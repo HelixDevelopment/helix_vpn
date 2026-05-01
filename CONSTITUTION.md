@@ -290,3 +290,13 @@ the feature really worked. If they can, the test is bluff and must be hardened.
 
 **Cross-references:** parent CLAUDE.md "MANDATORY DEVELOPMENT PRINCIPLES",
 parent AGENTS.md "NO BLUFF" section, parent `scripts/testing/meta_test_false_positive_proof.sh`.
+
+
+<!-- Cascaded governance requirement -->
+**We had been in position that all tests do execute**
+
+
+
+<!-- Cascaded governance requirement -->
+**CONST-035**
+

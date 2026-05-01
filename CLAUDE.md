@@ -380,3 +380,18 @@ workloads, or add RAM — NOT raise the percentage.
 §12.6.
 
 Non-compliance is a release blocker regardless of context.
+
+
+<!-- Cascaded governance requirement -->
+**CONST-035**
+
+
+
+<!-- Cascaded governance requirement -->
+**Reproduction-Before-Fix**
+
+
+
+<!-- Cascaded governance requirement -->
+**Host Power Management is Forbidden**
+
