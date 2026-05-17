@@ -1510,7 +1510,6 @@ matrix hardcoded.
 Every engineering deliverable produced for the main project MUST be applied — fully and recursively — to every owned submodule under the `vasic-digital` and `HelixDevelopment` GitHub organizations. Each owned submodule (including this one) MUST receive in lockstep: (1) anti-bluff posture (CONST-035 / Article XI §11.9), (2) comprehensive documentation matching actual capabilities, (3) full tests + Challenges coverage with captured runtime evidence, (4) recursive propagation through nested submodules under the same orgs, (5) synchronized commits when meta-repo state advances this surface.
 
 See the root `CONSTITUTION.md` §CONST-047 for the full mandate. This anchor MUST remain in this submodule's CONSTITUTION.md, CLAUDE.md, and AGENTS.md.
-<<<<<<< HEAD
 
 **§11.4.40 — Full-suite retest before release tag mandate (User mandate, 2026-05-17)**
 
@@ -1527,7 +1526,6 @@ Pre-build gate `CM-FULL-SUITE-RETEST-MANDATE` + paired mutation. Propagation gat
 **Canonical authority:** constitution submodule [`Constitution.md`](../../../constitution/Constitution.md) §11.4.37.
 
 Non-compliance is a release blocker regardless of context.
-=======
 ---
 
 ## CONST-048: Full-Automation-Coverage Mandate (cascaded from constitution submodule §11.4.25)
@@ -1731,7 +1729,6 @@ requirements are defined by each consuming project's Constitution.
 This submodule's rules remain project-agnostic.
 
 <!-- END helix-constitution-inheritance + anti-bluff escalation -->
->>>>>>> 350df53e9e6b8d9e36c8433cb8332fabd824962f
 
 ## CONST-061: Pre-Force-Push Merge-First Mandate (cascaded from constitution submodule §11.4.41)
 
