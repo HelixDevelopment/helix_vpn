@@ -24,13 +24,20 @@ type AgentSelector interface {
 
 // NewMultiProviderPool creates a multi-provider pool.
 //
-// Every provider-specific factory (NewOpenCodePool / NewClaudeCodePool /
-// NewGeminiPool / NewJuniePool / NewQwenCodePool) currently returns
-// ErrProviderPoolNotImplemented per round-28 §11.4 audit (CONTRACT-bluff
-// removal). Until each factory is replaced with a real provider-specific
-// implementation, NewMultiProviderPool propagates that sentinel error
-// rather than silently constructing a pool whose Acquire() would return
-// nil agents that panic on first use.
+// Round-60 §11.4 architecture upgrade: every provider-specific factory
+// (NewOpenCodePool / NewClaudeCodePool / NewGeminiPool / NewJuniePool /
+// NewQwenCodePool) now returns a real *SimpleAgentPool wired to a
+// per-provider ClientBuilder when the supplied PoolConfig is non-nil.
+// The pool itself is real and fully exercises capacity, available/in-use
+// bookkeeping, blocking Acquire semantics, and Shutdown — only the
+// per-call client materialisation surfaces a provider-specific
+// "client SDK not wired" sentinel (Err{OpenCode,ClaudeCode,Gemini,
+// Junie,QwenCode}ClientNotWired) until each provider's transport is
+// wired in round-61+.
+//
+// nil PoolConfig still surfaces the round-28 ErrProviderPoolNotImplemented
+// sentinel because that case is genuinely "the operator did not even
+// configure this provider" — distinct from "configured but not wired".
 //
 // Callers MAY still construct a MultiProviderPool directly with externally
 // provided AgentPool implementations (e.g., installed via dependency
@@ -248,62 +255,100 @@ type PoolConfig struct {
 	APIKey     string
 }
 
-// ErrProviderPoolNotImplemented is returned by every provider-specific
-// pool factory (NewOpenCodePool / NewClaudeCodePool / NewGeminiPool /
-// NewJuniePool / NewQwenCodePool) until each one is replaced with a real
-// provider-specific implementation that spawns and manages live CLI
-// agents.
+// ErrProviderPoolNotImplemented is the round-28 §11.4 sentinel — now
+// retained as the "configuration genuinely absent" indicator. Round-60
+// §11.4 upgraded the five provider factories to return real concrete
+// pools (SimpleAgentPool composed with a per-provider ClientBuilder)
+// when called with a NON-NIL PoolConfig. Calling a factory with a
+// nil PoolConfig still returns this sentinel because that genuinely
+// means "operator never even configured this provider" — distinct
+// from "configured but the transport SDK has not been wired yet",
+// which is the per-provider Err{Provider}ClientNotWired surface in
+// builders.go.
 //
-// Round-28 §11.4 audit (HelixCode close-out, 2026-05-17): the previous
-// factory bodies returned a MockPool seeded with `nil` agent slots
-// (`agents[i] = nil // Placeholder`). MultiProviderPool.Acquire() would
-// happily return one of those nil agents to a caller, which then panicked
-// on the first method call. The test suite passed because no test
-// exercised the round-trip — a CRITICAL CONTRACT-bluff at the
-// multi-provider-pool layer.
-//
-// Fix: every factory now surfaces this sentinel error so callers (and
-// MultiProviderPool itself) FAIL LOUDLY when a provider-specific
-// implementation is missing, instead of silently returning a pool of
-// nil-agent panic-traps. MockPool has been moved to *_test.go per
-// CONST-050(A) (no fakes outside unit tests). Tests that require a
-// deterministic stand-in install one via dependency injection in
-// the test file.
+// Round-28 §11.4 audit (HelixCode close-out, 2026-05-17, original
+// forensic anchor): the original factory bodies returned a MockPool
+// seeded with `nil` agent slots (`agents[i] = nil // Placeholder`).
+// MultiProviderPool.Acquire() would happily return one of those nil
+// agents to a caller, which then panicked on the first method call.
+// The test suite passed because no test exercised the round-trip —
+// a CRITICAL CONTRACT-bluff at the multi-provider-pool layer. Round
+// 28 closed that by making every factory return this sentinel. Round
+// 60 replaces the sentinel return with a real pool + per-provider
+// builder-sentinel pattern so callers see precise wiring gaps
+// instead of an undifferentiated "not implemented".
 //
 // Constitutional anchors: CONST-035 (anti-bluff), CONST-050(A)
 // (no-fakes-beyond-unit-tests), Article XI §11.9 (forensic anchor).
-var ErrProviderPoolNotImplemented = fmt.Errorf("llmorchestrator: provider-specific pool factory has not been implemented — NewOpenCodePool/NewClaudeCodePool/NewGeminiPool/NewJuniePool/NewQwenCodePool currently return a sentinel error to avoid the previous MockPool-with-nil-agents CONTRACT-bluff (every Acquire would have returned a nil agent that panicked on use); §11.4 PASS-bluff removed")
+var ErrProviderPoolNotImplemented = fmt.Errorf("llmorchestrator: provider pool factory invoked with nil PoolConfig — no provider configuration present (round-60 §11.4 upgraded factories to return real SimpleAgentPool instances for non-nil configs; nil-config still surfaces this round-28 sentinel)")
 
-// NewOpenCodePool returns ErrProviderPoolNotImplemented until a real
-// OpenCode-specific pool (spawning + supervising live `opencode`
-// CLI agents) is wired in. See ErrProviderPoolNotImplemented for the
-// round-28 §11.4 forensic anchor.
-func NewOpenCodePool(_ *PoolConfig) (AgentPool, error) {
-	return nil, fmt.Errorf("opencode: %w", ErrProviderPoolNotImplemented)
+// NewOpenCodePool returns a real *SimpleAgentPool wired to
+// OpenCodeClientBuilder when cfg is non-nil. The pool itself is fully
+// functional; its first Acquire fails loudly with ErrOpenCodeClientNotWired
+// until round-61+ wires the OpenCode CLI binary integration.
+//
+// A nil cfg surfaces ErrProviderPoolNotImplemented (round-28 sentinel,
+// retained for the "operator never configured this provider" case).
+func NewOpenCodePool(cfg *PoolConfig) (AgentPool, error) {
+	if cfg == nil {
+		return nil, fmt.Errorf("opencode: %w", ErrProviderPoolNotImplemented)
+	}
+	return NewSimpleAgentPool("opencode", poolSize(cfg), OpenCodeClientBuilder(cfg)), nil
 }
 
-// NewClaudeCodePool returns ErrProviderPoolNotImplemented until a real
-// Claude-Code-specific pool is wired in.
-func NewClaudeCodePool(_ *PoolConfig) (AgentPool, error) {
-	return nil, fmt.Errorf("claude-code: %w", ErrProviderPoolNotImplemented)
+// NewClaudeCodePool returns a real *SimpleAgentPool wired to
+// ClaudeCodeClientBuilder when cfg is non-nil. The pool's first
+// Acquire fails loudly with ErrClaudeCodeClientNotWired until
+// round-61+ wires the Claude Code CLI binary integration.
+func NewClaudeCodePool(cfg *PoolConfig) (AgentPool, error) {
+	if cfg == nil {
+		return nil, fmt.Errorf("claude-code: %w", ErrProviderPoolNotImplemented)
+	}
+	return NewSimpleAgentPool("claude-code", poolSize(cfg), ClaudeCodeClientBuilder(cfg)), nil
 }
 
-// NewGeminiPool returns ErrProviderPoolNotImplemented until a real
-// Gemini-specific pool is wired in.
-func NewGeminiPool(_ *PoolConfig) (AgentPool, error) {
-	return nil, fmt.Errorf("gemini: %w", ErrProviderPoolNotImplemented)
+// NewGeminiPool returns a real *SimpleAgentPool wired to
+// GeminiClientBuilder when cfg is non-nil. The pool's first Acquire
+// fails loudly with ErrGeminiClientNotWired until round-61+ wires
+// the Gemini HTTP transport.
+func NewGeminiPool(cfg *PoolConfig) (AgentPool, error) {
+	if cfg == nil {
+		return nil, fmt.Errorf("gemini: %w", ErrProviderPoolNotImplemented)
+	}
+	return NewSimpleAgentPool("gemini", poolSize(cfg), GeminiClientBuilder(cfg)), nil
 }
 
-// NewJuniePool returns ErrProviderPoolNotImplemented until a real
-// Junie-specific pool is wired in.
-func NewJuniePool(_ *PoolConfig) (AgentPool, error) {
-	return nil, fmt.Errorf("junie: %w", ErrProviderPoolNotImplemented)
+// NewJuniePool returns a real *SimpleAgentPool wired to
+// JunieClientBuilder when cfg is non-nil. The pool's first Acquire
+// fails loudly with ErrJunieClientNotWired until round-61+ wires
+// the Junie CLI binary integration.
+func NewJuniePool(cfg *PoolConfig) (AgentPool, error) {
+	if cfg == nil {
+		return nil, fmt.Errorf("junie: %w", ErrProviderPoolNotImplemented)
+	}
+	return NewSimpleAgentPool("junie", poolSize(cfg), JunieClientBuilder(cfg)), nil
 }
 
-// NewQwenCodePool returns ErrProviderPoolNotImplemented until a real
-// Qwen-Code-specific pool is wired in.
-func NewQwenCodePool(_ *PoolConfig) (AgentPool, error) {
-	return nil, fmt.Errorf("qwen-code: %w", ErrProviderPoolNotImplemented)
+// NewQwenCodePool returns a real *SimpleAgentPool wired to
+// QwenCodeClientBuilder when cfg is non-nil. The pool's first Acquire
+// fails loudly with ErrQwenCodeClientNotWired until round-61+ wires
+// the Qwen-Code SDK transport.
+func NewQwenCodePool(cfg *PoolConfig) (AgentPool, error) {
+	if cfg == nil {
+		return nil, fmt.Errorf("qwen-code: %w", ErrProviderPoolNotImplemented)
+	}
+	return NewSimpleAgentPool("qwen-code", poolSize(cfg), QwenCodeClientBuilder(cfg)), nil
+}
+
+// poolSize returns a safe SimpleAgentPool capacity from cfg.Size,
+// defaulting to 1 when cfg.Size is zero or negative — both meaning
+// "operator left it unset" rather than "explicitly forbid any
+// concurrent agents". SimpleAgentPool requires capacity >= 1.
+func poolSize(cfg *PoolConfig) int {
+	if cfg == nil || cfg.Size < 1 {
+		return 1
+	}
+	return cfg.Size
 }
 
 var (

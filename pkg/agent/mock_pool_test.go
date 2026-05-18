@@ -134,14 +134,18 @@ func TestMockPoolAcquireNeverNil(t *testing.T) {
 	}
 }
 
-// TestProviderPoolFactoriesReturnSentinelError — regression test for
-// round-28 §11.4 audit. Each of the five provider-specific pool
-// factories MUST return ErrProviderPoolNotImplemented (wrapped with
-// provider name) until a real implementation lands. The previous
-// behaviour silently returned a MockPool whose Acquire() handed back
-// nil agents — a CRITICAL CONTRACT-bluff.
-func TestProviderPoolFactoriesReturnSentinelError(t *testing.T) {
-	cfg := &PoolConfig{Size: 4}
+// TestProviderPoolFactoriesNilConfigReturnSentinelError — round-60
+// §11.4 evolution of the round-28 regression. Round 28 made every
+// factory return ErrProviderPoolNotImplemented unconditionally to
+// remove the MockPool-with-nil-agents CONTRACT-bluff. Round 60
+// upgraded the factories to return real *SimpleAgentPool instances
+// for non-nil PoolConfig; the round-28 sentinel is now reserved for
+// the "operator never even configured this provider" case (nil cfg).
+//
+// This regression test pins that contract: nil cfg in → sentinel out,
+// for ALL five provider factories, with provider name in wrapped
+// message so operators see which factory rejected nil config.
+func TestProviderPoolFactoriesNilConfigReturnSentinelError(t *testing.T) {
 	cases := []struct {
 		name    string
 		factory func(*PoolConfig) (AgentPool, error)
@@ -155,37 +159,37 @@ func TestProviderPoolFactoriesReturnSentinelError(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			pool, err := tc.factory(cfg)
+			pool, err := tc.factory(nil)
 			if err == nil {
-				t.Fatalf("%s factory returned nil error — round-28 §11.4 CONTRACT-bluff would regress", tc.name)
+				t.Fatalf("%s factory(nil) returned nil error — round-28 §11.4 nil-config sentinel would regress", tc.name)
 			}
 			if pool != nil {
-				t.Errorf("%s factory returned non-nil pool alongside error; want (nil, err)", tc.name)
+				t.Errorf("%s factory(nil) returned non-nil pool alongside error; want (nil, err)", tc.name)
 			}
 			if !errors.Is(err, ErrProviderPoolNotImplemented) {
-				t.Errorf("%s factory: errors.Is(err, ErrProviderPoolNotImplemented) = false; err = %v", tc.name, err)
+				t.Errorf("%s factory(nil): errors.Is(err, ErrProviderPoolNotImplemented) = false; err = %v", tc.name, err)
 			}
-			// The wrapped error MUST name the provider so operators can
-			// see which factory failed without unwrapping.
 			if got := err.Error(); !contains(got, tc.want) {
-				t.Errorf("%s factory error %q does not contain provider name %q", tc.name, got, tc.want)
+				t.Errorf("%s factory(nil) error %q does not contain provider name %q", tc.name, got, tc.want)
 			}
 		})
 	}
 }
 
-// TestNewMultiProviderPoolPropagatesFactoryError — regression test
-// confirming MultiProviderPool surfaces the sentinel error from the
-// underlying factories instead of silently constructing a partial
-// pool. The previous code path returned `*MultiProviderPool` populated
-// with MockPool entries; the fix makes the constructor fail fast.
-func TestNewMultiProviderPoolPropagatesFactoryError(t *testing.T) {
+// TestNewMultiProviderPoolPropagatesNilConfigSentinel — round-60
+// regression. Round-28 contract: NewMultiProviderPool with a configured
+// provider whose factory rejected → sentinel propagated. Round-60
+// contract narrows the bluff case to nil PoolConfig (truly unconfigured);
+// non-nil configs now build real pools and surface per-provider
+// builder-sentinel on first Acquire instead. This test pins the
+// nil-config-rejected case at the MultiProviderPool layer.
+func TestNewMultiProviderPoolPropagatesNilConfigSentinel(t *testing.T) {
 	configs := map[string]*PoolConfig{
-		"opencode": {Size: 1},
+		"opencode": nil,
 	}
 	pool, err := NewMultiProviderPool(configs)
 	if err == nil {
-		t.Fatal("NewMultiProviderPool returned nil error for an unimplemented provider — round-28 §11.4 CONTRACT-bluff would regress")
+		t.Fatal("NewMultiProviderPool returned nil error for a nil-config provider — round-28 nil-config sentinel would regress")
 	}
 	if pool != nil {
 		t.Errorf("NewMultiProviderPool returned non-nil pool alongside error; want (nil, err)")
