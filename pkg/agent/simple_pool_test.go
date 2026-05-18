@@ -291,17 +291,46 @@ func TestSimpleAgentPool_ConcurrentAcquireRelease_NoRace(t *testing.T) {
 // so errors.Is can disambiguate.
 // ---------------------------------------------------------------------
 
-func TestOpenCodeClientBuilder_NotWired_ReturnsSentinel(t *testing.T) {
-	b := OpenCodeClientBuilder(&PoolConfig{Size: 1, BinaryPath: "/nonexistent/opencode"})
+// TestOpenCodeClientBuilder_NilConfig_ReturnsNarrowedSentinel —
+// round-64 §11.4 narrowed ErrOpenCodeClientNotWired to fire only when
+// OpenCodeClientBuilder receives a nil PoolConfig (programmer error:
+// the per-provider factory should never propagate a nil cfg into the
+// builder, but the backstop guarantees the caller still sees a typed
+// errors.Is-checkable signal rather than a panic).
+//
+// The round-60 contract that pinned this sentinel for the
+// `&PoolConfig{BinaryPath: "/nonexistent"}` path no longer holds —
+// round-64 wires NewOpenCodeAgent and surfaces ErrOpenCodeBinaryNotFound
+// for the missing-binary case, which is the more honest signal.
+func TestOpenCodeClientBuilder_NilConfig_ReturnsNarrowedSentinel(t *testing.T) {
+	b := OpenCodeClientBuilder(nil)
 	a, err := b(context.Background())
 	if err == nil {
-		t.Fatal("OpenCodeClientBuilder closure returned nil error — round-60 §11.4 sentinel regression")
+		t.Fatal("OpenCodeClientBuilder(nil) returned nil error — narrowed round-60 sentinel regression")
 	}
 	if a != nil {
 		t.Errorf("OpenCodeClientBuilder returned non-nil agent alongside error: %v", a)
 	}
 	if !errors.Is(err, ErrOpenCodeClientNotWired) {
 		t.Errorf("errors.Is(err, ErrOpenCodeClientNotWired) = false; err = %v", err)
+	}
+}
+
+// TestOpenCodeClientBuilder_BinaryNotFound_ReturnsBinaryNotFound —
+// round-64 §11.4 lands the real wiring; when the configured BinaryPath
+// resolves to a non-existent binary, the builder MUST surface
+// ErrOpenCodeBinaryNotFound rather than the narrowed round-60 sentinel.
+func TestOpenCodeClientBuilder_BinaryNotFound_ReturnsBinaryNotFound(t *testing.T) {
+	b := OpenCodeClientBuilder(&PoolConfig{Size: 1, BinaryPath: "/nonexistent/opencode"})
+	a, err := b(context.Background())
+	if err == nil {
+		t.Fatal("OpenCodeClientBuilder closure returned nil error — round-64 binary-not-found regression")
+	}
+	if a != nil {
+		t.Errorf("OpenCodeClientBuilder returned non-nil agent alongside error: %v", a)
+	}
+	if !errors.Is(err, ErrOpenCodeBinaryNotFound) {
+		t.Errorf("errors.Is(err, ErrOpenCodeBinaryNotFound) = false; err = %v", err)
 	}
 }
 
@@ -410,6 +439,11 @@ func TestNewQwenCodePool_NilConfig_ReturnsRoundTwentyEightSentinel(t *testing.T)
 
 // Table-driven non-nil-config cases — assert each factory returns a real
 // pool whose first Acquire surfaces the per-provider builder sentinel.
+//
+// Round-64 §11.4 note: opencode is intentionally excluded from this
+// table because its builder is now wired to a real os/exec bridge
+// (NewOpenCodeAgent). Its Acquire outcome depends on PATH state and is
+// pinned by separate round-64 tests (TestOpenCodePool_Round64_*).
 func TestProviderPools_ValidConfig_ReturnRealPool_AcquireFailsWithBuilderSentinel(t *testing.T) {
 	cases := []struct {
 		name        string
@@ -417,7 +451,6 @@ func TestProviderPools_ValidConfig_ReturnRealPool_AcquireFailsWithBuilderSentine
 		wantBuilder error
 		wantName    string
 	}{
-		{"opencode", NewOpenCodePool, ErrOpenCodeClientNotWired, "opencode"},
 		{"claude-code", NewClaudeCodePool, ErrClaudeCodeClientNotWired, "claude-code"},
 		{"gemini", NewGeminiPool, ErrGeminiClientNotWired, "gemini"},
 		{"junie", NewJuniePool, ErrJunieClientNotWired, "junie"},

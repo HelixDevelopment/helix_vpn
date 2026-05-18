@@ -38,14 +38,30 @@ import (
 // CONST-050(A) (no-fakes-beyond-unit-tests; all stub returns are
 // loud errors, not silent agents), Article XI §11.9.
 
-// ErrOpenCodeClientNotWired is returned by the OpenCode ClientBuilder
-// until round-61+ wires the OpenCode CLI binary integration
-// (anticipated transport: os/exec spawning `opencode` with stdin/stdout
-// JSON-RPC, configured via cfg.BinaryPath).
+// ErrOpenCodeClientNotWired was the round-60 §11.4 sentinel that
+// signalled "OpenCode CLI binary integration not implemented in this
+// repository". Round-64 §11.4 lands the real os/exec-based bridge to
+// `opencode run` (see opencode_agent.go) — so this sentinel's meaning
+// has been NARROWED, not removed.
+//
+// Round-60 semantics: "no implementation exists; the builder is a stub".
+// Round-64 semantics: "implementation exists, but this code path took
+// the legacy stub branch — caller invoked OpenCodeClientBuilder with
+// nil PoolConfig (programmer error: factories should never propagate a
+// nil cfg into the builder)".
+//
+// In the normal end-to-end path (NewOpenCodePool with non-nil
+// PoolConfig → OpenCodeClientBuilder → NewOpenCodeAgent), the builder
+// returns a real *OpenCodeAgent and this sentinel never fires. Tests
+// that explicitly pass a nil PoolConfig into OpenCodeClientBuilder
+// continue to receive this sentinel for backward compatibility.
+//
+// See ErrOpenCodeClientNotConfigured (opencode_agent.go) for the
+// distinct "config present but zero-value" case landed in round 64.
 var ErrOpenCodeClientNotWired = fmt.Errorf(
-	"opencode agent: client SDK integration not wired in this round — " +
-		"pool's Acquire will fail loudly until round-61+ wires the " +
-		"OpenCode CLI binary integration via os/exec or HTTP-RPC")
+	"opencode agent: ClientBuilder received nil PoolConfig — round-64 " +
+		"wired the real os/exec bridge to `opencode run`; this sentinel " +
+		"now narrows to the nil-cfg backstop path (caller programmer error)")
 
 // ErrClaudeCodeClientNotWired is returned by the Claude-Code ClientBuilder
 // until round-61+ wires the Claude Code CLI binary integration
@@ -83,12 +99,70 @@ var ErrQwenCodeClientNotWired = fmt.Errorf(
 		"pool's Acquire will fail loudly until round-61+ wires the " +
 		"Qwen-Code SDK HTTP transport to dashscope.aliyuncs.com")
 
-// OpenCodeClientBuilder returns a ClientBuilder that surfaces
-// ErrOpenCodeClientNotWired. The pool around it is fully real; only
-// the per-call client materialisation is sentinel-stubbed.
-func OpenCodeClientBuilder(_ *PoolConfig) ClientBuilder {
+// OpenCodeClientBuilder returns a ClientBuilder that constructs a real
+// *OpenCodeAgent on each invocation (round-64 §11.4 wiring).
+//
+// The supplied PoolConfig contributes the BinaryPath (→ cfg.Binary)
+// and the runtime env (sourced from the caller via cfg's lifecycle —
+// the legacy PoolConfig struct does not yet carry an explicit Env
+// field, so OpenCodeAgent inherits os.Environ() through Go's default
+// exec behaviour when cfg.Env stays empty here).
+//
+// Backstop paths:
+//   - nil PoolConfig → ErrOpenCodeClientNotWired (round-60 sentinel,
+//     narrowed to "programmer error: factory propagated nil cfg").
+//   - cfg present but the would-be OpenCodeBuilderConfig is zero-value
+//     (no BinaryPath, no extra args) → caller still gets a working
+//     agent IF `opencode` is on $PATH (DefaultOpenCodeBinary fallback).
+//     The distinct ErrOpenCodeClientNotConfigured sentinel fires only
+//     for the explicit OpenCodeClientBuilderFromConfig() entrypoint.
+//   - `opencode` binary missing from $PATH → ErrOpenCodeBinaryNotFound
+//     surfaces from NewOpenCodeAgent, gets wrapped by
+//     SimpleAgentPool.Acquire, and reaches the caller errors.Is-checkable.
+//
+// Constitutional anchors: CONST-035 (real CLI invocation, no
+// simulation), CONST-042 (env-sourced credentials), CONST-050(A)
+// (production-side wiring uses no test mocks).
+func OpenCodeClientBuilder(cfg *PoolConfig) ClientBuilder {
+	if cfg == nil {
+		return func(_ context.Context) (Agent, error) {
+			return nil, ErrOpenCodeClientNotWired
+		}
+	}
+	agentCfg := OpenCodeAgentConfig{
+		Binary: cfg.BinaryPath,
+	}
 	return func(_ context.Context) (Agent, error) {
-		return nil, ErrOpenCodeClientNotWired
+		a, err := NewOpenCodeAgent(agentCfg)
+		if err != nil {
+			return nil, err
+		}
+		return a, nil
+	}
+}
+
+// OpenCodeClientBuilderFromConfig is the round-64 strict-config
+// entrypoint: it requires a non-zero OpenCodeBuilderConfig and
+// surfaces ErrOpenCodeClientNotConfigured otherwise. Use this when
+// the caller wants the "no implicit PATH fallback" contract.
+func OpenCodeClientBuilderFromConfig(cfg OpenCodeBuilderConfig) ClientBuilder {
+	if cfg.IsZero() {
+		return func(_ context.Context) (Agent, error) {
+			return nil, ErrOpenCodeClientNotConfigured
+		}
+	}
+	agentCfg := OpenCodeAgentConfig{
+		Binary:     cfg.Binary,
+		ExtraArgs:  cfg.ExtraArgs,
+		WorkingDir: cfg.WorkingDir,
+		Env:        cfg.Env,
+	}
+	return func(_ context.Context) (Agent, error) {
+		a, err := NewOpenCodeAgent(agentCfg)
+		if err != nil {
+			return nil, err
+		}
+		return a, nil
 	}
 }
 
