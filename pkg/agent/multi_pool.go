@@ -330,9 +330,13 @@ func NewJuniePool(cfg *PoolConfig) (AgentPool, error) {
 }
 
 // NewQwenCodePool returns a real *SimpleAgentPool wired to
-// QwenCodeClientBuilder when cfg is non-nil. The pool's first Acquire
-// fails loudly with ErrQwenCodeClientNotWired until round-61+ wires
-// the Qwen-Code SDK transport.
+// QwenCodeClientBuilder when cfg is non-nil. Round-76 §11.4 wired
+// the real os/exec bridge to `qwen <prompt>` (FINAL builder of the
+// LLMOrchestrator round-60 sentinel arc — 5/5 builders complete:
+// OpenCode + ClaudeCode + Gemini + Junie + QwenCode); the pool's
+// first Acquire builds a real *QwenCodeAgent unless the binary is
+// missing from $PATH (ErrQwenCodeBinaryNotFound surfaces in that
+// case, errors.Is-checkable).
 func NewQwenCodePool(cfg *PoolConfig) (AgentPool, error) {
 	if cfg == nil {
 		return nil, fmt.Errorf("qwen-code: %w", ErrProviderPoolNotImplemented)

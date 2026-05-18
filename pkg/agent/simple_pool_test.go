@@ -415,8 +415,18 @@ func TestJunieClientBuilder_BinaryNotFound_ReturnsBinaryNotFound(t *testing.T) {
 	}
 }
 
+// TestQwenCodeClientBuilder_NotWired_ReturnsSentinel — round-76 §11.4
+// migration: round-60 made this assertion against the non-nil-cfg
+// branch (the builder was a hardwired stub). Round-76 wired the real
+// os/exec bridge to `qwen <prompt>` so the non-nil-cfg branch now
+// constructs a real *QwenCodeAgent. The narrowed semantics of
+// ErrQwenCodeClientNotWired (per builders.go comment) now fire only
+// on the nil-cfg backstop path — so this test pins the same sentinel
+// against the nil-cfg branch instead. The round-76 in-package tests
+// (qwencode_agent_test.go) cover the wired non-nil-cfg branch
+// directly.
 func TestQwenCodeClientBuilder_NotWired_ReturnsSentinel(t *testing.T) {
-	b := QwenCodeClientBuilder(&PoolConfig{Size: 1, APIKey: "fake"})
+	b := QwenCodeClientBuilder(nil)
 	a, err := b(context.Background())
 	if err == nil || a != nil || !errors.Is(err, ErrQwenCodeClientNotWired) {
 		t.Errorf("got (agent=%v err=%v), want (nil, errors.Is=ErrQwenCodeClientNotWired)", a, err)
@@ -516,6 +526,16 @@ func TestNewQwenCodePool_NilConfig_ReturnsRoundTwentyEightSentinel(t *testing.T)
 // JunieClientBuilder to NewJunieAgent. Its Acquire outcome
 // likewise depends on PATH state and is pinned by separate round-71
 // tests in junie_agent_test.go.
+//
+// Round-76 §11.4 note: qwen-code is ALSO excluded — round-76 wires
+// QwenCodeClientBuilder to NewQwenCodeAgent. Its Acquire outcome
+// likewise depends on PATH state and is pinned by separate round-76
+// tests in qwencode_agent_test.go. Round-76 closes the 5/5 builder
+// arc: every provider that was sentinel-stubbed in round-60 now has
+// a real wired Acquire path, so this table-driven test has no
+// "still-unwired" providers left to assert against. The empty cases
+// slice intentionally documents arc completion — adding a new
+// provider in a future round would re-populate this table.
 func TestProviderPools_ValidConfig_ReturnRealPool_AcquireFailsWithBuilderSentinel(t *testing.T) {
 	cases := []struct {
 		name        string
@@ -523,7 +543,16 @@ func TestProviderPools_ValidConfig_ReturnRealPool_AcquireFailsWithBuilderSentine
 		wantBuilder error
 		wantName    string
 	}{
-		{"qwen-code", NewQwenCodePool, ErrQwenCodeClientNotWired, "qwen-code"},
+		// Empty: all 5 round-60 sentinel-stubbed providers are now
+		// wired (opencode round-64 + claude-code round-66 + gemini
+		// round-69 + junie round-71 + qwen-code round-76 = 5/5 arc
+		// COMPLETE). Adding a new provider in a future round would
+		// re-populate this table with that provider's sentinel.
+	}
+	if len(cases) == 0 {
+		// Document the arc-closure invariant: every previously
+		// sentinel-stubbed provider now builds a real Agent.
+		t.Log("LLMOrchestrator round-60 sentinel-stub arc CLOSED at round-76: 5/5 builders wired (opencode/claude-code/gemini/junie/qwen-code)")
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -627,14 +656,24 @@ func TestNewMultiProviderPool_ValidConfig_BuildsRealPools(t *testing.T) {
 	})
 
 	t.Run("direct_simple_pool_acquire_surfaces_builder_sentinel", func(t *testing.T) {
-		// Round-71 §11.4 transition: junie is now wired (parallel to
-		// opencode round-64 + claude-code round-66 + gemini round-69),
-		// so this sub-case switches to qwen-code which remains the last
-		// still-unwired provider whose SimpleAgentPool builder surfaces
-		// ErrQwenCodeClientNotWired on direct Acquire. The contract
-		// under test (direct sp.Acquire bubbles the per-provider
-		// builder-sentinel verbatim) is identical — only the chosen
-		// unwired provider has changed.
+		// Round-76 §11.4 transition: qwen-code is now wired (parallel to
+		// opencode round-64 + claude-code round-66 + gemini round-69 +
+		// junie round-71 — 5/5 builders complete, LLMOrchestrator arc
+		// COMPLETE). Every provider in the round-60 sentinel-stub arc
+		// now builds a real *Agent on non-nil PoolConfig — there are no
+		// "still-unwired" providers left whose SimpleAgentPool builder
+		// would surface ErrXxxClientNotWired on direct Acquire.
+		//
+		// The contract under test is preserved by isolating PATH so the
+		// `qwen` binary is unresolvable, which makes NewQwenCodeAgent
+		// fail with ErrQwenCodeBinaryNotFound — a real wired sentinel
+		// per round-76. The bubbling contract (direct sp.Acquire
+		// surfaces the per-provider sentinel verbatim) is unchanged;
+		// only the specific sentinel kind reflects round-76's narrowing
+		// (no-binary instead of no-wiring).
+		emptyDir := t.TempDir()
+		t.Setenv("PATH", emptyDir)
+
 		qwenMP, err := NewMultiProviderPool(map[string]*PoolConfig{
 			"qwen-code": {Size: 1},
 		})
@@ -652,8 +691,8 @@ func TestNewMultiProviderPool_ValidConfig_BuildsRealPools(t *testing.T) {
 		if a != nil {
 			t.Errorf("direct Acquire returned non-nil agent alongside error: %v", a)
 		}
-		if !errors.Is(err, ErrQwenCodeClientNotWired) {
-			t.Errorf("direct Acquire err did not match ErrQwenCodeClientNotWired: %v", err)
+		if !errors.Is(err, ErrQwenCodeBinaryNotFound) {
+			t.Errorf("direct Acquire err did not match ErrQwenCodeBinaryNotFound: %v", err)
 		}
 	})
 }

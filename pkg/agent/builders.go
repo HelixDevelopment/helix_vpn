@@ -139,14 +139,35 @@ var ErrJunieClientNotWired = fmt.Errorf(
 		"wired the real os/exec bridge to `junie <prompt>`; this sentinel " +
 		"now narrows to the nil-cfg backstop path (caller programmer error)")
 
-// ErrQwenCodeClientNotWired is returned by the Qwen-Code ClientBuilder
-// until round-61+ wires the Qwen-Code SDK integration
-// (anticipated transport: HTTP to Alibaba DashScope generation endpoint
-// with cfg.APIKey, or local Qwen-Code CLI via os/exec).
+// ErrQwenCodeClientNotWired was the round-60 §11.4 sentinel that
+// signalled "Qwen Code CLI binary integration not implemented in this
+// repository". Round-76 §11.4 lands the real os/exec-based bridge to
+// `qwen <prompt>` (see qwencode_agent.go) — so this sentinel's
+// meaning has been NARROWED, not removed.
+//
+// Round-60 semantics: "no implementation exists; the builder is a stub".
+// Round-76 semantics: "implementation exists, but this code path took
+// the legacy stub branch — caller invoked QwenCodeClientBuilder with
+// nil PoolConfig (programmer error: factories should never propagate
+// a nil cfg into the builder)".
+//
+// In the normal end-to-end path (NewQwenCodePool with non-nil
+// PoolConfig → QwenCodeClientBuilder → NewQwenCodeAgent), the
+// builder returns a real *QwenCodeAgent and this sentinel never
+// fires. Tests that explicitly pass a nil PoolConfig into
+// QwenCodeClientBuilder continue to receive this sentinel for
+// backward compatibility.
+//
+// See ErrQwenCodeClientNotConfigured (qwencode_agent.go) for the
+// distinct "config present but zero-value" case landed in round 76.
+//
+// Round-76 also marks the COMPLETION of the LLMOrchestrator builder
+// arc: rounds 64 (OpenCode) + 66 (ClaudeCode) + 69 (Gemini) +
+// 71 (Junie) + 76 (QwenCode) = 5/5 builders wired.
 var ErrQwenCodeClientNotWired = fmt.Errorf(
-	"qwen-code agent: client SDK integration not wired in this round — " +
-		"pool's Acquire will fail loudly until round-61+ wires the " +
-		"Qwen-Code SDK HTTP transport to dashscope.aliyuncs.com")
+	"qwen-code agent: ClientBuilder received nil PoolConfig — round-76 " +
+		"wired the real os/exec bridge to `qwen <prompt>`; this sentinel " +
+		"now narrows to the nil-cfg backstop path (caller programmer error)")
 
 // OpenCodeClientBuilder returns a ClientBuilder that constructs a real
 // *OpenCodeAgent on each invocation (round-64 §11.4 wiring).
@@ -423,10 +444,73 @@ func JunieClientBuilderFromConfig(cfg JunieBuilderConfig) ClientBuilder {
 	}
 }
 
-// QwenCodeClientBuilder returns a ClientBuilder that surfaces
-// ErrQwenCodeClientNotWired.
-func QwenCodeClientBuilder(_ *PoolConfig) ClientBuilder {
+// QwenCodeClientBuilder returns a ClientBuilder that constructs a real
+// *QwenCodeAgent on each invocation (round-76 §11.4 wiring — FINAL
+// builder in the LLMOrchestrator round-60 sentinel arc; rounds
+// 64+66+69+71+76 = 5/5 builders COMPLETE).
+//
+// The supplied PoolConfig contributes the BinaryPath (→ cfg.Binary)
+// and the runtime env (sourced from the caller via cfg's lifecycle —
+// the legacy PoolConfig struct does not yet carry an explicit Env
+// field, so QwenCodeAgent inherits the parent process environment
+// through Go's default exec behaviour when cfg.Env stays empty here).
+//
+// Backstop paths:
+//   - nil PoolConfig → ErrQwenCodeClientNotWired (round-60 sentinel,
+//     narrowed to "programmer error: factory propagated nil cfg").
+//   - cfg present but the would-be QwenCodeBuilderConfig is zero-value
+//     (no BinaryPath, no extra args) → caller still gets a working
+//     agent IF `qwen` is on $PATH (DefaultQwenCodeBinary fallback).
+//     The distinct ErrQwenCodeClientNotConfigured sentinel fires only
+//     for the explicit QwenCodeClientBuilderFromConfig() entrypoint.
+//   - `qwen` binary missing from $PATH → ErrQwenCodeBinaryNotFound
+//     surfaces from NewQwenCodeAgent, gets wrapped by
+//     SimpleAgentPool.Acquire, and reaches the caller errors.Is-
+//     checkable.
+//
+// Constitutional anchors: CONST-035 (real CLI invocation, no
+// simulation), CONST-042 (env-sourced credentials), CONST-050(A)
+// (production-side wiring uses no test mocks).
+func QwenCodeClientBuilder(cfg *PoolConfig) ClientBuilder {
+	if cfg == nil {
+		return func(_ context.Context) (Agent, error) {
+			return nil, ErrQwenCodeClientNotWired
+		}
+	}
+	agentCfg := QwenCodeAgentConfig{
+		Binary: cfg.BinaryPath,
+	}
 	return func(_ context.Context) (Agent, error) {
-		return nil, ErrQwenCodeClientNotWired
+		a, err := NewQwenCodeAgent(agentCfg)
+		if err != nil {
+			return nil, err
+		}
+		return a, nil
+	}
+}
+
+// QwenCodeClientBuilderFromConfig is the round-76 strict-config
+// entrypoint: it requires a non-zero QwenCodeBuilderConfig and
+// surfaces ErrQwenCodeClientNotConfigured otherwise. Use this when
+// the caller wants the "no implicit PATH fallback" contract.
+func QwenCodeClientBuilderFromConfig(cfg QwenCodeBuilderConfig) ClientBuilder {
+	if cfg.IsZero() {
+		return func(_ context.Context) (Agent, error) {
+			return nil, ErrQwenCodeClientNotConfigured
+		}
+	}
+	agentCfg := QwenCodeAgentConfig{
+		Binary:     cfg.Binary,
+		PromptFlag: cfg.PromptFlag,
+		ExtraArgs:  cfg.ExtraArgs,
+		WorkingDir: cfg.WorkingDir,
+		Env:        cfg.Env,
+	}
+	return func(_ context.Context) (Agent, error) {
+		a, err := NewQwenCodeAgent(agentCfg)
+		if err != nil {
+			return nil, err
+		}
+		return a, nil
 	}
 }
