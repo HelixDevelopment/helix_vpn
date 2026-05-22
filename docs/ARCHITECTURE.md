@@ -1,99 +1,165 @@
 # LLMOrchestrator Architecture
 
-## Overview
+**Module:** `digital.vasic.llmorchestrator`
 
-Standalone Go module (`digital.vasic.llmorchestrator`) for managing headless CLI coding agents with hybrid pipe+file communication. Orchestrates multiple agent types (Claude Code, OpenCode, Gemini, Junie, Qwen Code) through a unified interface with pooling, health monitoring, and circuit breaking.
+LLMOrchestrator manages headless CLI agents (OpenCode, Claude Code, Gemini, Junie,
+Qwen Code) with a hybrid pipe+file communication protocol. It provides a unified
+`Agent` interface, a thread-safe `AgentPool`, per-agent circuit breakers, a
+`MultiProviderPool` with pluggable `AgentSelector` strategies, and a structured
+`ResponseParser`.
 
-## Package Structure
+---
+
+## Package Overview
+
+| Package | Role |
+|---------|------|
+| `pkg/agent` | `Agent`/`AgentPool`/`AgentSelector` interfaces; `MultiProviderPool`, `RoundRobinSelector`, `PreferenceSelector`, `CircuitBreaker`, `HealthMonitor` |
+| `pkg/adapter` | `BaseAdapter` + 5 CLI agents (`ClaudeCodeAgent`, `GeminiAgent`, `JunieAgent`, `OpenCodeAgent`, `QwenCodeAgent`); `OpenCodeAdapter` drives OpenCode with a headless mode via `OpenCodeConfig.Headless` |
+| `pkg/protocol` | `PipeTransport` (JSON-lines) and `FileTransport` (inbox/outbox/shared) |
+| `pkg/parser` | `ResponseParser`: action, issue, and JSON extraction |
+| `pkg/config` | `.env` loading, binary path resolution, validation |
+| `pkg/i18n` | `Translator` contract for CLI message localization |
+
+---
+
+## Agent Pool
+
+```mermaid
+flowchart TD
+    A[Caller: Acquire ctx, requirements] --> B[AgentPool]
+    B --> C{Available agent\nmatches requirements?}
+    C -- yes --> D[Return Agent handle]
+    C -- no --> E[sync.Cond.Wait]
+    E --> C
+    D --> F[Caller uses Agent]
+    F --> G[Release back to pool]
+    G --> H[sync.Cond.Broadcast]
+    H --> E
+```
+
+`AgentPool` is protected by `sync.Mutex` + `sync.Cond`. `Acquire` blocks until a
+matching agent is available or `ctx` is cancelled, preventing busy-wait. Capability
+matching checks agent type, health status, and workload flags declared in
+`requirements`.
+
+---
+
+## Multi-Provider Pool
+
+`MultiProviderPool` (in `pkg/agent`) manages agents from multiple CLI providers
+under a single `AgentPool`-compatible facade. Selection strategy is provided by an
+`AgentSelector`:
+
+- **`RoundRobinSelector`** — cycles through available providers in round-robin order,
+  skipping providers whose agents do not satisfy the caller's `AgentRequirements`.
+- **`PreferenceSelector`** — walks a priority-ordered list of provider names and
+  returns the first one that has an agent meeting requirements; falls back to any
+  available provider.
+
+```mermaid
+flowchart LR
+    C[Caller] --> MPP[MultiProviderPool]
+    MPP --> AS[AgentSelector]
+    AS --> P1[opencode pool]
+    AS --> P2[claude-code pool]
+    AS --> P3[gemini pool]
+    AS --> P4[junie pool]
+    AS --> P5[qwen-code pool]
+```
+
+---
+
+## Adapter Pattern
 
 ```
-pkg/
-  agent/     -- Agent interface, AgentPool, MultiProviderPool, HealthMonitor, CircuitBreaker
-  adapter/   -- BaseAdapter + 5 CLI agent adapters
-  protocol/  -- PipeTransport (JSON-lines) and FileTransport (inbox/outbox/shared)
-  parser/    -- ResponseParser (JSON/action/issue extraction from raw LLM output)
-  config/    -- .env loading, agent path resolution, validation
-cmd/
-  orchestrator/ -- CLI entry point
+Agent interface
+  └─ BaseAdapter (pkg/adapter — shared process management)
+       ├─ ClaudeCodeAgent        (parses claude-code streaming JSON)
+       ├─ GeminiAgent            (parses gemini JSON output)
+       ├─ JunieAgent             (parses junie output format)
+       ├─ OpenCodeAgent          (parses opencode JSON-lines output)
+       ├─ OpenCodeAdapter        (OpenCode process driver; headless via OpenCodeConfig.Headless)
+       └─ QwenCodeAgent          (parses qwen-code output format)
 ```
 
-## Agent Management
+`BaseAdapter` owns process lifecycle: `Start` (exec + pipe setup), `Stop` (SIGTERM
+with timeout, SIGKILL fallback), `Restart`, and `IsAlive`. Each concrete adapter
+only implements `ParseResponse(raw string) (*Response, error)` and declares its
+binary name and default flags, keeping per-agent code minimal.
 
-### Agent Interface
+`OpenCodeAdapter` (`pkg/adapter/opencode_headless.go`) drives the OpenCode CLI
+process. It runs in headless, non-interactive mode when `OpenCodeConfig.Headless`
+is set, isolating the headless flag and config differences in one place.
 
-```go
-type Agent interface {
-    ID() string
-    Name() string
-    Start(ctx context.Context) error
-    Stop(ctx context.Context) error
-    IsRunning() bool
-    Health(ctx context.Context) HealthStatus
-    Send(ctx context.Context, prompt string) (Response, error)
-    SendStream(ctx context.Context, prompt string) (<-chan StreamChunk, error)
-    SendWithAttachments(ctx context.Context, prompt string, attachments []Attachment) (Response, error)
-    OutputDir() string
-    Capabilities() AgentCapabilities
-    SupportsVision() bool
-    ModelInfo() ModelInfo
-}
+---
+
+## Hybrid Communication Protocol
+
+### Pipe Transport (real-time)
+
+`protocol.PipeTransport` attaches to the agent's stdin/stdout as a JSON-lines stream:
+
+```
+stdin  →  {"type":"prompt","content":"...","id":"req-1"}\n
+stdout ←  {"type":"response","content":"...","id":"req-1"}\n
 ```
 
-### Agent Pool
+Each message is a single newline-terminated JSON object. The transport enforces a
+configurable response length limit and a read deadline per request.
 
-`AgentPool` is thread-safe (`sync.Mutex` + `sync.Cond`):
-- `Register(agent)` -- adds an agent to the pool
-- `Acquire(ctx, requirements)` -- blocks until a matching agent is available (supports context cancellation)
-- `Release(agent)` -- returns an agent for reuse
-- `HealthCheck(ctx)` -- runs health checks on all registered agents
-- `Shutdown(ctx)` -- gracefully stops all agents
+### File Transport (artifact exchange)
 
-### MultiProviderPool
+`protocol.FileTransport` manages three directories per agent session:
 
-Manages separate pools per provider type. `AgentSelector` interface chooses the best provider for a given request. Default: round-robin selection.
+| Directory | Purpose |
+|-----------|---------|
+| `inbox/` | Files written by the caller for the agent to read |
+| `outbox/` | Files written by the agent for the caller to consume |
+| `shared/` | Bidirectional scratch space for large artifacts |
 
-Supported providers: `opencode`, `claude-code`, `gemini`, `junie`, `qwen-code`.
+File transport is used for code files, diffs, and other payloads too large or
+ill-suited for inline JSON.
 
-## Adapter Layer
+---
 
-`BaseAdapter` provides shared process management (start/stop/health). Each concrete adapter only implements parsing:
+## Circuit Breaker
 
-| Adapter | Agent | Communication |
-|---------|-------|---------------|
-| `OpenCodeAdapter` | OpenCode CLI | Pipe (stdin/stdout) |
-| `OpenCodeHeadlessAdapter` | OpenCode headless | Pipe (JSON-lines) |
-| `ClaudeCodeAdapter` | Claude Code CLI | Pipe (stdin/stdout) |
-| `GeminiAdapter` | Gemini CLI | Pipe (stdin/stdout) |
-| `JunieAdapter` | JetBrains Junie | File (inbox/outbox) |
-| `QwenCodeAdapter` | Qwen Code CLI | Pipe (stdin/stdout) |
+Each agent has an independent `CircuitBreaker`:
 
-## Communication Protocols
+- **Closed** (healthy) — requests pass through normally.
+- **Open** (unhealthy) — after 3 consecutive failures, requests are rejected
+  immediately for a 60-second cool-down period.
+- **Half-Open** — after the cool-down, one probe request is allowed; success
+  returns to Closed, failure resets the 60-second timer.
 
-### PipeTransport
+`HealthMonitor` runs a background goroutine that periodically calls `Agent.Ping`
+and feeds results into the circuit breaker, allowing recovery without requiring
+an incoming request.
 
-JSON-lines over stdin/stdout. Each message is a single JSON object terminated by newline. Used by most adapters.
-
-### FileTransport
-
-Inbox/outbox/shared directory-based exchange. The orchestrator writes a prompt file to the agent's inbox; the agent writes its response to the outbox. Used by Junie and other agents that lack pipe support.
+---
 
 ## Response Parser
 
-`ResponseParser` extracts structured data from raw LLM text output:
-- JSON block extraction (fenced code blocks)
-- Action extraction (file edits, commands, tool calls)
-- Issue extraction (errors, warnings)
-- Security: path traversal protection, response length limits, API key masking
+`parser.ResponseParser` operates on raw string output and extracts:
 
-## Fault Tolerance
+| Extraction | Pattern |
+|------------|---------|
+| JSON blocks | First valid JSON object or array in the output |
+| Actions | Lines matching `ACTION: <verb> <target>` convention |
+| Issues | Lines matching `ISSUE:` or `ERROR:` prefixes |
 
-- **CircuitBreaker**: 3 consecutive failures opens the circuit for 60 seconds. Prevents cascading failures when an agent process is unresponsive.
-- **HealthMonitor**: Periodic health checks on all agents. Tracks status, latency, consecutive failures.
-- **Graceful shutdown**: Pool shutdown stops all agents in order, respecting context deadlines.
+The parser is intentionally stateless and side-effect-free, making it safe to call
+concurrently from multiple goroutines without locking.
 
-## Key Design Decisions
+---
 
-- **BaseAdapter pattern**: Shared process lifecycle logic reduces duplication across 5+ adapters.
-- **Blocking Acquire**: `sync.Cond` enables efficient waiting without polling. Context cancellation ensures no goroutine leaks.
-- **Protocol abstraction**: Pipe vs. file transport is hidden behind the Agent interface. Callers do not know or care how the agent communicates.
-- **Security-first parsing**: All extracted file paths are validated against traversal attacks. Response sizes are bounded.
+## Security Constraints
+
+- **Path traversal protection** — `FileTransport` rejects any path containing `..`
+  or absolute segments outside the session directory.
+- **Response length limit** — `PipeTransport` returns an error if a single response
+  exceeds the configured byte ceiling (default 1 MB).
+- **API key masking** — Config loader redacts `*_API_KEY` values in log output.
+- **Command injection prevention** — Agent binary paths are validated against an
+  allowlist; no shell interpolation is used when spawning processes.
