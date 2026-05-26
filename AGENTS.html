@@ -1565,6 +1565,7 @@ intentional skips</li>
 <hr />
 <!-- END host-power-management addendum (CONST-033) -->
 
+<p>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD</p>
 <h2 id="mandatory-anti-bluff-covenant--end-user-quality-guarantee-user-mandate-2026-04-28">MANDATORY
 ANTI-BLUFF COVENANT — END-USER QUALITY GUARANTEE (User mandate,
 2026-04-28)</h2>
@@ -2288,6 +2289,161 @@ gate FAILs.</p>
 <code>Constitution.md</code> §11.4.41.</p>
 <p>Non-compliance is a release blocker regardless of context.</p>
 <hr />
+<p>=======</p>
+<!-- CONST-035 anti-bluff addendum (cascaded) -->
+
+<h2 id="const-035--anti-bluff-tests--challenges-mandatory-inherits-from-root">CONST-035
+— Anti-Bluff Tests &amp; Challenges (mandatory; inherits from root)</h2>
+<p>Tests and Challenges in this submodule MUST verify the product, not
+the LLM&#39;s mental model of the product. A test that passes when the
+feature is broken is worse than a missing test — it gives false
+confidence and lets defects ship to users. Functional probes at the
+protocol layer are mandatory:</p>
+<ul>
+<li>TCP-open is the FLOOR, not the ceiling. Postgres → execute
+<code>SELECT 1</code>. Redis → <code>PING</code> returns
+<code>PONG</code>. ChromaDB → <code>GET /api/v1/heartbeat</code> returns
+200. MCP server → TCP connect + valid JSON-RPC handshake. HTTP gateway →
+real request, real response, non-empty body.</li>
+<li>Container <code>Up</code> is NOT application healthy. A
+<code>docker/podman ps</code> <code>Up</code> status only means PID 1 is
+running; the application may be crash-looping internally.</li>
+<li>No mocks/fakes outside unit tests (already CONST-030; CONST-035
+raises the cost of a mock-driven false pass to the same severity as a
+regression).</li>
+<li>Re-verify after every change. Don&#39;t assume a previously-passing test
+still verifies the same scope after a refactor.</li>
+<li>Verification of CONST-035 itself: deliberately break the feature
+(e.g. <code>kill &lt;service&gt;</code>, swap a password). The test MUST
+fail. If it still passes, the test is non-conformant and MUST be
+tightened.</li>
+</ul>
+<h2 id="const-033-clarification--distinguishing-host-events-from-sluggishness">CONST-033
+clarification — distinguishing host events from sluggishness</h2>
+<p>Heavy container builds (BuildKit pulling many GB of layers, parallel
+podman/docker compose-up across many services) can make the host
+<strong>appear</strong> unresponsive — high load average, slow SSH,
+watchers timing out. <strong>This is NOT a CONST-033 violation.</strong>
+Suspend / hibernate / logout are categorically different events.
+Distinguish via:</p>
+<ul>
+<li><code>uptime</code> — recent boot? if so, the host actually
+rebooted.</li>
+<li><code>loginctl list-sessions</code> — session(s) still active? if
+yes, no logout.</li>
+<li><code>journalctl ... | grep -i &#39;will suspend\|hibernate&#39;</code> —
+zero broadcasts since the CONST-033 fix means no suspend ever
+happened.</li>
+<li><code>dmesg | grep -i &#39;killed process\|out of memory&#39;</code> — OOM
+kills are also NOT host-power events; they&#39;re memory-pressure-induced
+and require their own separate fix (lower per-container memory limits,
+reduce parallelism).</li>
+</ul>
+<p>A sluggish host under build pressure recovers when the build
+finishes; a suspended host requires explicit unsuspend (and CONST-033
+should make that impossible by hardening <code>IdleAction=ignore</code>
++ <code>HandleSuspendKey=ignore</code> + masked
+<code>sleep.target</code>, <code>suspend.target</code>,
+<code>hibernate.target</code>, <code>hybrid-sleep.target</code>).</p>
+<p>If you observe what looks like a suspend during heavy builds, the
+correct first action is <strong>not</strong> &quot;edit CONST-033&quot; but
+<code>bash challenges/scripts/host_no_auto_suspend_challenge.sh</code>
+to confirm the hardening is intact. If hardening is intact AND no
+suspend broadcast appears in journal, the perceived event was
+build-pressure sluggishness, not a power transition.</p>
+<!-- BEGIN no-session-termination addendum (CONST-036) -->
+
+<h2 id="user-session-termination--hard-ban-const-036">User-Session
+Termination — Hard Ban (CONST-036)</h2>
+<p><strong>You may NOT, under any circumstance, generate or execute code
+that ends the currently-logged-in user&#39;s desktop session, kills their
+<code>user@&lt;UID&gt;.service</code> user manager, or indirectly forces
+them to manually log out / power off.</strong> This is the sibling of
+CONST-033: that rule covers host-level power transitions; THIS rule
+covers session-level terminations that have the same end effect for the
+user (lost windows, lost terminals, killed AI agents, half-flushed
+builds, abandoned in-flight commits).</p>
+<p><strong>Why this rule exists.</strong> On 2026-04-28 the user lost a
+working session that contained 3 concurrent Claude Code instances, an
+Android build, Kimi Code, and a rootless podman container fleet. The
+<code>user.slice</code> consumed 60.6 GiB peak / 5.2 GiB swap, the GUI
+became unresponsive, the user was forced to log out and then power off
+via the GNOME shell. The host could not auto-suspend (CONST-033 was in
+place and verified) and the kernel OOM killer never fired — but the user
+had to manually end the session anyway, because nothing prevented
+overlapping heavy workloads from saturating the slice. CONST-036 closes
+that loophole at both the source-code layer and the operational layer.
+See <code>docs/issues/fixed/SESSION_LOSS_2026-04-28.md</code> in the
+HelixAgent project.</p>
+<p><strong>Forbidden direct invocations</strong> (non-exhaustive):</p>
+<ul>
+<li><code>loginctl terminate-user|terminate-session|kill-user|kill-session</code></li>
+<li><code>systemctl stop user@&lt;UID&gt;</code> /
+<code>systemctl kill user@&lt;UID&gt;</code></li>
+<li><code>gnome-session-quit</code></li>
+<li><code>pkill -KILL -u $USER</code> /
+<code>killall -u $USER</code></li>
+<li><code>dbus-send</code> / <code>busctl</code> calls to
+<code>org.gnome.SessionManager.Logout|Shutdown|Reboot</code></li>
+<li><code>echo X &gt; /sys/power/state</code></li>
+<li><code>/usr/bin/poweroff</code>, <code>/usr/bin/reboot</code>,
+<code>/usr/bin/halt</code></li>
+</ul>
+<p><strong>Indirect-pressure clauses:</strong></p>
+<ol type="1">
+<li>Do not spawn parallel heavy workloads casually; check
+<code>free -h</code> first; keep <code>user.slice</code> under 70% of
+physical RAM.</li>
+<li>Long-lived background subagents go in <code>system.slice</code>.
+Rootless podman containers die with the user manager.</li>
+<li>Document AI-agent concurrency caps in CLAUDE.md.</li>
+<li>Never script &quot;log out and back in&quot; recovery flows.</li>
+</ol>
+<p><strong>Defence:</strong> every project ships
+<code>scripts/host-power-management/check-no-session-termination-calls.sh</code>
+(static scanner) and
+<code>challenges/scripts/no_session_termination_calls_challenge.sh</code>
+(challenge wrapper). Both MUST be wired into the project&#39;s CI /
+<code>run_all_challenges.sh</code>.</p>
+<!-- END no-session-termination addendum (CONST-036) -->
+
+<hr />
+<h2 id="article-xi-119--anti-bluff-forensic-anchor-cascaded-from-parent-constitutionmd">Article
+XI §11.9 — Anti-Bluff Forensic Anchor (cascaded from parent
+CONSTITUTION.md)</h2>
+<blockquote>
+<p>Verbatim user mandate (2026-04-29, reasserted multiple times across
+2026-05): <em>&quot;We had been in position that all tests do execute with
+success and all Challenges as well, but in reality the most of the
+features does not work and can&#39;t be used! This MUST NOT be the case and
+execution of tests and Challenges MUST guarantee the quality, the
+completion and full usability by end users of the product!&quot;</em></p>
+</blockquote>
+<p>Operative rule: <strong>The bar for shipping is not &quot;tests pass&quot; but
+&quot;users can use the feature.&quot;</strong> Every PASS in this codebase MUST
+carry positive runtime evidence captured during execution. Metadata-only
+/ configuration-only / absence-of-error / grep-based PASS without
+runtime evidence are critical defects regardless of how green the
+summary line looks. No false-success results are tolerable.</p>
+<p>This anchor MUST remain in this submodule&#39;s CONSTITUTION.md,
+CLAUDE.md, and AGENTS.md alongside CONST-047 — see the parent
+repository&#39;s <code>CONSTITUTION.md</code> for the full text.</p>
+<hr />
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>4350384757760aabcf8df00be609fff98e9f1805</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
 <h2 id="const-048-full-automation-coverage-mandate-cascaded-from-constitution-submodule-11425">CONST-048:
 Full-Automation-Coverage Mandate (cascaded from constitution submodule
 §11.4.25)</h2>
@@ -2302,20 +2458,59 @@ covered! Nothing less than this does not give us a chance to deliver
 stable product! This is mandatory constraint which MUST BE respected
 without ignoring, skipping, slacking or forgetting it!&quot;</em></p>
 </blockquote>
+<p>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD No feature / functionality / flow /
+use case / edge case / service / application on any supported platform
+of this submodule is deliverable until covered by automation tests
+proving six invariants: (1) anti-bluff posture with captured runtime
+evidence (CONST-035); (2) proof of working capability end-to-end on
+target topology; (3) implementation matching documented promise; (4) no
+open issues/bugs surfaced; (5) full documentation in sync; (6)
+four-layer test floor (pre-build + post-build + runtime + paired
+mutation).</p>
+<h1 id="cascade-requirement-this-anchor-verbatim-or-by-const-048-id-reference-must-remain-in-this-submodules-constitutionmd-claudemd-and-agentsmd-and-propagate-recursively-to-any-nested-owned-by-us-submodule-see-parent-projects-constitutionmd-const-048-and-constitution-submodule-constitutionmd-11425-for-the-full-mandate"><strong>Cascade
+requirement:</strong> This anchor (verbatim or by CONST-048 ID
+reference) MUST remain in this submodule&#39;s CONSTITUTION.md, CLAUDE.md,
+and AGENTS.md, and propagate recursively to any nested owned-by-us
+submodule. See parent project&#39;s <code>CONSTITUTION.md</code> §CONST-048
+and constitution submodule <code>Constitution.md</code> §11.4.25 for the
+full mandate.</h1>
 <p>No feature / functionality / flow / use case / edge case / service /
-application on any supported platform of this submodule is deliverable
-until covered by automation tests proving six invariants: (1) anti-bluff
-posture with captured runtime evidence (CONST-035); (2) proof of working
-capability end-to-end on target topology; (3) implementation matching
-documented promise; (4) no open issues/bugs surfaced; (5) full
-documentation in sync; (6) four-layer test floor (pre-build + post-build
-+ runtime + paired mutation).</p>
+application on any supported platform of HelixCode may be considered
+deliverable until covered by automation tests proving six invariants:
+(1) anti-bluff posture (CONST-035) with captured runtime evidence; (2)
+proof of working capability end-to-end on target topology (no mocks
+beyond unit tests — see CONST-050); (3) implementation matches
+documented promise; (4) no open issues/bugs surfaced — cross-checked
+against §11.4.15 / §11.4.16 trackers; (5) full documentation in sync per
+§11.4.12; (6) four-layer test floor per §1 (pre-build + post-build +
+runtime + paired mutation).</p>
+<p>Consuming projects MUST publish a coverage ledger (feature × platform
+× invariant-1..6 × status) regenerated as part of the release-gate
+sweep. Gaps tracked per §11.4.15 (<code>UNCONFIRMED:</code> /
+<code>PENDING_FORENSICS:</code> / <code>OPERATOR-BLOCKED:</code> with
+§11.4.21 audit) — rows that quietly omit a platform are CONST-048
+violations.</p>
 <p><strong>Cascade requirement:</strong> This anchor (verbatim or by
-CONST-048 ID reference) MUST remain in this submodule&#39;s CONSTITUTION.md,
-CLAUDE.md, and AGENTS.md, and propagate recursively to any nested
-owned-by-us submodule. See parent project&#39;s <code>CONSTITUTION.md</code>
-§CONST-048 and constitution submodule <code>Constitution.md</code>
-§11.4.25 for the full mandate.</p>
+<code>CONST-048</code> ID reference) MUST appear in every owned
+submodule&#39;s <code>CONSTITUTION.md</code>, <code>CLAUDE.md</code>, and
+<code>AGENTS.md</code>. Severity-equivalent to a §11.4 PASS-bluff at the
+release-gate layer. No escape hatch. See constitution submodule
+<code>Constitution.md</code> §11.4.25 for the full mandate.</p>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>4350384757760aabcf8df00be609fff98e9f1805</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
 <h2 id="const-049-constitution-submodule-update-workflow-mandate-cascaded-from-constitution-submodule-11426">CONST-049:
 Constitution-Submodule Update Workflow Mandate (cascaded from
 constitution submodule §11.4.26)</h2>
@@ -2329,7 +2524,7 @@ MUST BE carefully resolved! Nothing can be broken, made faulty,
 corrupted or unusable! After merging full validation and verification
 MUST BE done!&quot;</em></p>
 </blockquote>
-<p>Before ANY modification to
+<p>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD Before ANY modification to
 <code>constitution/{Constitution,CLAUDE,AGENTS}.md</code> in the parent
 project, the agent or operator MUST execute the 7-step pipeline: (1)
 fetch + pull first inside the constitution submodule worktree; (2) apply
@@ -2343,12 +2538,66 @@ union of governance content (force-push forbidden per CONST-043 / §9.2);
 re-run cascade verifier (CONST-047); (7) bump consuming project&#39;s
 <code>.gitmodules</code> pointer to the new constitution HEAD in the
 SAME commit as cascade work.</p>
+<h1 id="cascade-requirement-this-anchor-verbatim-or-by-const-049-id-reference-must-remain-in-this-submodules-constitutionmd-claudemd-and-agentsmd-and-propagate-recursively-to-any-nested-owned-by-us-submodule-see-parent-projects-constitutionmd-const-049-and-constitution-submodule-constitutionmd-11426-for-the-full-mandate"><strong>Cascade
+requirement:</strong> This anchor (verbatim or by CONST-049 ID
+reference) MUST remain in this submodule&#39;s CONSTITUTION.md, CLAUDE.md,
+and AGENTS.md, and propagate recursively to any nested owned-by-us
+submodule. See parent project&#39;s <code>CONSTITUTION.md</code> §CONST-049
+and constitution submodule <code>Constitution.md</code> §11.4.26 for the
+full mandate.</h1>
+<p>Before ANY modification to <code>constitution/Constitution.md</code>,
+<code>constitution/CLAUDE.md</code>, or
+<code>constitution/AGENTS.md</code>, the agent or operator MUST execute
+the following 7-step pipeline in order:</p>
+<ol type="1">
+<li><strong>Fetch + pull first</strong> inside the constitution
+submodule worktree — every configured remote fetched, then
+<code>git pull --ff-only</code> (or <code>--rebase</code> if non-FF;
+NEVER <code>--strategy=ours</code> /
+<code>--allow-unrelated-histories</code> without explicit
+authorization).</li>
+<li><strong>Apply the change</strong> with §11.4.17 classification +
+verbatim mandate quote.</li>
+<li><strong>Validate before commit</strong> —
+<code>meta_test_inheritance.sh</code> (or equivalent), no merge-conflict
+markers, cross-file consistency.</li>
+<li><strong>Commit + push to ALL upstreams</strong> — governance files
+only (NEVER <code>git add -A</code>); push to every configured remote.
+One-upstream commit = CONST-049 violation (also CONST-038/§6.W and
+§2.1).</li>
+<li><strong>Conflict resolution</strong> preserving union of governance
+content. Force-push to bypass conflicts is FORBIDDEN (CONST-043 /
+§9.2).</li>
+<li><strong>Post-merge validation</strong> —
+<code>git submodule update --remote --init</code> + re-run cascade
+verifier (CONST-047) confirming the new clause reaches every owned
+submodule.</li>
+<li><strong>Bump consuming project pointer</strong> —
+<code>.gitmodules</code>-tracked submodule pointer advanced to the new
+constitution HEAD in the SAME commit as cascade work.</li>
+</ol>
 <p><strong>Cascade requirement:</strong> This anchor (verbatim or by
-CONST-049 ID reference) MUST remain in this submodule&#39;s CONSTITUTION.md,
-CLAUDE.md, and AGENTS.md, and propagate recursively to any nested
-owned-by-us submodule. See parent project&#39;s <code>CONSTITUTION.md</code>
-§CONST-049 and constitution submodule <code>Constitution.md</code>
-§11.4.26 for the full mandate.</p>
+<code>CONST-049</code> ID reference) MUST appear in every owned
+submodule&#39;s <code>CONSTITUTION.md</code>, <code>CLAUDE.md</code>, and
+<code>AGENTS.md</code>. Severity-equivalent to a force-push without
+CONST-043 / §9.2 authorization. No escape hatch. See constitution
+submodule <code>Constitution.md</code> §11.4.26 for the full
+mandate.</p>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>4350384757760aabcf8df00be609fff98e9f1805</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
 <h2 id="const-050-no-fakes-beyond-unit-tests--100-test-type-coverage-mandate-cascaded-from-constitution-submodule-11427">CONST-050:
 No-Fakes-Beyond-Unit-Tests + 100%-Test-Type-Coverage Mandate (cascaded
 from constitution submodule §11.4.27)</h2>
@@ -2370,14 +2619,15 @@ HelixQA QA autonomous sessions! All required dependency Submodules MUST
 BE added into the project as well (fully recursive!!!).&quot;</em></p>
 </blockquote>
 <p>Two cooperating invariants:</p>
-<p><strong>(A) No-fakes-beyond-unit-tests.</strong> Mocks, stubs, fakes,
-placeholders, <code>TODO</code>, <code>FIXME</code>, &quot;for now&quot;, &quot;in
-production this would&quot;, or empty-implementation patterns are PERMITTED
-only in unit-test sources. Every other test type — integration, E2E,
-full automation, security, DDoS, scaling, chaos, stress, performance,
-benchmarking, UI, UX, Challenges, HelixQA — MUST exercise this
-submodule&#39;s real, fully implemented system against real infrastructure.
-Production code MUST NOT import mock paths.</p>
+<p>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD <strong>(A)
+No-fakes-beyond-unit-tests.</strong> Mocks, stubs, fakes, placeholders,
+<code>TODO</code>, <code>FIXME</code>, &quot;for now&quot;, &quot;in production this
+would&quot;, or empty-implementation patterns are PERMITTED only in unit-test
+sources. Every other test type — integration, E2E, full automation,
+security, DDoS, scaling, chaos, stress, performance, benchmarking, UI,
+UX, Challenges, HelixQA — MUST exercise this submodule&#39;s real, fully
+implemented system against real infrastructure. Production code MUST NOT
+import mock paths.</p>
 <p><strong>(B) 100% test-type coverage.</strong> Codebase MUST be
 covered by every supported test type the domain warrants: unit,
 integration, E2E, full-automation, security, DDoS, scaling, chaos,
@@ -2442,12 +2692,193 @@ consumes MUST be accessible from the consuming project&#39;s root at
 own-org submodule chains are FORBIDDEN</strong> — this submodule MUST
 NOT have its own <code>.gitmodules</code> entries pulling in further
 owned-by-us repos. Third-party submodules are exempt.</p>
+<h1 id="cascade-requirement-this-anchor-verbatim-or-by-const-051-id-reference-must-remain-in-this-submodules-constitutionmd-claudemd-and-agentsmd-and-propagate-recursively-to-any-nested-owned-by-us-submodule-see-parent-projects-constitutionmd-const-051-and-constitution-submodule-constitutionmd-11428-for-the-full-mandate"><strong>Cascade
+requirement:</strong> This anchor (verbatim or by CONST-051 ID
+reference) MUST remain in this submodule&#39;s CONSTITUTION.md, CLAUDE.md,
+and AGENTS.md, and propagate recursively to any nested owned-by-us
+submodule. See parent project&#39;s <code>CONSTITUTION.md</code> §CONST-051
+and constitution submodule <code>Constitution.md</code> §11.4.28 for the
+full mandate.</h1>
+<p><strong>(A) No-fakes-beyond-unit-tests.</strong> Mocks, stubs, fakes,
+placeholders, <code>TODO</code>, <code>FIXME</code>, &quot;for now&quot;, &quot;in
+production this would&quot;, or empty-implementation patterns are PERMITTED
+only in unit-test sources (<code>*_test.go</code> files invoked without
+the integration build tag; <code>HelixCode/tests/unit/</code>; etc.).
+Every other test type — integration, E2E, full automation, security,
+DDoS, scaling, chaos, stress, performance, benchmarking, UI, UX,
+Challenges, HelixQA — MUST exercise the real, fully implemented
+HelixCode system against real infrastructure (real PostgreSQL, real
+Redis, real LLM endpoints, real containers, real captured devices).
+Production code (anything under <code>HelixCode/cmd/</code>,
+<code>HelixCode/applications/</code>,
+<code>HelixCode/internal/&lt;pkg&gt;/&lt;file&gt;.go</code> not ending
+<code>_test.go</code>) MUST NOT import from
+<code>HelixCode/internal/mocks/</code>.</p>
+<p><strong>(B) 100% test-type coverage.</strong> HelixCode&#39;s codebase
+MUST be covered by every supported test type the domain warrants:</p>
+<ul>
+<li><strong>Unit</strong> — fast, isolated, mocks permitted per
+(A).</li>
+<li><strong>Integration</strong> — multi-component, no mocks, real
+backing services.</li>
+<li><strong>End-to-end (E2E)</strong> — full user-flow exercise on
+target topology.</li>
+<li><strong>Full automation</strong> — orchestrated suites exercising
+every feature × platform combination (CONST-048 coverage ledger).</li>
+<li><strong>Security</strong> — authn/authz boundaries, CONST-042
+secret-leak scans, input-fuzzing, dependency-CVE scanning, threat-model
+verification.</li>
+<li><strong>DDoS</strong> — request-flood resilience at advertised
+throughput tier.</li>
+<li><strong>Scaling</strong> — horizontal + vertical scale behaviour
+under linear load growth.</li>
+<li><strong>Chaos</strong> — controlled failure injection (network
+partition, process kill, disk full, clock skew).</li>
+<li><strong>Stress</strong> — sustained load above advertised tier.</li>
+<li><strong>Performance</strong> — latency / throughput / tail-latency
+invariants vs SLO baselines.</li>
+<li><strong>Benchmarking</strong> — micro + macro suites with historical
+p95-drift detection.</li>
+<li><strong>UI</strong> — visual-regression + DOM-state +
+interaction-flow coverage on every target platform&#39;s UI surface.</li>
+<li><strong>UX</strong> — flow-correctness + accessibility + i18n +
+visual-cue ordering (§11.4.23 composition).</li>
+<li><strong>Challenges</strong> — <code>vasic-digital/Challenges</code>
+submodule (at <code>./Challenges/</code>) fully incorporated;
+per-feature Challenge scripts with captured runtime evidence.</li>
+<li><strong>HelixQA</strong> — <code>HelixDevelopment/HelixQA</code>
+submodule (at <code>./HelixQA/</code>) fully incorporated; ALL written
+test banks executed; full autonomous QA sessions run as part of release
+gates with captured wire evidence per check.</li>
+</ul>
+<p><strong>Required dependency submodules</strong> (recursive per
+CONST-047):</p>
+<ul>
+<li>Challenges —
+<code>git@github.com:vasic-digital/Challenges.git</code> — incorporated
+at <code>./Challenges/</code>.</li>
+<li>HelixQA — <code>git@github.com:HelixDevelopment/HelixQA.git</code> —
+incorporated at <code>./HelixQA/</code>.</li>
+<li>Any additional functionality submodules under
+<code>vasic-digital/*</code> / <code>HelixDevelopment/*</code> orgs that
+HelixCode depends on — incorporate rather than duplicate work the orgs
+already maintain.</li>
+</ul>
+<p>Submodule pointers MUST be bumped to upstream HEAD in the SAME commit
+as any dependent cascade work (CONST-049 step 7). Pointer drift =
+CONST-050 violation.</p>
 <p><strong>Cascade requirement:</strong> This anchor (verbatim or by
-CONST-051 ID reference) MUST remain in this submodule&#39;s CONSTITUTION.md,
-CLAUDE.md, and AGENTS.md, and propagate recursively to any nested
-owned-by-us submodule. See parent project&#39;s <code>CONSTITUTION.md</code>
-§CONST-051 and constitution submodule <code>Constitution.md</code>
-§11.4.28 for the full mandate.</p>
+<code>CONST-050</code> ID reference) MUST appear in every owned
+submodule&#39;s <code>CONSTITUTION.md</code>, <code>CLAUDE.md</code>, and
+<code>AGENTS.md</code>. Severity-equivalent to a §11.4 PASS-bluff at the
+release-gate layer. No escape hatch. See constitution submodule
+<code>Constitution.md</code> §11.4.27 for the full mandate.</p>
+<h2 id="const-051-submodules-as-equal-codebase--decoupling--dependency-layout-mandate-cascaded-from-constitution-submodule-11428-1">CONST-051:
+Submodules-As-Equal-Codebase + Decoupling + Dependency-Layout Mandate
+(cascaded from constitution submodule §11.4.28)</h2>
+<blockquote>
+<p>Verbatim user mandate (2026-05-15): <em>&quot;All existing Submodules in
+the project that we are controlling and belong to some our organizations
+(vasic-digital, HelixDevelopment, red-elf, ATMOSphere1234321,
+Bear-Suite, BoatOS123456, Helix-Flow, Helix-Track, Server-Factory - we
+can ALWAYS check dynamically using GitHub and GitLab CLIs) are equal
+parts of the project&#39;s codebase! We MUST work on that code as much as we
+do with main project&#39;s codebase! All on equal basis! Equally important!
+We MUST take it into the account, analyze it, extend it, create missing
+tests, do full testing of it, fill the gaps (if any), fix any issues
+that we discover or they pop-up, write and extend the documentation,
+user guides, manulas, diagrams, graphs, SQL definitions, Website(s) and
+all other relevant materials! We MUST NEVER modify Submodules to bring
+into them any project specific context since they all MUST BE ALWAYS
+fully decoupled, project not-aware, fully reusable and modular (by any
+other project(s)), completely testable! All Submodule dependencies that
+are used by Submodule MUST BE acessed from the root of the project! We
+MUST NOT have nested Submodule dependencies but accessing each from
+proper location from the root of the project - directly from project&#39;s
+root project_name/submodule_name or some more proper structure
+project_name/submodules/submodule_name!&quot;</em></p>
+</blockquote>
+<p>Three cooperating invariants apply to every HelixCode-owned submodule
+(those whose upstream <code>origin</code> lives under
+<code>vasic-digital</code>, <code>HelixDevelopment</code>,
+<code>red-elf</code>, <code>ATMOSphere1234321</code>,
+<code>Bear-Suite</code>, <code>BoatOS123456</code>,
+<code>Helix-Flow</code>, <code>Helix-Track</code>,
+<code>Server-Factory</code>, or any subsequently authorised org):</p>
+<p><strong>(A) Equal-codebase.</strong> Every owned-by-us submodule is
+an <strong>equal part</strong> of HelixCode&#39;s codebase. The same
+engineering practice — analysis, extension, test creation, gap-filling,
+bug-fix, documentation (user manuals, guides, diagrams, graphs, SQL
+definitions, website pages, all materials) — applies to each owned
+submodule on equal basis. A round of work that improves only HelixCode&#39;s
+main while leaving an owned-submodule deficiency unaddressed is a
+CONST-051 violation, severity-equivalent to a §11.4 PASS-bluff at the
+project-scope layer. The §11.4.25 / CONST-048 coverage ledger MUST list
+every owned submodule as an in-scope target.</p>
+<p><strong>(B) Decoupling / reusability.</strong> Owned submodules MUST
+remain fully decoupled from HelixCode (and any other consuming project).
+No HelixCode-specific context, hardcoded paths, hostnames, asset names,
+or runtime assumptions may be introduced into an owned submodule&#39;s
+source tree. When a submodule needs information from HelixCode, the
+honest path is configuration injection (env var, config file,
+constructor parameter) — never a hardcoded reach into the parent&#39;s tree.
+Every owned submodule MUST be project-not-aware, fully reusable,
+modular, and completely testable as a standalone repository.</p>
+<p><strong>(C) Dependency-layout.</strong> Every dependency that an
+owned submodule consumes MUST be accessible from HelixCode&#39;s root at one
+of two canonical paths:</p>
+<ul>
+<li><code>&lt;repo_root&gt;/&lt;submodule_name&gt;/</code> (flat layout
+— current HelixCode layout for Challenges, HelixQA, Containers,
+Security, etc.)</li>
+<li><code>&lt;repo_root&gt;/submodules/&lt;submodule_name&gt;/</code>
+(grouped layout — alternate)</li>
+</ul>
+<p><strong>Nested own-org submodule chains are FORBIDDEN.</strong> A
+submodule MUST NOT have its own <code>.gitmodules</code> entries pulling
+in further owned-by-us repos. Every dependency required by submodule X
+is added to HelixCode&#39;s root at the canonical path; X reaches it via
+documented import / SDK path / runtime resolver — never via its own
+nested submodule pointer. Third-party submodules (not under our orgs)
+are exempt — they MAY appear at any depth.</p>
+<p>The owned-org list is dynamically discoverable at any time via
+<code>gh org list</code> / <code>glab</code> CLIs or the orgs&#39; public
+APIs.</p>
+<p><strong>Cascade requirement:</strong> This anchor (verbatim or by
+<code>CONST-051</code> ID reference) MUST appear in every owned
+submodule&#39;s <code>CONSTITUTION.md</code>, <code>CLAUDE.md</code>, and
+<code>AGENTS.md</code>. Severity-equivalent to a §11.4 PASS-bluff at the
+codebase-completeness layer. No escape hatch. See constitution submodule
+<code>Constitution.md</code> §11.4.28 for the full mandate (audit gates,
+mutation pairs, workflow integration).</p>
+<hr />
+<h2 id="amendment-process">Amendment Process</h2>
+<p>Constitution amendments require:</p>
+<ol type="1">
+<li>Written proposal with rationale</li>
+<li>Challenge demonstrating the need</li>
+<li>72-hour review period</li>
+<li>Approval by project architect</li>
+<li>Update to all submodule governance files</li>
+</ol>
+<hr />
+<p><em>This Constitution is the supreme law of the HelixCode project. No
+code, test, or process may contradict it.</em></p>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>4350384757760aabcf8df00be609fff98e9f1805</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
 <h2 id="const-052-lowercase-snake_case-naming-mandate-cascaded-from-constitution-submodule-11429">CONST-052:
 Lowercase-Snake_Case-Naming Mandate (cascaded from constitution
 submodule §11.4.29)</h2>
@@ -2470,11 +2901,12 @@ work with both Upstreams and upstreams directory. ... NOTE: Rules
 lowercase / snake-case do apply to all project files as well and
 references to it and from them!&quot;</em></p>
 </blockquote>
-<p>Every directory, submodule, and file in this submodule MUST use
-lowercase snake_case names. Existing non-compliant names MUST be renamed
-atomically with updates to every reference (configs, docs, source-code
-imports, governance files). Reference drift after rename = CONST-052
-violation of equal severity to the rename itself.</p>
+<p>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD Every directory, submodule, and
+file in this submodule MUST use lowercase snake_case names. Existing
+non-compliant names MUST be renamed atomically with updates to every
+reference (configs, docs, source-code imports, governance files).
+Reference drift after rename = CONST-052 violation of equal severity to
+the rename itself.</p>
 <p><strong>Common-sense exceptions (technology-preserving):</strong>
 language-mandated case for Java/Kotlin/Android/Apple/C#/Swift INSIDE
 language-roots; vendor/upstream third-party submodules keep upstream
@@ -2490,12 +2922,69 @@ layouts; lowercase wins when both present.</p>
 <p><strong>Test coverage of renames</strong> (per CONST-050(B)):
 regression test for reference resolution + full test-type matrix run +
 anti-bluff wire-evidence captured.</p>
+<h1 id="cascade-requirement-this-anchor-verbatim-or-by-const-052-id-reference-must-remain-in-this-submodules-constitutionmd-claudemd-and-agentsmd-and-propagate-recursively-to-any-nested-owned-by-us-submodule-see-parent-projects-constitutionmd-const-052-and-constitution-submodule-constitutionmd-11429-for-the-full-mandate"><strong>Cascade
+requirement:</strong> This anchor (verbatim or by CONST-052 ID
+reference) MUST remain in this submodule&#39;s CONSTITUTION.md, CLAUDE.md,
+and AGENTS.md, and propagate recursively to any nested owned-by-us
+submodule. See parent project&#39;s <code>CONSTITUTION.md</code> §CONST-052
+and constitution submodule <code>Constitution.md</code> §11.4.29 for the
+full mandate.</h1>
+<p>Every directory, submodule, and file in HelixCode MUST use lowercase
+snake_case names. Existing non-compliant names (<code>HelixCode/</code>,
+<code>Challenges/</code>, <code>Containers/</code>,
+<code>HelixAgent/</code>, <code>HelixQA/</code>, <code>Security/</code>,
+<code>Github-Pages-Website/</code>, <code>Upstreams/</code>,
+<code>Dependencies/</code>, etc.) MUST be renamed as part of the phased
+migration opened by this clause. Every reference (configs, docs, links,
+source-code imports, governance files) MUST be updated atomically with
+the rename — reference drift after a rename is a CONST-052 violation of
+equal severity to the rename itself.</p>
+<p><strong>Common-sense exceptions (technology-preserving):</strong>
+language-mandated case for Java/Kotlin/Android/Apple/C#/Swift INSIDE the
+language root (submodule root follows our convention; subtree follows
+language convention); vendor/upstream third-party submodules keep
+upstream names; build artefacts (<code>node_modules</code>,
+<code>__pycache__</code>, <code>.git</code>, <code>target</code>,
+<code>build</code>, <code>bin</code>) keep tool-mandated names. The test
+&quot;does renaming break the technology?&quot; trumps the rule.</p>
+<p><strong><code>Upstreams/</code> → <code>upstreams/</code>
+transition:</strong> the constitution submodule&#39;s
+<code>install_upstreams.sh</code> (exported via
+<code>.bashrc</code>/<code>.zshrc</code>) supports BOTH
+<code>Upstreams/</code> and <code>upstreams/</code> directory layouts
+(commit <code>45d3678</code> of the constitution submodule); lowercase
+wins when both present.</p>
+<p><strong>Test coverage of renames</strong> (per CONST-050(B)): every
+rename batch ships with (i) regression test verifying every reference
+now resolves, (ii) full test-type matrix run post-rename, (iii)
+anti-bluff wire-evidence captured.</p>
+<p><strong>Phased execution</strong> per the operator&#39;s explicit
+instruction: comprehensive brainstorming → phase-divided plan →
+fine-grained tasks/subtasks → every change covered by every applicable
+test type. §11.4.20 subagent delegation for cross-cutting rename
+sweeps.</p>
 <p><strong>Cascade requirement:</strong> This anchor (verbatim or by
-CONST-052 ID reference) MUST remain in this submodule&#39;s CONSTITUTION.md,
-CLAUDE.md, and AGENTS.md, and propagate recursively to any nested
-owned-by-us submodule. See parent project&#39;s <code>CONSTITUTION.md</code>
-§CONST-052 and constitution submodule <code>Constitution.md</code>
-§11.4.29 for the full mandate.</p>
+<code>CONST-052</code> ID reference) MUST appear in every owned
+submodule&#39;s <code>CONSTITUTION.md</code>, <code>CLAUDE.md</code>, and
+<code>AGENTS.md</code>. Severity-equivalent to a §11.4 PASS-bluff at the
+reference-integrity layer. No escape hatch beyond the common-sense
+exceptions enumerated above. See constitution submodule
+<code>Constitution.md</code> §11.4.29 for the full mandate.</p>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>4350384757760aabcf8df00be609fff98e9f1805</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
 <h2 id="const-053-gitignore--no-versioned-build-artifacts-mandate-cascaded-from-constitution-submodule-11430">CONST-053:
 .gitignore + No-Versioned-Build-Artifacts Mandate (cascaded from
 constitution submodule §11.4.30)</h2>
@@ -2840,7 +3329,8 @@ fetch.</p>
 submodule&#39;s <code>CONSTITUTION.md</code>, <code>CLAUDE.md</code>, and
 <code>AGENTS.md</code>. Severity-equivalent to §11.4 PASS-bluff at the
 parallel-session-coordination layer. See constitution submodule
-<code>Constitution.md</code> §11.4.37 for the full mandate.</p>
+<code>Constitution.md</code> §11.4.37 for the full mandate.
+&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD</p>
 <!-- BEGIN helix-constitution-inheritance + anti-bluff escalation -->
 
 <h2 id="anti-bluff-end-user-quality-guarantee-escalated-via-helixconstitution">Anti-Bluff
@@ -2914,7 +3404,23 @@ escape hatch — no <code>--allow-operator-attended-only</code>,
 <code>--manual-validation-suffices</code> flag.</p>
 <p><strong>Canonical authority:</strong> constitution submodule
 Constitution.md §11.4.52.</p>
-<p>Non-compliance is a release blocker regardless of context.</p>
+<h1 id="non-compliance-is-a-release-blocker-regardless-of-context">Non-compliance
+is a release blocker regardless of context.</h1>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>4350384757760aabcf8df00be609fff98e9f1805</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
 <h2 id="const-061-pre-force-push-merge-first-mandate-cascaded-from-constitution-submodule-11441">CONST-061:
 Pre-Force-Push Merge-First Mandate (cascaded from constitution submodule
 §11.4.41)</h2>
@@ -2974,8 +3480,8 @@ submodule&#39;s <code>CONSTITUTION.md</code>, <code>CLAUDE.md</code>, and
 <code>AGENTS.md</code>. Severity-equivalent to a §11.4 PASS-bluff at the
 remote-data-integrity layer. See constitution submodule
 <code>Constitution.md</code> §11.4.41 for the full mandate.</p>
-<p><strong>§11.4.53 — Fixed_Summary parity mandate (User mandate,
-2026-05-18)</strong></p>
+<p>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD <strong>§11.4.53 — Fixed_Summary
+parity mandate (User mandate, 2026-05-18)</strong></p>
 <p><strong>Forensic anchor — verbatim user mandate
 (2026-05-18T17:55Z):</strong> &quot;Note: Just like for Issues we have
 Issues_Summary, for Fixed we MUST HAVE Fixed_Summary - like all other
@@ -3228,7 +3734,64 @@ this anchor literal across the ~44-file consumer fleet. Paired mutation
 strips the literal → gate FAILs.</p>
 <p><strong>Canonical authority:</strong> constitution submodule <a href="constitution/Constitution.md"><code>Constitution.md</code></a>
 §11.4.69.</p>
-<p>Non-compliance is a release blocker regardless of context.</p>
+<h1 id="non-compliance-is-a-release-blocker-regardless-of-context-1">Non-compliance
+is a release blocker regardless of context.</h1>
+<h2 id="const-068-shell-script-target-shell-parseability-mandate-cascaded-from-constitution-submodule-11467">CONST-068:
+Shell-script target-shell-parseability mandate (cascaded from
+constitution submodule §11.4.67)</h2>
+<blockquote>
+<p>Verbatim user mandate (2026-05-19): <em>&quot;any issue we spot must be
+fixed, bash scripts as well if they are broken!&quot;</em> + <em>&quot;Make sure
+that this is mandatory rule!&quot;</em></p>
+</blockquote>
+<blockquote>
+<p>Verbatim 2026-05-19 operator mandate: <em>&quot;all existing tests and
+Challenges do work in anti-bluff manner - they MUST confirm that all
+tested codebase really works as expected! We had been in position that
+all tests do execute with success and all Challenges as well, but in
+reality the most of the features does not work and can&#39;t be used! This
+MUST NOT be the case and execution of tests and Challenges MUST
+guarantee the quality, the completition and full usability by end users
+of the product!&quot;</em></p>
+</blockquote>
+<p>Every committed shell script MUST be parseable by its target
+interpreter (<code>sh -n</code> for <code>/bin/sh</code>,
+<code>bash -n</code> for <code>/bin/bash</code>, etc.) AND MUST declare
+a shebang matching its actual syntax usage. Bash-only constructs
+(<code>&gt;(...)</code>, <code>&lt;(...)</code>, <code>[[ ]]</code>,
+<code>&lt;&lt;&lt;</code>, arrays, <code>${var^^}</code>, etc.) used in
+scripts that may be invoked via <code>sh script.sh</code> MUST be
+wrapped in <code>eval</code> so the parser sees only a string (target
+shells like mksh parse the entire script before executing — runtime
+guards cannot save a parse-time rejection). Honest shebangs only:
+<code>#!/bin/bash</code> only if bash actually expected;
+<code>#!/bin/sh</code> requires POSIX-clean body. Fix at source per
+§11.4.1, never at callsites. Composes with §11.4.1 / §11.4.4 / §11.4.6 /
+§11.4.50 / §11.4.51. Pre-build gate
+<code>CM-SCRIPT-TARGET-SHELL-PARSEABLE</code> runs <code>sh -n</code> on
+every in-scope script. No escape hatch — no
+<code>--skip-parseability-check</code>, <code>--bash-only-script</code>,
+<code>--runtime-guard-suffices</code> flag.</p>
+<p><strong>Cascade requirement:</strong> This anchor (verbatim or by
+<code>CONST-068</code> ID reference) MUST appear in every owned
+submodule&#39;s <code>CONSTITUTION.md</code>, <code>CLAUDE.md</code>, and
+<code>AGENTS.md</code>. See constitution submodule
+<code>Constitution.md</code> §11.4.67 for the full mandate.</p>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>4350384757760aabcf8df00be609fff98e9f1805</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
 <h2 id="11468--positive-sink-side--downstream-evidence-mandate-cascaded-from-constitution-submodule-11468">§11.4.68
 — Positive Sink-Side / Downstream Evidence Mandate (cascaded from
 constitution submodule §11.4.68)</h2>
@@ -3434,7 +3997,8 @@ feature&#39;s tracker entry with a <code>Catalogue-Check:</code> field
 <code>AGENTS.md</code>. Severity-equivalent to a process violation;
 duplicate implementations landed without catalogue check are release
 blockers. <strong>Canonical authority:</strong> constitution submodule
-<code>Constitution.md</code> §11.4.74 for the full mandate.</p>
+<code>Constitution.md</code> §11.4.74 for the full mandate.
+&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD</p>
 <p><strong>§11.4.85 — Stress + Chaos Test Mandate (User mandate,
 2026-05-24)</strong></p>
 <p><strong>Forensic anchor — direct user mandate (verbatim,
@@ -3505,5 +4069,52 @@ end-user-channel proofs).</p>
 hatch — no <code>--skip-stress</code>, <code>--no-chaos</code>,
 <code>--happy-path-suffices</code>, <code>--stress-test-later</code>
 flag exists.</p>
+<p><strong>§11.4.87 — Endless-loop autonomous work + zero-idle agent
+dispatch + anti-bluff testing mandate (User mandate,
+2026-05-26)</strong></p>
+<p>When operator instructs an AI agent to &quot;continue in endless loop
+fully autonomously&quot; (or semantically-equivalent), the agent MUST treat
+as HARD-CONTRACT covenant covering five obligations: (A) continue until
+<code>docs/Issues.md</code> non-terminal Status entries = 0 AND
+<code>docs/CONTINUATION.md</code> §3 Active work empty AND no subagent
+in-flight AND no external dep in-flight; (B) dispatch background
+subagents for parallelisable work — main + subagents concurrent,
+&quot;waiting for results&quot; is the ONLY idle reason; (C) every closure lands
+four-layer test coverage per §11.4.4(b) with captured-evidence &quot;physical
+proofs&quot; (tinycap WAV + RMS / screen recording + ffprobe / dumpsys +
+sink-probe / uiautomator dump / sysfs snapshots) — metadata-only /
+config-only / absence-of-error / grep-without-runtime PASS are critical
+defects; (D) §11.4 anti-bluff covenant family operative end-to-end
+(tests AND HelixQA Challenges bound equally per forensic anchor &quot;tests
+pass but features don&#39;t work&quot;); (E) loop terminates ONLY on
+all-conditions-met, explicit operator STOP, host-safety demand (§12
+family), or scheduled wake on known-future-actionable signal.</p>
+<p>Composes with §11.4 / §11.4.1 / §11.4.2 / §11.4.4 / §11.4.5 / §11.4.6
+/ §11.4.7 / §11.4.20 / §11.4.27 / §11.4.42 / §11.4.43 / §11.4.50 /
+§11.4.52 / §11.4.58 / §11.4.68 / §11.4.69 / §11.4.70 / §11.4.83 /
+§11.4.85 / §11.4.86 / §12.10. Pre-build gate
+<code>CM-COVENANT-114-87-PROPAGATION</code> + paired §1.1 mutation.</p>
+<p><strong>Canonical authority:</strong> constitution submodule <a href="Constitution.md"><code>Constitution.md</code></a> §11.4.87.</p>
+<h1 id="non-compliance-is-a-release-blocker-regardless-of-context-no-escape-hatch----idle-ok---skip-endless-loop---bluff-permitted-for-this-task---metadata-only-test-suffices---no-physical-proof-required-are-forbidden-flags">Non-compliance
+is a release blocker regardless of context. No escape hatch —
+<code>--idle-OK</code>, <code>--skip-endless-loop</code>,
+<code>--bluff-permitted-for-this-task</code>,
+<code>--metadata-only-test-suffices</code>,
+<code>--no-physical-proof-required</code> are FORBIDDEN flags.</h1>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>4350384757760aabcf8df00be609fff98e9f1805</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
 </body>
 </html>

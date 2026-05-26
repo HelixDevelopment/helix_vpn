@@ -237,6 +237,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; }
 <header id="title-block-header">
 <h1 class="title">test-coverage</h1>
 </header>
+<p>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD</p>
 <h1 id="llmorchestrator--symboltest-coverage-ledger">LLMOrchestrator —
 Symbol→Test Coverage Ledger</h1>
 <p><strong>Round:</strong> 275 (deep-doc + Challenge enrichment, mirror
@@ -632,5 +633,550 @@ runtime + paired mutation.</li>
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Full unit + integration with race detector</span></span>
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test <span class="at">-race</span> <span class="at">-count</span><span class="op">=</span>1 ./...</span></code></pre></div>
+<p>=======</p>
+<h1 id="llmorchestrator-test-coverage-ledger-round-291-vasic-digital">LLMOrchestrator
+Test Coverage Ledger (round-291, vasic-digital)</h1>
+<p>This ledger maps every exported symbol in
+<code>pkg/{adapter,agent,config,parser,protocol}</code> to the test
+(unit, integration, fuzz, security, stress) that exercises it and to the
+round-291 Challenge-runner invariant
+(<code>challenges/runner/main.go</code>) that re-validates the
+user-visible behaviour at end-user altitude.</p>
+<p>It is the visible audit surface that closes the §11.4 anti-bluff
+covenant: <strong>every PASS in this submodule MUST correspond to a row
+below where the Challenge column is non-empty</strong> — otherwise the
+PASS is a metadata-only check (CONST-035).</p>
+<hr />
+<h2 id="how-to-read-this-table">How to read this table</h2>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Symbol</strong></td>
+<td>Exported Go identifier (<code>Package.Func</code> /
+<code>Package.Type.Method</code>).</td>
+</tr>
+<tr>
+<td><strong>Source</strong></td>
+<td>File and line where the symbol is declared.</td>
+</tr>
+<tr>
+<td><strong>Test(s)</strong></td>
+<td><code>*_test.go</code> files that exercise the symbol with
+assertions.</td>
+</tr>
+<tr>
+<td><strong>Challenge invariant</strong></td>
+<td>Numbered invariant in <code>challenges/runner/main.go</code> that
+re-proves the symbol works end-to-end across the 5-locale fixture
+matrix. Empty = covered by tests only; non-empty = also re-validated by
+the round-291 runner.</td>
+</tr>
+<tr>
+<td><strong>Bluff risk closed</strong></td>
+<td>Concrete user-visible failure mode the assertion catches.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="pkgparser"><code>pkg/parser</code></h2>
+<table>
+<thead>
+<tr>
+<th>Symbol</th>
+<th>Source</th>
+<th>Test(s)</th>
+<th>Challenge invariant</th>
+<th>Bluff risk closed</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>NewParser</code></td>
+<td><code>parser.go:71</code></td>
+<td><code>parser_test.go</code> (all <code>TestParser_*</code>)</td>
+<td>(1) <code>parser.NewParser.not_nil</code></td>
+<td>Constructor returns nil but tests don&#39;t notice → every downstream
+method panics for users.</td>
+</tr>
+<tr>
+<td><code>DefaultParser.Parse</code></td>
+<td><code>parser.go:76</code></td>
+<td><code>parser_test.go</code> (<code>TestParser_Parse_*</code>);
+<code>parser_fuzz_test.go</code> (fuzz)</td>
+<td>(1) <code>parser.Parse.&lt;locale&gt;.action</code>; (2)
+<code>parser.Parse.empty_errors</code></td>
+<td>Bare-stub parser that returns an empty <code>ParsedResponse{}</code>
+would PASS legacy &quot;no-error&quot; tests; runner asserts an Action with
+matching Type+Target was actually extracted.</td>
+</tr>
+<tr>
+<td><code>DefaultParser.ExtractJSON</code></td>
+<td><code>parser.go:112</code></td>
+<td><code>parser_test.go</code> (<code>TestParser_ExtractJSON_*</code>);
+<code>parser_security_test.go</code></td>
+<td>(1) (via Parse)</td>
+<td>JSON parser silently dropping nested actions → users see empty
+action lists.</td>
+</tr>
+<tr>
+<td><code>DefaultParser.ExtractActions</code></td>
+<td><code>parser.go:150</code></td>
+<td><code>parser_test.go</code>
+(<code>TestParser_ExtractActions_*</code>)</td>
+<td>(1)</td>
+<td>Action-keyword extraction regressing to 0-action output.</td>
+</tr>
+<tr>
+<td><code>DefaultParser.ExtractIssues</code></td>
+<td><code>parser.go:200</code></td>
+<td><code>parser_test.go</code>
+(<code>TestParser_ExtractIssues_*</code>)</td>
+<td>(covered indirectly via Parse)</td>
+<td>Issue extractor silently swallowing severity field.</td>
+</tr>
+<tr>
+<td><code>ErrEmptyInput</code> / <code>ErrNoJSONFound</code> /
+<code>ErrMalformedJSON</code> / <code>ErrResponseTooLong</code></td>
+<td><code>parser.go:17-25</code></td>
+<td><code>parser_test.go</code>; <code>parser_security_test.go</code>
+(length-DoS)</td>
+<td>(2) <code>parser.Parse.empty_errors</code> (specifically
+<code>ErrEmptyInput</code>)</td>
+<td>Defensive boundaries silently weakened — users could DoS the
+orchestrator with multi-MB junk.</td>
+</tr>
+<tr>
+<td><code>MaxResponseLength</code></td>
+<td><code>parser.go:28</code></td>
+<td><code>parser_security_test.go</code></td>
+<td>—</td>
+<td>Constant raised silently; defense-in-depth disappears.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="pkgprotocol"><code>pkg/protocol</code></h2>
+<table>
+<thead>
+<tr>
+<th>Symbol</th>
+<th>Source</th>
+<th>Test(s)</th>
+<th>Challenge invariant</th>
+<th>Bluff risk closed</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>PipeMessage</code> (struct)</td>
+<td><code>message.go:25</code></td>
+<td><code>message_test.go</code>; <code>pipe_test.go</code>
+(round-trip); <code>protocol_integration_test.go</code></td>
+<td>(3) <code>protocol.PipeMessage.roundtrip.&lt;locale&gt;</code></td>
+<td>JSON tag drift: a future rename of <code>content</code> →
+<code>Content</code> in struct tags would silently corrupt every
+cross-process pipe payload; round-trip with verbatim Content match
+catches it.</td>
+</tr>
+<tr>
+<td><code>MessageType</code> constants</td>
+<td><code>message.go:13-22</code></td>
+<td><code>message_test.go</code></td>
+<td>(3) (Type field)</td>
+<td>Renaming <code>MessageTypePrompt</code> value from
+<code>&quot;prompt&quot;</code> to anything else silently breaks every existing
+agent.</td>
+</tr>
+<tr>
+<td><code>FileMessage</code> / <code>FileAttachment</code></td>
+<td><code>message.go:45-60</code></td>
+<td><code>file_test.go</code>;
+<code>protocol_integration_test.go</code></td>
+<td>(4)
+<code>protocol.FileTransport.roundtrip.&lt;locale&gt;</code></td>
+<td>Stale field — Content not persisted in inbox JSON — users would see
+empty messages in their session directory.</td>
+</tr>
+<tr>
+<td><code>NewFileTransport</code></td>
+<td><code>file.go:34</code></td>
+<td><code>file_test.go</code> (<code>TestFileTransport_*</code>)</td>
+<td>(4) <code>protocol.NewFileTransport</code></td>
+<td>Constructor silently returns a transport whose inbox/outbox/shared
+dirs were not created → writes succeed but reads return nothing.</td>
+</tr>
+<tr>
+<td><code>FileTransport.WriteToInbox</code> /
+<code>ReadFromInbox</code></td>
+<td><code>file.go:56,66</code></td>
+<td><code>file_test.go</code>;
+<code>protocol_integration_test.go</code></td>
+<td>(4)</td>
+<td>Write-then-read drops the message → users&#39; instructions vanish.</td>
+</tr>
+<tr>
+<td><code>FileTransport.WriteToOutbox</code> /
+<code>ReadFromOutbox</code></td>
+<td><code>file.go:61,71</code></td>
+<td><code>file_test.go</code></td>
+<td>— (inbox covers symmetric path)</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>FileTransport.WriteSharedFile</code></td>
+<td><code>file.go:76</code></td>
+<td><code>file_test.go</code> (path-traversal)</td>
+<td>—</td>
+<td>Path-traversal regression allows writing outside session dir.</td>
+</tr>
+<tr>
+<td><code>ErrSessionDirNotExist</code> /
+<code>ErrPathTraversal</code></td>
+<td><code>file.go:17-22</code></td>
+<td><code>file_test.go</code> (security)</td>
+<td>—</td>
+<td>Defensive boundary silently weakened.</td>
+</tr>
+<tr>
+<td><code>PipeTransport.*</code></td>
+<td><code>pipe.go</code></td>
+<td><code>pipe_test.go</code></td>
+<td>—</td>
+<td>(Process-level transport — not exercised by runner to keep Challenge
+dependency-free; tests cover the wire format directly.)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="pkgagent"><code>pkg/agent</code></h2>
+<table>
+<thead>
+<tr>
+<th>Symbol</th>
+<th>Source</th>
+<th>Test(s)</th>
+<th>Challenge invariant</th>
+<th>Bluff risk closed</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Agent</code> (interface)</td>
+<td><code>agent.go:12</code></td>
+<td>(every adapter <code>_test.go</code> implements &amp; asserts)</td>
+<td>(5) (via Register)</td>
+<td>Interface contract drift silently breaking all adapter
+implementations.</td>
+</tr>
+<tr>
+<td><code>Response</code> / <code>StreamChunk</code> /
+<code>Attachment</code> / <code>AgentCapabilities</code> /
+<code>AgentRequirements</code> / <code>HealthStatus</code> /
+<code>Action</code> / <code>ParsedResponse</code> / <code>Issue</code> /
+<code>ModelInfo</code></td>
+<td><code>agent.go:42-127</code></td>
+<td>(used throughout the test surface)</td>
+<td>(5)</td>
+<td>Field renamed/dropped — every adapter response silently
+truncated.</td>
+</tr>
+<tr>
+<td><code>NewPool</code></td>
+<td><code>pool.go:54</code></td>
+<td><code>pool_test.go</code>; <code>pool_stress_test.go</code></td>
+<td>(5) <code>agent.Pool.Register</code></td>
+<td>Constructor returns a non-functional pool that drops every Register
+on the floor.</td>
+</tr>
+<tr>
+<td><code>Pool.Register</code></td>
+<td><code>pool.go:63</code></td>
+<td><code>pool_test.go</code></td>
+<td>(5) <code>agent.Pool.Register</code></td>
+<td>Duplicate-ID detection silently weakened; one rogue agent shadows
+another.</td>
+</tr>
+<tr>
+<td><code>Pool.Acquire</code></td>
+<td><code>pool.go:87</code></td>
+<td><code>pool_test.go</code>; <code>pool_stress_test.go</code>
+(concurrency)</td>
+<td>(5) <code>agent.Pool.Acquire</code>; (5)
+<code>agent.Pool.Acquire.blocks_while_busy</code></td>
+<td>Acquire returns nil silently (no agent matched, no error) → users
+wait forever for a response that never starts. Acquire-while-busy not
+actually blocking → race conditions in production.</td>
+</tr>
+<tr>
+<td><code>Pool.Release</code></td>
+<td><code>pool.go:169</code></td>
+<td><code>pool_test.go</code></td>
+<td>(5) <code>agent.Pool.Release.reacquire</code></td>
+<td>Release silently no-ops; pool exhausts.</td>
+</tr>
+<tr>
+<td><code>Pool.Available</code> / <code>Pool.HealthCheck</code> /
+<code>Pool.Shutdown</code></td>
+<td><code>pool.go:180-216</code></td>
+<td><code>pool_test.go</code>; <code>health_test.go</code></td>
+<td>—</td>
+<td>Health-check returning stale data; Shutdown not actually stopping
+subprocesses.</td>
+</tr>
+<tr>
+<td><code>MultiPool.*</code></td>
+<td><code>multi_pool.go</code></td>
+<td><code>pool_test.go</code> (subset)</td>
+<td>—</td>
+<td>(Covered by unit tests; not exercised by runner — single-pool path
+proves the locking contract.)</td>
+</tr>
+<tr>
+<td><code>CircuitBreaker.*</code> (health)</td>
+<td><code>health.go</code></td>
+<td><code>health_test.go</code></td>
+<td>—</td>
+<td>3-failure threshold weakened silently.</td>
+</tr>
+<tr>
+<td><code>ErrAgentAlreadyRegistered</code> /
+<code>ErrNoAvailableAgent</code> / <code>ErrPoolShutdown</code> /
+<code>ErrAgentNotFound</code></td>
+<td><code>pool.go:13-21</code></td>
+<td><code>pool_test.go</code></td>
+<td>(5) (via Register/Acquire error paths)</td>
+<td>Error-class collapse — users can&#39;t distinguish &quot;no agent matches&quot;
+from &quot;pool dead&quot;.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="pkgadapter"><code>pkg/adapter</code></h2>
+<table>
+<thead>
+<tr>
+<th>Symbol</th>
+<th>Source</th>
+<th>Test(s)</th>
+<th>Challenge invariant</th>
+<th>Bluff risk closed</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>BaseAdapter</code></td>
+<td><code>base.go</code></td>
+<td><code>adapter_test.go</code>;
+<code>adapter_integration_test.go</code></td>
+<td>(5) (via OpenCode)</td>
+<td>Process-management regression silently affects every adapter.</td>
+</tr>
+<tr>
+<td><code>NewOpenCodeAgent</code> /
+<code>OpenCodeAgent.parseOpenCodeResponse</code></td>
+<td><code>opencode.go:20,53</code></td>
+<td><code>adapter_test.go</code>;
+<code>opencode_headless_test.go</code></td>
+<td>(5) <code>agent.Pool.Register</code> (probe is OpenCode)</td>
+<td>OpenCode JSON shape drift silently breaks the most-used
+adapter.</td>
+</tr>
+<tr>
+<td><code>NewClaudeCodeAgent</code></td>
+<td><code>claudecode.go</code></td>
+<td><code>adapter_test.go</code></td>
+<td>—</td>
+<td>Constructor wiring regression.</td>
+</tr>
+<tr>
+<td><code>NewGeminiAgent</code></td>
+<td><code>gemini.go</code></td>
+<td><code>adapter_test.go</code></td>
+<td>—</td>
+<td>Constructor wiring regression.</td>
+</tr>
+<tr>
+<td><code>NewJunieAgent</code></td>
+<td><code>junie.go</code></td>
+<td><code>adapter_test.go</code></td>
+<td>—</td>
+<td>Constructor wiring regression.</td>
+</tr>
+<tr>
+<td><code>NewQwenCodeAgent</code></td>
+<td><code>qwencode.go</code></td>
+<td><code>adapter_test.go</code></td>
+<td>—</td>
+<td>Constructor wiring regression.</td>
+</tr>
+<tr>
+<td><code>OpenCodeHeadlessAgent</code></td>
+<td><code>opencode_headless.go</code></td>
+<td><code>opencode_headless_test.go</code></td>
+<td>—</td>
+<td>Headless flag-list drift.</td>
+</tr>
+<tr>
+<td><code>AdapterConfig</code></td>
+<td><code>base.go</code></td>
+<td><code>adapter_test.go</code></td>
+<td>(5)</td>
+<td>Field rename silently breaks every consumer&#39;s config.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="pkgconfig"><code>pkg/config</code></h2>
+<table>
+<thead>
+<tr>
+<th>Symbol</th>
+<th>Source</th>
+<th>Test(s)</th>
+<th>Challenge invariant</th>
+<th>Bluff risk closed</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Config</code> / <code>LoadFromEnv</code> /
+<code>LoadFromEnvironment</code> / <code>Validate</code></td>
+<td><code>config.go</code></td>
+<td><code>config_test.go</code></td>
+<td>— (covered by tests; runner uses no .env)</td>
+<td><code>.env</code> parser silently skipping required fields →
+orchestrator boots with no agents and no warning.</td>
+</tr>
+<tr>
+<td><code>AgentBinaryPath</code> / <code>SessionDir</code></td>
+<td><code>config.go</code></td>
+<td><code>config_test.go</code></td>
+<td>—</td>
+<td>Path-traversal in user-supplied SessionDir base.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="test-type-coverage-summary">Test-type coverage summary</h2>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Where</th>
+<th>Anti-bluff guarantee</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Unit</strong></td>
+<td><code>pkg/*/* _test.go</code></td>
+<td>Direct API exercise; mocks ALLOWED here only per CONST-050(A).</td>
+</tr>
+<tr>
+<td><strong>Integration</strong></td>
+<td><code>pkg/adapter/adapter_integration_test.go</code>;
+<code>pkg/protocol/protocol_integration_test.go</code></td>
+<td>Real <code>os/exec</code> / real <code>os.MkdirTemp</code> / real
+JSON; no fakes (CONST-050(A)).</td>
+</tr>
+<tr>
+<td><strong>Fuzz</strong></td>
+<td><code>pkg/parser/parser_fuzz_test.go</code></td>
+<td><code>go test -fuzz=</code> driven; surfaces panics on adversarial
+input.</td>
+</tr>
+<tr>
+<td><strong>Security</strong></td>
+<td><code>pkg/parser/parser_security_test.go</code></td>
+<td>Length-DoS, traversal, command-injection patterns.</td>
+</tr>
+<tr>
+<td><strong>Stress</strong></td>
+<td><code>pkg/agent/pool_stress_test.go</code></td>
+<td>Concurrent Acquire/Release under contention; race detector
+mandatory.</td>
+</tr>
+<tr>
+<td><strong>Challenge (round-291)</strong></td>
+<td><code>challenges/runner/main.go</code> +
+<code>challenges/llmorchestrator_describe_challenge.sh</code></td>
+<td>5 invariants × 5 locales = 22 PASS rows; paired §1.1 mutation.</td>
+</tr>
+<tr>
+<td><strong>Challenge (legacy)</strong></td>
+<td><code>challenges/scripts/*.sh</code></td>
+<td>UI / UX / DDoS / chaos / scaling / stress / no-suspend /
+host-hardening (legacy bash suite).</td>
+</tr>
+<tr>
+<td><strong>Performance / benchmarking</strong></td>
+<td>Not yet wired — tracked as future work (CONST-048).</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="anti-bluff-guarantees">Anti-bluff guarantees</h2>
+<ol type="1">
+<li><strong>No metadata-only PASS.</strong> Every Challenge-column entry
+in the table above corresponds to a runtime invariant in
+<code>challenges/runner/main.go</code> that compares observed values
+against fixture-pinned expected values byte-for-byte.</li>
+<li><strong>5-locale matrix.</strong> Every protocol-level invariant
+runs across <code>en</code>, <code>sr</code>, <code>ja</code>,
+<code>es</code>, <code>de</code> — a single English-only PASS would not
+survive CONST-046 (no-hardcoded-content) review.</li>
+<li><strong>Paired mutation.</strong>
+<code>challenges/llmorchestrator_describe_challenge.sh mutate</code>
+flips one invariant and asserts the runner exits non-zero.
+Mutation-undetected = runner is a bluff gate.</li>
+<li><strong>Real I/O.</strong> The runner uses <code>os.MkdirTemp</code>
++ <code>os.WriteFile</code> (via <code>protocol.FileTransport</code>) —
+never an in-memory shim. The Pool exercises Register/Acquire/Release on
+a real <code>adapter.NewOpenCodeAgent</code> instance.</li>
+<li><strong>No mocks past the unit-test boundary.</strong> Per
+CONST-050(A), the runner&#39;s path is real types, real I/O, real
+concurrency. <code>pkg/agent/multi_pool.go</code> etc. are excluded from
+runner only because their behaviour is a strict superset of
+<code>Pool</code> already covered.</li>
+</ol>
+<hr />
+<h2 id="how-to-run">How to run</h2>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> <span class="op">&lt;</span>repo<span class="op">&gt;</span>/dependencies/vasic-digital/LLMOrchestrator</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Normal mode — every invariant must PASS, exit 0</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> challenges/llmorchestrator_describe_challenge.sh normal</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Mutation mode — one invariant flipped; runner MUST exit non-zero,</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="co"># wrapper rewrites to 99 (paired-mutation success)</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> challenges/llmorchestrator_describe_challenge.sh mutate</span></code></pre></div>
+<p>Both invocations are wired into the round-291 evidence capture.</p>
+<hr />
+<h2 id="verbatim-2026-05-19-operator-mandate-preserved-per-const-049-11417">Verbatim
+2026-05-19 operator mandate (preserved per CONST-049 §11.4.17)</h2>
+<blockquote>
+<p>&quot;all existing tests and Challenges do work in anti-bluff manner -
+they MUST confirm that all tested codebase really works as expected! We
+had been in position that all tests do execute with success and all
+Challenges as well, but in reality the most of the features does not
+work and can&#39;t be used! This MUST NOT be the case and execution of tests
+and Challenges MUST guarantee the quality, the completition and full
+usability by end users of the product!&quot;</p>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>4350384757760aabcf8df00be609fff98e9f1805</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
 </body>
 </html>
