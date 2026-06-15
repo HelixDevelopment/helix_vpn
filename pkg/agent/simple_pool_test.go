@@ -593,14 +593,26 @@ func TestProviderPools_ValidConfig_ReturnRealPool_AcquireFailsWithBuilderSentine
 // provider constructor MUST now succeed when handed non-nil configs.
 // Three sub-cases prove the end-to-end Acquire path:
 //
-//  1. With ZERO agents pre-registered the RoundRobinSelector sees
-//     no Available agents and returns ErrNoSuitableAgent — selector
-//     semantics, NOT a pool-implementation bluff. This documents the
-//     existing selector contract round-60 inherits unchanged.
+//  1. RECONCILED per §11.4.120 (multi_pool_lazy_select_bug fix): the
+//     prior assertion here ("ZERO pre-registered agents ⇒ Acquire returns
+//     ErrNoSuitableAgent") encoded the lazy-build DEAD-PATH BUG as if it
+//     were the contract — RoundRobinSelector.Select only picked a provider
+//     whose Available() was already non-empty, so a freshly-built lazy
+//     SimpleAgentPool (capacity > 0, zero pre-registered agents) was never
+//     selected and its on-demand build path was dead on first use. The fix
+//     makes Select also honour spare BUILD capacity. The reconciled
+//     assertion therefore checks the NEW correct mechanism directly and
+//     host-independently: Select MUST now return the lazy provider (not "")
+//     for a capacity-bearing, empty-Available pool. (The real configured
+//     pools above build via os/exec/HTTP whose success is host-dependent,
+//     so we assert the selector contract — the layer the bug lived in —
+//     with a deterministic injected lazy pool rather than the host-bound
+//     real builders.)
 //
 //  2. Registering a real mockAgent into one of the underlying
-//     SimpleAgentPools makes round-robin pick that provider and
-//     Acquire returns the real agent end-to-end.
+//     SimpleAgentPools makes round-robin pick that provider (via the
+//     PreferredAgent priority pass) and Acquire returns the real agent
+//     end-to-end.
 //
 //  3. Calling SimpleAgentPool.Acquire directly on a fresh (unregistered)
 //     pool surfaces the per-provider builder-sentinel — the round-60
@@ -619,13 +631,24 @@ func TestNewMultiProviderPool_ValidConfig_BuildsRealPools(t *testing.T) {
 		t.Fatal("NewMultiProviderPool returned nil pool with nil error")
 	}
 
-	t.Run("no_registered_agents_returns_ErrNoSuitableAgent", func(t *testing.T) {
-		a, acqErr := mp.Acquire(context.Background(), AgentRequirements{})
-		if a != nil {
-			t.Errorf("Acquire returned non-nil agent under empty-Available conditions: %v", a)
+	t.Run("lazy_pool_with_build_capacity_is_selected", func(t *testing.T) {
+		// §11.4.120 reconciliation: a lazy SimpleAgentPool with spare build
+		// capacity and an EMPTY Available() set MUST be selected so its
+		// on-demand build path can fire. Pre-fix this returned "" (the bug);
+		// the fix makes Select honour build capacity. Use a deterministic
+		// injected lazy pool so the assertion is host-independent (the real
+		// configured pools' builders are os/exec/HTTP, host-bound).
+		lazy := NewSimpleAgentPool("opencode", 1, func(ctx context.Context) (Agent, error) {
+			return newMockAgent("lazy-selected", "opencode"), nil
+		})
+		if len(lazy.Available()) != 0 {
+			t.Fatalf("precondition: lazy Available() = %d, want 0", len(lazy.Available()))
 		}
-		if !errors.Is(acqErr, ErrNoSuitableAgent) {
-			t.Errorf("Acquire err = %v, want ErrNoSuitableAgent (selector-semantics signal)", acqErr)
+		sel := NewRoundRobinSelector()
+		provider := sel.Select(map[string]AgentPool{"opencode": lazy}, AgentRequirements{})
+		if provider != "opencode" {
+			t.Errorf("Select returned %q for a lazy capacity-bearing pool, want %q "+
+				"(build-capacity arm — lazy-build path must not be dead)", provider, "opencode")
 		}
 	})
 

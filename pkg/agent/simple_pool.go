@@ -221,8 +221,15 @@ func meetsAgentRequirements(a Agent, req AgentRequirements) bool {
 }
 
 // Release returns an Agent to the pool's available set.
-// Agents not currently tracked as in-use are accepted silently so that
-// pre-registered agents may flow through the available/in-use cycle.
+//
+// Only agents this pool currently has checked out (tracked in p.inUse)
+// are returned to availability. An agent that is NOT in-use — a double
+// Release, or an agent that belongs to a different pool (e.g. when a
+// MultiProviderPool fans Release out to every underlying pool) — is
+// ignored. Without this guard a duplicate would be appended to
+// p.available, letting a capacity-1 pool hand the SAME agent instance
+// to two concurrent callers and letting a foreign agent leak into a
+// pool that never built it (capacity-accounting corruption).
 func (p *SimpleAgentPool) Release(a Agent) {
 	if a == nil {
 		return
@@ -232,9 +239,13 @@ func (p *SimpleAgentPool) Release(a Agent) {
 	if p.closed {
 		return
 	}
-	if _, tracked := p.inUse[a]; tracked {
-		delete(p.inUse, a)
+	if _, tracked := p.inUse[a]; !tracked {
+		// Not currently checked out by this pool: double-release or
+		// foreign agent. Dropping it keeps available/in-use accounting
+		// exact and prevents duplicate hand-out.
+		return
 	}
+	delete(p.inUse, a)
 	p.available = append(p.available, a)
 	p.cond.Broadcast()
 }

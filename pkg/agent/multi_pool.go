@@ -139,6 +139,32 @@ func (m *MultiProviderPool) Shutdown(ctx context.Context) error {
 	return lastErr
 }
 
+// capacityReporter is an OPTIONAL interface a pool MAY implement to
+// report its build capacity. A pool that satisfies it tells the selector
+// it can materialise a NEW agent on demand (capacity not yet exhausted)
+// even when its Available() set is currently empty — exactly the shape a
+// freshly-built lazy SimpleAgentPool (capacity > 0, zero pre-registered
+// agents) presents. SimpleAgentPool already satisfies it via Size()/InUse().
+//
+// Defining it as a narrow optional interface keeps the AgentPool contract
+// untouched: pools that do NOT implement it keep the prior "select only
+// when Available() is non-empty" behaviour.
+type capacityReporter interface {
+	Size() int
+	InUse() int
+}
+
+// hasSpareBuildCapacity reports whether pool can build a new agent on
+// demand. A pool that does not implement capacityReporter cannot be
+// queried for capacity, so it returns false (prior behaviour preserved).
+func hasSpareBuildCapacity(pool AgentPool) bool {
+	cr, ok := pool.(capacityReporter)
+	if !ok {
+		return false
+	}
+	return cr.InUse() < cr.Size()
+}
+
 // RoundRobinSelector implements round-robin selection across providers
 type RoundRobinSelector struct {
 	mu        sync.Mutex
@@ -168,27 +194,63 @@ func (r *RoundRobinSelector) Select(pools map[string]AgentPool, req AgentRequire
 		return ""
 	}
 
-	// Try to find a provider that can meet requirements
-	for i := 0; i < len(r.providers); i++ {
-		idx := (r.counter + i) % len(r.providers)
-		provider := r.providers[idx]
-
-		// Check if this provider has available agents that meet requirements
-		if pool, ok := pools[provider]; ok {
-			available := pool.Available()
-			for _, agent := range available {
-				if meetsRequirements(agent, req) {
-					r.counter = (r.counter + 1) % len(r.providers)
+	// Priority pass: if the caller named a PreferredAgent and a provider
+	// currently holds an available agent with that name meeting the
+	// requirements, select that provider directly. PreferredAgent is an
+	// agent-name filter applied inside each pool's Acquire — surfacing it
+	// here keeps the selector from round-robining PAST the very provider
+	// that already holds the preferred agent (which, with the build-capacity
+	// arm below, could otherwise pick a different provider first).
+	if req.PreferredAgent != "" {
+		for _, provider := range r.providers {
+			pool, ok := pools[provider]
+			if !ok {
+				continue
+			}
+			for _, agent := range pool.Available() {
+				if agent.Name() == req.PreferredAgent && meetsRequirements(agent, req) {
 					return provider
 				}
 			}
 		}
 	}
 
-	// Fallback: just return the first provider with any available agent
+	// Try to find a provider that can serve the request in round-robin
+	// order. A provider qualifies if EITHER it has an available agent that
+	// meets requirements, OR it has spare build capacity to materialise a
+	// new agent on demand (the lazy-build path). Without the capacity arm a
+	// freshly-built lazy pool — capacity > 0, zero pre-registered agents,
+	// empty Available() — is never selected and its on-demand build path is
+	// dead on first use.
+	for i := 0; i < len(r.providers); i++ {
+		idx := (r.counter + i) % len(r.providers)
+		provider := r.providers[idx]
+
+		pool, ok := pools[provider]
+		if !ok {
+			continue
+		}
+
+		// Check if this provider has available agents that meet requirements.
+		for _, agent := range pool.Available() {
+			if meetsRequirements(agent, req) {
+				r.counter = (r.counter + 1) % len(r.providers)
+				return provider
+			}
+		}
+
+		// Otherwise, a pool with spare build capacity can build one on
+		// demand in its own Acquire (which applies requirement filtering).
+		if hasSpareBuildCapacity(pool) {
+			r.counter = (r.counter + 1) % len(r.providers)
+			return provider
+		}
+	}
+
+	// Fallback: any provider with an available agent OR spare build capacity.
 	for _, provider := range r.providers {
 		if pool, ok := pools[provider]; ok {
-			if len(pool.Available()) > 0 {
+			if len(pool.Available()) > 0 || hasSpareBuildCapacity(pool) {
 				return provider
 			}
 		}
