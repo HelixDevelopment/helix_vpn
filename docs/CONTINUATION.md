@@ -1,5 +1,8 @@
 # Helix VPN — Session Continuation File
 
+**Revision:** 2
+**Last modified:** 2026-06-24T00:00:00Z
+
 > Helix Constitution §11.4.131 — standing session-resumption artifact.
 > Re-read this file at the start of any new session before touching code.
 
@@ -100,11 +103,21 @@ bash scripts/install_git_hooks.sh    # opt in to the hook
 bash scripts/testing/meta_test_precommit_hook.sh    # prove it blocks bad commits
 ```
 
-### 7. CI workflow added
+### 7. CI workflow DISABLED (§11.4.156)
 
-- `.github/workflows/constitution.yml` — checks out submodules recursively and runs
-  the gate, inheritance test, and mutation proof on push/PR. (Private submodule
-  remote requires a deploy key / PAT secret — see the comment in the file.)
+- `.github/workflows/constitution.yml` has been renamed to
+  `.github/workflows/constitution.yml.disabled-local-only` and is **not** executed
+  by any remote runner. This is intentional per Constitution §11.4.156, which
+  requires all GitHub Actions workflows to be disabled.
+- Enforcement is local only: pre-commit hook + `scripts/commit_all.sh` (§11.4.75).
+
+### 8. Compliance scripts added
+
+- `scripts/commit_all.sh` — pushes to all configured upstreams (§2.1).
+- `scripts/verify-all-constitution-rules.sh` — validates all constitution rules locally.
+- `scripts/post_constitution_update.sh` — post-update hook + full rule verification
+  (run after `git submodule update --remote constitution`).
+- `scripts/testing/verify_agent.sh` — agent-level compliance verification.
 
 ---
 
@@ -115,9 +128,9 @@ bash scripts/testing/meta_test_precommit_hook.sh    # prove it blocks bad commit
 - **Project-specific constitution clauses:** `docs/guides/HELIX_VPN_CONSTITUTION.md`
   has no overrides or project clauses yet (intentionally empty during scaffolding).
 - **Go module initialisation:** no `go.mod` / `go.sum` exist yet.
-- **CI execution:** `.github/workflows/constitution.yml` exists but has not been
-  executed on a live GitHub Actions runner (validated statically only); a deploy
-  key / PAT secret is still needed for the private submodule checkout.
+- **CI permanently disabled:** `.github/workflows/constitution.yml.disabled-local-only`
+  is the renamed (inert) workflow file. No remote CI will run. Local enforcement via
+  pre-commit hook + `scripts/commit_all.sh` is the mandated replacement (§11.4.156, §11.4.75).
 
 ---
 
@@ -136,7 +149,51 @@ bash scripts/testing/meta_test_precommit_hook.sh    # prove it blocks bad commit
 | Full-suite orchestrator | `test_all.sh` |
 | Pre-commit hook + installer | `.githooks/pre-commit`, `scripts/install_git_hooks.sh` |
 | Pre-commit hook proof | `scripts/testing/meta_test_precommit_hook.sh` |
-| CI workflow | `.github/workflows/constitution.yml` |
+| CI workflow (DISABLED) | `.github/workflows/constitution.yml.disabled-local-only` |
+| Multi-upstream commit script | `scripts/commit_all.sh` |
+| Constitution rule verifier | `scripts/verify-all-constitution-rules.sh` |
+| Post-update hook runner | `scripts/post_constitution_update.sh` |
+| Agent compliance verifier | `scripts/testing/verify_agent.sh` |
+
+---
+
+## Resumption prompt (§11.4.127)
+
+Use one of the two variants below to hand off to a new session.
+
+### SHORT variant (first-sentence hand-off)
+
+> Continue work on `feat/constitution-submodule` in `/Volumes/T7/Projects/helix_vpn`; read `docs/CONTINUATION.md` first, then run `git fetch --all` and `bash tests/pre_build_verification.sh` to confirm the baseline is clean.
+
+### FULL variant (detailed block)
+
+```
+You are resuming work on the Helix VPN project.
+
+Repository:  /Volumes/T7/Projects/helix_vpn
+Branch:      feat/constitution-submodule
+Handoff doc: docs/CONTINUATION.md  ← read this FIRST before touching any file
+
+State at handoff
+----------------
+- Constitution submodule: constitution/ @ e1bb12502d297ccef376698fc2cadd6a92d2b112 (origin/main)
+- CI is DISABLED per §11.4.156 — workflow renamed to
+  .github/workflows/constitution.yml.disabled-local-only
+- Local enforcement: .githooks/pre-commit + scripts/commit_all.sh
+- Compliance scripts present: scripts/commit_all.sh,
+  scripts/verify-all-constitution-rules.sh,
+  scripts/post_constitution_update.sh,
+  scripts/testing/verify_agent.sh
+
+First actions
+-------------
+1. git fetch --all
+2. bash tests/pre_build_verification.sh   # must print STATUS: PASS
+3. Review "What Remains" in docs/CONTINUATION.md for open work items.
+
+No VPN application code exists yet. Do not create application code unless
+explicitly instructed. Governance scaffolding only.
+```
 
 ---
 

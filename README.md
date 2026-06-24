@@ -44,11 +44,25 @@ bash scripts/testing/meta_test_false_positive_proof.sh
 This mutates `constitution/Constitution.md`, asserts the gate fails, then restores
 the file from a backup and verifies byte-identical restore via SHA-256 checksum.
 
-### Initialising the submodule after a fresh clone
+### Setup after clone (§11.4.36)
+
+After cloning this repository, initialise the constitution submodule and opt in to
+the local pre-commit enforcement gate:
 
 ```bash
+# 1. Initialise the submodule
 git submodule update --init --recursive
+
+# 2. Opt in to the pre-commit hook (local enforcement — see §11.4.75)
+bash scripts/install_git_hooks.sh
 ```
+
+> **CI is intentionally DISABLED** per Constitution §11.4.156.
+> `.github/workflows/constitution.yml` has been renamed to
+> `.github/workflows/constitution.yml.disabled-local-only` and is not executed
+> by any remote runner. Enforcement is local only: the pre-commit hook (installed
+> via `scripts/install_git_hooks.sh`) runs the gate before every commit, and
+> `scripts/commit_all.sh` pushes to all configured upstreams (§2.1).
 
 ## Session resumption
 
