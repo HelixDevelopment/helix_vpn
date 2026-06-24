@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# .githooks/pre-commit
+# Constitution-inheritance pre-commit gate.
+# Runs tests/pre_build_verification.sh from the repo root.
+# Aborts the commit (non-zero exit) if the gate fails.
+
+set -uo pipefail
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+
+GATE="${REPO_ROOT}/tests/pre_build_verification.sh"
+
+if [ ! -f "${GATE}" ]; then
+    echo "[pre-commit] ERROR: gate script not found: ${GATE}" >&2
+    exit 1
+fi
+
+echo "[pre-commit] Running constitution gate: ${GATE}"
+bash "${GATE}"
+STATUS=$?
+
+if [ "${STATUS}" -ne 0 ]; then
+    echo "[pre-commit] BLOCKED — constitution gate failed (exit ${STATUS}). Commit aborted." >&2
+    exit 1
+fi
+
+echo "[pre-commit] Gate passed. Proceeding with commit."
+exit 0
