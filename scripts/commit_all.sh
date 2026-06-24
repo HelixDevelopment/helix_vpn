@@ -71,12 +71,16 @@ echo ""
 # (submodule commits must be done first, before the parent pointer is captured)
 # ---------------------------------------------------------------------------
 CONST_STAGED="$(git -C "${REPO_ROOT}" diff --cached --name-only -- constitution/ 2>/dev/null || true)"
-if [ -n "${CONST_STAGED}" ]; then
-    echo "ERROR: constitution/ has staged changes." >&2
+# Also catch UNSTAGED pointer/content drift: the `git add -A` below would
+# otherwise stage and commit a submodule pointer bump, defeating the §3 guard.
+CONST_UNSTAGED="$(git -C "${REPO_ROOT}" diff --name-only -- constitution/ 2>/dev/null || true)"
+if [ -n "${CONST_STAGED}" ] || [ -n "${CONST_UNSTAGED}" ]; then
+    echo "ERROR: constitution/ has changes (staged or unstaged)." >&2
     echo "       Commit the submodule first (§3):" >&2
     echo "         cd constitution && git add -A && git commit -m '...' && cd .." >&2
-    echo "       Staged constitution/ files:" >&2
+    echo "       Changed constitution/ entries:" >&2
     echo "${CONST_STAGED}" >&2
+    echo "${CONST_UNSTAGED}" >&2
     exit 1
 fi
 
