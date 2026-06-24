@@ -1,0 +1,38 @@
+# Constitution gate — runs pre-build verification and constitution inheritance checks.
+#
+# NOTE: If the `constitution` submodule remote is private, you must add an SSH deploy
+# key (or a PAT with repo scope) as a repository secret and configure it here.
+# See: https://docs.github.com/en/actions/security-guides/using-secrets-in-github-actions
+
+name: Constitution Gate
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  constitution-gate:
+    name: Constitution Gate
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout (with submodules)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          # If the submodule remote is private, uncomment and configure:
+          # ssh-key: ${{ secrets.CONSTITUTION_DEPLOY_KEY }}
+
+      - name: Run pre-build verification
+        run: bash tests/pre_build_verification.sh
+
+      - name: Run constitution inheritance tests
+        # tests/test_constitution_inheritance.sh is authored by a sibling task in this wave;
+        # it will be present once all branches are merged.
+        run: bash tests/test_constitution_inheritance.sh
+
+      - name: Run meta test false-positive proof
+        run: bash scripts/testing/meta_test_false_positive_proof.sh
