@@ -10,9 +10,15 @@
 
 ## Summary
 
-**Branch:** `feat/constitution-submodule`
+**Branch:** `feat/constitution-submodule` (pushed to github origin @ `4bbefca`)
 **Submodule SHA:** `e1bb12502d297ccef376698fc2cadd6a92d2b112` (constitution, tracking `origin/main`)
-**Overall status:** Constitution onboarding complete. No VPN application code exists yet.
+**Overall status:** Constitution fully integrated; all *applicable* mandatory rules applied, verified, committed, and pushed. No VPN application code exists yet.
+**Loop status (2026-06-24):** PAUSED — awaiting VPN specs from the operator. All
+governance/process mandates auditable on a codeless repo are satisfied (see Completed
+Work). Code-level mandates (§4/§5 release+changelog, §11.4.40/.108/.151/.153, 4-layer
+feature tests, `go.mod`/build) are DEFERRED until the spec defines what to build — do
+NOT invent VPN scope (anti-bluff). Resume: paste the SHORT resumption prompt below, then
+hand over the specs.
 
 ---
 
