@@ -1,0 +1,161 @@
+# Helix VPN — Session Continuation File
+
+> Helix Constitution §11.4.131 — standing session-resumption artifact.
+> Re-read this file at the start of any new session before touching code.
+
+---
+
+## Summary
+
+**Branch:** `feat/constitution-submodule`
+**Submodule SHA:** `e1bb12502d297ccef376698fc2cadd6a92d2b112` (constitution, tracking `origin/main`)
+**Overall status:** Constitution onboarding complete. No VPN application code exists yet.
+
+---
+
+## Completed Work
+
+### 1. Constitution submodule added
+
+The `constitution/` directory is a Git submodule pointing at
+`git@github.com:HelixDevelopment/HelixConstitution.git`, branch `main`.
+
+Verify:
+```
+git submodule status
+# expected: e1bb12502d297ccef376698fc2cadd6a92d2b112 constitution (heads/main)
+```
+
+### 2. Inheritance pointers wired into parent repo
+
+Three parent files now reference the submodule:
+
+| File | What it contains |
+|------|-----------------|
+| `CLAUDE.md` | `@constitution/CLAUDE.md` directive; inherits all universal Claude Code rules |
+| `AGENTS.md` | Pointer to `constitution/AGENTS.md`; inherits all universal agent rules |
+| `docs/guides/HELIX_VPN_CONSTITUTION.md` | Project-level constitution extending `constitution/Constitution.md` |
+
+Verify (all three `grep` calls must print the matching line):
+```
+grep 'constitution/CLAUDE.md' CLAUDE.md
+grep 'constitution/AGENTS.md' AGENTS.md
+grep 'constitution/Constitution.md' docs/guides/HELIX_VPN_CONSTITUTION.md
+```
+
+### 3. Pre-build gate added
+
+`tests/pre_build_verification.sh` — checks five invariants:
+
+| Inv | What is checked |
+|-----|----------------|
+| Inv1 | `constitution/` directory exists |
+| Inv2 | `constitution/Constitution.md` contains `§11.4` forensic anchor |
+| Inv3 | `constitution/CLAUDE.md` contains `MANDATORY ANTI-BLUFF COVENANT` |
+| Inv4 | `constitution/AGENTS.md` contains `Anti-bluff covenant` |
+| Inv5 | All three parent files reference the submodule |
+
+Run it:
+```
+bash tests/pre_build_verification.sh
+# expected final line: STATUS: PASS
+```
+
+### 4. Anti-bluff mutation proof added
+
+`scripts/testing/meta_test_false_positive_proof.sh` — mutation case
+`CM-CONSTITUTION-INHERITANCE`. Proves the gate is not a bluff gate by:
+1. Confirming gate passes on clean repo (GREEN baseline)
+2. Mutating `constitution/Constitution.md` to break Inv2
+3. Confirming gate fails after mutation (RED)
+4. Restoring the file from backup (not via `git`)
+5. Verifying byte-identical restore (SHA-256 checksum)
+6. Confirming gate passes again (GREEN restored)
+
+Run it:
+```
+bash scripts/testing/meta_test_false_positive_proof.sh
+# expected final line: STATUS: PASS — gate is discriminating (not a bluff gate) ...
+```
+
+### 5. Comprehensive inheritance test + orchestrator added
+
+- `tests/test_constitution_inheritance.sh` — asserts all 5 invariants (via the
+  gate) plus parent-file non-empty checks and the `.gitmodules` entry check.
+- `test_all.sh` — root orchestrator running the gate, the inheritance test, and
+  the anti-bluff mutation proof in sequence.
+```
+bash test_all.sh
+# expected final line: OVERALL STATUS: PASS
+```
+
+### 6. Git pre-commit hook added
+
+- `.githooks/pre-commit` — runs the gate and aborts the commit if it fails.
+- `scripts/install_git_hooks.sh` — idempotent installer (`git config core.hooksPath .githooks`).
+- `scripts/testing/meta_test_precommit_hook.sh` — §1.1 proof in an isolated temp
+  repo: good commit ALLOWED, bad commit BLOCKED.
+```
+bash scripts/install_git_hooks.sh    # opt in to the hook
+bash scripts/testing/meta_test_precommit_hook.sh    # prove it blocks bad commits
+```
+
+### 7. CI workflow added
+
+- `.github/workflows/constitution.yml` — checks out submodules recursively and runs
+  the gate, inheritance test, and mutation proof on push/PR. (Private submodule
+  remote requires a deploy key / PAT secret — see the comment in the file.)
+
+---
+
+## What Remains
+
+- **VPN application code:** none exists. The Go implementation has not been started.
+  No protocols, tunneling code, configuration, or CLI have been written.
+- **Project-specific constitution clauses:** `docs/guides/HELIX_VPN_CONSTITUTION.md`
+  has no overrides or project clauses yet (intentionally empty during scaffolding).
+- **Go module initialisation:** no `go.mod` / `go.sum` exist yet.
+- **CI execution:** `.github/workflows/constitution.yml` exists but has not been
+  executed on a live GitHub Actions runner (validated statically only); a deploy
+  key / PAT secret is still needed for the private submodule checkout.
+
+---
+
+## Evidence Locations
+
+| Artifact | Path |
+|----------|------|
+| Submodule config | `.gitmodules` |
+| Submodule content | `constitution/` |
+| Claude Code rules (parent) | `CLAUDE.md` |
+| Agent rules (parent) | `AGENTS.md` |
+| Project constitution guide | `docs/guides/HELIX_VPN_CONSTITUTION.md` |
+| Pre-build gate | `tests/pre_build_verification.sh` |
+| Anti-bluff mutation proof | `scripts/testing/meta_test_false_positive_proof.sh` |
+| Comprehensive inheritance test | `tests/test_constitution_inheritance.sh` |
+| Full-suite orchestrator | `test_all.sh` |
+| Pre-commit hook + installer | `.githooks/pre-commit`, `scripts/install_git_hooks.sh` |
+| Pre-commit hook proof | `scripts/testing/meta_test_precommit_hook.sh` |
+| CI workflow | `.github/workflows/constitution.yml` |
+
+---
+
+## Quick Re-run Checklist
+
+```bash
+# 1. Confirm correct branch
+git branch --show-current
+# → feat/constitution-submodule
+
+# 2. Confirm submodule SHA
+git submodule status
+# → e1bb12502d297ccef376698fc2cadd6a92d2b112 constitution (heads/main)
+
+# 3. Run the gate
+bash tests/pre_build_verification.sh
+# → STATUS: PASS
+
+# 4. Run the anti-bluff mutation proof (optional but recommended)
+bash scripts/testing/meta_test_false_positive_proof.sh
+# → STATUS: PASS — gate is discriminating (not a bluff gate) ...
+```
