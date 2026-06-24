@@ -4,7 +4,7 @@
 # Checks five invariants; prints PASS/FAIL per invariant; exits 0 only if all pass.
 # Usage: bash tests/pre_build_verification.sh  (resolved from SCRIPT location, not $PWD)
 
-set -euo pipefail
+set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
@@ -91,15 +91,24 @@ GUIDE_PARENT="${REPO_ROOT}/docs/guides/HELIX_VPN_CONSTITUTION.md"
 inv5_ok=true
 inv5_detail=""
 
-if ! grep -qF 'constitution/CLAUDE.md' "${CLAUDE_PARENT}" 2>/dev/null; then
+if [ ! -f "${CLAUDE_PARENT}" ]; then
+    inv5_ok=false
+    inv5_detail="${inv5_detail}CLAUDE.md not found: ${CLAUDE_PARENT}; "
+elif ! grep -qF 'constitution/CLAUDE.md' "${CLAUDE_PARENT}"; then
     inv5_ok=false
     inv5_detail="${inv5_detail}CLAUDE.md missing 'constitution/CLAUDE.md' reference; "
 fi
-if ! grep -qF 'constitution/AGENTS.md' "${AGENTS_PARENT}" 2>/dev/null; then
+if [ ! -f "${AGENTS_PARENT}" ]; then
+    inv5_ok=false
+    inv5_detail="${inv5_detail}AGENTS.md not found: ${AGENTS_PARENT}; "
+elif ! grep -qF 'constitution/AGENTS.md' "${AGENTS_PARENT}"; then
     inv5_ok=false
     inv5_detail="${inv5_detail}AGENTS.md missing 'constitution/AGENTS.md' reference; "
 fi
-if ! grep -qF 'constitution/Constitution.md' "${GUIDE_PARENT}" 2>/dev/null; then
+if [ ! -f "${GUIDE_PARENT}" ]; then
+    inv5_ok=false
+    inv5_detail="${inv5_detail}docs/guides/HELIX_VPN_CONSTITUTION.md not found: ${GUIDE_PARENT}; "
+elif ! grep -qF 'constitution/Constitution.md' "${GUIDE_PARENT}"; then
     inv5_ok=false
     inv5_detail="${inv5_detail}docs/guides/HELIX_VPN_CONSTITUTION.md missing 'constitution/Constitution.md' reference; "
 fi

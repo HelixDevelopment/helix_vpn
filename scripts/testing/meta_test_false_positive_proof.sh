@@ -140,10 +140,9 @@ fi
 log "Step 4: restoring ${TARGET} from backup..."
 cp "${BACKUP_FILE}" "${TARGET}" \
     || die "§9 VIOLATION: explicit restore from backup FAILED"
-MUTATION_APPLIED=false   # disarm the trap (restore already done)
 log "  Restore complete."
 
-# Verify git submodule sees the file as clean.
+# Verify git submodule sees the file as clean — trap must still fire if this die() triggers.
 GIT_STATUS="$(git -C "${REPO_ROOT}/constitution" status --porcelain 2>&1)"
 if [ -z "${GIT_STATUS}" ]; then
     log "  git submodule status: clean (OK)"
@@ -151,13 +150,16 @@ else
     die "§9 VIOLATION: git submodule not clean after restore — status: ${GIT_STATUS}"
 fi
 
-# Verify checksum matches original.
+# Verify checksum matches original — trap must still fire if this die() triggers.
 RESTORED_SUM="$(shasum -a 256 "${TARGET}" | awk '{print $1}')"
 if [ "${RESTORED_SUM}" = "${ORIG_SUM}" ]; then
     log "  Checksum after restore matches original: ${RESTORED_SUM} (OK)"
 else
     die "§9 VIOLATION: restored file checksum MISMATCH — orig=${ORIG_SUM} restored=${RESTORED_SUM}"
 fi
+
+# Both assertions passed — disarm the trap (restore already done and verified).
+MUTATION_APPLIED=false
 
 # ---------------------------------------------------------------------------
 # Step 5 — Assert GREEN again: gate must pass after restore.
@@ -190,5 +192,5 @@ if [ "${fail_count}" -gt 0 ]; then
     exit 1
 fi
 
-log "STATUS: PASS — gate is non-discriminating and correctly catches ${MUTATION_CASE}"
+log "STATUS: PASS — gate is discriminating (not a bluff gate) and correctly catches ${MUTATION_CASE}"
 exit 0
