@@ -120,6 +120,29 @@ else
 fi
 
 # ---------------------------------------------------------------------------
+# Inv6: CM-NO-ACTIVE-CI — no active root CI workflow files (§11.4.156 part E)
+# git ls-files must return empty for *.yml/*.yaml under .github/workflows/ and
+# for .gitlab-ci.yml at the repo root.
+# ---------------------------------------------------------------------------
+inv6_ok=true
+inv6_detail=""
+
+if git -C "${REPO_ROOT}" ls-files | grep -qE '^\.github/workflows/.*\.ya?ml$'; then
+    inv6_ok=false
+    inv6_detail="${inv6_detail}active GitHub Actions workflow(s) found in git index; "
+fi
+if git -C "${REPO_ROOT}" ls-files | grep -qE '^\.gitlab-ci\.yml$'; then
+    inv6_ok=false
+    inv6_detail="${inv6_detail}.gitlab-ci.yml found in git index; "
+fi
+
+if $inv6_ok; then
+    check "Inv6" "CM-NO-ACTIVE-CI: no active root CI workflow" "ok" ""
+else
+    check "Inv6" "CM-NO-ACTIVE-CI: no active root CI workflow" "fail" "${inv6_detail%%; }"
+fi
+
+# ---------------------------------------------------------------------------
 # Summary
 # ---------------------------------------------------------------------------
 echo ""
