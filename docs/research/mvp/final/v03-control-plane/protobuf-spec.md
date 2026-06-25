@@ -765,7 +765,7 @@ are the **`WatchNetworkMap` contract** document (this Volume) — referenced, no
   §6 enrollment, §10 SLO, §11 MVP DoD.
 - **[04_ARCH §N]** `docs/research/mvp/04_VPN_CLD/HelixVPN-Architecture-Refined.md` — §3.4 ULA /48 +
   4via6 (D4), §4.2 schema-generated clients (no hand-written stubs), §7 no-logging/default-deny.
-- **[SYNTHESIS §N]** `scratchpad/kb/SYNTHESIS.md` — §2 stack floor, §3 decisions D1–D7, §6 repo
+- **[SYNTHESIS §N]** `v09-research/_SYNTHESIS.md` — §2 stack floor, §3 decisions D1–D7, §6 repo
   layout (`helix-proto`), §7 security invariants, §8 ecosystem submodule wiring, §9 constitution
   bindings.
 - Constitution anchors cited: §11.4.5/§11.4.69/§11.4.107 (captured-evidence/anti-bluff),

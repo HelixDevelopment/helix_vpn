@@ -7,7 +7,7 @@
 **Scope:** Enumerated proof that every one of the 16 source research documents under
 `docs/research/mvp/` (11 LLM analyses + 5 `04_VPN_CLD` refined docs) was read and that its
 distinctive content is accounted for in the `final/` specification set — OR is named as a
-gap. Evidence base: `scratchpad/kb/SYNTHESIS.md` + citation-grep across all 13 produced
+gap. Evidence base: `v09-research/_SYNTHESIS.md` + citation-grep across all 13 produced
 `final/*.md` docs.
 
 ---
@@ -111,7 +111,7 @@ Rust-core + custom-transport design rather than carried verbatim.
 
 ## Provenance of this ledger
 
-- Synthesis evidence base: `scratchpad/kb/SYNTHESIS.md` (digests of all 16 sources).
+- Synthesis evidence base: `v09-research/_SYNTHESIS.md` (digests of all 16 sources).
 - Citation grep across all 13 `final/*.md` docs (source-id frequency table, 2026-06-25).
 - Distinctive-term presence check (`sing-box`, `KMS`, `Fyne`, `KMP`, `RTO`, `GitOps`,
   `Terraform`, `Patroni`, `reproducible build`) confirming G1–G3.

@@ -1000,7 +1000,7 @@ mutation.
   overview: §1 module architecture & wiring rules, §2 DDL + RLS, §3 IPAM (D4, `AllocOverlayIP`,
   bit layout), §4 `helix.coordinator.v1` protobuf (`Via6Route`, `EnrollResponse.overlay_ip`),
   §5 event taxonomy + envelope, §7 policy/route-conflict interplay.
-- **[SYNTHESIS]** `…/scratchpad/kb/SYNTHESIS.md` — settled stack floor, D4 decision matrix,
+- **[SYNTHESIS]** `…/v09-research/_SYNTHESIS.md` — settled stack floor, D4 decision matrix,
   privacy/no-log invariants, constitution bindings.
 - **RFC 4193** — IPv6 Unique Local Addresses (`fd00::/8`, 40-bit Global ID, 16-bit Subnet ID,
   64-bit Interface ID) — verifiable standard underpinning §1.1.

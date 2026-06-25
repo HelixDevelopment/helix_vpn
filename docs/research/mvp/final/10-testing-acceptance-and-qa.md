@@ -1040,7 +1040,7 @@ Per §11.4.66, decisions the QA layer touches but does not silently resolve:
 - **[05_YBO]** founding constraints + mandated stack. **[02_QWN] [01_DSK] [11_MST]
   [10_KMI] [07_GMI]** — LLM analyses (transport plurality, IPAM/D4 solvers, asymmetric
   per-leg transport).
-- **[SYNTHESIS]** `scratchpad/kb/SYNTHESIS.md` — settled floor, key decisions D1–D7,
+- **[SYNTHESIS]** `v09-research/_SYNTHESIS.md` — settled floor, key decisions D1–D7,
   phased structure, ecosystem-integration gaps.
 - **[01] [02] [03] [04] [05] [06] [07]** — companion `final/` documents (data plane,
   control plane, client core+UI, security/PKI, repo+ecosystem, Phase-0 WBS, Phase-1 WBS).

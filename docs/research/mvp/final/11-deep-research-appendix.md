@@ -17,9 +17,9 @@ angle's research file.
 ### A0.1 Provenance — read this first
 
 This revision is rebuilt from the now-collected per-angle research corpus under
-`kb/research-*.md`, each entry produced 2026-06-25 with live web access. **Nine of the
+`v09-research/research-*.md`, each entry produced 2026-06-25 with live web access. **Nine of the
 ten planned angles are verified and cited** below. The tenth angle —
-**WireGuard core protocol (§A1)** — has **no `kb/research-wireguard.md` on disk**; per
+**WireGuard core protocol (§A1)** — has **no `v09-research/research-wireguard.md` on disk**; per
 §11.4.6 (no-guessing) it is left honestly marked **UNVERIFIED** and MUST be re-run
 before any WireGuard-core claim in the spec is treated as cited. The remaining angles
 replace all prior "UNVERIFIED (no web access)" markers with cited facts.
@@ -41,7 +41,7 @@ replace all prior "UNVERIFIED (no web access)" markers with cited facts.
 
 ## A1. WireGuard core protocol — UNVERIFIED (research not re-run)
 
-**Status (§11.4.6):** No `kb/research-wireguard.md` exists in the research corpus. The
+**Status (§11.4.6):** No `v09-research/research-wireguard.md` exists in the research corpus. The
 WireGuard-core angle (Noise IK handshake internals, 1-RTT handshake, Curve25519/
 ChaCha20-Poly1305/BLAKE2s crypto suite, cookie/DoS mitigation, `wireguard-go` vs
 kernel-module data paths, the 148-byte handshake-init / 92-byte response fingerprint as

@@ -154,7 +154,7 @@
 
 ## Generation plan (autonomous, batched, rate-limit-aware)
 Documents are generated in **expansion waves** of 3–4 parallel subagents (§11.4.103), each
-reading the volume's pass-1 overview + `kb/SYNTHESIS.md` + the relevant `research-<angle>.md`,
+reading the volume's pass-1 overview + `v09-research/_SYNTHESIS.md` + the relevant `research-<angle>.md`,
 producing one nano-detail document with concrete interfaces/DDL/protobuf/skeletons + Mermaid
 diagrams, citing sources, marking unproven facts `UNVERIFIED`. Each wave is committed +
 pushed; an adversarial review gates each volume. Wave order: V2 data-plane → V3 control-plane →

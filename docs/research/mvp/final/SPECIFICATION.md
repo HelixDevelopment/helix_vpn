@@ -417,7 +417,7 @@ This spine is `SPECIFICATION.md`. Every other document below is an actual siblin
 
 ## 12. Provenance & change control
 
-- **Sources:** 16 research documents under `docs/research/mvp/` (see citation key in metadata block). Primary architectural source: `[04_ARCH]`. Cross-cutting synthesis: `[SYN]` (`scratchpad/kb/SYNTHESIS.md`).
+- **Sources:** 16 research documents under `docs/research/mvp/` (see citation key in metadata block). Primary architectural source: `[04_ARCH]`. Cross-cutting synthesis: `[SYN]` (`v09-research/_SYNTHESIS.md`).
 - **Versioning (§11.4.73):** primary version bumps for major rewrites (this is V1); `Revision` bumps for additive refinements. This spine is `Revision 1`.
 - **Sync (§11.4.106):** `.html`/`.pdf` exports of this and every `final/` doc kept in lockstep via `docs_chain`.
 - **Decision discipline (§11.4.66/.101):** open decisions live in §9 + doc 99, never silently resolved.

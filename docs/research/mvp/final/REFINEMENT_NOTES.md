@@ -39,7 +39,7 @@ file records every finding so nothing is lost going into the next pass (§11.4.1
   **Pass-2 status (2026-06-25): INTERMITTENT, not total — a 2-agent probe found the throttle is
   flaky. **RESOLVED (mostly): 9 of 10 angles now verified against real cited web sources**
   (masque, hysteria2, mullvad, flutter_ffi, ios_android, go_cp, podman_k8s, pki_pq_nat,
-  daita_test — ~130 KB cited corpus in kb/research-*.md); `11-deep-research-appendix.md`
+  daita_test — ~130 KB cited corpus in v09-research/research-*.md); `11-deep-research-appendix.md`
   rewritten from that corpus. ONLY `wireguard` remains `UNVERIFIED` (kept rate-limited) —
   re-run that one angle when the throttle next clears.**
 - **R2 — Proto package name inconsistent.** ✅ RESOLVED — see F2 above.
@@ -60,6 +60,30 @@ file records every finding so nothing is lost going into the next pass (§11.4.1
     gives byte-for-byte client↔edge reuse).
   - G3 [09_GCT] Fyne rejection rationale — ✅ RESOLVED: recorded in 99-ledger (Flutter is the
     only toolkit reaching all 8 platforms + shared design system; Fyne is desktop-only).
+
+## Expansion waves (nano-detail volumes per MASTER_INDEX)
+- **V2 Data-Plane** ✅ 13 docs (`v02-data-plane/`), review go=true. Committed `7d748b3`.
+- **V3 Control-Plane** ✅ 13 docs (`v03-control-plane/`), 3 contradictions fixed to GO. Committed `5f43dae`.
+- **V4 Clients** ⚠️ 12 docs (`v04-client/`) generated, review **go=false** on FFI-surface
+  contradictions (R7) — committed WITH the contradiction documented (not hidden, §11.4.6).
+- Citation paths normalized repo-wide: `scratchpad/kb/*` → in-repo `v09-research/*` so every
+  `[research-*]`/`[SYNTHESIS]` reference resolves (one straggler: `v02-data-plane/wireguard-core.md`).
+
+- **R7 — V4 FFI-surface contradiction (OPEN, do myself when capacity returns).** `ffi-surface.md`
+  (canonical owner) and `helix-core-rust.md` disagree on the `helix-ffi/src/api.rs` surface:
+  (a) status enum name `TunnelStatus` vs `FfiTunnelStatus`; (b) `status_stream` return `Result<(),CoreError>`
+  vs void; (c) start/stop error `CoreError` vs `anyhow::Result`; (d) `CoreError` variants
+  `{NotStarted,AlreadyStarted,Config,Auth,HostFatal,BadFd,Internal}` vs `{Busy,NotStarted,HostFatal,Internal}`
+  (`Busy` should be `AlreadyStarted`); (e) `apply_map` missing from ffi-surface §2 surface list;
+  (f) ffi-surface "Sources verified" footer cites `scratchpad/kb/` paths. FIX: make `ffi-surface.md`
+  canonical; align `helix-core-rust.md` to it. These are precise textual edits — no agent needed.
+
+## WEEKLY-LIMIT STOP (2026-06-25)
+The account hit its **weekly usage limit (resets Jun 29 12:00 Europe/Moscow)** mid-V4. No further
+subagents/workflows can run until reset. The reconciliation agent for R7 never executed. All
+generated work is committed (no loss). Resume after reset: fix R7 (self, no agent), retry the one
+`wireguard` research angle, then continue V5 Security → V6 Deploy → V1 Product → V7 Execution →
+V8 Testing → V0 Meta per MASTER_INDEX.
 
 ## Deferred deliverables (post-refinement, already agreed)
 - Reusable-component **vasic-digital repos** (GitHub+GitLab) + submodules + `upstreams/` +

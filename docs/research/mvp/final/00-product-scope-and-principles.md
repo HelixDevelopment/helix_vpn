@@ -784,7 +784,7 @@ This document records the binding so later docs cannot omit it:
 - `04_VPN_CLD/HelixVPN-Phase0-Spike.md` (`[04_P0]`), `HelixVPN-Phase1-MVP.md` (`[04_P1]`), `HelixVPN-Phase2-Parity.md` (`[04_P2]`), `HelixVPN-helix-ui-Flutter.md` (`[04_UI]`).
 - `05_VPN_YBO.md` (`[05_YBO]`) — operator mandate brief (stack + platform + two-way/multi-network requirements).
 - `00_VPN_Initial_Res.md`, `01_VPN_DSK.md`, `02_VPN_QWN.md`, `03_VPN_ZAI.md`, `06_VPN_GRK.md`, `07_VPN_GMI.md`, `08_VPN_CPL.md`, `09_VPN_GCT.md`, `10_VPN_KMI.md`, `11_VPN_MST.md` — the 10 independent analyses cross-referenced for D1–D7 camps.
-- `scratchpad/kb/SYNTHESIS.md` (`[SYNTHESIS]`) — cross-document synthesis + decision register.
+- `v09-research/_SYNTHESIS.md` (`[SYNTHESIS]`) — cross-document synthesis + decision register.
 - `[research-masque]` — RFC 9298 (CONNECT-UDP), RFC 9297 (HTTP Datagrams), RFC 9221 (unreliable QUIC datagrams), RFC 9484 (CONNECT-IP); Mullvad QUIC-mode = WG-over-MASQUE.
 
 *Constitution bindings applied: §11.4.44 (revision header), §11.4.6 (no-guessing — open decisions carry options+recommendation, never silent picks), §11.4.66 (decision discipline), §11.4.17/.35 (universal vs project, inheritance), §11.4.76/.161 (containers/rootless), §11.4.93 (phases→workable items), §11.4.106 (docs_chain sync), §11.4.65/.153 (HTML+PDF[+DOCX] exports follow in refinement).*

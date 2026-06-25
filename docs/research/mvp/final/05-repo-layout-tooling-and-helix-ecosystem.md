@@ -4,7 +4,7 @@
 **Last modified:** 2026-06-25T00:00:00Z
 **Status:** active — subordinate to `SPECIFICATION.md` (the spine). Where this document disagrees with the spine on roles, principles (spine §4), or the decision register (spine §9), the spine wins until amended per §11.4.73.
 **Authority:** This document owns the **physical engineering substrate** of HelixVPN: the working monorepo, the decoupled reusable-component repos, schema-first codegen, the `helixvpnctl` operator CLI, the three deployment substrates (Podman quadlets / Docker Compose / Kubernetes), and the wiring of every already-incorporated `submodules/` member into its concrete role. It is a **specification**, not the product — interface sketches, manifests, and skeletons are illustrative, not the shipping implementation (2–3 refinement passes follow).
-**Evidence base:** `[04_ARCH §4/§9/§10/§11]` = `04_VPN_CLD/HelixVPN-Architecture-Refined.md`; `[04_P1]` = `HelixVPN-Phase1-MVP.md`; `[04_P0]` = `HelixVPN-Phase0-Spike.md`; `[04_UI]` = `HelixVPN-helix-ui-Flutter.md`; `[05_YBO]` = mandated-stack brief; `[SYNTHESIS]` = `scratchpad/kb/SYNTHESIS.md`; per-LLM ids `[02_QWN] [01_DSK] [07_GMI] [10_KMI] [11_MST]`; `[research-podman_k8s]` = the Podman-Quadlet / `podman kube` / Kubernetes-for-WireGuard deep-research thread (verified against latest official sources per §11.4.99).
+**Evidence base:** `[04_ARCH §4/§9/§10/§11]` = `04_VPN_CLD/HelixVPN-Architecture-Refined.md`; `[04_P1]` = `HelixVPN-Phase1-MVP.md`; `[04_P0]` = `HelixVPN-Phase0-Spike.md`; `[04_UI]` = `HelixVPN-helix-ui-Flutter.md`; `[05_YBO]` = mandated-stack brief; `[SYNTHESIS]` = `v09-research/_SYNTHESIS.md`; per-LLM ids `[02_QWN] [01_DSK] [07_GMI] [10_KMI] [11_MST]`; `[research-podman_k8s]` = the Podman-Quadlet / `podman kube` / Kubernetes-for-WireGuard deep-research thread (verified against latest official sources per §11.4.99).
 
 ---
 
@@ -726,7 +726,7 @@ These compose with the spine's decision register (D1–D8); none is resolved her
 - `04_VPN_CLD/HelixVPN-Phase1-MVP.md` §2/§3 (repo skeleton, protobuf `WatchNetworkMap`), §8 (codegen — buf + OpenAPI), §9 (`helixvpnctl` + quadlets), §11 (test layers + MVP DoD) — `[04_P1]`.
 - `04_VPN_CLD/HelixVPN-Phase0-Spike.md` (surviving `Transport` trait + FFI surface that define extraction seams), `HelixVPN-helix-ui-Flutter.md` (`runHelixApp` flavors, Melos) — `[04_P0] [04_UI]`.
 - `05_VPN_YBO.md` (mandated Go/Gin/Postgres/Redis/Podman rootless stack) — `[05_YBO]`.
-- `scratchpad/kb/SYNTHESIS.md` §2 (stack floor), §6 (repo layout / reuse pillars), §8 (submodule wiring the research misses), §9 (constitution bindings) — `[SYNTHESIS]`.
+- `v09-research/_SYNTHESIS.md` §2 (stack floor), §6 (repo layout / reuse pillars), §8 (submodule wiring the research misses), §9 (constitution bindings) — `[SYNTHESIS]`.
 - `submodules/{containers,docs_chain,helix_qa,challenges,security,vision_engine,doc_processor,llm_provider,llm_orchestrator,llms_verifier,panoptic}/README.md` (module identities, public surfaces, anti-bluff guarantees) — read in full for §6.
 - `[research-podman_k8s]` — Podman Quadlet `.pod`/`.container`/`.network` unit semantics, rootless `systemctl --user` lifecycle, `podman kube generate`, Kubernetes UDP ingress for WireGuard (hostNetwork DaemonSet vs UDP LoadBalancer/MetalLB/NLB vs NodePort), `NET_ADMIN`/`hostPort` requirements for in-cluster tunnels; cross-referenced against latest official Podman + Kubernetes docs per §11.4.99.
 

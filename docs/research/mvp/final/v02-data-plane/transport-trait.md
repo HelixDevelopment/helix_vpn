@@ -12,8 +12,8 @@
 > (04_VPN_CLD/HelixVPN-Architecture-Refined.md), `[04_P0 §N]`
 > (04_VPN_CLD/HelixVPN-Phase0-Spike.md), `[04_P2 §N]`
 > (04_VPN_CLD/HelixVPN-Phase2-Parity.md), `[research-masque]`
-> (scratchpad/kb/research-masque.md), `[SYNTHESIS §N]`
-> (scratchpad/kb/SYNTHESIS.md). Anything not grounded in that evidence base is
+> (v09-research/research-masque.md), `[SYNTHESIS §N]`
+> (v09-research/_SYNTHESIS.md). Anything not grounded in that evidence base is
 > tagged `UNVERIFIED` per constitution §11.4.6 — never fabricated.
 
 ---

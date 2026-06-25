@@ -13,7 +13,7 @@
 > Evidence cited inline by id: [02_CP §N] (pass-1 control-plane spec
 > `final/02-control-plane.md`), [04_P1 §N] (`HelixVPN-Phase1-MVP.md`),
 > [04_ARCH §N] (`HelixVPN-Architecture-Refined.md`), [research-go_cp §N]
-> (`kb/research-go_cp.md`), [SYNTHESIS §N]. Unproven facts are marked `UNVERIFIED` per §11.4.6.
+> (`v09-research/research-go_cp.md`), [SYNTHESIS §N]. Unproven facts are marked `UNVERIFIED` per §11.4.6.
 
 ---
 
@@ -824,7 +824,7 @@ proto §4, events §5, policy §7, SLO §10, invariants §0.1). · [04_P1]
 `docs/research/mvp/04_VPN_CLD/HelixVPN-Phase1-MVP.md` (coordinator, WatchNetworkMap, convergence,
 SLOs). · [04_ARCH] `docs/research/mvp/04_VPN_CLD/HelixVPN-Architecture-Refined.md` §1–§7
 (control/data separation, push-don't-poll, need-to-know, ULA/48+4via6, no-logging). ·
-[research-go_cp] `scratchpad/kb/research-go_cp.md` (Connect-RPC server-streaming + trailer-error
+[research-go_cp] `v09-research/research-go_cp.md` (Connect-RPC server-streaming + trailer-error
 semantics §2, RLS `SET LOCAL` §4, Redis Streams XAutoClaim/DLQ §5 — latest versions, accessed
-2026-06-25). · [SYNTHESIS] `scratchpad/kb/SYNTHESIS.md` §§1–9 (stack floor, D3/D4 decisions,
+2026-06-25). · [SYNTHESIS] `v09-research/_SYNTHESIS.md` §§1–9 (stack floor, D3/D4 decisions,
 ecosystem + constitution bindings).

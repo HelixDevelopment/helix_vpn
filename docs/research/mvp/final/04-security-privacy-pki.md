@@ -947,7 +947,7 @@ security validations and run FIRST in the suite per §11.4.132.
   hybrid, Rosenpass), §3 (NAT traversal / relay-sees-only-ciphertext), §6.4 (gateway key rotation),
   §7 (security audit + reproducible builds) (`[04_P2]`).
 - `05_VPN_YBO.md` (`[05_YBO]`) — operator mandate (Go/Gin/Postgres/Redis/Podman stack; rootless).
-- `scratchpad/kb/SYNTHESIS.md` §7 (security/privacy invariants), §2/§8/§9 (stack + submodule wiring
+- `v09-research/_SYNTHESIS.md` §7 (security/privacy invariants), §2/§8/§9 (stack + submodule wiring
   + constitution bindings) (`[SYNTHESIS]`).
 - `[research-pki_pq_nat]` — RFC 8446 (TLS 1.3 mutual auth), RFC 7636 (PKCE), RFC 5280 (X.509 / CRL),
   FIPS 203 (ML-KEM / standardized Kyber), Rosenpass PQ key-exchange design, RFC 5869 (HKDF),
