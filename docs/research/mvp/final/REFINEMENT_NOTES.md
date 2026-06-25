@@ -17,12 +17,17 @@ file records every finding so nothing is lost going into the next pass (§11.4.1
 - All 16 source docs cited; all open decisions D1–D7 surfaced with recommendations.
 - 46 Mermaid diagrams, SQL DDL, Podman/Docker/K8s manifests embedded.
 
-## FIXED in pass 1 (this commit)
+## FIXED
 - **F1 — Spine navigation (was the GO-blocker).** `SPECIFICATION.md` §10 INDEX and §7
-  owning-doc pointers referenced an idealized filename scheme
-  (`00_PRODUCT_AND_REQUIREMENTS.md` …) that does not exist on disk. Rewritten to point
+  owning-doc pointers (+ §6 and the §9 decision register) referenced an idealized filename
+  scheme (`00_PRODUCT_AND_REQUIREMENTS.md` …) that does not exist on disk. Rewritten to point
   at the real files (`00-product-scope-and-principles.md` … `99-source-coverage-ledger.md`)
   with correct owning-doc mapping (Transport trait → 01; WatchNetworkMap → 02; FFI → 03).
+- **F2 — Proto package unified (resolves R2).** The Coordinator service proto is now
+  `helix.coordinator.v1` across `SPECIFICATION.md`, `02-control-plane.md`, and
+  `11-deep-research-appendix.md` (billing stays `helix.billing.v1`). Schema-first zero-drift restored.
+- **F3 — D8 added to ledger (resolves R3).** `99-source-coverage-ledger.md` decision
+  cross-check now lists D1–D8 (added D8 licensing/positioning) and the header/footer say "8".
 
 ## OPEN for pass 2 (worklist)
 - **R1 — Deep web research NOT performed (rate-limited).** The 10 research angles
@@ -31,14 +36,13 @@ file records every finding so nothing is lost going into the next pass (§11.4.1
   appendix.md` honestly marks every external fact `UNVERIFIED (no web access)`. **Pass 2
   MUST run the deep research (§11.4.150/§11.4.99) when rate-limits clear** and replace the
   UNVERIFIED markers with cited (URL + access-date) facts; re-validate version pins.
-- **R2 — Proto package name inconsistent.** `02-control-plane.md` uses
-  `package helix.agent.v1`; `SPECIFICATION.md` uses `helix.coord.v1`;
-  `11-deep-research-appendix.md` differs again. Standardize on ONE canonical package
-  across all docs (recommend `helix.v1` with `agent`/`coord` as message-name prefixes, or
-  a documented per-service package set) — the schema-first "zero-drift" promise depends on it.
-- **R3 — Decision D8 (licensing/positioning).** Surfaced in SPECIFICATION §9 + docs 00/03/05
-  but omitted from the 99-ledger decision cross-check (lists only D1–D7) and the appendix.
-  Add D8 to the decision register everywhere so the surfaced set is internally complete.
+  **Pass-2 status (2026-06-25): INTERMITTENT, not total — a 2-agent probe found the throttle is
+  flaky: `masque` rate-limited but `mullvad` SUCCEEDED (web=yes, 29 cited sources, written to
+  kb/research-mullvad.md). Research IS achievable with retry. In progress: the remaining 9 angles
+  run in small retried batches, then 11-deep-research-appendix.md is rewritten from the cited
+  corpus (replacing the UNVERIFIED markers).**
+- **R2 — Proto package name inconsistent.** ✅ RESOLVED — see F2 above.
+- **R3 — Decision D8 (licensing/positioning).** ✅ RESOLVED — see F3 above.
 - **R4 — doc-99 identity.** SPECIFICATION §10 originally promised "99 = consolidated
   Glossary/Decisions/References"; the actual 99 is the source-coverage ledger (glossary lives
   in SPECIFICATION §11, decision register in §9). Reconciled in F1, but pass 2 may choose to
@@ -48,9 +52,13 @@ file records every finding so nothing is lost going into the next pass (§11.4.1
   adequate, but asymmetric). Pass 2: bring 07/08/09 to the same subtask granularity for the
   §11.4.93 workable-items DB import.
 - **R6 — Ledger-disclosed source gaps** (honestly flagged, not hidden):
-  - G1 [03_ZAI] disaster-recovery / RTO-RPO not consolidated into a runbook section.
-  - G2 [06_GRK] sing-box framework: rejection rationale unrecorded.
-  - G3 [09_GCT] Fyne (Go-native UI) not recorded as considered-then-rejected.
+  - G1 [03_ZAI] disaster-recovery / RTO-RPO not consolidated into a runbook section — OPEN,
+    recommended for a Phase-2 HA/DR revision (08 or 05).
+  - G2 [06_GRK] sing-box framework rejection rationale — ✅ RESOLVED: recorded in 99-ledger
+    (Go framework conflicts with Rust-core D2 + iOS memory ceiling; custom Rust helix-transport
+    gives byte-for-byte client↔edge reuse).
+  - G3 [09_GCT] Fyne rejection rationale — ✅ RESOLVED: recorded in 99-ledger (Flutter is the
+    only toolkit reaching all 8 platforms + shared design system; Fyne is desktop-only).
 
 ## Deferred deliverables (post-refinement, already agreed)
 - Reusable-component **vasic-digital repos** (GitHub+GitLab) + submodules + `upstreams/` +

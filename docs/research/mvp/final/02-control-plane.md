@@ -512,7 +512,7 @@ rules are doc 03; the canonical `.proto` is here.
 ```protobuf
 // proto/helix/agent/v1/agent.proto
 syntax = "proto3";
-package helix.agent.v1;
+package helix.coordinator.v1;
 option go_package = "github.com/vasic-digital/helix-go/gen/helix/agent/v1;agentv1";
 
 service Coordinator {

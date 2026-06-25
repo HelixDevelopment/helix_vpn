@@ -253,7 +253,7 @@ The push-based desired-state spine. Every agent opens it once; polling is abolis
 
 ```protobuf
 syntax = "proto3";
-package helix.coord.v1;
+package helix.coordinator.v1;
 
 service Coordinator {
   // Agent opens once; receives a full snapshot then a delta stream. Peers are ALREADY policy-filtered

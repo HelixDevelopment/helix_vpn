@@ -51,7 +51,7 @@ gap. Evidence base: `scratchpad/kb/SYNTHESIS.md` + citation-grep across all 13 p
 
 ---
 
-## Decision-coverage cross-check (the 7 D-decisions are all surfaced)
+## Decision-coverage cross-check (the 8 D-decisions are all surfaced)
 
 | Decision | Camp A source(s) | Camp B source(s) | Surfaced in final/ |
 |---|---|---|---|
@@ -62,8 +62,9 @@ gap. Evidence base: `scratchpad/kb/SYNTHESIS.md` + citation-grep across all 13 p
 | D5 edge language | 04_P0 (Rust) | (Go quic-go) | 01, 06 (gate G4), 11 |
 | D6 transport topology | single-protocol | 11_MST (asymmetric per-leg) | 01, 11 |
 | D7 MVP ambition | QWN/DSK/04_P0 (lean) | KMI/ZAI (Connectivity-OS) | 00, 11 |
+| D8 licensing / positioning | 04_ARCH §13 (source-available + commercial) | pure OSS | 00, SPEC §9 (pre-Phase-3 decision) |
 
-All seven decisions from SYNTHESIS §3 are present as explicit decisions-with-recommendations.
+All eight decisions (D1–D7 from SYNTHESIS §3 + D8 licensing/positioning surfaced in 00 + SPECIFICATION §9) are present as explicit decisions-with-recommendations.
 
 ---
 
@@ -86,17 +87,19 @@ be added/recorded in a future revision).
   TUIC/etc. via one Go framework). The protocols GRK wanted are reflected (Hysteria2 → D1
   Camp B; Shadowsocks + UDP-over-TCP → 08 Phase-2 transport set), but the **sing-box framework
   itself was not adopted** — the spec chose a custom Rust `helix-transport` crate (04_ARCH).
-  This is a conscious divergence, but the *reason sing-box was rejected* is **not written down**
-  in any final/ doc. **Recommendation:** add a one-paragraph "considered-and-rejected: sing-box
-  (Go framework conflicts with Rust-core D2/iOS-memory-ceiling)" note to 01-data-plane or the
-  11-appendix.
+  **Rejection rationale (recorded here):** sing-box is a Go framework, which conflicts with the
+  Rust-core decision (D2) and the iOS NE memory ceiling; a custom Rust `helix-transport` crate
+  gives byte-for-byte client↔edge reuse and a single obfuscate/de-obfuscate implementation that
+  sing-box's process model cannot match. A future pass MAY also surface this note inline in
+  01-data-plane; for now the considered-and-rejected record lives here.
 
 - **G3 — [09_GCT] Fyne desktop UI — deliberate-divergence (rejected alternative not recorded).**
   GCT proposed **Fyne** for the desktop/web client. Flutter (04_UI) won unanimously and Fyne
-  is correctly absent from the build plan, but it is **not recorded as a considered-then-rejected
-  option**, so a future reader cannot see it was evaluated. **Recommendation:** one line in
-  03-client-core-and-ui's UI-toolkit decision noting Fyne/`[09_GCT]` was evaluated and dropped
-  in favor of Flutter (cross-platform mobile reach + shared design system).
+  is correctly absent from the build plan. **Rejection rationale (recorded here):** Fyne
+  (`[09_GCT]`) was evaluated and dropped in favor of Flutter — Flutter is the only toolkit that
+  reaches all 8 required platforms (incl. iOS/Android/Aurora/HarmonyOS) with one codebase + a
+  shared `helix_design` system; Fyne targets desktop and lacks the mobile/niche-OS reach. A
+  future pass MAY also note this inline in 03-client-core-and-ui's UI-toolkit decision.
 
 No source is **wholly** unabsorbed: every one of the 16 ids is cited in at least `00` and the
 `11` deep-research appendix, and the three gaps above are scoped, named, and recommendation-
