@@ -37,10 +37,11 @@ file records every finding so nothing is lost going into the next pass (§11.4.1
   MUST run the deep research (§11.4.150/§11.4.99) when rate-limits clear** and replace the
   UNVERIFIED markers with cited (URL + access-date) facts; re-validate version pins.
   **Pass-2 status (2026-06-25): INTERMITTENT, not total — a 2-agent probe found the throttle is
-  flaky: `masque` rate-limited but `mullvad` SUCCEEDED (web=yes, 29 cited sources, written to
-  kb/research-mullvad.md). Research IS achievable with retry. In progress: the remaining 9 angles
-  run in small retried batches, then 11-deep-research-appendix.md is rewritten from the cited
-  corpus (replacing the UNVERIFIED markers).**
+  flaky. **RESOLVED (mostly): 9 of 10 angles now verified against real cited web sources**
+  (masque, hysteria2, mullvad, flutter_ffi, ios_android, go_cp, podman_k8s, pki_pq_nat,
+  daita_test — ~130 KB cited corpus in kb/research-*.md); `11-deep-research-appendix.md`
+  rewritten from that corpus. ONLY `wireguard` remains `UNVERIFIED` (kept rate-limited) —
+  re-run that one angle when the throttle next clears.**
 - **R2 — Proto package name inconsistent.** ✅ RESOLVED — see F2 above.
 - **R3 — Decision D8 (licensing/positioning).** ✅ RESOLVED — see F3 above.
 - **R4 — doc-99 identity.** SPECIFICATION §10 originally promised "99 = consolidated
