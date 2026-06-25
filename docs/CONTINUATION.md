@@ -1,7 +1,7 @@
 # Helix VPN — Session Continuation File
 
-**Revision:** 2
-**Last modified:** 2026-06-24T00:00:00Z
+**Revision:** 3
+**Last modified:** 2026-06-25T00:00:00Z
 
 > Helix Constitution §11.4.131 — standing session-resumption artifact.
 > Re-read this file at the start of any new session before touching code.
@@ -10,10 +10,11 @@
 
 ## Summary
 
-**Branch:** `feat/constitution-submodule` (pushed to github origin @ `4bbefca`)
+**Branch:** `main` (single working branch as of 2026-06-25 — `feat/constitution-submodule` was fast-forward-merged into `main` and pushed to origin; all work happens on `main` now).
 **Submodule SHA:** `e1bb12502d297ccef376698fc2cadd6a92d2b112` (constitution, tracking `origin/main`)
-**Overall status:** Constitution fully integrated; all *applicable* mandatory rules applied, verified, committed, and pushed. No VPN application code exists yet.
-**Loop status (2026-06-24):** PAUSED — awaiting VPN specs from the operator. All
+**Mandatory submodules incorporated (2026-06-25):** 11 own-org repos under `submodules/<name>` (flat, lowercase snake_case per §11.4.28(C)/§11.4.29), full recursive closure from seeds challenges/containers/docs_chain/helix_qa. Audit record: `.helix-manifest.yaml`. `install_upstreams` (§11.4.36) run in each. helix_qa source = `HelixDevelopment/helixqa` (operator choice).
+**Overall status:** Constitution fully integrated; mandatory submodules incorporated. No VPN application code exists yet.
+**Loop status (2026-06-25):** PAUSED — awaiting VPN specs from the operator. All
 governance/process mandates auditable on a codeless repo are satisfied (see Completed
 Work). Code-level mandates (§4/§5 release+changelog, §11.4.40/.108/.151/.153, 4-layer
 feature tests, `go.mod`/build) are DEFERRED until the spec defines what to build — do
