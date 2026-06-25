@@ -406,32 +406,42 @@ pub enum CoreMode { Client, Connector }
 
 // ---- lifecycle (LOGIC ONLY — NOT the OS tunnel; the shim owns that, F-I2) ----
 /// Build the Orchestrator (§6.1), arm the kill-switch closed (§8.2), spawn the
-/// loops, emit Connecting. Idempotent: a second start while running is Err(Busy).
-pub async fn start(cfg: ClientConfig) -> anyhow::Result<()>;
+/// loops, emit Connecting. Idempotent: a second start while running is Err(AlreadyStarted) (§6.1).
+pub async fn start(cfg: ClientConfig) -> Result<(), CoreError>;
 /// Graceful stop: cancel loops, FIN transport, revert kill-switch+DNS per §8.6, emit Down{stopped}.
-pub async fn stop() -> anyhow::Result<()>;
+pub async fn stop() -> Result<(), CoreError>;
 
 // ---- the live status stream (maps to the orchestrator broadcast, §5) ----
-/// frb StreamSink → Dart broadcast Stream. Exactly one logical stream per process.
-pub fn status_stream(sink: StreamSink<FfiTunnelStatus>);
+/// frb StreamSink → Dart broadcast Stream. Many concurrent sinks are allowed (broadcast
+/// fan-out, §5.3); each call subscribes a fresh receiver and immediately re-emits the
+/// cached latest status (§5.2). Returns Err(NotStarted) if the core is not running.
+pub fn status_stream(sink: StreamSink<FfiTunnelStatus>) -> Result<(), CoreError>;
 
 // ---- exits / routing (Phase 1+) ----
-pub async fn exits() -> anyhow::Result<Vec<ExitOption>>;
-pub async fn set_exit(id: String, multi_hop_chain: Option<Vec<String>>) -> anyhow::Result<()>;
+pub async fn exits() -> Result<Vec<ExitOption>, CoreError>;
+pub async fn set_exit(id: String, multi_hop_chain: Option<Vec<String>>) -> Result<(), CoreError>;
 
 // ---- privacy shields (pure logic — no OS tunnel touched, F-I2) ----
-pub async fn set_shields(s: Shields) -> anyhow::Result<()>;
+pub async fn set_shields(s: Shields) -> Result<(), CoreError>;
 
 // ---- connector mode only (§9) ----
-pub async fn advertise(cidrs: Vec<String>) -> anyhow::Result<AdvertiseResult>;
+pub async fn advertise(cidrs: Vec<String>) -> Result<AdvertiseResult, CoreError>;
 
 // ---- desired-state push (Phase 1: bridges WatchNetworkMap; Phase 0: file-watch) (§7) ----
-pub async fn apply_map(map_json: String) -> anyhow::Result<MapApplied>;
+pub async fn apply_map(map_json: String) -> Result<MapApplied, CoreError>;
 
 // ---- shim handoff: the core NEVER opens the TUN; the shim hands it a packet fd / pump (F-I2, §6) ----
-pub fn attach_tun(fd: i32) -> anyhow::Result<()>;   // Android ParcelFileDescriptor / Linux tun fd
-pub fn detach_tun() -> anyhow::Result<()>;
+pub fn attach_tun(fd: i32) -> Result<(), CoreError>;   // Android ParcelFileDescriptor / Linux tun fd
+pub fn detach_tun() -> Result<(), CoreError>;
 ```
+
+> **Canonical FFI contract (R7-reconciled).** Every FFI verb returns the typed
+> `CoreError` (§10.1), never `anyhow::Result` — `anyhow` stays *internal* to the
+> orchestrator and is converted at the boundary via `From` impls (see
+> `v04-client/ffi-surface.md` §8.1, the canonical owner of the exported surface).
+> The Dart-facing status enum is `FfiTunnelStatus` (§5.1); `ffi-surface.md` writes it
+> path-qualified as `ffi::TunnelStatus` purely to contrast with the orchestrator's
+> `core::TunnelStatus` — it is **the same Rust type**.
 
 ### 4.2 Mirrored value types (frb `#[frb(mirror)]` → identical Dart/Swift/Kotlin)
 
@@ -599,9 +609,9 @@ touching the OS tunnel (F-I2).
 
 ```rust
 // helix-ffi/src/api.rs (body sketch) — drives helix-core; v02-orch §2.1 owns Orchestrator::start
-pub async fn start(cfg: ClientConfig) -> anyhow::Result<()> {
+pub async fn start(cfg: ClientConfig) -> Result<(), CoreError> {
     let mut guard = orch_cell().lock().await;
-    if guard.is_some() { anyhow::bail!(CoreError::Busy); }        // idempotent: no double tunnel
+    if guard.is_some() { return Err(CoreError::AlreadyStarted); } // idempotent: no double tunnel
     let initial_map = load_map(&cfg.map_path_or_session).await?; // Phase 0: file; Phase 1: session→WatchNetworkMap
     let oc = helix_core::OrchestratorConfig {
         mode: cfg.mode.into(),                                    // F-I3
@@ -757,7 +767,7 @@ pub struct MapDelta {                        // produced by diff(), surfaced to 
 
 ```rust
 // helix-ffi/src/api.rs — Phase 1 wires WatchNetworkMap → this; Phase 0 the file-watch task calls it.
-pub async fn apply_map(map_json: String) -> anyhow::Result<MapApplied> {
+pub async fn apply_map(map_json: String) -> Result<MapApplied, CoreError> {
     let desired: RouteMap = serde_json::from_str(&map_json)?;       // Phase-0 stand-in shape == Phase-1 stream
     let delta = orchestrator().apply_map(desired).await?;          // v02-orch §6.4 in-place converge (O-I12)
     Ok(MapApplied {
@@ -935,7 +945,7 @@ flowchart LR
 
 ```rust
 // helix-ffi/src/api.rs (connector mode)
-pub async fn advertise(cidrs: Vec<String>) -> anyhow::Result<AdvertiseResult>;
+pub async fn advertise(cidrs: Vec<String>) -> Result<AdvertiseResult, CoreError>;
 // → orchestrator pushes the served CIDRs into its RouteMap; the gateway reconciles them.
 // AdvertiseResult.conflicts surfaces overlapping-CIDR rejections to the Connector UI (doc 03 §6).
 ```
@@ -956,20 +966,23 @@ to `status_stream()` exactly as Access does (the FFI/UI code is shared, F-I3).
 ```rust
 // helix-ffi/src/error.rs — what crosses the FFI as a Dart exception / Swift-Kotlin throw
 #[derive(thiserror::Error, Debug)]
-pub enum CoreError {
-    #[error("core busy: already started")]        Busy,            // start() while running (§6.1)
-    #[error("not started")]                        NotStarted,      // stop/apply_map/exits before start
-    #[error("tun attach failed: {0}")]             TunAttach(String), // attach_tun on a dead/foreign fd
-    #[error("host-fatal: {0}")]                    HostFatal(String), // TUN open / firewall apply failed (§8)
-    #[error("map parse: {0}")]                     MapParse(String),  // apply_map invalid JSON/shape (§7.2)
-    #[error("orchestrator: {0}")]                  Orch(#[from] helix_core::OrchestratorError),
-    #[error("internal (caught panic)")]            Internal,        // panic guard (§4.3) — bug, surfaced not hidden
+pub enum CoreError {                                              // canonical = ffi-surface.md §8.1
+    #[error("core not started")]            NotStarted,           // status_stream/stop/apply_map/exits before start
+    #[error("core already started")]        AlreadyStarted,       // start() while running (§6.1)
+    #[error("invalid config: {0}")]         Config(String),       // bad transport/map path; apply_map bad JSON (§7.2)
+    #[error("auth failed (revoked)")]       Auth,                 // maps from Down{auth-failed} (§8)
+    #[error("host fatal: {0}")]             HostFatal(String),    // TUN open / firewall apply failed (§8)
+    #[error("tun fd invalid")]              BadFd,                // attach_tun on a dead/foreign fd
+    #[error("internal: {0}")]               Internal(String),     // panic guard (§4.3) — bug, surfaced not hidden; never a secret (§11.4.10)
 }
+// The orchestrator's internal anyhow / OrchestratorError / TransportError are converted to
+// CoreError at the FFI boundary via `From` impls (ffi-surface.md §8.1): map-parse → Config,
+// tun-attach → BadFd, auth-revoked → Auth, leak-unprotectable → HostFatal, else → Internal.
 ```
 
 Classification: `HostFatal` (the core refuses to run a tunnel it cannot
 leak-protect) → the orchestrator emits `Down{host-fatal}` (§8) and `start()`
-returns `Err`. `Busy`/`NotStarted` are caller-discipline errors surfaced as Dart
+returns `Err`. `AlreadyStarted`/`NotStarted` are caller-discipline errors surfaced as Dart
 exceptions, never silent no-ops (§11.4.6). A caught panic becomes `Internal` (a
 bug, surfaced honestly); with `panic=abort` (§3.1) an uncatchable panic aborts the
 process rather than corrupting the C-ABI.
@@ -978,11 +991,11 @@ process rather than corrupting the C-ABI.
 
 | # | Edge case | Required behaviour | Source |
 |---|---|---|---|
-| C1 | `start()` called twice | second returns `Err(Busy)`; one live orchestrator, one tunnel (§6.1) | §4.3 |
-| C2 | `attach_tun(fd)` on a closed/foreign fd | `Err(TunAttach)`; no half-open pump; kill-switch unchanged | §6.2 |
+| C1 | `start()` called twice | second returns `Err(AlreadyStarted)`; one live orchestrator, one tunnel (§6.1) | §4.3 |
+| C2 | `attach_tun(fd)` on a closed/foreign fd | `Err(BadFd)`; no half-open pump; kill-switch unchanged | §6.2 |
 | C3 | `status_stream` receiver wedged > 64 events behind | `Lagged` → skip-to-latest; core unaffected (§5.3) | [v02-orch §4.2] |
 | C4 | iOS NE memory spike during upload soak | bounded buffer pool (§3.3); G3 soak must hold ≥30% headroom; else D-CLIENT-1 fallback | [research-ios_android §1] |
-| C5 | `apply_map` with malformed JSON | `Err(MapParse)`; last-applied map stays live (fail-static, §7.4) | §7.2 |
+| C5 | `apply_map` with malformed JSON | `Err(Config)`; last-applied map stays live (fail-static, §7.4) | §7.2 |
 | C6 | Revoke (`peers_removed` = active gateway) | tear session, close kill-switch, FFI `Down{auth-failed}`; < 1 s (§7.3/§8.5) | [v02-orch §6.4] |
 | C7 | `Lagged`/`Closed` on the FFI pump | `Lagged`→continue; `Closed`→end Dart stream (§5.2) | §5 |
 | C8 | Rust `panic!` in an FFI body | caught → `CoreError::Internal`; uncatchable → `panic=abort` process abort (never unwind across C-ABI) | §3.1/§4.3 |

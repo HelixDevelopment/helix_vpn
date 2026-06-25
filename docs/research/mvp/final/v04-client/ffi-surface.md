@@ -75,7 +75,7 @@ Kotlin/C surface, but contains no project-specific UI glue.
 
 | # | Owned artifact | Where |
 |---|---|---|
-| F1 | The exact Rust API of `helix-ffi` (`start`/`stop`/`status_stream`/`exits`/`set_exit`/`set_shields`/`advertise`/`attach_tun`/`detach_tun`) + the mirrored DTO types (`ClientConfig`, `CoreMode`, `Shields`, `ExitOption`, `AdvertiseResult`, `CoreError`) | §2 |
+| F1 | The exact Rust API of `helix-ffi` (`start`/`stop`/`status_stream`/`exits`/`set_exit`/`set_shields`/`advertise`/`apply_map`/`attach_tun`/`detach_tun`) + the mirrored DTO types (`ClientConfig`, `CoreMode`, `Shields`, `ExitOption`, `AdvertiseResult`, `MapApplied`, `CoreError`) | §2 |
 | F2 | The Dart-facing `TunnelStatus` (7-variant) and its **deterministic projection** from the orchestrator's canonical 5-variant `core::TunnelStatus` | §3 |
 | F3 | The `StreamSink<TunnelStatus>` delivery mechanism + the tokio runtime / forwarding-task threading model + the pause/resume re-emit rule | §4 |
 | F4 | The idiomatic Dart wrapper (`helix_core.dart`) and the UniFFI Swift/Kotlin/C surface | §5, §6 |
@@ -214,6 +214,12 @@ pub async fn set_shields(s: Shields) -> Result<(), CoreError>;
 
 // ───────────────────── connector mode only ─────────────────────
 pub async fn advertise(cidrs: Vec<String>) -> Result<AdvertiseResult, CoreError>;
+
+// ───────── desired-state push (Phase 1 bridges WatchNetworkMap; Phase 0 file-watch) ─────────
+/// Push a fresh RouteMap into the running orchestrator (doc 02 Orchestrator::apply_map).
+/// Malformed JSON => Err(CoreError::Config); the last-applied map stays live (fail-static).
+/// `MapApplied` reports the diff (peers added/removed/changed) for the Connector/Console UI.
+pub async fn apply_map(map_json: String) -> Result<MapApplied, CoreError>;
 
 // ───────────────────── shim handoff (called by the platform shim, NOT the UI) ─────────────────────
 /// The core never opens the TUN; the shim hands it a packet fd. Ownership of `fd` transfers

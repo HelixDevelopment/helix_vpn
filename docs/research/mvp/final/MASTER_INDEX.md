@@ -1,8 +1,11 @@
 # HelixVPN — Master Specification Index (the full document tree)
 
-**Revision:** 1
-**Last modified:** 2026-06-25T00:00:00Z
+**Revision:** 2
+**Last modified:** 2026-06-25T12:00:00Z
 **Status:** active — the navigation + generation blueprint for the full HelixVPN technical specification
+**Rev 2:** Added **Volume 10 — Design System (OpenDesign)** as a decoupled reusable submodule
+(`vasic-digital/helix_design`) per operator mandate 2026-06-25 (§11.4.162); repointed the V4
+design row to the client-integration view; recorded the resumed wave order.
 
 > This index decomposes the HelixVPN specification into **volumes** of **nano-detail
 > documents** (dozens of documents, thousands of pages target). `SPECIFICATION.md` is the
@@ -84,7 +87,7 @@
 | `v04-client/helix-core-rust.md` | [GEN] | Crate layout, reconciler, kill-switch + DNS state machine, memory/size strategy |
 | `v04-client/ffi-surface.md` | [GEN][RES] | flutter_rust_bridge v2 / UniFFI, start/stop/status_stream, TunnelStatus, threading |
 | `v04-client/helix-ui-flutter.md` | [GEN][RES] | Melos monorepo, 3 flavors via runHelixApp, capability gating |
-| `v04-client/design-system.md` | [GEN] | helix_design: tokens, connection-state palette, signature components, OpenDesign §11.4.162 |
+| `v04-client/design-system.md` | [GEN] | **Client-integration view only** — how `helix-ui` consumes `helix_design`; the full design system is **Volume 10** (operator mandate 2026-06-25) |
 | `v04-client/state-management.md` | [GEN] | Riverpod providers, status-stream→UI pure-function, Console WS/SSE folding |
 | `v04-client/shim-apple.md` | [GEN][RES] | iOS/macOS NEPacketTunnelProvider, the memory ceiling, Swift↔Rust |
 | `v04-client/shim-android.md` | [GEN][RES] | VpnService + JNI, builder/protect/fd handoff, background-kill |
@@ -150,6 +153,35 @@
 | `11-deep-research-appendix.md` | [P1][RES] | Consolidated cited research (10 angles); being rewritten from the corpus |
 | `v09-research/research-<angle>.md` ×10 | [GEN][RES] | Per-angle full research dossier (wireguard, masque, hysteria2, mullvad, flutter_ffi, ios_android, go_cp, podman_k8s, pki_pq_nat, daita_test) |
 
+## Volume 10 — Design System (OpenDesign) — `vasic-digital/helix_design` (decoupled reusable submodule)
+> **Operator mandate (2026-06-25, §11.4.162).** OpenDesign is the **mandatory** design-and-refinement
+> system for **every** HelixVPN user-facing application (Client, Console, Connector) on **all 8
+> platforms**. The design system is a **fully decoupled, reusable submodule** (`vasic-digital/helix_design`,
+> snake_case flat per §11.4.28/.29/.74) incorporable by any future app. This volume documents — in
+> depth — the whole design system: every screen, every reusable component, light+dark color schemes,
+> typography, and **all** design/UI/UX resources emitted in **every consumable form** (JSON / CSS /
+> Dart / Swift / Kotlin / ArkTS / C-Qt) for **direct** incorporation. Every component ships light+dark
+> variants; elements MUST NOT overlap/overlay labels; all UI changes carry visual-regression coverage
+> (§11.4.162). NO ad-hoc CSS / one-off tools — OpenDesign tokens/themes only; missing patterns extend
+> OpenDesign upstream per §11.4.74.
+
+| Doc | Status | Scope |
+|---|---|---|
+| `v10-design/00-overview-and-submodule.md` | [GEN] | `helix_design` as a decoupled submodule: purpose, repo layout, semver, consumption model, how ANY app incorporates it (§11.4.28/.74/.162), upstreams/install_upstreams, decoupling invariants (no project-specific context) |
+| `v10-design/opendesign-foundation.md` | [GEN][RES] | OpenDesign integration: install, theme/token engine, how it drives palette/type/spacing/component tokens; extend-upstream policy (§11.4.74); honest boundary vs functional/a11y testing (§11.4.162) |
+| `v10-design/design-tokens.md` | [GEN] | Canonical token taxonomy + source-of-truth schema: color/type/spacing/radius/elevation/motion/z-index/breakpoints; naming, tiers (primitive→semantic→component), theming model |
+| `v10-design/color-system.md` | [GEN] | Full brand palette **light+dark**, connection-state palette (status colors), semantic mapping, WCAG contrast proofs, no-overlap/no-overlay rule (§11.4.162) |
+| `v10-design/typography-iconography-motion.md` | [GEN] | Type ramp + fonts (per-platform), icon set + asset forms, motion/animation tokens & curves |
+| `v10-design/token-export-pipeline.md` | [GEN][RES] | Emit tokens in **all forms** — JSON (Style-Dictionary-class) → CSS vars, Dart `ThemeData`, SwiftUI, Compose, ArkTS, C/Qt; build pipeline, drift gate, §11.4.65/.168 export + visual validation |
+| `v10-design/component-library.md` | [GEN] | **Every reusable component** (ConnectButton, StatusChip, ExitPicker, ShieldToggle, ServerList, PeerCard, TopologyGraph, dialogs, forms, nav) — anatomy, states, variants, tokens, a11y, light+dark |
+| `v10-design/screens-client.md` | [GEN] | **All Client app screens** (onboarding, connect/home, exits, multihop, shields, account, settings, errors) — full specs + wireframes, responsive phone/tablet/desktop/TV |
+| `v10-design/screens-console.md` | [GEN] | **All admin Console screens** (devices, policy editor, users/SSO, audit, topology, billing) — full specs + wireframes |
+| `v10-design/screens-connector.md` | [GEN] | **All Connector appliance screens** (enroll, advertised routes, conflicts, health) — full specs |
+| `v10-design/ux-flows-and-interaction.md` | [GEN] | End-to-end UX flows, navigation/IA, interaction patterns, motion, loading/empty/error states, i18n, full accessibility spec |
+| `v10-design/platform-adaptation.md` | [GEN][RES] | Per-platform UI adaptation (Material/Cupertino/desktop/TV-leanback/HarmonyOS/Aurora) + capability gating, OpenDesign theme mapping per platform |
+| `v10-design/visual-regression-and-qa.md` | [GEN] | §11.4.162 visual-regression suite, golden screenshots, token-drift tests, a11y/contrast assertions, §11.4.168 exported-doc visual validation |
+| `v10-design/assets-and-deliverables.md` | [GEN] | **All design/UI/UX deliverables in all forms** ready for direct incorporation: token bundles, per-platform theme packages, icon/illustration asset forms, component packages, design-source — + the per-app pull recipe |
+
 ---
 
 ## Generation plan (autonomous, batched, rate-limit-aware)
@@ -157,5 +189,6 @@ Documents are generated in **expansion waves** of 3–4 parallel subagents (§11
 reading the volume's pass-1 overview + `v09-research/_SYNTHESIS.md` + the relevant `research-<angle>.md`,
 producing one nano-detail document with concrete interfaces/DDL/protobuf/skeletons + Mermaid
 diagrams, citing sources, marking unproven facts `UNVERIFIED`. Each wave is committed +
-pushed; an adversarial review gates each volume. Wave order: V2 data-plane → V3 control-plane →
-V4 clients → V5 security → V6 deploy → V1 product → V7 execution → V8 testing → V0/V9 meta.
+pushed; an adversarial review gates each volume. Wave order (resumed 2026-06-25): V2 data-plane ✅
+→ V3 control-plane ✅ → V4 clients ✅ → **V10 design-system (OpenDesign, operator-prioritized)** →
+V5 security → V6 deploy → V1 product → V7 execution → V8 testing → V0/V9 meta.
