@@ -1,7 +1,7 @@
 # Deep-Research Appendix (cited external findings)
 
-**Revision:** 2
-**Last modified:** 2026-06-25T00:00:00Z
+**Revision:** 3
+**Last modified:** 2026-06-25T12:00:00Z
 
 ---
 
@@ -17,16 +17,17 @@ angle's research file.
 ### A0.1 Provenance — read this first
 
 This revision is rebuilt from the now-collected per-angle research corpus under
-`v09-research/research-*.md`, each entry produced 2026-06-25 with live web access. **Nine of the
-ten planned angles are verified and cited** below. The tenth angle —
-**WireGuard core protocol (§A1)** — has **no `v09-research/research-wireguard.md` on disk**; per
-§11.4.6 (no-guessing) it is left honestly marked **UNVERIFIED** and MUST be re-run
-before any WireGuard-core claim in the spec is treated as cited. The remaining angles
-replace all prior "UNVERIFIED (no web access)" markers with cited facts.
+`v09-research/research-*.md`, each entry produced 2026-06-25 with live web access. **All ten
+planned angles are now verified and cited** below — the tenth angle,
+**WireGuard core protocol (§A1)**, was re-run 2026-06-25 with live web access and is
+backed by `v09-research/research-wireguard.md` (511 lines, official `wireguard.com`
+protocol page + `messages.h` constants + `cloudflare/boringtun` + docs.rs Tunn API +
+`wireguard-nt`). The prior "UNVERIFIED — research file missing" marker is **resolved**;
+all "UNVERIFIED (no web access)" markers across the corpus are replaced with cited facts.
 
 | § | Angle | Status |
 |---|---|---|
-| A1 | WireGuard core protocol | **UNVERIFIED — research file missing, must re-run** |
+| A1 | WireGuard core protocol | **Verified 2026-06-25** |
 | A2 | MASQUE / QUIC obfuscation (`masque`) | Verified 2026-06-25 |
 | A3 | Hysteria2 / Salamander / censorship regimes (`hysteria2`) | Verified 2026-06-25 |
 | A4 | Mullvad full-feature parity (`mullvad`) | Verified 2026-06-25 |
@@ -39,22 +40,84 @@ replace all prior "UNVERIFIED (no web access)" markers with cited facts.
 
 ---
 
-## A1. WireGuard core protocol — UNVERIFIED (research not re-run)
+## A1. WireGuard core protocol (Noise IK + boringtun/kernel/wireguard-go/wireguard-nt)
 
-**Status (§11.4.6):** No `v09-research/research-wireguard.md` exists in the research corpus. The
-WireGuard-core angle (Noise IK handshake internals, 1-RTT handshake, Curve25519/
-ChaCha20-Poly1305/BLAKE2s crypto suite, cookie/DoS mitigation, `wireguard-go` vs
-kernel-module data paths, the 148-byte handshake-init / 92-byte response fingerprint as
-an authoritative primary fact, the documented UDP-only limitation) is **NOT
-independently cited here**. Adjacent facts that DID surface in other angles are recorded
-where they belong — the WireGuard UDP-only limitation and the 148/92-byte fingerprint
-appear under §A3 (AmneziaWG), the Curve25519-public-key-as-identity model and PSK
-handshake-mixing under §A9, and the `wireguard-go` integration path under §A4/§A10.
+**Status (§11.4.6):** Verified 2026-06-25 with live web access; full dossier at
+`v09-research/research-wireguard.md`. The previously-missing angle is re-run against
+**official primary sources** — the official Protocol & Cryptography page, the official
+`messages.h` constants header, `cloudflare/boringtun`, docs.rs Tunn API, and the
+`wireguard-nt` about page. **Honest gap:** the formal whitepaper PDF
+(`wireguard.com/papers/wireguard.pdf`) was **UNREACHABLE** via the fetch tool (returned
+FlateDecode binary, not text) — every value it canonically sources was re-confirmed from
+a different authoritative source, so no claim rests on the unreachable PDF.
 
-**Required action:** re-run the `wireguard-go` / WireGuard-core deep-research angle
-(official `wireguard.com` papers + `wireguard-go` repo + the Noise protocol spec) and
-replace this section with cited facts. Until then, do not present WireGuard-core
-internals in the spec as externally verified. **No sources fabricated (§11.4.6).**
+**Key findings that shape the spec (all cited in the dossier).**
+
+- **Noise_IK, 1-RTT** handshake; the initiator knows the responder's static pubkey in
+  advance; the responder cannot send data until key confirmation and never initiates a
+  rekey (Noise_IKpsk2 when the PSK is in use)
+  [wg-protocol https://www.wireguard.com/protocol/].
+- **Crypto set (CONFIRMED):** Curve25519 (X25519), ChaCha20Poly1305 (RFC 7539, 64-bit
+  counter nonce), BLAKE2s + HKDF, **SipHash24** (index hashtable), **XChaCha20Poly1305**
+  (cookie), TAI64N (12-byte handshake-replay timestamp) [wg-protocol].
+- **Message sizes (CONFIRMED, were a primary fingerprint):** Handshake Initiation **148 B**,
+  Handshake Response **92 B**, Cookie Reply **64 B**, Transport Data = 16-byte header +
+  AEAD (16-byte data hdr + 16-byte Poly1305 tag = **32-byte WG overhead**) [wg-protocol].
+- **Timers (CONFIRMED from messages.h):** `REKEY_AFTER_TIME=120 s`,
+  `REKEY_TIMEOUT=5 s`, `REKEY_ATTEMPT_TIME=90 s` (→ `MAX_TIMER_HANDSHAKES=18`),
+  `REJECT_AFTER_TIME=180 s`, `KEEPALIVE_TIMEOUT=10 s`, `REKEY_AFTER_MESSAGES=2^60`,
+  `REJECT_AFTER_MESSAGES≈2^64`, `COOKIE_SECRET_MAX_AGE=120 s`, replay window
+  `COUNTER_BITS_TOTAL=2048` [wg-messages-h
+  https://github.com/WireGuard/wireguard-monolithic-historical/blob/master/src/messages.h].
+- **MTU 1420 (CONFIRMED):** 1500 − 60 B IPv4 (20 IP + 8 UDP + 32 WG) / − 80 B IPv6
+  overhead; 1280 is the robust mobile floor (IPv6 min-MTU) [wg-mtu].
+- **PSK = the post-quantum injection point (CONFIRMED):** the optional 32-byte PSK
+  (all-zero when unused) is mixed into the symmetric key schedule
+  (`temp = HMAC(responder.chaining_key, preshared_key)`), so the tunnel survives a broken
+  X25519 — exactly the slot Mullvad's PQ KEM secret fills (§A9, §A4) [wg-protocol].
+- **AllowedIPs = Cryptokey Routing (CONFIRMED):** dest-IP → peer for outbound, source-IP
+  ∈ peer's AllowedIPs for inbound default-deny; UAPI keys `public_key`/`allowed_ip`/
+  `preshared_key`/`endpoint`/`persistent_keepalive_interval`
+  [wg-xplatform https://www.wireguard.com/xplatform/].
+- **boringtun (CONFIRMED):** Cloudflare pure-Rust userspace WG, BSD-3-Clause, deployed on
+  "millions of iOS and Android consumer devices … thousands of Cloudflare Linux servers"
+  (1.1.1.1/WARP). **Maintenance note (§11.4.6): master branch explicitly unstable — "you
+  should probably not rely on or link to the master branch right now"; use crates.io
+  releases.** The sans-IO `Tunn` API is CONFIRMED: `Tunn::new(static_private,
+  peer_static_public, preshared_key: Option<[u8;32]>, persistent_keepalive, index,
+  rate_limiter)`, `encapsulate(src, dst)`, `decapsulate(src_addr, datagram, dst)`,
+  `update_timers(dst)` → `TunnResult` {`Done`,`Err`,`WriteToNetwork`,`WriteToTunnelV4`,
+  `WriteToTunnelV6`} — the caller-provided `dst: &mut [u8]` matches `helix-wg`'s
+  zero-alloc-hot-path invariant W1 [boringtun-gh https://github.com/cloudflare/boringtun;
+  boringtun-tunn https://docs.rs/boringtun/latest/boringtun/noise/struct.Tunn.html].
+- **Backends (CONFIRMED):** kernel WG (mainline since Linux 5.6, fastest, `plain-udp`
+  only), boringtun (cross-platform floor incl. iOS where no kernel WG exists),
+  **wireguard-go** (official Go userspace reference; the base Mullvad DAITA forks),
+  **wireguard-nt** ("High performance **in-kernel** WireGuard implementation for Windows",
+  Win10/11 AMD64/x86/ARM64, ships as `wireguard.dll` — "the only official and recommended
+  way of using WireGuard on Windows") [wg-nt https://git.zx2c4.com/wireguard-nt/about/;
+  wg-xplatform].
+- **Why HelixVPN wraps it:** WireGuard has **no built-in obfuscation** (DPI-fingerprintable,
+  UDP-blockable), leaks size/timing side-channels, rekeys every ~2 min + handshakes on
+  first packet, ships the PSK empty, and has no PKI/coordination — each gap maps to a
+  HelixVPN layer (helix-transport / DAITA / PQ-PSK / control plane).
+
+**Cross-references retained:** the 148/92-byte fingerprint + UDP-only limitation also
+appear under §A3 (AmneziaWG), the Curve25519-pubkey-as-identity + PSK-mixing model under
+§A9, and the wireguard-go/maybenot integration path under §A4/§A10 — now backed by the
+primary WireGuard sources here.
+
+**Sources** (accessed 2026-06-25; full list in the dossier):
+
+- wg-protocol — https://www.wireguard.com/protocol/ (REACHED, primary)
+- wg-paper — https://www.wireguard.com/papers/wireguard.pdf (**UNREACHABLE**: FlateDecode binary, not parseable text — values re-confirmed elsewhere)
+- wg-xplatform — https://www.wireguard.com/xplatform/
+- wg-messages-h — https://github.com/WireGuard/wireguard-monolithic-historical/blob/master/src/messages.h
+- boringtun-gh — https://github.com/cloudflare/boringtun
+- boringtun-noise — https://docs.rs/boringtun/latest/boringtun/noise/index.html
+- boringtun-tunn — https://docs.rs/boringtun/latest/boringtun/noise/struct.Tunn.html
+- wg-nt — https://git.zx2c4.com/wireguard-nt/about/
+- wg-mtu / wg-timers — WireGuard MTU + timer constants corroborated by wireguard-go device/timers.go, torvalds/linux drivers/net/wireguard/timers.c, en.wikipedia.org/wiki/WireGuard
 
 ---
 
