@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Benchmarking / Performance Test Strategy</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Benchmarking / Performance Test Strategy</h1>
+</header>
+<h1 id="benchmarking--performance-test-strategy">Benchmarking /
+Performance Test Strategy</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-06-26T12:00:00Z</p>
+<blockquote>
+<p>Master technical specification — Volume 8 (Testing &amp; QA),
+nano-detail document <strong>benchmarking</strong>, one of the seven
+§11.4.169 cross-cutting test-type deep-dives. It deepens <a href="../10-testing-acceptance-and-qa.md"><code>10-testing-acceptance-and-qa.md</code></a>
+§5.13 (BENCH + PERF + SCALE) into an implementation-ready bank for
+throughput, CPU-per-Gbps, handshakes/sec, p50/p95/p99 latency, and the
+Go-vs-Rust edge decision (G4). <strong>Every figure here is a TARGET
+measured against a recorded baseline (§11.4.6) — a regression vs
+baseline is a finding, never a soft warning.</strong> SPEC-ONLY: it
+describes harness, fixtures, evidence, gate, and the paired §1.1
+mutation; it does not build the product. Sources cited inline by id —
+<code>[OVERVIEW]</code> = doc 10; <code>[04_P0]</code> = Phase-0 spike
+(<code>bench.sh</code>, G1/G2/G4); <code>[SYNTHESIS]</code> = synthesis
+(D5 edge language); <code>[reconcile]</code> =
+[<code>../v03-control-plane/reconciliation-flow.md</code>];
+<code>[ladder]</code> =
+[<code>../v02-data-plane/transport-selection-ladder.md</code>];
+<code>[01-DP]</code> = doc 01; <code>[TM]</code> =
+[<code>../v05-security/threat-model.md</code>]. Claims not grounded in
+the evidence base are marked <strong>UNVERIFIED</strong> per
+constitution §11.4.6 — never fabricated.</p>
+</blockquote>
+<hr />
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#0-scope--the-figure-is-a-target-not-a-claim-rule">0. Scope
++ the figure-is-a-target-not-a-claim rule</a></li>
+<li><a href="#1-the-benchmark--slo-matrix">1. The benchmark + SLO
+matrix</a></li>
+<li><a href="#2-harness--benchsh--criterion">2. Harness — bench.sh +
+criterion</a></li>
+<li><a href="#3-the-baseline-registry--regression-rule">3. The baseline
+registry + regression rule</a></li>
+<li><a href="#4-fixtures--real-rig-1114277">4. Fixtures — real rig
+(§11.4.27)</a></li>
+<li><a href="#5-captured-evidence-1114-69---24">5. Captured evidence
+(§11.4.69 / .24)</a></li>
+<li><a href="#6-determinism-1114050">6. Determinism (§11.4.50)</a></li>
+<li><a href="#7-acceptance-gate">7. Acceptance gate</a></li>
+<li><a href="#8-the-paired-111-mutation">8. The paired §1.1
+mutation</a></li>
+<li><a href="#9-test-skeletons">9. Test skeletons</a></li>
+<li><a href="#sources-verified">Sources verified</a></li>
+</ul>
+<hr />
+<h2 id="0-scope--the-figure-is-a-target-not-a-claim-rule">0. Scope + the
+figure-is-a-target-not-a-claim rule</h2>
+<p>Performance is the test type most prone to bluff-by-optimism: it is
+tempting to <em>assert</em> &quot;we do 80% of bare-link&quot; without measuring.
+§11.4.6 forbids it — <strong>every number in this bank is either a
+TARGET (a go/no-go bar) or a MEASURED RESULT (captured from a real run),
+never a design estimate stated as a result.</strong> A measured figure
+that regresses below the recorded baseline is a <strong>finding</strong>
+(a release blocker), processed via §11.4.4 STOP + systematic-debug — not
+a soft warning the suite shrugs off.</p>
+<table>
+<thead>
+<tr>
+<th>Sub-type</th>
+<th>What it measures</th>
+<th>HelixVPN surface</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>BENCH</strong></td>
+<td>raw throughput, CPU-per-Gbps, handshakes/sec, framing latency</td>
+<td>edge data plane (Rust/Go), WG core, MASQUE framing</td>
+</tr>
+<tr>
+<td><strong>PERF</strong></td>
+<td>p50/p95/p99 latency vs SLO budget; Go GC-tail</td>
+<td>control-plane reconcile/enroll/revoke hot paths</td>
+</tr>
+<tr>
+<td><strong>SCALE</strong></td>
+<td>N agents holding streams; convergence + bounded memory</td>
+<td>coordinator fan-out (partial MVP / full Phase 2)</td>
+</tr>
+</tbody>
+</table>
+<p>The headline number is always the <strong>measured</strong>
+reduction/throughput, never the design estimate (§11.4.141 lesson
+applied to perf): the spec states the <em>target</em>, the run produces
+the <em>result</em>, and the gate compares result-to-target and
+result-to-baseline.</p>
+<hr />
+<h2 id="1-the-benchmark--slo-matrix">1. The benchmark + SLO matrix</h2>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Target (the bar)</th>
+<th>Type</th>
+<th>Gate / SLO</th>
+<th>Baseline source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>plain-UDP WG throughput</td>
+<td><strong>≥ 80%</strong> of bare-link</td>
+<td>BENCH</td>
+<td><strong>G1</strong> [04_P0]</td>
+<td>iperf3 bare-link run (same rig)</td>
+</tr>
+<tr>
+<td>MASQUE/QUIC throughput</td>
+<td><strong>≥ 50%</strong> of plain-UDP; survives 5% loss</td>
+<td>BENCH</td>
+<td><strong>G2</strong> [04_P0]</td>
+<td>the G1 plain-UDP run</td>
+</tr>
+<tr>
+<td>CPU-per-Gbps (Rust vs Go edge)</td>
+<td>lower is better; decides G4</td>
+<td>BENCH</td>
+<td><strong>G4</strong> (edge language) [SYNTHESIS D5]</td>
+<td>the other language&#39;s run</td>
+</tr>
+<tr>
+<td>handshakes/sec</td>
+<td>≥ target (Phase-2 DDoS seam input)</td>
+<td>BENCH</td>
+<td>bench trend</td>
+<td>prior tagged run</td>
+</tr>
+<tr>
+<td>MASQUE framing latency</td>
+<td>within budget</td>
+<td>BENCH (criterion)</td>
+<td>bench trend</td>
+<td>prior <code>criterion</code> baseline</td>
+</tr>
+<tr>
+<td>event→delta-on-wire p99</td>
+<td><strong>&lt; 1 s</strong></td>
+<td>PERF</td>
+<td><strong>SLO1</strong></td>
+<td>prior tagged run</td>
+</tr>
+<tr>
+<td>enroll→first NetworkMap</td>
+<td><strong>&lt; 2 s</strong></td>
+<td>PERF</td>
+<td><strong>SLO2</strong></td>
+<td>prior tagged run</td>
+</tr>
+<tr>
+<td>revoke→edge enforcement p99</td>
+<td><strong>&lt; 1 s</strong></td>
+<td>PERF</td>
+<td><strong>SLO3</strong></td>
+<td>prior tagged run</td>
+</tr>
+<tr>
+<td>coordinator mem @ 10k streams</td>
+<td>bounded / 24 h</td>
+<td>SCALE</td>
+<td><strong>SLO4</strong> (→ [<code>memory.md</code>])</td>
+<td>prior soak</td>
+</tr>
+<tr>
+<td>N-agent convergence p99</td>
+<td>&lt; 1 s</td>
+<td>SCALE</td>
+<td>partial MVP / full Phase 2</td>
+<td>prior soak</td>
+</tr>
+</tbody>
+</table>
+<p>The G4 row is special: it is a <strong>decision input</strong>, not a
+pass/fail — the CPU-per-Gbps + p99 + churn</p>
+<ul>
+<li>memory CSV for Rust vs Go decides
+<code>gates.G4.outcome IN (&#39;rust&#39;,&#39;go&#39;)</code> [04_P0 §8].</li>
+</ul>
+<hr />
+<h2 id="2-harness--benchsh--criterion">2. Harness — bench.sh +
+criterion</h2>
+<table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Tool</th>
+<th>What it produces</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>edge throughput / goodput</td>
+<td><code>bench.sh</code> driving the netns rig with
+<code>iperf3 -J</code></td>
+<td>per-iteration throughput + loss-goodput CSV</td>
+</tr>
+<tr>
+<td>CPU-per-Gbps</td>
+<td><code>iperf3</code> throughput ÷ edge CPU-seconds
+(<code>/proc</code> or cgroup <code>cpuacct</code>)</td>
+<td>the G4 decision CSV</td>
+</tr>
+<tr>
+<td>micro-bench (MASQUE framing, WG encode/decode)</td>
+<td><code>criterion</code> (Rust)</td>
+<td>statistically-rigorous per-op latency with confidence intervals</td>
+</tr>
+<tr>
+<td>control-plane PERF p99</td>
+<td>histogram metrics (<code>helix_reconcile_seconds</code>) + a timed
+driver</td>
+<td>p50/p95/p99 per SLO</td>
+</tr>
+<tr>
+<td>SCALE convergence</td>
+<td>the coordinator agent-fuzzer holding N streams</td>
+<td>convergence p99 + RSS series</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># bench.sh — the G1/G2/G4 benchmark, deterministic over N=3 (overview §5.13, [04_P0 §8])</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="va">THRPUT</span><span class="op">=</span><span class="va">$(</span><span class="ex">iperf3</span> <span class="at">-J</span> <span class="at">-c</span> 10.10.0.20 <span class="at">-P</span> <span class="st">&quot;</span><span class="va">$CLIENTS</span><span class="st">&quot;</span> <span class="kw">|</span> <span class="ex">jq</span> <span class="st">&#39;.end.sum_received.bits_per_second&#39;</span><span class="va">)</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="va">GOODPUT_LOSS</span><span class="op">=</span><span class="va">$(</span><span class="ex">with_netem</span> <span class="st">&#39;loss 5% delay 40ms&#39;</span> iperf3_goodput<span class="va">)</span>       <span class="co"># G2 / resilience</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="va">CPU_PER_GBPS</span><span class="op">=</span><span class="va">$(</span><span class="fu">awk</span> <span class="at">-v</span> t=<span class="st">&quot;</span><span class="va">$THRPUT</span><span class="st">&quot;</span> <span class="at">-v</span> c=<span class="st">&quot;</span><span class="va">$EDGE_CPU_SEC</span><span class="st">&quot;</span> <span class="st">&#39;BEGIN{print c/(t/1e9)}&#39;</span><span class="va">)</span>  <span class="co"># G4 input</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="bu">printf</span> <span class="st">&#39;%s,%s,%s,%s,%s\n&#39;</span> <span class="st">&quot;</span><span class="va">$EDGE_LANG</span><span class="st">&quot;</span> <span class="st">&quot;</span><span class="va">$RUN</span><span class="st">&quot;</span> <span class="st">&quot;</span><span class="va">$THRPUT</span><span class="st">&quot;</span> <span class="st">&quot;</span><span class="va">$GOODPUT_LOSS</span><span class="st">&quot;</span> <span class="st">&quot;</span><span class="va">$CPU_PER_GBPS</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="op">&gt;&gt;</span> qa-results/bench/edge_compare.csv      <span class="co"># the G4 decision CSV (rust vs go)</span></span></code></pre></div>
+<p>The bank runs under <code>make bench</code> (overview §9:
+<code>bash bench.sh 3</code> — N=3 deterministic), backgrounded
+(§11.4.89). The netns rig needs <code>CAP_NET_ADMIN</code> (scoped sudo
+exception); <code>criterion</code> and the control-plane PERF drivers
+run under <code>containers</code>-booted infra (§11.4.76, rootless
+§11.4.161).</p>
+<hr />
+<h2 id="3-the-baseline-registry--regression-rule">3. The baseline
+registry + regression rule</h2>
+<p>§11.4.6 + §11.4.24: a number means nothing without a baseline to
+compare to. The bank maintains a <strong>git-tracked baseline
+registry</strong> — a TSV per metric per platform per edge-language,
+with the last-accepted value and its run context (artifact MD5, rig
+fingerprint, CLIENTS, date). Every run:</p>
+<ol type="1">
+<li>measures the metric N=3 (overview §5.13) and computes
+min/max/mean/p95 (§11.4.24 discipline);</li>
+<li>compares the run&#39;s mean (or p99 for latency) to (a) the
+<strong>target</strong> bar and (b) the <strong>baseline</strong>;</li>
+<li>classifies: <code>PASS</code> (meets target AND ≥ baseline −
+tolerance), <code>REGRESSION</code> (below baseline beyond tolerance — a
+<strong>finding</strong>, §11.4.4 STOP), or <code>IMPROVEMENT</code>
+(above baseline — update the baseline in the same commit with the
+evidence).</li>
+</ol>
+<pre class="text"><code>regression rule (§11.4.6):
+  run.metric &lt; baseline.metric - tolerance   ⇒  REGRESSION  ⇒  finding (release blocker)
+  run.metric within tolerance of baseline    ⇒  PASS
+  run.metric &gt; baseline.metric + tolerance   ⇒  IMPROVEMENT ⇒ ratchet the baseline (commit w/ evidence)</code></pre>
+<p>A regression is never silently accepted (no
+<code>--allow-perf-regression</code> escape) — it is a finding processed
+like any defect (systematic-debug per §11.4.102, fix or justify with
+evidence). The baseline is ratcheted <em>up</em> only with a
+captured-evidence run (§11.4.135-class: the baseline is a standing
+regression guard for performance).</p>
+<hr />
+<h2 id="4-fixtures--real-rig-11427">4. Fixtures — real rig
+(§11.4.27)</h2>
+<table>
+<thead>
+<tr>
+<th>Fixture</th>
+<th>What</th>
+<th>Why real</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>netns rig (client→gateway→connector LAN)</td>
+<td>the real E2E reachability rig (overview §5.3)</td>
+<td>throughput must cross a <em>real</em> tunnel, not a mocked
+socket</td>
+</tr>
+<tr>
+<td>real <code>helix-edge</code> (Rust + Go builds)</td>
+<td>both candidate edge artifacts for G4</td>
+<td>CPU-per-Gbps must measure the <em>real</em> edge in each
+language</td>
+</tr>
+<tr>
+<td><code>tc netem</code> loss/delay profile</td>
+<td>a real impairment profile (5% loss, 40 ms delay)</td>
+<td>G2 goodput-under-loss must use real netem, not a simulated
+penalty</td>
+</tr>
+<tr>
+<td>baseline TSV registry</td>
+<td>the git-tracked accepted-baseline values</td>
+<td>the regression comparison needs a real prior result</td>
+</tr>
+</tbody>
+</table>
+<p>The bare-link reference (the denominator of G1&#39;s &quot;80% of bare-link&quot;)
+is itself a measured <code>iperf3</code> run on the same rig
+<strong>without</strong> the tunnel — a real number, captured the same
+cycle, never an assumed line rate (§11.4.6).</p>
+<hr />
+<h2 id="5-captured-evidence-11469--24">5. Captured evidence (§11.4.69 /
+.24)</h2>
+<p>Every PASS cites a CSV under
+<code>qa-results/bench/&lt;run-id&gt;/</code> with min/max/mean/p95
+(§11.4.24). The §11.4.69 class is <code>network_throughput</code>
+(BENCH) / a counter-delta latency (PERF).</p>
+<table>
+<thead>
+<tr>
+<th>Test</th>
+<th>Artifact</th>
+<th>Asserts</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>BENCH-G1-THROUGHPUT</td>
+<td><code>g1_throughput.csv</code></td>
+<td>mean ≥ 80% of the captured bare-link run</td>
+</tr>
+<tr>
+<td>BENCH-G2-MASQUE</td>
+<td><code>g2_masque.csv</code></td>
+<td>mean ≥ 50% of the G1 run; goodput survives 5% loss</td>
+</tr>
+<tr>
+<td>BENCH-G4-EDGE-COMPARE</td>
+<td><code>edge_compare.csv</code></td>
+<td>the Rust-vs-Go CPU-per-Gbps/p99/mem decision matrix</td>
+</tr>
+<tr>
+<td>PERF-SLO1-RECONCILE</td>
+<td><code>reconcile_p99.csv</code></td>
+<td><code>helix_reconcile_seconds</code> p99 &lt; 1 s</td>
+</tr>
+<tr>
+<td>PERF-SLO2-ENROLL</td>
+<td><code>enroll_latency.csv</code></td>
+<td>enroll→first-map &lt; 2 s</td>
+</tr>
+<tr>
+<td>PERF-SLO3-REVOKE</td>
+<td><code>revoke_latency.csv</code></td>
+<td>revoke→edge-enforcement p99 &lt; 1 s</td>
+</tr>
+<tr>
+<td>SCALE-CONVERGE</td>
+<td><code>converge_p99.csv</code></td>
+<td>N-agent convergence p99 &lt; 1 s</td>
+</tr>
+</tbody>
+</table>
+<p>The CSV with the percentile distribution is the evidence
+(§11.4.107(13): thresholds calibrated on the project&#39;s own rig, not
+literature). A PERF PASS that cites only a single latency sample is a
+point-not-window bluff — the gate asserts a <strong>percentile over a
+window</strong> (p99), and §11.4.107(2)&#39;s independent-counter-advance
+applies (goodput AND the WG transfer counter must both move, or it is a
+decoy path).</p>
+<hr />
+<h2 id="6-determinism-11450">6. Determinism (§11.4.50)</h2>
+<p><code>bench.sh 3</code> runs each benchmark N=3 against the same
+artifact MD5 + same rig + same CLIENTS; the suite computes
+min/max/mean/p95 and asserts the spread is within a tolerance band (a
+benchmark whose runs vary by &gt; X% is itself a non-deterministic
+<em>measurement</em> and is auto-FAIL — the number is not trustworthy).
+The determinism evidence-hash is over the verdict tuple
+<code>(meets_target: bool, not_regressed_vs_baseline: bool)</code>; all
+3 runs MUST agree on the verdict. The raw throughput numbers vary
+run-to-run (that is physical), so the <em>verdict</em> (target met / not
+regressed), not the raw number, is the determinism key — the same
+discipline as the DDoS/chaos verdict-determinism. PERF p99 is taken over
+a large sample within each of the 3 runs so the percentile itself is
+stable.</p>
+<hr />
+<h2 id="7-acceptance-gate">7. Acceptance gate</h2>
+<table>
+<thead>
+<tr>
+<th>Gate / SLO</th>
+<th>Bar (TARGET)</th>
+<th>Evidence</th>
+<th>Phase</th>
+<th>Regression handling</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>G1</strong></td>
+<td>throughput ≥ 80% bare-link</td>
+<td><code>g1_throughput.csv</code></td>
+<td>Phase 0</td>
+<td>below baseline ⇒ finding</td>
+</tr>
+<tr>
+<td><strong>G2</strong></td>
+<td>MASQUE ≥ 50% plain; survives 5% loss</td>
+<td><code>g2_masque.csv</code></td>
+<td>Phase 0</td>
+<td>finding</td>
+</tr>
+<tr>
+<td><strong>G4</strong></td>
+<td>record CPU-per-Gbps decision (rust|go)</td>
+<td><code>edge_compare.csv</code></td>
+<td>Phase 0 (decision)</td>
+<td>n/a (decision)</td>
+</tr>
+<tr>
+<td><strong>SLO1</strong></td>
+<td>event→delta p99 &lt; 1 s</td>
+<td><code>reconcile_p99.csv</code></td>
+<td>MVP</td>
+<td>finding</td>
+</tr>
+<tr>
+<td><strong>SLO2</strong></td>
+<td>enroll→first-map &lt; 2 s</td>
+<td><code>enroll_latency.csv</code></td>
+<td>MVP</td>
+<td>finding</td>
+</tr>
+<tr>
+<td><strong>SLO3</strong></td>
+<td>revoke→edge p99 &lt; 1 s</td>
+<td><code>revoke_latency.csv</code></td>
+<td>MVP</td>
+<td>finding</td>
+</tr>
+<tr>
+<td><strong>SLO4</strong></td>
+<td>coordinator mem bounded @ 10k (→ [<code>memory.md</code>])</td>
+<td><code>coord_rss_24h.csv</code></td>
+<td>MVP</td>
+<td>finding</td>
+</tr>
+<tr>
+<td>SCALE-CONVERGE</td>
+<td>N-agent convergence p99 &lt; 1 s</td>
+<td><code>converge_p99.csv</code></td>
+<td>partial MVP / full P2</td>
+<td>finding</td>
+</tr>
+</tbody>
+</table>
+<p>A PERF regression beyond budget is a <strong>release blocker</strong>
+(overview §5.13). G4 is a decision gate (records
+<code>rust</code>/<code>go</code>), not pass/fail. BENCH/PERF cells
+appear in the ledger for F-AUTHZ-REACH (G1), F-TRANSPORT-ESCALATE (G2),
+F-POLICY-RECONCILE (SLO1), F-REVOKE (SLO3) (overview §6.3, §7.2). These
+are not the §11.4.132 risk-ordered <em>head</em> (the security floor
+runs first) but a PERF regression on a hot path is still a blocker.</p>
+<hr />
+<h2 id="8-the-paired-11-mutation">8. The paired §1.1 mutation</h2>
+<pre class="text"><code>MUTATION (paired §1.1, gate CM-PERF-REGRESSION-IS-FINDING):
+  Inject a fixed 200 ms sleep into the reconcile hot path (or lower the
+  recorded SLO1 baseline so a regressed run would &quot;pass&quot;).
+EXPECTED (sleep variant):   reconcile_p99.csv p99 blows past 1 s →
+           PERF-SLO1 FAILs → mutation caught.
+EXPECTED (baseline variant):the regression-rule comparator no longer flags
+           the regressed run → the baseline-tamper meta-test FAILs (the
+           baseline must be a guard, not a movable goalpost).
+RESTORE:   remove the sleep / restore the baseline; re-run → GREEN.</code></pre>
+<p>A second mutation (<code>CM-G1-BARELINK-DENOMINATOR</code>) replaces
+the <em>measured</em> bare-link denominator with an assumed line-rate
+constant; expected: the &quot;denominator must be a captured run, not a
+constant&quot; check FAILs (defeats the bluff-by-optimism of asserting a
+percentage against an imaginary baseline, §11.4.6). A third
+(<code>CM-BENCH-COUNTER-ADVANCE</code>) reports goodput from
+<code>iperf3</code> while the WG transfer counter is flat; expected:
+§11.4.107(2) independent-counter-advance check FAILs (a decoy/loopback
+path). All mutations restored, tree verified quiescent (§11.4.84) before
+commit.</p>
+<hr />
+<h2 id="9-test-skeletons">9. Test skeletons</h2>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># rig/bench_g1.sh — BENCH-G1: throughput ≥ 80% of the MEASURED bare-link (never assumed)</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="bu">set</span> <span class="at">-euo</span> pipefail</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="va">out</span><span class="op">=</span><span class="st">&quot;qa-results/bench/</span><span class="va">$(</span><span class="fu">date</span> +%s<span class="va">)</span><span class="st">&quot;</span><span class="kw">;</span> <span class="fu">mkdir</span> <span class="at">-p</span> <span class="st">&quot;</span><span class="va">$out</span><span class="st">&quot;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="bu">trap</span> <span class="st">&#39;rig/netns_down.sh&#39;</span> EXIT</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="va">bare</span><span class="op">=</span><span class="va">$(</span><span class="ex">measure_bare_link_iperf3</span><span class="va">)</span>                                  <span class="co"># REAL bare-link run, same rig (the denominator)</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="va">tun</span><span class="op">=</span><span class="va">$(</span><span class="ex">ab_run_n_times</span> <span class="st">&quot;g1&quot;</span> 3 <span class="st">&#39;measure_tunnel_iperf3&#39;</span> <span class="va">)</span>            <span class="co"># N=3 deterministic; mean throughput</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="va">wg_rx_advanced</span><span class="op">=</span><span class="va">$(</span><span class="ex">wg_transfer_counter_advanced</span><span class="va">)</span>                   <span class="co"># §11.4.107(2) independent counter</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="va">pct</span><span class="op">=</span><span class="va">$(</span><span class="fu">awk</span> <span class="at">-v</span> t=<span class="st">&quot;</span><span class="va">$tun</span><span class="st">&quot;</span> <span class="at">-v</span> b=<span class="st">&quot;</span><span class="va">$bare</span><span class="st">&quot;</span> <span class="st">&#39;BEGIN{print 100*t/b}&#39;</span><span class="va">)</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="va">regressed</span><span class="op">=</span><span class="va">$(</span><span class="ex">compare_to_baseline</span> g1_throughput <span class="st">&quot;</span><span class="va">$tun</span><span class="st">&quot;</span><span class="va">)</span>            <span class="co"># §3 regression rule</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="bu">[</span> <span class="st">&quot;</span><span class="va">$(</span><span class="fu">awk</span> <span class="at">-v</span> p=<span class="st">&quot;</span><span class="va">$pct</span><span class="st">&quot;</span> <span class="st">&#39;BEGIN{print (p&gt;=80)}&#39;</span><span class="va">)</span><span class="st">&quot;</span> <span class="ot">=</span> 1 <span class="bu">]</span> <span class="kw">&amp;&amp;</span> <span class="bu">[</span> <span class="st">&quot;</span><span class="va">$wg_rx_advanced</span><span class="st">&quot;</span> <span class="ot">=</span> 1 <span class="bu">]</span> <span class="kw">&amp;&amp;</span> <span class="bu">[</span> <span class="st">&quot;</span><span class="va">$regressed</span><span class="st">&quot;</span> <span class="ot">=</span> no <span class="bu">]</span> <span class="dt">\</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>  <span class="kw">&amp;&amp;</span> <span class="ex">ab_pass_with_evidence</span> <span class="st">&quot;G1: </span><span class="va">${pct}</span><span class="st">% of bare-link (&gt;=80%), no regression&quot;</span> <span class="st">&quot;</span><span class="va">$out</span><span class="st">/g1_throughput.csv&quot;</span> <span class="dt">\</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>  <span class="kw">||</span> <span class="ex">ab_fail</span> <span class="st">&quot;G1: </span><span class="va">${pct}</span><span class="st">% (target 80%); wg_advanced=</span><span class="va">$wg_rx_advanced</span><span class="st"> regressed=</span><span class="va">$regressed</span><span class="st">&quot;</span></span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># rig/bench_g4.sh — BENCH-G4: Rust-vs-Go edge CPU-per-Gbps decision CSV [04_P0 §8, SYNTHESIS D5]</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> lang <span class="kw">in</span> rust go<span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="ex">deploy_edge</span> <span class="st">&quot;</span><span class="va">$lang</span><span class="st">&quot;</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="va">EDGE_LANG</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$lang</span><span class="st">&quot;</span> <span class="va">RUN</span><span class="op">=</span>1 <span class="fu">bash</span> bench.sh 3                        <span class="co"># appends to edge_compare.csv (N=3)</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="va">decision</span><span class="op">=</span><span class="va">$(</span><span class="ex">decide_edge_language</span> qa-results/bench/edge_compare.csv<span class="va">)</span>  <span class="co"># lower CPU-per-Gbps + p99 + churn + mem</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="ex">record_gate_outcome</span> G4 <span class="st">&quot;</span><span class="va">$decision</span><span class="st">&quot;</span>                               <span class="co"># gates.G4.outcome IN (&#39;rust&#39;,&#39;go&#39;) with evidence_path</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="ex">ab_pass_with_evidence</span> <span class="st">&quot;G4 decision = </span><span class="va">$decision</span><span class="st">&quot;</span> <span class="st">&quot;qa-results/bench/edge_compare.csv&quot;</span></span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># rig/perf_slo3_revoke.sh — PERF-SLO3: revoke→edge enforcement p99 &lt; 1 s (overview §7.2)</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="bu">set</span> <span class="at">-euo</span> pipefail</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="va">out</span><span class="op">=</span><span class="st">&quot;qa-results/bench/</span><span class="va">$(</span><span class="fu">date</span> +%s<span class="va">)</span><span class="st">_revoke&quot;</span><span class="kw">;</span> <span class="fu">mkdir</span> <span class="at">-p</span> <span class="st">&quot;</span><span class="va">$out</span><span class="st">&quot;</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="va">$(</span><span class="fu">seq</span> 1 200<span class="va">)</span><span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="va">t0</span><span class="op">=</span><span class="va">$(</span><span class="ex">now_ms</span><span class="va">)</span><span class="kw">;</span> <span class="ex">issue_revoke</span> <span class="st">&quot;dev-</span><span class="va">$i</span><span class="st">&quot;</span><span class="kw">;</span> <span class="ex">wait_for_edge_peer_removed</span> <span class="st">&quot;dev-</span><span class="va">$i</span><span class="st">&quot;</span><span class="kw">;</span> <span class="va">t1</span><span class="op">=</span><span class="va">$(</span><span class="ex">now_ms</span><span class="va">)</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="bu">echo</span> <span class="st">&quot;</span><span class="va">$((t1</span> <span class="op">-</span> <span class="va">t0))</span><span class="st">&quot;</span> <span class="op">&gt;&gt;</span> <span class="st">&quot;</span><span class="va">$out</span><span class="st">/revoke_latency.csv&quot;</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="va">p99</span><span class="op">=</span><span class="va">$(</span><span class="ex">percentile</span> <span class="st">&quot;</span><span class="va">$out</span><span class="st">/revoke_latency.csv&quot;</span> 99<span class="va">)</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="bu">[</span> <span class="st">&quot;</span><span class="va">$p99</span><span class="st">&quot;</span> <span class="ot">-lt</span> 1000 <span class="bu">]</span> <span class="kw">&amp;&amp;</span> <span class="bu">[</span> <span class="st">&quot;</span><span class="va">$(</span><span class="ex">compare_to_baseline</span> revoke_p99 <span class="st">&quot;</span><span class="va">$p99</span><span class="st">&quot;</span><span class="va">)</span><span class="st">&quot;</span> <span class="ot">=</span> no_regression <span class="bu">]</span> <span class="dt">\</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>  <span class="kw">&amp;&amp;</span> <span class="ex">ab_pass_with_evidence</span> <span class="st">&quot;SLO3 revoke p99=</span><span class="va">${p99}</span><span class="st">ms (&lt;1s), no regression&quot;</span> <span class="st">&quot;</span><span class="va">$out</span><span class="st">/revoke_latency.csv&quot;</span> <span class="dt">\</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>  <span class="kw">||</span> <span class="ex">ab_fail</span> <span class="st">&quot;SLO3 revoke p99=</span><span class="va">${p99}</span><span class="st">ms — finding (§11.4.4 STOP)&quot;</span></span></code></pre></div>
+<p><strong>Honest boundary (§11.4.6).</strong> Every target figure in §1
+(80% bare-link, 50% MASQUE, &lt; 1 s SLOs) is a <strong>TARGET</strong>,
+not a measured result, until the rig produces the CSV — they are
+<strong>UNVERIFIED</strong> as HelixVPN results and become facts only
+when <code>bench.sh</code>/the PERF drivers run on the real rig and the
+captured CSV is attached. The G4 edge-language outcome is
+<strong>UNVERIFIED</strong> until the <code>edge_compare.csv</code>
+exists (the spec records it as a decision to be made from the CSV, never
+a pre-decided result). The SCALE convergence p99 at the MVP agent count
+is partial; full N-scale is a Phase-2 SCALE concern ([TM
+<code>T-COORD-D-1</code>] flags the 10k-stream p99 as a soak number not
+yet a result). The bare-link reference rate depends on the rig&#39;s NIC/CPU
+and is captured per-rig, never assumed.</p>
+<hr />
+<h2 id="sources-verified">Sources verified</h2>
+<ul>
+<li>[OVERVIEW] [<code>../10-testing-acceptance-and-qa.md</code>] — §5.13
+(BENCH+PERF+SCALE strategy + <code>bench.sh</code> skeleton), §3.2
+(metamorphic 2×-clients relation), §6.3 (BENCH/PERF ledger cells), §7.1
+(G1/G2/G4), §7.2 (SLO1–SLO4), §8 (determinism N=3), §9
+(<code>make bench</code>). (Read 2026-06-26.)</li>
+<li>[04_P0] <code>04_VPN_CLD/HelixVPN-Phase0-Spike.md</code> — §8
+<code>bench.sh</code>, G1 ≥80% bare-link, G2 ≥50% MASQUE, G4 Rust-vs-Go
+CPU-per-Gbps decision. (Cited via overview.)</li>
+<li>[SYNTHESIS] <code>v09-research/_SYNTHESIS.md</code> — D5
+edge-language decision input. (Cited via overview.)</li>
+<li>[reconcile]
+[<code>../v03-control-plane/reconciliation-flow.md</code>] —
+<code>helix_reconcile_seconds</code> histogram, event→enforced p99 &lt;
+1 s budget. (Read 2026-06-26.)</li>
+<li>[ladder]
+[<code>../v02-data-plane/transport-selection-ladder.md</code>] — MASQUE
+rung (G2 throughput surface). (Read 2026-06-26.)</li>
+<li>[01-DP] <code>final/01-data-plane.md</code> — WG core throughput,
+MASQUE framing; [TM] [<code>../v05-security/threat-model.md</code>]
+<code>T-COORD-D-1</code> (10k-stream p99 <strong>UNVERIFIED</strong>).
+(Cited via overview.)</li>
+<li>Constitution: §11.4.169, §11.4.6 (TARGET-not-claim / UNVERIFIED /
+regression-is-finding), §11.4.24 (min/max/mean/p95 resource stats),
+§11.4.27 (real rig), §11.4.69 (throughput evidence class),
+§11.4.107(2)/(13) (independent counter-advance + calibrated thresholds),
+§11.4.50 (determinism N=3), §11.4.135 (baseline as regression guard),
+§11.4.4 (STOP on regression), §11.4.102 (systematic-debug), §11.4.84
+(quiescence), §1.1 (paired mutation).</li>
+</ul>
+</body>
+</html>

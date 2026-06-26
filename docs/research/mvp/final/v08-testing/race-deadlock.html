@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Race-Condition / Deadlock Test Strategy</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Race-Condition / Deadlock Test Strategy</h1>
+</header>
+<h1 id="race-condition--deadlock-test-strategy">Race-Condition /
+Deadlock Test Strategy</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-06-26T12:00:00Z</p>
+<blockquote>
+<p>Master technical specification — Volume 8 (Testing &amp; QA),
+nano-detail document <strong>race-deadlock</strong>, one of the seven
+§11.4.169 cross-cutting test-type deep-dives. It deepens <a href="../10-testing-acceptance-and-qa.md"><code>10-testing-acceptance-and-qa.md</code></a>
+§5.11 (RACE) into an implementation-ready bank for
+<strong>data-race</strong> and <strong>deadlock</strong> detection on
+HelixVPN&#39;s hot paths, using Rust <code>loom</code> + ThreadSanitizer and
+Go <code>-race</code>. SPEC-ONLY: it describes the harness, fixtures,
+evidence, gate, and the paired §1.1 mutation; it does not build the
+product. Sources cited inline by id — <code>[OVERVIEW]</code> = doc 10;
+<code>[ladder]</code> =
+[<code>../v02-data-plane/transport-selection-ladder.md</code>];
+<code>[reconcile]</code> =
+[<code>../v03-control-plane/reconciliation-flow.md</code>];
+<code>[TM]</code> = [<code>../v05-security/threat-model.md</code>];
+<code>[01-DP]</code> = doc 01. Claims not grounded in the evidence base
+are marked <strong>UNVERIFIED</strong> per constitution §11.4.6 — never
+fabricated. (Companion: logical correctness under concurrency is owned
+by [<code>concurrency.md</code>]; this doc owns <em>memory-model</em>
+races and <em>lock-order</em> deadlocks.)</p>
+</blockquote>
+<hr />
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#0-scope-on-helixvpn-surfaces">0. Scope on HelixVPN
+surfaces</a></li>
+<li><a href="#1-the-hot-paths-under-interleaving">1. The hot paths under
+interleaving</a></li>
+<li><a href="#2-harness--loom--tsan--go--race">2. Harness — loom + tsan
++ go -race</a></li>
+<li><a href="#3-the-lock-order-discipline-no-blocking-op-inside-a-held-lock">3.
+The lock-order discipline (no blocking op inside a held lock)</a></li>
+<li><a href="#4-fixtures--real-critical-sections-1114277">4. Fixtures —
+real critical sections (§11.4.27)</a></li>
+<li><a href="#5-captured-evidence-1114-69">5. Captured evidence
+(§11.4.69)</a></li>
+<li><a href="#6-determinism-1114050">6. Determinism (§11.4.50)</a></li>
+<li><a href="#7-acceptance-gate">7. Acceptance gate</a></li>
+<li><a href="#8-the-paired-111-mutation">8. The paired §1.1
+mutation</a></li>
+<li><a href="#9-test-skeletons">9. Test skeletons</a></li>
+<li><a href="#sources-verified">Sources verified</a></li>
+</ul>
+<hr />
+<h2 id="0-scope-on-helixvpn-surfaces">0. Scope on HelixVPN surfaces</h2>
+<p>A data race or deadlock on a VPN&#39;s data plane is a §11.4.145-class
+<em>latent</em> defect: it passes code review and every functional test,
+then fails at runtime only — a torn read of <code>AllowedIPs</code> can
+<strong>route a packet outside its grant</strong> (a default-deny
+breach, [TM <code>T-EDGE-E-1</code>]); a deadlock in the reconcile loop
+stalls convergence past the &lt; 1 s SLO. This bank exercises the
+memory-model behaviour of HelixVPN&#39;s lock-bearing hot paths and asserts
+a <strong>zero-findings</strong> detector report — a <code>-race</code>,
+<code>loom</code>, or <code>tsan</code> finding is a release
+blocker.</p>
+<table>
+<thead>
+<tr>
+<th>Hot path</th>
+<th>Concurrent access</th>
+<th>Failure if racy</th>
+<th>Component</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>edge verdict-map hot-swap</td>
+<td>policy update swaps the map while packets are classified</td>
+<td>use-after-free / half-applied map ⇒ wrong verdict</td>
+<td>helix-edge (Rust, <code>ArcSwap</code>)</td>
+</tr>
+<tr>
+<td>client reconcile loop</td>
+<td>network-map apply under a concurrent status read</td>
+<td>torn read of <code>AllowedIPs</code> ⇒ packet outside grant</td>
+<td>helix-core (Rust)</td>
+</tr>
+<tr>
+<td>core <code>tick()</code> keepalive/rekey</td>
+<td>timer fires under concurrent send/recv</td>
+<td>rekey race ⇒ dropped/duplicated handshake</td>
+<td>helix-core (Rust)</td>
+</tr>
+<tr>
+<td>transport ladder re-pick</td>
+<td>re-pick under concurrent dial result</td>
+<td>torn ladder state ⇒ stuck transport</td>
+<td>helix-core (<code>ladder.rs</code>, [ladder §3])</td>
+</tr>
+<tr>
+<td>coordinator topology graph</td>
+<td>concurrent stream fan-out under a new enroll</td>
+<td>racy graph read ⇒ wrong served map</td>
+<td>helix-go (Go)</td>
+</tr>
+<tr>
+<td>Redis Streams consumer</td>
+<td>concurrent ack/claim of a pending message</td>
+<td>double-process / lost ack</td>
+<td>helix-go (Go)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="1-the-hot-paths-under-interleaving">1. The hot paths under
+interleaving</h2>
+<p>The bank&#39;s value is exhaustively (Rust) or detector-driven (Go)
+interleaving the <em>real</em> critical sections, not asserting &quot;we used
+a mutex&quot;. Two are load-bearing:</p>
+<ul>
+<li><strong>Edge verdict-map hot-swap.</strong> The edge classifies
+packets against a <code>VerdictMap</code> while a policy update swaps
+it. The contract: the swap is <strong>atomic</strong>
+(<code>ArcSwap</code> store) so a classifier either sees the whole old
+map or the whole new map — <strong>never a half-applied map</strong> (no
+torn read, no use-after-free). A <code>loom</code> test models the
+swap-vs-classify interleaving exhaustively and asserts
+<code>is_consistent()</code> on every observed interleaving (overview
+§5.11).</li>
+<li><strong>Client reconcile vs status read.</strong> The reconcile loop
+rewrites <code>AllowedIPs</code> while a status reader reads the current
+peer set (for the UI / FFI status stream). The contract: the reader sees
+a consistent snapshot — never a peer with half-updated
+<code>AllowedIPs</code> that would route a packet outside its grant. A
+<code>loom</code> test exhaustively interleaves apply-vs-read.</li>
+</ul>
+<p>For the Go control plane, exhaustive interleaving is infeasible, so
+the discipline is <strong>detector- driven</strong>: every coordinator +
+consumer test runs under <code>go test -race</code>
+(ThreadSanitizer-based), and a positive deadlock-probe test asserts the
+fan-out never deadlocks under concurrent enroll+stream.</p>
+<hr />
+<h2 id="2-harness--loom--tsan--go--race">2. Harness — loom + tsan + go
+-race</h2>
+<table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Tool</th>
+<th>What it proves</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Rust core/edge critical sections</td>
+<td><code>cargo +nightly test --features loom</code></td>
+<td><strong>exhaustive</strong> interleaving of the modelled section —
+no torn read, no deadlock, no UAF</td>
+</tr>
+<tr>
+<td>Rust FFI boundary</td>
+<td>ThreadSanitizer (<code>-Zsanitizer=thread</code>)</td>
+<td>data races across the Dart↔︎Rust FFI boundary the loom model cannot
+reach</td>
+</tr>
+<tr>
+<td>Go coordinator + consumer</td>
+<td><code>go test -race</code></td>
+<td>data races + a subset of lock-order issues on the real Go
+runtime</td>
+</tr>
+<tr>
+<td>Go deadlock probe</td>
+<td>a bounded-timeout fan-out test</td>
+<td>the fan-out completes within budget (no deadlock) under concurrent
+enroll+stream</td>
+</tr>
+</tbody>
+</table>
+<p><code>loom</code> is the canonical strong layer (decision QA-D1,
+overview §10): its exhaustive interleaving is stronger than
+<code>-race</code>&#39;s observe-what-happened for the verdict-swap hot
+path; QA-D1 revisits this on the G4 Rust-vs-Go edge decision (if the
+edge ships in Go, the canonical edge tool becomes <code>-race</code>).
+The bank runs under <code>make test</code> RACE stage (overview §9),
+dispatched by <code>helix_qa</code>. <code>make test</code> already runs
+<code>go test -race ./helix-go/...</code> (overview §9), so the Go race
+detector is on by default.</p>
+<hr />
+<h2 id="3-the-lock-order-discipline-no-blocking-op-inside-a-held-lock">3.
+The lock-order discipline (no blocking op inside a held lock)</h2>
+<p>CLAUDE.md MANDATORY DEVELOPMENT PRINCIPLE 2 — <em>no blocking
+operations inside synchronized / shared-lock regions</em> — is asserted
+mechanically, not by review. Two checks:</p>
+<ul>
+<li><strong>loom no-block-under-lock.</strong> A <code>loom</code> test
+asserts the verdict-swap never holds the classify lock across an
+allocation or a <code>.await</code>/blocking call (overview §5.11): a
+long op inside the held lock is the deadlock/timeout vector principle 2
+forbids. The test models the section and asserts the lock is released
+before any potentially-blocking call.</li>
+<li><strong>lock-order graph.</strong> A static + runtime lock-ordering
+check (the Go coordinator acquires locks in a fixed total order:
+topology-graph lock → per-stream lock, never the reverse) — a
+<code>loom</code>/<code>-race</code> deadlock-probe asserts no two
+goroutines acquire the two locks in opposite order (the classic AB-BA
+deadlock). A documented lock-acquisition order is part of the spec; a
+violation is a finding.</li>
+</ul>
+<hr />
+<h2 id="4-fixtures--real-critical-sections-11427">4. Fixtures — real
+critical sections (§11.4.27)</h2>
+<p>Race testing is below the unit layer in the sense that mocks cannot
+prove a memory-model property: the fixtures are the
+<strong>real</strong> critical-section types compiled with the
+detector.</p>
+<table>
+<thead>
+<tr>
+<th>Fixture</th>
+<th>What</th>
+<th>Why real</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>real <code>VerdictMap</code> + <code>ArcSwap</code></td>
+<td>the actual edge verdict-map type under loom</td>
+<td>a mocked map cannot reproduce the real swap interleaving</td>
+</tr>
+<tr>
+<td>real reconcile <code>AllowedIPs</code> apply</td>
+<td>the actual client reconcile critical section</td>
+<td>a stubbed apply cannot exhibit the real torn-read</td>
+</tr>
+<tr>
+<td>real coordinator topology graph</td>
+<td>the actual Go graph + per-stream locks</td>
+<td><code>-race</code> must instrument the real lock acquisition
+order</td>
+</tr>
+<tr>
+<td><code>loom</code> model harness</td>
+<td>loom&#39;s permutation driver wrapping the real types</td>
+<td>loom needs the real <code>Arc</code>/atomic types, not a fake</td>
+</tr>
+</tbody>
+</table>
+<p>Note (§11.4.27): <code>loom</code> substitutes its own
+<code>loom::sync</code>/<code>loom::thread</code> primitives for
+<code>std</code> ones — this is the <em>model</em> substitution loom
+requires, not a product mock; the <em>logic under test</em> is the real
+critical section.</p>
+<hr />
+<h2 id="5-captured-evidence-11469">5. Captured evidence (§11.4.69)</h2>
+<p>Every PASS cites the detector report under
+<code>qa-results/race/&lt;run-id&gt;/</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Test</th>
+<th>Artifact</th>
+<th>Asserts</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>RACE-VERDICT-SWAP</td>
+<td><code>loom_verdict_swap.log</code></td>
+<td>every interleaving consistent; zero UAF; zero deadlock</td>
+</tr>
+<tr>
+<td>RACE-RECONCILE-READ</td>
+<td><code>loom_reconcile.log</code></td>
+<td>status read sees a consistent <code>AllowedIPs</code> snapshot</td>
+</tr>
+<tr>
+<td>RACE-FFI-TSAN</td>
+<td><code>tsan_ffi.log</code></td>
+<td>zero ThreadSanitizer findings across the FFI boundary</td>
+</tr>
+<tr>
+<td>RACE-GO-CONSUMER</td>
+<td><code>go_race_consumer.log</code></td>
+<td><code>go test -race</code> clean (zero data-race reports)</td>
+</tr>
+<tr>
+<td>DEADLOCK-FANOUT</td>
+<td><code>fanout_timing.json</code></td>
+<td>fan-out completes within budget under concurrent enroll+stream (no
+deadlock)</td>
+</tr>
+<tr>
+<td>NOBLOCK-UNDER-LOCK</td>
+<td><code>loom_noblock.log</code></td>
+<td>classify lock released before any blocking call (principle 2)</td>
+</tr>
+</tbody>
+</table>
+<p>The detector&#39;s <strong>zero-findings</strong> report <em>is</em> the
+captured evidence — a clean
+<code>loom</code>/<code>tsan</code>/<code>-race</code> log is the
+§11.4.69 artifact. A &quot;no error in the test run&quot; claim without the
+attached detector log is a B2 absence-of-error bluff (overview §0).</p>
+<hr />
+<h2 id="6-determinism-11450">6. Determinism (§11.4.50)</h2>
+<p><code>loom</code>&#39;s exhaustive interleaving is <strong>deterministic
+by construction</strong> — it explores the full modelled state space, so
+a clean loom run is a proof over all interleavings (within the model&#39;s
+bound), not a sample; re-running yields the identical exploration.
+<code>tsan</code> and <code>go -race</code> are probabilistic (they
+observe only the interleavings that happened), so the bank runs them
+under <code>ab_run_n_times … 10</code> (N=10 cycle-validation, because
+races are high-risk per §11.4.132) and the evidence-hash is over
+<code>(findings == 0: bool)</code>; all 10 MUST report zero findings. A
+single run with a finding in 10 is <strong>auto-FAIL</strong> — a race
+that appears once in ten is still a release blocker (§11.4.50:
+intermittent is mechanically forbidden, and a race is the
+<em>definition</em> of intermittent). Where loom is bounded
+(<code>LOOM_MAX_PREEMPTIONS</code>), the bound is recorded in the
+evidence so the proof&#39;s scope is honest (§11.4.6).</p>
+<hr />
+<h2 id="7-acceptance-gate">7. Acceptance gate</h2>
+<table>
+<thead>
+<tr>
+<th>Gate</th>
+<th>Bar</th>
+<th>Evidence</th>
+<th>Component</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>RACE-VERDICT-SWAP</td>
+<td>loom: zero inconsistent interleaving / UAF / deadlock</td>
+<td><code>loom_verdict_swap.log</code></td>
+<td>helix-edge</td>
+</tr>
+<tr>
+<td>RACE-RECONCILE-READ</td>
+<td>loom: status read consistent</td>
+<td><code>loom_reconcile.log</code></td>
+<td>helix-core</td>
+</tr>
+<tr>
+<td>RACE-FFI-TSAN</td>
+<td>tsan: zero findings</td>
+<td><code>tsan_ffi.log</code></td>
+<td>FFI</td>
+</tr>
+<tr>
+<td>RACE-GO-CONSUMER</td>
+<td><code>go test -race</code> clean</td>
+<td><code>go_race_consumer.log</code></td>
+<td>helix-go</td>
+</tr>
+<tr>
+<td>DEADLOCK-FANOUT</td>
+<td>fan-out within budget, no deadlock</td>
+<td><code>fanout_timing.json</code></td>
+<td>helix-go</td>
+</tr>
+<tr>
+<td>NOBLOCK-UNDER-LOCK</td>
+<td>classify lock released before blocking call</td>
+<td><code>loom_noblock.log</code></td>
+<td>helix-edge</td>
+</tr>
+</tbody>
+</table>
+<p>A <code>-race</code>/<code>loom</code>/<code>tsan</code> finding is a
+<strong>release blocker</strong> (overview §5.11) — it is the §11.4.145
+angle-3 latent-bug class that causes runtime-only failures. RACE cells
+appear in the coverage ledger for F-DEFAULT-DENY, F-TRANSPORT-ESCALATE,
+F-POLICY-RECONCILE, F-KILLSWITCH (overview §6.3). The race floor runs
+alongside the §11.4.132 risk-ordered security floor (the verdict-swap
+race <em>is</em> a default-deny breach vector).</p>
+<hr />
+<h2 id="8-the-paired-11-mutation">8. The paired §1.1 mutation</h2>
+<pre class="text"><code>MUTATION (paired §1.1, gate CM-VERDICT-SWAP-ATOMIC):
+  Replace the ArcSwap atomic store of the VerdictMap with a non-atomic
+  two-step update (clear-then-populate), so a classifier can observe a
+  half-applied (empty/partial) map mid-swap.
+EXPECTED:  the loom test observes an interleaving where is_consistent()
+           is false (a packet classified against a half-applied map) →
+           RACE-VERDICT-SWAP FAILs → mutation caught (loom is exhaustive,
+           so it is GUARANTEED to find the interleaving, not probabilistic).
+RESTORE:   re-instate the ArcSwap atomic store; re-run → GREEN.</code></pre>
+<p>A second mutation (<code>CM-GO-RACE-CLEAN</code>) introduces an
+unguarded concurrent write to the coordinator&#39;s topology graph;
+expected: <code>go test -race</code> reports a data race →
+RACE-GO-CONSUMER FAILs → caught. A third
+(<code>CM-NOBLOCK-UNDER-LOCK</code>) inserts a blocking call inside the
+held classify lock; expected: the loom no-block assertion FAILs (and the
+deadlock-probe may time out) → caught. All mutations restored, tree
+verified quiescent (§11.4.84) before commit.</p>
+<hr />
+<h2 id="9-test-skeletons">9. Test skeletons</h2>
+<div class="sourceCode" id="cb2"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-edge/tests/verdict_swap_loom.rs — RACE-VERDICT-SWAP: no torn read, no deadlock (overview §5.11)</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>test<span class="at">]</span> <span class="kw">fn</span> verdict_swap_is_atomic_under_loom() <span class="op">{</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="pp">loom::</span>model(<span class="op">||</span> <span class="op">{</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> vm <span class="op">=</span> <span class="pp">Arc::</span>new(<span class="pp">ArcSwap::</span>from_pointee(<span class="pp">VerdictMap::</span>empty()))<span class="op">;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> (vm1<span class="op">,</span> vm2) <span class="op">=</span> (vm<span class="op">.</span>clone()<span class="op">,</span> vm<span class="op">.</span>clone())<span class="op">;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> t <span class="op">=</span> <span class="pp">loom::thread::</span>spawn(<span class="kw">move</span> <span class="op">||</span> <span class="op">{</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>            vm1<span class="op">.</span>store(<span class="pp">Arc::</span>new(<span class="pp">VerdictMap::</span>allow(<span class="st">&quot;10.10.0.0/24&quot;</span>)))<span class="op">;</span>   <span class="co">// policy update swaps the map</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> v <span class="op">=</span> vm2<span class="op">.</span>load()<span class="op">;</span>                       <span class="co">// classifier reads concurrently</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>        <span class="pp">assert!</span>(v<span class="op">.</span>is_consistent())<span class="op">;</span>               <span class="co">// NEVER a half-applied map (no torn read / UAF)</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>        t<span class="op">.</span>join()<span class="op">.</span>unwrap()<span class="op">;</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    <span class="co">// paired §1.1 (CM-VERDICT-SWAP-ATOMIC): non-atomic two-step store → loom finds an inconsistent read → FAIL</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-edge/tests/noblock_under_lock_loom.rs — NOBLOCK-UNDER-LOCK (principle 2)</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>test<span class="at">]</span> <span class="kw">fn</span> classify_lock_released_before_blocking_call() <span class="op">{</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="pp">loom::</span>model(<span class="op">||</span> <span class="op">{</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> guard <span class="op">=</span> CLASSIFY_LOCK<span class="op">.</span>lock()<span class="op">;</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> verdict <span class="op">=</span> classify_fast(<span class="op">&amp;</span>guard)<span class="op">;</span>      <span class="co">// pure, non-blocking, under the lock</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>        drop(guard)<span class="op">;</span>                              <span class="co">// lock MUST be released BEFORE any blocking work</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>        do_possibly_blocking_followup(verdict)<span class="op">;</span>   <span class="co">// alloc / await happens OUTSIDE the lock</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>        <span class="pp">assert!</span>(lock_was_released_before_followup())<span class="op">;</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-go/internal/coordinator/fanout_deadlock_test.go — DEADLOCK-FANOUT (run with -race)</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestFanoutNoDeadlockUnderConcurrentEnroll<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    infra <span class="op">:=</span> mustBootRedisPG<span class="op">(</span>t<span class="op">)</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    coord <span class="op">:=</span> startCoordinator<span class="op">(</span>t<span class="op">,</span> infra<span class="op">)</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    done <span class="op">:=</span> <span class="bu">make</span><span class="op">(</span><span class="kw">chan</span> <span class="kw">struct</span><span class="op">{})</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">go</span> <span class="kw">func</span><span class="op">()</span> <span class="op">{</span> openNStreams<span class="op">(</span>coord<span class="op">,</span> <span class="dv">50</span><span class="op">)</span> <span class="op">}()</span>             <span class="co">// concurrent stream fan-out</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">go</span> <span class="kw">func</span><span class="op">()</span> <span class="op">{</span> enrollNDevices<span class="op">(</span>coord<span class="op">,</span> <span class="dv">50</span><span class="op">);</span> <span class="bu">close</span><span class="op">(</span>done<span class="op">)</span> <span class="op">}()</span> <span class="co">// concurrent enroll (mutates topology graph)</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">select</span> <span class="op">{</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> <span class="op">&lt;-</span>done<span class="op">:</span>                                         <span class="co">// completed → no deadlock</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>        writeEvidence<span class="op">(</span>t<span class="op">,</span> <span class="st">&quot;qa-results/race/fanout_timing.json&quot;</span><span class="op">,</span> coord<span class="op">.</span>Timing<span class="op">())</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> <span class="op">&lt;-</span>time<span class="op">.</span>After<span class="op">(</span>deadlockBudget<span class="op">):</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>        t<span class="op">.</span>Fatal<span class="op">(</span><span class="st">&quot;DEADLOCK: fan-out did not complete within budget (AB-BA lock order?)&quot;</span><span class="op">)</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>    <span class="co">// run: go test -race  → CM-GO-RACE-CLEAN mutation (unguarded graph write) makes -race report a race → FAIL</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><strong>Honest boundary (§11.4.6).</strong> <code>loom</code> proves
+the property over the <strong>modelled</strong> state space within its
+preemption bound — it does <strong>not</strong> prove freedom from races
+in code paths not wrapped in a loom model (those rely on
+<code>tsan</code>/<code>-race</code>, which are probabilistic and proven
+only over N=10 observed runs, not exhaustively). The G4 edge-language
+decision (overview §7.1) determines whether <code>loom</code> (Rust) or
+<code>-race</code> (Go) is the canonical edge tool — until G4 resolves,
+the canonical edge RACE tool is <strong>UNVERIFIED</strong> (QA-D1
+recommends Rust/loom but defers to the G4 CSV). The Go deadlock-probe
+proves <em>no deadlock under the tested concurrency level</em>, not
+under all loads — higher-concurrency deadlock exposure is an §11.4.118
+discovery concern.</p>
+<hr />
+<h2 id="sources-verified">Sources verified</h2>
+<ul>
+<li>[OVERVIEW] [<code>../10-testing-acceptance-and-qa.md</code>] — §5.11
+(RACE strategy + loom verdict-swap skeleton + lock discipline), §6.3
+(RACE ledger cells), §7.1 (G4 edge language), §8
+(determinism/risk-order), §9 (<code>go test -race</code> in
+<code>make test</code>), §10 QA-D1. (Read 2026-06-26.)</li>
+<li>[ladder]
+[<code>../v02-data-plane/transport-selection-ladder.md</code>] — §3
+ladder state machine (re-pick under concurrent dial result). (Read
+2026-06-26.)</li>
+<li>[reconcile]
+[<code>../v03-control-plane/reconciliation-flow.md</code>] — §0.2
+reconcile loop, coordinator topology graph + stream fan-out. (Read
+2026-06-26.)</li>
+<li>[TM] [<code>../v05-security/threat-model.md</code>] —
+<code>T-EDGE-E-1</code> (a torn verdict map is a default-deny breach
+vector). (Cited via overview.)</li>
+<li>[01-DP] <code>final/01-data-plane.md</code> —
+<code>helix-core</code> <code>tick()</code> keepalive/rekey, edge
+verdict map. (Cited via overview.)</li>
+<li>Constitution: §11.4.169, §11.4.27 (no-fakes / loom model is not a
+product mock), §11.4.69 (detector report = evidence), §11.4.50
+(determinism: race is the definition of intermittent), §11.4.132 (race
+is high-risk), §11.4.145 (latent-runtime-only-defect class), §11.4.84
+(quiescence), §1.1 (paired mutation); CLAUDE.md principles 2 + 3.</li>
+</ul>
+</body>
+</html>

@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Memory Test Strategy (iOS NE ceiling + leak soak)</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Memory Test Strategy (iOS NE ceiling + leak soak)</h1>
+</header>
+<h1 id="memory-test-strategy-ios-ne-ceiling--leak-soak">Memory Test
+Strategy (iOS NE ceiling + leak soak)</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-06-26T12:00:00Z</p>
+<blockquote>
+<p>Master technical specification — Volume 8 (Testing &amp; QA),
+nano-detail document <strong>memory</strong>, one of the seven §11.4.169
+cross-cutting test-type deep-dives. It deepens <a href="../10-testing-acceptance-and-qa.md"><code>10-testing-acceptance-and-qa.md</code></a>
+§5.12 (MEM) into an implementation-ready bank for the
+<strong>make-or-break</strong> iOS <code>NEPacketTunnelProvider</code>
+memory ceiling (Phase-0 gate G3), 24 h leak soaks, and the coordinator&#39;s
+bounded memory at 10k streams (SLO4). SPEC-ONLY: it describes harness,
+fixtures, evidence, gate, and the paired §1.1 mutation; it does not
+build the product. Sources cited inline by id — <code>[OVERVIEW]</code>
+= doc 10; <code>[SYNTHESIS]</code> =
+<code>v09-research/_SYNTHESIS.md</code>; <code>[04_P0]</code> = Phase-0
+spike; <code>[reconcile]</code> =
+[<code>../v03-control-plane/reconciliation-flow.md</code>];
+<code>[TM]</code> = [<code>../v05-security/threat-model.md</code>].
+Claims not grounded in the evidence base are marked
+<strong>UNVERIFIED</strong> per constitution §11.4.6 — never
+fabricated.</p>
+</blockquote>
+<hr />
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#0-scope-on-helixvpn-surfaces--why-memory-is-make-or-break">0.
+Scope on HelixVPN surfaces — why memory is make-or-break</a></li>
+<li><a href="#1-the-four-memory-claims">1. The four memory
+claims</a></li>
+<li><a href="#2-harness--per-platform-rss-samplers">2. Harness —
+per-platform RSS samplers</a></li>
+<li><a href="#3-fixtures--real-device-real-soak-1114277">3. Fixtures —
+real device, real soak (§11.4.27)</a></li>
+<li><a href="#4-captured-evidence-1114697---107">4. Captured evidence
+(§11.4.69 / .107)</a></li>
+<li><a href="#5-determinism-1114050">5. Determinism (§11.4.50)</a></li>
+<li><a href="#6-acceptance-gate">6. Acceptance gate</a></li>
+<li><a href="#7-the-paired-111-mutation">7. The paired §1.1
+mutation</a></li>
+<li><a href="#8-test-skeletons">8. Test skeletons</a></li>
+<li><a href="#sources-verified">Sources verified</a></li>
+</ul>
+<hr />
+<h2 id="0-scope-on-helixvpn-surfaces--why-memory-is-make-or-break">0.
+Scope on HelixVPN surfaces — why memory is make-or-break</h2>
+<p>The single decision the whole client architecture rests on is the
+<strong>iOS <code>NEPacketTunnelProvider</code> memory ceiling</strong>
+(~15 MB historical [SYNTHESIS §5]): iOS jetsam-kills a packet-tunnel
+extension that exceeds its footprint, so the entire choice to write
+<code>helix-core</code> in <strong>Rust, not Go</strong> (decision D2
+[SYNTHESIS §3]) is justified <em>only</em> if the Rust core + WG +
+transport stack stays under that ceiling with ≥30% headroom on a real
+device. The Phase-0 gate <strong>G3</strong> is the make-or-break test
+for the program: if Rust cannot meet it, the architecture changes
+[04_P0]. This bank also covers leak-freedom over a 24 h soak (the
+reconcile loop and the QUIC/MASQUE buffer pool must not grow), Android
+<code>VpnService</code> RSS, and the coordinator&#39;s bounded memory at 10k
+streams (SLO4).</p>
+<table>
+<thead>
+<tr>
+<th>Surface</th>
+<th>Memory claim</th>
+<th>Why it matters</th>
+<th>Gate</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>iOS <code>NEPacketTunnelProvider</code></td>
+<td>peak <code>phys_footprint</code> &lt; ceiling, ≥30% headroom</td>
+<td>jetsam kills the tunnel above the ceiling</td>
+<td><strong>G3 (make-or-break)</strong></td>
+</tr>
+<tr>
+<td>helix-core 24 h soak</td>
+<td>no RSS growth over sustained transfer</td>
+<td>a leak in reconcile/QUIC buffers eventually OOMs the extension</td>
+<td>MEM soak</td>
+</tr>
+<tr>
+<td>Android <code>VpnService</code></td>
+<td>RSS within the Android background budget</td>
+<td>a too-heavy service is killed under memory pressure</td>
+<td>MEM</td>
+</tr>
+<tr>
+<td>coordinator @ 10k streams</td>
+<td>bounded RSS over a 24 h soak</td>
+<td>an unbounded per-stream allocation OOMs the gateway</td>
+<td><strong>SLO4</strong></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="1-the-four-memory-claims">1. The four memory claims</h2>
+<p><strong>(A) G3 — iOS NE peak footprint (make-or-break).</strong> On a
+<strong>real iOS device</strong> (the simulator does not reproduce the
+jetsam ceiling, decision QA-D3 — overview §10), the Rust core under
+sustained real traffic must keep
+<code>task_vm_info.phys_footprint</code> (the metric iOS jetsam actually
+evaluates, <strong>not</strong> resident-size) below the ceiling with
+<strong>≥30% headroom</strong> (peak &lt; ceiling × 0.7). This is the
+program&#39;s go/no-go.</p>
+<p><strong>(B) Leak-freedom over a 24 h soak.</strong> A sustained real
+transfer for 24 h must show <strong>no monotonic RSS growth</strong> — a
+leak in the reconcile loop (each map apply must free the old peer set)
+or the QUIC/MASQUE buffer pool (buffers must be returned, not
+accumulated) would be a slow OOM. The claim is a flat (within jitter)
+RSS-vs-time series, asserted by a monotonic-growth detector with a slope
+threshold.</p>
+<p><strong>(C) Android <code>VpnService</code> RSS.</strong> The Android
+tunnel service RSS (via <code>dumpsys meminfo &lt;pkg&gt;</code>) stays
+within the platform background budget so Android does not kill it under
+memory pressure.</p>
+<p><strong>(D) SLO4 — coordinator bounded memory at 10k
+streams.</strong> N=10k simulated agents holding
+<code>WatchNetworkMap</code> streams must keep coordinator RSS
+<strong>bounded</strong> over a 24 h soak — per-stream state is O(1) and
+the in-memory topology graph is shared, not copied per stream
+([reconcile], [TM <code>T-COORD-D-1</code>]). An unbounded per-stream
+allocation is the OOM vector.</p>
+<hr />
+<h2 id="2-harness--per-platform-rss-samplers">2. Harness — per-platform
+RSS samplers</h2>
+<p>Memory is platform-specific (§11.4.81 cross-platform parity); each
+platform has its OS-correct sampler, chosen at runtime. <strong>No
+mocks</strong> — the metric must come from the real OS.</p>
+<table>
+<thead>
+<tr>
+<th>Platform</th>
+<th>Sampler</th>
+<th>Metric (the jetsam/OOM-relevant one)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>iOS NE</td>
+<td><code>task_info(TASK_VM_INFO)</code> → <code>phys_footprint</code>;
+Instruments <code>Allocations</code>/<code>Leaks</code>
+<code>.trace</code></td>
+<td><code>phys_footprint</code> (the jetsam metric, not resident
+size)</td>
+</tr>
+<tr>
+<td>Linux (helix-core, edge, coordinator)</td>
+<td><code>/proc/&lt;pid&gt;/status</code> <code>VmRSS</code> /
+<code>smaps_rollup</code> Pss</td>
+<td>RSS / Pss over time</td>
+</tr>
+<tr>
+<td>Android <code>VpnService</code></td>
+<td><code>dumpsys meminfo &lt;pkg&gt;</code> (TOTAL PSS)</td>
+<td>PSS in the background budget</td>
+</tr>
+<tr>
+<td>coordinator soak</td>
+<td><code>/proc/&lt;pid&gt;/status</code> at 1-min cadence over 24
+h</td>
+<td>RSS bounded / no growth</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb1"><pre class="sourceCode swift"><code class="sourceCode swift"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// shims/apple/PacketTunnelProvider+MemoryProbe.swift — G3 evidence emitter (overview §5.12)</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="fu">sampleFootprint</span><span class="op">()</span> -&gt; <span class="fu">UInt64</span> <span class="op">{</span>                 <span class="co">// bytes; appended to qa-results/mem/ios_rss.csv</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">var</span> <span class="va">info</span> <span class="op">=</span> task_vm_info_data_t<span class="op">()</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">var</span> <span class="va">count</span> <span class="op">=</span> mach_msg_type_number_t<span class="op">(</span>MemoryLayout<span class="op">&lt;</span>task_vm_info<span class="op">&gt;.</span>size <span class="op">/</span> MemoryLayout<span class="op">&lt;</span>integer_t<span class="op">&gt;.</span>size<span class="op">)</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="va">kr</span> <span class="op">=</span> withUnsafeMutablePointer<span class="op">(</span>to<span class="op">:</span> <span class="op">&amp;</span>info<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>        $<span class="fl">0.</span>withMemoryRebound<span class="op">(</span>to<span class="op">:</span> integer_t<span class="op">.</span><span class="kw">self</span><span class="op">,</span> capacity<span class="op">:</span> Int<span class="op">(</span>count<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>            task_info<span class="op">(</span>mach_task_self_<span class="op">,</span> task_flavor_t<span class="op">(</span>TASK_VM_INFO<span class="op">),</span> $<span class="dv">0</span><span class="op">,</span> <span class="op">&amp;</span>count<span class="op">)</span> <span class="op">}</span> <span class="op">}</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">return</span> kr <span class="op">==</span> KERN_SUCCESS <span class="op">?</span> info<span class="op">.</span>phys_footprint <span class="op">:</span> <span class="dv">0</span>   <span class="co">// phys_footprint == the jetsam metric</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>The samplers themselves must be light (Heisenberg constraint,
+§11.4.24-class): the probe samples at a fixed cadence (≤1 Hz) and writes
+a CSV out-of-band; it must not itself perturb the footprint it measures.
+The bank runs under <code>make test</code> MEM stage for short probes
+and a backgrounded 24 h soak job (§11.4.89). Coordinator soak boots
+PG+Redis via <code>containers</code> (§11.4.76, rootless §11.4.161).</p>
+<hr />
+<h2 id="3-fixtures--real-device-real-soak-11427">3. Fixtures — real
+device, real soak (§11.4.27)</h2>
+<table>
+<thead>
+<tr>
+<th>Fixture</th>
+<th>What</th>
+<th>Why real</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>real iOS device (paired)</td>
+<td>a physical iPhone running the NE build</td>
+<td>the jetsam ceiling does <strong>not</strong> reproduce in the
+simulator (QA-D3)</td>
+</tr>
+<tr>
+<td><code>device_build.ipa</code></td>
+<td>the shipping NE extension build (release config)</td>
+<td>G3 must measure the <em>shipping</em> artifact (§11.4.108), not a
+debug build with allocator debug overhead</td>
+</tr>
+<tr>
+<td>sustained real transfer</td>
+<td>a real <code>iperf3</code>/file transfer through the tunnel</td>
+<td>a leak shows only under real buffer churn, not an idle tunnel</td>
+</tr>
+<tr>
+<td>10k agent-fuzzer</td>
+<td>a real load generator opening 10k <code>WatchNetworkMap</code>
+streams</td>
+<td>SLO4 needs real streams holding real per-stream state</td>
+</tr>
+</tbody>
+</table>
+<p>If <strong>no real iOS device is available</strong>, G3 is an honest
+§11.4.3 <code>SKIP: hardware_not_present</code> with a tracked
+operator-attended migration item (QA-D3, overview §10) —
+<strong>never</strong> a simulator PASS faked as a device result (that
+would be a B3 wrong-plane bluff).</p>
+<hr />
+<h2 id="4-captured-evidence-11469--107">4. Captured evidence (§11.4.69 /
+.107)</h2>
+<p>Every PASS cites artifacts under
+<code>qa-results/mem/&lt;run-id&gt;/</code>. The §11.4.69 class is
+<code>MEM</code>. §11.4.107 liveness applies: the RSS series must be
+over a <strong>window</strong> during <em>real, advancing</em> traffic
+(a single footprint sample while the tunnel is idle is not proof — the
+core must be doing real work).</p>
+<table>
+<thead>
+<tr>
+<th>Test</th>
+<th>Artifact</th>
+<th>Asserts</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>G3-IOS-PEAK</td>
+<td><code>ios_rss.csv</code> + Instruments <code>.trace</code></td>
+<td>peak <code>phys_footprint</code> &lt; ceiling × 0.7 (≥30%
+headroom)</td>
+</tr>
+<tr>
+<td>MEM-SOAK-LEAK</td>
+<td><code>core_rss_24h.csv</code></td>
+<td>no monotonic growth (slope &lt; threshold) over 24 h</td>
+</tr>
+<tr>
+<td>MEM-ANDROID-RSS</td>
+<td><code>android_meminfo.csv</code></td>
+<td>PSS within the background budget</td>
+</tr>
+<tr>
+<td>SLO4-COORD-BOUNDED</td>
+<td><code>coord_rss_24h.csv</code> + <code>stream_count.csv</code></td>
+<td>RSS bounded while holding 10k streams over 24 h</td>
+</tr>
+</tbody>
+</table>
+<p>The evidence is the <strong>time series</strong>, not a point: a
+flat-or-bounded RSS-vs-time curve under load. A single in-bounds sample
+is a B-class point-not-window bluff (§11.4.107(1)); the analyzer asserts
+the <em>peak over the window</em> and the <em>growth slope</em>, both
+self-validated (§5, golden-good flat series PASSes, golden-bad leaking
+series FAILs).</p>
+<hr />
+<h2 id="5-determinism-11450">5. Determinism (§11.4.50)</h2>
+<p>The G3 peak and the soak slope are asserted N=3 (G3 short probe) /
+over a single authoritative 24 h run (soak — a 24 h run is not repeated
+N=3, but its <em>verdict</em> is deterministic: peak &lt; ceiling is a
+fact about that run, and the run is re-run on any regression).
+<code>ab_run_n_times &quot;g3-ios-peak&quot; 3 run_ios_probe</code> runs the short
+G3 probe 3× against the same <code>.ipa</code> MD5 + same device; the
+evidence-hash is over
+<code>(peak_footprint_bucket, headroom_pct_meets_30: bool)</code> — all
+3 MUST agree. A run where the headroom meets 30% in 2 of 3 is
+<strong>auto-FAIL</strong> (the ceiling margin must be reliable, not
+lucky). The soak&#39;s monotonic-growth verdict is deterministic given the
+same workload; a divergent slope across two soaks is a regression
+triggering §11.4.4 STOP.</p>
+<hr />
+<h2 id="6-acceptance-gate">6. Acceptance gate</h2>
+<table>
+<thead>
+<tr>
+<th>Gate</th>
+<th>Bar</th>
+<th>Evidence</th>
+<th>Phase</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>G3</strong> (make-or-break)</td>
+<td>peak <code>phys_footprint</code> &lt; ceiling, <strong>≥30%
+headroom</strong>, on a real device</td>
+<td><code>ios_rss.csv</code> + <code>.trace</code></td>
+<td><strong>Phase 0 (release-blocking go/no-go)</strong></td>
+</tr>
+<tr>
+<td>MEM-SOAK-LEAK</td>
+<td>no monotonic RSS growth over 24 h under load</td>
+<td><code>core_rss_24h.csv</code></td>
+<td>MVP</td>
+</tr>
+<tr>
+<td>MEM-ANDROID-RSS</td>
+<td>PSS within background budget</td>
+<td><code>android_meminfo.csv</code></td>
+<td>MVP</td>
+</tr>
+<tr>
+<td><strong>SLO4</strong></td>
+<td>coordinator RSS bounded @ 10k streams / 24 h</td>
+<td><code>coord_rss_24h.csv</code></td>
+<td>MVP (release-blocking SLO)</td>
+</tr>
+</tbody>
+</table>
+<p>G3 is the program&#39;s make-or-break gate: a No-Go means the
+architecture changes (Rust→? or a memory budget rework), escalated per
+§11.4.66 — never silently overrun [04_P0]. G3 + SLO4 are §11.4.132
+risk-ordered high (G3 is the highest-risk Phase-0 gate). The MEM cell
+appears in the ledger for F-IOS-NE-MEM (G3) and SLO4 (overview §6.3,
+§7.2).</p>
+<hr />
+<h2 id="7-the-paired-11-mutation">7. The paired §1.1 mutation</h2>
+<pre class="text"><code>MUTATION (paired §1.1, gate CM-MEM-LEAK-DETECTOR-SELFVALIDATED):
+  Replace the golden-bad leaking RSS series fixture with a flat one (or
+  loosen the monotonic-growth slope threshold to accept any slope).
+EXPECTED:  the leak-detector self-validation test that asserts the
+           golden-bad (leaking) series FAILs now PASSES the leak →
+           meta-test FAILs → mutation caught (defeats B5 — an analyzer
+           that passes its golden-bad fixture is the bluff).
+RESTORE:   re-instate the leaking golden-bad fixture / strict slope; re-run → GREEN.</code></pre>
+<p>A second mutation (<code>CM-SLO4-BOUNDED</code>) introduces a
+per-stream allocation that is never freed in the coordinator fan-out;
+expected: <code>coord_rss_24h.csv</code> shows unbounded growth at 10k
+streams → SLO4 FAILs → caught (this is the real OOM vector the gate
+guards). A third (<code>CM-G3-METRIC-IS-FOOTPRINT</code>) swaps the G3
+metric from <code>phys_footprint</code> to resident-size (which
+under-reports the jetsam-relevant footprint); expected: the
+metric-correctness check FAILs because the asserted metric no longer
+matches the jetsam metric (defeats a B3 wrong-plane bluff). All
+mutations restored, tree verified quiescent (§11.4.84) before
+commit.</p>
+<hr />
+<h2 id="8-test-skeletons">8. Test skeletons</h2>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># rig/ios_g3_probe.sh — G3-IOS-PEAK on a REAL device (QA-D3), §11.4.108 shipping artifact</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="bu">set</span> <span class="at">-euo</span> pipefail</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="va">out</span><span class="op">=</span><span class="st">&quot;qa-results/mem/g3_</span><span class="va">$(</span><span class="fu">date</span> +%s<span class="va">)</span><span class="st">&quot;</span><span class="kw">;</span> <span class="fu">mkdir</span> <span class="at">-p</span> <span class="st">&quot;</span><span class="va">$out</span><span class="st">&quot;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="va">device_serial</span><span class="op">=</span><span class="va">$(</span><span class="ex">ios_paired_device</span><span class="va">)</span> <span class="kw">||</span> <span class="ex">ab_skip_with_reason</span> <span class="st">&quot;G3 iOS peak&quot;</span> hardware_not_present  <span class="co"># §11.4.3, never a sim PASS</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="ex">ios_install</span> <span class="st">&quot;</span><span class="va">$device_serial</span><span class="st">&quot;</span> device_build.ipa                    <span class="co"># the RELEASE NE build</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="ex">ios_start_tunnel</span> <span class="st">&quot;</span><span class="va">$device_serial</span><span class="st">&quot;</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="ex">ios_run_sustained_transfer</span> <span class="st">&quot;</span><span class="va">$device_serial</span><span class="st">&quot;</span> 600 <span class="kw">&amp;</span>                <span class="co"># 10 min of REAL traffic (liveness §11.4.107)</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="ex">ios_sample_footprint_1hz</span> <span class="st">&quot;</span><span class="va">$device_serial</span><span class="st">&quot;</span> <span class="st">&quot;</span><span class="va">$out</span><span class="st">/ios_rss.csv&quot;</span>     <span class="co"># phys_footprint series</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="ex">ios_capture_instruments_trace</span> <span class="st">&quot;</span><span class="va">$device_serial</span><span class="st">&quot;</span> <span class="st">&quot;</span><span class="va">$out</span><span class="st">/leaks.trace&quot;</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="va">peak</span><span class="op">=</span><span class="va">$(</span><span class="ex">max_col</span> <span class="st">&quot;</span><span class="va">$out</span><span class="st">/ios_rss.csv&quot;</span> phys_footprint<span class="va">)</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="va">ceiling</span><span class="op">=</span><span class="va">$NE_CEILING_BYTES</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-v</span> p=<span class="st">&quot;</span><span class="va">$peak</span><span class="st">&quot;</span> <span class="at">-v</span> c=<span class="st">&quot;</span><span class="va">$ceiling</span><span class="st">&quot;</span> <span class="st">&#39;BEGIN{exit !(p &lt; c*0.7)}&#39;</span> <span class="dt">\</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>  <span class="kw">&amp;&amp;</span> <span class="ex">ab_pass_with_evidence</span> <span class="st">&quot;G3: peak </span><span class="va">$peak</span><span class="st"> &lt; ceiling </span><span class="va">$ceiling</span><span class="st"> (&gt;=30% headroom)&quot;</span> <span class="st">&quot;</span><span class="va">$out</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>  <span class="kw">||</span> <span class="ex">ab_fail</span> <span class="st">&quot;G3 NO-GO: peak </span><span class="va">$peak</span><span class="st"> exceeds 70% of ceiling </span><span class="va">$ceiling</span><span class="st"> — escalate (§11.4.66)&quot;</span></span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># scripts/mem_soak.sh — MEM-SOAK-LEAK 24 h, no monotonic growth (backgrounded §11.4.89)</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="bu">set</span> <span class="at">-euo</span> pipefail</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="va">out</span><span class="op">=</span><span class="st">&quot;qa-results/mem/soak_</span><span class="va">$(</span><span class="fu">date</span> +%s<span class="va">)</span><span class="st">&quot;</span><span class="kw">;</span> <span class="fu">mkdir</span> <span class="at">-p</span> <span class="st">&quot;</span><span class="va">$out</span><span class="st">&quot;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="bu">trap</span> <span class="st">&#39;stop_transfer; rig/netns_down.sh&#39;</span> EXIT</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="ex">start_sustained_transfer</span> <span class="kw">&amp;</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="ex">sample_rss_1min</span> <span class="st">&quot;</span><span class="va">$(</span><span class="ex">core_pid</span><span class="va">)</span><span class="st">&quot;</span> <span class="st">&quot;</span><span class="va">$out</span><span class="st">/core_rss_24h.csv&quot;</span> 86400      <span class="co"># 24 h at 1-min cadence</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="va">slope</span><span class="op">=</span><span class="va">$(</span><span class="ex">monotonic_growth_slope</span> <span class="st">&quot;</span><span class="va">$out</span><span class="st">/core_rss_24h.csv&quot;</span><span class="va">)</span>          <span class="co"># bytes/hour</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="ex">within_threshold</span> <span class="st">&quot;</span><span class="va">$slope</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  <span class="kw">&amp;&amp;</span> <span class="ex">ab_pass_with_evidence</span> <span class="st">&quot;no RSS leak over 24h (slope=</span><span class="va">$slope</span><span class="st"> B/h)&quot;</span> <span class="st">&quot;</span><span class="va">$out</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>  <span class="kw">||</span> <span class="ex">ab_fail</span> <span class="st">&quot;RSS leak: slope=</span><span class="va">$slope</span><span class="st"> B/h exceeds threshold — §11.4.4 STOP + systematic-debug&quot;</span></span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-go/internal/coordinator/slo4_soak_test.go — SLO4 bounded @ 10k streams</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestCoordinatorMemoryBoundedAt10kStreams<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    infra <span class="op">:=</span> mustBootRedisPG<span class="op">(</span>t<span class="op">)</span>                          <span class="co">// containers, rootless §11.4.161</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    coord <span class="op">:=</span> startCoordinator<span class="op">(</span>t<span class="op">,</span> infra<span class="op">)</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    agents <span class="op">:=</span> openNStreams<span class="op">(</span>t<span class="op">,</span> coord<span class="op">,</span> <span class="dv">10_000</span><span class="op">)</span>             <span class="co">// 10k real WatchNetworkMap streams</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    rss <span class="op">:=</span> sampleRSSOver<span class="op">(</span>t<span class="op">,</span> coord<span class="op">.</span>Pid<span class="op">(),</span> <span class="dv">24</span><span class="op">*</span>time<span class="op">.</span>Hour<span class="op">,</span> time<span class="op">.</span>Minute<span class="op">)</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    requireBounded<span class="op">(</span>t<span class="op">,</span> rss<span class="op">,</span> slo4Ceiling<span class="op">)</span>                  <span class="co">// RSS bounded, no unbounded per-stream growth</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    writeEvidence<span class="op">(</span>t<span class="op">,</span> <span class="st">&quot;qa-results/mem/coord_rss_24h.csv&quot;</span><span class="op">,</span> rss<span class="op">)</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    _ <span class="op">=</span> agents</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">// paired §1.1 (CM-SLO4-BOUNDED): leak a per-stream allocation → unbounded growth → SLO4 FAILs</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><strong>Honest boundary (§11.4.6).</strong> The exact NE ceiling
+value (<code>NE_CEILING_BYTES</code>) is a platform constant cited as
+~15 MB historical [SYNTHESIS §5] but is <strong>UNVERIFIED</strong> for
+the current iOS version on the target device class until the G3 probe
+runs on the real device — the ceiling is iOS-version and
+device-dependent, and the spec uses the conservative historical figure.
+The 24 h soak proves no leak <em>over that window</em> under <em>that
+workload</em>; a leak with a period longer than 24 h, or under a
+workload not exercised, is an §11.4.118 discovery gap, not a proven
+absence. SLO4&#39;s bound at exactly 10k streams is the MVP target; the
+convergence-and-memory behaviour beyond 10k is a Phase-2 SCALE concern
+([TM <code>T-COORD-D-1</code>] notes the 10k-stream p99 is itself
+<strong>UNVERIFIED</strong> until the soak runs).</p>
+<hr />
+<h2 id="sources-verified">Sources verified</h2>
+<ul>
+<li>[OVERVIEW] [<code>../10-testing-acceptance-and-qa.md</code>] — §5.12
+(MEM strategy + <code>sampleFootprint</code> skeleton + real-device
+requirement), §6.3 (F-IOS-NE-MEM ledger), §7.1 (G3 gate), §7.2 (SLO4),
+§8 (determinism/risk-order), §10 QA-D3. (Read 2026-06-26.)</li>
+<li>[SYNTHESIS] <code>v09-research/_SYNTHESIS.md</code> — §3 (D2
+Rust-not-Go decision), §5 (~15 MB NE ceiling). (Cited via
+overview.)</li>
+<li>[04_P0] <code>04_VPN_CLD/HelixVPN-Phase0-Spike.md</code> — G3
+make-or-break iOS memory gate, ≥30% headroom. (Cited via overview.)</li>
+<li>[reconcile]
+[<code>../v03-control-plane/reconciliation-flow.md</code>] — coordinator
+topology graph + stream fan-out (SLO4 per-stream state). (Read
+2026-06-26.)</li>
+<li>[TM] [<code>../v05-security/threat-model.md</code>] —
+<code>T-COORD-D-1</code> (10k-stream p99/memory
+<strong>UNVERIFIED</strong> soak). (Read 2026-06-26.)</li>
+<li>Constitution: §11.4.169, §11.4.27 (real device/no mocks), §11.4.3
+(honest SKIP hardware_not_present), §11.4.69 (MEM evidence class),
+§11.4.107(1)/(10) (window-not-point liveness + self-validated analyzer),
+§11.4.50 (determinism), §11.4.81 (per-platform sampler), §11.4.108
+(shipping artifact), §11.4.132 (G3/SLO4 high-risk), §11.4.118 (discovery
+boundary), §11.4.84 (quiescence), §11.4.66 (escalate G3 No-Go), §1.1
+(paired mutation).</li>
+</ul>
+</body>
+</html>

@@ -1,8 +1,11 @@
 # HelixVPN — Master Specification Index (the full document tree)
 
-**Revision:** 2
-**Last modified:** 2026-06-25T12:00:00Z
+**Revision:** 3
+**Last modified:** 2026-06-26T12:00:00Z
 **Status:** active — the navigation + generation blueprint for the full HelixVPN technical specification
+**Rev 3:** All 11 volumes (V0–V10) expanded — generation COMPLETE (~140 nano-detail docs, all with
+synced HTML/PDF siblings). Marked the wave order done; recorded the tracked pre-tag quality items
+(owed volume reviews, §11.4.168 Mermaid-render, V9 dossiers, D-PKI-CA-TIER reversibility).
 **Rev 2:** Added **Volume 10 — Design System (OpenDesign)** as a decoupled reusable submodule
 (`vasic-digital/helix_design`) per operator mandate 2026-06-25 (§11.4.162); repointed the V4
 design row to the client-integration view; recorded the resumed wave order.
@@ -190,5 +193,13 @@ reading the volume's pass-1 overview + `v09-research/_SYNTHESIS.md` + the releva
 producing one nano-detail document with concrete interfaces/DDL/protobuf/skeletons + Mermaid
 diagrams, citing sources, marking unproven facts `UNVERIFIED`. Each wave is committed +
 pushed; an adversarial review gates each volume. Wave order (resumed 2026-06-25): V2 data-plane ✅
-→ V3 control-plane ✅ → V4 clients ✅ → **V10 design-system (OpenDesign, operator-prioritized)** →
-V5 security → V6 deploy → V1 product → V7 execution → V8 testing → V0/V9 meta.
+→ V3 control-plane ✅ → V4 clients ✅ → V10 design-system ✅ → V5 security ✅ (reviewed+reconciled→GO)
+→ V6 deploy ✅ → V1 product ✅ → V7 execution ✅ → V8 testing ✅ → V0 meta ✅.
+
+**Generation COMPLETE (2026-06-26): all 11 volumes (V0–V10) expanded** — ~140 nano-detail docs,
+every `.md` carrying synced `.html`+`.pdf` siblings (§11.4.65, via `scripts/testing/sync_all_markdown_exports.sh`).
+**Outstanding quality items (tracked, pre-tag):** (a) adversarial reviews still owed for V1/V6/V7/V8/V0
+(V2/V3/V4/V5/V10 reviewed); (b) §11.4.168 — Mermaid fences render as raw source in HTML/PDF (needs a pandoc
+mermaid filter); (c) V9 per-angle research dossiers — only `research-wireguard.md` split out, rest consolidated
+in `11-deep-research-appendix.md`; (d) D-PKI-CA-TIER (two-tier issuing CA as MVP) is a reversible reconciliation
+— operator may veto in favour of single-tier-MVP velocity.

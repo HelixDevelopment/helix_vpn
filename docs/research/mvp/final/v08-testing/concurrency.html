@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Concurrency / Atomicity Test Strategy</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Concurrency / Atomicity Test Strategy</h1>
+</header>
+<h1 id="concurrency--atomicity-test-strategy">Concurrency / Atomicity
+Test Strategy</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-06-26T12:00:00Z</p>
+<blockquote>
+<p>Master technical specification — Volume 8 (Testing &amp; QA),
+nano-detail document <strong>concurrency</strong>, one of the seven
+§11.4.169 cross-cutting test-type deep-dives. It deepens <a href="../10-testing-acceptance-and-qa.md"><code>10-testing-acceptance-and-qa.md</code></a>
+§5.10 (CONC) into an implementation-ready bank for correctness under
+concurrent callers, transactional <strong>atomicity</strong>, and
+<strong>idempotency under replay</strong>. SPEC-ONLY: it describes the
+harness, fixtures, evidence, gate, and the paired §1.1 mutation; it does
+not build the product. Sources cited inline by id —
+<code>[OVERVIEW]</code> = doc 10; <code>[ipam]</code> =
+[<code>../v03-control-plane/svc-ipam.md</code>];
+<code>[reconcile]</code> =
+[<code>../v03-control-plane/reconciliation-flow.md</code>];
+<code>[svc-policy]</code> =
+[<code>../v03-control-plane/svc-policy.md</code>]; <code>[TM]</code> =
+[<code>../v05-security/threat-model.md</code>]. Claims not grounded in
+the evidence base are marked <strong>UNVERIFIED</strong> per
+constitution §11.4.6 — never fabricated. (Companion: race/deadlock
+detection is owned by [<code>race-deadlock.md</code>]; this doc owns
+<em>logical</em> correctness under concurrency, that doc owns
+<em>memory-model</em> races.)</p>
+</blockquote>
+<hr />
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#0-scope-on-helixvpn-surfaces">0. Scope on HelixVPN
+surfaces</a></li>
+<li><a href="#1-the-three-correctness-properties">1. The three
+correctness properties</a></li>
+<li><a href="#2-harness">2. Harness</a></li>
+<li><a href="#3-fixtures--real-db-no-mocks-1114277">3. Fixtures — real
+DB, no mocks (§11.4.27)</a></li>
+<li><a href="#4-captured-evidence-1114-69">4. Captured evidence
+(§11.4.69)</a></li>
+<li><a href="#5-determinism-1114050">5. Determinism (§11.4.50)</a></li>
+<li><a href="#6-acceptance-gate">6. Acceptance gate</a></li>
+<li><a href="#7-the-paired-111-mutation">7. The paired §1.1
+mutation</a></li>
+<li><a href="#8-test-skeletons">8. Test skeletons</a></li>
+<li><a href="#sources-verified">Sources verified</a></li>
+</ul>
+<hr />
+<h2 id="0-scope-on-helixvpn-surfaces">0. Scope on HelixVPN surfaces</h2>
+<p>Project principle 3 (CLAUDE.md MANDATORY DEVELOPMENT PRINCIPLES) —
+<em>any method called from multiple threads must be safe for rapid
+consecutive calls</em> — is the contract this bank proves. The HelixVPN
+places where two callers race over shared state are concrete and
+high-stakes: a double-allocated overlay IP breaks routing for two
+devices; a lost policy edit grants access that was revoked; an
+out-of-order delta delivery leaves a device with a stale map. The bank
+covers the control plane&#39;s shared-state hot spots and the at-least-once
+event substrate.</p>
+<table>
+<thead>
+<tr>
+<th>Surface</th>
+<th>Concurrent contention</th>
+<th>Failure if unsafe</th>
+<th>Invariant</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>IPAM allocator</td>
+<td>N devices allocate overlay IPs simultaneously</td>
+<td>two devices get the <strong>same</strong> IP</td>
+<td><code>overlay_pools.next_host</code> monotonic,
+<code>SELECT … FOR UPDATE</code> [ipam §0.1]</td>
+</tr>
+<tr>
+<td>device enrollment</td>
+<td>the <strong>same</strong> device enrolls twice concurrently</td>
+<td>duplicate identity / duplicate cert</td>
+<td>unique constraint on <code>(tenant_id, device_id)</code></td>
+</tr>
+<tr>
+<td>policy edit</td>
+<td>two admins edit the same tenant&#39;s policy</td>
+<td><strong>lost update</strong> (one edit silently dropped)</td>
+<td>optimistic version guard on <code>policies.version</code>
+[svc-policy]</td>
+</tr>
+<tr>
+<td>coordinator delta apply</td>
+<td>deltas arrive out of order during a new enroll</td>
+<td>a device&#39;s final map ≠ compiled target</td>
+<td>order-invariant apply; final map == <code>CompiledPolicy</code>
+[reconcile §0.2]</td>
+</tr>
+<tr>
+<td>event consume (Redis Streams)</td>
+<td>a consumed message is redelivered (at-least-once)</td>
+<td>a reconcile is applied twice</td>
+<td><strong>idempotent</strong> apply keyed by
+<code>(SpecHash, Version)</code> [reconcile §0.3]</td>
+</tr>
+<tr>
+<td>connector site assignment</td>
+<td>two connectors attach simultaneously</td>
+<td>two connectors get the same 16-bit site id</td>
+<td><code>overlay_pools.next_site</code> monotonic [ipam §0.1]</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="1-the-three-correctness-properties">1. The three correctness
+properties</h2>
+<p><strong>(A) No lost update / no double-allocation (atomicity at the
+DB).</strong> Concurrent allocations and edits are serialized by the DB
+contract, not by app-level hope. IPAM allocates under
+<code>SELECT … FOR UPDATE</code> on the <code>overlay_pools</code> row
+(or a unique constraint on <code>devices.overlay_ip</code>); N
+concurrent <code>Allocate</code> calls MUST yield
+<strong>exactly</strong> N distinct IPs and <strong>zero</strong>
+constraint violations [ipam §0.1]. Policy edits use an optimistic
+version guard:
+<code>UPDATE policies SET spec=…, version=version+1 WHERE id=$1 AND version=$expected</code>;
+a stale-version writer is <strong>rejected</strong>, never silently wins
+(no lost update) [svc-policy].</p>
+<p><strong>(B) Order-invariant convergence.</strong> The coordinator&#39;s
+final served map for a device MUST be invariant to the <strong>arrival
+order</strong> of deltas (a metamorphic relation, overview §3.2):
+whether the &quot;new peer enrolled&quot; delta arrives before or after the
+&quot;policy edit&quot; delta, the device converges to the same final map == its
+<code>CompiledPolicy.VisibleTo[self]</code> ∩ <code>AllowedIPs</code>
+[reconcile §0.2, svc-policy §3]. A property test asserts this over
+randomized delta interleavings.</p>
+<p><strong>(C) Idempotency under replay.</strong> The event substrate
+(Redis Streams, consumer group <code>coordinator</code>) is
+<strong>at-least-once</strong>: a message can be redelivered ([reconcile
+§0.3]). The reconcile apply MUST be idempotent — applying
+<code>policy.compiled{Version=N, SpecHash=H}</code> twice MUST produce
+the identical final state and emit <strong>no duplicate</strong> side
+effect (no second cert issued, no second WG peer added). Idempotency is
+keyed on <code>(SpecHash, Version)</code>: a replayed event whose
+<code>(SpecHash, Version)</code> matches the last-applied marker is a
+no-op. This is the property a redelivery-replay test proves.</p>
+<hr />
+<h2 id="2-harness">2. Harness</h2>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Harness</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>(A) no double-alloc / no lost update</td>
+<td>Go test spawning N goroutines against <strong>real</strong> Postgres
+(booted via <code>containers</code>, overview §5.2); asserts
+exactly-N-distinct + zero constraint violations</td>
+</tr>
+<tr>
+<td>(B) order-invariant convergence</td>
+<td>property test (<code>gopter</code>) over randomized delta
+interleavings; asserts final-map invariance</td>
+</tr>
+<tr>
+<td>(C) idempotency under replay</td>
+<td>inject a duplicate Redis Streams message (XADD the same payload, or
+NACK→redeliver); assert the apply is a no-op</td>
+</tr>
+</tbody>
+</table>
+<p>All run with the Go race detector enabled
+(<code>go test -race</code>, overlaps [<code>race-deadlock.md</code>])
+so a logical-concurrency test also surfaces a memory race. The bank runs
+under <code>make test</code> CONC stage and is dispatched by
+<code>helix_qa</code>. Infra is real, rootless Podman (§11.4.76/.161) —
+<strong>no mocks</strong> below the unit layer (§11.4.27): a mocked DB
+cannot prove the real <code>FOR UPDATE</code>/unique-constraint
+contract.</p>
+<hr />
+<h2 id="3-fixtures--real-db-no-mocks-11427">3. Fixtures — real DB, no
+mocks (§11.4.27)</h2>
+<table>
+<thead>
+<tr>
+<th>Fixture</th>
+<th>What</th>
+<th>Why real</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>real Postgres via <code>containers/pkg/boot</code></td>
+<td>the actual control-plane DB with the real DDL
+(<code>overlay_pools</code>, <code>devices</code>,
+<code>policies</code>)</td>
+<td>the <code>FOR UPDATE</code>/unique-constraint/version-guard
+contracts only exist on the real engine</td>
+</tr>
+<tr>
+<td>real Redis Streams via <code>containers</code></td>
+<td>the actual event substrate, consumer group
+<code>coordinator</code></td>
+<td>at-least-once redelivery is a real-broker behaviour, not
+stubbable</td>
+</tr>
+<tr>
+<td><code>tenant_seed.sql</code></td>
+<td>a seeded tenant with a real <code>/48</code> overlay pool</td>
+<td>allocations must draw from a real pool with a real
+<code>next_host</code></td>
+</tr>
+<tr>
+<td><code>policy_v0.yaml</code> + two divergent edits</td>
+<td>two real conflicting policy specs</td>
+<td>the lost-update test needs two real version-N edits</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="4-captured-evidence-11469">4. Captured evidence (§11.4.69)</h2>
+<p>Every PASS cites an artifact under
+<code>qa-results/conc/&lt;run-id&gt;/</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Test</th>
+<th>Artifact</th>
+<th>Asserts</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CONC-IPAM-NO-DOUBLE</td>
+<td><code>allocated_set.json</code></td>
+<td>the N-set has exactly N distinct IPs</td>
+</tr>
+<tr>
+<td>CONC-IPAM-NO-DOUBLE</td>
+<td><code>pg_constraint_violations.txt</code></td>
+<td>count == 0</td>
+</tr>
+<tr>
+<td>CONC-POLICY-NO-LOST-UPDATE</td>
+<td><code>version_trace.json</code></td>
+<td>every accepted edit incremented <code>version</code>; the rejected
+stale edit is logged, not silently dropped</td>
+</tr>
+<tr>
+<td>CONC-CONVERGENCE-ORDER-INVARIANT</td>
+<td><code>final_maps.json</code></td>
+<td>every interleaving yields the identical final map per device</td>
+</tr>
+<tr>
+<td>CONC-IDEMPOTENT-REPLAY</td>
+<td><code>replay_sideeffects.json</code></td>
+<td>the replayed event produced <strong>zero</strong> new side effects
+(no 2nd cert / 2nd peer)</td>
+</tr>
+<tr>
+<td>CONC-ENROLL-IDEMPOTENT</td>
+<td><code>enroll_result.json</code></td>
+<td>the same device enrolled twice ⇒ one identity, one cert</td>
+</tr>
+</tbody>
+</table>
+<p>The captured <em>set</em> (the allocated-IP set, the final-map set)
+is the evidence — a CONC PASS that only asserts &quot;no error&quot; is a B2
+absence-of-error bluff (overview §0); it MUST assert the <em>positive
+shape</em> (exactly N distinct, identical final map, zero new side
+effects).</p>
+<hr />
+<h2 id="5-determinism-11450">5. Determinism (§11.4.50)</h2>
+<p>Concurrency tests are the canonical flake source, so determinism is
+enforced <strong>mechanically</strong>:
+<code>ab_run_n_times &quot;conc-ipam&quot; 10 run_ipam_concurrent</code> runs the
+contention test <strong>N=10</strong> (the cycle-validation count,
+because concurrency is high-risk per §11.4.132) against the same
+artifact MD5 + same DB image; the evidence-hash is over the verdict
+tuple
+<code>(distinct_ips == N: bool, constraint_violations == 0: bool, deadlocks == 0: bool)</code>.
+All 10 runs MUST yield the identical tuple — a single divergent run (a
+double-allocation that appears once in 10) is <strong>auto-FAIL</strong>
+with no flake escape. There is no &quot;it usually passes&quot; path; intermittent
+is mechanically forbidden (§11.4.50). The property tests (B) use a fixed
+<code>gopter</code> seed for reproducibility, with the seed recorded in
+the evidence so a failure is replayable.</p>
+<hr />
+<h2 id="6-acceptance-gate">6. Acceptance gate</h2>
+<table>
+<thead>
+<tr>
+<th>Gate</th>
+<th>Bar</th>
+<th>Evidence</th>
+<th>Bound feature</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CONC-IPAM-NO-DOUBLE</td>
+<td>N=64 concurrent allocs ⇒ 64 distinct IPs, 0 violations</td>
+<td><code>allocated_set.json</code></td>
+<td>F-POLICY-RECONCILE / IPAM</td>
+</tr>
+<tr>
+<td>CONC-POLICY-NO-LOST-UPDATE</td>
+<td>concurrent edits ⇒ no lost update; stale edit rejected</td>
+<td><code>version_trace.json</code></td>
+<td>F-POLICY-RECONCILE (AC5)</td>
+</tr>
+<tr>
+<td>CONC-CONVERGENCE-ORDER-INVARIANT</td>
+<td>randomized delta order ⇒ identical final map</td>
+<td><code>final_maps.json</code></td>
+<td>F-POLICY-RECONCILE</td>
+</tr>
+<tr>
+<td>CONC-IDEMPOTENT-REPLAY</td>
+<td>redelivered event ⇒ no-op, zero new side effect</td>
+<td><code>replay_sideeffects.json</code></td>
+<td>F-REVOKE (AC6) / reconcile</td>
+</tr>
+<tr>
+<td>CONC-ENROLL-IDEMPOTENT</td>
+<td>double enroll ⇒ one identity, one cert</td>
+<td><code>enroll_result.json</code></td>
+<td>F-AUTHZ-REACH (AC2)</td>
+</tr>
+</tbody>
+</table>
+<p>CONC cells appear in the coverage ledger for F-POLICY-RECONCILE and
+F-REVOKE (overview §6.3). Run with <code>-race</code> (RACE overlap). A
+double-allocation or lost update is a release blocker — it is a silent
+correctness defect that no functional test would catch.</p>
+<hr />
+<h2 id="7-the-paired-11-mutation">7. The paired §1.1 mutation</h2>
+<pre class="text"><code>MUTATION (paired §1.1, gate CM-IPAM-ATOMIC-ALLOC):
+  Drop the `SELECT ... FOR UPDATE` row lock (or the unique constraint on
+  devices.overlay_ip) from the IPAM allocate path.
+EXPECTED:  under N=64 concurrent Allocate calls a collision appears —
+           allocated_set.json shows &lt; 64 distinct IPs OR
+           pg_constraint_violations.txt &gt; 0 → CONC-IPAM-NO-DOUBLE FAILs
+           → mutation caught (within the N=10 determinism window).
+RESTORE:   re-instate FOR UPDATE / the constraint; re-run → GREEN x10.</code></pre>
+<p>A second mutation (<code>CM-POLICY-VERSION-GUARD</code>) removes the
+<code>AND version=$expected</code> clause from the policy
+<code>UPDATE</code>; expected: a stale-version edit silently overwrites
+a newer one → <code>version_trace.json</code> shows a lost update →
+CONC-POLICY-NO-LOST-UPDATE FAILs → caught. A third
+(<code>CM-RECONCILE-IDEMPOTENT</code>) removes the
+<code>(SpecHash, Version)</code> last-applied marker check; expected:
+the replayed event issues a <strong>second</strong> cert / adds a
+<strong>second</strong> peer → CONC-IDEMPOTENT-REPLAY FAILs. All
+mutations restored, tree verified quiescent (§11.4.84) before
+commit.</p>
+<hr />
+<h2 id="8-test-skeletons">8. Test skeletons</h2>
+<div class="sourceCode" id="cb2"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-go/internal/ipam/conc_alloc_test.go — CONC-IPAM-NO-DOUBLE (overview §5.10)</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co">//go:build integration</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestIPAMNoDoubleAllocationUnderConcurrency<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    infra <span class="op">:=</span> mustBootPG<span class="op">(</span>t<span class="op">)</span>                              <span class="co">// containers submodule, rootless §11.4.161</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    alloc <span class="op">:=</span> NewIPAMAllocator<span class="op">(</span>infra<span class="op">.</span>PostgresDSN<span class="op">(),</span> mustParseULA<span class="op">(</span><span class="st">&quot;fd7a:115c:a1e0::/48&quot;</span><span class="op">))</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> N <span class="op">=</span> <span class="dv">64</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    got <span class="op">:=</span> <span class="bu">make</span><span class="op">([]</span>netip<span class="op">.</span>Addr<span class="op">,</span> N<span class="op">);</span> <span class="kw">var</span> wg sync<span class="op">.</span>WaitGroup</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="op">:=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> N<span class="op">;</span> i<span class="op">++</span> <span class="op">{</span> wg<span class="op">.</span>Add<span class="op">(</span><span class="dv">1</span><span class="op">);</span> <span class="cf">go</span> <span class="kw">func</span><span class="op">(</span>i <span class="dt">int</span><span class="op">){</span> <span class="cf">defer</span> wg<span class="op">.</span>Done<span class="op">()</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>        a<span class="op">,</span> err <span class="op">:=</span> alloc<span class="op">.</span>Allocate<span class="op">(</span>ctx<span class="op">,</span> deviceID<span class="op">(</span>i<span class="op">));</span> requireNoErr<span class="op">(</span>t<span class="op">,</span> err<span class="op">);</span> got<span class="op">[</span>i<span class="op">]</span> <span class="op">=</span> a <span class="op">}(</span>i<span class="op">)</span> <span class="op">}</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    wg<span class="op">.</span>Wait<span class="op">()</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    requireAllDistinct<span class="op">(</span>t<span class="op">,</span> got<span class="op">)</span>                          <span class="co">// the N-set IS the captured evidence</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    requireZeroConstraintViolations<span class="op">(</span>t<span class="op">,</span> infra<span class="op">)</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    writeEvidence<span class="op">(</span>t<span class="op">,</span> <span class="st">&quot;qa-results/conc/allocated_set.json&quot;</span><span class="op">,</span> got<span class="op">)</span>   <span class="co">// §11.4.69</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    <span class="co">// paired §1.1 (CM-IPAM-ATOMIC-ALLOC): drop FOR UPDATE → a collision appears → FAIL</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// CONC-CONVERGENCE-ORDER-INVARIANT — property test over randomized delta interleavings (B)</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestFinalMapInvariantToDeltaOrder<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    props <span class="op">:=</span> gopter<span class="op">.</span>NewProperties<span class="op">(</span>gopter<span class="op">.</span>DefaultTestParametersWithSeed<span class="op">(</span><span class="bn">0x</span><span class="er">HELIX</span><span class="op">))</span>  <span class="co">// recorded seed</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    props<span class="op">.</span>Property<span class="op">(</span><span class="st">&quot;final map == compiled target regardless of delta order&quot;</span><span class="op">,</span> prop<span class="op">.</span>ForAll<span class="op">(</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>        <span class="kw">func</span><span class="op">(</span>order <span class="op">[]</span>DeltaIndex<span class="op">)</span> <span class="dt">bool</span> <span class="op">{</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>            m <span class="op">:=</span> applyDeltasInOrder<span class="op">(</span>baseMap<span class="op">,</span> deltas<span class="op">,</span> order<span class="op">)</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> m<span class="op">.</span>Equal<span class="op">(</span>compiledTargetFor<span class="op">(</span>self<span class="op">))</span>     <span class="co">// metamorphic: order-invariant convergence</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>        <span class="op">},</span> genPermutationOfDeltas<span class="op">()))</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    props<span class="op">.</span>TestingRun<span class="op">(</span>t<span class="op">)</span>                                  <span class="co">// failures replayable from the recorded seed</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// CONC-IDEMPOTENT-REPLAY — redeliver a consumed event, assert no-op (C)</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestReconcileIdempotentUnderRedelivery<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    infra <span class="op">:=</span> mustBootRedisPG<span class="op">(</span>t<span class="op">)</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    ev <span class="op">:=</span> PolicyCompiled<span class="op">{</span>Version<span class="op">:</span> <span class="dv">7</span><span class="op">,</span> SpecHash<span class="op">:</span> <span class="st">&quot;h7&quot;</span><span class="op">}</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    applyReconcile<span class="op">(</span>t<span class="op">,</span> infra<span class="op">,</span> ev<span class="op">)</span>                         <span class="co">// first delivery: applies</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    certsBefore<span class="op">,</span> peersBefore <span class="op">:=</span> snapshotSideEffects<span class="op">(</span>t<span class="op">,</span> infra<span class="op">)</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    redeliverSameMessage<span class="op">(</span>t<span class="op">,</span> infra<span class="op">,</span> ev<span class="op">)</span>                   <span class="co">// at-least-once redelivery</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    certsAfter<span class="op">,</span> peersAfter <span class="op">:=</span> snapshotSideEffects<span class="op">(</span>t<span class="op">,</span> infra<span class="op">)</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    requireEqual<span class="op">(</span>t<span class="op">,</span> certsBefore<span class="op">,</span> certsAfter<span class="op">)</span>             <span class="co">// ZERO new cert</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    requireEqual<span class="op">(</span>t<span class="op">,</span> peersBefore<span class="op">,</span> peersAfter<span class="op">)</span>             <span class="co">// ZERO new WG peer</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    writeEvidence<span class="op">(</span>t<span class="op">,</span> <span class="st">&quot;qa-results/conc/replay_sideeffects.json&quot;</span><span class="op">,</span> diff<span class="op">(</span>certsBefore<span class="op">,</span> certsAfter<span class="op">))</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>    <span class="co">// paired §1.1 (CM-RECONCILE-IDEMPOTENT): drop the (SpecHash,Version) marker → 2nd side effect → FAIL</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><strong>Honest boundary (§11.4.6).</strong> This bank proves logical
+correctness for the enumerated shared-state hot spots; it does
+<strong>not</strong> prove freedom from <em>memory-model</em> data races
+(that is [<code>race-deadlock.md</code>]) nor from faults outside the
+contention set (covered by §11.4.118 discovery). The order-invariant
+convergence property is proven over the <code>gopter</code>-generated
+permutation space, which is a sample of the interleaving space, not
+exhaustive — exhaustive interleaving of the Rust critical sections is
+the loom job in [<code>race-deadlock.md</code>]. The &quot;at-least-once ⇒
+idempotent-apply&quot; guarantee rests on the Redis Streams consumer-group
+semantics ([reconcile §0.3]) and is <strong>UNVERIFIED</strong> for the
+specific redelivery-timing until the replay test runs.</p>
+<hr />
+<h2 id="sources-verified">Sources verified</h2>
+<ul>
+<li>[OVERVIEW] [<code>../10-testing-acceptance-and-qa.md</code>] — §3.2
+(metamorphic relations), §5.10 (CONC strategy + IPAM skeleton), §5.2
+(containers INT), §6 (ledger), §8 (determinism N=10/risk-order). (Read
+2026-06-26.)</li>
+<li>[ipam] [<code>../v03-control-plane/svc-ipam.md</code>] — §0.1
+<code>overlay_pools.next_host</code>/<code>next_site</code> monotonic
+counters, <code>connector_sites</code>,
+ipam-computes-registry-persists-in-same-tx. (Read 2026-06-26.)</li>
+<li>[reconcile]
+[<code>../v03-control-plane/reconciliation-flow.md</code>] — §0.2
+signature flow, §0.3 <code>events:*</code> Redis Streams consumer group
+<code>coordinator</code>, <code>helix_reconcile_seconds</code>. (Read
+2026-06-26.)</li>
+<li>[svc-policy] [<code>../v03-control-plane/svc-policy.md</code>] — §3
+<code>CompiledPolicy</code> {Version, SpecHash, VisibleTo, AllowedIPs},
+policy version semantics. (Read 2026-06-26.)</li>
+<li>[TM] [<code>../v05-security/threat-model.md</code>] —
+<code>T-CP-T-1</code>/<code>T-CP-I-1</code> (RLS),
+<code>T-COORD-I-1</code> (filtered map). (Cited via overview.)</li>
+<li>Constitution: §11.4.169, §11.4.27 (no-fakes / real DB), §11.4.69
+(sink-side evidence / positive shape), §11.4.50 (determinism N=10),
+§11.4.132 (concurrency is high-risk), §11.4.84 (quiescence),
+§11.4.76/.161 (containers/rootless), §1.1 (paired mutation); CLAUDE.md
+principle 3 (safe for rapid consecutive calls).</li>
+</ul>
+</body>
+</html>

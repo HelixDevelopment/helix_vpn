@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>The Network Test Rig — netns topology, nftables DPI/censor sim, tc-netem, iperf3, leak harness (§11.4.169 / §11.4.69)</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">The Network Test Rig — netns topology, nftables
+DPI/censor sim, tc-netem, iperf3, leak harness (§11.4.169 /
+§11.4.69)</h1>
+</header>
+<h1 id="the-network-test-rig--netns-topology-nftables-dpicensor-sim-tc-netem-iperf3-leak-harness-114169--11469">The
+Network Test Rig — netns topology, nftables DPI/censor sim, tc-netem,
+iperf3, leak harness (§11.4.169 / §11.4.69)</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-06-26T12:00:00Z</p>
+<blockquote>
+<p>Volume 8 (Testing &amp; QA) nano-detail specification. This document
+deepens the [10 §5.3] netns E2E rig and [10 §4] topology into the
+<strong>reproducible network test rig</strong> that is the substrate for
+every E2E / SEC / BENCH / PERF / CHAOS claim in HelixVPN: a
+<strong>four-namespace Linux topology</strong> (client-ns ↔︎ gateway-ns ↔︎
+censor-ns ↔︎ exit-ns), an <strong>nftables-based DPI/censorship
+simulator</strong> that reproduces each [obf §1] censorship regime,
+<strong>tc-netem</strong> impairment (loss/latency/reorder/bursty loss),
+<strong>iperf3</strong> throughput bars, and the <strong>leak-test
+harness</strong> (kill-switch / DNS / IPv6, the §11.4.69
+negative-evidence triad). It is <strong>SPEC-ONLY</strong>: it fixes the
+topology, the concrete <code>ip netns</code> / <code>nft</code> /
+<code>tc</code> / <code>iperf3</code> commands, the per-transport ×
+per-regime exercise matrix (tracing to the [obf §2] survival matrix),
+and the captured-evidence shape — it is not the running rig. Sources
+cited inline: the Volume-8 overview [10] (§5.3 rig sketch, §3 evidence
+model, §5.7 SEC); the obfuscation/DPI spec [obf]
+(<code>v02-data-plane/obfuscation-and-dpi.md</code> — the regime
+taxonomy + survival matrix); the methodology research
+<strong>[research-daita_test]</strong>
+(<code>v09-research/research-daita_test.md</code> §5 — netns, nftables
+kill-switch/leak, tc-netem, iperf3, RES-cited). Unproven facts are
+flagged <code>UNVERIFIED:</code> per §11.4.6.</p>
+</blockquote>
+<hr />
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#0-why-a-four-namespace-rig-and-the-1114156-local-only-constraint">0.
+Why a four-namespace rig (and the §11.4.156 local-only
+constraint)</a></li>
+<li><a href="#1-the-topology">1. The topology</a></li>
+<li><a href="#2-namespace--veth-bring-up-concrete-commands">2. Namespace
++ veth bring-up (concrete commands)</a></li>
+<li><a href="#3-the-censor-ns-nftables-dpicensorship-simulator-per-regime">3.
+The censor-ns: nftables DPI/censorship simulator (per regime)</a></li>
+<li><a href="#4-tc-netem-impairment-profiles">4. tc-netem impairment
+profiles</a></li>
+<li><a href="#5-iperf3-throughput-bars--the-goodput-evidence">5. iperf3
+throughput bars + the goodput evidence</a></li>
+<li><a href="#6-the-leak-test-harness-kill-switch--dns--ipv6">6. The
+leak-test harness (kill-switch / DNS / IPv6)</a></li>
+<li><a href="#7-per-transport--per-regime-exercise-matrix-traces-to-obf-2">7.
+Per-transport × per-regime exercise matrix (traces to [obf §2])</a></li>
+<li><a href="#8-self-validated-analyzers--determinism--cleanup">8.
+Self-validated analyzers + determinism + cleanup</a></li>
+<li><a href="#9-on-demand-boot-rootlessness-and-the-one-sanctioned-sudo">9.
+On-demand boot, rootlessness, and the one sanctioned sudo</a></li>
+<li><a href="#10-edge-cases--honest-gaps">10. Edge cases &amp; honest
+gaps</a></li>
+<li><a href="#sources-verified">Sources verified</a></li>
+</ul>
+<hr />
+<h2 id="0-why-a-four-namespace-rig-and-the-114156-local-only-constraint">0.
+Why a four-namespace rig (and the §11.4.156 local-only constraint)</h2>
+<p>Every HelixVPN security property is a <strong>path property</strong>
+— default-deny, kill-switch, DPI-evasion, transport escalation all
+assert what does or does not cross a network path under an adversary.
+Proving them needs a real, reproducible path with a real adversary in
+the middle, on <strong>one host, with no remote CI</strong> (§11.4.156).
+Linux network namespaces give exactly that: isolated network stacks
+joined by <code>veth</code> links, fully reproducible, no real WAN, no
+shared runner [research-daita_test §5.1].</p>
+<p>The [10 §5.3] overview used a <strong>three</strong>-process rig
+(client / gateway / connector). This document refines it into a
+<strong>four-namespace</strong> rig by splitting the adversary out of
+the path as its own <code>censor-ns</code>, so the DPI/censorship
+simulator is a <strong>distinct middlebox</strong> the packet must
+traverse — not an <code>nft</code> rule bolted onto an endpoint. This
+matters because the [obf] survival claims are about a <em>middlebox</em>
+that inspects and drops/mangles in transit; modelling it as a separate
+namespace is what makes &quot;plain WG is dropped but MASQUE survives&quot; a
+genuine forwarding-path test rather than an endpoint-local filter ([obf
+§1], §3 here).</p>
+<p>The four namespaces map to the real roles ([10 §5.3], [obf §1]):</p>
+<ul>
+<li><strong>client-ns</strong> — runs <code>helix-core</code> (the Rust
+client), builds the tunnel.</li>
+<li><strong>gateway-ns</strong> — runs <code>helix-edge</code> (the
+<code>:443</code> listener + probe-classifier [obf §3]) and the WG
+gateway.</li>
+<li><strong>censor-ns</strong> — the adversarial middlebox: forwards
+client↔︎gateway, runs the nftables DPI/censorship rules (§3) and tc-netem
+impairment (§4).</li>
+<li><strong>exit-ns</strong> — the &quot;authorized LAN host&quot; / synthetic
+internet behind the gateway: the hello HTTP service (the reachability
+sink) + a controlled DNS resolver (the leak-test oracle, §6).</li>
+</ul>
+<hr />
+<h2 id="1-the-topology">1. The topology</h2>
+<pre class="mermaid"><code>graph LR
+  subgraph client-ns[&quot;client-ns (10.0.1.2)&quot;]
+    C[&quot;helix-core (Rust client)&lt;br/&gt;builds tunnel · kill-switch FSM&quot;]
+  end
+  subgraph censor-ns[&quot;censor-ns (forwarder + adversary)&quot;]
+    Z[&quot;nftables DPI/censor rules §3&lt;br/&gt;tc-netem impairment §4&quot;]
+  end
+  subgraph gateway-ns[&quot;gateway-ns (10.0.2.2 / pub :443)&quot;]
+    G[&quot;helix-edge :443&lt;br/&gt;probe-classifier [obf §3]&quot;]
+    W[&quot;WG gateway (overlay fd7a::/48)&quot;]
+  end
+  subgraph exit-ns[&quot;exit-ns (10.10.0.20 LAN sink)&quot;]
+    H[&quot;hello HTTP :80 (reach sink)&quot;]
+    R[&quot;controlled DNS resolver :53 (leak oracle)&quot;]
+  end
+
+  C -- &quot;veth: cli↔cen&lt;br/&gt;10.0.1.0/30&quot; --&gt; Z
+  Z -- &quot;veth: cen↔gw&lt;br/&gt;10.0.2.0/30&quot; --&gt; G
+  G --- W
+  W -- &quot;veth: gw↔exit&lt;br/&gt;10.10.0.0/24&quot; --&gt; H
+  W --- R
+  Z -. &quot;host-side pcap tap (leak capture §6)&quot; .-&gt; CAP[(&quot;qa-results/&lt;run&gt;/*.pcap&quot;)]</code></pre>
+<p>Addressing plan (fixed so captures + nft rules are stable across
+runs):</p>
+<table>
+<thead>
+<tr>
+<th>Link</th>
+<th>Subnet</th>
+<th>client side</th>
+<th>other side</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>client ↔︎ censor</td>
+<td><code>10.0.1.0/30</code></td>
+<td><code>10.0.1.2</code> (client-ns)</td>
+<td><code>10.0.1.1</code> (censor-ns)</td>
+</tr>
+<tr>
+<td>censor ↔︎ gateway</td>
+<td><code>10.0.2.0/30</code></td>
+<td><code>10.0.2.1</code> (censor-ns)</td>
+<td><code>10.0.2.2</code> (gateway-ns, public <code>:443</code>)</td>
+</tr>
+<tr>
+<td>gateway ↔︎ exit</td>
+<td><code>10.10.0.0/24</code></td>
+<td><code>10.10.0.1</code> (gateway-ns)</td>
+<td><code>10.10.0.20</code> (exit-ns hello/DNS sink)</td>
+</tr>
+<tr>
+<td>overlay (tunnel inner)</td>
+<td><code>fd7a:115c:a1e0::/48</code> ULA</td>
+<td>client overlay addr</td>
+<td>exit overlay addr</td>
+</tr>
+</tbody>
+</table>
+<p>The censor-ns is the <strong>only</strong> forwarding path
+client→gateway; <code>client-ns</code> has its default route via
+<code>10.0.1.1</code> (censor-ns), which forwards to
+<code>10.0.2.2</code>. There is no side path, so a packet the censor
+drops is genuinely gone — the negative-evidence captures (§6) tap on the
+censor-ns egress interface, observing exactly what would reach the real
+WAN.</p>
+<hr />
+<h2 id="2-namespace--veth-bring-up-concrete-commands">2. Namespace +
+veth bring-up (concrete commands)</h2>
+<p><code>rig/netns_up.sh</code> (idempotent,
+<code>set -euo pipefail</code>, sources the [10 §9] anti-bluff lib; one
+sanctioned <code>sudo</code> per §9). Snake_case per §11.4.29.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">#!/usr/bin/env bash</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co"># rig/netns_up.sh — bring up the 4-ns rig [research-daita_test §5.1, 10 §5.3]</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="bu">set</span> <span class="at">-euo</span> pipefail</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> ns <span class="kw">in</span> client censor gateway exit<span class="kw">;</span> <span class="cf">do</span> <span class="ex">ip</span> netns add <span class="st">&quot;</span><span class="va">$ns</span><span class="st">&quot;</span> <span class="dv">2</span><span class="op">&gt;</span>/dev/null <span class="kw">||</span> <span class="fu">true</span><span class="kw">;</span> <span class="cf">done</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="fu">mkveth()</span> <span class="kw">{</span>  <span class="co"># $1 a-ns $2 a-name $3 a-cidr   $4 b-ns $5 b-name $6 b-cidr</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="ex">ip</span> link add <span class="st">&quot;</span><span class="va">$2</span><span class="st">&quot;</span> netns <span class="st">&quot;</span><span class="va">$1</span><span class="st">&quot;</span> type veth peer name <span class="st">&quot;</span><span class="va">$5</span><span class="st">&quot;</span> netns <span class="st">&quot;</span><span class="va">$4</span><span class="st">&quot;</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="ex">ip</span> <span class="at">-n</span> <span class="st">&quot;</span><span class="va">$1</span><span class="st">&quot;</span> addr add <span class="st">&quot;</span><span class="va">$3</span><span class="st">&quot;</span> dev <span class="st">&quot;</span><span class="va">$2</span><span class="st">&quot;</span><span class="kw">;</span> <span class="ex">ip</span> <span class="at">-n</span> <span class="st">&quot;</span><span class="va">$1</span><span class="st">&quot;</span> link set <span class="st">&quot;</span><span class="va">$2</span><span class="st">&quot;</span> up</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  <span class="ex">ip</span> <span class="at">-n</span> <span class="st">&quot;</span><span class="va">$4</span><span class="st">&quot;</span> addr add <span class="st">&quot;</span><span class="va">$6</span><span class="st">&quot;</span> dev <span class="st">&quot;</span><span class="va">$5</span><span class="st">&quot;</span><span class="kw">;</span> <span class="ex">ip</span> <span class="at">-n</span> <span class="st">&quot;</span><span class="va">$4</span><span class="st">&quot;</span> link set <span class="st">&quot;</span><span class="va">$5</span><span class="st">&quot;</span> up</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="kw">}</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="ex">mkveth</span> client cli2cen 10.0.1.2/30  censor  cen2cli 10.0.1.1/30</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="ex">mkveth</span> censor cen2gw  10.0.2.1/30  gateway gw2cen  10.0.2.2/30</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="ex">mkveth</span> gateway gw2exit 10.10.0.1/24 exit   exit2gw 10.10.0.20/24</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="co"># censor-ns forwards client&lt;-&gt;gateway (it is the adversarial middlebox).</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="ex">ip</span> netns exec censor  sysctl <span class="at">-w</span> net.ipv4.ip_forward=1 <span class="op">&gt;</span>/dev/null</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="ex">ip</span> netns exec gateway sysctl <span class="at">-w</span> net.ipv4.ip_forward=1 <span class="op">&gt;</span>/dev/null</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="ex">ip</span> <span class="at">-n</span> client  route add default via 10.0.1.1            <span class="co"># client -&gt; censor</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="ex">ip</span> <span class="at">-n</span> censor  route add 10.0.2.0/30 dev cen2gw          <span class="co"># censor -&gt; gateway</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="ex">ip</span> <span class="at">-n</span> gateway route add 10.0.1.0/30 via 10.0.2.1        <span class="co"># return path</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a><span class="co"># exit-ns sinks: the reach target + the controlled DNS resolver (leak oracle §6).</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a><span class="ex">ip</span> netns exec exit python3 <span class="at">-m</span> http.server 80 <span class="at">--bind</span> 10.10.0.20 <span class="dt">\</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>  <span class="op">&gt;</span>qa-results/rig/hello.log <span class="dv">2</span><span class="op">&gt;&amp;</span><span class="dv">1</span> <span class="kw">&amp;</span>                       <span class="co"># reachability sink</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a><span class="ex">ip</span> netns exec exit dnsmasq <span class="at">-k</span> <span class="at">-p</span> 53 <span class="at">-a</span> 10.10.0.20 <span class="dt">\</span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>  <span class="at">--no-resolv</span> <span class="at">--address</span><span class="op">=</span>/example.test/93.184.216.34 <span class="dt">\</span></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>  <span class="op">&gt;</span>qa-results/rig/dns.log <span class="dv">2</span><span class="op">&gt;&amp;</span><span class="dv">1</span> <span class="kw">&amp;</span>                         <span class="co"># controlled resolver</span></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">&quot;rig up: client(10.0.1.2) -&gt; censor -&gt; gateway(10.0.2.2:443) -&gt; exit(10.10.0.20)&quot;</span></span></code></pre></div>
+<p>Teardown (<code>rig/netns_down.sh</code>) deletes all four namespaces
+(which reaps veths + child processes) and is wired to a
+<code>trap &#39;... EXIT&#39;</code> in every rig consumer so the host is left
+quiescent (§11.4.14):</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">#!/usr/bin/env bash</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co"># rig/netns_down.sh — §11.4.14 quiescence; idempotent</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="bu">set</span> <span class="at">-uo</span> pipefail</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> ns <span class="kw">in</span> client censor gateway exit<span class="kw">;</span> <span class="cf">do</span> <span class="ex">ip</span> netns pids <span class="st">&quot;</span><span class="va">$ns</span><span class="st">&quot;</span> <span class="dv">2</span><span class="op">&gt;</span>/dev/null <span class="kw">|</span> <span class="fu">xargs</span> <span class="at">-r</span> kill <span class="dv">2</span><span class="op">&gt;</span>/dev/null <span class="kw">||</span> <span class="fu">true</span><span class="kw">;</span> <span class="cf">done</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> ns <span class="kw">in</span> client censor gateway exit<span class="kw">;</span> <span class="cf">do</span> <span class="ex">ip</span> netns del <span class="st">&quot;</span><span class="va">$ns</span><span class="st">&quot;</span> <span class="dv">2</span><span class="op">&gt;</span>/dev/null <span class="kw">||</span> <span class="fu">true</span><span class="kw">;</span> <span class="cf">done</span></span></code></pre></div>
+<hr />
+<h2 id="3-the-censor-ns-nftables-dpicensorship-simulator-per-regime">3.
+The censor-ns: nftables DPI/censorship simulator (per regime)</h2>
+<p>The censor-ns reproduces each [obf §1] <code>Regime</code> bit as a
+concrete nftables ruleset on its <code>forward</code> hook, so a
+transport&#39;s [obf §2] survival claim becomes a falsifiable
+forwarding-path test. Each profile is a function the rig loads before
+the per-transport exercise (§7). <code>nft</code> matches sit on
+<code>inet censor</code> table, <code>forward</code> chain.</p>
+<h3 id="31-wg_fingerprint--drop-plain-wireguard-by-signature">3.1
+<code>WG_FINGERPRINT</code> — drop plain WireGuard by signature</h3>
+<p>The GFW/DPI key on the WG datagram: 1-byte <code>type ∈ {1..4}</code>
+at offset 0 + the invariant 148 B (init) / 92 B (response) handshake
+sizes [obf §5.1, research-hysteria2 §4]. The simulator approximates this
+with a port+size match (an exact payload-byte match needs
+<code>nft … @ih</code> raw-payload matching; the port+handshake-size
+form is the rig&#39;s tractable approximation, <code>UNVERIFIED:</code>
+exact byte-offset fidelity vs a real GFW classifier — the [obf §7
+T-WGFP] test asserts the behavioural outcome, not classifier-internal
+parity):</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># rig/regimes/wg_fingerprint.nft  -&gt; WG_FINGERPRINT</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="ex">table</span> inet censor { chain forward { type filter hook forward priority 0<span class="kw">;</span> <span class="ex">policy</span> accept<span class="kw">;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="ex">udp</span> dport 51820 udp length 148 drop      <span class="co"># WG handshake_init invariant size [obf §5.1]</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="ex">udp</span> dport 51820 udp length 92  drop      <span class="co"># WG handshake_response invariant size</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="ex">udp</span> dport 51820 drop                     <span class="co"># residual: plain WG to the canonical port</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="er">}</span> <span class="er">}</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Expected: plain-udp FAILs handshake; lwo (header+size mangled, [obf §5.2]) survives.</span></span></code></pre></div>
+<h3 id="32-udp_block--hard-udp-drop-only-tcp-carried-survive">3.2
+<code>UDP_BLOCK</code> — hard UDP drop (only TCP-carried survive)</h3>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># rig/regimes/udp_block.nft  -&gt; UDP_BLOCK</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="ex">table</span> inet censor { chain forward { type filter hook forward priority 0<span class="kw">;</span> <span class="ex">policy</span> accept<span class="kw">;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="ex">meta</span> l4proto udp drop                    <span class="co"># ALL UDP dropped (incl. QUIC/443) [obf §1 UDP_BLOCK]</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="er">}</span> <span class="er">}</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Expected: plain-udp/lwo/masque-h3/connect-ip ALL fail; shadowsocks + udp-over-tcp connect.</span></span></code></pre></div>
+<h3 id="33-quic_sni_filter--quic-permitted-initial-sni-extracted--blocklisted">3.3
+<code>QUIC_SNI_FILTER</code> — QUIC permitted, Initial-SNI extracted +
+blocklisted</h3>
+<p>The GFW decrypts the QUIC Initial (RFC 9001 header-derivable key),
+extracts the SNI, matches a blocklist [obf §1.1, research-hysteria2
+§5(a)]. The rig models this with a helper that inspects the first
+UDP/443 datagram&#39;s QUIC-Initial SNI (a small userspace
+<code>nfqueue</code> classifier, since nftables alone cannot decrypt a
+QUIC Initial); a blocked SNI → drop, an unblocked/fronted SNI →
+accept:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># rig/regimes/quic_sni_filter.nft + rig/quic_sni_classifier.py (nfqueue) -&gt; QUIC_SNI_FILTER</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="ex">table</span> inet censor { chain forward { type filter hook forward priority 0<span class="kw">;</span> <span class="ex">policy</span> accept<span class="kw">;</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="ex">udp</span> dport 443 queue num 0                <span class="co"># hand QUIC/443 to the SNI classifier</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="er">}</span> <span class="er">}</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="co"># rig/quic_sni_classifier.py: derive QUIC-Initial key, extract SNI; verdict per blocklist.</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="co">#   - does NOT reassemble Initials split across &gt;1 datagram  -&gt; models the GFW weakness</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="co">#     Gecko exploits [obf §5.3, research-hysteria2 §5(a)]; T-GECKO-FRAG asserts this.</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Expected: masque-h3 with PlainBlockable SNI dropped; fronted SNI + hysteria2/Salamander survive.</span></span></code></pre></div>
+<h3 id="34-tls_sni_filter-active_probing-residual_block">3.4
+<code>TLS_SNI_FILTER</code>, <code>ACTIVE_PROBING</code>,
+<code>RESIDUAL_BLOCK</code></h3>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># rig/regimes/tls_sni_filter.nft -&gt; TLS_SNI_FILTER (TCP/443 ClientHello SNI blocklist via nfqueue)</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="ex">table</span> inet censor { chain forward { tcp dport 443 queue num 1<span class="kw">;</span> <span class="er">}</span> <span class="er">}</span>  <span class="co"># SNI classifier on TCP</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co"># ACTIVE_PROBING -&gt; a scripted prober (rig/active_probe.sh) connects to the gateway :443</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="co">#   with forged first bytes; the edge MUST return decoy/silent/benign-RST [obf §3], proved by T-PROBE.</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="co"># RESIDUAL_BLOCK -&gt; stateful: after a trigger, block the (src,dst,sport,dport) tuple for a window.</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="ex">table</span> inet censor { </span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>  <span class="bu">set</span> blocked4 { type ipv4_addr . inet_service . ipv4_addr . inet_service<span class="kw">;</span> <span class="ex">flags</span> timeout<span class="kw">;</span> <span class="er">}</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>  <span class="ex">chain</span> forward { type filter hook forward priority 0<span class="kw">;</span> <span class="ex">policy</span> accept<span class="kw">;</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>    <span class="ex">ct</span> state new udp dport 51820 add @blocked4 { ip saddr . udp sport . ip daddr . udp dport timeout 200s }</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>    <span class="ex">ip</span> saddr . udp sport . ip daddr . udp dport @blocked4 drop   <span class="co"># ~180s GFW window [obf §4.4]</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a><span class="er">}</span> <span class="er">}</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Expected: mid-session drop -&gt; ladder cools the tuple + rotates port/escalates [obf §4.4]; T-RESIDUAL.</span></span></code></pre></div>
+<p>The regime profiles compose (the GFW =
+<code>WG_FINGERPRINT | QUIC_SNI_FILTER | ACTIVE_PROBING | RESIDUAL_BLOCK</code>):
+the rig loads the union ruleset and asserts the ladder converges on the
+surviving transport ([obf §4.3], §7 T-LADDER).</p>
+<hr />
+<h2 id="4-tc-netem-impairment-profiles">4. tc-netem impairment
+profiles</h2>
+<p>Applied <strong>inside the censor-ns</strong> on the
+<code>cen2gw</code> veth so only the test path is impaired
+[research-daita_test §5.2]. Profiles model realistic adversary/network
+conditions; combined with §3 nft rules they reproduce throttle + loss
+regimes.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># rig/impair.sh — tc-netem profiles on the censor egress (IFACE=cen2gw, in censor-ns)</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="va">ns</span><span class="op">=</span><span class="st">&quot;ip netns exec censor&quot;</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="cf">case</span> <span class="st">&quot;</span><span class="va">$1</span><span class="st">&quot;</span> <span class="kw">in</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="ss">clean</span><span class="kw">)</span>     <span class="va">$ns</span> tc qdisc del dev cen2gw root <span class="dv">2</span><span class="op">&gt;</span>/dev/null <span class="kw">||</span> <span class="fu">true</span> <span class="cf">;;</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  <span class="ss">loss5</span><span class="kw">)</span>     <span class="va">$ns</span> tc qdisc add dev cen2gw root netem loss 5% delay 40ms 10ms <span class="cf">;;</span>        <span class="co"># uniform loss + jitter</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  <span class="ss">burst</span><span class="kw">)</span>     <span class="va">$ns</span> tc qdisc add dev cen2gw root netem loss gemodel 2% 10% 70% 0.1% <span class="cf">;;</span>   <span class="co"># Gilbert-Elliott bursty [research-daita_test §5.2]</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  <span class="ss">reorder</span><span class="kw">)</span>   <span class="va">$ns</span> tc qdisc add dev cen2gw root netem delay 20ms reorder 25% 50% <span class="cf">;;</span>     <span class="co"># reordering</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  <span class="ss">throttle</span><span class="kw">)</span>  <span class="va">$ns</span> tc qdisc add dev cen2gw root tbf rate 8mbit burst 32kb latency 400ms <span class="cf">;;</span> <span class="co"># bandwidth throttle (THROTTLE regime)</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>  <span class="ss">highrtt</span><span class="kw">)</span>   <span class="va">$ns</span> tc qdisc add dev cen2gw root netem delay 150ms 30ms distribution normal <span class="cf">;;</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="cf">esac</span></span></code></pre></div>
+<p>The <code>burst</code> (Gilbert-Elliott) profile is the
+realistic-wireless loss model [research-daita_test §5.2] used for the
+resilience PERF tests (T-LOSS [obf §7]); the <code>throttle</code>
+profile reproduces the <code>THROTTLE</code> regime where
+Hysteria2/Brutal sustains goodput and MASQUE collapses (T-THROTTLE [obf
+§7]).</p>
+<hr />
+<h2 id="5-iperf3-throughput-bars--the-goodput-evidence">5. iperf3
+throughput bars + the goodput evidence</h2>
+<p>iperf3 server in <code>exit-ns</code>, client in
+<code>client-ns</code> driving traffic <strong>through the
+tunnel</strong> (over the overlay), measured against the bare-link
+baseline [research-daita_test §5.3]. The G1 gate is ≥80% bare-link
+plain-UDP; G2 is ≥50% of plain over MASQUE [10 §7.1].</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># rig/bench.sh — N=3 deterministic goodput bars (§11.4.50) [10 §5.13]</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="ex">ip</span> netns exec exit iperf3 <span class="at">-s</span> <span class="at">-1</span> <span class="at">-D</span>                              <span class="co"># one-shot server, exit-ns</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="va">bare</span><span class="op">=</span><span class="va">$(</span><span class="ex">ip</span> netns exec client iperf3 <span class="at">-J</span> <span class="at">-c</span> 10.10.0.20 <span class="at">-t</span> 10 <span class="kw">|</span> <span class="ex">jq</span> <span class="st">&#39;.end.sum_received.bits_per_second&#39;</span><span class="va">)</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="va">tun</span><span class="op">=</span><span class="va">$(</span> <span class="ex">ip</span> netns exec client iperf3 <span class="at">-J</span> <span class="at">-c</span> <span class="op">&lt;</span>overlay-exit-addr<span class="op">&gt;</span> -t 10 <span class="kw">|</span> <span class="ex">jq</span> <span class="st">&#39;.end.sum_received.bits_per_second&#39;</span><span class="va">)</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="va">pct</span><span class="op">=</span><span class="va">$(</span><span class="fu">awk</span> <span class="at">-v</span> t=<span class="st">&quot;</span><span class="va">$tun</span><span class="st">&quot;</span> <span class="at">-v</span> b=<span class="st">&quot;</span><span class="va">$bare</span><span class="st">&quot;</span> <span class="st">&#39;BEGIN{printf &quot;%.1f&quot;, 100*t/b}&#39;</span><span class="va">)</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="bu">printf</span> <span class="st">&#39;%s,%s,%s,%s,%s\n&#39;</span> <span class="st">&quot;</span><span class="va">$TRANSPORT</span><span class="st">&quot;</span> <span class="st">&quot;</span><span class="va">$REGIME</span><span class="st">&quot;</span> <span class="st">&quot;</span><span class="va">$tun</span><span class="st">&quot;</span> <span class="st">&quot;</span><span class="va">$bare</span><span class="st">&quot;</span> <span class="st">&quot;</span><span class="va">$pct</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  <span class="op">&gt;&gt;</span> qa-results/bench/goodput.csv                              <span class="co"># the evidence (min/max/mean/p95 per §11.4.24)</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="ex">ab_pass_with_evidence</span> <span class="st">&quot;goodput </span><span class="va">$TRANSPORT</span><span class="st">/</span><span class="va">$REGIME</span><span class="st"> = </span><span class="va">${pct}</span><span class="st">% bare-link&quot;</span> <span class="st">&quot;qa-results/bench/goodput.csv&quot;</span></span></code></pre></div>
+<p>The §11.4.107 liveness battery applies: goodput is sampled over a ≥10
+s window (not a one-shot ping), and an <strong>independent</strong> WG
+counter (<code>wg show &lt;if&gt; transfer</code> rx/tx advancing) must
+also move — a moving <code>iperf3</code> with a flat WG counter is a
+decoy/loopback path and FAILs (B3, [10 §3.2]). The metamorphic relation
+(2× clients ⇒ ~2× aggregate goodput; same exit reached over WG-UDP vs
+MASQUE ⇒ same body hash) is the no-golden-source oracle ([10 §3.2]).</p>
+<hr />
+<h2 id="6-the-leak-test-harness-kill-switch--dns--ipv6">6. The leak-test
+harness (kill-switch / DNS / IPv6)</h2>
+<p>The §11.4.69 negative-evidence triad — three properties whose proof
+is <strong>the absence of a packet</strong> captured on the censor-ns
+egress (the path to the synthetic WAN) [research-daita_test §5.4/§5.5].
+Each uses a host-side pcap on <code>cen2gw</code> (the only path out) so
+the capture observes exactly what would reach a real ISP.</p>
+<h3 id="61-kill-switch-s4--seal-on-tunnel-drop">6.1 Kill-switch (S4) —
+seal on tunnel drop</h3>
+<div class="sourceCode" id="cb10"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># rig/killswitch_drop.sh — S4, the anti-bluff kill-switch test (defeats B2) [10 §5.7]</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="bu">set</span> <span class="at">-euo</span> pipefail</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="va">pcap</span><span class="op">=</span><span class="st">&quot;qa-results/sec/</span><span class="va">$(</span><span class="fu">date</span> +%s<span class="va">)</span><span class="st">_killswitch.pcap&quot;</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="ex">ip</span> netns exec censor tcpdump <span class="at">-i</span> cen2gw <span class="at">-w</span> <span class="st">&quot;</span><span class="va">$pcap</span><span class="st">&quot;</span> <span class="kw">&amp;</span> <span class="va">TPID</span><span class="op">=</span><span class="va">$!</span>     <span class="co"># tap the path to the WAN</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="ex">ip</span> netns exec client curl <span class="at">-s</span> <span class="at">--max-time</span> 30 http://<span class="op">&lt;</span>overlay-exit<span class="op">&gt;</span>/ <span class="op">&gt;</span>/dev/null <span class="kw">&amp;</span>  <span class="co"># traffic in flight</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="fu">sleep</span> 2</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="ex">rig/force_tunnel_drop.sh</span>        <span class="co"># core FSM -&gt; Blocked, firewall seals (fwmark reject) [research-daita_test §5.4]</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="fu">sleep</span> 5</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="ex">ip</span> netns exec client nslookup example.test <span class="dv">2</span><span class="op">&gt;</span>/dev/null <span class="kw">||</span> <span class="fu">true</span>  <span class="co"># try to leak a DNS query</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="bu">kill</span> <span class="st">&quot;</span><span class="va">$TPID</span><span class="st">&quot;</span> <span class="dv">2</span><span class="op">&gt;</span>/dev/null</span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="co"># PASS only if, AFTER the drop (t&gt;2s), ZERO non-loopback packets AND ZERO :53 left the host:</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a><span class="va">LEAK</span><span class="op">=</span><span class="va">$(</span><span class="ex">tshark</span> <span class="at">-r</span> <span class="st">&quot;</span><span class="va">$pcap</span><span class="st">&quot;</span> <span class="at">-Y</span> <span class="st">&#39;frame.time_relative&gt;2 &amp;&amp; ip &amp;&amp; not (ip.addr==127.0.0.1)&#39;</span> <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span><span class="va">)</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a><span class="va">DNS</span><span class="op">=</span><span class="va">$(</span> <span class="ex">tshark</span> <span class="at">-r</span> <span class="st">&quot;</span><span class="va">$pcap</span><span class="st">&quot;</span> <span class="at">-Y</span> <span class="st">&#39;frame.time_relative&gt;2 &amp;&amp; udp.port==53&#39;</span> <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span><span class="va">)</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a><span class="bu">[</span> <span class="st">&quot;</span><span class="va">$LEAK</span><span class="st">&quot;</span> <span class="ot">-eq</span> 0 <span class="bu">]</span> <span class="kw">&amp;&amp;</span> <span class="bu">[</span> <span class="st">&quot;</span><span class="va">$DNS</span><span class="st">&quot;</span> <span class="ot">-eq</span> 0 <span class="bu">]</span> <span class="dt">\</span></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>  <span class="kw">&amp;&amp;</span> <span class="ex">ab_pass_with_evidence</span> <span class="st">&quot;kill-switch sealed, no DNS leak&quot;</span> <span class="st">&quot;</span><span class="va">$pcap</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>  <span class="kw">||</span> <span class="ex">ab_fail</span> <span class="st">&quot;LEAK=</span><span class="va">$LEAK</span><span class="st"> DNS=</span><span class="va">$DNS</span><span class="st"> — plaintext/DNS escaped the seal&quot;</span></span></code></pre></div>
+<p>The kill-switch mechanism is the WireGuard fwmark pattern: tunnel
+traffic is tagged with an fwmark, an OUTPUT rule rejects any egress
+<strong>not</strong> matching it, so a tunnel drop fails closed
+[research-daita_test §5.4].</p>
+<h3 id="62-dns-leak-s5--queries-forced-through-the-tunnel-resolver">6.2
+DNS leak (S5) — queries forced through the tunnel resolver</h3>
+<p>The exit-ns dnsmasq (§2) is the <strong>only</strong> legitimate
+resolver; the censor-ns has no resolver. A DNS query observed on
+<code>cen2gw</code> to anything other than the tunnelled resolver is a
+leak. Defense-in-depth per [research-daita_test §5.5]: tunnel DNS config
+→ nftables drop of :53 outside the tunnel → server-side resolver. The
+test asserts <strong>zero</strong>
+<code>udp.port==53 || tcp.port==53</code> on the non-tunnel path during
+a resolve + during a reconnect.</p>
+<h3 id="63-ipv6-leak-s5b--no-v6-escapes-the-seal">6.3 IPv6 leak (S5b) —
+no v6 escapes the seal</h3>
+<p>IPv6 is the common gap [research-daita_test §5.5]: either route v6
+through the tunnel or block v6 egress at nftables. The rig asserts
+<strong>zero</strong> IPv6 packets on <code>cen2gw</code> when the
+policy is v6-block, or all v6 inside the overlay when v6-tunnelled:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># IPv6-leak assertion (the censor-ns blocks/observes v6 egress)</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="va">V6</span><span class="op">=</span><span class="va">$(</span><span class="ex">tshark</span> <span class="at">-r</span> <span class="st">&quot;</span><span class="va">$pcap</span><span class="st">&quot;</span> <span class="at">-Y</span> <span class="st">&#39;ipv6 &amp;&amp; not (ipv6.addr==::1)&#39;</span> <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span><span class="va">)</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="bu">[</span> <span class="st">&quot;</span><span class="va">$V6</span><span class="st">&quot;</span> <span class="ot">-eq</span> 0 <span class="bu">]</span> <span class="kw">&amp;&amp;</span> <span class="ex">ab_pass_with_evidence</span> <span class="st">&quot;no IPv6 leak&quot;</span> <span class="st">&quot;</span><span class="va">$pcap</span><span class="st">&quot;</span> <span class="kw">||</span> <span class="ex">ab_fail</span> <span class="st">&quot;IPv6 leaked: </span><span class="va">$V6</span><span class="st"> pkts&quot;</span></span></code></pre></div>
+<p>Each leak test is self-validated (§8): a golden-bad pcap with a
+seeded :53 / v6 packet MUST score FAIL, else the detector is the bluff
+(§11.4.107(10), [10 §3.3]).</p>
+<hr />
+<h2 id="7-per-transport--per-regime-exercise-matrix-traces-to-obf-2">7.
+Per-transport × per-regime exercise matrix (traces to [obf §2])</h2>
+<p>This is the rig&#39;s load-bearing artifact: every [obf §2.1]
+survival-matrix cell is a rig run <code>(transport, regime)</code> whose
+outcome is captured. The rig drives each transport under each nft regime
+profile (§3) + netem profile (§4) and asserts the expected connect/fail,
+tracing each expectation to the [obf] cell-source. <code>✓</code> =
+expected-connect (capture goodput), <code>✗</code> = expected-fail
+(capture the DPI drop).</p>
+<table>
+<thead>
+<tr>
+<th>Transport</th>
+<th>empty</th>
+<th><code>WG_FINGERPRINT</code></th>
+<th><code>UDP_BLOCK</code></th>
+<th><code>QUIC_SNI_FILTER</code> (plain SNI)</th>
+<th><code>QUIC_SNI_FILTER</code> (fronted)</th>
+<th><code>TLS_SNI_FILTER</code></th>
+<th><code>ACTIVE_PROBING</code></th>
+<th>trace</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>plain-udp</code></td>
+<td>✓</td>
+<td>✗</td>
+<td>✗</td>
+<td>✗ (not QUIC; UDP path)</td>
+<td>✗</td>
+<td>n/a</td>
+<td>✗</td>
+<td>[obf §2.1]</td>
+</tr>
+<tr>
+<td><code>lwo</code></td>
+<td>✓</td>
+<td>✓ (header+size mangle)</td>
+<td>✗</td>
+<td>n/a</td>
+<td>n/a</td>
+<td>n/a</td>
+<td>partial</td>
+<td>[obf §2.1, §5.2]</td>
+</tr>
+<tr>
+<td><code>masque-h3</code></td>
+<td>✓</td>
+<td>✓ (no WG sig on wire)</td>
+<td>✗</td>
+<td>✗ (SNI blockable)</td>
+<td>✓ (fronted)</td>
+<td>n/a</td>
+<td>✓ (decoy edge)</td>
+<td>[obf §2.1, §3]</td>
+</tr>
+<tr>
+<td><code>shadowsocks</code></td>
+<td>✓</td>
+<td>✓</td>
+<td>✓ (TCP)</td>
+<td>n/a</td>
+<td>n/a</td>
+<td>✓ (<code>tls_sni</code> wrap)</td>
+<td>✓ (AEAD front)</td>
+<td>[obf §2.1, §5.5]</td>
+</tr>
+<tr>
+<td><code>udp-over-tcp</code></td>
+<td>✓</td>
+<td>✓</td>
+<td>✓ (TCP)</td>
+<td>n/a</td>
+<td>n/a</td>
+<td>✓ (<code>tls_sni</code> wrap)</td>
+<td>partial</td>
+<td>[obf §2.1, §5.5]</td>
+</tr>
+<tr>
+<td><code>hysteria2</code>+Salamander¹</td>
+<td>✓</td>
+<td>✓</td>
+<td>✗ (needs UDP)</td>
+<td>✓ (SNI scrambled)</td>
+<td>✓</td>
+<td>n/a</td>
+<td>✓ (password front)</td>
+<td>[obf §2.1, §5.3]</td>
+</tr>
+</tbody>
+</table>
+<p>¹ Phase-2 / feature-gated ([obf §6.3]); the MVP rig exercises
+<code>plain-udp</code>, <code>masque-h3</code>,
+<code>shadowsocks</code>, <code>udp-over-tcp</code>, <code>lwo</code>
+(the MVP transport set [10 §2]).</p>
+<p><strong>The UDP-block carve-out (load-bearing, [obf §2.2]).</strong>
+Under <code>UDP_BLOCK</code> every UDP-carried transport
+(<code>plain-udp</code>, <code>lwo</code>, <code>masque-h3</code>,
+<code>connect-ip</code>, <code>hysteria2</code>) <strong>must</strong>
+fail — the rig asserts this explicitly so a mask bug cannot claim the
+impossible (§11.4.6). Only the TCP-carried <code>shadowsocks</code> /
+<code>udp-over-tcp</code> connect.</p>
+<p><strong>The ladder run (T-LADDER, [obf §4.3]).</strong> The rig loads
+the composed GFW ruleset
+(<code>WG_FINGERPRINT | QUIC_SNI_FILTER | ACTIVE_PROBING | RESIDUAL_BLOCK</code>)
+and asserts the detector-driven ladder dials <code>plain-udp</code>
+(drops) → <code>lwo</code> (drops) → <code>masque-h3</code> fronted
+(<strong>connects</strong>), commits the <code>QUIC_SNI_FILTER</code>
+regime estimate, and pins <code>masque-h3</code> in per-network memory —
+the captured <code>TunnelStatus</code> trace is the evidence, run
+<code>-count=3</code> deterministic (§11.4.50, [obf §7 T-LADDER]).</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># rig/exercise.sh — drive one (transport, regime) cell and capture</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="ex">load_regime</span> <span class="st">&quot;</span><span class="va">$REGIME</span><span class="st">&quot;</span>                       <span class="co"># rig/regimes/&lt;regime&gt;.nft + nfqueue classifier</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="ex">load_impair</span> <span class="st">&quot;</span><span class="va">$NETEM</span><span class="st">&quot;</span>                         <span class="co"># §4</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="va">pcap</span><span class="op">=</span><span class="st">&quot;qa-results/e2e/</span><span class="va">${TRANSPORT}</span><span class="st">_</span><span class="va">${REGIME}</span><span class="st">.pcap&quot;</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="ex">ip</span> netns exec censor tcpdump <span class="at">-i</span> cen2gw <span class="at">-w</span> <span class="st">&quot;</span><span class="va">$pcap</span><span class="st">&quot;</span> <span class="kw">&amp;</span> <span class="va">TPID</span><span class="op">=</span><span class="va">$!</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="ex">rig/dial.sh</span> <span class="st">&quot;</span><span class="va">$TRANSPORT</span><span class="st">&quot;</span><span class="kw">;</span> <span class="cf">then</span> <span class="va">status</span><span class="op">=</span>connected<span class="kw">;</span> <span class="cf">else</span> <span class="va">status</span><span class="op">=</span>failed<span class="kw">;</span> <span class="cf">fi</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="bu">kill</span> <span class="st">&quot;</span><span class="va">$TPID</span><span class="st">&quot;</span> <span class="dv">2</span><span class="op">&gt;</span>/dev/null</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="ex">assert_outcome</span> <span class="st">&quot;</span><span class="va">$TRANSPORT</span><span class="st">&quot;</span> <span class="st">&quot;</span><span class="va">$REGIME</span><span class="st">&quot;</span> <span class="st">&quot;</span><span class="va">$status</span><span class="st">&quot;</span> <span class="st">&quot;</span><span class="va">$pcap</span><span class="st">&quot;</span>   <span class="co"># checks against the §7 matrix; ab_pass_with_evidence</span></span></code></pre></div>
+<hr />
+<h2 id="8-self-validated-analyzers--determinism--cleanup">8.
+Self-validated analyzers + determinism + cleanup</h2>
+<p>Every rig analyzer (the pcap classifier, the leak detector, the
+QUIC-SNI classifier, the goodput parser) ships with a
+<strong>golden-good + golden-bad</strong> fixture pair wired into the
+meta-test sweep (§11.4.107(10), [10 §3.3]) — an analyzer that passes its
+golden-bad fixture is itself the bluff and FAILs
+<code>CM-ANALYZER-SELF-VALIDATED</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Analyzer</th>
+<th>golden-good (PASS)</th>
+<th>golden-bad (MUST FAIL)</th>
+<th>mutation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>leak detector</td>
+<td><code>killswitch_clean.pcap</code></td>
+<td><code>killswitch_leaked_dns.pcap</code> (seeded :53)</td>
+<td>strip the <code>udp.port==53</code> clause → golden-bad passes →
+meta-test FAILs</td>
+</tr>
+<tr>
+<td>WG-fingerprint sim</td>
+<td><code>wg_blocked.pcap</code> (plain WG dropped)</td>
+<td><code>wg_passed_through.pcap</code></td>
+<td>weaken the nft size match → WG passes → T-WGFP FAILs</td>
+</tr>
+<tr>
+<td>QUIC-SNI classifier</td>
+<td><code>sni_blocked.pcap</code></td>
+<td><code>sni_missed.pcap</code> (blocklisted SNI passed)</td>
+<td>break the SNI extractor → blocked SNI passes → T-QUIC-SNI FAILs</td>
+</tr>
+<tr>
+<td>goodput parser</td>
+<td><code>iperf_live.json</code> (advancing)</td>
+<td><code>iperf_frozen.json</code> (flat counter)</td>
+<td>accept the flat counter → B3 → FAILs</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Determinism (§11.4.50).</strong> Every rig PASS runs N=3
+(normal) / N=10 (cycle-validation) against the same artifact MD5 + same
+rig, identical evidence-hashes; a divergent run is auto-FAIL via
+<code>ab_run_n_times</code> ([10 §5.4]). The fixed addressing plan (§1)
++ fixed regime rulesets (§3) make the rig reproducible.</p>
+<p><strong>Cleanup (§11.4.14).</strong> Every rig consumer wires
+<code>trap &#39;rig/netns_down.sh&#39; EXIT</code> so the four namespaces +
+their child processes (http.server, dnsmasq, iperf3, tcpdump) are reaped
+on every exit path; the orchestrator post-test sanity-checks that no
+<code>client</code>/<code>censor</code>/<code>gateway</code>/<code>exit</code>
+namespace survives and FAILs the just-completed test if one does
+(§11.4.14 orphan-state guard).</p>
+<hr />
+<h2 id="9-on-demand-boot-rootlessness-and-the-one-sanctioned-sudo">9.
+On-demand boot, rootlessness, and the one sanctioned sudo</h2>
+<p>Per [10 §9] the rig boots <strong>on demand</strong> —
+<code>make e2e</code> runs <code>rig/netns_up.sh</code>, the exercise,
+then <code>rig/netns_down.sh</code>; the developer never hand-creates
+namespaces. The container-backed infra the INT layer needs (Postgres +
+Redis for the control plane behind the gateway) boots rootless via the
+<code>containers</code> submodule (<code>containers/pkg/boot</code>,
+§11.4.76/.161) — no rootful Docker, no container-management
+<code>sudo</code>.</p>
+<p>The <strong>only</strong> <code>sudo</code> in the whole harness is
+<code>rig/netns_up.sh</code> / <code>rig/netns_down.sh</code>:
+network-namespace + veth creation needs <code>CAP_NET_ADMIN</code>, a
+documented, scoped exception ([10 §9]) — never a container-management
+escalation, never host-power, never disabling session managers (§12).
+<code>UNVERIFIED:</code> whether rootless netns via a user namespace
+(<code>ip netns</code> inside a <code>unshare -Un</code>) fully
+substitutes for the <code>CAP_NET_ADMIN</code> path on every target host
+— the spec records the privileged path as canonical and the
+rootless-netns path as a Phase-1 investigation (§11.4.81
+cross-platform-parity adjacency for macOS, where netns does not exist
+and the rig SKIPs with <code>topology_unsupported</code> per
+§11.4.3).</p>
+<hr />
+<h2 id="10-edge-cases--honest-gaps">10. Edge cases &amp; honest
+gaps</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Edge case</th>
+<th>Required behavior</th>
+<th>Cite</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>R1</td>
+<td>nft size-match approximates, not byte-exact, the GFW WG
+classifier</td>
+<td>assert the behavioural outcome (plain-udp drops, lwo survives), flag
+the classifier-internal parity <code>UNVERIFIED:</code></td>
+<td>§3.1, §11.4.6</td>
+</tr>
+<tr>
+<td>R2</td>
+<td>QUIC-Initial SNI needs decryption nftables can&#39;t do</td>
+<td>offload to an <code>nfqueue</code> userspace classifier; model the
+GFW no-reassembly weakness explicitly (Gecko relies on it)</td>
+<td>§3.3, [obf §5.3]</td>
+</tr>
+<tr>
+<td>R3</td>
+<td>A regime profile leaves a stale nft table between runs</td>
+<td><code>load_regime</code> flushes <code>inet censor</code> first;
+teardown deletes the namespace (drops the table)</td>
+<td>§3, §8</td>
+</tr>
+<tr>
+<td>R4</td>
+<td>iperf3 measures the bare link, not the tunnel, by mistake</td>
+<td>the client targets the <strong>overlay</strong> exit addr; the
+independent WG counter must also advance (B3 guard)</td>
+<td>§5</td>
+</tr>
+<tr>
+<td>R5</td>
+<td>A leak test &quot;passes&quot; because no traffic was generated at all</td>
+<td>the test asserts traffic <strong>was</strong> in flight before the
+drop (a non-empty pre-drop capture window) — absence-of-traffic ≠
+no-leak</td>
+<td>§6, §11.4.68</td>
+</tr>
+<tr>
+<td>R6</td>
+<td>macOS / non-Linux host has no netns</td>
+<td>honest §11.4.3 <code>SKIP: topology_unsupported</code> + tracked
+migration item; never a fake PASS</td>
+<td>§9, §11.4.81</td>
+</tr>
+<tr>
+<td>R7</td>
+<td>The host lacks <code>CAP_NET_ADMIN</code></td>
+<td><code>SKIP: topology_unsupported</code>; the rig cannot run
+unprivileged on that host (investigate rootless-netns)</td>
+<td>§9</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Honest boundary (§11.4.6).</strong> The rig proves the
+<strong>path-level</strong> security and survival properties on a Linux
+netns substrate that <em>models</em> each censorship regime; it does
+<strong>not</strong> prove behaviour against a <em>real</em>
+nation-state DPI deployment (the nft/<code>nfqueue</code> simulator is a
+faithful behavioural model, not the GFW itself — classifier-internal
+parity is <code>UNVERIFIED:</code> and the [obf §7] tests assert the
+behavioural outcome, not byte-for-byte adversary parity). The on-wire
+DPI-resistance claims (a <code>masque-h3</code> flow classifies as
+HTTP/3 with no WG signature) are additionally proven by the
+<code>tshark</code>-on-capture wire-fingerprint check + a window-scoped
+MP4 vision verdict (T-G2-WIRE [obf §7], §11.4.159). Real-world
+DPI-evasion confidence ultimately rests on field evidence the rig cannot
+supply — the rig empties the <em>reproducible-regime</em> defect class,
+not the <em>all-adversaries</em> class.</p>
+<hr />
+<h2 id="sources-verified">Sources verified</h2>
+<ul>
+<li>[10]
+<code>docs/research/mvp/final/10-testing-acceptance-and-qa.md</code> §3
+(evidence model
+<ul>
+<li>liveness battery), §4 (pyramid/topology), §5.3 (netns E2E rig), §5.7
+(SEC invariants + killswitch_drop.sh), §5.13 (bench.sh), §9 (local gate
+harness + sanctioned sudo) — read 2026-06-26.</li>
+</ul></li>
+<li>[obf]
+<code>docs/research/mvp/final/v02-data-plane/obfuscation-and-dpi.md</code>
+§1 (regime taxonomy bits), §2 (regime → transport survival matrix +
+UDP-block carve-out), §3 (probe-classifier / decoy edge), §4
+(regime-aware ladder + residual-block), §5 (wire byte-layouts), §7 (T-id
+test points) — read 2026-06-26.</li>
+<li>[research-daita_test]
+<code>docs/research/mvp/final/v09-research/research-daita_test.md</code>
+§5.1 (netns + veth topology), §5.2 (tc-netem incl. Gilbert-Elliott
+bursty loss), §5.3 (iperf3), §5.4 (nftables kill-switch fwmark +
+DNS-leak port-drop + DPI sim), §5.5 (DNS/kill-switch/IPv6 leak testing +
+defense-in-depth order) — read 2026-06-26 (all sources access-dated
+2026-06-25 in the dossier).</li>
+<li>Constitution: §11.4.69 (sink-side negative-evidence taxonomy),
+§11.4.68 (positive sink-side / no absence-of-error), §11.4.107 (liveness
+battery + self-validated analyzers), §11.4.50 (determinism), §11.4.14
+(cleanup/quiescence), §11.4.156 (no remote CI — local rig),
+§11.4.76/.161 (containers/rootless), §11.4.81 (cross-platform parity —
+macOS netns SKIP), §11.4.169 (test-type mandate) —
+<code>CLAUDE.md</code>, read 2026-06-26.</li>
+</ul>
+</body>
+</html>

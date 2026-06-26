@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>DDoS / Load-Flood Test Strategy</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">DDoS / Load-Flood Test Strategy</h1>
+</header>
+<h1 id="ddos--load-flood-test-strategy">DDoS / Load-Flood Test
+Strategy</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-06-26T12:00:00Z</p>
+<blockquote>
+<p>Master technical specification — Volume 8 (Testing &amp; QA),
+nano-detail document <strong>ddos</strong>, one of the seven §11.4.169
+cross-cutting test-type deep-dives. It deepens <a href="../10-testing-acceptance-and-qa.md"><code>10-testing-acceptance-and-qa.md</code></a>
+§5.8 (DDOS) and the §2 taxonomy row marked
+<code>NOT_APPLICABLE: single-node-selfhost</code> at MVP into an
+implementation-ready, <strong>author-now-parked</strong> (decision
+QA-D2, overview §10) bank that re-arms mechanically when Phase 2&#39;s
+public multi-tenant surface exists. SPEC-ONLY: it describes the harness,
+the fixtures, the captured evidence, the acceptance gate, and the paired
+§1.1 mutation; it does not build the product. Sources cited inline by id
+— <code>[OVERVIEW]</code> = doc 10; <code>[TM]</code> =
+[<code>../v05-security/threat-model.md</code>]; <code>[01-DP]</code> =
+doc 01 data plane; <code>[04_P1]</code>/<code>[04_P2]</code> = the
+Phase-1/Phase-2 refined docs;
+<code>[svc-policy]</code>/<code>[svc-pki]</code> = the Volume-3
+nano-docs. Any claim not grounded in the evidence base is marked
+<strong>UNVERIFIED</strong> per constitution §11.4.6 — never
+fabricated.</p>
+</blockquote>
+<hr />
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#0-scope-on-helixvpn-surfaces--mvp-status">0. Scope on
+HelixVPN surfaces + MVP status</a></li>
+<li><a href="#1-the-two-threats-this-suite-proves-bounded">1. The two
+threats this suite proves bounded</a></li>
+<li><a href="#2-harness--the-flood-rig">2. Harness — the flood
+rig</a></li>
+<li><a href="#3-fixtures--real-no-mocks-1114277">3. Fixtures — real, no
+mocks (§11.4.27)</a></li>
+<li><a href="#4-captured-evidence-1114697---85">4. Captured evidence
+(§11.4.69 / .85)</a></li>
+<li><a href="#5-determinism-1114050">5. Determinism (§11.4.50)</a></li>
+<li><a href="#6-acceptance-gate">6. Acceptance gate</a></li>
+<li><a href="#7-the-paired-111-mutation">7. The paired §1.1
+mutation</a></li>
+<li><a href="#8-test-skeletons">8. Test skeletons</a></li>
+<li><a href="#9-the-mvp-skip-record--re-arm-trigger">9. The MVP SKIP
+record + re-arm trigger</a></li>
+<li><a href="#sources-verified">Sources verified</a></li>
+</ul>
+<hr />
+<h2 id="0-scope-on-helixvpn-surfaces--mvp-status">0. Scope on HelixVPN
+surfaces + MVP status</h2>
+<p>A VPN gateway is, by definition, an Internet-reachable target: the
+<strong>Rust edge</strong> listens on <code>:443</code> for WG/MASQUE
+datagrams ([TM §5.3], <code>T-EDGE-D-1</code>) and the <strong>Go
+control plane</strong> answers enroll / <code>WatchNetworkMap</code> /
+policy RPCs over mTLS ([TM §5.2]). DDoS is the threat that <em>no single
+client</em> and <em>no flood of init packets</em> may exhaust those
+surfaces. At MVP the deployment is a single rootless-Podman host with no
+public multi-tenant surface [04_P1 §11]; a volumetric DDoS at MVP would
+exercise a threat the topology does not yet present, so the
+coverage-ledger cell is
+<code>NOT_APPLICABLE: single-node-selfhost</code> (§11.4.6, overview
+§6.3 row F-DDOS-FLOOD) — an <strong>honest, reasoned</strong> NA, never
+a silent omission.</p>
+<p>The seam, however, is built <strong>now</strong> so the suite re-arms
+by data, not by code: the per-tenant / per-source rate-limit token
+buckets in Redis ([TM §5.1 <code>T-CONN-D-1</code>], [svc-pki §3.4]),
+WG&#39;s stateless cookie-reply anti-DoS ([01-DP], [TM §5.3
+<code>T-EDGE-D-1</code>]), and the stateless fail-static edge that drops
+and rootless-auto-restarts rather than crashing [01-DP I3]. This
+document authors the bank against those seams; QA-D2 records the
+decision (author-now-parked).</p>
+<table>
+<thead>
+<tr>
+<th>Surface</th>
+<th>Flood class</th>
+<th>MVP seam (built)</th>
+<th>Phase-2 re-arm</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>edge <code>:443</code> data port</td>
+<td>WG/MASQUE handshake-init flood</td>
+<td>WG cookie-reply; host firewall floor</td>
+<td>full handshake-flood bank</td>
+</tr>
+<tr>
+<td>edge <code>:443</code> data port</td>
+<td>volumetric byte flood</td>
+<td>stateless drop + rootless restart [01-DP I3]</td>
+<td>upstream-scrubbing-assisted bank</td>
+</tr>
+<tr>
+<td>control plane mTLS RPC</td>
+<td>enroll / <code>SignDeviceCert</code> flood</td>
+<td>Redis token bucket, per-tenant + per-source [svc-pki §3.4]</td>
+<td>KMS-quota-protection bank</td>
+</tr>
+<tr>
+<td>control plane</td>
+<td><code>WatchNetworkMap</code> stream-open flood</td>
+<td>bounded streams [svc-policy §11]</td>
+<td>coordinator fan-out soak</td>
+</tr>
+<tr>
+<td>control plane</td>
+<td>policy compile-bomb</td>
+<td>bounded <code>O(devices×rules×targets)</code> [TM §5.2
+<code>T-CP-D-1</code>]</td>
+<td>10k×1k tenant soak</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="1-the-two-threats-this-suite-proves-bounded">1. The two threats
+this suite proves bounded</h2>
+<p>The bank is built around two falsifiable claims, each phrased so the
+PASS is a captured-evidence proof that a <strong>legitimate</strong>
+client is unharmed <em>while the flood runs</em> (anti-bluff: a flood
+test that only proves &quot;the flood happened&quot; is a §11.4 bluff — it must
+prove the service stayed usable).</p>
+<ul>
+<li><strong>D-FLOOD-HANDSHAKE.</strong> A torrent of WG/MASQUE init
+packets (and a torrent of unauthenticated enroll attempts) must not
+exhaust the gateway. <strong>Claim:</strong> during the flood, a
+<em>legitimate</em> enrolled client&#39;s handshake p99 latency stays under
+its SLO budget, the edge process never OOM/crashes
+(<code>helix_edge_up == 1</code> throughout), and
+<code>wg_init_dropped</code> / <code>ratelimit_rejected</code> counters
+rise (proving the rate limiter <em>engaged</em>, not that the flood was
+absent).</li>
+<li><strong>D-FLOOD-VOLUMETRIC.</strong> A byte flood on
+<code>:443</code> must make the stateless edge
+<strong>fail-static</strong> — drop excess, never crash,
+rootless-auto-restart if the supervisor cycles it [01-DP I3].
+<strong>Claim:</strong> the edge liveness counter stays 1 (or restarts
+within the supervisor budget with zero plaintext leak during the gap —
+composes the kill-switch S9 evidence, [TM §5.4
+<code>T-CLI-T-1</code>]).</li>
+</ul>
+<p>Each claim is a <code>challenges</code> bank entry (overview §5.5)
+scored on captured evidence, never the generator&#39;s exit code.</p>
+<hr />
+<h2 id="2-harness--the-flood-rig">2. Harness — the flood rig</h2>
+<p>The rig extends the netns rig (overview §5.3,
+[<code>test-rig.md</code>]) with two flood generators and a
+<strong>legitimate-client probe</strong> that runs <em>concurrently
+with</em> the flood — the probe is the thing the acceptance gate
+measures. Single-resource-owner partitioning (§11.4.119): exactly one
+process owns the edge data port; the flood generators and the legit
+probe are distinct netns peers.</p>
+<pre><code>            netns: flooders (N attacker peers)            netns: legit (1 honest client)
+   ┌──────────────────────────────────────┐     ┌────────────────────────────────┐
+   │ wg_init_flood  (Noise-IK init torrent)│     │ helix-core: real enroll + WG    │
+   │ iperf3 -u -b &lt;rate&gt;  (volumetric)     │     │   handshake, sampled p99 latency│
+   └───────────────┬──────────────────────┘     └───────────────┬────────────────┘
+                   │   both target :443 on        ▲              │
+                   ▼                              │ probe        ▼
+        ┌───────────────────────────────────────────────────────────────┐
+        │ helix-edge (Rust, rootless Podman §11.4.161) — verdict map +    │
+        │ WG cookie-reply + Redis token bucket; emits helix_edge_up,      │
+        │ wg_init_dropped, ratelimit_rejected counters                    │
+        └───────────────────────────────────────────────────────────────┘</code></pre>
+<ul>
+<li><strong><code>wg_init_flood</code></strong> — a custom Noise-IK
+initiation-message generator (not a mock: it emits real WG
+<code>MessageInitiation</code> frames with valid framing but
+unregistered static keys, exactly the cheapest attacker packet [01-DP],
+[TM <code>T-EDGE-D-1</code>]). Rust binary
+<code>rig/wg_init_flood</code>, rate configurable
+(<code>--pps</code>).</li>
+<li><strong><code>iperf3 -u -b &lt;rate&gt;</code></strong> — UDP
+volumetric flood at line rate toward <code>:443</code>.</li>
+<li><strong>legit probe</strong> — a real <code>helix-core</code>
+instance performing genuine enroll + WG handshake + <code>iperf3</code>
+goodput in the <code>legit</code> netns, sampling handshake completion
+latency.</li>
+<li><strong>counter scrape</strong> — <code>helix-edge</code>&#39;s
+Prometheus endpoint (control-plane-local, no per-user data, invariant
+I5) is scraped at 1 s cadence into a CSV.</li>
+</ul>
+<p>The rig runs under <code>containers/pkg/boot</code> for Redis (the
+token-bucket backing store) — the sole container path (§11.4.76); the
+netns peers need <code>CAP_NET_ADMIN</code> (the documented scoped sudo
+exception, overview §9), never container-management escalation.</p>
+<hr />
+<h2 id="3-fixtures--real-no-mocks-11427">3. Fixtures — real, no mocks
+(§11.4.27)</h2>
+<p>DDoS is an integration/e2e-class type: <strong>no mocks</strong>
+below the unit layer. Fixtures are real:</p>
+<table>
+<thead>
+<tr>
+<th>Fixture</th>
+<th>What it is</th>
+<th>Why real</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>legit_client.toml</code></td>
+<td>a genuinely enrolled <code>helix-core</code> config (real device
+cert, real WG key)</td>
+<td>the probe must complete a <em>real</em> handshake — a mocked client
+cannot prove the limiter spares legitimate traffic</td>
+</tr>
+<tr>
+<td><code>attacker_keys.bin</code></td>
+<td>N=10k unregistered Curve25519 static keys for
+<code>wg_init_flood</code></td>
+<td>real WG frames with keys the edge will reject — the cheapest real
+attacker packet</td>
+</tr>
+<tr>
+<td><code>tenant_ratelimit.yaml</code></td>
+<td>the real Redis token-bucket config under test [svc-pki §3.4]</td>
+<td>the limiter&#39;s real thresholds, not a stubbed allow-all</td>
+</tr>
+<tr>
+<td><code>edge_image</code></td>
+<td>the published rootless-Podman edge image (S8)</td>
+<td>the suite must flood the <em>shipping</em> artifact (§11.4.108), not
+a debug build</td>
+</tr>
+</tbody>
+</table>
+<p>The legitimate-client fixture is the load-bearing one: the suite&#39;s
+entire value is proving the <strong>real</strong> honest client is
+unharmed; a stubbed probe would be a B3 wrong-plane bluff.</p>
+<hr />
+<h2 id="4-captured-evidence-11469--85">4. Captured evidence (§11.4.69 /
+.85)</h2>
+<p>Every PASS cites artifacts under
+<code>qa-results/ddos/&lt;run-id&gt;/</code>, scored by the
+<code>challenges</code> engine, never the generator&#39;s exit code. The
+§11.4.69 evidence class is <code>network_throughput</code> /
+<code>network_connectivity</code> for the legit probe and a liveness
+counter for the edge.</p>
+<table>
+<thead>
+<tr>
+<th>Artifact</th>
+<th>Shape</th>
+<th>Asserts</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>legit_latency.json</code></td>
+<td>per-sample handshake-complete + goodput series, p50/p95/p99</td>
+<td>legit p99 ≤ budget <em>during</em> the flood</td>
+</tr>
+<tr>
+<td><code>edge_liveness.csv</code></td>
+<td>1 Hz <code>helix_edge_up</code>, RSS, FD count</td>
+<td>edge never 0 (or restart within supervisor budget)</td>
+</tr>
+<tr>
+<td><code>limiter_counters.csv</code></td>
+<td><code>wg_init_dropped</code>, <code>ratelimit_rejected</code> time
+series</td>
+<td>the limiter <em>engaged</em> (counters rose) — proves the flood
+reached the edge, not that it was absent</td>
+</tr>
+<tr>
+<td><code>gap_pcap.pcap</code></td>
+<td>host-iface capture during any edge restart</td>
+<td>zero plaintext / zero <code>:53</code> during the gap (composes S9,
+[TM <code>T-CLI-T-1</code>])</td>
+</tr>
+<tr>
+<td><code>categorised_errors.txt</code></td>
+<td>per-error-class counts from the flood window (§11.4.85)</td>
+<td>refused-cleanly vs crashed classification</td>
+</tr>
+</tbody>
+</table>
+<p>Anti-bluff rule (overview §0, B2): &quot;no error during flood&quot; is
+<strong>not</strong> evidence — the limiter counters MUST show
+engagement and the legit-probe latency CSV MUST show bounded service, or
+the test is a B2 absence-of-error bluff and FAILs.</p>
+<hr />
+<h2 id="5-determinism-11450">5. Determinism (§11.4.50)</h2>
+<p>The flood is inherently noisy, so determinism is asserted on the
+<strong>verdict</strong>, not the raw rate.
+<code>ab_run_n_times &quot;ddos-handshake&quot; 3 run_handshake_flood</code> runs
+the bank N=3 against the same edge image MD5 + same rig; the per-run
+evidence-hash is computed over the <em>verdict tuple</em>
+<code>(edge_stayed_up: bool, legit_p99_within_budget: bool, limiter_engaged: bool, leak_during_gap: bool)</code>
+— all three runs MUST yield the identical verdict tuple. A run where the
+edge stays up in 2 of 3 is <strong>auto-FAIL</strong> (§11.4.50: no
+first-pass-was-a-flake escape). Cycle-validation runs N=10.</p>
+<p>The raw rate/latency numbers are recorded for trend (§11.4.24
+min/max/mean/p95) but are not the determinism key — the <em>verdict</em>
+is, because the property under test is binary (&quot;bounded / not&quot;).</p>
+<hr />
+<h2 id="6-acceptance-gate">6. Acceptance gate</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Bar</th>
+<th>Evidence</th>
+<th>Phase</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>DDOS-G1</td>
+<td>legit handshake p99 ≤ SLO budget while flood at ≥ design-attack-rate
+runs</td>
+<td><code>legit_latency.json</code></td>
+<td>Phase 2</td>
+</tr>
+<tr>
+<td>DDOS-G2</td>
+<td><code>helix_edge_up == 1</code> throughout, OR restart ≤ supervisor
+budget with <strong>zero</strong> leak in <code>gap_pcap</code></td>
+<td><code>edge_liveness.csv</code> + <code>gap_pcap.pcap</code></td>
+<td>Phase 2</td>
+</tr>
+<tr>
+<td>DDOS-G3</td>
+<td>limiter engaged:
+<code>ratelimit_rejected</code>/<code>wg_init_dropped</code> strictly
+&gt; 0 during flood</td>
+<td><code>limiter_counters.csv</code></td>
+<td>Phase 2</td>
+</tr>
+<tr>
+<td>DDOS-G4</td>
+<td>control-plane enroll-flood: legit enroll still succeeds; KMS
+<code>SignDeviceCert</code> quota not exhausted</td>
+<td>enroll-success log + quota counter</td>
+<td>Phase 2</td>
+</tr>
+</tbody>
+</table>
+<p>At MVP the gate is recorded
+<code>NOT_APPLICABLE: single-node-selfhost</code> in the coverage ledger
+with the §11.4.3 reason; the gate is <strong>release-blocking in Phase
+2</strong> when the multi-tenant surface exists. A gate that cannot
+clear in its time box <strong>is the finding</strong> — escalate per
+§11.4.66, never overrun silently.</p>
+<hr />
+<h2 id="7-the-paired-11-mutation">7. The paired §1.1 mutation</h2>
+<p>The mutation proves the gate is not a bluff — it must FAIL the gate
+when the protection is removed:</p>
+<pre class="text"><code>MUTATION (paired §1.1, gate CM-DDOS-RATELIMIT-ENGAGED):
+  Disable the Redis token-bucket check in the edge enroll/handshake path
+  (the `ratelimit.Allow()` call returns true unconditionally).
+EXPECTED:  under the flood, the legit probe&#39;s p99 blows past budget AND
+           limiter_counters.csv shows ZERO ratelimit_rejected
+           → DDOS-G1 + DDOS-G3 FAIL → mutation caught.
+RESTORE:   re-enable ratelimit.Allow(); re-run → GREEN.</code></pre>
+<p>A second mutation (<code>CM-DDOS-EDGE-FAILSTATIC</code>) replaces the
+stateless drop with an unbounded allocation per init packet; expected:
+edge RSS climbs to OOM under the flood, <code>helix_edge_up</code> drops
+with no clean restart → DDOS-G2 FAILs → caught. Both mutations are
+restored and the working tree is verified quiescent (§11.4.84) before
+any commit.</p>
+<hr />
+<h2 id="8-test-skeletons">8. Test skeletons</h2>
+<div class="sourceCode" id="cb3"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// rig/wg_init_flood/src/main.rs — REAL Noise-IK init torrent (not a mock), §11.4.27</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">-&gt;</span> <span class="pp">anyhow::</span><span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> args <span class="op">=</span> <span class="pp">Args::</span>parse()<span class="op">;</span>                 <span class="co">// --target :443  --pps  --keys attacker_keys.bin</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> keys <span class="op">=</span> load_static_keys(<span class="op">&amp;</span>args<span class="op">.</span>keys)<span class="op">?;</span> <span class="co">// 10k unregistered Curve25519 keys</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> sock <span class="op">=</span> <span class="pp">UdpSocket::</span>bind(<span class="st">&quot;0.0.0.0:0&quot;</span>)<span class="op">?;</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> pacer <span class="op">=</span> <span class="pp">Pacer::</span>new(args<span class="op">.</span>pps)<span class="op">;</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">loop</span> <span class="op">{</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> k <span class="op">=</span> keys<span class="op">.</span>next_round_robin()<span class="op">;</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> init <span class="op">=</span> <span class="pp">wg::MessageInitiation::</span>new(<span class="op">&amp;</span>k<span class="op">,</span> <span class="op">&amp;</span>args<span class="op">.</span>gateway_pubkey)<span class="op">;</span> <span class="co">// valid framing, bad identity</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>        sock<span class="op">.</span>send_to(<span class="op">&amp;</span>init<span class="op">.</span>encode()<span class="op">,</span> args<span class="op">.</span>target)<span class="op">?;</span>                       <span class="co">// the cheapest attacker packet</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>        pacer<span class="op">.</span>tick()<span class="op">;</span>                          <span class="co">// bounded send rate; never floods the *host* (§12 host-safety)</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># rig/ddos_handshake.sh — the D-FLOOD-HANDSHAKE challenge driver</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="bu">set</span> <span class="at">-euo</span> pipefail</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="va">out</span><span class="op">=</span><span class="st">&quot;qa-results/ddos/</span><span class="va">$(</span><span class="fu">date</span> +%s<span class="va">)</span><span class="st">&quot;</span><span class="kw">;</span> <span class="fu">mkdir</span> <span class="at">-p</span> <span class="st">&quot;</span><span class="va">$out</span><span class="st">&quot;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="bu">trap</span> <span class="st">&#39;rig/flood_stop.sh; rig/netns_down.sh&#39;</span> EXIT            <span class="co"># §11.4.14 cleanup on every path</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="ex">scrape_counters_1hz</span> <span class="st">&quot;</span><span class="va">$out</span><span class="st">/limiter_counters.csv&quot;</span> <span class="kw">&amp;</span>           <span class="co"># edge counters</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="ex">sample_edge_liveness_1hz</span> <span class="st">&quot;</span><span class="va">$out</span><span class="st">/edge_liveness.csv&quot;</span> <span class="kw">&amp;</span>         <span class="co"># helix_edge_up, RSS</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="ex">ip</span> netns exec flooders rig/wg_init_flood <span class="at">--target</span> gw:443 <span class="at">--pps</span> <span class="st">&quot;</span><span class="va">$ATTACK_PPS</span><span class="st">&quot;</span> <span class="at">--keys</span> attacker_keys.bin <span class="kw">&amp;</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="fu">sleep</span> 2                                                      <span class="co"># let the flood ramp</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="ex">ip</span> netns exec legit helix-core probe <span class="at">--enroll</span> legit_client.toml <span class="at">--iperf</span> 20 <span class="dt">\</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">--latency-out</span> <span class="st">&quot;</span><span class="va">$out</span><span class="st">/legit_latency.json&quot;</span>                 <span class="co"># the LEGIT client, concurrently</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="va">p99</span><span class="op">=</span><span class="va">$(</span><span class="ex">jq</span> <span class="st">&#39;.handshake_p99_ms&#39;</span> <span class="st">&quot;</span><span class="va">$out</span><span class="st">/legit_latency.json&quot;</span><span class="va">)</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="va">up</span><span class="op">=</span><span class="va">$(</span><span class="ex">min_col</span> <span class="st">&quot;</span><span class="va">$out</span><span class="st">/edge_liveness.csv&quot;</span> helix_edge_up<span class="va">)</span>        <span class="co"># min over the window</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="va">rej</span><span class="op">=</span><span class="va">$(</span><span class="ex">max_col</span> <span class="st">&quot;</span><span class="va">$out</span><span class="st">/limiter_counters.csv&quot;</span> ratelimit_rejected<span class="va">)</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="bu">[</span> <span class="st">&quot;</span><span class="va">$up</span><span class="st">&quot;</span> <span class="ot">=</span> 1 <span class="bu">]</span> <span class="kw">&amp;&amp;</span> <span class="ex">within_budget</span> <span class="st">&quot;</span><span class="va">$p99</span><span class="st">&quot;</span> <span class="kw">&amp;&amp;</span> <span class="bu">[</span> <span class="st">&quot;</span><span class="va">$rej</span><span class="st">&quot;</span> <span class="ot">-gt</span> 0 <span class="bu">]</span> <span class="dt">\</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>  <span class="kw">&amp;&amp;</span> <span class="ex">ab_pass_with_evidence</span> <span class="st">&quot;edge bounded under handshake flood; legit p99=</span><span class="va">$p99ms</span><span class="st">&quot;</span> <span class="st">&quot;</span><span class="va">$out</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>  <span class="kw">||</span> <span class="ex">ab_fail</span> <span class="st">&quot;DDoS bound breached: up=</span><span class="va">$up</span><span class="st"> p99=</span><span class="va">$p99</span><span class="st"> rejected=</span><span class="va">$rej</span><span class="st">&quot;</span></span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># challenges/banks/helixvpn_phase2_ddos.yaml — parked, re-arms in Phase 2 (QA-D2)</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">bank</span><span class="kw">:</span><span class="at"> helixvpn-phase2-ddos</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="fu">arm_condition</span><span class="kw">:</span><span class="at"> deployment.topology == &quot;multi-tenant-ha&quot;</span><span class="co">   # mechanical re-arm, not a code edit</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="fu">challenges</span><span class="kw">:</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">id</span><span class="kw">:</span><span class="at"> HVPN-CHAL-DDOS-HANDSHAKE</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">feature_class</span><span class="kw">:</span><span class="at"> network_connectivity</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">driver</span><span class="kw">:</span><span class="at"> rig/ddos_handshake.sh</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">evidence</span><span class="kw">:</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">latency</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">path</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;legit_latency.json&quot;</span><span class="kw">,</span><span class="at"> </span><span class="fu">assert</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;handshake_p99_ms &lt;= slo.handshake&quot;</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="at">      liveness</span><span class="fu">:{ path</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;edge_liveness.csv&quot;</span><span class="er">,</span><span class="at">  </span><span class="er">assert_min:</span><span class="at"> </span><span class="er">&quot;helix_edge_up</span><span class="at"> </span><span class="er">==</span><span class="at"> </span><span class="er">1&quot;</span><span class="at"> </span><span class="er">}</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">limiter</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">path</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;limiter_counters.csv&quot;</span><span class="kw">,</span><span class="at"> </span><span class="fu">assert</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;max(ratelimit_rejected) &gt; 0&quot;</span><span class="at"> </span><span class="kw">}</span><span class="co">   # defeats B2</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">self_validated</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span><span class="co">                                   # golden-bad: limiter-off run MUST score FAIL</span></span></code></pre></div>
+<hr />
+<h2 id="9-the-mvp-skip-record--re-arm-trigger">9. The MVP SKIP record +
+re-arm trigger</h2>
+<p>At MVP the coverage ledger carries (overview §6):</p>
+<pre><code>feature_id = F-DDOS-FLOOD
+  DDOS cell: state = NOT_APPLICABLE, skip_reason = &#39;single-node-selfhost&#39;  -- §11.4.3 closed reason
+  CHAL cell: state = NOT_APPLICABLE, skip_reason = &#39;single-node-selfhost&#39;</code></pre>
+<p>The re-arm is <strong>mechanical</strong> (overview §6.2 state
+machine, §7.3): when the deployment topology changes to
+<code>multi-tenant-ha</code> in Phase 2, the <code>arm_condition</code>
+flips the cell from <code>NOT_APPLICABLE</code> to
+<code>REQUIRED</code>, the parked bank activates, and the gate becomes
+release-blocking. No code change is needed to re-arm — the bank already
+exists (QA-D2), satisfying the §11.4.6 &quot;the seam exists now&quot; discipline
+so Phase-2 cannot ship a DDoS gap by omission.</p>
+<p><strong>UNVERIFIED.</strong> The concrete design-attack-rate
+(<code>ATTACK_PPS</code>), the legit-handshake SLO budget under flood,
+and the supervisor restart budget are Phase-2 measured numbers, not yet
+results; they are stated as Phase-2 targets here and become facts only
+when the Phase-2 rig produces the CSVs. The WG cookie-reply
+effectiveness against the specific init-flood rate is asserted from the
+WireGuard design [01-DP] but <strong>UNVERIFIED</strong> for HelixVPN&#39;s
+edge until the Phase-2 bank runs.</p>
+<hr />
+<h2 id="sources-verified">Sources verified</h2>
+<ul>
+<li>[OVERVIEW] [<code>../10-testing-acceptance-and-qa.md</code>] — §2
+taxonomy (DDOS <code>NOT_APPLICABLE</code> row), §5.8 (DDoS strategy),
+§6.3 (F-DDOS-FLOOD ledger row), §7.3 (Phase-2 re-arm), §10 QA-D2. (Read
+2026-06-26.)</li>
+<li>[TM] [<code>../v05-security/threat-model.md</code>] —
+<code>T-EDGE-D-1</code> (handshake/UDP flood), <code>T-CONN-D-1</code>,
+<code>T-CP-D-1</code> (compile-bomb), <code>T-PKI-D-1</code> (KMS
+quota), §10 R-DOS residual. (Read 2026-06-26.)</li>
+<li>[01-DP] <code>final/01-data-plane.md</code> — WG stateless
+cookie-reply anti-DoS, stateless fail-static edge (I3); cited via the
+overview + threat-model.</li>
+<li>[svc-pki] [<code>../v03-control-plane/svc-pki.md</code>] /
+[svc-policy] [<code>../v03-control-plane/svc-policy.md</code>] — §3.4
+enroll rate limits, §11 bounded compile/streams; cited via the
+threat-model.</li>
+<li>[04_P1 §11] single-node MVP topology (the basis for the MVP
+<code>NOT_APPLICABLE</code>); [04_P2] Phase-2 HA surface — cited via the
+overview.</li>
+<li>Constitution: §11.4.169 (test-type mandate), §11.4.3 (honest SKIP/NA
+reason), §11.4.6 (no-guessing / UNVERIFIED), §11.4.27 (no-fakes),
+§11.4.69 (sink-side evidence), §11.4.85 (stress/chaos taxonomy
+adjacency), §11.4.50 (determinism), §11.4.84 (quiescence), §11.4.119
+(single-resource-owner), §11.4.108 (flood the shipping artifact), §1.1
+(paired mutation).</li>
+</ul>
+</body>
+</html>
