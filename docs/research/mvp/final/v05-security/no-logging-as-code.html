@@ -1,0 +1,1303 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>No-Logging as Code (the privacy promise made mechanical)</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">No-Logging as Code (the privacy promise made
+mechanical)</h1>
+</header>
+<h1 id="no-logging-as-code-the-privacy-promise-made-mechanical">No-Logging
+as Code (the privacy promise made mechanical)</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-06-25T12:00:00Z</p>
+<blockquote>
+<p>Master technical specification — Volume 5 (Security &amp; Privacy),
+nano-detail spec. Deepens invariant <strong>S6</strong> (no durable
+connection/traffic log — by construction) and <strong>S7</strong>
+(control actions audited; traffic never) of [04-sec]
+(<code>04-security-privacy-pki.md</code> §6–§7). This document owns the
+<em>mechanical contract</em> that turns &quot;we don&#39;t log&quot; from an
+operator&#39;s good intentions into a <strong>build property</strong>: the
+data-minimization model (what is stored vs never-stored), the
+CI/pre-build <strong>schema-lint</strong> that fails the build if any
+log/event schema acquires a traffic/PII shape, the ephemeral-only
+presence model (Redis TTL, no durable connection records), the
+control-action-only audit model, the §11.4.10 credentials discipline,
+and the paired §1.1 mutation that proves the lint is not a tautology.
+This is a <strong>SPEC</strong> — it describes the implementation; it
+does not build the product.</p>
+<p>Source evidence cited inline by id: [04-sec §6/§7]
+(<code>04-security-privacy-pki.md</code> no-logging-as-code + audit),
+[svc-tel] (<code>v03-control-plane/svc-telemetry.md</code> — the
+telemetry service that <em>governs</em> the schema-lint + owns presence
++ audit-sink), [svc-evt] (<code>v03-control-plane/svc-events.md</code> —
+the event bus C3 payload constraint + payload-lint), [04_P1 §11.4]
+(HelixVPN-Phase1-MVP no-logging CI lint), [04_ARCH §7/§4.5]
+(no-logging-as-code</p>
+<ul>
+<li>ephemeral Redis presence). Access date for external facts:
+<strong>2026-06-25</strong>. Unproven claims are marked
+<code>UNVERIFIED:</code> per §11.4.6 — never fabricated.</li>
+</ul>
+</blockquote>
+<hr />
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#0-position-ownership-and-the-one-sentence-contract">0.
+Position, ownership, and the one-sentence contract</a></li>
+<li><a href="#1-the-privacy-promise-as-a-build-property-not-a-config-flag">1.
+The privacy promise as a build property, not a config flag</a></li>
+<li><a href="#2-the-data-minimization-model--stored-vs-never-stored">2.
+The data-minimization model — stored vs never-stored</a></li>
+<li><a href="#3-ephemeral-only-presence-redis-ttl-no-durable-connection-records">3.
+Ephemeral-only presence (Redis TTL, no durable connection
+records)</a></li>
+<li><a href="#4-audit--control-actions-only-traffic-never-s7">4. Audit —
+control actions only, traffic never (S7)</a></li>
+<li><a href="#5-the-forbidden-field-list-the-closed-denylist">5. The
+forbidden-field list (the closed denylist)</a></li>
+<li><a href="#6-the-schema-lint-gate-the-mechanical-enforcement">6. The
+schema-lint gate (the mechanical enforcement)</a></li>
+<li><a href="#7-schema-examples--allowed-vs-rejected">7. Schema examples
+— allowed vs rejected</a></li>
+<li><a href="#8-the-event-payload-lint-c3-on-the-bus">8. The
+event-payload lint (C3 on the bus)</a></li>
+<li><a href="#9-the-audit-meta-shape-guard-the-jsonb-back-door">9. The
+audit meta-shape guard (the jsonb back-door)</a></li>
+<li><a href="#10-paired-11-mutation--proving-the-lint-is-not-a-tautology">10.
+Paired §1.1 mutation — proving the lint is not a tautology</a></li>
+<li><a href="#11-runtime-signature--green-against-the-deployed-db-1148">11.
+Runtime signature — green against the deployed DB (§11.4.108)</a></li>
+<li><a href="#12-credentials-discipline-11410-intersection">12.
+Credentials discipline (§11.4.10) intersection</a></li>
+<li><a href="#13-gdpr--privacy-posture">13. GDPR / privacy
+posture</a></li>
+<li><a href="#14-threat-model-placement--residual-risk">14. Threat-model
+placement &amp; residual risk</a></li>
+<li><a href="#15-phase--task--subtask-plan-no-logging-workstream">15.
+Phase → task → subtask plan (no-logging workstream)</a></li>
+<li><a href="#sources-verified">Sources verified</a></li>
+</ul>
+<hr />
+<h2 id="0-position-ownership-and-the-one-sentence-contract">0. Position,
+ownership, and the one-sentence contract</h2>
+<p><strong>One-sentence contract.</strong> HelixVPN&#39;s no-logging
+guarantee is enforced by <em>absence</em> and by a CI/pre-build
+<strong>schema-lint</strong> that fails the build if any durable table,
+any event payload, or any audit blob acquires a connection/traffic/PII
+shape — so the privacy promise is a mechanical property of the build,
+not an operator&#39;s good intentions [04-sec §6, 04_P1 §11.4, svc-tel
+§7].</p>
+<p><strong>What this document owns:</strong></p>
+<ul>
+<li>the data-minimization model (the closed stored-vs-never-stored
+partition);</li>
+<li>the forbidden-field denylist + the topology/identity
+allow-list;</li>
+<li>the schema-lint gate (static migrations + live
+<code>information_schema</code>) + its verdict logic;</li>
+<li>the event-payload lint (C3 on the bus) and the audit meta-shape
+guard;</li>
+<li>the paired §1.1 mutation that proves the lint catches a planted flow
+table;</li>
+<li>the runtime-signature requirement (green against the
+<em>deployed</em> DB, §11.4.108);</li>
+<li>the §11.4.10 credentials intersection and the GDPR posture.</li>
+</ul>
+<p><strong>What this document does NOT own (referenced, not
+redefined):</strong></p>
+<ul>
+<li>the canonical DDL for <code>audit_events</code>,
+<code>devices</code>, <code>advertised_prefixes</code> — that is the
+data model (doc 02 / svc-tel); this doc quotes the relevant slices and
+the lint over them;</li>
+<li>the telemetry service&#39;s presence/audit/metric
+<em>implementation</em> — that is [svc-tel]; this doc owns the
+<em>invariant</em> (S6/S7) the telemetry service mechanizes;</li>
+<li>the event bus&#39;s transport/consumer machinery — that is [svc-evt];
+this doc owns the <em>C3 payload-shape constraint</em> on the bus, not
+the bus itself.</li>
+</ul>
+<blockquote>
+<p><strong>Governance note (§11.4.35).</strong> The schema-lint binary
+lives at <code>tools/schemalint</code> but is <strong>governed by the
+telemetry service</strong> because &quot;the privacy guarantee is telemetry&#39;s
+charter&quot; [svc-tel §0]. This document is the cross-volume security spec
+for the <em>invariant</em>; [svc-tel §7] is the service-level
+nano-detail of the lint&#39;s parser. They agree by construction.</p>
+</blockquote>
+<hr />
+<h2 id="1-the-privacy-promise-as-a-build-property-not-a-config-flag">1.
+The privacy promise as a build property, not a config flag</h2>
+<p>A privacy VPN that <em>could</em> log but promises not to is one
+config edit, one rogue operator, or one well-meaning &quot;let&#39;s add a debug
+table&quot; away from betraying every user. HelixVPN closes this class
+<strong>by construction</strong>: the data simply does not exist, and a
+build gate refuses any change that would make it exist [04-sec §6,
+04_ARCH §7].</p>
+<p>Three cooperating mechanisms make the promise mechanical:</p>
+<ol type="1">
+<li><p><strong>Absence by design (S6).</strong> There is no
+<code>connections</code>, <code>flows</code>, <code>traffic</code>,
+<code>packets</code>, or durable <code>sessions</code> table anywhere in
+the schema. Per-flow / per-packet / per-destination data is <em>never
+written</em> — not &quot;written then redacted,&quot; <strong>never
+written</strong> [04-sec §0.1 S6, §6.1].</p></li>
+<li><p><strong>The schema-lint gate (§6).</strong> A pre-build +
+post-deploy lint introspects <em>both</em> the migration SQL
+<em>and</em> the live <code>information_schema</code> and <strong>fails
+the build</strong> if any durable table is connection-log-shaped
+(forbidden name, or a src/dst column + a bytes/timestamp column outside
+<code>audit_events</code>) [04-sec §6.2, svc-tel §7]. The privacy
+promise is enforced by tooling, not trust.</p></li>
+<li><p><strong>Ephemeral-only live state (§3).</strong> &quot;Who is online
+right now&quot; lives only in Redis with a TTL, so the durable store never
+accumulates a connection log [04-sec §6.1, 04_ARCH §4.5, svc-tel §5].
+Online/offline is operationalized <em>without</em> a session
+table.</p></li>
+</ol>
+<p>The bar (per the §11.4 covenant): a green build is the
+<em>guarantee</em> the data cannot exist, backed by a paired §1.1
+mutation (§10) proving the lint is not a tautology that passes
+everything.</p>
+<hr />
+<h2 id="2-the-data-minimization-model--stored-vs-never-stored">2. The
+data-minimization model — stored vs never-stored</h2>
+<p>The single most important table in this document: the <strong>closed
+partition</strong> of what HelixVPN&#39;s durable store holds vs what it can
+never hold [04-sec §6.1, svc-tel §5].</p>
+<table>
+<thead>
+<tr>
+<th>Stored (durable, Postgres)</th>
+<th>NEVER stored (no table, no column, ever)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Identity:</strong> tenants, users
+(<code>oidc_sub</code>/<code>email</code> only for managed tenants),
+devices (<code>wg_pubkey</code>, <code>overlay_ip</code>,
+<strong>coarse</strong> <code>last_seen_at</code>)</td>
+<td>Per-connection records (one row per tunnel session)</td>
+</tr>
+<tr>
+<td><strong>Topology:</strong> connectors,
+<code>advertised_prefixes</code> (CIDRs), groups, sites</td>
+<td>Per-packet / per-flow records (src IP, dst IP, ports-in-use, byte
+counts, timestamps-of-use)</td>
+</tr>
+<tr>
+<td><strong>Policy:</strong> policy spec + compiled rules + version
+history</td>
+<td>DNS query logs (which domains a user resolved)</td>
+</tr>
+<tr>
+<td><strong>PKI:</strong> <code>device_certs</code>,
+<code>enroll_tokens</code> (Argon2id-hashed, never plaintext)</td>
+<td>Destination IPs / domains visited by any user</td>
+</tr>
+<tr>
+<td><strong>Audit:</strong> <code>audit_events</code> (control actions
+only, §4)</td>
+<td>Traffic content or metadata of any kind</td>
+</tr>
+<tr>
+<td><strong>Aggregate counters:</strong> handshakes, bytes-total, errors
+— Prometheus series, <em>not</em> per-user</td>
+<td>Anything correlating a user to a destination or a
+timestamp-of-use</td>
+</tr>
+</tbody>
+</table>
+<h3 id="21-the-two-columns-that-look-like-traffic-but-are-not-the-allow-list">2.1
+The two columns that look like traffic but are not (the allow-list)</h3>
+<p>Three identity/topology columns <em>do</em> carry IP/CIDR shape and
+are explicitly <strong>allow-listed</strong> — they are the device&#39;s
+<em>own</em> stable address or a connector&#39;s <em>advertised</em>
+network, not traffic [svc-tel §7.1, svc-evt §2.2]:</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Why it is identity/topology, not traffic</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>devices.overlay_ip</code></td>
+<td><code>inet</code></td>
+<td>the device&#39;s own stable overlay address (its identity on the mesh),
+assigned at enroll — never a destination it talked to</td>
+</tr>
+<tr>
+<td><code>devices.wg_pubkey</code></td>
+<td><code>bytea</code></td>
+<td>32-byte Curve25519 public key = the device identity</td>
+</tr>
+<tr>
+<td><code>advertised_prefixes.cidr</code></td>
+<td><code>cidr</code></td>
+<td>a connector&#39;s <em>advertised</em> network (topology) — what the
+connector <em>offers</em>, not what anyone <em>visited</em></td>
+</tr>
+<tr>
+<td><code>overlay_pools.ula_prefix</code></td>
+<td><code>cidr</code></td>
+<td>IPAM — the tenant&#39;s ULA /48 allocation pool</td>
+</tr>
+</tbody>
+</table>
+<p>The allow-list is asserted <strong>exhaustive</strong> (§6): any
+<code>inet</code>/<code>cidr</code>/<code>*_ip</code>/<code>*_port</code>-shaped
+column <em>not</em> in this list FAILs the lint. This is the
+discriminator that lets the lint pass legitimate identity/topology while
+failing any traffic-shaped addition.</p>
+<h3 id="22-the-coarsening-rule-last_seen_at-cannot-reconstruct-a-timeline">2.2
+The coarsening rule (<code>last_seen_at</code> cannot reconstruct a
+timeline)</h3>
+<p><code>devices.last_seen_at</code> is the one durable timestamp
+derived from presence — and it is <strong>deliberately coarse</strong>.
+It is refreshed <em>at most</em> every <code>LAST_SEEN_COARSEN</code>
+(default <strong>5 min</strong>), <strong>not</strong> per-heartbeat,
+and carries <strong>no destination</strong> [04-sec §6.1, svc-tel §5.1].
+A coarse 5-minute &quot;last seen&quot; cannot reconstruct a session timeline; it
+is enough for &quot;is this device stale?&quot; and nothing more.</p>
+<hr />
+<h2 id="3-ephemeral-only-presence-redis-ttl-no-durable-connection-records">3.
+Ephemeral-only presence (Redis TTL, no durable connection records)</h2>
+<p>The mechanism that lets HelixVPN know <em>which devices are online
+right now</em> <strong>without a durable session/connection
+table</strong> — the literal operationalization of the no-logging
+promise [04-sec §6.1, 04_ARCH §4.5/§4.6, svc-tel §5].</p>
+<h3 id="31-presence-is-redis-only-ttld-never-copied-to-postgres">3.1
+Presence is Redis-only, TTL&#39;d, never copied to Postgres</h3>
+<table>
+<thead>
+<tr>
+<th>Key</th>
+<th>Type</th>
+<th>Value</th>
+<th>TTL</th>
+<th>Set/refreshed by</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>presence:{tenant}:{device}</code></td>
+<td>string</td>
+<td><code>&quot;1&quot;</code> or compact health JSON
+<code>{&quot;t&quot;:&quot;masque-h3&quot;,&quot;rtt&quot;:21}</code></td>
+<td><code>PRESENCE_TTL</code> (default <strong>45 s</strong>)</td>
+<td><code>MarkOnline</code>/<code>RefreshPresence</code> on each
+heartbeat</td>
+</tr>
+<tr>
+<td><code>presence:{tenant}:set</code></td>
+<td>set</td>
+<td>device-ids currently online</td>
+<td>members self-expire via the keyspace-notification reaper</td>
+<td>reaper + <code>Mark*</code></td>
+</tr>
+</tbody>
+</table>
+<p>Three invariants make this the <em>operationalization</em> of
+no-logging [svc-tel §5.1]:</p>
+<ol type="1">
+<li><p><strong>Ephemeral by construction.</strong> Presence lives only
+in Redis with a TTL = <strong>3× the agent heartbeat interval</strong>
+(<code>PRESENCE_TTL = 3 * HEARTBEAT_INTERVAL</code>, default 45 s = 3 ×
+15 s). The TTL is <em>derived</em> from the heartbeat cadence, never
+invented (§11.4.6). When a device stops beating, the key
+<em>expires</em> — there is no record it was ever there.</p></li>
+<li><p><strong>Health-only value.</strong> The value carries the
+<em>current</em> transport + rtt — <strong>no destination, no bytes, no
+flow</strong> (C3). Same restriction as the <code>StatusReport</code>
+proto message [svc-tel §5.1].</p></li>
+<li><p><strong>Never copied to Postgres.</strong> Presence is
+<em>never</em> persisted to the durable store. The only durable
+derivative is the coarse <code>last_seen_at</code> (§2.2). Losing Redis
+loses <strong>no durable state</strong> (C2) — and crucially, loses no
+privacy-sensitive data because none was durable.</p></li>
+</ol>
+<h3 id="32-expiry--offline-event-no-silent-corpus-hole-114144-spirit">3.2
+Expiry → offline event (no silent corpus hole, §11.4.144 spirit)</h3>
+<pre class="mermaid"><code>stateDiagram-v2
+    [*] --&gt; Offline
+    Offline --&gt; Online: MarkOnline (WatchNetworkMap opened / first heartbeat)
+    Online --&gt; Online: RefreshPresence (heartbeat within TTL)
+    Online --&gt; Offline: MarkOffline (stream Close / explicit logout)
+    Online --&gt; Expiring: TTL elapsed, key evicted by Redis
+    Expiring --&gt; Offline: keyspace-notification reaper emits device.offline + SREM + gauge.Dec
+    note right of Expiring
+        A silently-expired presence key MUST still produce a device.offline event
+        (svc-tel §5.3) — the corpus-hole / fabricated-continuity failure class (§11.4.144).
+        But NOTHING about the session is written durably: offline is an EVENT, not a row.
+    end note</code></pre>
+<p>The expiry → offline event is mandatory so the coordinator flips
+relay availability — <strong>but it is an ephemeral event on
+<code>events:presence</code>, not a durable record</strong> [svc-tel
+§5.3]. A belt-and- suspenders sweeper (<code>PRESENCE_SWEEP</code>,
+default 30 s) reaps memberships whose key is gone, so even a missed
+keyspace notification never leaves a stuck &quot;online&quot; — and never writes a
+session row.</p>
+<blockquote>
+<p><strong><code>UNVERIFIED:</code></strong> Redis keyspace-expiry
+notifications are best-effort and can be delayed under load (Redis docs:
+expired events fire when the key is <em>accessed</em> or actively
+expired) [svc-tel §5.3]. Mitigation is the 30 s sweeper (the
+authoritative offline detector); notifications are the low-latency fast
+path. Neither path writes durable session data.</p>
+</blockquote>
+<hr />
+<h2 id="4-audit--control-actions-only-traffic-never-s7">4. Audit —
+control actions only, traffic never (S7)</h2>
+<p>Every state-changing <strong>control</strong> action is audited;
+<strong>traffic is never audited</strong> because the traffic data does
+not exist (S6) — so it <em>cannot</em> be audited even by mistake
+[04-sec §7, svc-tel §4].</p>
+<h3 id="41-what-is-audited-the-closed-action-vocabulary">4.1 What is
+audited (the closed action vocabulary)</h3>
+<p>Audit covers <strong>control actions only</strong>, drawn from a
+closed Go enum so a typo cannot mint a new high-cardinality value and
+the <code>action</code> Prometheus label stays bounded [svc-tel §4.2,
+04-sec §7]:</p>
+<pre><code>device.enrolled · device.revoke · device.cert.issued · device.cert.rotated ·
+policy.create · policy.activate · policy.rollback · connector.attached ·
+connector.prefixes.changed · enroll_token.mint · enroll_token.used ·
+tenant.create · user.role.change</code></pre>
+<p><code>Audit()</code> <strong>rejects</strong> any action not in this
+closed vocabulary with <code>ErrUnknownAuditAction</code> [svc-tel §4.2]
+— the mechanical guarantee that audit never silently grows toward
+traffic logging.</p>
+<h3 id="42-what-is-never-audited">4.2 What is NEVER audited</h3>
+<ul>
+<li>any packet, flow, destination, DNS query, or byte-count attributable
+to a user — <strong>those don&#39;t exist (S6)</strong>, so they cannot be
+audited [04-sec §7];</li>
+<li>the <code>meta jsonb</code> blob is shape-checked (§9) so traffic
+cannot be smuggled <em>inside</em> an audit row.</li>
+</ul>
+<h3 id="43-audit-is-append-only-by-grant-control-only-by-vocabulary">4.3
+Audit is append-only by grant, control-only by vocabulary</h3>
+<p>The <code>audit_events</code> table is append-only by
+<strong>grant</strong>, not by trigger — the simplest mechanical
+guarantee [svc-tel §4.1]:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- audit_events (canonical DDL in doc 02 / svc-tel §4.1; the no-logging-relevant constraints):</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> audit_events (</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">id</span>          bigint <span class="kw">GENERATED</span> ALWAYS <span class="kw">AS</span> IDENTITY <span class="kw">PRIMARY</span> <span class="kw">KEY</span>,</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  tenant_id   uuid <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">REFERENCES</span> tenants(<span class="kw">id</span>) <span class="kw">ON</span> <span class="kw">DELETE</span> <span class="kw">CASCADE</span>,</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  actor       text <span class="kw">NOT</span> <span class="kw">NULL</span>,             <span class="co">-- user id / &quot;system&quot; (never a destination)</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  action      text <span class="kw">NOT</span> <span class="kw">NULL</span>,             <span class="co">-- closed vocabulary (§4.1)</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  target      text,                      <span class="co">-- opaque id (device/policy/connector) — NOT a destination</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  ts          timestamptz <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> now(),  <span class="co">-- when the ADMIN acted, not a timestamp-of-use</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  meta        jsonb                       <span class="co">-- small; shape-checked (§9) to carry no traffic shape</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="co">-- Append-only by grant: helix_app has INSERT + SELECT but NOT UPDATE/DELETE.</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="co">-- REVOKE UPDATE, DELETE ON audit_events FROM helix_app;  -- a row cannot be mutated/erased by request-path.</span></span></code></pre></div>
+<p><code>audit_events</code> is the <strong>single allowed
+exception</strong> in the schema-lint (§6): it is the only table
+permitted a <code>ts</code> column alongside actor/target,
+<em>because</em> it audits control actions — and even it is
+meta-shape-guarded (§9). Note the distinction the lint relies on:
+<code>audit_events.ts</code> is <em>when an admin acted</em>, never
+<em>a timestamp-of-use of traffic</em>; <code>target</code> is an opaque
+control-object id, never a destination.</p>
+<hr />
+<h2 id="5-the-forbidden-field-list-the-closed-denylist">5. The
+forbidden-field list (the closed denylist)</h2>
+<p>The schema-lint matches two regexes — a forbidden
+<strong>table-name</strong> set and a forbidden <strong>column</strong>
+set — against parsed SQL [svc-tel §7.1, 04-sec §6.2]. These are the
+concrete denylists.</p>
+<h3 id="51-forbidden-durable-table-names-connection-log-shapes">5.1
+Forbidden durable table names (connection-log shapes)</h3>
+<pre><code>connections   connection    sessions    session    flows     flow      traffic
+packets       packet        netflow     bandwidth_samples     dns_queries
+conn_log      access_log    session_log</code></pre>
+<p>A durable table whose name matches
+<code>(?i)\b(connections?|sessions?|flows?|traffic|packets?|netflow| bandwidth_samples?|dns_queries?|conn_log|access_log|session_log)\b</code>
+<strong>FAILs</strong> the build [svc-tel §7.1]. The name itself is a
+forbidden <em>signal</em> — privacy is about shape, and a
+<code>traffic_summary</code> view &quot;over only counts&quot; still FAILs (rename
+to <code>metrics_summary</code>; the lint defaults to FAIL = safe)
+[svc-tel §7.3].</p>
+<h3 id="52-forbidden-columns-trafficpii-shapes">5.2 Forbidden columns
+(traffic/PII shapes)</h3>
+<pre><code>src_ip   dst_ip   dest_ip   src_port   dst_port
+bytes_in bytes_out          packet_count
+payload  sni_host
+flow_id  session_id  conn_id</code></pre>
+<p>A column matching
+<code>(?i)\b(src_ip|dst_ip|dest_ip|src_port|dst_port|bytes_(in|out)|packet_count| payload|sni_host|flow_id|session_id|conn_id)\b</code>
+<strong>FAILs</strong> [svc-tel §7.1]. Additionally, the
+<em>combination</em> rule from [04-sec §6.2]: any durable table (outside
+<code>audit_events</code>) that has <strong>both</strong> a
+<code>src</code>/<code>dst</code>-shaped column <strong>AND</strong> a
+<code>bytes</code>/<code>ts</code>-shaped column is a flow log by shape
+— FAIL, even if the individual column names dodge the explicit
+denylist.</p>
+<h3 id="53-the-exhaustive-allow-list-the-only-permitted-ipportcidr-columns">5.3
+The exhaustive allow-list (the ONLY permitted ip/port/cidr columns)</h3>
+<pre><code>devices.overlay_ip          (inet)  — identity: the device&#39;s own stable overlay addr (S6 not traffic)
+devices.wg_pubkey           (bytea) — identity: 32B Curve25519 public key
+advertised_prefixes.cidr    (cidr)  — topology: a connector&#39;s advertised network
+overlay_pools.ula_prefix    (cidr)  — IPAM: the tenant&#39;s ULA /48 pool</code></pre>
+<p>Any ip/port/cidr-shaped column <strong>not</strong> in this
+allow-list → FAIL [svc-tel §7.1]. The allow-list is asserted exhaustive:
+adding a new identity/topology column that carries IP shape requires an
+<em>explicit</em> allow-list amendment in the same change (a visible,
+reviewed decision per §11.4.6), not a silent pass.</p>
+<hr />
+<h2 id="6-the-schema-lint-gate-the-mechanical-enforcement">6. The
+schema-lint gate (the mechanical enforcement)</h2>
+<p>The lint is the privacy guarantee turned into a build gate. It parses
+<strong>both</strong> the static migration SQL <strong>and</strong> the
+live <code>information_schema</code>, so a table that exists in the DB
+but not in a migration (drift) is also caught [04-sec §6.2, svc-tel
+§7].</p>
+<h3 id="61-what-it-parses-and-the-verdict-logic">6.1 What it parses and
+the verdict logic</h3>
+<div class="sourceCode" id="cb7"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">// tools/schemalint/main.go  (pre-build gate; constitution §11.4.27 / §1.1 / §11.4.108 runtime sig)</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Parses BOTH migrations/*.sql (static) AND the live information_schema (dynamic) so DB drift</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="co">// (a table present in the DB but absent from migrations) is ALSO caught. SQL comments are</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co">// stripped before matching (no false-fail on a prose mention of &quot;bytes_out&quot;, svc-tel §7.3).</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="kw">var</span> forbiddenTables <span class="op">=</span> regexp<span class="op">.</span>MustCompile<span class="op">(</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">`(?i)\b(connections?|sessions?|flows?|traffic|packets?|netflow|bandwidth_samples?|`</span> <span class="op">+</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">`dns_queries?|conn_log|access_log|session_log)\b`</span><span class="op">)</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="kw">var</span> forbiddenCols <span class="op">=</span> regexp<span class="op">.</span>MustCompile<span class="op">(</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">`(?i)\b(src_ip|dst_ip|dest_ip|src_port|dst_port|bytes_(in|out)|packet_count|payload|`</span> <span class="op">+</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">`sni_host|flow_id|session_id|conn_id)\b`</span><span class="op">)</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="co">// allowList = { devices.overlay_ip, devices.wg_pubkey, advertised_prefixes.cidr,</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a><span class="co">//               overlay_pools.ula_prefix }  (asserted exhaustive, §5.3)</span></span></code></pre></div>
+<pre class="mermaid"><code>flowchart TD
+    START[&quot;pre-build gate runs schemalint&quot;] --&gt; PARSE[&quot;parse migrations/ + live information_schema&lt;br/&gt;(strip SQL comments first)&quot;]
+    PARSE --&gt; T{&quot;forbidden table-name match?&quot;}
+    T -- yes --&gt; FAIL[&quot;exit 1: &#39;S6/C3 violation: durable traffic table &amp;lt;name&amp;gt;&#39;&quot;]
+    T -- no --&gt; C{&quot;ip/port/cidr column outside the allow-list?&quot;}
+    C -- yes --&gt; FAIL
+    C -- no --&gt; COMBO{&quot;durable table (≠ audit_events) with src/dst col AND bytes/ts col?&quot;}
+    COMBO -- yes --&gt; FAIL
+    COMBO -- no --&gt; M{&quot;audit_events.meta carries a forbidden-key shape? (§9)&quot;}
+    M -- yes --&gt; FAIL
+    M -- no --&gt; PASS[&quot;exit 0: no-logging invariant intact&quot;]
+    FAIL --&gt; BLOCK[&quot;build BLOCKED — release-blocker §11.4&quot;]</code></pre>
+<h3 id="62-the-cross-check-that-closes-the-source-only-grep-gap">6.2 The
+cross-check that closes the source-only-grep gap</h3>
+<p>A lint that only greps the migration <em>source text</em> is a
+§11.4.108 SOURCE-layer bluff: the deployed DB could have a drifted table
+no migration mentions. So the lint reads the <strong>live
+<code>information_schema</code></strong> (the actual migrated schema,
+not the <code>.sql</code> text) [04-sec §6.2 &quot;introspect the live
+migrated schema, not the .sql source&quot;]. This makes the green verdict a
+<strong>runtime signature</strong> (§11), not a source-grep.</p>
+<h3 id="63-the-four-test-contract-1144b-four-layer">6.3 The four-test
+contract (§11.4.4(b) four-layer)</h3>
+<table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>What</th>
+<th>Where</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>pre-build gate</td>
+<td>lint runs static + live parse; build BLOCKED on FAIL</td>
+<td><code>tools/schemalint</code> in the pre-build sweep</td>
+</tr>
+<tr>
+<td>post-deploy runtime signature</td>
+<td>lint runs against the <em>deployed</em> DB (§11)</td>
+<td>post-deploy assertion (§11.4.169 matrix)</td>
+</tr>
+<tr>
+<td>paired §1.1 mutation</td>
+<td>plant a <code>flows(src,dst,bytes,ts)</code> migration ⇒ lint MUST
+FAIL (§10)</td>
+<td>meta-test</td>
+</tr>
+<tr>
+<td>Challenge</td>
+<td>end-to-end drive asserts <code>schemalint</code> green against the
+deployed DB</td>
+<td><code>helix_qa</code>/<code>challenges</code> [svc-tel
+T-CHAL-1]</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="7-schema-examples--allowed-vs-rejected">7. Schema examples —
+allowed vs rejected</h2>
+<p>Concrete cases the lint must classify correctly — <strong>no
+false-pass, no false-fail</strong> [svc-tel §7.3].</p>
+<h3 id="71-rejected-build-blocked">7.1 REJECTED (build BLOCKED)</h3>
+<div class="sourceCode" id="cb9"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- REJECTED: forbidden table name + the canonical flow-log shape (this is the paired-mutation fixture, §10)</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> flows (</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  src      inet,        <span class="co">-- forbidden: src-shaped</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  dst      inet,        <span class="co">-- forbidden: dst-shaped</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  bytes    bigint,      <span class="co">-- forbidden: bytes-shaped + (with src/dst) the flow-log combination rule</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  ts       timestamptz  <span class="co">-- timestamp-of-use</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="co">-- → exit 1: &quot;S6/C3 violation: durable traffic table flows&quot;</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="co">-- REJECTED: dodges the table-name denylist but is a flow log by COMBINATION (src/dst + bytes/ts)</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> device_activity (</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>  device_id  uuid,</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>  remote     inet,          <span class="co">-- dst-shaped (a destination the device talked to)</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>  octets     bigint,        <span class="co">-- bytes-shaped</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>  seen_at    timestamptz    <span class="co">-- ts-shaped</span></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a><span class="co">-- → exit 1: combination rule (src/dst col + bytes/ts col outside audit_events)</span></span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a><span class="co">-- REJECTED: a forbidden column even on an otherwise-fine table</span></span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">TABLE</span> devices <span class="kw">ADD</span> <span class="kw">COLUMN</span> dst_ip inet;   <span class="co">-- → exit 1: forbidden column dst_ip</span></span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a><span class="co">-- REJECTED: a view whose NAME is a forbidden signal, even over only counts</span></span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">VIEW</span> traffic_summary <span class="kw">AS</span> <span class="kw">SELECT</span> <span class="fu">count</span>(<span class="op">*</span>) <span class="kw">FROM</span> handshakes;  <span class="co">-- → exit 1: rename to metrics_summary</span></span>
+<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a><span class="co">-- REJECTED: a connections-word column (aggregate must be a Prometheus counter, not a column)</span></span>
+<span id="cb9-26"><a href="#cb9-26" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">TABLE</span> devices <span class="kw">ADD</span> <span class="kw">COLUMN</span> device_connections_count bigint;  <span class="co">-- → exit 1: connections? word-boundary</span></span></code></pre></div>
+<h3 id="72-allowed-build-passes">7.2 ALLOWED (build PASSES)</h3>
+<div class="sourceCode" id="cb10"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- ALLOWED: identity/topology on the exhaustive allow-list (§5.3)</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> devices (</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">id</span>          uuid <span class="kw">PRIMARY</span> <span class="kw">KEY</span>,</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  tenant_id   uuid <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  wg_pubkey   bytea <span class="kw">NOT</span> <span class="kw">NULL</span>,          <span class="co">-- ALLOW: identity (32B Curve25519 public key)</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>  overlay_ip  inet  <span class="kw">NOT</span> <span class="kw">NULL</span>,          <span class="co">-- ALLOW: identity (device&#39;s OWN stable overlay addr)</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>  last_seen_at timestamptz,            <span class="co">-- ALLOW: COARSE (≥5min coarsened, §2.2) — not a session timeline</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>  name        text</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> advertised_prefixes (</span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>  connector_id uuid <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>  cidr         cidr <span class="kw">NOT</span> <span class="kw">NULL</span>           <span class="co">-- ALLOW: topology (a connector&#39;s ADVERTISED network)</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a><span class="co">-- ALLOWED: control-action audit (the single ts+actor exception, meta shape-checked §9)</span></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> audit_events (</span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>  <span class="kw">id</span>        bigint <span class="kw">GENERATED</span> ALWAYS <span class="kw">AS</span> IDENTITY <span class="kw">PRIMARY</span> <span class="kw">KEY</span>,</span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>  tenant_id uuid <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>  actor     text <span class="kw">NOT</span> <span class="kw">NULL</span>,             <span class="co">-- a user id / &quot;system&quot; — never a destination</span></span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>  action    text <span class="kw">NOT</span> <span class="kw">NULL</span>,             <span class="co">-- closed vocabulary (§4.1)</span></span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>  target    text,                      <span class="co">-- opaque control-object id — never a destination</span></span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a>  ts        timestamptz <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> now(),  <span class="co">-- when the ADMIN acted (not a timestamp-of-use)</span></span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a>  meta      jsonb                       <span class="co">-- shape-guarded (§9)</span></span>
+<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a><span class="co">-- ALLOWED: a comment mentioning a forbidden word (parser strips comments first, no false-fail)</span></span>
+<span id="cb10-27"><a href="#cb10-27" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> handshake_totals ( <span class="co">-- aggregate only; no src_ip/dst_ip here</span></span>
+<span id="cb10-28"><a href="#cb10-28" aria-hidden="true" tabindex="-1"></a>  <span class="dt">day</span>   <span class="dt">date</span> <span class="kw">PRIMARY</span> <span class="kw">KEY</span>,</span>
+<span id="cb10-29"><a href="#cb10-29" aria-hidden="true" tabindex="-1"></a>  total bigint</span>
+<span id="cb10-30"><a href="#cb10-30" aria-hidden="true" tabindex="-1"></a>);</span></code></pre></div>
+<h3 id="73-edge-case-classification-table">7.3 Edge-case classification
+table</h3>
+<table>
+<thead>
+<tr>
+<th>Case</th>
+<th>Verdict</th>
+<th>Rationale</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>connections</code> table added</td>
+<td><strong>FAIL</strong></td>
+<td>direct S6/C3 breach (forbidden name)</td>
+</tr>
+<tr>
+<td><code>device_connections_count bigint</code> column</td>
+<td><strong>FAIL</strong></td>
+<td><code>connections?</code> word-boundary; a legitimate aggregate must
+be a Prometheus counter, not a column</td>
+</tr>
+<tr>
+<td><code>device_activity(remote inet, octets bigint, seen_at ts)</code></td>
+<td><strong>FAIL</strong></td>
+<td>combination rule (dst-shaped + bytes-shaped + ts) — a flow log
+dodging the name denylist</td>
+</tr>
+<tr>
+<td><code>audit_events.meta</code> containing
+<code>{&quot;src_ip&quot;:&quot;…&quot;}</code> at runtime</td>
+<td><strong>FAIL</strong></td>
+<td>meta-shape guard (§9) — traffic-via-jsonb evasion</td>
+</tr>
+<tr>
+<td><code>advertised_prefixes.cidr</code></td>
+<td><strong>PASS</strong></td>
+<td>topology allow-list</td>
+</tr>
+<tr>
+<td><code>devices.overlay_ip</code></td>
+<td><strong>PASS</strong></td>
+<td>identity allow-list (the device&#39;s own addr)</td>
+</tr>
+<tr>
+<td><code>view traffic_summary</code> over only counts</td>
+<td><strong>FAIL</strong></td>
+<td>name is a forbidden signal; lint defaults to FAIL (safe); rename to
+<code>metrics_summary</code></td>
+</tr>
+<tr>
+<td>comment line mentioning <code>bytes_out</code></td>
+<td><strong>PASS</strong></td>
+<td>parser strips SQL comments before matching (no false-fail on
+prose)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="8-the-event-payload-lint-c3-on-the-bus">8. The event-payload
+lint (C3 on the bus)</h2>
+<p>The schema-lint guards the <em>durable store</em>. The <strong>event
+bus</strong> is the second place a traffic shape could leak in — an
+event payload could carry a src/dst pair just as a table column could.
+So C3 applies to the bus payload too, enforced by a mirror lint [svc-evt
+§2.2/§9.4, 04-sec §6].</p>
+<h3 id="81-the-c3-payload-constraint">8.1 The C3 payload constraint</h3>
+<p>Event <code>payload</code> objects are structurally constrained to
+<strong>identity / topology / policy</strong> keys. There is
+<strong>no</strong> field anywhere in the event taxonomy for a
+source/destination pair in use, a port a flow used, a byte count, or a
+DNS query [svc-evt §2.2]:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co">// The entire event payload taxonomy (svc-evt §3.4) — note: ZERO src/dst/bytes/dns fields.</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> DeviceEnrolled    <span class="kw">struct</span> <span class="op">{</span> DeviceID uuid<span class="op">.</span>UUID<span class="op">;</span> Kind <span class="dt">string</span><span class="op">;</span> OverlayIP <span class="dt">string</span> <span class="op">}</span>  <span class="co">// overlay_ip = identity</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> DevicePresence    <span class="kw">struct</span> <span class="op">{</span> DeviceID uuid<span class="op">.</span>UUID<span class="op">;</span> RTTMs <span class="dt">uint32</span> <span class="op">}</span>                    <span class="co">// rtt = health, not traffic</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> DeviceRevoked     <span class="kw">struct</span> <span class="op">{</span> DeviceID uuid<span class="op">.</span>UUID <span class="op">}</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> ConnectorAttached <span class="kw">struct</span> <span class="op">{</span> DeviceID uuid<span class="op">.</span>UUID<span class="op">;</span> Site <span class="dt">string</span> <span class="op">}</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> ConnectorPrefixes <span class="kw">struct</span> <span class="op">{</span> ConnectorID uuid<span class="op">.</span>UUID<span class="op">;</span> CIDRs <span class="op">[]</span><span class="dt">string</span><span class="op">;</span> Gen <span class="dt">int64</span> <span class="op">}</span>    <span class="co">// cidrs = topology</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> RouteConflict     <span class="kw">struct</span> <span class="op">{</span> CIDR <span class="dt">string</span><span class="op">;</span> ConnectorIDs <span class="op">[]</span>uuid<span class="op">.</span>UUID <span class="op">}</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> PolicyVersion     <span class="kw">struct</span> <span class="op">{</span> Version <span class="dt">int64</span> <span class="op">}</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> GatewayFailover   <span class="kw">struct</span> <span class="op">{</span> From <span class="dt">string</span><span class="op">;</span> To <span class="dt">string</span> <span class="op">}</span></span></code></pre></div>
+<p><code>advertised_prefixes</code> CIDRs and a device&#39;s stable
+<code>overlay_ip</code> <em>do</em> appear — they are <strong>topology,
+not traffic</strong> — exactly the same allow-list the schema-lint
+enforces [svc-evt §2.2]. The §9.4 payload-lint is the runtime signature
+that proves the constraint is live, not merely promised.</p>
+<h3 id="82-the-bus-payload-lint-mirrors-the-schema-lint">8.2 The bus
+payload-lint mirrors the schema-lint</h3>
+<p>The §1.1 payload-lint applies the same forbidden-field regex (§5) to
+event payload JSON shapes at build time (a test that introspects every
+<code>payload</code> struct) and at publish time as a cheap guard inside
+<code>events.New</code> [svc-evt §2.2/§9.4]. A payload struct that grows
+a <code>dst_ip</code>/<code>bytes_in</code>/ <code>sni_host</code> field
+FAILs the build — the bus-side analogue of the schema-lint. This closes
+the &quot;log traffic via an event payload&quot; evasion of C3.</p>
+<hr />
+<h2 id="9-the-audit-meta-shape-guard-the-jsonb-back-door">9. The audit
+meta-shape guard (the jsonb back-door)</h2>
+<p><code>audit_events.meta</code> is a <code>jsonb</code> blob — the one
+place a developer could smuggle a traffic field <em>inside</em> an
+otherwise-allowed audit row. The meta-shape guard closes that back door
+[svc-tel §4.4, §7.3].</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co">// svc-tel audit.go (excerpt) — runs BEFORE every audit insert.</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>s <span class="op">*</span>AuditSink<span class="op">)</span> validate<span class="op">(</span>r AuditRecord<span class="op">)</span> <span class="dt">error</span> <span class="op">{</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> _<span class="op">,</span> ok <span class="op">:=</span> auditVocabulary<span class="op">[</span>r<span class="op">.</span>Action<span class="op">];</span> <span class="op">!</span>ok <span class="op">{</span> <span class="cf">return</span> ErrUnknownAuditAction <span class="op">}</span>   <span class="co">// closed vocab §4.1</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">len</span><span class="op">(</span>r<span class="op">.</span>Meta<span class="op">)</span> <span class="op">&gt;</span> maxMetaKeys <span class="op">{</span> <span class="cf">return</span> ErrAuditMetaShape <span class="op">}</span>                     <span class="co">// bound the blob (default 16 keys)</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> k <span class="op">:=</span> <span class="kw">range</span> r<span class="op">.</span>Meta <span class="op">{</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> forbiddenMetaKey<span class="op">.</span>MatchString<span class="op">(</span>k<span class="op">)</span> <span class="op">{</span> <span class="cf">return</span> ErrAuditMetaShape <span class="op">}</span>           <span class="co">// §5 regex shared</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="ot">nil</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li>The <code>meta</code> keys are matched against the
+<strong>same</strong> forbidden-column regex the schema-lint uses
+(§5.2). A control-action audit carrying a
+<code>dst_ip</code>/<code>sni_host</code>/<code>bytes_in</code> key is
+<strong>rejected</strong> with <code>ErrAuditMetaShape</code> [svc-tel
+§4.4].</li>
+<li><code>ErrAuditMetaShape</code> <strong>fails the control action
+closed</strong> — audit is part of the action&#39;s transaction, so a
+refused audit rolls back the mutation it would have recorded [svc-tel
+§9]. Audit fails closed (accountability); presence fails static (never
+brick a tunnel) — the deliberate, load-bearing asymmetry [svc-tel
+§9].</li>
+<li>The blob is bounded (default 16 keys) so audit cannot grow into a
+traffic log by accumulation.</li>
+</ul>
+<hr />
+<h2 id="10-paired-11-mutation--proving-the-lint-is-not-a-tautology">10.
+Paired §1.1 mutation — proving the lint is not a tautology</h2>
+<p>A lint that passes everything is worse than no lint — it is a green
+light over a hole. So the no-logging gate is
+<strong>self-validated</strong> by a paired §1.1 mutation (§11.4.107(10)
+— an analyzer that passes its golden-bad fixture is itself a bluff gate)
+[04-sec §6.2, svc-tel §7.2].</p>
+<h3 id="101-the-mutation-contract">10.1 The mutation contract</h3>
+<pre class="text"><code>GOLDEN-BAD FIXTURE (the mutation):
+  Plant a throwaway migration:
+    CREATE TABLE flows (src inet, dst inet, bytes bigint, ts timestamptz);
+  ASSERT: schemalint exits 1 (FAIL) on this fixture.   ← proves the lint CATCHES a flow log.
+
+GOLDEN-GOOD FIXTURE (the restore):
+  Remove the planted migration.
+  ASSERT: schemalint exits 0 (PASS).                   ← proves the lint does not FAIL the clean schema.
+
+VERDICT: the lint is real iff golden-bad FAILs AND golden-good PASSes.
+  A lint that PASSes the golden-bad `flows` table is a tautology — itself a §11.4 bluff gate.</code></pre>
+<h3 id="102-the-mutations-one-per-evasion-vector">10.2 The mutations
+(one per evasion vector)</h3>
+<table>
+<thead>
+<tr>
+<th>Mutation (golden-bad)</th>
+<th>Must produce</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>CREATE TABLE flows(src inet, dst inet, bytes bigint, ts timestamptz)</code></td>
+<td>lint FAIL (forbidden name + combination)</td>
+</tr>
+<tr>
+<td><code>CREATE TABLE device_activity(remote inet, octets bigint, seen_at ts)</code>
+(name-dodge)</td>
+<td>lint FAIL (combination rule)</td>
+</tr>
+<tr>
+<td><code>ALTER TABLE devices ADD COLUMN dst_ip inet</code></td>
+<td>lint FAIL (forbidden column)</td>
+</tr>
+<tr>
+<td>event payload struct grows a <code>DstIP string</code> field</td>
+<td>payload-lint FAIL (§8)</td>
+</tr>
+<tr>
+<td><code>audit_events.meta</code> insert with key
+<code>&quot;src_ip&quot;</code></td>
+<td><code>ErrAuditMetaShape</code> (§9)</td>
+</tr>
+<tr>
+<td>strip the <code>flows</code> denylist entry from the lint regex</td>
+<td>the mutation-test that asserts FAIL now PASSes ⇒ the
+<em>meta-test</em> FAILs (proves the denylist is load-bearing)</td>
+</tr>
+</tbody>
+</table>
+<p>Each mutation must make its gate FAIL; restoring the clean state must
+make it PASS. This is the mechanical proof the no-logging invariant is
+<em>enforced</em>, not merely documented.</p>
+<hr />
+<h2 id="11-runtime-signature--green-against-the-deployed-db-114108">11.
+Runtime signature — green against the deployed DB (§11.4.108)</h2>
+<p>A green lint against the migration <em>source</em> proves the SOURCE
+layer only — the deployed DB could have drifted. The runtime signature
+(§11.4.108) requires the lint be green against the <strong>live,
+deployed schema</strong> [svc-tel §7.2, §10 T-CHAL-1].</p>
+<ul>
+<li><strong>The observable.</strong> <code>schemalint</code> exit 0
+against the <em>live</em> <code>information_schema</code> of the
+deployed Postgres is the runtime signature that S6/C3 is
+<strong>active</strong>, not merely promised [svc-tel §7.2].</li>
+<li><strong>Where it runs.</strong> Not just pre-build — the §11.4.169
+test matrix wires the lint as a <strong>post-deploy</strong> assertion
+against the deployed DB, so a drifted table that no migration mentions
+is caught on the running system, not just in CI [svc-tel §7.2, §10
+T-CHAL-1].</li>
+<li><strong>The Challenge.</strong> <code>T-CHAL-1</code> drives a full
+enroll→policy→delta flow AND asserts <code>schemalint</code> green
+against the <em>deployed</em> DB, with captured evidence [svc-tel §10] —
+a Challenge that scores PASS on a privacy control that is actually
+broken is the same class of defect as a unit-test PASS-bluff.</li>
+</ul>
+<p>This makes the no-logging guarantee a four-layer property (source /
+artifact / runtime-on-clean- target / user-visible per §11.4.108): the
+data does not exist in the source schema, does not exist in the deployed
+schema, and a passive observer correlating a user to a destination finds
+nothing because there is nothing to find.</p>
+<hr />
+<h2 id="12-credentials-discipline-11410-intersection">12. Credentials
+discipline (§11.4.10) intersection</h2>
+<p>No-logging composes tightly with the §11.4.10 credentials mandate —
+both forbid sensitive data from landing where it can leak [04-sec §11,
+04_ARCH §10, §11.4.10].</p>
+<ul>
+<li><strong>Secrets are never logged or printed.</strong>
+<code>helixvpnctl</code> never prints or logs a credential, an enroll
+token, or an API token [04-sec §11]. The no-logging lint forbids
+<em>traffic</em> shapes; the §11.4.10 discipline forbids <em>secret</em>
+values in any log/output — complementary halves.</li>
+<li><strong>Hashed at rest.</strong> Enroll tokens are Argon2id-hashed
+(<code>enroll_tokens.token_hash</code>, plaintext never stored); API
+tokens hashed at rest [04-sec §2.2, §11]. A leaked DB dump yields no
+usable token and no traffic log.</li>
+<li><strong><code>.env</code>/secrets git-ignored project-wide</strong>
+with a tracked <code>.example</code> + README, <code>chmod 600</code> on
+credential files [04-sec §11, §11.4.10/§11.4.30].</li>
+<li><strong>The intersection invariant.</strong> A debug log line that
+printed a destination would be <em>both</em> a no-logging violation (S6)
+<em>and</em>, if it also printed a token, a §11.4.10 violation — the two
+mandates overlap precisely at &quot;no sensitive data in any durable or
+logged form.&quot;</li>
+</ul>
+<hr />
+<h2 id="13-gdpr--privacy-posture">13. GDPR / privacy posture</h2>
+<p>The data-minimization model (§2) <em>is</em> the GDPR posture: the
+strongest privacy guarantee is data that does not exist [04-sec §6,
+§7].</p>
+<table>
+<thead>
+<tr>
+<th>GDPR concern</th>
+<th>HelixVPN posture</th>
+<th>Mechanism</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Data minimization (Art. 5(1)(c))</strong></td>
+<td>only identity/topology/policy + control-action audit is stored; no
+traffic, no destinations, no DNS, no timestamps-of-use</td>
+<td>§2 model + §6 schema-lint enforce it mechanically</td>
+</tr>
+<tr>
+<td><strong>Purpose limitation (Art. 5(1)(b))</strong></td>
+<td>audit records <em>control actions</em> (operate the service), never
+user traffic</td>
+<td>§4 closed vocabulary + §9 meta guard</td>
+</tr>
+<tr>
+<td><strong>Anonymous mode (no PII)</strong></td>
+<td>a tenant can mint device enroll tokens with <strong>no email, no
+SSO</strong> — the Mullvad &quot;account number, no PII&quot; stance;
+<code>users.email = NULL</code>, <code>oidc_sub = NULL</code>, no
+reverse-link to a human</td>
+<td>[04-sec §2.2]</td>
+</tr>
+<tr>
+<td><strong>Right to erasure (Art. 17)</strong></td>
+<td>identity/device data is deletable; there is no traffic log to erase
+because none exists;
+<code>helixvpnctl audit prune --before &lt;ts&gt;</code> exists for
+operator-driven audit erasure</td>
+<td>[svc-tel §4.1] (operator-driven, not automatic)</td>
+</tr>
+<tr>
+<td><strong>Storage limitation (Art. 5(1)(e))</strong></td>
+<td>presence is ephemeral (TTL, §3); <code>last_seen_at</code> is coarse
+(§2.2); audit is low-volume control-only with optional operator
+prune</td>
+<td>§3 + §2.2 + [svc-tel §4.1]</td>
+</tr>
+<tr>
+<td><strong>Subject-access (Art. 15)</strong></td>
+<td>what HelixVPN holds about a device is enumerable (identity/topology
+rows) and provably bounded by the schema-lint — there is no hidden
+traffic store to disclose</td>
+<td>§2 + §6</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Honest boundary (§11.4.6).</strong> No-logging-as-code
+guarantees the <em>durable store and the bus and the audit blob</em>
+hold no traffic data — it does <strong>not</strong> claim a
+hot-compromised gateway holds nothing in RAM. Live in-RAM presence on a
+compromised running gateway, and aggregate counters, are the residual
+surface (§14, threat T5). The guarantee is &quot;no durable correlation of a
+user to a destination ever exists,&quot; not &quot;an attacker with root on a
+running box sees nothing in memory.&quot;</p>
+</blockquote>
+<hr />
+<h2 id="14-threat-model-placement--residual-risk">14. Threat-model
+placement &amp; residual risk</h2>
+<p>No-logging-as-code closes threat <strong>T5</strong> in [04-sec
+§10]:</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Threat (STRIDE)</th>
+<th>Vector</th>
+<th>Mitigation (this doc)</th>
+<th>Residual risk (§11.4.6)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>T5</td>
+<td><strong>Information disclosure — traffic correlation</strong></td>
+<td>Operator/host compromise reads a connection log</td>
+<td><strong>No connection log exists</strong> (S6, §2) + CI schema-lint
+(§6) + ephemeral Redis presence (§3)</td>
+<td>Live in-RAM presence on a <em>hot-compromised</em> gateway;
+aggregate counters only — no durable user↔︎destination record to
+read</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Residual risks stated honestly:</strong></p>
+<ol type="1">
+<li><p><strong>Hot-compromise RAM.</strong> A gateway compromised
+<em>while running</em> has live presence keys in Redis RAM (who is
+online now) and in-flight state. This is ephemeral and carries no
+destination, but it is not nothing. The guarantee is <em>durable</em>
+absence, not <em>runtime-memory</em> absence.</p></li>
+<li><p><strong>Aggregate counters.</strong> Prometheus series
+(handshakes, bytes-total, errors) exist by design — they are aggregate,
+label-cardinality-bounded (no
+<code>tenant_id</code>/<code>device_id</code>/ip labels, §3.1 of
+svc-tel), and cannot correlate a user to a destination. But they reveal
+<em>operational shape</em> (tenant population via gauges), which is why
+<code>/metrics</code> is scrape-network-only (§8.3 svc-tel).</p></li>
+<li><p><strong>Lint-evasion creativity.</strong> The denylist (§5) is
+closed; a sufficiently creative column name could in principle dodge it.
+The combination rule (src/dst + bytes/ts) catches name-dodges, the
+live-schema cross-check catches drift, and the paired mutation (§10)
+keeps the denylist load-bearing — but a reviewer (§11.4.6) is the
+backstop for a genuinely novel shape, and the lint defaults to FAIL
+(safe) on an ambiguous name.</p></li>
+<li><p><strong>Not a runtime-memory claim.</strong> Per §13&#39;s honest
+boundary — no-logging is a durable-store + bus + audit guarantee, not a
+claim about an attacker with root on a live box.</p></li>
+</ol>
+<hr />
+<h2 id="15-phase--task--subtask-plan-no-logging-workstream">15. Phase →
+task → subtask plan (no-logging workstream)</h2>
+<p>Each leaf becomes a §11.4.93 workable item. The no-logging lint + RLS
+audit are the <strong>irreversible privacy/correctness floor and land
+first</strong> (§11.4.132 risk-descending) [svc-tel §11]. Anti-bluff:
+every closure carries captured evidence (§11.4.5/§11.4.69) and a paired
+§1.1 mutation.</p>
+<h3 id="phase-1-mvp">Phase 1 (MVP)</h3>
+<ul>
+<li><strong>NL-1 — schema-lint gate.</strong>
+<code>tools/schemalint</code>: static migrations + live
+<code>information_schema</code> parse; forbidden-table regex (§5.1);
+forbidden-column regex (§5.2); exhaustive allow-list (§5.3); combination
+rule (src/dst + bytes/ts); comment-stripping; verdict logic (§6.1). Wire
+into pre-build [svc-tel TEL-T1, 04-sec §6.2].</li>
+<li><strong>NL-2 — paired §1.1 mutation.</strong> Plant
+<code>flows(src,dst,bytes,ts)</code> ⇒ lint FAIL; remove ⇒ PASS; the
+name-dodge <code>device_activity</code> ⇒ FAIL; golden-good/golden-bad
+self-validation (§10) [svc-tel T-LINT-1].</li>
+<li><strong>NL-3 — ephemeral presence.</strong>
+<code>PresenceTracker</code> Redis SET/SADD/Expire/Del with
+<code>PRESENCE_TTL = 3×HEARTBEAT</code>; keyspace-expiry reaper +
+<code>PRESENCE_SWEEP</code> sweeper; never copy to Postgres; coarse
+<code>last_seen_at</code> (≥5 min) (§3) [svc-tel TEL-T3].</li>
+<li><strong>NL-4 — control-action audit.</strong>
+<code>audit_events</code> closed vocabulary (§4.1); append-only by grant
+(<code>REVOKE UPDATE,DELETE</code>); meta-shape guard (§9);
+<code>WithTenant</code> RLS insert; fails-closed (§9) [svc-tel TEL-T2,
+04-sec §7].</li>
+<li><strong>NL-5 — event-payload lint.</strong> Mirror the schema-lint
+over event payload structs (§8); build-time introspection +
+<code>events.New</code> publish-time guard [svc-evt §9.4].</li>
+<li><strong>NL-6 — runtime signature.</strong> Wire
+<code>schemalint</code> as a post-deploy assertion against the deployed
+DB (§11); <code>T-CHAL-1</code> end-to-end Challenge asserting
+deployed-DB lint green [svc-tel §7.2, §10].</li>
+<li><strong>NL-7 — credentials intersection.</strong> Argon2id token
+hashing; <code>helixvpnctl</code> never prints secrets;
+<code>.env</code>/secrets git-ignored (§12, §11.4.10/§11.4.30) [04-sec
+§11].</li>
+</ul>
+<h3 id="phase-2-parity--hardening">Phase 2 (parity + hardening)</h3>
+<ul>
+<li><strong>NL-2.1 — lint holds across phases.</strong> The schema-lint
+gates the Phase-2 NATS-JetStream swap and the optional ClickHouse
+aggregate sink (an <em>export of already-aggregated counters</em>, never
+a connection log — C3 holds across phases, lint gates Phase 2 too)
+[svc-tel §12].</li>
+<li><strong>NL-2.2 — GDPR tooling.</strong> Subject-access enumeration
+(§13 Art. 15) + operator-driven <code>helixvpnctl audit prune</code>
+(§13 Art. 17) hardened with captured-evidence tests.</li>
+</ul>
+<hr />
+<h2 id="sources-verified">Sources verified</h2>
+<ul>
+<li><code>final/04-security-privacy-pki.md</code>
+(<code>[04-sec]</code>) — §0.1 invariants <strong>S6</strong> (no
+durable connection/traffic log by construction) + <strong>S7</strong>
+(control actions audited, traffic never); §6 (no-logging as code: §6.1
+stored-vs-not-stored table, §6.2 CI schema-lint Go code + anti-bluff
+paired mutation); §7 (audit control-actions only, closed action set,
+append-only, live stream); §2.2 (anonymous enroll tokens, no PII,
+Argon2id hash); §10 threat <strong>T5</strong> (traffic correlation) +
+residual risk; §11 (secrets hygiene, §11.4.10/§11.4.30); §13 S6/S7
+verification rows. — local spec.</li>
+<li><code>v03-control-plane/svc-telemetry.md</code>
+(<code>[svc-tel]</code>) — §0 (telemetry owns the no-logging-as-code
+invariant + governs <code>tools/schemalint</code>); §4 (control-action
+audit: §4.1 DDL append-only-by-grant, §4.2 closed
+<code>AuditAction</code> vocabulary, §4.4 meta-shape guard); §5 (live
+presence in TTL Redis: §5.1 key schema +
+<code>PRESENCE_TTL = 3×HEARTBEAT</code> + coarse
+<code>last_seen_at</code>, §5.3 expiry→offline event
+<ul>
+<li>sweeper, §5.4 drift handling); §7 (the schema-lint nano-detail: §7.1
+forbidden-table/column regex + exhaustive allow-list, §7.2 verdict logic
++ runtime signature + paired mutation, §7.3 edge-case table); §9 (error
+taxonomy — audit fails closed, presence fails static); §10 (T-LINT-1 /
+T-CHAL-1 / T-STORE-1 test points); §11 (risk-descending task order —
+lint + RLS audit first); §3.1 (metric label cardinality bound — no
+tenant/device/ip labels); §12 (lint gates Phase-2 NATS/ClickHouse). —
+local spec.</li>
+</ul></li>
+<li><code>v03-control-plane/svc-events.md</code>
+(<code>[svc-evt]</code>) — C3 (no-logging by construction on the bus);
+§2.2 (Envelope privacy boundary — payload is identity/topology/policy
+only, no src/dst/bytes/dns field; overlay_ip/CIDRs are topology not
+traffic; §9.4 payload-lint as runtime signature); §3.4 (full payload
+taxonomy — zero traffic fields). — local spec.</li>
+<li><code>[04_P1 §11.4]</code> HelixVPN-Phase1-MVP — no-logging CI lint
++ DoD; <code>[04_ARCH §7]</code> no-logging-as-code
+<ul>
+<li>control-only audit; <code>[04_ARCH §4.5/§4.6]</code> ephemeral Redis
+presence operationalizes no-logging.</li>
+</ul></li>
+</ul>
+<p><em>Constitution bindings applied: §11.4.44 (revision header),
+§11.4.6 (no-guessing — every unproven claim marked
+<code>UNVERIFIED:</code>; presence TTL derived from heartbeat, never
+invented; lint defaults to FAIL on ambiguous shape), §11.4.10/§11.4.30
+(credentials/secrets hygiene intersection, §12), §11.4.107(10)
+(self-validated analyzer — golden-bad <code>flows</code> table ⇒ lint
+FAILs, §10), §11.4.108 (runtime signature — lint green against the
+DEPLOYED DB, not source grep, §11), §11.4.132 (risk-descending — privacy
+floor lands first, §15), §11.4.144 (presence expiry never a silent
+corpus hole, §3.2), §11.4.93 (phases → workable items), §11.4.169
+(post-deploy test-type matrix wires the runtime signature),
+§11.4.65/§11.4.153 (HTML+PDF[+DOCX] exports follow in refinement).
+Honest boundary (§11.4.6): no-logging is a durable-store + bus + audit
+guarantee, NOT a claim about runtime memory on a hot-compromised gateway
+(§13/§14 residual risk T5).</em></p>
+</body>
+</html>

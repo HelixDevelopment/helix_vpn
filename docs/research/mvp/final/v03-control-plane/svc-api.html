@@ -1,0 +1,1842 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>api service (Gin + Connect + WS/SSE)</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">api service (Gin + Connect + WS/SSE)</h1>
+</header>
+<h1 id="api-service-gin--connect--wssse">api service (Gin + Connect +
+WS/SSE)</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-06-25T00:00:00Z</p>
+<blockquote>
+<p>Volume 3 nano-detail spec — deepens the <strong>api service</strong>
+of the Phase-1 control plane (pass-1 overview: <a href="../02-control-plane.md"><code>02-control-plane.md</code> §8</a>).
+Scope: ONE multiplexed HTTP server hosting (a) Gin REST for the three
+apps, (b) WebSocket/SSE live event fan-out for the Console, and (c) the
+Connect/gRPC <code>Coordinator</code> service for agents; plus the full
+authorization model (OIDC/session or API token + RBAC for apps; device
+mTLS for agents; Row-Level-Security backstop) and the schema-first
+contract pipeline (OpenAPI + buf, no-drift). This is a SPEC — it
+describes the implementation; it does not build it. Evidence cited
+inline by id: [04_P1] = <code>HelixVPN-Phase1-MVP.md</code>, [04_ARCH
+§N] = <code>HelixVPN-Architecture-Refined.md</code>, [research-go_cp] =
+the cited Go control-plane research digest, [02-cp §N] = the pass-1
+control-plane doc, [SYNTH §N] = cross-document synthesis. Unproven facts
+are marked <strong>UNVERIFIED</strong> per constitution §11.4.6. The
+proto package is <code>helix.coordinator.v1</code>, unified across the
+spec set [02-cp §4].</p>
+</blockquote>
+<hr />
+<h2 id="0-what-this-document-owns-and-does-not">0. What this document
+owns (and does not)</h2>
+<p>This document owns the <strong><code>internal/api</code>
+package</strong> — the single network ingress of <code>helixd</code>
+[04_P1 §1, 02-cp §1.1]. It owns the listener topology, the
+request-routing mux, the full REST route table with
+request/response/error schemas, the WS/SSE stream contract, the Connect
+handler wiring, the four-layer authorization chain, and the
+schema→client codegen gates.</p>
+<p>It does <strong>not</strong> redefine: the <code>Coordinator</code>
+<code>.proto</code> byte layout (canonical in [02-cp §4]; evolution
+semantics are doc 03), the policy compiler (doc deepens [02-cp §7]), the
+coordinator graph/delta engine ([02-cp §6]), the IPAM algorithm ([02-cp
+§3]), or the DDL of the eleven core tables ([02-cp §2]). Those are
+referenced, not re-specified. This doc adds the DDL that is
+<strong>api-owned</strong> — sessions, API tokens, enroll tokens —
+because they exist solely to serve the authentication surface.</p>
+<h3 id="01-invariants-this-layer-must-uphold-from-02-cp-01">0.1
+Invariants this layer must uphold (from [02-cp §0.1])</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Invariant inherited</th>
+<th>How the api layer honors it</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>C3</td>
+<td>No-logging by construction</td>
+<td>api emits only Prometheus counters + control-action audit rows;
+request bodies/headers with peer addresses are never persisted, never
+logged at INFO. The access log records
+<code>method+route-template+status+latency+tenant</code>, never client
+IP at rest (§4.6).</td>
+</tr>
+<tr>
+<td>C4</td>
+<td>Default-deny, need-to-know</td>
+<td>every REST route defaults to <code>requireRole(...)</code>; an
+un-annotated route is rejected by a startup audit (§3.4). Connect peers
+are policy-filtered upstream (coordinator), never here.</td>
+</tr>
+<tr>
+<td>C5</td>
+<td>Push, don&#39;t poll; p99 &lt; 1 s</td>
+<td><code>/v1/stream</code> (WS/SSE) and
+<code>Coordinator.WatchNetworkMap</code> are server-push; no app-facing
+polling endpoint streams desired state. The api layer contributes the
+<strong>transport hop</strong> of the &lt; 1 s budget (§9).</td>
+</tr>
+<tr>
+<td>C6</td>
+<td>Device private keys never leave the device</td>
+<td><code>Enroll</code> accepts only the 32-byte WG
+<strong>public</strong> key; the api layer rejects any request body
+field named like a private key (§5.3 protovalidate + §4.4 REST
+binding).</td>
+</tr>
+<tr>
+<td>C8</td>
+<td>Tenant isolation at the database</td>
+<td>every handler runs DB work through <code>store.WithTenant</code>;
+RLS is the floor even if RBAC is mis-wired (§6.5).</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="1-listener-topology--one-server-three-surfaces">1. Listener
+topology — one server, three surfaces</h2>
+<p>A single <code>*http.Server</code> bound to one TLS listener serves
+all three audiences. There is no second port, no sidecar proxy, no Envoy
+[research-go_cp §1/§2/§7]. Connect handlers are plain
+<code>http.Handler</code>s, so a top-level mux routes by path prefix:
+RPC paths (<code>/helix.coordinator.v1.*</code>) go to the Connect mux;
+everything else to Gin (which itself owns <code>/v1/...</code> REST and
+<code>/v1/stream</code> WS/SSE) [research-go_cp §1].</p>
+<pre class="mermaid"><code>flowchart TD
+    subgraph net[&quot;one TLS listener :8443 (h2 + h2c + http/1.1)&quot;]
+        L[crypto/tls + ALPN h2,http/1.1]
+    end
+    L --&gt; MUX{top-level http.ServeMux&lt;br/&gt;route by path prefix}
+    MUX --&gt;|&quot;/helix.coordinator.v1/*&quot;| CMUX[Connect mux&lt;br/&gt;+ interceptors §5.2]
+    MUX --&gt;|&quot;everything else&quot;| GIN[gin.Engine §3]
+    CMUX --&gt; CO[Coordinator handlers&lt;br/&gt;Enroll · WatchNetworkMap&lt;br/&gt;AdvertisePrefixes · ReportStatus]
+    GIN --&gt;|&quot;/v1/* REST&quot;| REST[REST handlers §4]
+    GIN --&gt;|&quot;/v1/stream&quot;| WS[WS/SSE hub §7]
+    GIN --&gt;|&quot;/healthz /readyz /metrics&quot;| OPS[ops handlers §4.7]
+    CO --&gt;|device mTLS| AUTHD[authDevice §6.3]
+    REST --&gt;|OIDC/session or API token| AUTHN[authn → rbac §6.1/6.2]
+    WS  --&gt;|OIDC/session| AUTHN
+    AUTHN --&gt; WT[store.WithTenant §6.5]
+    AUTHD --&gt; WT</code></pre>
+<h3 id="11-the-mux-wiring-go">1.1 The mux wiring (Go)</h3>
+<div class="sourceCode" id="cb2"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/api/server.go</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Server <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    gin   <span class="op">*</span>gin<span class="op">.</span>Engine                 <span class="co">// REST + WS/SSE</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    conn  http<span class="op">.</span>Handler                <span class="co">// Connect mux (Coordinator handlers)</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    http  <span class="op">*</span>http<span class="op">.</span>Server</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    deps  Deps                        <span class="co">// Registry, PKI, Policy, Bus, Store, Coordinator, OIDC</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="co">// Mux: Connect paths to conn, all else to gin. connectPathPrefix is the proto package path.</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> connectPathPrefix <span class="op">=</span> <span class="st">&quot;/helix.coordinator.v1.&quot;</span> <span class="co">// [02-cp §4] package helix.coordinator.v1</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>s <span class="op">*</span>Server<span class="op">)</span> handler<span class="op">()</span> http<span class="op">.</span>Handler <span class="op">{</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    mux <span class="op">:=</span> http<span class="op">.</span>NewServeMux<span class="op">()</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    mux<span class="op">.</span>Handle<span class="op">(</span>connectPathPrefix<span class="op">,</span> s<span class="op">.</span>conn<span class="op">)</span> <span class="co">// matches Coordinator/&lt;Method&gt; routes</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    mux<span class="op">.</span>Handle<span class="op">(</span><span class="st">&quot;/&quot;</span><span class="op">,</span> s<span class="op">.</span>gin<span class="op">)</span>                <span class="co">// REST, WS/SSE, ops</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> mux</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>s <span class="op">*</span>Server<span class="op">)</span> Run<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> addr <span class="dt">string</span><span class="op">,</span> tlsCfg <span class="op">*</span>tls<span class="op">.</span>Config<span class="op">)</span> <span class="dt">error</span> <span class="op">{</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>    <span class="co">// h2c so native agents get HTTP/2 even on plaintext dev; prod uses TLS-ALPN h2.</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>    h2s <span class="op">:=</span> <span class="op">&amp;</span>http2<span class="op">.</span>Server<span class="op">{}</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>    s<span class="op">.</span>http <span class="op">=</span> <span class="op">&amp;</span>http<span class="op">.</span>Server<span class="op">{</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>        Addr<span class="op">:</span>              addr<span class="op">,</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>        Handler<span class="op">:</span>           h2c<span class="op">.</span>NewHandler<span class="op">(</span>s<span class="op">.</span>handler<span class="op">(),</span> h2s<span class="op">),</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>        TLSConfig<span class="op">:</span>         tlsCfg<span class="op">,</span>         <span class="co">// ALPN: [&quot;h2&quot;,&quot;http/1.1&quot;]; ClientAuth: VerifyClientCertIfGiven (§6.3)</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>        ReadHeaderTimeout<span class="op">:</span> <span class="dv">5</span> <span class="op">*</span> time<span class="op">.</span>Second<span class="op">,</span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>        IdleTimeout<span class="op">:</span>       <span class="dv">120</span> <span class="op">*</span> time<span class="op">.</span>Second<span class="op">,</span></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>        <span class="co">// NO global WriteTimeout: it would kill long-lived WatchNetworkMap / WS streams (§7.4, §8.3).</span></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>    <span class="cf">go</span> <span class="kw">func</span><span class="op">()</span> <span class="op">{</span> <span class="op">&lt;-</span>ctx<span class="op">.</span>Done<span class="op">();</span> _ <span class="op">=</span> s<span class="op">.</span>http<span class="op">.</span>Shutdown<span class="op">(</span>context<span class="op">.</span>Background<span class="op">())</span> <span class="op">}()</span></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> tlsCfg <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> s<span class="op">.</span>http<span class="op">.</span>ListenAndServeTLS<span class="op">(</span><span class="st">&quot;&quot;</span><span class="op">,</span> <span class="st">&quot;&quot;</span><span class="op">)</span></span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> s<span class="op">.</span>http<span class="op">.</span>ListenAndServe<span class="op">()</span></span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<blockquote>
+<p><strong>Why no <code>WriteTimeout</code>.</strong>
+<code>WatchNetworkMap</code> and <code>/v1/stream</code> are
+intentionally infinite; a server-wide <code>WriteTimeout</code> severs
+them mid-stream. Liveness is instead enforced per-stream by application
+keepalives (§7.4, §8.3) and <code>ReadHeaderTimeout</code> guards
+slowloris on new connections [research-go_cp §2 — streaming
+caveats].</p>
+</blockquote>
+<h3 id="12-clientauth-is-verifyclientcertifgiven-not-requireandverify">1.2
+<code>ClientAuth</code> is <code>VerifyClientCertIfGiven</code>, not
+<code>RequireAndVerify</code></h3>
+<p>REST/WS callers present no client cert (they use bearer auth); agents
+present a device mTLS cert. A single listener therefore uses
+<code>tls.VerifyClientCertIfGiven</code>: the cert is verified against
+the tenant CA pool <strong>if presented</strong>, and its absence is
+permitted (REST path) but a <strong>presented-and-invalid</strong> cert
+aborts the TLS handshake. <code>authDevice</code> (§6.3) then
+<strong>requires</strong> a verified cert on Connect routes;
+<code>authn</code> (§6.1) requires a bearer token on REST routes. This
+is the one-listener compromise [research-go_cp §7 single-server]; the
+per-route requirement is enforced in the auth layer, not the TLS
+layer.</p>
+<hr />
+<h2 id="2-api-owned-ddl-sessions-api-tokens-enroll-tokens">2. api-owned
+DDL (sessions, API tokens, enroll tokens)</h2>
+<p>These three tables exist only to serve authentication and live in the
+api/identity boundary. They are tenant-scoped and RLS-protected exactly
+like the core eleven [02-cp §2.3]. Enroll tokens are referenced by the
+enrollment flow in [02-cp §9.2]; this doc gives their schema.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- ============ browser/console sessions (OIDC login) ============</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> sessions (</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">id</span>           uuid <span class="kw">PRIMARY</span> <span class="kw">KEY</span> <span class="kw">DEFAULT</span> gen_random_uuid(),</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  tenant_id    uuid <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">REFERENCES</span> tenants(<span class="kw">id</span>) <span class="kw">ON</span> <span class="kw">DELETE</span> <span class="kw">CASCADE</span>,</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  user_id      uuid <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">REFERENCES</span> users(<span class="kw">id</span>)   <span class="kw">ON</span> <span class="kw">DELETE</span> <span class="kw">CASCADE</span>,</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  token_hash   bytea <span class="kw">NOT</span> <span class="kw">NULL</span>,            <span class="co">-- sha256(opaque cookie value); the raw value is never stored</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  created_at   timestamptz <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> now(),</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  expires_at   timestamptz <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  revoked_at   timestamptz,</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>  user_agent   text,                      <span class="co">-- coarse; NO IP address (C3)</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>  <span class="kw">UNIQUE</span> (tenant_id, token_hash)</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> <span class="kw">ON</span> sessions (tenant_id, user_id) <span class="kw">WHERE</span> revoked_at <span class="kw">IS</span> <span class="kw">NULL</span>;</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="co">-- ============ programmatic API tokens (CI / Connector daemon / Console automation) ============</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> api_tokens (</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>  <span class="kw">id</span>           uuid <span class="kw">PRIMARY</span> <span class="kw">KEY</span> <span class="kw">DEFAULT</span> gen_random_uuid(),</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>  tenant_id    uuid <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">REFERENCES</span> tenants(<span class="kw">id</span>) <span class="kw">ON</span> <span class="kw">DELETE</span> <span class="kw">CASCADE</span>,</span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>  user_id      uuid <span class="kw">REFERENCES</span> users(<span class="kw">id</span>) <span class="kw">ON</span> <span class="kw">DELETE</span> <span class="kw">SET</span> <span class="kw">NULL</span>,  <span class="co">-- nullable: tenant-scoped service token</span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>  name         text <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>  token_hash   bytea <span class="kw">NOT</span> <span class="kw">NULL</span>,            <span class="co">-- sha256 of the displayed-once secret; raw secret never stored (C6 posture)</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>  <span class="kw">role</span>         user_role <span class="kw">NOT</span> <span class="kw">NULL</span>,        <span class="co">-- the RBAC role the token carries (§6.2)</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>  created_at   timestamptz <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> now(),</span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>  last_used_at timestamptz,               <span class="co">-- COARSE; updated at most once/min, async (not per-request, C3)</span></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>  expires_at   timestamptz,               <span class="co">-- nullable: non-expiring service token (discouraged)</span></span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>  revoked_at   timestamptz,</span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>  <span class="kw">UNIQUE</span> (tenant_id, name),</span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>  <span class="kw">UNIQUE</span> (tenant_id, token_hash)</span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> <span class="kw">ON</span> api_tokens (tenant_id) <span class="kw">WHERE</span> revoked_at <span class="kw">IS</span> <span class="kw">NULL</span>;</span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a><span class="co">-- ============ single-use device enroll tokens (anonymous + managed both) ============</span></span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> enroll_tokens (</span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a>  <span class="kw">id</span>           uuid <span class="kw">PRIMARY</span> <span class="kw">KEY</span> <span class="kw">DEFAULT</span> gen_random_uuid(),</span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a>  tenant_id    uuid <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">REFERENCES</span> tenants(<span class="kw">id</span>) <span class="kw">ON</span> <span class="kw">DELETE</span> <span class="kw">CASCADE</span>,</span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a>  token_hash   bytea <span class="kw">NOT</span> <span class="kw">NULL</span>,            <span class="co">-- sha256 of the printed/QR token; raw never stored</span></span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a>  kind         device_kind <span class="kw">NOT</span> <span class="kw">NULL</span>,      <span class="co">-- the device_kind this token may enroll (client|connector)</span></span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a>  bound_user_id uuid <span class="kw">REFERENCES</span> users(<span class="kw">id</span>) <span class="kw">ON</span> <span class="kw">DELETE</span> <span class="kw">SET</span> <span class="kw">NULL</span>, <span class="co">-- NULL =&gt; anonymous enroll (C6 privacy)</span></span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a>  created_by   uuid <span class="kw">REFERENCES</span> users(<span class="kw">id</span>) <span class="kw">ON</span> <span class="kw">DELETE</span> <span class="kw">SET</span> <span class="kw">NULL</span>,  <span class="co">-- minting admin/operator</span></span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a>  created_at   timestamptz <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> now(),</span>
+<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a>  expires_at   timestamptz <span class="kw">NOT</span> <span class="kw">NULL</span>,      <span class="co">-- short-lived (default 15 min, §4.1)</span></span>
+<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a>  consumed_at  timestamptz,               <span class="co">-- set atomically on Enroll; non-NULL =&gt; spent</span></span>
+<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a>  consumed_device_id uuid <span class="kw">REFERENCES</span> devices(<span class="kw">id</span>) <span class="kw">ON</span> <span class="kw">DELETE</span> <span class="kw">SET</span> <span class="kw">NULL</span>,</span>
+<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a>  <span class="kw">UNIQUE</span> (tenant_id, token_hash)</span>
+<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> <span class="kw">ON</span> enroll_tokens (tenant_id) <span class="kw">WHERE</span> consumed_at <span class="kw">IS</span> <span class="kw">NULL</span>;</span></code></pre></div>
+<p>All three carry <code>tenant_id</code> and receive the identical
+<code>tenant_isolation</code> + <code>FORCE ROW LEVEL SECURITY</code>
+policy of [02-cp §2.3]. <strong>Secrets are stored only as
+<code>sha256</code> hashes</strong>; the raw token/cookie value is shown
+to the caller exactly once at mint and never re-derivable — a DB
+compromise yields no usable credential (constitution §11.4.10). The
+atomic single-use consume of <code>enroll_tokens</code> is the
+load-bearing line of §5.4.</p>
+<blockquote>
+<p><strong>No-logging note (C3).</strong> <code>sessions</code> and
+<code>api_tokens</code> deliberately omit any IP / port / connection
+column. The §2.4 schema-lint of [02-cp §2.4] runs over these tables too;
+an added <code>client_ip inet</code> here would FAIL the lint (paired
+§1.1 mutation, §10).</p>
+</blockquote>
+<hr />
+<h2 id="3-gin-rest-surface--engine-middleware-routing">3. Gin REST
+surface — engine, middleware, routing</h2>
+<h3 id="31-engine-construction-production-posture">3.1 Engine
+construction (production posture)</h3>
+<div class="sourceCode" id="cb4"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/api/rest.go — gin.New(), never gin.Default() in prod [research-go_cp §1]</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> newGin<span class="op">(</span>d Deps<span class="op">)</span> <span class="op">*</span>gin<span class="op">.</span>Engine <span class="op">{</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    r <span class="op">:=</span> gin<span class="op">.</span>New<span class="op">()</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    r<span class="op">.</span>Use<span class="op">(</span>requestID<span class="op">())</span>          <span class="co">// X-Request-Id in/out; flows into trace_id (§5/§7 envelopes)</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    r<span class="op">.</span>Use<span class="op">(</span>structuredLogger<span class="op">())</span>   <span class="co">// route-template + status + latency + tenant; NO client IP at rest (C3)</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    r<span class="op">.</span>Use<span class="op">(</span>recovery<span class="op">())</span>           <span class="co">// converts panics → 500 + audit, never leaks stack to client</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    r<span class="op">.</span>Use<span class="op">(</span>securityHeaders<span class="op">())</span>    <span class="co">// HSTS, X-Content-Type-Options, no-store on auth routes</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">// global body cap: REST bodies are tiny (policy specs are the largest, &lt; 256 KiB).</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    r<span class="op">.</span>Use<span class="op">(</span>limitBody<span class="op">(</span><span class="dv">256</span> <span class="op">&lt;&lt;</span> <span class="dv">10</span><span class="op">))</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> r</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>The middleware order is load-bearing: <code>requestID</code> →
+<code>structuredLogger</code> → <code>recovery</code> →
+<code>limitBody</code>, then per-group <code>authn</code> →
+<code>rbac</code>. <code>recovery</code> is above <code>authn</code> so
+a panic in auth still returns a clean 500 (never a torn connection).</p>
+<h3 id="32-full-rest-route-table">3.2 Full REST route table</h3>
+<p>All routes are versioned under <code>/v1</code>. <code>Role</code>
+columns use the closed RBAC set
+<code>admin &gt; operator &gt; member</code> [02-cp §8.1]. Every route
+is tenant-scoped via <code>WithTenant</code>. The table is the
+<strong>authoritative</strong> route list this layer must implement
+[04_P1 §8, 02-cp §8].</p>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Purpose</th>
+<th style="text-align: center;">admin</th>
+<th style="text-align: center;">operator</th>
+<th style="text-align: center;">member</th>
+<th>Handler</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>POST</td>
+<td><code>/v1/enroll-tokens</code></td>
+<td>Mint a single-use device enroll token (§4.1)</td>
+<td style="text-align: center;">✓</td>
+<td style="text-align: center;">✓</td>
+<td style="text-align: center;">✗</td>
+<td><code>h.MintEnrollToken</code></td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/v1/enroll-tokens</code></td>
+<td>List unconsumed tokens (metadata only)</td>
+<td style="text-align: center;">✓</td>
+<td style="text-align: center;">✓</td>
+<td style="text-align: center;">✗</td>
+<td><code>h.ListEnrollTokens</code></td>
+</tr>
+<tr>
+<td>DELETE</td>
+<td><code>/v1/enroll-tokens/:id</code></td>
+<td>Revoke an unconsumed token</td>
+<td style="text-align: center;">✓</td>
+<td style="text-align: center;">✓</td>
+<td style="text-align: center;">✗</td>
+<td><code>h.RevokeEnrollToken</code></td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/v1/devices</code></td>
+<td>List tenant devices (clients + connectors) (§4.2)</td>
+<td style="text-align: center;">✓</td>
+<td style="text-align: center;">✓</td>
+<td style="text-align: center;">✓</td>
+<td><code>h.ListDevices</code></td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/v1/devices/:id</code></td>
+<td>One device detail</td>
+<td style="text-align: center;">✓</td>
+<td style="text-align: center;">✓</td>
+<td style="text-align: center;">✓</td>
+<td><code>h.GetDevice</code></td>
+</tr>
+<tr>
+<td>PATCH</td>
+<td><code>/v1/devices/:id</code></td>
+<td>Rename / reassign owner</td>
+<td style="text-align: center;">✓</td>
+<td style="text-align: center;">✓</td>
+<td style="text-align: center;">✗</td>
+<td><code>h.PatchDevice</code></td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/v1/devices/:id/revoke</code></td>
+<td>Revoke device (&lt; 1 s edge enforce) (§4.3)</td>
+<td style="text-align: center;">✓</td>
+<td style="text-align: center;">✗</td>
+<td style="text-align: center;">✗</td>
+<td><code>h.RevokeDevice</code></td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/v1/connectors</code></td>
+<td>List connectors + advertised prefixes</td>
+<td style="text-align: center;">✓</td>
+<td style="text-align: center;">✓</td>
+<td style="text-align: center;">✓</td>
+<td><code>h.ListConnectors</code></td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/v1/connectors/:id/prefixes</code></td>
+<td>Set advertised CIDRs (Console path)</td>
+<td style="text-align: center;">✓</td>
+<td style="text-align: center;">✓</td>
+<td style="text-align: center;">✗</td>
+<td><code>h.SetPrefixes</code></td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/v1/groups</code></td>
+<td>List policy groups</td>
+<td style="text-align: center;">✓</td>
+<td style="text-align: center;">✓</td>
+<td style="text-align: center;">✓</td>
+<td><code>h.ListGroups</code></td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/v1/groups</code></td>
+<td>Create group</td>
+<td style="text-align: center;">✓</td>
+<td style="text-align: center;">✓</td>
+<td style="text-align: center;">✗</td>
+<td><code>h.CreateGroup</code></td>
+</tr>
+<tr>
+<td>PUT</td>
+<td><code>/v1/groups/:id/members</code></td>
+<td>Replace group membership</td>
+<td style="text-align: center;">✓</td>
+<td style="text-align: center;">✓</td>
+<td style="text-align: center;">✗</td>
+<td><code>h.SetGroupMembers</code></td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/v1/policies</code></td>
+<td>List policy versions (active flagged) (§4.5)</td>
+<td style="text-align: center;">✓</td>
+<td style="text-align: center;">✓</td>
+<td style="text-align: center;">✓</td>
+<td><code>h.ListPolicies</code></td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/v1/policies</code></td>
+<td>Submit new policy spec (dry-run compile) (§4.5)</td>
+<td style="text-align: center;">✓</td>
+<td style="text-align: center;">✓</td>
+<td style="text-align: center;">✗</td>
+<td><code>h.CreatePolicy</code></td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/v1/policies/:v/activate</code></td>
+<td>Activate version v (atomic flip)</td>
+<td style="text-align: center;">✓</td>
+<td style="text-align: center;">✓</td>
+<td style="text-align: center;">✗</td>
+<td><code>h.ActivatePolicy</code></td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/v1/networks</code></td>
+<td>Tenant overlay summary (ULA /48, sites, IPAM) (§4.4)</td>
+<td style="text-align: center;">✓</td>
+<td style="text-align: center;">✓</td>
+<td style="text-align: center;">✓</td>
+<td><code>h.GetNetworks</code></td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/v1/audit</code></td>
+<td>Control-action audit log (paginated)</td>
+<td style="text-align: center;">✓</td>
+<td style="text-align: center;">✓</td>
+<td style="text-align: center;">✗</td>
+<td><code>h.ListAudit</code></td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/v1/api-tokens</code></td>
+<td>Mint a programmatic API token</td>
+<td style="text-align: center;">✓</td>
+<td style="text-align: center;">✗</td>
+<td style="text-align: center;">✗</td>
+<td><code>h.MintAPIToken</code></td>
+</tr>
+<tr>
+<td>DELETE</td>
+<td><code>/v1/api-tokens/:id</code></td>
+<td>Revoke an API token</td>
+<td style="text-align: center;">✓</td>
+<td style="text-align: center;">✗</td>
+<td style="text-align: center;">✗</td>
+<td><code>h.RevokeAPIToken</code></td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/v1/stream</code></td>
+<td>WS/SSE live event subscription (§7)</td>
+<td style="text-align: center;">✓</td>
+<td style="text-align: center;">✓</td>
+<td style="text-align: center;">✓</td>
+<td><code>h.Stream</code></td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/v1/me</code></td>
+<td>Current principal (user/role/tenant)</td>
+<td style="text-align: center;">✓</td>
+<td style="text-align: center;">✓</td>
+<td style="text-align: center;">✓</td>
+<td><code>h.Me</code></td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/healthz</code> <code>/readyz</code>
+<code>/metrics</code></td>
+<td>ops (no auth; §4.7)</td>
+<td style="text-align: center;">—</td>
+<td style="text-align: center;">—</td>
+<td style="text-align: center;">—</td>
+<td><code>h.Health/Ready/Metrics</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="33-route-registration-go--rbac-is-declared-at-registration-not-inside-handlers">3.3
+Route registration (Go) — RBAC is declared at registration, not inside
+handlers</h3>
+<div class="sourceCode" id="cb5"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/api/routes.go</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>s <span class="op">*</span>Server<span class="op">)</span> registerREST<span class="op">(</span>r <span class="op">*</span>gin<span class="op">.</span>Engine<span class="op">,</span> h <span class="op">*</span>Handlers<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    v1 <span class="op">:=</span> r<span class="op">.</span>Group<span class="op">(</span><span class="st">&quot;/v1&quot;</span><span class="op">,</span> s<span class="op">.</span>authn<span class="op">())</span>                 <span class="co">// every /v1 route authenticates first</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>        et <span class="op">:=</span> v1<span class="op">.</span>Group<span class="op">(</span><span class="st">&quot;/enroll-tokens&quot;</span><span class="op">,</span> requireRole<span class="op">(</span><span class="st">&quot;admin&quot;</span><span class="op">,</span> <span class="st">&quot;operator&quot;</span><span class="op">))</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>        et<span class="op">.</span>POST<span class="op">(</span><span class="st">&quot;&quot;</span><span class="op">,</span>        h<span class="op">.</span>MintEnrollToken<span class="op">)</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>        et<span class="op">.</span>GET <span class="op">(</span><span class="st">&quot;&quot;</span><span class="op">,</span>        h<span class="op">.</span>ListEnrollTokens<span class="op">)</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>        et<span class="op">.</span>DELETE<span class="op">(</span><span class="st">&quot;/:id&quot;</span><span class="op">,</span>  h<span class="op">.</span>RevokeEnrollToken<span class="op">)</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>        dev <span class="op">:=</span> v1<span class="op">.</span>Group<span class="op">(</span><span class="st">&quot;/devices&quot;</span><span class="op">)</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>        dev<span class="op">.</span>GET <span class="op">(</span><span class="st">&quot;&quot;</span><span class="op">,</span>            requireRole<span class="op">(</span><span class="st">&quot;admin&quot;</span><span class="op">,</span> <span class="st">&quot;operator&quot;</span><span class="op">,</span> <span class="st">&quot;member&quot;</span><span class="op">),</span> h<span class="op">.</span>ListDevices<span class="op">)</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>        dev<span class="op">.</span>GET <span class="op">(</span><span class="st">&quot;/:id&quot;</span><span class="op">,</span>        requireRole<span class="op">(</span><span class="st">&quot;admin&quot;</span><span class="op">,</span> <span class="st">&quot;operator&quot;</span><span class="op">,</span> <span class="st">&quot;member&quot;</span><span class="op">),</span> h<span class="op">.</span>GetDevice<span class="op">)</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>        dev<span class="op">.</span>PATCH<span class="op">(</span><span class="st">&quot;/:id&quot;</span><span class="op">,</span>       requireRole<span class="op">(</span><span class="st">&quot;admin&quot;</span><span class="op">,</span> <span class="st">&quot;operator&quot;</span><span class="op">),</span>           h<span class="op">.</span>PatchDevice<span class="op">)</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>        dev<span class="op">.</span>POST<span class="op">(</span><span class="st">&quot;/:id/revoke&quot;</span><span class="op">,</span> requireRole<span class="op">(</span><span class="st">&quot;admin&quot;</span><span class="op">),</span>                       h<span class="op">.</span>RevokeDevice<span class="op">)</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>        pol <span class="op">:=</span> v1<span class="op">.</span>Group<span class="op">(</span><span class="st">&quot;/policies&quot;</span><span class="op">)</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>        pol<span class="op">.</span>GET <span class="op">(</span><span class="st">&quot;&quot;</span><span class="op">,</span>             requireRole<span class="op">(</span><span class="st">&quot;admin&quot;</span><span class="op">,</span> <span class="st">&quot;operator&quot;</span><span class="op">,</span> <span class="st">&quot;member&quot;</span><span class="op">),</span> h<span class="op">.</span>ListPolicies<span class="op">)</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>        pol<span class="op">.</span>POST<span class="op">(</span><span class="st">&quot;&quot;</span><span class="op">,</span>             requireRole<span class="op">(</span><span class="st">&quot;admin&quot;</span><span class="op">,</span> <span class="st">&quot;operator&quot;</span><span class="op">),</span>           h<span class="op">.</span>CreatePolicy<span class="op">)</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>        pol<span class="op">.</span>POST<span class="op">(</span><span class="st">&quot;/:v/activate&quot;</span><span class="op">,</span> requireRole<span class="op">(</span><span class="st">&quot;admin&quot;</span><span class="op">,</span> <span class="st">&quot;operator&quot;</span><span class="op">),</span>           h<span class="op">.</span>ActivatePolicy<span class="op">)</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>        <span class="co">// ... remaining groups identically (connectors, groups, networks, audit, api-tokens, stream, me)</span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="34-startup-route-authz-audit-c4-enforced-mechanically">3.4
+Startup route-authz audit (C4 enforced mechanically)</h3>
+<p>A boot-time check walks <code>r.Routes()</code> and asserts
+<strong>every</strong> <code>/v1/*</code> route carries a
+<code>requireRole</code> handler in its chain; an unguarded
+<code>/v1</code> route aborts startup. This makes &quot;default-deny&quot; a
+runtime signature (§11.4.108), not a convention.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/api/audit_routes.go — runs in NewServer(); fails closed</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> assertEveryV1RouteGuarded<span class="op">(</span>routes gin<span class="op">.</span>RoutesInfo<span class="op">)</span> <span class="dt">error</span> <span class="op">{</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> _<span class="op">,</span> rt <span class="op">:=</span> <span class="kw">range</span> routes <span class="op">{</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> strings<span class="op">.</span>HasPrefix<span class="op">(</span>rt<span class="op">.</span>Path<span class="op">,</span> <span class="st">&quot;/v1/&quot;</span><span class="op">)</span> <span class="op">&amp;&amp;</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>            <span class="op">!</span>chainHasRBAC<span class="op">(</span>rt<span class="op">.</span>HandlerName<span class="op">)</span> <span class="op">{</span>       <span class="co">// handler chain contains requireRole marker</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> fmt<span class="op">.</span>Errorf<span class="op">(</span><span class="st">&quot;route %s %s missing requireRole: §11.4.6/C4 violation&quot;</span><span class="op">,</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>                rt<span class="op">.</span>Method<span class="op">,</span> rt<span class="op">.</span>Path<span class="op">)</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="ot">nil</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Paired §1.1 mutation (§10): registering a <code>/v1</code> route
+without <code>requireRole</code> MUST make this audit FAIL.</p>
+<hr />
+<h2 id="4-rest-requestresponse-schemas-per-route">4. REST
+request/response schemas (per route)</h2>
+<p>JSON, <code>Content-Type: application/json</code>, validated with
+go-playground/validator <code>binding</code> tags [research-go_cp §1].
+All times are RFC 3339 UTC. All ids are UUIDv4 strings. Errors follow
+the unified taxonomy of §8. Below: the load-bearing schemas; the
+remaining routes follow the same shape.</p>
+<h3 id="41-post-v1enroll-tokens--mint-device-enroll-token">4.1
+<code>POST /v1/enroll-tokens</code> — mint device enroll token</h3>
+<div class="sourceCode" id="cb7"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> MintEnrollTokenReq <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    Kind        <span class="dt">string</span> <span class="st">`json:&quot;kind&quot;        binding:&quot;required,oneof=client connector&quot;`</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    BindUserID  <span class="dt">string</span> <span class="st">`json:&quot;bind_user_id&quot; binding:&quot;omitempty,uuid&quot;`</span> <span class="co">// omit =&gt; anonymous (C6)</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    TTLSeconds  <span class="dt">int</span>    <span class="st">`json:&quot;ttl_seconds&quot;  binding:&quot;omitempty,min=60,max=86400&quot;`</span> <span class="co">// default 900</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> MintEnrollTokenResp <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    ID        <span class="dt">string</span> <span class="st">`json:&quot;id&quot;`</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    Token     <span class="dt">string</span> <span class="st">`json:&quot;token&quot;`</span>       <span class="co">// shown ONCE; only sha256 persisted (§2)</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    QRPNG     <span class="dt">string</span> <span class="st">`json:&quot;qr_png_b64&quot;`</span>  <span class="co">// base64 PNG of the token for Connector/Access scan</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>    Kind      <span class="dt">string</span> <span class="st">`json:&quot;kind&quot;`</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>    ExpiresAt <span class="dt">string</span> <span class="st">`json:&quot;expires_at&quot;`</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Handler: <code>WithTenant</code> → insert
+<code>enroll_tokens(token_hash=sha256(raw), kind, bound_user_id, expires_at)</code>
+→ <code>audit_events(&quot;enroll_token.mint&quot;)</code>. The raw token is
+generated from <code>crypto/rand</code> (32 bytes, base32).
+<strong>Anti-bluff:</strong> the response&#39;s <code>token</code> is the
+only place the raw value ever appears; re-fetching the token returns
+metadata only.</p>
+<h3 id="42-get-v1devices--list-devices">4.2 <code>GET /v1/devices</code>
+— list devices</h3>
+<p>Query params: <code>?kind=client|connector</code>,
+<code>?online=true|false</code>, <code>?limit=</code>(≤200, default 50),
+<code>?cursor=</code>(opaque). Cursor pagination (keyset on
+<code>(enrolled_at, id)</code>), never <code>OFFSET</code>.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> DeviceView <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    ID         <span class="dt">string</span> <span class="st">`json:&quot;id&quot;`</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    Kind       <span class="dt">string</span> <span class="st">`json:&quot;kind&quot;`</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    Name       <span class="dt">string</span> <span class="st">`json:&quot;name&quot;`</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    OverlayIP  <span class="dt">string</span> <span class="st">`json:&quot;overlay_ip&quot;`</span>        <span class="co">// ULA /48 address [02-cp §3]</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    OS         <span class="dt">string</span> <span class="st">`json:&quot;os,omitempty&quot;`</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    Online     <span class="dt">bool</span>   <span class="st">`json:&quot;online&quot;`</span>            <span class="co">// from Redis presence (ephemeral) [02-cp §5]</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>    LastSeenAt <span class="dt">string</span> <span class="st">`json:&quot;last_seen_at,omitempty&quot;`</span> <span class="co">// COARSE (C3)</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>    Revoked    <span class="dt">bool</span>   <span class="st">`json:&quot;revoked&quot;`</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>    OwnerEmail <span class="dt">string</span> <span class="st">`json:&quot;owner_email,omitempty&quot;`</span>  <span class="co">// null in anonymous mode (C6)</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> ListDevicesResp <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>    Devices    <span class="op">[]</span>DeviceView <span class="st">`json:&quot;devices&quot;`</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>    NextCursor <span class="dt">string</span>       <span class="st">`json:&quot;next_cursor,omitempty&quot;`</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><code>Online</code> is read from Redis presence (TTL keys, ephemeral)
+[02-cp §5.1], NOT from a durable column — losing Redis loses presence,
+not identity (C2). The wg public key is <strong>not</strong> returned to
+apps (it is an agent-plane datum delivered via
+<code>WatchNetworkMap</code>, need-to-know C4).</p>
+<h3 id="43-post-v1devicesidrevoke--revoke-admin-only">4.3
+<code>POST /v1/devices/:id/revoke</code> — revoke (admin only)</h3>
+<p>Empty body. Handler (the &lt; 1 s revoke promise [02-cp §9.3]):</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>h <span class="op">*</span>Handlers<span class="op">)</span> RevokeDevice<span class="op">(</span>c <span class="op">*</span>gin<span class="op">.</span>Context<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    id <span class="op">:=</span> mustUUID<span class="op">(</span>c<span class="op">.</span>Param<span class="op">(</span><span class="st">&quot;id&quot;</span><span class="op">))</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    tn <span class="op">:=</span> tenantOf<span class="op">(</span>c<span class="op">)</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    err <span class="op">:=</span> h<span class="op">.</span>store<span class="op">.</span>WithTenant<span class="op">(</span>c<span class="op">,</span> tn<span class="op">,</span> <span class="kw">func</span><span class="op">(</span>q <span class="op">*</span>db<span class="op">.</span>Queries<span class="op">)</span> <span class="dt">error</span> <span class="op">{</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> err <span class="op">:=</span> q<span class="op">.</span>MarkDeviceRevoked<span class="op">(</span>c<span class="op">,</span> db<span class="op">.</span>MarkDeviceRevokedParams<span class="op">{</span>Tenant<span class="op">:</span> tn<span class="op">,</span> ID<span class="op">:</span> id<span class="op">});</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> err <span class="co">// sets devices.revoked_at = now()</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> err <span class="op">:=</span> q<span class="op">.</span>RevokeDeviceCerts<span class="op">(</span>c<span class="op">,</span> db<span class="op">.</span>RevokeParams<span class="op">{</span>Tenant<span class="op">:</span> tn<span class="op">,</span> Device<span class="op">:</span> id<span class="op">});</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> err <span class="co">// device_certs.revoked = true</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>        <span class="co">// R3 [02-cp §1.2]: emit so coordinator pushes a peer-removal delta + edge drops the WG peer.</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>        _<span class="op">,</span> err <span class="op">:=</span> h<span class="op">.</span>bus<span class="op">.</span>Publish<span class="op">(</span>c<span class="op">,</span> <span class="st">&quot;events:devices&quot;</span><span class="op">,</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>            events<span class="op">.</span>New<span class="op">(</span><span class="st">&quot;device.revoked&quot;</span><span class="op">,</span> tn<span class="op">,</span> principalOf<span class="op">(</span>c<span class="op">).</span>Subject<span class="op">,</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="dt">any</span><span class="op">{</span><span class="st">&quot;device_id&quot;</span><span class="op">:</span> id<span class="op">}))</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> err</span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>    <span class="op">})</span></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>    writeResultOrError<span class="op">(</span>c<span class="op">,</span> err<span class="op">,</span> http<span class="op">.</span>StatusAccepted<span class="op">)</span> <span class="co">// 202: revoke ACCEPTED; edge enforcement is async-but-&lt;1s</span></span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><strong>Status semantics:</strong> <code>202 Accepted</code>, not
+<code>200</code>. The DB write + event publish are synchronous; the
+actual WG-peer removal at the edge is event-driven within the
+convergence SLO (§9). The response carries
+<code>{ &quot;revoked_at&quot;: &quot;...&quot;, &quot;convergence&quot;: &quot;streaming&quot; }</code>. The
+matching <code>device.revoked</code> also force-closes the device&#39;s open
+<code>WatchNetworkMap</code> stream (§8.4).</p>
+<h3 id="44-get-v1networks--overlay-summary">4.4
+<code>GET /v1/networks</code> — overlay summary</h3>
+<div class="sourceCode" id="cb10"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> NetworksResp <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    ULAPrefix   <span class="dt">string</span>        <span class="st">`json:&quot;ula_prefix&quot;`</span>     <span class="co">// fd7a:helix:&lt;rand&gt;::/48 [02-cp §3.1]</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    GatewayIP   <span class="dt">string</span>        <span class="st">`json:&quot;gateway_ip&quot;`</span>     <span class="co">// ::1</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    DeviceCount <span class="dt">int</span>           <span class="st">`json:&quot;device_count&quot;`</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    Connectors  <span class="op">[]</span>ConnectorView <span class="st">`json:&quot;connectors&quot;`</span>   <span class="co">// each: site_id, prefixes[], 4via6 mapping</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> ConnectorView <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>    DeviceID <span class="dt">string</span>   <span class="st">`json:&quot;device_id&quot;`</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>    SiteName <span class="dt">string</span>   <span class="st">`json:&quot;site_name&quot;`</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>    SiteID   <span class="dt">uint32</span>   <span class="st">`json:&quot;site_id&quot;`</span>                <span class="co">// for 4via6 disambiguation (D4) [02-cp §3.2]</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>    Prefixes <span class="op">[]</span><span class="dt">string</span> <span class="st">`json:&quot;prefixes&quot;`</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>    Via6     <span class="op">[]</span>Via6   <span class="st">`json:&quot;via6&quot;`</span>                   <span class="co">// {ipv4_cidr, via6_prefix}</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="45-post-v1policies--submit-spec-dry-run-compile-fail-closed">4.5
+<code>POST /v1/policies</code> — submit spec (dry-run compile,
+fail-closed)</h3>
+<div class="sourceCode" id="cb11"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> CreatePolicyReq <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    Spec json<span class="op">.</span>RawMessage <span class="st">`json:&quot;spec&quot; binding:&quot;required&quot;`</span> <span class="co">// the Tailscale-ACL-flavored doc [02-cp §7.1]</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> CreatePolicyResp <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    Version      <span class="dt">int64</span>           <span class="st">`json:&quot;version&quot;`</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>    Active       <span class="dt">bool</span>            <span class="st">`json:&quot;active&quot;`</span>           <span class="co">// false until /activate</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>    CompileStats CompileStats    <span class="st">`json:&quot;compile_stats&quot;`</span>    <span class="co">// devices, rules, edges</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>    Conflicts    <span class="op">[]</span>RouteConflict <span class="st">`json:&quot;conflicts,omitempty&quot;`</span> <span class="co">// overlapping CIDRs — non-fatal warning</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Handler runs <code>policy.Compiler.Compile</code> (pure dry-run)
+BEFORE any insert; a compile error returns
+<code>422 Unprocessable Entity</code> with the structured
+<code>PolicyCompileError</code> (§8.2) and writes
+<strong>nothing</strong> [02-cp §7.3 fail-closed]. Only a clean dry-run
+inserts the <code>policies</code> row and emits
+<code>policy.updated</code>. <code>POST /v1/policies/:v/activate</code>
+then performs the atomic flip [02-cp §7.4] and returns <code>200</code>
+with <code>{ &quot;version&quot;: v, &quot;active&quot;: true }</code>; activation emits
+<code>policy.compiled</code>, which the coordinator turns into per-node
+deltas within the SLO (§9).</p>
+<h3 id="46-response-envelope--access-log-c3">4.6 Response envelope &amp;
+access log (C3)</h3>
+<p>Success responses are the bare resource JSON (no wrapper). The access
+log line is structured:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span> <span class="dt">&quot;ts&quot;</span><span class="fu">:</span><span class="st">&quot;RFC3339&quot;</span><span class="fu">,</span><span class="dt">&quot;level&quot;</span><span class="fu">:</span><span class="st">&quot;info&quot;</span><span class="fu">,</span><span class="dt">&quot;msg&quot;</span><span class="fu">:</span><span class="st">&quot;req&quot;</span><span class="fu">,</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;request_id&quot;</span><span class="fu">:</span><span class="st">&quot;...&quot;</span><span class="fu">,</span><span class="dt">&quot;route&quot;</span><span class="fu">:</span><span class="st">&quot;POST /v1/policies&quot;</span><span class="fu">,</span><span class="dt">&quot;status&quot;</span><span class="fu">:</span><span class="dv">201</span><span class="fu">,</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;latency_ms&quot;</span><span class="fu">:</span><span class="dv">42</span><span class="fu">,</span><span class="dt">&quot;tenant&quot;</span><span class="fu">:</span><span class="st">&quot;&lt;uuid&gt;&quot;</span><span class="fu">,</span><span class="dt">&quot;role&quot;</span><span class="fu">:</span><span class="st">&quot;operator&quot;</span> <span class="fu">}</span></span></code></pre></div>
+<p>It records the <strong>route template</strong>
+(<code>/v1/devices/:id</code>, never the concrete id when the id is
+sensitive — device ids are non-sensitive tenant-internal UUIDs, so they
+are logged), <code>status</code>, <code>latency</code>,
+<code>tenant</code>, <code>role</code>. It NEVER records client IP,
+request body, or auth token (C3 + §11.4.10). DEBUG level may log body
+shape for local dev only, gated off in prod builds.</p>
+<h3 id="47-ops-endpoints-unauthenticated-no-tenant">4.7 Ops endpoints
+(unauthenticated, no tenant)</h3>
+<ul>
+<li><code>GET /healthz</code> — process liveness; returns
+<code>200 {&quot;status&quot;:&quot;ok&quot;}</code> always while the process runs.</li>
+<li><code>GET /readyz</code> — dependency readiness; <code>200</code>
+only if Postgres <code>SELECT 1</code> and Redis <code>PING</code> both
+succeed within 1 s, else <code>503</code> with
+<code>{&quot;postgres&quot;:bool,&quot;redis&quot;:bool}</code>. Used by the quadlet
+<code>After=</code>/healthcheck [02-cp §11.1].</li>
+<li><code>GET /metrics</code> — Prometheus exposition (§9.2 histograms).
+Bound to localhost/scrape network only via deploy network policy, never
+the public listener path — <strong>UNVERIFIED</strong> whether the MVP
+exposes <code>/metrics</code> on the same <code>:8443</code> or a
+separate scrape port; recommendation is a separate internal listener so
+it is never internet-reachable.</li>
+</ul>
+<hr />
+<h2 id="5-connect--grpc-surface--coordinator-handlers">5. Connect / gRPC
+surface — <code>Coordinator</code> handlers</h2>
+<p>The agent-plane RPCs are served via connect-go [research-go_cp §2].
+The service + messages are canonical in [02-cp §4]; this section
+specifies the <strong>server-side wiring</strong>: handler signatures,
+the interceptor chain, request validation, and the auth resolution.</p>
+<h3 id="51-service-methods-package-helixcoordinatorv1">5.1 Service
+methods (package <code>helix.coordinator.v1</code>)</h3>
+<table>
+<thead>
+<tr>
+<th>RPC</th>
+<th>Kind</th>
+<th>Auth</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Enroll</code></td>
+<td>unary</td>
+<td>enroll token (the only unauthenticated-by-cert RPC)</td>
+<td>single-use token → identity + cert (§5.4)</td>
+</tr>
+<tr>
+<td><code>WatchNetworkMap</code></td>
+<td><strong>server-stream</strong></td>
+<td>device mTLS</td>
+<td>the spine: snapshot then deltas, p99 &lt; 1 s (§8) [02-cp §6.3]</td>
+</tr>
+<tr>
+<td><code>AdvertisePrefixes</code></td>
+<td>unary</td>
+<td>device mTLS (connector)</td>
+<td>connector pushes CIDRs; conflict list returned</td>
+</tr>
+<tr>
+<td><code>ReportStatus</code></td>
+<td>unary</td>
+<td>device mTLS</td>
+<td>presence + transport + rtt; NO traffic data (C3)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="52-interceptor-chain-connect-go">5.2 Interceptor chain
+(connect-go)</h3>
+<div class="sourceCode" id="cb13"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/api/connect.go</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> newConnectMux<span class="op">(</span>d Deps<span class="op">)</span> http<span class="op">.</span>Handler <span class="op">{</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    interceptors <span class="op">:=</span> connect<span class="op">.</span>WithInterceptors<span class="op">(</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>        recoverInterceptor<span class="op">(),</span>                 <span class="co">// panic → CodeInternal + audit</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>        requestIDInterceptor<span class="op">(),</span>               <span class="co">// propagate/issue request id → trace_id</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>        validateInterceptor<span class="op">(),</span>                <span class="co">// protovalidate: buf.validate field constraints [research-go_cp §2]</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>        deviceAuthInterceptor<span class="op">(</span>d<span class="op">.</span>PKI<span class="op">),</span>         <span class="co">// mTLS cert → device (skips Enroll) (§6.3)</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>        metricsInterceptor<span class="op">(),</span>                 <span class="co">// helix_rpc_* histograms (§9.2)</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>    <span class="op">)</span></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>    path<span class="op">,</span> handler <span class="op">:=</span> coordinatorv1connect<span class="op">.</span>NewCoordinatorHandler<span class="op">(</span></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>        <span class="op">&amp;</span>coordinatorServer<span class="op">{</span>d<span class="op">:</span> d<span class="op">},</span> interceptors<span class="op">)</span></span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>    mux <span class="op">:=</span> http<span class="op">.</span>NewServeMux<span class="op">()</span></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>    mux<span class="op">.</span>Handle<span class="op">(</span>path<span class="op">,</span> handler<span class="op">)</span></span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> mux</span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> coordinatorServer <span class="kw">struct</span><span class="op">{</span> d Deps <span class="op">}</span></span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>s <span class="op">*</span>coordinatorServer<span class="op">)</span> Enroll<span class="op">(</span></span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>    ctx context<span class="op">.</span>Context<span class="op">,</span> req <span class="op">*</span>connect<span class="op">.</span>Request<span class="op">[</span>coordinatorv1<span class="op">.</span>EnrollRequest<span class="op">],</span></span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="op">(*</span>connect<span class="op">.</span>Response<span class="op">[</span>coordinatorv1<span class="op">.</span>EnrollResponse<span class="op">],</span> <span class="dt">error</span><span class="op">)</span> <span class="op">{</span> <span class="co">/* §5.4 */</span> <span class="op">}</span></span>
+<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>s <span class="op">*</span>coordinatorServer<span class="op">)</span> WatchNetworkMap<span class="op">(</span></span>
+<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a>    ctx context<span class="op">.</span>Context<span class="op">,</span> req <span class="op">*</span>connect<span class="op">.</span>Request<span class="op">[</span>coordinatorv1<span class="op">.</span>WatchRequest<span class="op">],</span></span>
+<span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a>    stream <span class="op">*</span>connect<span class="op">.</span>ServerStream<span class="op">[</span>coordinatorv1<span class="op">.</span>MapUpdate<span class="op">],</span></span>
+<span id="cb13-26"><a href="#cb13-26" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="dt">error</span> <span class="op">{</span> <span class="cf">return</span> s<span class="op">.</span>d<span class="op">.</span>Coordinator<span class="op">.</span>WatchNetworkMap<span class="op">(</span>ctx<span class="op">,</span> req<span class="op">,</span> stream<span class="op">)</span> <span class="op">}</span> <span class="co">// delegates to [02-cp §6.3]</span></span></code></pre></div>
+<blockquote>
+<p><strong>Streaming-error caveat (load-bearing) [research-go_cp
+§2].</strong> In every Connect protocol a streaming response is
+<strong>HTTP 200</strong> even on failure — the real status rides in the
+trailer / end-of-stream. The api layer therefore MUST encode
+<code>WatchNetworkMap</code> errors as
+<code>connect.NewError(code, ...)</code> returned from the handler
+(which connect-go places in the trailer), never as an HTTP status;
+generated agent clients read the trailer status. A test asserts a
+revoked-device stream yields <code>CodePermissionDenied</code> in the
+trailer, not a 4xx status (§10).</p>
+</blockquote>
+<h3 id="53-request-validation--protovalidate-not-hand-written">5.3
+Request validation — protovalidate, not hand-written</h3>
+<p>Field constraints live in the <code>.proto</code> via
+<code>buf.validate</code> and are enforced by the
+<code>validateInterceptor</code> [research-go_cp §2]. Example
+constraints on <code>EnrollRequest</code>:</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode protobuf"><code class="sourceCode protobuf"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co">// proto/helix/coordinator/v1/coordinator.proto (constraints overlaid on [02-cp §4] messages)</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="st">&quot;buf/validate/validate.proto&quot;</span>;</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="kw">message</span> EnrollRequest {</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">string</span>     enroll_token <span class="op">=</span> <span class="dv">1</span> [(buf.validate.field).<span class="dt">string</span>.min_len <span class="op">=</span> <span class="dv">16</span>];</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">bytes</span>      wg_pubkey    <span class="op">=</span> <span class="dv">2</span> [(buf.validate.field).<span class="dt">bytes</span>.len <span class="op">=</span> <span class="dv">32</span>]; <span class="co">// exactly 32B Curve25519 (C6)</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">string</span>     os           <span class="op">=</span> <span class="dv">3</span> [(buf.validate.field).<span class="dt">string</span>.max_len <span class="op">=</span> <span class="dv">32</span>];</span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">string</span>     name         <span class="op">=</span> <span class="dv">4</span> [(buf.validate.field).<span class="dt">string</span>.max_len <span class="op">=</span> <span class="dv">128</span>];</span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>  DeviceKind kind         <span class="op">=</span> <span class="dv">5</span> [(buf.validate.field).<span class="kw">enum</span>.defined_only <span class="op">=</span> <span class="kw">true</span>];</span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p><code>wg_pubkey.len = 32</code> mechanically rejects anything that is
+not a 32-byte public key — a private key (also 32 bytes) is rejected by
+the <strong>absence of any private-key field</strong> in the contract,
+not by length (C6: the contract has no slot to carry a private key)
+[02-cp §4].</p>
+<h3 id="54-enroll-handler--atomic-single-use-token-consume">5.4
+<code>Enroll</code> handler — atomic single-use token consume</h3>
+<pre class="mermaid"><code>stateDiagram-v2
+    [*] --&gt; Received: Enroll(token, wg_pubkey, os, kind)
+    Received --&gt; Validated: protovalidate (§5.3)
+    Validated --&gt; Rejected: token hash not found / expired / consumed
+    Validated --&gt; Consuming: UPDATE enroll_tokens SET consumed_at=now()\nWHERE token_hash=$1 AND consumed_at IS NULL\nAND expires_at&gt;now() RETURNING id
+    Consuming --&gt; Rejected: 0 rows (lost race / already spent)
+    Consuming --&gt; Allocating: 1 row (won the consume)
+    Allocating --&gt; Issuing: IPAM.AllocOverlayIP (§02-cp §3.2)
+    Issuing --&gt; Persisting: PKI.IssueDeviceCert(24h)
+    Persisting --&gt; Emitting: INSERT devices(...) [WithTenant]
+    Emitting --&gt; Done: publish device.enrolled → EnrollResponse
+    Rejected --&gt; [*]: CodePermissionDenied (token)
+    Done --&gt; [*]</code></pre>
+<p>The atomic consume is the single
+<code>UPDATE ... WHERE consumed_at IS NULL ... RETURNING</code> — two
+concurrent <code>Enroll</code> calls with the same token: exactly one
+gets a row, the loser gets <code>CodePermissionDenied</code> [02-cp
+§9.2]. <code>kind</code> in the request MUST match
+<code>enroll_tokens.kind</code> or the enroll is rejected
+(<code>CodeInvalidArgument</code>). The whole sequence runs in one
+<code>WithTenant</code> transaction; the <code>device.enrolled</code>
+publish (§02-cp §5.3) shares the unit of work (R3) — a rollback
+un-consumes the token. <strong>Anti-bluff:</strong> the integration test
+asserts the second concurrent enroll fails AND that the device row +
+cert + event all land or none do (§10).</p>
+<hr />
+<h2 id="6-authorization-model-four-cooperating-layers">6. Authorization
+model (four cooperating layers)</h2>
+<pre class="mermaid"><code>flowchart LR
+    REQ[incoming request] --&gt; K{path class}
+    K --&gt;|REST /v1/*| A1[authn: OIDC session&lt;br/&gt;OR API token §6.1]
+    K --&gt;|WS /v1/stream| A1
+    K --&gt;|Connect Coordinator.*| A3[deviceAuth: mTLS cert §6.3]
+    A1 --&gt; A2[rbac: requireRole §6.2]
+    A2 --&gt; A4[store.WithTenant §6.5&lt;br/&gt;RLS backstop C8]
+    A3 --&gt;|Enroll exempt| A5[enroll-token verify §5.4]
+    A3 --&gt;|other RPC| A4
+    A4 --&gt; DB[(Postgres RLS)]</code></pre>
+<h3 id="61-authn--oidcsession-or-api-token-rest--ws">6.1
+<code>authn</code> — OIDC/session OR API token (REST + WS)</h3>
+<div class="sourceCode" id="cb17"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/api/authn.go</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>s <span class="op">*</span>Server<span class="op">)</span> authn<span class="op">()</span> gin<span class="op">.</span>HandlerFunc <span class="op">{</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">func</span><span class="op">(</span>c <span class="op">*</span>gin<span class="op">.</span>Context<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>        <span class="co">// 1. Bearer API token? &quot;Authorization: Bearer hvpn_&lt;...&gt;&quot;</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> raw<span class="op">,</span> ok <span class="op">:=</span> bearerToken<span class="op">(</span>c<span class="op">);</span> ok <span class="op">&amp;&amp;</span> strings<span class="op">.</span>HasPrefix<span class="op">(</span>raw<span class="op">,</span> <span class="st">&quot;hvpn_&quot;</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>            p<span class="op">,</span> err <span class="op">:=</span> s<span class="op">.</span>resolveAPIToken<span class="op">(</span>c<span class="op">,</span> sha256sum<span class="op">(</span>raw<span class="op">))</span> <span class="co">// lookup api_tokens by hash, not-revoked, not-expired</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span> abort401<span class="op">(</span>c<span class="op">,</span> <span class="st">&quot;invalid_token&quot;</span><span class="op">);</span> <span class="cf">return</span> <span class="op">}</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>            setPrincipal<span class="op">(</span>c<span class="op">,</span> p<span class="op">);</span> c<span class="op">.</span>Next<span class="op">();</span> <span class="cf">return</span></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>        <span class="co">// 2. Session cookie? (Console browser, OIDC login)</span></span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> cookie<span class="op">,</span> err <span class="op">:=</span> c<span class="op">.</span>Cookie<span class="op">(</span><span class="st">&quot;helix_session&quot;</span><span class="op">);</span> err <span class="op">==</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>            p<span class="op">,</span> err <span class="op">:=</span> s<span class="op">.</span>resolveSession<span class="op">(</span>c<span class="op">,</span> sha256sum<span class="op">(</span>cookie<span class="op">))</span> <span class="co">// sessions by hash, not-revoked, not-expired</span></span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span> abort401<span class="op">(</span>c<span class="op">,</span> <span class="st">&quot;invalid_session&quot;</span><span class="op">);</span> <span class="cf">return</span> <span class="op">}</span></span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>            setPrincipal<span class="op">(</span>c<span class="op">,</span> p<span class="op">);</span> c<span class="op">.</span>Next<span class="op">();</span> <span class="cf">return</span></span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a>        abort401<span class="op">(</span>c<span class="op">,</span> <span class="st">&quot;missing_credentials&quot;</span><span class="op">)</span></span>
+<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><code>Principal{TenantID, UserID, Role, Subject}</code> is stashed on
+the gin context. OIDC login itself (<code>/v1/auth/login</code> → IdP
+redirect → <code>/v1/auth/callback</code> → set
+<code>helix_session</code> cookie) is a thin standard OIDC
+Authorization-Code+PKCE flow against any IdP (Keycloak/Authentik) [02-cp
+§9.1]; the callback validates the IdP id-token, upserts the
+<code>users</code> row keyed on <code>(tenant_id, oidc_sub)</code>, and
+mints a <code>sessions</code> row. <strong>UNVERIFIED:</strong> whether
+the MVP supports multi-IdP-per-tenant or one IdP per tenant — the schema
+(<code>users.oidc_sub</code> unique per tenant) supports one issuer per
+tenant; multi-issuer is a Phase-2 extension.</p>
+<h3 id="62-rbac--role-gate-closed-set-admin--operator--member">6.2
+<code>rbac</code> — role gate (closed set admin &gt; operator &gt;
+member)</h3>
+<div class="sourceCode" id="cb18"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> requireRole<span class="op">(</span>allowed <span class="op">...</span><span class="dt">string</span><span class="op">)</span> gin<span class="op">.</span>HandlerFunc <span class="op">{</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>    set <span class="op">:=</span> toSet<span class="op">(</span>allowed<span class="op">)</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">func</span><span class="op">(</span>c <span class="op">*</span>gin<span class="op">.</span>Context<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">!</span>set<span class="op">[</span>principalOf<span class="op">(</span>c<span class="op">).</span>Role<span class="op">]</span> <span class="op">{</span> abort403<span class="op">(</span>c<span class="op">,</span> <span class="st">&quot;insufficient_role&quot;</span><span class="op">);</span> <span class="cf">return</span> <span class="op">}</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>        c<span class="op">.</span>Next<span class="op">()</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>The role-per-route matrix is §3.2. RBAC is the
+<strong>app-facing</strong> gate; it is defense-in-depth ATOP RLS, never
+instead of it [02-cp §8.1].</p>
+<h3 id="63-deviceauth--agent-mtls-connect">6.3 <code>deviceAuth</code> —
+agent mTLS (Connect)</h3>
+<div class="sourceCode" id="cb19"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co">// connect interceptor; resolves the verified client cert → device, rejecting revoked/expired</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> deviceAuthInterceptor<span class="op">(</span>pki PKI<span class="op">)</span> connect<span class="op">.</span>UnaryInterceptorFunc <span class="op">{</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">func</span><span class="op">(</span>next connect<span class="op">.</span>UnaryFunc<span class="op">)</span> connect<span class="op">.</span>UnaryFunc <span class="op">{</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="kw">func</span><span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> req connect<span class="op">.</span>AnyRequest<span class="op">)</span> <span class="op">(</span>connect<span class="op">.</span>AnyResponse<span class="op">,</span> <span class="dt">error</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> req<span class="op">.</span>Spec<span class="op">().</span>Procedure <span class="op">==</span> coordinatorEnrollProcedure <span class="op">{</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> next<span class="op">(</span>ctx<span class="op">,</span> req<span class="op">)</span> <span class="co">// Enroll is cert-exempt; token-authed instead (§5.4)</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>            cert <span class="op">:=</span> peerCert<span class="op">(</span>ctx<span class="op">)</span> <span class="co">// from tls.ConnectionState.PeerCertificates[0]</span></span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> cert <span class="op">==</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> <span class="ot">nil</span><span class="op">,</span> connect<span class="op">.</span>NewError<span class="op">(</span>connect<span class="op">.</span>CodeUnauthenticated<span class="op">,</span> errNoCert<span class="op">)</span></span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>            dev<span class="op">,</span> err <span class="op">:=</span> pki<span class="op">.</span>ResolveDevice<span class="op">(</span>ctx<span class="op">,</span> cert<span class="op">.</span>SerialNumber<span class="op">)</span> <span class="co">// device_certs → devices</span></span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">||</span> dev<span class="op">.</span>Revoked <span class="op">||</span> time<span class="op">.</span>Now<span class="op">().</span>After<span class="op">(</span>dev<span class="op">.</span>CertNotAfter<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> <span class="ot">nil</span><span class="op">,</span> connect<span class="op">.</span>NewError<span class="op">(</span>connect<span class="op">.</span>CodePermissionDenied<span class="op">,</span> errRevokedOrExpired<span class="op">)</span></span>
+<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> next<span class="op">(</span>deviceCtx<span class="op">(</span>ctx<span class="op">,</span> dev<span class="op">),</span> req<span class="op">)</span> <span class="co">// device on ctx for the handler</span></span>
+<span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb19-18"><a href="#cb19-18" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb19-19"><a href="#cb19-19" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>A stream variant (<code>StreamingHandlerFunc</code>) does the
+identical resolution for
+<code>WatchNetworkMap</code>/<code>AdvertisePrefixes</code>/<code>ReportStatus</code>.
+The cert is verified at the TLS layer against the tenant CA pool (§1.2);
+the interceptor adds the <strong>authorization</strong> check
+(not-revoked, not-expired) on top of TLS authentication [02-cp
+§8.2].</p>
+<h3 id="64-tenant-resolution-for-agents">6.4 Tenant resolution for
+agents</h3>
+<p>An agent&#39;s tenant is <strong>derived from its device cert</strong>,
+never from a request field — the <code>device_certs</code> row carries
+<code>tenant_id</code>, so a device cannot assert a tenant it does not
+belong to. REST/WS principals carry tenant from the session/api-token
+row. There is <strong>no</strong> client-supplied tenant header anywhere
+(it would be a forgeable trust boundary).</p>
+<h3 id="65-rls-backstop-c8--the-floor-under-both-gates">6.5 RLS backstop
+(C8) — the floor under both gates</h3>
+<p>Every handler — REST and Connect — runs its DB work inside
+<code>store.WithTenant(ctx, principal.TenantID, fn)</code> [02-cp §2.3].
+<code>SET LOCAL app.tenant_id</code> is transaction-scoped, so tenant
+context cannot leak across pooled connections [research-go_cp §4]. If
+RBAC is misconfigured or a handler forgets a <code>WHERE</code>, RLS
+still denies cross-tenant rows. A <code>golangci-lint</code> custom
+analyzer flags any <code>db.Query</code>/<code>pool.Exec</code> outside
+<code>store</code> (R4 [02-cp §1.2]).</p>
+<blockquote>
+<p><strong>The three-layer guarantee.</strong> authn proves
+<em>who</em>; rbac proves <em>may-this-role</em>; RLS proves
+<em>only-this-tenant&#39;s-rows</em> at the database. A bug in any one layer
+is caught by the next. This is the constitution §11.4 anti-bluff posture
+applied to authz: no single point whose failure silently grants
+cross-tenant access [SYNTH §7].</p>
+</blockquote>
+<hr />
+<h2 id="7-websocket--sse-live-stream--v1stream">7. WebSocket / SSE live
+stream — <code>/v1/stream</code></h2>
+<p>The Console subscribes to live control-plane events (device
+online/offline, route changed, handshake failing, policy compiled)
+without polling [04_P1 §8, 02-cp §8]. This is the <strong>app</strong>
+live channel; agents use <code>WatchNetworkMap</code> (§8). Both are
+server-push (C5).</p>
+<h3 id="71-protocol-negotiation">7.1 Protocol negotiation</h3>
+<p><code>GET /v1/stream</code> upgrades to WebSocket if the client sends
+<code>Upgrade: websocket</code>; otherwise it serves
+<strong>SSE</strong> (<code>Accept: text/event-stream</code>) as the
+fallback (browsers behind proxies that block WS) [04_P1 §8]. Both
+deliver the identical event envelope (§7.2). Auth is the standard
+<code>authn</code> (session cookie or API token) — the WS upgrade
+carries the cookie; the SSE request carries the bearer/cookie.</p>
+<h3 id="72-event-envelope-app-facing--a-projection-of-the-02-cp-52-bus-envelope">7.2
+Event envelope (app-facing — a projection of the §02-cp §5.2 bus
+envelope)</h3>
+<div class="sourceCode" id="cb20"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;device.online&quot;</span><span class="fu">,</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;tenant_id&quot;</span><span class="fu">:</span> <span class="st">&quot;&lt;uuid&gt;&quot;</span><span class="fu">,</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;ts&quot;</span><span class="fu">:</span> <span class="st">&quot;RFC3339&quot;</span><span class="fu">,</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;data&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;device_id&quot;</span><span class="fu">:</span> <span class="st">&quot;&lt;uuid&gt;&quot;</span><span class="fu">,</span> <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;alice-laptop&quot;</span> <span class="fu">},</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;trace_id&quot;</span><span class="fu">:</span> <span class="st">&quot;&lt;request-or-event-id&gt;&quot;</span> <span class="fu">}</span></span></code></pre></div>
+<p>The app-facing envelope is a <strong>filtered, tenant-scoped
+projection</strong> of the internal bus envelope: only events for the
+subscriber&#39;s tenant, only types the subscriber&#39;s role may see, and
+<code>actor</code>/internal payload fields are stripped to the
+app-relevant subset. The hub never forwards another tenant&#39;s event — the
+projection is the C4 need-to-know boundary at the live channel.</p>
+<h3 id="73-subscribable-event-types-app-projection">7.3 Subscribable
+event types (app projection)</h3>
+<table>
+<thead>
+<tr>
+<th><code>type</code></th>
+<th>Source bus event [02-cp §5.3]</th>
+<th>Role floor</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>device.online</code> / <code>device.offline</code></td>
+<td><code>device.online</code>/<code>.offline</code></td>
+<td>member</td>
+</tr>
+<tr>
+<td><code>device.enrolled</code> / <code>device.revoked</code></td>
+<td>same</td>
+<td>operator</td>
+</tr>
+<tr>
+<td><code>route.changed</code></td>
+<td><code>connector.prefixes.changed</code></td>
+<td>member</td>
+</tr>
+<tr>
+<td><code>route.conflict</code></td>
+<td><code>route.conflict.detected</code></td>
+<td>operator</td>
+</tr>
+<tr>
+<td><code>policy.compiled</code></td>
+<td><code>policy.compiled</code></td>
+<td>operator</td>
+</tr>
+<tr>
+<td><code>handshake.failing</code></td>
+<td>derived from <code>gateway</code>/edge health</td>
+<td>operator</td>
+</tr>
+<tr>
+<td><code>gateway.failover</code></td>
+<td><code>gateway.failover</code></td>
+<td>operator</td>
+</tr>
+</tbody>
+</table>
+<h3 id="74-hub-mechanics--backpressure">7.4 Hub mechanics &amp;
+backpressure</h3>
+<div class="sourceCode" id="cb21"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/api/stream.go — one goroutine per subscriber; bounded send queue</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> subscriber <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>    tenant uuid<span class="op">.</span>UUID</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>    role   <span class="dt">string</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>    out    <span class="kw">chan</span> <span class="op">[]</span><span class="dt">byte</span> <span class="co">// bounded (cap 256); full =&gt; drop subscriber, force reconnect</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>    done   <span class="kw">chan</span> <span class="kw">struct</span><span class="op">{}</span></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>h <span class="op">*</span>Hub<span class="op">)</span> run<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>    evs <span class="op">:=</span> h<span class="op">.</span>bus<span class="op">.</span>SubscribeFanout<span class="op">(</span>ctx<span class="op">,</span> <span class="st">&quot;coordinator-ws&quot;</span><span class="op">,</span> busStreams<span class="op">...)</span> <span class="co">// consumer group</span></span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">{</span></span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a>        <span class="cf">select</span> <span class="op">{</span></span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> <span class="op">&lt;-</span>ctx<span class="op">.</span>Done<span class="op">():</span> <span class="cf">return</span></span>
+<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> env <span class="op">:=</span> <span class="op">&lt;-</span>evs<span class="op">:</span></span>
+<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a>            <span class="cf">for</span> _<span class="op">,</span> s <span class="op">:=</span> <span class="kw">range</span> h<span class="op">.</span>subsFor<span class="op">(</span>env<span class="op">.</span>TenantID<span class="op">)</span> <span class="op">{</span>       <span class="co">// tenant-scoped fan-out (C4)</span></span>
+<span id="cb21-16"><a href="#cb21-16" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> <span class="op">!</span>roleMaySee<span class="op">(</span>s<span class="op">.</span>role<span class="op">,</span> env<span class="op">.</span>Type<span class="op">)</span> <span class="op">{</span> <span class="cf">continue</span> <span class="op">}</span>  <span class="co">// role projection (§7.3)</span></span>
+<span id="cb21-17"><a href="#cb21-17" aria-hidden="true" tabindex="-1"></a>                msg <span class="op">:=</span> projectAppEnvelope<span class="op">(</span>env<span class="op">,</span> s<span class="op">.</span>role<span class="op">)</span></span>
+<span id="cb21-18"><a href="#cb21-18" aria-hidden="true" tabindex="-1"></a>                <span class="cf">select</span> <span class="op">{</span></span>
+<span id="cb21-19"><a href="#cb21-19" aria-hidden="true" tabindex="-1"></a>                <span class="cf">case</span> s<span class="op">.</span>out <span class="op">&lt;-</span> msg<span class="op">:</span>                              <span class="co">// delivered</span></span>
+<span id="cb21-20"><a href="#cb21-20" aria-hidden="true" tabindex="-1"></a>                <span class="cf">default</span><span class="op">:</span> h<span class="op">.</span>drop<span class="op">(</span>s<span class="op">)</span>                              <span class="co">// slow consumer → drop, not memory growth</span></span>
+<span id="cb21-21"><a href="#cb21-21" aria-hidden="true" tabindex="-1"></a>                <span class="op">}</span></span>
+<span id="cb21-22"><a href="#cb21-22" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb21-23"><a href="#cb21-23" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb21-24"><a href="#cb21-24" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb21-25"><a href="#cb21-25" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>A WS keepalive ping every 20 s (and SSE comment heartbeat) proves
+liveness without a global <code>WriteTimeout</code> (§1.1). A subscriber
+whose 256-deep queue fills is <strong>dropped</strong> and must
+reconnect — back-pressure, never unbounded memory (mirrors the
+coordinator&#39;s bounded send-queue discipline [02-cp §6.4]).</p>
+<h3 id="75-sse-wire-format">7.5 SSE wire format</h3>
+<pre><code>event: device.online
+id: &lt;event-id&gt;
+data: {&quot;type&quot;:&quot;device.online&quot;,&quot;tenant_id&quot;:&quot;...&quot;,&quot;ts&quot;:&quot;...&quot;,&quot;data&quot;:{...},&quot;trace_id&quot;:&quot;...&quot;}
+
+: keepalive</code></pre>
+<p>The <code>id:</code> line lets the browser <code>EventSource</code>
+send <code>Last-Event-ID</code> on reconnect; the hub does NOT replay
+from the bus on reconnect in the MVP (the Console re-fetches current
+state via REST, then resumes the live stream) —
+<strong>UNVERIFIED</strong> whether Phase 1 implements
+<code>Last-Event-ID</code> replay; the lean MVP path is
+reconnect-then-refetch, replay is a Phase-2 nicety.</p>
+<hr />
+<h2 id="8-watchnetworkmap-at-the-api-boundary-server-stream">8.
+<code>WatchNetworkMap</code> at the api boundary (server-stream)</h2>
+<p>The handler body lives in <code>coordinator</code> [02-cp §6.3]; the
+api layer owns its <strong>entry conditions</strong> — auth, version
+negotiation, lifecycle, and the convergence-budget hop.</p>
+<h3 id="81-stream-lifecycle-state-machine">8.1 Stream lifecycle state
+machine</h3>
+<pre class="mermaid"><code>stateDiagram-v2
+    [*] --&gt; Authenticating: open WatchNetworkMap (mTLS)
+    Authenticating --&gt; Closed_PermDenied: cert revoked/expired (§6.3)
+    Authenticating --&gt; Subscribing: device resolved, not revoked
+    Subscribing --&gt; Snapshotting: known_version==0 || &gt; current
+    Subscribing --&gt; CatchingUp: 0 &lt; known_version &lt;= current
+    Snapshotting --&gt; Streaming: sent full NetworkMap
+    CatchingUp --&gt; Streaming: sent deltas since known_version
+    Streaming --&gt; Streaming: delta on event / keepalive every 20s
+    Streaming --&gt; Closed_Revoked: device.revoked observed (§8.4)
+    Streaming --&gt; Closed_SlowConsumer: bounded send queue full
+    Streaming --&gt; Closed_ClientGone: ctx canceled / disconnect
+    Closed_PermDenied --&gt; [*]
+    Closed_Revoked --&gt; [*]
+    Closed_SlowConsumer --&gt; [*]
+    Closed_ClientGone --&gt; [*]</code></pre>
+<h3 id="82-version-negotiation-cheap-reconnect">8.2 Version negotiation
+(cheap reconnect)</h3>
+<p><code>WatchRequest.known_version</code> [02-cp §4]: <code>0</code> ⇒
+full snapshot; a non-zero value the server still holds ⇒ deltas since
+that version (no full resync); a value <strong>greater</strong> than the
+server&#39;s current (impossible/forked client state) ⇒ defensive full
+snapshot. This makes a flapping agent&#39;s reconnect O(delta), not O(full
+topology) [02-cp §6.3].</p>
+<h3 id="83-liveness-without-writetimeout">8.3 Liveness without
+<code>WriteTimeout</code></h3>
+<p>A 20 s <code>KeepAlive</code> <code>MapUpdate</code> (oneof
+<code>keepalive</code>) [02-cp §4] proves the stream is alive and lets
+the agent detect a half-open connection; presence is flipped online on
+subscribe, offline on <code>defer sub.Close()</code> [02-cp §6.3]. No
+server-wide write deadline severs the stream (§1.1).</p>
+<h3 id="84-revoke-force-close-the--1-s-teardown">8.4 Revoke force-close
+(the &lt; 1 s teardown)</h3>
+<p>When the coordinator observes <code>device.revoked</code> for a
+device with an open stream, it closes that stream&#39;s context, the handler
+returns <code>CodePermissionDenied</code>, and the agent&#39;s generated
+client surfaces a terminal error (read from the trailer, §5.2). Combined
+with the edge dropping the WG peer, this is the revoke-to-enforced &lt;
+1 s path [02-cp §9.3, §10.2]. <strong>Anti-bluff:</strong> the test
+measures wall-clock from <code>POST /v1/devices/:id/revoke</code>
+<code>202</code> to stream-closed AND WG-peer-gone, asserting both &lt;
+1 s with captured evidence (§10).</p>
+<hr />
+<h2 id="9-convergence--1-s--the-api-layers-contribution">9. Convergence
+(&lt; 1 s) — the api layer&#39;s contribution</h2>
+<p>The end-to-end &lt; 1 s budget (event → enforced-at-edge) is owned by
+[02-cp §10]; the api layer owns two hops of it: (1) REST mutation → bus
+publish (synchronous, in-handler), and (2) coordinator delta →
+<code>stream.Send</code> on the open <code>WatchNetworkMap</code> /
+<code>/v1/stream</code>.</p>
+<pre class="mermaid"><code>sequenceDiagram
+    autonumber
+    participant Console
+    participant API as api (Gin)
+    participant Policy as policy
+    participant Bus as Redis Streams
+    participant Coord as coordinator
+    participant Agent as agent (WatchNetworkMap)
+    Console-&gt;&gt;API: POST /v1/policies/{v}/activate
+    API-&gt;&gt;Policy: Activate(v) — atomic flip [02-cp §7.4]
+    Policy-&gt;&gt;Bus: XADD events:policy {policy.compiled,v}
+    API--&gt;&gt;Console: 200 {active:true}  (mutation hop done)
+    Bus--&gt;&gt;Coord: XReadGroup delivers event
+    Coord-&gt;&gt;Coord: minimal affected set [02-cp §6.4]
+    loop each affected open stream
+        Coord-&gt;&gt;Agent: stream.Send(MapDelta)
+    end
+    Note over Console,Agent: api hops measured by helix_reconcile_seconds (event→Send)</code></pre>
+<h3 id="91-budget-allocation-target-measured--not-asserted">9.1 Budget
+allocation (target, measured — not asserted)</h3>
+<table>
+<thead>
+<tr>
+<th>Hop</th>
+<th>Owner</th>
+<th>Target</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>REST handler → <code>bus.Publish</code> returns</td>
+<td>api</td>
+<td>&lt; 20 ms (one tx + one XADD)</td>
+</tr>
+<tr>
+<td>bus deliver → coordinator picks up</td>
+<td>events</td>
+<td>&lt; 50 ms (XReadGroup BLOCK)</td>
+</tr>
+<tr>
+<td>coordinator recompute affected set</td>
+<td>coordinator</td>
+<td>&lt; 100 ms @ 1k devices [02-cp §10.2]</td>
+</tr>
+<tr>
+<td>coordinator → <code>stream.Send</code> on wire</td>
+<td>api/coordinator</td>
+<td>&lt; 50 ms</td>
+</tr>
+<tr>
+<td><strong>event → delta-on-wire (p99)</strong></td>
+<td><strong>end-to-end</strong></td>
+<td><strong>&lt; 1 s</strong> [02-cp §10.2]</td>
+</tr>
+</tbody>
+</table>
+<p>These are budget targets; the <strong>acceptance number is the
+measured <code>helix_reconcile_seconds</code> p99 &lt; 1 s</strong>
+under the §10 integration/soak load, captured per §11.4.5/§11.4.69 —
+never a design estimate presented as a result (§11.4.6).</p>
+<h3 id="92-api-layer-metrics-prometheus">9.2 api-layer metrics
+(Prometheus)</h3>
+<pre><code>helix_http_requests_total{route,method,status}            # REST counter
+helix_http_request_seconds{route,method}                  # REST latency histogram
+helix_rpc_seconds{procedure,code}                          # Connect unary/stream histogram
+helix_ws_subscribers{tenant}                               # gauge: open /v1/stream subs
+helix_ws_dropped_total{reason=&quot;slow_consumer&quot;}             # backpressure drops (§7.4)
+helix_watch_streams_open{tenant}                           # gauge: open WatchNetworkMap streams
+helix_reconcile_seconds                                    # event→Send histogram (the SLO, §9.1)</code></pre>
+<hr />
+<h2 id="10-error-taxonomy-unified-across-rest--connect">10. Error
+taxonomy (unified across REST + Connect)</h2>
+<p>REST errors carry a stable machine <code>code</code> + human
+<code>message</code>; Connect errors carry a <code>connect.Code</code> +
+the same machine <code>code</code> in <code>connect.ErrorDetail</code>.
+The mapping is one table so a client sees the same <code>code</code>
+regardless of surface.</p>
+<div class="sourceCode" id="cb26"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> APIError <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>    Code    <span class="dt">string</span> <span class="st">`json:&quot;code&quot;`</span>             <span class="co">// stable machine token, e.g. &quot;policy_compile_failed&quot;</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>    Message <span class="dt">string</span> <span class="st">`json:&quot;message&quot;`</span>          <span class="co">// human, safe to surface</span></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>    Details <span class="dt">any</span>    <span class="st">`json:&quot;details,omitempty&quot;`</span><span class="co">// structured (e.g. PolicyCompileError)</span></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<table>
+<thead>
+<tr>
+<th><code>code</code></th>
+<th>REST HTTP</th>
+<th>Connect code</th>
+<th>When</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>missing_credentials</code></td>
+<td>401</td>
+<td>Unauthenticated</td>
+<td>no session/api-token/cert</td>
+</tr>
+<tr>
+<td><code>invalid_token</code> / <code>invalid_session</code></td>
+<td>401</td>
+<td>Unauthenticated</td>
+<td>bad/expired/revoked credential</td>
+</tr>
+<tr>
+<td><code>insufficient_role</code></td>
+<td>403</td>
+<td>PermissionDenied</td>
+<td>RBAC gate fails (§6.2)</td>
+</tr>
+<tr>
+<td><code>device_revoked</code></td>
+<td>403</td>
+<td>PermissionDenied</td>
+<td>revoked/expired device cert (§6.3)</td>
+</tr>
+<tr>
+<td><code>enroll_token_invalid</code></td>
+<td>403</td>
+<td>PermissionDenied</td>
+<td>enroll token missing/expired/consumed (§5.4)</td>
+</tr>
+<tr>
+<td><code>not_found</code></td>
+<td>404</td>
+<td>NotFound</td>
+<td>resource absent in tenant (RLS-filtered)</td>
+</tr>
+<tr>
+<td><code>validation_failed</code></td>
+<td>400</td>
+<td>InvalidArgument</td>
+<td>binding/protovalidate failure (§4/§5.3)</td>
+</tr>
+<tr>
+<td><code>policy_compile_failed</code></td>
+<td>422</td>
+<td>InvalidArgument</td>
+<td>dry-run compile rejected (§4.5,
+<code>details</code>=PolicyCompileError)</td>
+</tr>
+<tr>
+<td><code>prefix_conflict</code></td>
+<td>409</td>
+<td>AlreadyExists</td>
+<td>overlapping advertised CIDR (hard-conflict path)</td>
+</tr>
+<tr>
+<td><code>rate_limited</code></td>
+<td>429</td>
+<td>ResourceExhausted</td>
+<td>enroll/mint throttle (§11)</td>
+</tr>
+<tr>
+<td><code>internal</code></td>
+<td>500</td>
+<td>Internal</td>
+<td>unexpected (panic-recovered, audited, NO stack to client)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="101-policycompileerror-detail-shape-45">10.1
+<code>PolicyCompileError</code> detail shape (§4.5)</h3>
+<div class="sourceCode" id="cb27"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> PolicyCompileError <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>    Stage   <span class="dt">string</span> <span class="st">`json:&quot;stage&quot;`</span>   <span class="co">// &quot;parse&quot; | &quot;resolve_groups&quot; | &quot;resolve_hosts&quot; | &quot;validate&quot;</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>    Field   <span class="dt">string</span> <span class="st">`json:&quot;field&quot;`</span>   <span class="co">// JSON path into spec, e.g. &quot;acls[1].dst[0]&quot;</span></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>    Reason  <span class="dt">string</span> <span class="st">`json:&quot;reason&quot;`</span>  <span class="co">// closed set: unknown_group | unknown_host | cidr_not_advertised |</span></span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>                                     <span class="co">//   grants_revoked_device | exit_node_is_connector</span></span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>    Detail  <span class="dt">string</span> <span class="st">`json:&quot;detail&quot;`</span>  <span class="co">// human elaboration</span></span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>This is the fail-closed feedback of [02-cp §7.3] surfaced as
+structured <code>details</code> so the Console can pinpoint the
+offending rule.</p>
+<hr />
+<h2 id="11-edge-cases-enumerated-with-the-decided-behavior--1146">11.
+Edge cases (enumerated, with the decided behavior — §11.4.6)</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Edge case</th>
+<th>Decided behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>E1</td>
+<td>REST request with no credentials</td>
+<td><code>401 missing_credentials</code>; never default-allow (C4).</td>
+</tr>
+<tr>
+<td>E2</td>
+<td>Valid session, wrong role for route</td>
+<td><code>403 insufficient_role</code>; RLS would also deny, but RBAC
+fails first (cheaper).</td>
+</tr>
+<tr>
+<td>E3</td>
+<td>API token valid but device/user it belonged to deleted</td>
+<td>token row <code>revoked_at</code> cascade-set on user delete?
+<strong>No</strong> —
+<code>api_tokens.user_id ON DELETE SET NULL</code>; a tenant-scoped
+service token survives, a user-bound token keeps working until
+explicitly revoked. Operator revokes via
+<code>DELETE /v1/api-tokens/:id</code>.</td>
+</tr>
+<tr>
+<td>E4</td>
+<td>Two <code>Enroll</code> with the same token (race)</td>
+<td>atomic consume → exactly one wins; loser
+<code>enroll_token_invalid</code> (§5.4).</td>
+</tr>
+<tr>
+<td>E5</td>
+<td>Enroll token <code>kind=client</code> used to enroll a
+connector</td>
+<td><code>CodeInvalidArgument</code> (<code>validation_failed</code>);
+<code>kind</code> must match (§5.4).</td>
+</tr>
+<tr>
+<td>E6</td>
+<td><code>WatchNetworkMap</code> opened by a device revoked
+mid-stream</td>
+<td>force-close <code>CodePermissionDenied</code> within SLO
+(§8.4).</td>
+</tr>
+<tr>
+<td>E7</td>
+<td><code>WatchNetworkMap</code> <code>known_version</code> greater than
+server current</td>
+<td>defensive full snapshot (§8.2), never error.</td>
+</tr>
+<tr>
+<td>E8</td>
+<td>WS subscriber too slow (queue full)</td>
+<td>dropped, <code>helix_ws_dropped_total++</code>, must reconnect
+(§7.4); never grows memory.</td>
+</tr>
+<tr>
+<td>E9</td>
+<td>Cross-tenant resource id in REST path
+(<code>GET /v1/devices/&lt;other-tenant-uuid&gt;</code>)</td>
+<td>RLS returns 0 rows → <code>404 not_found</code>; the id&#39;s existence
+in another tenant is never disclosed (C8 + C4).</td>
+</tr>
+<tr>
+<td>E10</td>
+<td><code>POST /v1/policies</code> spec references a host CIDR not
+advertised</td>
+<td>dry-run <code>422 policy_compile_failed</code>
+<code>reason=cidr_not_advertised</code>; nothing written (§4.5).</td>
+</tr>
+<tr>
+<td>E11</td>
+<td>Redis down at request time</td>
+<td>mutations that must publish return <code>503</code> (readyz also
+red, §4.7); reads from Postgres still succeed; presence
+(<code>Online</code>) degrades to <code>false</code>/unknown, never
+errors (C2 — losing Redis loses no durable state).</td>
+</tr>
+<tr>
+<td>E12</td>
+<td>Postgres down</td>
+<td><code>readyz</code> red; mutating + reading routes <code>503</code>;
+the listener stays up so health is observable.</td>
+</tr>
+<tr>
+<td>E13</td>
+<td>Connect client sends streaming request over HTTP/1.1</td>
+<td>server-streaming works over Connect/HTTP-1.1; <strong>bidi</strong>
+would need HTTP/2 — <code>WatchNetworkMap</code> is server-stream only,
+so HTTP/1.1 agents are supported [research-go_cp §2].</td>
+</tr>
+<tr>
+<td>E14</td>
+<td>Oversized policy spec (&gt; 256 KiB)</td>
+<td><code>limitBody</code> → <code>400 validation_failed</code> before
+parse (§3.1).</td>
+</tr>
+<tr>
+<td>E15</td>
+<td>Clock skew on token expiry</td>
+<td>expiry checks use server time only; tokens carry server-issued
+<code>expires_at</code>; no client time is trusted (§6.1).</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="12-schema-first-contracts--no-drift-gates">12. Schema-first
+contracts &amp; no-drift gates</h2>
+<p>Two generated client families, zero hand-written clients [04_ARCH
+§4.2, 02-cp §8].</p>
+<pre class="mermaid"><code>flowchart LR
+    P[proto/helix/coordinator/v1/*.proto] --&gt;|buf generate| GO[Go server stubs&lt;br/&gt;coordinatorv1connect]
+    P --&gt;|buf generate| DART[Dart agent client]
+    P --&gt;|buf generate| RUST[Rust edge/connector client]
+    P --&gt;|buf lint + buf breaking| GATE1[CI gate: wire-incompat fails build]
+    O[openapi/helix-v1.yaml] --&gt;|openapi-generator| TS[TS Console client]
+    O --&gt;|openapi-generator| DARTAPP[Dart app client]
+    O --&gt;|oasdiff| GATE2[CI gate: breaking REST change fails]
+    REST[Gin handlers §4] -.contract source.-&gt; O
+    GATE1 --&gt; BUILD[pre-build §11.4.110]
+    GATE2 --&gt; BUILD</code></pre>
+<h3 id="121-connect--buf-agent-plane">12.1 Connect / buf (agent
+plane)</h3>
+<p><code>buf.yaml</code> (module) + <code>buf.gen.yaml</code> (plugins
+<code>protoc-gen-go</code>, <code>protoc-gen-connect-go</code>,
+<code>protoc-gen-validate</code>/protovalidate) [research-go_cp §2].
+<code>buf lint</code> + <code>buf breaking</code> (against the last
+released git ref) run in the pre-build sweep so a wire-incompatible
+proto change fails <strong>before</strong> it ships [research-go_cp §2].
+Generated Go/Dart/Rust stubs are committed (regeneratable) so the three
+codebases cannot drift.</p>
+<h3 id="122-openapi-app-plane">12.2 OpenAPI (app plane)</h3>
+<p>The REST contract is <code>openapi/helix-v1.yaml</code>.
+<strong>UNVERIFIED</strong> whether it is hand-authored (spec-first,
+handlers validated against it) or generated from handler annotations
+(code-first) — the recommendation per [research-go_cp §1] (Gin is the
+thin edge) is <strong>spec-first</strong>: author the OpenAPI, generate
+TS/Dart app clients, and add a request-validation middleware
+(kin-openapi) that asserts every request/response conforms — a drift
+between handler and spec then FAILs a test (§10). <code>oasdiff</code>
+gates a breaking REST change.</p>
+<h3 id="123-no-drift-is-a-runtime-signature">12.3 No-drift is a runtime
+signature</h3>
+<p>The no-drift guarantee is mechanical, not aspirational: regenerate in
+CI, <code>git diff --exit-code</code> the generated tree — a stale
+committed client FAILs the gate (constitution §11.4.108
+runtime-signature). Paired §1.1 mutation: hand-edit a generated stub →
+gate FAILs.</p>
+<hr />
+<h2 id="13-test-points-constitution-114169--mandatory-comprehensive-test-type-coverage">13.
+Test points (constitution §11.4.169 — mandatory comprehensive test-type
+coverage)</h2>
+<p>§11.4.169 mandates comprehensive test-type coverage; every api
+capability below is mapped to the canonical test types (§11.4.27
+enumerates them). Each PASS cites captured evidence per
+§11.4.5/§11.4.69; mocks/fakes are permitted <strong>only</strong> in
+unit tests (§11.4.27) — integration/e2e drive a real Postgres + Redis
+booted on-demand via the <code>vasic-digital/containers</code> submodule
+(§11.4.76), never ad-hoc <code>docker run</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Test type</th>
+<th>api-layer target</th>
+<th>Evidence / assertion</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Unit</strong></td>
+<td>mux routing (§1.1); <code>requireRole</code> matrix (§3.2);
+error-mapping table (§10); app-envelope projection + role filter
+(§7.2/§7.3)</td>
+<td>table-driven; <code>Querier</code>/<code>Bus</code> mocked</td>
+</tr>
+<tr>
+<td><strong>Unit</strong></td>
+<td><code>assertEveryV1RouteGuarded</code> (§3.4)</td>
+<td>every <code>/v1</code> route has RBAC; mutation adds unguarded route
+→ FAIL</td>
+</tr>
+<tr>
+<td><strong>Integration</strong></td>
+<td>full authn→rbac→WithTenant→RLS chain on a real PG; cross-tenant
+<code>GET /v1/devices/:id</code> → 404 (E9)</td>
+<td>RLS denies even with crafted query, running as
+<code>helix_app</code> [02-cp §10.3]</td>
+</tr>
+<tr>
+<td><strong>Integration</strong></td>
+<td><code>Enroll</code> atomic single-use consume under concurrency
+(E4)</td>
+<td>exactly-one-wins; device+cert+event all-or-nothing (§5.4)</td>
+</tr>
+<tr>
+<td><strong>Integration</strong></td>
+<td><code>POST /v1/policies</code> dry-run fail-closed (E10, §4.5)</td>
+<td>bad spec → 422 + <code>PolicyCompileError</code>, zero rows
+written</td>
+</tr>
+<tr>
+<td><strong>E2E / full-automation</strong></td>
+<td>enroll → advertise → policy → <code>WatchNetworkMap</code>
+delta-on-wire; assert delta content</td>
+<td>captured stream transcript; the 8-criterion MVP DoD [02-cp
+§13.1]</td>
+</tr>
+<tr>
+<td><strong>E2E</strong></td>
+<td><code>POST /v1/devices/:id/revoke</code> → stream force-close +
+WG-peer-gone &lt; 1 s (E6, §8.4)</td>
+<td>wall-clock measured both legs &lt; 1 s</td>
+</tr>
+<tr>
+<td><strong>Performance</strong></td>
+<td><code>helix_reconcile_seconds</code> p99 &lt; 1 s under load
+(§9.1)</td>
+<td>histogram captured; budget table met</td>
+</tr>
+<tr>
+<td><strong>Performance</strong></td>
+<td>enrollment round-trip &lt; 500 ms [02-cp §10.2]</td>
+<td>api histogram</td>
+</tr>
+<tr>
+<td><strong>Soak (24 h)</strong></td>
+<td>N agents holding <code>WatchNetworkMap</code> + N WS subs; flap
+policies</td>
+<td><code>helix_watch_streams_open</code> stable; RSS slope ≈ 0;
+<code>helix_ws_dropped_total</code> bounded</td>
+</tr>
+<tr>
+<td><strong>Stress / chaos</strong> (§11.4.85)</td>
+<td>Redis kill mid-mutation (E11); Postgres kill (E12); slow WS consumer
+(E8)</td>
+<td><code>readyz</code> red, clean <code>503</code>, no crash, no memory
+growth, recovery on restore</td>
+</tr>
+<tr>
+<td><strong>Security</strong></td>
+<td>streaming-error rides trailer not HTTP status (§5.2); no client IP
+persisted/logged (C3, §4.6); secrets stored hashed only (§2)</td>
+<td>trailer code asserted; schema-lint over
+<code>sessions</code>/<code>api_tokens</code>/<code>enroll_tokens</code>
+green</td>
+</tr>
+<tr>
+<td><strong>Security</strong></td>
+<td><code>wg_pubkey.len=32</code> rejects non-32B; contract has no
+private-key slot (C6, §5.3)</td>
+<td>protovalidate rejection captured</td>
+</tr>
+<tr>
+<td><strong>Meta-test (§1.1)</strong></td>
+<td>every gate above has a paired mutation: unguarded route, hand-edited
+stub, added <code>client_ip</code> column, <code>ab_pass</code> without
+evidence</td>
+<td>each mutation makes its gate FAIL</td>
+</tr>
+<tr>
+<td><strong>Contract / no-drift</strong></td>
+<td><code>buf lint</code>+<code>buf breaking</code> (§12.1); regenerate
++ <code>git diff --exit-code</code> (§12.3); <code>oasdiff</code>
+(§12.2)</td>
+<td>stale stub / breaking change → FAIL</td>
+</tr>
+<tr>
+<td><strong>Challenge (HelixQA)</strong></td>
+<td>drives enroll→policy→delta and asserts &lt; 1 s SLO with captured
+evidence</td>
+<td>§11.4.27/§11.4.5/.69/.107 [02-cp §12]</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="14-phase-2-forward-seams-additive-not-a-rewrite">14. Phase-2
+forward seams (additive, not a rewrite)</h2>
+<p>The api layer&#39;s seams permit Phase-2 growth without reshaping [02-cp
+§14, 04_P1 §12]: the same multiplexed listener gains a WASM Console
+calling <code>Coordinator</code> over Connect/HTTP-1.1 (already
+supported, §5.1); <code>/v1/stream</code> <code>Last-Event-ID</code>
+replay (§7.5) becomes a NATS-JetStream-backed durable subscription when
+the <code>events.Bus</code> swaps (D3); REST gains GitOps policy
+endpoints (policy-as-code); device mTLS gains the PQ-PSK layer at the
+TLS config (§1.1) with no handler change; and stateless multi-replica
+api pods sit behind one LB because no api handler holds durable state —
+the graph/streams live in <code>coordinator</code>, rebuilt from
+Postgres + events on boot [02-cp §11.3]. Phase 1 drew the seams (one
+listener, four auth layers, schema-first contracts, bounded-queue push)
+in the right places.</p>
+<hr />
+<h3 id="sources">Sources</h3>
+<p>[04_P1] <code>HelixVPN-Phase1-MVP.md</code> §8 (API surface: Gin REST
++ Connect + WS/SSE; route list; multiplexed server; generated clients) ·
+[04_ARCH §4.2] <code>HelixVPN-Architecture-Refined.md</code>
+(schema-generated clients, no drift) · [02-cp]
+<code>02-control-plane.md</code> §1 (modular monolith / api package), §2
+(DDL + RLS + no-log lint), §3 (IPAM / ULA /48 / 4via6), §4 (canonical
+<code>Coordinator</code> <code>.proto</code>, package
+<code>helix.coordinator.v1</code>), §5 (Redis Streams envelope +
+taxonomy), §6 (coordinator stream loop), §7 (policy compiler /
+fail-closed / activate), §8 (REST authz + agent mTLS), §9 (enrollment +
+PKI), §10 (SLOs + test strategy), §11–§14 (deploy, ecosystem wiring,
+phase plan, forward seams) · [research-go_cp] §1 (Gin v1.12.0 — thin
+REST edge, same <code>http.Server</code> as Connect), §2 (connect-go
+v1.20.0 — one handler/three protocols, server-streaming,
+HTTP-200-on-stream-error caveat, buf + protovalidate), §3 (sqlc/pgx
+typed SQL), §4 (Postgres RLS <code>SET LOCAL</code> per-tx tenant
+context), §5 (Redis Streams consumer groups + XAUTOCLAIM DLQ), §6 (goose
+migrations), §7 (single-server composition) · [SYNTH] §2 (settled stack
+floor), §7 (security/privacy invariants), §9 (constitution
+bindings).</p>
+</body>
+</html>

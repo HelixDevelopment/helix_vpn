@@ -1,0 +1,1683 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>WireGuard Core (helix-wg)</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">WireGuard Core (helix-wg)</h1>
+</header>
+<h1 id="wireguard-core-helix-wg">WireGuard Core (helix-wg)</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-06-25T00:00:00Z</p>
+<blockquote>
+<p>Volume 2, document 01 of the HelixVPN master technical specification
+— the nano-detail deepening of the <strong>WireGuard Core
+(<code>helix-wg</code>)</strong> section of the pass-1 data-plane
+overview [01-DP §4]. This is a SPEC: it describes <em>what to build</em>
+(every trait/struct/enum/fn signature, wire layout, state machine, error
+taxonomy, config knob, edge case, security note, performance budget, and
+test point) — it does not ship the product. Sources are cited inline by
+id.</p>
+</blockquote>
+<hr />
+<h2 id="evidence-base-honesty-notes-constitution-1146--stated-not-guessed">Evidence-base
+honesty notes (constitution §11.4.6 — stated, not guessed)</h2>
+<p>Three grounding caveats apply to this whole document; every claim
+that rests on them carries an inline <code>UNVERIFIED:</code>
+marker:</p>
+<ol type="1">
+<li><strong><code>research-wireguard.md</code> does not exist</strong>
+in the supplied evidence base (<code>scratchpad/kb/</code> contains
+<code>research-mullvad.md</code>, <code>research-masque.md</code>,
+<code>research-hysteria2.md</code>, … but no
+<code>research-wireguard.md</code>). Therefore every <strong>WireGuard
+protocol wire-byte layout</strong> (handshake message sizes, field
+offsets, MAC layout, transport-data header) in §3 is
+<code>UNVERIFIED:</code> against the evidence base — it is reproduced
+from the public WireGuard protocol (Donenfeld, <em>WireGuard: Next
+Generation Kernel Network Tunnel</em>) and MUST be re-confirmed against
+the WireGuard whitepaper + RFC-equivalent + the <code>boringtun</code>
+source before implementation. The <em>architectural</em> facts (Noise
+IK, Curve25519, ChaCha20-Poly1305, BLAKE2s, PSK seam) ARE grounded
+[01-DP §4, SYNTHESIS §2, research-mullvad §4].</li>
+<li><strong><code>boringtun</code> internal API signatures</strong>
+(<code>Tunn::encapsulate</code>, <code>decapsulate</code>,
+<code>update_timers</code>, <code>TunnResult</code>) are
+<code>UNVERIFIED:</code> against the evidence base — they are reproduced
+from the public <code>boringtun</code> crate (cloudflare/boringtun) and
+MUST be pinned to the exact crate version&#39;s API at implementation time.
+The evidence base grounds only the <em>wrapper</em> shape
+(<code>WgPeer</code>, <code>WgVerdict</code>, the three pump methods)
+[01-DP §4, 04_P0 §4.4].</li>
+<li><strong>§11.4.169 (&quot;test types&quot;)</strong> referenced in the
+authoring brief is <strong>not present</strong> in this document&#39;s
+constitution context (which ends at §11.4.168). <code>UNVERIFIED:</code>
+its exact enumeration. The concrete test types in §13 are therefore
+drawn from the in-context §11.4.27 test-type set (unit, integration,
+e2e, full-automation, security, fuzz, stress, chaos, performance,
+benchmark, Challenges, HelixQA) + the §11.4.5/.69/.107 captured-evidence
+covenant, and labelled &quot;§11.4.169-class&quot; where the brief intends the
+per-component mandate.</li>
+</ol>
+<hr />
+<h2 id="0-position-ownership-and-invariants">0. Position, ownership, and
+invariants</h2>
+<p><code>helix-wg</code> is the crate at <strong>L3 — the WireGuard
+cryptographic core</strong> of the layering model [01-DP §1]. It is the
+<em>only</em> crate in the workspace that touches WireGuard plaintext on
+one side and WireGuard ciphertext on the other; the
+<code>Transport</code> layer (§3 of [01-DP]) sits strictly
+<strong>beneath</strong> it and never sees plaintext (invariant I1)
+[01-DP §0.1]. <code>helix-wg</code> owns the WireGuard <code>Tunn</code>
+state machine, pumps its timers, routes its output verdicts, and
+enforces per-peer <code>AllowedIPs</code> crypto-routing. It is the same
+crate byte-for-byte on client, connector, and gateway edge (invariant
+I4) [01-DP §0.1, §4; 04_ARCH §3.2].</p>
+<p><strong>What <code>helix-wg</code> owns (this document):</strong></p>
+<ul>
+<li>boringtun-vs-kernel selection per platform (§1).</li>
+<li>The <code>WgPeer</code> / <code>WgDevice</code> wrapper over
+boringtun <code>Tunn</code>, its <code>WgVerdict</code> output enum, and
+the four pump entry points (§2).</li>
+<li>The Noise IK handshake state machine + WireGuard message wire
+formats it drives (§3) — <code>UNVERIFIED:</code> byte layouts per note
+1.</li>
+<li>The fixed crypto parameter set + the additive PSK (post-quantum)
+seam (§4).</li>
+<li><code>AllowedIPs</code> semantics: the longest-prefix-match
+crypto-routing trie (§5).</li>
+<li>Per-device key generation + rotation lifecycle (§6).</li>
+<li>MTU derivation from the active transport&#39;s
+<code>effective_mtu()</code> (§7).</li>
+<li>Timer / rekey / keepalive state machine (§8).</li>
+<li>The encrypted-datagram boundary contract with
+<code>helix-transport</code> (§9).</li>
+<li>Error taxonomy (§10), config knobs (§11), edge cases (§12), test
+points (§13), security (§14), performance budget (§15).</li>
+</ul>
+<p><strong>What <code>helix-wg</code> does NOT own:</strong> the
+obfuscating transport (<code>helix-transport</code>, [01-DP §3]); the
+TUN device (<code>helix-tun</code>); the orchestrator&#39;s three loops and
+<code>TunnelStatus</code> stream (<code>helix-core</code>, [01-DP §5]);
+the route map / ACL compiler (<code>helix-route</code>, [01-DP §6–§7]);
+DAITA shaping (<code>helix-daita</code>, [01-DP §9]); the full
+post-quantum KEM exchange protocol (security doc — <code>helix-wg</code>
+exposes only the PSK <em>field</em>, §4.4).</p>
+<h3 id="01-crate-local-invariants-extend-the-01-data-plane-invariants">0.1
+Crate-local invariants (extend the §0.1 data-plane invariants)</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Invariant</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>W1</td>
+<td><code>helix-wg</code> performs <strong>zero heap allocation on the
+steady-state encrypt/decrypt path</strong>; all framing uses
+caller-provided scratch buffers (<code>&amp;mut [u8]</code>).</td>
+<td>derived from iOS NE memory ceiling [04_P0 §6, 04_ARCH §5.6]</td>
+</tr>
+<tr>
+<td>W2</td>
+<td>Crypto parameters are <strong>fixed and never altered</strong>
+(Noise IK / Curve25519 / ChaCha20-Poly1305 / BLAKE2s); the only additive
+seam is the WG PSK field.</td>
+<td>[01-DP §4, SYNTHESIS §2]</td>
+</tr>
+<tr>
+<td>W3</td>
+<td>A device <strong>private key is generated on-device and never leaves
+it</strong>; <code>helix-wg</code> exposes only the public key for
+enrollment.</td>
+<td>[01-DP §4, 04_ARCH §7, SYNTHESIS §7]</td>
+</tr>
+<tr>
+<td>W4</td>
+<td>A packet whose decrypted source / encrypted destination does not
+match the peer&#39;s <code>AllowedIPs</code> is <strong>dropped</strong> —
+crypto-routing is the coarse default-deny layer (I6).</td>
+<td>[01-DP §7, 04_ARCH §3.4]</td>
+</tr>
+<tr>
+<td>W5</td>
+<td><code>helix-wg</code> keeps <strong>no durable per-packet or
+per-connection state</strong> — only in-RAM session state + aggregate
+counters (no-logging by construction, I5).</td>
+<td>[01-DP §0.1, 04_ARCH §2.7, research-mullvad §8]</td>
+</tr>
+<tr>
+<td>W6</td>
+<td>The wrapper is <strong>the same crate on all three roles</strong>;
+role differences (client default-route capture vs connector CIDR
+forwarding) live in <code>helix-core</code>, not here.</td>
+<td>[01-DP §4, §5.1]</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="1-boringtun-userspace-vs-kernel-wireguard--per-platform">1.
+boringtun (userspace) vs kernel WireGuard — per platform</h2>
+<h3 id="11-the-decision-grounded">1.1 The decision (grounded)</h3>
+<p>boringtun is the <strong>default and the cross-platform
+floor</strong>: pure-Rust userspace WireGuard, no kernel module, runs
+identically on Linux/Android/iOS — exactly the iOS path, where there is
+no kernel WG regardless [04_P0 §4.4]. On <strong>Linux</strong> the
+kernel WG fast path is used where available, with boringtun userspace as
+fallback; the project <strong>ships both and defaults to kernel on
+Linux</strong> [01-DP §4, 04_ARCH §13 &quot;ship both, default to
+kernel&quot;].</p>
+<h3 id="12-per-platform-matrix">1.2 Per-platform matrix</h3>
+<table>
+<thead>
+<tr>
+<th>Platform</th>
+<th>Backend selected</th>
+<th>Rationale</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Linux (client/connector/edge)</td>
+<td><strong>kernel WG</strong> (<code>wireguard</code>
+netlink/<code>wg</code>), boringtun fallback</td>
+<td>kernel is faster; constrains containerization/permissions → fallback
+exists</td>
+<td>[04_ARCH §13, §3.2; 04_P0 §4.4]</td>
+</tr>
+<tr>
+<td>Android</td>
+<td><strong>boringtun</strong> (via <code>VpnService</code>+JNI)</td>
+<td>userspace, no root, uniform</td>
+<td>[04_ARCH §5.3, SYNTHESIS §5]</td>
+</tr>
+<tr>
+<td>iOS / macOS (NE)</td>
+<td><strong>boringtun</strong> (in
+<code>NEPacketTunnelProvider</code>)</td>
+<td>no kernel WG on iOS; bounded-memory Rust is the make-or-break gate
+G3</td>
+<td>[04_P0 §4.4, §6; 04_ARCH §5.6]</td>
+</tr>
+<tr>
+<td>Windows</td>
+<td><strong>boringtun</strong> over
+<code>wireguard-nt</code>/<code>wintun</code>, or kernel-ish
+<code>wireguard-nt</code> data path</td>
+<td>shim owns the adapter; backend abstracted</td>
+<td>[04_ARCH §5.3]</td>
+</tr>
+<tr>
+<td>HarmonyOS / Aurora</td>
+<td><strong>boringtun</strong> (native shim → <code>.so</code>)</td>
+<td>no kernel WG; Phase 3</td>
+<td>[04_ARCH §5.3, SYNTHESIS §4]</td>
+</tr>
+</tbody>
+</table>
+<p><code>UNVERIFIED:</code> exact Windows kernel-vs-userspace split —
+the evidence base says &quot;<code>wireguard-nt</code> / <code>wintun</code>&quot;
+[04_ARCH §5.3] without pinning whether boringtun or
+<code>wireguard-nt</code>&#39;s own crypto runs the data path; settle in the
+Windows shim spec (doc 06).</p>
+<h3 id="13-backend-abstraction--wgbackend">1.3 Backend abstraction —
+<code>WgBackend</code></h3>
+<p>The two backends hide behind one trait so <code>helix-core</code> and
+the rest of the workspace are backend-agnostic; backend selection is a
+build-time + runtime choice resolved once at device construction.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-wg/src/backend.rs</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co">/// Selects how WireGuard crypto + the Tunn state machine are executed.</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="bu">Clone</span><span class="op">,</span> <span class="bu">Copy</span><span class="op">,</span> <span class="bu">Debug</span><span class="op">,</span> <span class="bu">PartialEq</span><span class="op">,</span> <span class="bu">Eq</span><span class="at">)]</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">enum</span> WgBackend <span class="op">{</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Pure-Rust userspace (boringtun Tunn). The cross-platform floor.</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    Userspace<span class="op">,</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Linux kernel WireGuard via netlink (`wg`/`wireguard` module).</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    LinuxKernel<span class="op">,</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> WgBackend <span class="op">{</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Resolve the backend for the current platform + availability.</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Linux: prefer LinuxKernel if the module is loadable AND not running</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// inside a constrained container; else Userspace. All other platforms: Userspace.</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">fn</span> resolve(prefer_kernel<span class="op">:</span> <span class="dt">bool</span>) <span class="op">-&gt;</span> WgBackend <span class="op">{</span> <span class="co">/* … */</span> <span class="op">}</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="co">/// The role-neutral handle the orchestrator drives, regardless of backend.</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="co">/// (Userspace impl wraps boringtun Tunn per §2; LinuxKernel impl drives netlink.)</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">trait</span> WgDataPath<span class="op">:</span> <span class="bu">Send</span> <span class="op">+</span> <span class="bu">Sync</span> <span class="op">{</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Encrypt one outbound plaintext IP packet for `peer_index` (userspace path);</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// kernel path is configured once and the kernel does this — see §9.3.</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> encapsulate<span class="op">&lt;</span><span class="ot">&#39;a</span><span class="op">&gt;</span>(<span class="op">&amp;</span><span class="kw">mut</span> <span class="kw">self</span><span class="op">,</span> peer<span class="op">:</span> PeerIndex<span class="op">,</span> ip_pkt<span class="op">:</span> <span class="op">&amp;</span>[<span class="dt">u8</span>]<span class="op">,</span> scratch<span class="op">:</span> <span class="op">&amp;</span><span class="ot">&#39;a</span> <span class="kw">mut</span> [<span class="dt">u8</span>])</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>        <span class="op">-&gt;</span> WgVerdict<span class="op">&lt;</span><span class="ot">&#39;a</span><span class="op">&gt;;</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> decapsulate<span class="op">&lt;</span><span class="ot">&#39;a</span><span class="op">&gt;</span>(<span class="op">&amp;</span><span class="kw">mut</span> <span class="kw">self</span><span class="op">,</span> datagram<span class="op">:</span> <span class="op">&amp;</span>[<span class="dt">u8</span>]<span class="op">,</span> scratch<span class="op">:</span> <span class="op">&amp;</span><span class="ot">&#39;a</span> <span class="kw">mut</span> [<span class="dt">u8</span>]) <span class="op">-&gt;</span> WgVerdict<span class="op">&lt;</span><span class="ot">&#39;a</span><span class="op">&gt;;</span></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> tick<span class="op">&lt;</span><span class="ot">&#39;a</span><span class="op">&gt;</span>(<span class="op">&amp;</span><span class="kw">mut</span> <span class="kw">self</span><span class="op">,</span> scratch<span class="op">:</span> <span class="op">&amp;</span><span class="ot">&#39;a</span> <span class="kw">mut</span> [<span class="dt">u8</span>]) <span class="op">-&gt;</span> WgVerdict<span class="op">&lt;</span><span class="ot">&#39;a</span><span class="op">&gt;;</span></span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> backend(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> WgBackend<span class="op">;</span></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<blockquote>
+<p><strong>Kernel-path note (§9.3 expands):</strong> when
+<code>LinuxKernel</code> is selected, the per-packet encrypt/decrypt
+happens <em>inside the kernel</em>, NOT through
+<code>encapsulate</code>/<code>decapsulate</code>. In that mode
+<code>helix-wg</code> (a) programs the kernel peer set +
+<code>AllowedIPs</code> via netlink, and (b) the <em>transport</em> must
+still be userspace for any non-<code>plain-udp</code> carrier — so a
+kernel/userspace <strong>split</strong> applies only to
+<code>plain-udp</code>; every obfuscating transport forces the userspace
+data path because the kernel cannot emit MASQUE/Shadowsocks framing.
+This is a first-class edge case (§12.7).</p>
+</blockquote>
+<h3 id="14-backend-placement-in-the-packet-flow">1.4 Backend placement
+in the packet flow</h3>
+<pre class="mermaid"><code>flowchart LR
+    TUN[helix-tun&lt;br/&gt;OS TUN fd] --&gt;|plaintext IP pkt| WG{helix-wg&lt;br/&gt;WgDataPath}
+    WG --&gt;|&quot;Userspace: boringtun encapsulate&quot;| ENC[encrypted WG datagram]
+    WG -.-&gt;|&quot;LinuxKernel + plain-udp:&lt;br/&gt;kernel does crypto&quot;| KUDP[kernel WG socket]
+    ENC --&gt;|&quot;WriteToTransport(&amp;[u8])&quot;| TX[helix-transport&lt;br/&gt;active carrier]
+    TX --&gt;|opaque WG datagram| WIRE[(L1 wire :443/udp …)]
+    WIRE --&gt; TX
+    TX --&gt;|&quot;recv() -&gt; Bytes&quot;| WG2{helix-wg&lt;br/&gt;decapsulate}
+    WG2 --&gt;|&quot;WriteToTun(&amp;[u8])&quot;| TUN
+    WG2 --&gt;|&quot;WriteToTransport(&amp;[u8])&lt;br/&gt;handshake reply&quot;| TX
+    classDef core fill:#1f3a5f,stroke:#9cf,color:#fff;
+    class WG,WG2 core;</code></pre>
+<hr />
+<h2 id="2-the-helix-wg-boringtun-tunn-wrapper--wgverdict">2. The
+<code>helix-wg</code> boringtun <code>Tunn</code> wrapper +
+<code>WgVerdict</code></h2>
+<h3 id="21-the-four-verdict-output-model-grounded">2.1 The four-verdict
+output model (grounded)</h3>
+<p>boringtun&#39;s <code>Tunn</code> is a sans-I/O state machine: you feed
+it bytes and it returns a verdict telling you what to do next [04_P0
+§4.4]. <code>helix-wg</code> maps boringtun&#39;s <code>TunnResult</code>
+onto a tighter, lifetime-bound <code>WgVerdict</code> [01-DP §4]:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-wg/src/lib.rs</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co">/// The output of every helix-wg pump call. Borrows the caller&#39;s scratch buffer</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co">/// (W1: no heap alloc on the hot path) — the orchestrator acts on it immediately</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co">/// before the next pump call reuses the scratch.</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">enum</span> WgVerdict<span class="op">&lt;</span><span class="ot">&#39;a</span><span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Encrypted datagram (handshake or transport-data) → hand to the active Transport (§3 of 01-DP).</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    WriteToTransport(<span class="op">&amp;</span><span class="ot">&#39;a</span> [<span class="dt">u8</span>])<span class="op">,</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Decrypted inner IP packet → hand to the TUN. Carries the parsed inner src for AllowedIPs audit (§5).</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    WriteToTun <span class="op">{</span> pkt<span class="op">:</span> <span class="op">&amp;</span><span class="ot">&#39;a</span> [<span class="dt">u8</span>]<span class="op">,</span> inner_src<span class="op">:</span> IpAddr <span class="op">},</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Nothing to emit this call (e.g. duplicate, keepalive consumed, queued).</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    Nothing<span class="op">,</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// A genuine WireGuard-layer error (see WgError, §10). NEVER used for &quot;no output&quot;.</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    <span class="cn">Err</span>(WgError)<span class="op">,</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><strong>Mapping from boringtun <code>TunnResult</code></strong>
+(<code>UNVERIFIED:</code> boringtun API per note 2; this is the public
+crate surface to confirm at pin time):</p>
+<table>
+<thead>
+<tr>
+<th>boringtun <code>TunnResult</code></th>
+<th><code>helix-wg</code> <code>WgVerdict</code></th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Done</code></td>
+<td><code>Nothing</code></td>
+<td>nothing to emit</td>
+</tr>
+<tr>
+<td><code>Err(WireGuardError)</code></td>
+<td><code>Err(WgError::from(_))</code></td>
+<td>translated taxonomy (§10)</td>
+</tr>
+<tr>
+<td><code>WriteToNetwork(&amp;[u8])</code></td>
+<td><code>WriteToTransport(&amp;[u8])</code></td>
+<td>ciphertext → transport</td>
+</tr>
+<tr>
+<td><code>WriteToTunnelV4(&amp;[u8], Ipv4Addr)</code></td>
+<td><code>WriteToTun { pkt, inner_src: V4(..) }</code></td>
+<td>plaintext → TUN, src for §5 audit</td>
+</tr>
+<tr>
+<td><code>WriteToTunnelV6(&amp;[u8], Ipv6Addr)</code></td>
+<td><code>WriteToTun { pkt, inner_src: V6(..) }</code></td>
+<td>plaintext → TUN, src for §5 audit</td>
+</tr>
+</tbody>
+</table>
+<h3 id="22-wgpeer-and-wgdevice--full-signatures">2.2 <code>WgPeer</code>
+and <code>WgDevice</code> — full signatures</h3>
+<p>A <code>WgPeer</code> wraps exactly one boringtun <code>Tunn</code>
+(one peer session). A <code>WgDevice</code> owns the local static key +
+the set of peers + the <code>AllowedIPs</code> routing trie (§5). The
+client has one peer (the gateway); the connector has one peer (the
+gateway); the <strong>edge</strong> has N peers (every connected client
++ connector) and is the only multi-peer instance.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-wg/src/peer.rs</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::net::</span><span class="op">{</span>IpAddr<span class="op">,</span> SocketAddr<span class="op">};</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">type</span> PeerIndex <span class="op">=</span> <span class="dt">u32</span><span class="op">;</span>          <span class="co">// dense index into WgDevice.peers</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">type</span> PubKey   <span class="op">=</span> [<span class="dt">u8</span><span class="op">;</span> <span class="dv">32</span>]<span class="op">;</span>      <span class="co">// Curve25519 public key</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">type</span> PrivKey  <span class="op">=</span> SecretBytes<span class="op">;</span>   <span class="co">// Curve25519 private key (zeroizing, never logged — W3)</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">type</span> Psk      <span class="op">=</span> [<span class="dt">u8</span><span class="op">;</span> <span class="dv">32</span>]<span class="op">;</span>      <span class="co">// optional pre-shared key (post-quantum seam, §4.4)</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> WgPeer <span class="op">{</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    tunn<span class="op">:</span> <span class="pp">boringtun::noise::</span>Tunn<span class="op">,</span>  <span class="co">// UNVERIFIED: exact path/type per note 2</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> remote_pubkey<span class="op">:</span> PubKey<span class="op">,</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> endpoint<span class="op">:</span> <span class="dt">Option</span><span class="op">&lt;</span>SocketAddr<span class="op">&gt;,</span>   <span class="co">// current latched endpoint (WG roaming, §8.4)</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> allowed_ips<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span>IpNet<span class="op">&gt;,</span>        <span class="co">// this peer&#39;s permitted overlay prefixes (W4, §5)</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> persistent_keepalive<span class="op">:</span> <span class="dt">Option</span><span class="op">&lt;</span><span class="dt">u16</span><span class="op">&gt;,</span> <span class="co">// seconds; None = off (§8.3)</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> last_handshake<span class="op">:</span> <span class="dt">Option</span><span class="op">&lt;</span>Instant<span class="op">&gt;,</span>   <span class="co">// in-RAM only (W5)</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>    stats<span class="op">:</span> PeerStats<span class="op">,</span>                       <span class="co">// aggregate counters only (W5)</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> WgDevice <span class="op">{</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>    local_private<span class="op">:</span> PrivKey<span class="op">,</span>         <span class="co">// generated on-device, never leaves (W3)</span></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>    local_public<span class="op">:</span> PubKey<span class="op">,</span></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>    peers<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span>WgPeer<span class="op">&gt;,</span></span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>    routing<span class="op">:</span> AllowedIpsTrie<span class="op">,</span>        <span class="co">// §5 — maps inner src/dst → PeerIndex</span></span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>    backend<span class="op">:</span> WgBackend<span class="op">,</span></span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>    rate_limiter<span class="op">:</span> HandshakeRateLimiter<span class="op">,</span> <span class="co">// §14.3 anti-DoS (cookie reply path)</span></span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>    index_map<span class="op">:</span> PeerIndexMap<span class="op">,</span>        <span class="co">// WG receiver-index → PeerIndex demux (§3.5)</span></span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> WgDevice <span class="op">{</span></span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Construct from the local static key + initial peer set (from the RouteMap, 01-DP §6.2).</span></span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">fn</span> new(local_private<span class="op">:</span> PrivKey<span class="op">,</span> backend<span class="op">:</span> WgBackend) <span class="op">-&gt;</span> <span class="dt">Self</span> <span class="op">{</span> <span class="co">/* … */</span> <span class="op">}</span></span>
+<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Add / update a peer (reconciler-driven, no restart — 01-DP §6.3). Idempotent on pubkey.</span></span>
+<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">fn</span> upsert_peer(<span class="op">&amp;</span><span class="kw">mut</span> <span class="kw">self</span><span class="op">,</span> cfg<span class="op">:</span> PeerConfig) <span class="op">-&gt;</span> PeerIndex <span class="op">{</span> <span class="co">/* … */</span> <span class="op">}</span></span>
+<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Remove a peer (e.g. device.revoked → drop in &lt;1s — 01-DP §7). Zeroizes its session.</span></span>
+<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">fn</span> remove_peer(<span class="op">&amp;</span><span class="kw">mut</span> <span class="kw">self</span><span class="op">,</span> peer<span class="op">:</span> PeerIndex) <span class="op">{</span> <span class="co">/* … */</span> <span class="op">}</span></span>
+<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// OUTBOUND: a plaintext IP packet left the TUN → find the peer by dst (§5),</span></span>
+<span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// encrypt, return ciphertext for the transport. Drops (W4) if no AllowedIPs match.</span></span>
+<span id="cb4-40"><a href="#cb4-40" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">fn</span> handle_tun_out<span class="op">&lt;</span><span class="ot">&#39;a</span><span class="op">&gt;</span>(<span class="op">&amp;</span><span class="kw">mut</span> <span class="kw">self</span><span class="op">,</span> ip_pkt<span class="op">:</span> <span class="op">&amp;</span>[<span class="dt">u8</span>]<span class="op">,</span> scratch<span class="op">:</span> <span class="op">&amp;</span><span class="ot">&#39;a</span> <span class="kw">mut</span> [<span class="dt">u8</span>]) <span class="op">-&gt;</span> WgVerdict<span class="op">&lt;</span><span class="ot">&#39;a</span><span class="op">&gt;;</span></span>
+<span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-42"><a href="#cb4-42" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// INBOUND: bytes arrived from the transport → demux to the right peer by WG</span></span>
+<span id="cb4-43"><a href="#cb4-43" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// receiver index (§3.5), decrypt; emit plaintext for the TUN (after §5 src audit)</span></span>
+<span id="cb4-44"><a href="#cb4-44" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// or a handshake reply for the transport.</span></span>
+<span id="cb4-45"><a href="#cb4-45" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">fn</span> handle_transport_in<span class="op">&lt;</span><span class="ot">&#39;a</span><span class="op">&gt;</span>(<span class="op">&amp;</span><span class="kw">mut</span> <span class="kw">self</span><span class="op">,</span> datagram<span class="op">:</span> <span class="op">&amp;</span>[<span class="dt">u8</span>]<span class="op">,</span> from<span class="op">:</span> <span class="dt">Option</span><span class="op">&lt;</span>SocketAddr<span class="op">&gt;,</span></span>
+<span id="cb4-46"><a href="#cb4-46" aria-hidden="true" tabindex="-1"></a>                                   scratch<span class="op">:</span> <span class="op">&amp;</span><span class="ot">&#39;a</span> <span class="kw">mut</span> [<span class="dt">u8</span>]) <span class="op">-&gt;</span> WgVerdict<span class="op">&lt;</span><span class="ot">&#39;a</span><span class="op">&gt;;</span></span>
+<span id="cb4-47"><a href="#cb4-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-48"><a href="#cb4-48" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// TIMER: call every TICK_INTERVAL (§8.1); emits keepalives, rekeys, expirations</span></span>
+<span id="cb4-49"><a href="#cb4-49" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// for ALL peers (round-robins which peer needs work this tick).</span></span>
+<span id="cb4-50"><a href="#cb4-50" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">fn</span> tick<span class="op">&lt;</span><span class="ot">&#39;a</span><span class="op">&gt;</span>(<span class="op">&amp;</span><span class="kw">mut</span> <span class="kw">self</span><span class="op">,</span> now<span class="op">:</span> Instant<span class="op">,</span> scratch<span class="op">:</span> <span class="op">&amp;</span><span class="ot">&#39;a</span> <span class="kw">mut</span> [<span class="dt">u8</span>]) <span class="op">-&gt;</span> <span class="dt">Vec</span><span class="op">&lt;</span>WgVerdict<span class="op">&lt;</span><span class="ot">&#39;a</span><span class="op">&gt;&gt;;</span></span>
+<span id="cb4-51"><a href="#cb4-51" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-52"><a href="#cb4-52" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">fn</span> local_public(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> PubKey <span class="op">{</span> <span class="kw">self</span><span class="op">.</span>local_public <span class="op">}</span></span>
+<span id="cb4-53"><a href="#cb4-53" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">fn</span> peer_stats(<span class="op">&amp;</span><span class="kw">self</span><span class="op">,</span> peer<span class="op">:</span> PeerIndex) <span class="op">-&gt;</span> PeerStats <span class="op">{</span> <span class="co">/* aggregate only, W5 */</span> <span class="op">}</span></span>
+<span id="cb4-54"><a href="#cb4-54" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb4-55"><a href="#cb4-55" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-56"><a href="#cb4-56" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="bu">Clone</span><span class="op">,</span> <span class="bu">Debug</span><span class="op">,</span> <span class="bu">Default</span><span class="at">)]</span></span>
+<span id="cb4-57"><a href="#cb4-57" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> PeerStats <span class="op">{</span>        <span class="co">// W5: aggregate counters only, never per-packet logs</span></span>
+<span id="cb4-58"><a href="#cb4-58" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> tx_bytes<span class="op">:</span> <span class="dt">u64</span><span class="op">,</span> <span class="kw">pub</span> rx_bytes<span class="op">:</span> <span class="dt">u64</span><span class="op">,</span></span>
+<span id="cb4-59"><a href="#cb4-59" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> tx_packets<span class="op">:</span> <span class="dt">u64</span><span class="op">,</span> <span class="kw">pub</span> rx_packets<span class="op">:</span> <span class="dt">u64</span><span class="op">,</span></span>
+<span id="cb4-60"><a href="#cb4-60" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> handshakes_ok<span class="op">:</span> <span class="dt">u32</span><span class="op">,</span> <span class="kw">pub</span> handshakes_failed<span class="op">:</span> <span class="dt">u32</span><span class="op">,</span></span>
+<span id="cb4-61"><a href="#cb4-61" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> last_handshake_age_s<span class="op">:</span> <span class="dt">Option</span><span class="op">&lt;</span><span class="dt">u32</span><span class="op">&gt;,</span></span>
+<span id="cb4-62"><a href="#cb4-62" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb4-63"><a href="#cb4-63" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-64"><a href="#cb4-64" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> PeerConfig <span class="op">{</span></span>
+<span id="cb4-65"><a href="#cb4-65" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> remote_pubkey<span class="op">:</span> PubKey<span class="op">,</span></span>
+<span id="cb4-66"><a href="#cb4-66" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> allowed_ips<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span>IpNet<span class="op">&gt;,</span></span>
+<span id="cb4-67"><a href="#cb4-67" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> endpoint<span class="op">:</span> <span class="dt">Option</span><span class="op">&lt;</span>SocketAddr<span class="op">&gt;,</span></span>
+<span id="cb4-68"><a href="#cb4-68" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> persistent_keepalive<span class="op">:</span> <span class="dt">Option</span><span class="op">&lt;</span><span class="dt">u16</span><span class="op">&gt;,</span></span>
+<span id="cb4-69"><a href="#cb4-69" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> psk<span class="op">:</span> <span class="dt">Option</span><span class="op">&lt;</span>Psk<span class="op">&gt;,</span>          <span class="co">// §4.4</span></span>
+<span id="cb4-70"><a href="#cb4-70" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="23-why-handle_tun_out-takes-the-whole-device-not-a-single-peer">2.3
+Why <code>handle_tun_out</code> takes the whole device, not a single
+peer</h3>
+<p>A multi-hop chain or an edge with N peers must select the
+<em>right</em> peer from the inner destination IP via the
+<code>AllowedIPs</code> trie (§5) before encrypting — so the outbound
+entry point lives on <code>WgDevice</code>, not <code>WgPeer</code>. The
+single-peer client case is just N=1. (The pass-1 sketch put
+<code>handle_tun_out</code> on <code>WgPeer</code> for the one-peer
+slice [01-DP §4]; this nano-spec lifts it to <code>WgDevice</code> for
+the edge&#39;s N-peer reality, a deliberate refinement — the one-peer body
+is unchanged.)</p>
+<hr />
+<h2 id="3-noise-ik-handshake--wireguard-message-wire-formats">3. Noise
+IK handshake + WireGuard message wire formats</h2>
+<blockquote>
+<p><strong><code>UNVERIFIED:</code> (note 1)</strong> — the byte
+sizes/offsets below are the public WireGuard protocol values, NOT
+confirmed against an evidence-base <code>research-wireguard.md</code>
+(which is absent). Confirm against the WireGuard whitepaper + boringtun
+source before coding. The <em>architecture</em> (Noise IK, 1-RTT, the
+four message types, the MAC1/MAC2 cookie anti-DoS) is grounded [01-DP
+§4, research-mullvad §4 PQ-PSK-over-WG].</p>
+</blockquote>
+<h3 id="31-handshake-shape-grounded-architecture">3.1 Handshake shape
+(grounded architecture)</h3>
+<p>WireGuard uses the <strong>Noise IK</strong> pattern: a
+<strong>1-RTT</strong> handshake where the initiator already knows the
+responder&#39;s static public key (the &quot;I&quot; = initiator immediately transmits
+its static key encrypted; &quot;K&quot; = responder&#39;s static key is known in
+advance) [01-DP §4]. HelixVPN learns the responder&#39;s static pubkey from
+the <code>RouteMap</code> (<code>PeerRoute.wg_pubkey</code>) pushed by
+the coordinator [01-DP §6.2].</p>
+<p>Four message types (<code>UNVERIFIED:</code> sizes):</p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Name</th>
+<th>Size (bytes)</th>
+<th>Direction</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Handshake Initiation</td>
+<td><strong>148</strong></td>
+<td>initiator → responder</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Handshake Response</td>
+<td><strong>92</strong></td>
+<td>responder → initiator</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Cookie Reply</td>
+<td><strong>64</strong></td>
+<td>responder → initiator (under load / anti-DoS, §14.3)</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Transport Data</td>
+<td>16 + 16·⌈(plaintext+0)/16⌉ … header <strong>16</strong> +
+ciphertext</td>
+<td>both, steady state</td>
+</tr>
+</tbody>
+</table>
+<h3 id="32-message-1--handshake-initiation-148-b-unverified-layout">3.2
+Message 1 — Handshake Initiation (148 B, <code>UNVERIFIED:</code>
+layout)</h3>
+<pre><code>offset  size  field
+  0      1    message_type = 0x01
+  1      3    reserved = 0x000000
+  4      4    sender_index            (u32 LE, initiator&#39;s receiver index)
+  8     32    unencrypted_ephemeral   (Curve25519 ephemeral public)
+ 40     48    encrypted_static        (32 B static pub + 16 B Poly1305 tag)
+ 88     28    encrypted_timestamp     (12 B TAI64N + 16 B tag)
+116     16    mac1                    (BLAKE2s keyed MAC over preceding bytes)
+132     16    mac2                    (cookie MAC; zero unless under cookie challenge)</code></pre>
+<h3 id="33-message-2--handshake-response-92-b-unverified-layout">3.3
+Message 2 — Handshake Response (92 B, <code>UNVERIFIED:</code>
+layout)</h3>
+<pre><code>offset  size  field
+  0      1    message_type = 0x02
+  1      3    reserved = 0x000000
+  4      4    sender_index            (responder&#39;s receiver index)
+  8      4    receiver_index          (echoes initiator&#39;s sender_index)
+ 12     32    unencrypted_ephemeral
+ 44     16    encrypted_nothing       (empty payload + 16 B tag — confirms key schedule)
+ 60     16    mac1
+ 76     16    mac2</code></pre>
+<h3 id="34-message-4--transport-data-header-unverified-layout">3.4
+Message 4 — Transport Data header (<code>UNVERIFIED:</code> layout)</h3>
+<pre><code>offset  size  field
+  0      1    message_type = 0x04
+  1      3    reserved = 0x000000
+  4      4    receiver_index          (peer&#39;s receiver index — demux key, §3.5)
+  8      8    counter                 (u64 LE nonce; monotonic per session, anti-replay)
+ 16      N    encrypted_packet        (ChaCha20-Poly1305 of the inner IP packet, incl. 16 B tag)</code></pre>
+<p>The plaintext is padded to a multiple of 16 bytes before AEAD
+(WireGuard padding); the 16-byte Poly1305 tag is appended inside
+<code>encrypted_packet</code>. This fixed 16-byte data header + 16-byte
+tag is the <strong>32-byte WG overhead</strong> that the MTU budget (§7)
+accounts for.</p>
+<h3 id="35-receiver-index-demux-the-edges-n-peer-dispatch">3.5
+Receiver-index demux (the edge&#39;s N-peer dispatch)</h3>
+<p>On inbound, <code>handle_transport_in</code> reads bytes [4..8) (the
+<code>receiver_index</code>, which the <em>local</em> device assigned at
+handshake) to select the <code>PeerIndex</code> via
+<code>index_map</code> before decrypting — O(1), no trial decryption
+across N peers. A datagram with an unknown receiver index, a type ∉
+{1,2,3,4}, or a malformed length is dropped as
+<code>WgError::Malformed</code> (§10), counted, not logged (W5).</p>
+<h3 id="36-handshake-state-machine">3.6 Handshake state machine</h3>
+<pre class="mermaid"><code>stateDiagram-v2
+    [*] --&gt; Down
+    Down --&gt; InitSent: handle_tun_out needs a session\n→ emit Msg1 (Initiation)
+    InitSent --&gt; Established: rx Msg2 (Response) within REKEY_TIMEOUT (5s)
+    InitSent --&gt; InitSent: REKEY_TIMEOUT elapsed → resend Msg1\n(up to REKEY_ATTEMPT_TIME 90s)
+    InitSent --&gt; CookieWait: rx Msg3 (Cookie Reply, under load)
+    CookieWait --&gt; InitSent: resend Msg1 with mac2 = cookie
+    InitSent --&gt; Down: REKEY_ATTEMPT_TIME (90s) exhausted → HandshakeTimeout
+    Established --&gt; Rekeying: REKEY_AFTER_TIME (120s) OR\nREKEY_AFTER_MESSAGES sent
+    Rekeying --&gt; Established: new Msg1/Msg2 completes (initiator-only rekey)
+    Established --&gt; Down: REJECT_AFTER_TIME (180s) with no valid traffic
+    Established --&gt; Established: persistent-keepalive / passive keepalive (§8)
+    note right of Established
+      Data flows as Msg4 (Transport Data).
+      Responder NEVER initiates a rekey
+      (WireGuard rule) — it sends a
+      keepalive hinting the initiator to rekey.
+    end note</code></pre>
+<p>Timer constants (<code>UNVERIFIED:</code> exact values — standard
+WireGuard defaults, pin against boringtun):
+<code>REKEY_AFTER_TIME = 120s</code>, <code>REKEY_TIMEOUT = 5s</code>,
+<code>REKEY_ATTEMPT_TIME = 90s</code>,
+<code>REJECT_AFTER_TIME = 180s</code>,
+<code>KEEPALIVE_TIMEOUT = 10s</code>,
+<code>REKEY_AFTER_MESSAGES = 2^60</code>,
+<code>REJECT_AFTER_MESSAGES = 2^64 − 2^13</code>. These are surfaced as
+read-only constants, NOT config knobs (W2 — crypto invariants are
+fixed).</p>
+<hr />
+<h2 id="4-crypto-parameters-fixed--the-additive-psk-seam">4. Crypto
+parameters (fixed) + the additive PSK seam</h2>
+<h3 id="41-fixed-primitive-set-grounded-w2">4.1 Fixed primitive set
+(grounded, W2)</h3>
+<p>Never altered [01-DP §4, SYNTHESIS §2]:</p>
+<table>
+<thead>
+<tr>
+<th>Role</th>
+<th>Primitive</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Key agreement</td>
+<td><strong>Curve25519</strong> ECDH (X25519)</td>
+</tr>
+<tr>
+<td>AEAD (data + handshake)</td>
+<td><strong>ChaCha20-Poly1305</strong> (IETF, 96-bit nonce = 32-bit zero
+‖ 64-bit counter)</td>
+</tr>
+<tr>
+<td>Hash / KDF / MAC</td>
+<td><strong>BLAKE2s</strong> (HKDF-style key schedule; keyed BLAKE2s for
+MAC1/MAC2)</td>
+</tr>
+<tr>
+<td>Handshake</td>
+<td><strong>Noise IK</strong> (1-RTT, known responder static key)</td>
+</tr>
+<tr>
+<td>Timestamp (anti-replay of Msg1)</td>
+<td><strong>TAI64N</strong> (12 B)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="42-key-schedule-grounded-architecture-unverified-exact-chaining">4.2
+Key schedule (grounded architecture; <code>UNVERIFIED:</code> exact
+chaining)</h3>
+<p>The Noise IK key schedule mixes: responder static pub, initiator
+ephemeral, initiator static, the optional PSK (§4.4), and
+BLAKE2s-chained <code>Ck</code>/<code>Hk</code> values to derive the two
+directional transport keys (<code>T_send</code>, <code>T_recv</code>).
+Each direction has an independent 64-bit message counter; the receiver
+maintains a sliding anti-replay window (<code>UNVERIFIED:</code> exact
+window size — WireGuard uses a 2048-bit / 8000-packet-class window; pin
+against boringtun).</p>
+<h3 id="43-device-keys-never-leave-the-device-w3">4.3 Device keys never
+leave the device (W3)</h3>
+<p><code>helix-wg</code> generates the Curve25519 keypair on-device;
+only <code>local_public()</code> is exported for enrollment (doc 02 PKI)
+[01-DP §4, SYNTHESIS §7]. The private key is held in a
+<code>SecretBytes</code> zeroizing wrapper, never logged, never
+serialized to durable storage in plaintext (§14.1).</p>
+<h3 id="44-post-quantum-psk-seam-additive-phase-2">4.4 Post-quantum PSK
+seam (additive, Phase 2)</h3>
+<p>Post-quantum is an <strong>additive pre-shared-key layer</strong>,
+hybrid-never-PQ-only, that slots into the WG PSK field with <strong>no
+transport change</strong> [01-DP §4, SYNTHESIS §4]. Mechanism (parity
+target, grounded): establish a vanilla WG tunnel, run a PQ KEM exchange
+(ML-KEM-1024 / FIPS-203, optionally hybridized with Classic McEliece)
+<em>over</em> it, install the negotiated shared secret as WireGuard&#39;s
+PSK — the PSK is mixed into the symmetric key schedule so the tunnel
+stays secure even if X25519 is broken [research-mullvad §4].
+<code>helix-wg</code>&#39;s only surface is the
+<code>PeerConfig.psk: Option&lt;Psk&gt;</code> field (§2.2) + the
+key-schedule mix-in (§4.2); the full KEM exchange protocol is owned by
+the security doc, NOT here. Cost: ~1–2 s extra at handshake,
+steady-state unchanged [research-mullvad §4]. <code>UNVERIFIED:</code>
+the exact PQ-PSK message sequence — public Mullvad docs are high-level
+on this [research-mullvad §&quot;Honest gaps&quot;]; treat as security-doc design
+work.</p>
+<hr />
+<h2 id="5-allowedips-semantics--the-crypto-routing-trie">5.
+<code>AllowedIPs</code> semantics — the crypto-routing trie</h2>
+<h3 id="51-two-roles-of-one-field-grounded">5.1 Two roles of one field
+(grounded)</h3>
+<p><code>AllowedIPs</code> is WireGuard&#39;s <strong>cryptographic routing
+table</strong> and serves both directions [01-DP §7 layer 1, 04_ARCH
+§3.4]:</p>
+<ul>
+<li><strong>Outbound (routing):</strong> for a plaintext packet leaving
+the TUN, the inner <strong>destination</strong> IP selects which peer to
+encrypt for — longest-prefix match across all peers&#39;
+<code>AllowedIPs</code>.</li>
+<li><strong>Inbound (access control / W4):</strong> for a packet
+decrypted from a peer, the inner <strong>source</strong> IP MUST fall
+inside <em>that</em> peer&#39;s <code>AllowedIPs</code>, else drop. A peer
+cannot spoof a source it was not granted — the coarse, crypto-enforced
+default-deny layer (I6); the port/proto-granular layer is the edge
+verdict map [01-DP §7 layer 2].</li>
+</ul>
+<h3 id="52-data-structure--longest-prefix-match-trie">5.2 Data structure
+— longest-prefix-match trie</h3>
+<div class="sourceCode" id="cb9"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-wg/src/allowed_ips.rs</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="co">/// A binary radix (Patricia) trie over IPv4+IPv6 prefixes → PeerIndex,</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="co">/// matching the kernel WireGuard `allowedips` structure. O(W) lookup</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="co">/// (W = address bit-width: 32 / 128), no allocation on lookup.</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> AllowedIpsTrie <span class="op">{</span> <span class="co">/* dual v4/v6 radix roots */</span> <span class="op">}</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> AllowedIpsTrie <span class="op">{</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">fn</span> insert(<span class="op">&amp;</span><span class="kw">mut</span> <span class="kw">self</span><span class="op">,</span> prefix<span class="op">:</span> IpNet<span class="op">,</span> peer<span class="op">:</span> PeerIndex)<span class="op">;</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">fn</span> remove(<span class="op">&amp;</span><span class="kw">mut</span> <span class="kw">self</span><span class="op">,</span> prefix<span class="op">:</span> IpNet<span class="op">,</span> peer<span class="op">:</span> PeerIndex)<span class="op">;</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">fn</span> remove_peer(<span class="op">&amp;</span><span class="kw">mut</span> <span class="kw">self</span><span class="op">,</span> peer<span class="op">:</span> PeerIndex)<span class="op">;</span>    <span class="co">// revoke path (&lt;1s, 01-DP §7)</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Longest-prefix match for an address → the peer that owns it (outbound routing).</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">fn</span> lookup(<span class="op">&amp;</span><span class="kw">self</span><span class="op">,</span> addr<span class="op">:</span> IpAddr) <span class="op">-&gt;</span> <span class="dt">Option</span><span class="op">&lt;</span>PeerIndex<span class="op">&gt;;</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// True iff `addr` falls within ANY prefix granted to `peer` (inbound audit, W4).</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">fn</span> permits(<span class="op">&amp;</span><span class="kw">self</span><span class="op">,</span> peer<span class="op">:</span> PeerIndex<span class="op">,</span> addr<span class="op">:</span> IpAddr) <span class="op">-&gt;</span> <span class="dt">bool</span><span class="op">;</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="53-overlapping-prefix-rule">5.3 Overlapping-prefix rule</h3>
+<p>Within one device, <code>AllowedIPs</code> prefixes across peers MUST
+be disjoint after longest-prefix resolution (WireGuard semantics: a
+more-specific prefix on peer B overrides a less-specific one on peer A).
+The <code>RouteMap</code> compiler (<code>helix-route</code>, [01-DP
+§6–§7]) guarantees disjointness <em>post-4via6</em> — the overlay ULA
+/48 + 4via6 mapping is exactly what prevents two connectors that both
+serve <code>192.168.1.0/24</code> from colliding here [01-DP §6.1,
+04_ARCH §3.4]. <code>helix-wg</code> trusts the compiled, disjoint
+overlay prefixes; it does <strong>not</strong> itself resolve RFC1918
+collisions (that is solved one layer up). Edge case §12.4 covers a
+malformed (overlapping) map.</p>
+<h3 id="54-crypto-routing-decision-flow">5.4 Crypto-routing decision
+flow</h3>
+<pre class="mermaid"><code>flowchart TD
+    OUT[&quot;TUN out: plaintext IP pkt&quot;] --&gt; DST[parse inner dst IP]
+    DST --&gt; LP{AllowedIpsTrie.lookup&amp;#40;dst&amp;#41;}
+    LP --&gt;|Some&amp;#40;peer&amp;#41;| ENC[encapsulate for peer → Msg4]
+    LP --&gt;|None| DROP1[&quot;DROP (W4) + counter++&lt;br/&gt;WgError::NoRoute (not logged, W5)&quot;]
+    ENC --&gt; TX[&quot;WriteToTransport&quot;]
+
+    IN[&quot;transport in: WG datagram&quot;] --&gt; DEMUX[&quot;demux by receiver_index → peer (§3.5)&quot;]
+    DEMUX --&gt; DEC[decrypt Msg4 → inner IP pkt]
+    DEC --&gt; SRC[parse inner src IP]
+    SRC --&gt; PERM{AllowedIpsTrie.permits&amp;#40;peer, src&amp;#41;}
+    PERM --&gt;|true| TUN[&quot;WriteToTun&quot;]
+    PERM --&gt;|false| DROP2[&quot;DROP (W4) source-spoof&lt;br/&gt;+ counter++ WgError::SourceViolation&quot;]</code></pre>
+<hr />
+<h2 id="6-per-device-key-generation--rotation">6. Per-device key
+generation + rotation</h2>
+<h3 id="61-generation-grounded-w3">6.1 Generation (grounded, W3)</h3>
+<p>Each device (client, connector, edge) generates its Curve25519
+keypair locally at enrollment; the private key never leaves the device,
+only the public key is registered with the control plane PKI [01-DP §4,
+04_ARCH §7, research-mullvad §8].</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-wg/src/keys.rs</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> DeviceKeypair <span class="op">{</span> <span class="kw">pub</span> public<span class="op">:</span> PubKey<span class="op">,</span> private<span class="op">:</span> PrivKey <span class="co">/* zeroizing */</span> <span class="op">}</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> DeviceKeypair <span class="op">{</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Generate from a CSPRNG (OS getrandom). The ONLY way to mint a device key.</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">fn</span> generate() <span class="op">-&gt;</span> DeviceKeypair<span class="op">;</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Load a previously-generated private key from the platform secure store</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// (Keychain / Keystore / TPM-backed) — never from a plaintext file (§14.1).</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">fn</span> from_secure_store(handle<span class="op">:</span> SecureKeyHandle) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>DeviceKeypair<span class="op">,</span> WgError<span class="op">&gt;;</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">fn</span> public(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> PubKey<span class="op">;</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="62-two-rotation-tiers-grounded">6.2 Two rotation tiers
+(grounded)</h3>
+<p>WireGuard distinguishes <strong>ephemeral session rekey</strong>
+(automatic, every ~2 min, §3.6 <code>Rekeying</code>) from
+<strong>static device-key rotation</strong> (policy-driven). Both exist
+[01-DP §4 &quot;rotated on schedule and on device.revoked&quot;; 04_ARCH §7].</p>
+<table>
+<thead>
+<tr>
+<th>Tier</th>
+<th>Trigger</th>
+<th>Mechanism</th>
+<th>Owner</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Session rekey</td>
+<td><code>REKEY_AFTER_TIME</code> (120s) /
+<code>REKEY_AFTER_MESSAGES</code> / inbound after
+<code>REKEY_AFTER_TIME</code></td>
+<td>new Noise IK handshake, same static keys (§3.6)</td>
+<td><code>helix-wg</code> (automatic)</td>
+</tr>
+<tr>
+<td>Static rotation</td>
+<td>schedule (e.g. 30/90d) OR <code>device.revoked</code> event</td>
+<td>mint new <code>DeviceKeypair</code>, re-enroll public key,
+coordinator pushes updated <code>PeerRoute.wg_pubkey</code>, peers
+<code>upsert_peer</code> the new pub, old peer
+<code>remove_peer</code></td>
+<td><code>helix-core</code> + PKI (doc 02); <code>helix-wg</code>
+executes the upsert/remove</td>
+</tr>
+</tbody>
+</table>
+<h3 id="63-revocation-is-a-peer-removal-grounded-1s">6.3 Revocation is a
+peer removal (grounded, &lt;1s)</h3>
+<p><code>device.revoked</code> → the coordinator pushes a map delta
+removing the peer → <code>helix-core</code> calls
+<code>WgDevice::remove_peer</code> → the session is zeroized and the
+<code>AllowedIpsTrie</code> entry dropped, in <strong>&lt; 1
+second</strong>, no restart [01-DP §7, 04_ARCH §4.4, SYNTHESIS §7]. On
+the edge, this composes with the verdict-map drop (layer 2);
+<code>helix-wg</code> owns the crypto-routing half.</p>
+<h3 id="64-static-rotation-state-machine-make-before-break">6.4
+Static-rotation state machine (make-before-break)</h3>
+<pre class="mermaid"><code>stateDiagram-v2
+    [*] --&gt; ActiveKeyA
+    ActiveKeyA --&gt; Rotating: rotation due / scheduled
+    Rotating --&gt; DualAdvertised: generate KeyB, enroll pub_B,\ncoordinator pushes pub_B to peers
+    DualAdvertised --&gt; ActiveKeyB: peers handshake with pub_B\n(make-before-break: A still valid)
+    ActiveKeyB --&gt; [*]: remove_peer(old A session),\nzeroize KeyA
+    Rotating --&gt; ActiveKeyA: rotation aborted (enroll failed)\n→ keep KeyA (no break)
+    note right of DualAdvertised
+      Overlap window prevents a connectivity
+      gap during static rotation. Bounded by a
+      rotation_overlap_s config knob (§11).
+    end note</code></pre>
+<hr />
+<h2 id="7-mtu-derivation">7. MTU derivation</h2>
+<h3 id="71-the-rule-grounded">7.1 The rule (grounded)</h3>
+<p>The inner WG MTU is derived from the <strong>active
+transport&#39;s</strong> <code>effective_mtu()</code> minus nothing further
+(the transport already subtracted its own overhead), then clamped by
+path-MTU discovery [01-DP §3.1 trait, §10]:</p>
+<pre><code>inner_wg_mtu = min( active_transport.effective_mtu(), path_mtu_discovered )</code></pre>
+<p><code>helix-wg</code> does <strong>not</strong> hardcode an MTU; it
+reads it from the transport it is handed (decoupling — the same WG core
+runs over any carrier, W6). The transport budget table is owned by
+[01-DP §10]; reproduced for the WG-overhead derivation:</p>
+<table>
+<thead>
+<tr>
+<th>Transport</th>
+<th><code>effective_mtu()</code></th>
+<th>WG-relevant overhead accounted</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>plain-udp</code></td>
+<td><strong>1420</strong></td>
+<td>1500 − 20 IP − 8 UDP − 32 WG (16 hdr + 16 tag, §3.4)</td>
+<td>[01-DP §10, 04_P0 §4.3]</td>
+</tr>
+<tr>
+<td><code>masque-h3</code></td>
+<td><strong>1280</strong> (measure &amp; tune)</td>
+<td>QUIC + HTTP-Datagram + UDP-proxy overhead; 1280 = IPv6 min-MTU
+floor</td>
+<td>[01-DP §10, 04_P0 §5.2]</td>
+</tr>
+<tr>
+<td><code>shadowsocks</code></td>
+<td>~1380</td>
+<td>TCP MSS − 2 B length prefix − AEAD tag</td>
+<td>[01-DP §10, 04_P2 §1.1]</td>
+</tr>
+<tr>
+<td><code>udp-over-tcp</code></td>
+<td>~1380</td>
+<td>TCP MSS − length prefix</td>
+<td>[01-DP §10]</td>
+</tr>
+<tr>
+<td><code>lwo</code></td>
+<td>~1400</td>
+<td>plain-udp − padding bytes</td>
+<td>[01-DP §10]</td>
+</tr>
+</tbody>
+</table>
+<h3 id="72-the-32-byte-wg-overhead-is-already-inside-effective_mtu">7.2
+The 32-byte WG overhead is already inside
+<code>effective_mtu()</code></h3>
+<p><code>plain-udp</code>&#39;s 1420 already subtracts the WireGuard 16-byte
+data header + 16-byte Poly1305 tag (§3.4). So <code>helix-wg</code>
+configures the TUN MTU to exactly <code>inner_wg_mtu</code>; the
+transport&#39;s <code>effective_mtu()</code> is the post-WG-overhead figure
+for the <em>inner</em> IP payload. (<code>UNVERIFIED:</code> whether the
+1420 figure folds the WG overhead or the IP/UDP overhead — the pass-1
+doc&#39;s arithmetic <code>1500 − 20 − 8 − 32 ≈ 1420</code> folds
+<strong>both</strong>; confirm the split during the §13 benchmark.)</p>
+<h3 id="73-oversize-handling">7.3 Oversize handling</h3>
+<p>A plaintext packet whose encrypted size would exceed the active
+transport&#39;s MTU yields <code>TransportError::Oversize</code> at the
+transport boundary; <code>helix-wg</code>&#39;s contract is to <strong>lower
+the inner TUN MTU</strong> (preferred) or signal L3 fragmentation rather
+than silently truncate [01-DP §10 rule 3]. The orchestrator sets the TUN
+MTU from <code>inner_wg_mtu</code>, so under normal operation oversize
+is unreachable; it is a defensive edge (§12.5). When DAITA pads (§9 of
+[01-DP]), padding is added <strong>after</strong> WG encrypt and counts
+against the transport budget, not the inner MTU [01-DP §10 rule 2] —
+<code>helix-wg</code> is unaware of DAITA padding (placement is L2.5,
+beneath WG output, above transport).</p>
+<h3 id="74-mtu-derivation-flow">7.4 MTU derivation flow</h3>
+<pre class="mermaid"><code>flowchart LR
+    A[&quot;active Transport&quot;] --&gt;|&quot;effective_mtu()&quot;| B[transport_mtu]
+    PMTU[&quot;path-MTU discovery&quot;] --&gt; C
+    B --&gt; C{&quot;min(transport_mtu, pmtu)&quot;}
+    C --&gt;|inner_wg_mtu| D[&quot;set TUN MTU = inner_wg_mtu&quot;]
+    C --&gt;|on transport switch&lt;br/&gt;masque↔plain| E[&quot;re-derive + reconfigure TUN&lt;br/&gt;(no reconnect, 01-DP §6.3)&quot;]
+    D --&gt; F[&quot;WG encrypt fits in one L1 packet&quot;]</code></pre>
+<p>When the ladder switches transport (e.g. <code>plain-udp</code> →
+<code>masque-h3</code>, [01-DP §5.3]), the inner MTU changes (1420 →
+1280) and <code>helix-core</code> re-derives + reconfigures the TUN MTU
+without a reconnect of unrelated state — a first-class reconcile
+event.</p>
+<hr />
+<h2 id="8-timers-rekey-and-keepalive-state-machine">8. Timers, rekey,
+and keepalive state machine</h2>
+<h3 id="81-the-tick-grounded">8.1 The tick (grounded)</h3>
+<p><code>helix-core</code> calls
+<code>WgDevice::tick(now, scratch)</code> every
+<strong><code>TICK_INTERVAL</code></strong> — ~100–250 ms [01-DP §4,
+04_P0 §4.4 &quot;every 100–250 ms&quot;]. Each tick advances every peer&#39;s
+WireGuard timers (boringtun <code>update_timers</code>-equivalent,
+<code>UNVERIFIED:</code> API note 2) and returns the batch of
+<code>WgVerdict</code>s to emit (keepalives, rekey Msg1s,
+expirations).</p>
+<h3 id="82-timer-effects-grounded-constants-36">8.2 Timer effects
+(grounded constants, §3.6)</h3>
+<table>
+<thead>
+<tr>
+<th>Condition</th>
+<th>Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>REKEY_AFTER_TIME</code> (120s) since last handshake, AND
+outbound traffic pending</td>
+<td>initiator emits Msg1 (rekey)</td>
+</tr>
+<tr>
+<td><code>KEEPALIVE_TIMEOUT</code> (10s) since last <em>received</em>
+data, AND data was sent</td>
+<td>passive keepalive (empty Msg4)</td>
+</tr>
+<tr>
+<td><code>persistent_keepalive</code> set (e.g. 25s)</td>
+<td>unconditional keepalive every N seconds — keeps NAT mappings alive
+(§8.3)</td>
+</tr>
+<tr>
+<td><code>REJECT_AFTER_TIME</code> (180s) with no valid traffic</td>
+<td>session expires → <code>Down</code>; next packet re-handshakes</td>
+</tr>
+</tbody>
+</table>
+<h3 id="83-persistent-keepalive-nat-survival">8.3 Persistent keepalive
+(NAT survival)</h3>
+<p><code>PeerConfig.persistent_keepalive: Option&lt;u16&gt;</code>
+(§2.2). The <strong>connector</strong> and <strong>client</strong>
+behind NAT set it (typical 25s) so the gateway-bound mapping never
+expires; the gateway edge generally does not (peers dial it). This
+composes with Phase-2 NAT traversal [01-DP §8] but is independent of
+it.</p>
+<h3 id="84-roaming-endpoint-latch--grounded">8.4 Roaming (endpoint latch
+— grounded)</h3>
+<p>WireGuard roaming: when a valid, authenticated Msg4 arrives from a
+<em>new</em> source <code>SocketAddr</code>, <code>helix-wg</code>
+updates <code>WgPeer.endpoint</code> to that address — no re-handshake
+[01-DP §8.2 &quot;WireGuard&#39;s roaming latches onto whatever source address a
+valid handshake arrives from&quot;]. This is what makes mobile network
+switches (Wi-Fi ↔︎ cellular) seamless and is the substrate for Phase-2
+hole punching [01-DP §8.2]. Only a <em>cryptographically valid</em>
+packet moves the endpoint — a spoofed source cannot hijack the session
+(§14.2).</p>
+<hr />
+<h2 id="9-the-encrypted-datagram-boundary-transport-sits-beneath">9. The
+encrypted-datagram boundary (transport sits beneath)</h2>
+<h3 id="91-the-contract-grounded-i1i2">9.1 The contract (grounded,
+I1/I2)</h3>
+<p><code>helix-wg</code> ↔︎ <code>helix-transport</code> exchange
+<strong>only opaque, already-encrypted WG datagrams</strong> as
+<code>bytes::Bytes</code> [01-DP §3.1, §0.1 I1/I2]. The transport never
+sees plaintext (I1) and carries unreliable datagrams, never an ordered
+stream (I2). The boundary is exactly two calls:</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-core orchestrator loop (01-DP §5.1) — the seam between §2 and 01-DP §3:</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="co">// OUTBOUND</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="cf">match</span> device<span class="op">.</span>handle_tun_out(<span class="op">&amp;</span>ip_pkt<span class="op">,</span> <span class="op">&amp;</span><span class="kw">mut</span> scratch) <span class="op">{</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    <span class="pp">WgVerdict::</span>WriteToTransport(dg) <span class="op">=&gt;</span> transport<span class="op">.</span>send(<span class="pp">Bytes::</span>copy_from_slice(dg))<span class="op">.</span><span class="kw">await</span><span class="op">?,</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>    <span class="pp">WgVerdict::</span>Nothing <span class="op">=&gt;</span> <span class="op">{}</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>    <span class="pp">WgVerdict::</span><span class="cn">Err</span>(e) <span class="op">=&gt;</span> metrics<span class="op">.</span>wg_error(e)<span class="op">,</span>         <span class="co">// counter only (W5)</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>    <span class="pp">WgVerdict::</span>WriteToTun<span class="op">{..}</span> <span class="op">=&gt;</span> <span class="pp">unreachable!</span>()<span class="op">,</span>       <span class="co">// tun_out never yields tun output</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a><span class="co">// INBOUND</span></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> dg <span class="op">=</span> transport<span class="op">.</span>recv()<span class="op">.</span><span class="kw">await</span><span class="op">?;</span>                      <span class="co">// opaque WG bytes (I1)</span></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a><span class="cf">match</span> device<span class="op">.</span>handle_transport_in(<span class="op">&amp;</span>dg<span class="op">,</span> from<span class="op">,</span> <span class="op">&amp;</span><span class="kw">mut</span> scratch) <span class="op">{</span></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>    <span class="pp">WgVerdict::</span>WriteToTun<span class="op">{</span> pkt<span class="op">,</span> <span class="op">..</span> <span class="op">}</span> <span class="op">=&gt;</span> tun<span class="op">.</span>write(pkt)<span class="op">.</span><span class="kw">await</span><span class="op">?,</span></span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>    <span class="pp">WgVerdict::</span>WriteToTransport(reply) <span class="op">=&gt;</span> transport<span class="op">.</span>send(<span class="pp">Bytes::</span>copy_from_slice(reply))<span class="op">.</span><span class="kw">await</span><span class="op">?,</span> <span class="co">// handshake reply</span></span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>    <span class="pp">WgVerdict::</span>Nothing <span class="op">=&gt;</span> <span class="op">{}</span></span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>    <span class="pp">WgVerdict::</span><span class="cn">Err</span>(e) <span class="op">=&gt;</span> metrics<span class="op">.</span>wg_error(e)<span class="op">,</span></span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="92-why-helix-wg-is-transport-agnostic-w6-decoupling">9.2 Why
+<code>helix-wg</code> is transport-agnostic (W6, decoupling)</h3>
+<p><code>helix-wg</code> holds no reference to a concrete transport — it
+returns <em>bytes</em> and takes <em>bytes</em>. The orchestrator owns
+the <code>Box&lt;dyn Transport&gt;</code> and the ladder [01-DP §5.3].
+This is what makes the <em>same</em> WG core run over
+<code>plain-udp</code>, <code>masque-h3</code>,
+<code>shadowsocks</code>, … and what makes multi-hop trivial: an outer
+hop&#39;s <code>Transport</code> simply carries the inner hop&#39;s WG datagrams
+[01-DP §11.1]. <code>helix-wg</code> is unaware of obfuscation, DAITA,
+or which carrier is active — it only knows the active MTU (§7).</p>
+<h3 id="93-kernel-backend-boundary-variation">9.3 Kernel-backend
+boundary variation</h3>
+<p>When <code>WgBackend::LinuxKernel</code> runs <code>plain-udp</code>,
+the encrypt/decrypt happens in the kernel and the datagram boundary is a
+kernel UDP socket, not the <code>Transport::send/recv</code> calls
+(§1.3). For <strong>any obfuscating transport</strong>, the kernel
+cannot emit the carrier framing, so the userspace boundary (9.1) is
+mandatory — i.e. <code>masque-h3</code>/<code>shadowsocks</code>/… force
+<code>WgBackend::Userspace</code>. The <code>WgDataPath</code> trait
+(§1.3) hides this: <code>helix-core</code> calls the same verdict pump;
+the kernel impl short-circuits to netlink config + raw socket for
+<code>plain-udp</code> only. Edge case §12.7 enumerates the forbidden
+kernel+obfs combination.</p>
+<h3 id="94-multi-hop-nesting-grounded-phase-2">9.4 Multi-hop nesting
+(grounded, Phase 2)</h3>
+<p>A 2-hop chain <code>[Entry, Exit]</code> is an ordered
+<code>Vec&lt;Hop&gt;</code> where
+<code>Hop = { wg: WgPeer, transport: Box&lt;dyn Transport&gt; }</code>
+[01-DP §11.1]. Outbound: encrypt for Exit (innermost
+<code>WgPeer</code>) → the Exit ciphertext is the <em>plaintext</em> fed
+to the Entry <code>WgPeer</code>&#39;s <code>handle_tun_out</code> → Entry
+ciphertext → <code>Entry.transport.send()</code>. <code>helix-wg</code>
+provides the per-hop <code>WgPeer</code>/<code>WgDevice</code>; the
+chain orchestration is <code>helix-core::hop_chain</code> [01-DP §11.1].
+Entry sees the client but not the destination; Exit sees the destination
+but not the client — the Mullvad multi-hop property [01-DP §11.1,
+research-mullvad §3].</p>
+<hr />
+<h2 id="10-error-taxonomy">10. Error taxonomy</h2>
+<div class="sourceCode" id="cb16"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-wg/src/error.rs</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="pp">thiserror::</span><span class="bu">Error</span><span class="op">,</span> <span class="bu">Debug</span><span class="op">,</span> <span class="bu">Clone</span><span class="op">,</span> <span class="bu">PartialEq</span><span class="at">)]</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">enum</span> WgError <span class="op">{</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ---- handshake ----</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>error<span class="at">(</span><span class="st">&quot;handshake timed out after {0:?}&quot;</span><span class="at">)]</span>      HandshakeTimeout(Duration)<span class="op">,</span> <span class="co">// REKEY_ATTEMPT_TIME exhausted</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>error<span class="at">(</span><span class="st">&quot;handshake rejected: bad MAC1&quot;</span><span class="at">)]</span>          BadMac1<span class="op">,</span>                    <span class="co">// anti-DoS first gate (§14.3)</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>error<span class="at">(</span><span class="st">&quot;handshake rejected: bad MAC2/cookie&quot;</span><span class="at">)]</span>   BadMac2<span class="op">,</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>error<span class="at">(</span><span class="st">&quot;handshake AEAD verification failed&quot;</span><span class="at">)]</span>    HandshakeAead<span class="op">,</span>              <span class="co">// wrong peer / tampered</span></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>error<span class="at">(</span><span class="st">&quot;stale handshake timestamp (replay)&quot;</span><span class="at">)]</span>    StaleTimestamp<span class="op">,</span>             <span class="co">// TAI64N anti-replay (§3.2)</span></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ---- transport-data ----</span></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>error<span class="at">(</span><span class="st">&quot;AEAD decrypt failed (peer {0})&quot;</span><span class="at">)]</span>        DataAead(PeerIndex)<span class="op">,</span>        <span class="co">// tampered / wrong key</span></span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>error<span class="at">(</span><span class="st">&quot;replayed counter (peer {0})&quot;</span><span class="at">)]</span>           Replay(PeerIndex)<span class="op">,</span>          <span class="co">// anti-replay window (§4.2)</span></span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>error<span class="at">(</span><span class="st">&quot;unknown receiver index {0}&quot;</span><span class="at">)]</span>            UnknownIndex(<span class="dt">u32</span>)<span class="op">,</span>          <span class="co">// demux miss (§3.5)</span></span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>error<span class="at">(</span><span class="st">&quot;malformed WG datagram (len {0})&quot;</span><span class="at">)]</span>       Malformed(<span class="dt">usize</span>)<span class="op">,</span></span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ---- routing / access control (W4) ----</span></span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>error<span class="at">(</span><span class="st">&quot;no AllowedIPs route for dst {0}&quot;</span><span class="at">)]</span>       NoRoute(IpAddr)<span class="op">,</span>            <span class="co">// outbound drop (§5)</span></span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>error<span class="at">(</span><span class="st">&quot;source {src} not permitted for peer {peer}&quot;</span><span class="at">)]</span> SourceViolation <span class="op">{</span> peer<span class="op">:</span> PeerIndex<span class="op">,</span> src<span class="op">:</span> IpAddr <span class="op">},</span></span>
+<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ---- session lifecycle ----</span></span>
+<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>error<span class="at">(</span><span class="st">&quot;no current session (peer {0}); handshake required&quot;</span><span class="at">)]</span> NoSession(PeerIndex)<span class="op">,</span></span>
+<span id="cb16-20"><a href="#cb16-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>error<span class="at">(</span><span class="st">&quot;peer {0} expired (REJECT_AFTER_TIME)&quot;</span><span class="at">)]</span>  SessionExpired(PeerIndex)<span class="op">,</span></span>
+<span id="cb16-21"><a href="#cb16-21" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ---- config / key ----</span></span>
+<span id="cb16-22"><a href="#cb16-22" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>error<span class="at">(</span><span class="st">&quot;invalid key material&quot;</span><span class="at">)]</span>                  InvalidKey<span class="op">,</span></span>
+<span id="cb16-23"><a href="#cb16-23" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>error<span class="at">(</span><span class="st">&quot;secure store error: {0}&quot;</span><span class="at">)]</span>               SecureStore(<span class="dt">String</span>)<span class="op">,</span></span>
+<span id="cb16-24"><a href="#cb16-24" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><strong>Classification rules (anti-bluff, §11.4.1/.6):</strong></p>
+<ul>
+<li><code>NoRoute</code> / <code>SourceViolation</code> /
+<code>Replay</code> / <code>BadMac1</code> are <strong>expected,
+policy-or-attack-driven drops</strong> — counted
+(<code>PeerStats</code>), surfaced as metrics, never an <code>Err</code>
+propagated to the user as a tunnel failure, never logged per-packet
+(W5). They map to <code>WgVerdict::Nothing</code> at the orchestrator
+with a counter bump, NOT a <code>Down{reason}</code> status.</li>
+<li><code>HandshakeTimeout</code> / <code>HandshakeAead</code> are
+<strong>genuine connection failures</strong> → surface as
+<code>TunnelStatus::Reconnecting</code> then ladder escalation [01-DP
+§5.3].</li>
+<li><code>Malformed</code> / <code>UnknownIndex</code> are
+<strong>defensive drops</strong> at the edge under scan load — bounded
+by the rate limiter (§14.3), counted, never logged.</li>
+<li>A script-internal failure (panic, OOB slice) is a §11.4.1 FAIL-bluff
+and MUST fail the build, never reach this enum.</li>
+</ul>
+<hr />
+<h2 id="11-configuration-knobs">11. Configuration knobs</h2>
+<p>Only <strong>operational</strong> knobs are exposed; crypto
+parameters (§4) and WireGuard timer constants (§3.6) are
+<strong>fixed</strong> (W2) and are read-only constants, NOT config.</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-wg/src/config.rs</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="bu">Clone</span><span class="op">,</span> <span class="bu">Debug</span><span class="at">)]</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> WgDeviceConfig <span class="op">{</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> prefer_kernel<span class="op">:</span> <span class="dt">bool</span><span class="op">,</span>            <span class="co">// Linux only; resolve() honours availability (§1.3)</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> tick_interval<span class="op">:</span> Duration<span class="op">,</span>        <span class="co">// default 200ms; clamp [100ms, 250ms] (§8.1)</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> rotation_overlap_s<span class="op">:</span> <span class="dt">u32</span><span class="op">,</span>        <span class="co">// static-key make-before-break window (§6.4); default 120</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> handshake_rate_limit<span class="op">:</span> RateLimit<span class="op">,</span><span class="co">// per-source cookie-challenge threshold (§14.3)</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> scratch_size<span class="op">:</span> <span class="dt">usize</span><span class="op">,</span>            <span class="co">// per-loop scratch buffer bytes; default 65535 (max IP pkt)</span></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> max_peers<span class="op">:</span> <span class="dt">u32</span><span class="op">,</span>                 <span class="co">// edge guardrail; client/connector = 1</span></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a><span class="co">// Per-peer knobs live in PeerConfig (§2.2): allowed_ips, endpoint,</span></span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a><span class="co">// persistent_keepalive, psk. All are reconciler-pushed from the RouteMap (01-DP §6.2).</span></span></code></pre></div>
+<p>Defaults are chosen so the client/connector single-peer case needs
+<strong>zero</strong> explicit config; the edge sets
+<code>max_peers</code> + a tighter
+<code>handshake_rate_limit</code>.</p>
+<hr />
+<h2 id="12-edge-cases-enumerate-do-not-hand-wave--114118">12. Edge cases
+(enumerate, do not hand-wave — §11.4.118)</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Edge case</th>
+<th>Required behaviour</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>12.1</td>
+<td>Inbound Msg4 before any handshake completes</td>
+<td><code>WgError::NoSession</code> → drop + counter; do NOT emit
+plaintext. Trigger a rekey if outbound traffic is queued.</td>
+</tr>
+<tr>
+<td>12.2</td>
+<td>Two concurrent handshake initiations (both sides initiate)</td>
+<td>WireGuard tie-break by handshake hash / timestamp; keep the winner,
+drop the loser. <code>UNVERIFIED:</code> exact tie-break — pin to
+boringtun.</td>
+</tr>
+<tr>
+<td>12.3</td>
+<td>Peer removed (<code>remove_peer</code>) mid-decrypt of its
+datagram</td>
+<td>Datagram in flight is dropped (<code>UnknownIndex</code>); zeroize
+must complete before the index is reused.</td>
+</tr>
+<tr>
+<td>12.4</td>
+<td>Malformed/overlapping <code>AllowedIPs</code> in a pushed map</td>
+<td><code>helix-wg</code> trusts the compiler&#39;s disjointness (§5.3); a
+longest-prefix collision resolves deterministically; an <em>invalid</em>
+prefix is rejected at <code>upsert_peer</code> with
+<code>InvalidKey</code>-class error, map delta NACKed to
+<code>helix-core</code>.</td>
+</tr>
+<tr>
+<td>12.5</td>
+<td>Plaintext packet larger than <code>inner_wg_mtu</code></td>
+<td>Lower TUN MTU (preferred) or L3-fragment; never silent truncate
+(§7.3).</td>
+</tr>
+<tr>
+<td>12.6</td>
+<td>Transport switch (ladder) mid-session</td>
+<td>Re-derive MTU (§7.4); the WG session is <strong>preserved</strong>
+across transport change — same keys, new carrier; no re-handshake unless
+the endpoint changed.</td>
+</tr>
+<tr>
+<td>12.7</td>
+<td><code>WgBackend::LinuxKernel</code> requested with an obfuscating
+transport</td>
+<td>Forbidden combination → force <code>Userspace</code> for that tunnel
+(§9.3); surface a one-time warning, never a silent wrong-backend run
+(§11.4.6).</td>
+</tr>
+<tr>
+<td>12.8</td>
+<td>Counter exhaustion (<code>REJECT_AFTER_MESSAGES</code>)</td>
+<td>Force rekey before the 64-bit counter nears exhaustion; a session
+that cannot rekey expires (<code>SessionExpired</code>).</td>
+</tr>
+<tr>
+<td>12.9</td>
+<td>Clock skew breaking TAI64N timestamp check</td>
+<td><code>StaleTimestamp</code> drop; the device clock MUST be
+monotonic-enough for handshake — surface a health warning, do not weaken
+the check.</td>
+</tr>
+<tr>
+<td>12.10</td>
+<td>iOS NE memory pressure during QUIC buffering</td>
+<td><code>helix-wg</code> itself is alloc-free on the hot path (W1);
+buffering lives in the transport. The memory gate G3 is a
+<em>transport+core</em> measurement, not a <code>helix-wg</code>-only
+one [04_P0 §6].</td>
+</tr>
+<tr>
+<td>12.11</td>
+<td>Roaming: valid Msg4 from a new source while old endpoint still
+sends</td>
+<td>Latch to the newest <em>cryptographically valid</em> source (§8.4);
+ignore the stale one.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="13-test-points-114169-class-types-per-11427--see-note-3">13.
+Test points (§11.4.169-class; types per §11.4.27 — see note 3)</h2>
+<p>Every claim ships <strong>captured evidence</strong>, not a
+config-only PASS (§11.4.5/.69/.107). <code>UNVERIFIED:</code>
+§11.4.169&#39;s exact enumeration (note 3); the types below are the
+in-context §11.4.27 set.</p>
+<table>
+<thead>
+<tr>
+<th>Test type</th>
+<th>What it exercises</th>
+<th>Evidence (anti-bluff)</th>
+<th>Maps to gate</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>unit</strong></td>
+<td><code>AllowedIpsTrie</code> longest-prefix + <code>permits</code>;
+<code>WgVerdict</code> mapping from <code>TunnResult</code>; MTU
+derivation arithmetic (§7.1); error classification (§10)</td>
+<td>property tests: random prefix sets vs a reference linear matcher;
+assert byte-identical routing decisions</td>
+<td>—</td>
+</tr>
+<tr>
+<td><strong>fuzz</strong></td>
+<td><code>handle_transport_in</code> on arbitrary bytes (malformed
+datagrams, §3.5/§12)</td>
+<td><code>cargo-fuzz</code> corpus; zero panics (W1/§11.4.1), every
+input → a <code>WgVerdict</code> (drop or output), never a crash</td>
+<td>—</td>
+</tr>
+<tr>
+<td><strong>integration</strong></td>
+<td>client↔︎gateway↔︎connector plain-UDP WG up; ping overlay IP; reach
+<code>10.10.0.20:80</code> through the netns rig</td>
+<td><code>iperf3</code> ≥ 80% bare link + <code>curl</code> hello page
+CSV from <code>bench.sh</code></td>
+<td><strong>G1 / S1–S2</strong> [04_P0 §8]</td>
+</tr>
+<tr>
+<td><strong>integration (obfs)</strong></td>
+<td>same slice over <code>masque-h3</code> with plain WG
+<strong>blocked</strong> (nft rule)</td>
+<td><code>tshark</code> capture classified HTTP/3, <strong>no WG
+signature</strong>; goodput @ 5% <code>netem</code> loss beats UoT
+strawman</td>
+<td><strong>G2 / S3</strong> [04_P0 §5.3, §8]</td>
+</tr>
+<tr>
+<td><strong>e2e</strong></td>
+<td>full ladder escalation <code>plain-udp → … → masque-h3</code>;
+session survives transport switch (§12.6)</td>
+<td>ordered <code>TunnelStatus</code> event trace captured; WG session
+keys unchanged across switch</td>
+<td>— [01-DP §5.4]</td>
+</tr>
+<tr>
+<td><strong>security</strong></td>
+<td>source-spoof drop (W4/§5.4); replay drop (§4.2); MAC1/cookie
+anti-DoS (§14.3); revoked peer unreachable in &lt;1s (§6.3)</td>
+<td>denied-flow packet capture; revoke→drop timing &lt; 1s captured</td>
+<td>[01-DP §7]</td>
+</tr>
+<tr>
+<td><strong>performance / benchmark</strong></td>
+<td>encrypt/decrypt throughput; CPU per Gbps; handshake/sec churn;
+per-platform RSS (W1)</td>
+<td><code>bench.sh</code> CSV: throughput @ 1/10/100 peers, p50/p99,
+CPU/Gbps; iOS Instruments RSS soak</td>
+<td><strong>G3 (iOS mem), G4 (edge)</strong> [04_P0 §6–§8]</td>
+</tr>
+<tr>
+<td><strong>stress / chaos</strong> (§11.4.85)</td>
+<td>sustained N≥100-iteration handshake churn; mid-handshake peer
+removal (§12.3); clock-skew injection (§12.9); counter-exhaustion forced
+rekey (§12.8)</td>
+<td>per-iteration latency.json + categorised-error census; recovery
+trace; no deadlock/leak</td>
+<td>—</td>
+</tr>
+<tr>
+<td><strong>deterministic-consistency</strong> (§11.4.50)</td>
+<td>the integration + obfs slices run N times (3 normal / 10 cycle) on
+the same rig</td>
+<td>identical PASS + identical evidence hashes every run</td>
+<td>—</td>
+</tr>
+<tr>
+<td><strong>Challenge / HelixQA</strong> (§11.4.27)</td>
+<td>the §11.4.169-class per-feature &quot;really works&quot; challenge: drive the
+real client→LAN journey, confirm the hello page, captured</td>
+<td>HelixQA <code>result.json</code> + captured transcript under
+<code>docs/qa/&lt;run-id&gt;/</code> (§11.4.83)</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<p>Each fix to <code>helix-wg</code> follows §11.4.115 RED-on-broken +
+§11.4.135 standing regression guard (e.g. the source-spoof-accept bug →
+a permanent <code>permits()</code>-rejects-spoof guard).</p>
+<hr />
+<h2 id="14-security-considerations">14. Security considerations</h2>
+<ol type="1">
+<li><strong>Private key custody (W3, §4.3/§6.1).</strong> Device private
+keys live in the platform secure store (iOS Keychain / Android Keystore
+/ TPM-backed where available), <code>SecretBytes</code>-wrapped
+(zeroizing), never logged, never written to a plaintext file [01-DP §4,
+04_ARCH §7, research-mullvad §8]. A leak path is a §11.4.10
+violation.</li>
+<li><strong>Cryptographic source authentication (§8.4/§12.11).</strong>
+Only a valid AEAD- authenticated Msg4 moves a peer&#39;s latched endpoint; a
+spoofed-source packet cannot hijack a session or redirect traffic —
+roaming is safe by construction.</li>
+<li><strong>Handshake anti-DoS (§14.3, grounded architecture).</strong>
+MAC1 (keyed BLAKE2s over the static pubkey) is the cheap first gate: a
+Msg1 with a bad MAC1 is dropped before any expensive Curve25519 work.
+Under load the responder issues a <strong>Cookie Reply (Msg3,
+§3.1)</strong> demanding MAC2, rate-limited per source — the edge&#39;s
+defence against handshake floods. <code>UNVERIFIED:</code> exact cookie
+TTL / rate-limit constants (pin to WireGuard whitepaper +
+boringtun).</li>
+<li><strong>No-logging by construction (W5).</strong> Only aggregate
+<code>PeerStats</code> counters exist; no per-packet, per-connection, or
+durable session state. The edge&#39;s sim-connection accounting is in-RAM
+only [research-mullvad §8, 01-DP §0.1 I5].</li>
+<li><strong>Default-deny crypto-routing (W4/§5).</strong> A peer reaches
+only its granted <code>AllowedIPs</code>; this is the coarse crypto
+layer beneath the port/proto edge verdict map — both required (defense
+in depth) [01-DP §7].</li>
+<li><strong>Harvest-now-decrypt-later (§4.4).</strong> The additive
+PQ-PSK seam protects today&#39;s recorded traffic against future quantum
+decryption, hybrid (never PQ-only) so a flaw in either KEM alone does
+not break the PSK [research-mullvad §4].</li>
+<li><strong>Target-system safety (§11.4.133).</strong> The Linux
+kernel-WG netlink path writes only the documented WireGuard config
+surface; no out-of-range or unverified kernel writes. Backend selection
+never bricks the host.</li>
+</ol>
+<hr />
+<h2 id="15-performance-budget">15. Performance budget</h2>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Target</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>plain-UDP through-tunnel throughput</td>
+<td>≥ <strong>80%</strong> of bare link</td>
+<td>G1 [04_P0 §8]</td>
+</tr>
+<tr>
+<td><code>masque-h3</code> through-tunnel throughput</td>
+<td>≥ <strong>50%</strong> of plain-UDP</td>
+<td>G2 [04_P0 §8]</td>
+</tr>
+<tr>
+<td>Added latency (plain-UDP)</td>
+<td>&lt; <strong>2 ms</strong></td>
+<td>[04_P0 §8]</td>
+</tr>
+<tr>
+<td>Added latency (<code>masque-h3</code>)</td>
+<td>&lt; <strong>15 ms</strong></td>
+<td>[04_P0 §8]</td>
+</tr>
+<tr>
+<td>Handshake time (plain)</td>
+<td>&lt; <strong>1 s</strong></td>
+<td>[04_P0 §8]</td>
+</tr>
+<tr>
+<td>Handshake time (<code>masque-h3</code>)</td>
+<td>&lt; <strong>2 s</strong></td>
+<td>[04_P0 §8]</td>
+</tr>
+<tr>
+<td>Reconnect / roam recovery</td>
+<td>&lt; <strong>3 s</strong></td>
+<td>[04_P0 §8]</td>
+</tr>
+<tr>
+<td>iOS NE steady-state RSS (core, both transports)</td>
+<td>under device ceiling with <strong>≥ 30% headroom</strong>, 30-min
+soak</td>
+<td>G3 (make-or-break) [04_P0 §6.3]</td>
+</tr>
+<tr>
+<td>Steady-state heap alloc on encrypt/decrypt</td>
+<td><strong>zero</strong> (scratch-buffer only)</td>
+<td>W1</td>
+</tr>
+<tr>
+<td>Edge CPU per Gbps</td>
+<td>recorded (cost-to-serve, feeds D5 edge-language decision)</td>
+<td>G4 [04_P0 §7–§8]</td>
+</tr>
+<tr>
+<td>PQ-PSK handshake extra cost</td>
+<td>~1–2 s at handshake; steady-state unchanged</td>
+<td>research-mullvad §4</td>
+</tr>
+</tbody>
+</table>
+<p>The MASQUE throughput penalty (double crypto + double congestion
+control) is <strong>real and must be measured, never claimed at
+parity</strong> [research-masque §5 &quot;do NOT claim parity speed&quot;]. The
+§13 benchmark fills these cells with captured numbers
+(§11.4.5/.69/.123).</p>
+<hr />
+<h2 id="16-build-checklist-this-crate">16. Build checklist (this
+crate)</h2>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Owns</th>
+<th>Phase</th>
+<th>Gate</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>helix-wg/src/lib.rs</code></td>
+<td><code>WgVerdict</code>, re-exports</td>
+<td>0</td>
+<td>G1 / S1</td>
+</tr>
+<tr>
+<td><code>helix-wg/src/backend.rs</code></td>
+<td><code>WgBackend</code>, <code>WgDataPath</code>,
+<code>resolve()</code> (§1.3)</td>
+<td>0→1</td>
+<td>G1</td>
+</tr>
+<tr>
+<td><code>helix-wg/src/peer.rs</code></td>
+<td><code>WgPeer</code>, <code>WgDevice</code>, pump methods (§2)</td>
+<td>0</td>
+<td>G1 / S1</td>
+</tr>
+<tr>
+<td><code>helix-wg/src/allowed_ips.rs</code></td>
+<td><code>AllowedIpsTrie</code> (§5)</td>
+<td>0→1</td>
+<td>G6 / S8</td>
+</tr>
+<tr>
+<td><code>helix-wg/src/keys.rs</code></td>
+<td><code>DeviceKeypair</code>, rotation (§6)</td>
+<td>0→1</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>helix-wg/src/config.rs</code></td>
+<td><code>WgDeviceConfig</code> (§11)</td>
+<td>0</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>helix-wg/src/error.rs</code></td>
+<td><code>WgError</code> taxonomy (§10)</td>
+<td>0</td>
+<td>S0</td>
+</tr>
+</tbody>
+</table>
+<p>Surviving interfaces (frozen contracts per [01-DP §4, 04_P0 §14]):
+<code>WgVerdict</code>, <code>WgPeer</code>/<code>WgDevice</code> pump
+signatures, the encrypted-datagram boundary (§9). Their implementations
+may evolve; the signatures hold from Phase 0.</p>
+<hr />
+<p><em>End of <code>helix-wg</code> nano-detail specification (Volume 2,
+doc 01). Pair with [01-DP] §4 (the section this deepens), the
+<code>Transport</code> trait spec ([01-DP] §3 — the layer beneath this
+one at the §9 boundary), and the security doc (PQ-PSK KEM exchange §4.4,
+kill-switch/DNS-leak state machine). Wire-byte layouts (§3) and
+boringtun signatures (§2) are <code>UNVERIFIED:</code> against the
+evidence base and MUST be confirmed against the WireGuard whitepaper +
+the pinned <code>boringtun</code> crate before implementation
+(§11.4.6).</em></p>
+</body>
+</html>

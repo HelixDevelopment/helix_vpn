@@ -1,0 +1,1600 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>UDP-over-TCP Transport</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">UDP-over-TCP Transport</h1>
+</header>
+<h1 id="udp-over-tcp-transport">UDP-over-TCP Transport</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-06-25T00:00:00Z</p>
+<blockquote>
+<p>Master technical specification — Volume 2 (Data Plane), nano-detail
+document. Deepens the <em><code>udp-over-tcp</code> — last resort when
+all UDP is blocked</em> section (<code>§3.6</code>) of [01-DP §3.6].
+This is a SPEC — it describes the
+<code>helix-transport::udp_over_tcp</code> module to be built,
+<strong>not</strong> the shipping product. Source evidence cited inline
+by id: [01-DP §N] = <code>final/01-data-plane.md</code>; [04_ARCH §N] =
+<code>04_VPN_CLD/HelixVPN-Architecture-Refined.md</code>; [04_P2 §N] =
+the Phase-2 refined doc; [SYNTHESIS §N] = the cross-document synthesis;
+[11-DR §N] = <code>final/11-deep-research-appendix.md</code>; [10-QA §N]
+= <code>final/10-testing-acceptance-and-qa.md</code>. External protocol
+constants not part of this evidence base (WireGuard message sizes,
+TCP/TLS header sizes) are tagged <code>[WG-PROTO]</code> /
+<code>[TCP]</code> / <code>[TLS]</code> and, where their exact value is
+not load-bearing, annotated honestly per constitution §11.4.6. Anything
+not grounded in the evidence base is marked <code>UNVERIFIED</code>.</p>
+</blockquote>
+<hr />
+<h2 id="0-scope--contract-summary">0. Scope &amp; contract summary</h2>
+<p><code>udp-over-tcp</code> (UoT) is the <strong>lowest rung of the
+transport escalation ladder</strong> [01-DP §5.3]: it length-prefixes
+already-encrypted WireGuard datagrams over a <strong>single TCP
+connection</strong>, matching Mullvad&#39;s <code>udp2tcp</code> / the Rust
+<code>udp-over-tcp</code> crate [01-DP §3.6, 04_ARCH §3.2, 04_P2 §1.2,
+11-DR A4]. It exists for exactly one purpose: <strong>keep a tunnel
+possible on networks where all UDP is blocked</strong> — the failure
+mode where <code>plain-udp</code>, <code>lwo</code>,
+<code>masque-h3</code> (QUIC/UDP), and
+<code>shadowsocks</code>-over-QUIC all fail because the path drops UDP
+entirely [11-DR A3 &quot;Hard UDP block&quot;]. It pays a
+<strong>head-of-line-blocking (HoL) penalty</strong> by construction
+(TCP imposes an ordered, reliable byte stream over WG&#39;s unreliable
+datagrams) and is therefore ranked <strong>last</strong> in every ladder
+order — preferred only when nothing faster connects [01-DP §3.6, §0.1
+I2].</p>
+<p>This document owns, to nano-detail:</p>
+<ol type="1">
+<li>The <code>UdpOverTcp</code> type and its full <code>Transport</code>
+implementation (§4).</li>
+<li>The on-the-wire framing — the 2-byte big-endian length prefix +
+opaque WG datagram, the optional TLS wrap, byte-exact layouts (§5).</li>
+<li>The connection lifecycle + framer/deframer state machines (§6).</li>
+<li>The HoL-blocking tradeoff — why it is unavoidable, what it costs,
+how the orchestrator bounds its damage (§7).</li>
+<li>Error taxonomy, config knobs, edge cases, security, performance
+budget (§8–§12).</li>
+<li>The concrete test points, tied to the §11.4.169 test-type taxonomy
+[10-QA §1] (§13).</li>
+</ol>
+<p><strong>Invariants inherited unchanged</strong> [01-DP §0.1]:</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Invariant</th>
+<th>How UoT honours it</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>I1</td>
+<td>Transport never sees plaintext.</td>
+<td>UoT frames an <strong>opaque</strong> WG datagram; it never
+inspects, parses, or decrypts the payload — the length prefix is the
+only byte it adds.</td>
+</tr>
+<tr>
+<td>I2</td>
+<td>Transport carries unreliable datagrams, not an ordered stream.</td>
+<td>UoT <strong>violates the spirit</strong> of I2 at the wire (TCP is
+ordered+reliable) but <strong>preserves the contract at the trait
+boundary</strong>: <code>send</code>/<code>recv</code> still exchange
+whole WG datagrams. WG&#39;s own loss/replay handling runs unchanged on top;
+the cost is HoL latency, not a semantic break (§7). This is the
+documented, accepted tradeoff of the last rung.</td>
+</tr>
+<tr>
+<td>I4</td>
+<td>One transport crate, three consumers.</td>
+<td>The same <code>udp_over_tcp.rs</code> runs on client (frames out),
+edge (deframes in), and connector; framing is symmetric.</td>
+</tr>
+<tr>
+<td>I5</td>
+<td>No-logging by construction.</td>
+<td>Only aggregate counters (bytes, frames, reconnects) — never
+per-datagram durable state.</td>
+</tr>
+</tbody>
+</table>
+<pre><code>File:   helix-transport/src/udp_over_tcp.rs   (the unit this doc specifies)
+Trait:  helix-transport/src/lib.rs::Transport  (the contract; frozen Phase-0 interface) [01-DP §3.1]
+Config: helix-transport/src/lib.rs::TransportConfig::UdpOverTcp { peer, tls_sni } [01-DP §3.1]
+Errors: helix-transport/src/error.rs::TransportError [01-DP §3.1]
+Phase:  2 (full transport set) [01-DP §12, 04_P2 §1.2]; the `Transport` trait it implements is frozen Phase-0.</code></pre>
+<hr />
+<h2 id="1-when-udp-over-tcp-is-selected--selection-conditions">1. When
+<code>udp-over-tcp</code> is selected — selection conditions</h2>
+<p>UoT is <strong>ladder rung N (last)</strong> in any
+restricted-network <code>TransportPolicy.order</code>; on an
+unrestricted network it is never reached [01-DP §5.3]. The orchestrator
+selects it in this closed set of cases:</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Condition</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>C1</td>
+<td><strong>All UDP blocked</strong> — <code>plain-udp</code>,
+<code>lwo</code>, <code>masque-h3</code>, <code>shadowsocks</code>
+(QUIC-carried) each exceeded their per-rung failure budget; the ladder
+has escalated to its final rung.</td>
+<td>[01-DP §5.3 step 3], [11-DR A3]</td>
+</tr>
+<tr>
+<td>C2</td>
+<td><strong>Per-network memory hit</strong> — a prior successful UoT
+connect on this SSID / gateway fingerprint is remembered and re-tried
+first, so the user does not pay the full escalation latency again on the
+same hostile network.</td>
+<td>[01-DP §5.3 step 4], [04_P2 §1.4]</td>
+</tr>
+<tr>
+<td>C3</td>
+<td><strong>Regional prior</strong> — the coordinator pushed a
+<code>TransportPolicy.order</code> that ends in (or, for a known
+UDP-blackholing region, <em>starts higher up but still terminates
+at</em>) <code>udp-over-tcp</code>.</td>
+<td>[01-DP §5.3 step 5], [04_P2 §1.4]</td>
+</tr>
+<tr>
+<td>C4</td>
+<td><strong>Manual pin</strong> — user sets
+<code>TransportPolicy.pin = UdpOverTcp</code> (rare; deliberate &quot;make it
+work on this captive/corporate network&quot; choice).</td>
+<td>[01-DP §5.3 step 1], [04_ARCH §3.2]</td>
+</tr>
+</tbody>
+</table>
+<p>UoT is <strong>never</strong> the default <code>order[0]</code>. The
+default unrestricted order is <code>[plain-udp]</code>; the restricted
+prior is
+<code>[plain-udp, lwo, masque-h3, shadowsocks, udp-over-tcp]</code>
+[01-DP §5.3]. Rule: the orchestrator MUST exhaust every UDP-capable rung
+before UoT, because UoT&#39;s HoL penalty makes it the worst-performing
+carrier (§7).</p>
+<blockquote>
+<p><strong>UNVERIFIED (TLS-443 DPI residual):</strong> [11-DR A3] notes
+that on a path with <strong>SNI/TLS DPI on TCP 443</strong>, a naive
+TLS-wrapped UoT may still be fingerprinted unless it presents a
+real-site TLS fingerprint (VLESS+Reality / ShadowTLS class). HelixVPN&#39;s
+MVP UoT ships the <em>plain</em> and
+<em>opportunistic-TLS-camouflage</em> variants only (§5.4); a
+Reality-grade TLS-mimic UoT is a <strong>Phase-3 hardening
+item</strong>, not specified here. Where TLS-443 DPI also blocks UoT,
+the honest outcome is <code>EndpointBlocked</code> → no tunnel (the
+residual-censorship boundary), not a silent degraded PASS.</p>
+</blockquote>
+<hr />
+<h2 id="2-reference-implementations--build-stance">2. Reference
+implementations &amp; build stance</h2>
+<table>
+<thead>
+<tr>
+<th>Reference</th>
+<th>What it gives us</th>
+<th>Stance</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Mullvad <code>udp-over-tcp</code> Rust crate</td>
+<td>The canonical 2-byte-length-prefix framing this module reproduces;
+Mullvad&#39;s <code>udp2tcp</code> obfuscation mode is literally this
+crate.</td>
+<td><strong>Reuse the framing design; reimplement in-crate</strong> so
+UoT shares <code>helix-transport</code>&#39;s <code>Transport</code> trait,
+error taxonomy, and <code>HealthCell</code> (I4) rather than bolting on
+a foreign socket loop. [11-DR A4], [04_P2 §1.2]</td>
+</tr>
+<tr>
+<td><code>dndx/phantun</code> (fake-TCP, 12-byte overhead, user-mode
+TCP, 100% safe Rust)</td>
+<td>An alternative <em>fake-TCP</em> approach (forges TCP segments over
+a raw/<code>AF_PACKET</code> socket; no real kernel TCP, no HoL because
+it does not implement TCP retransmit).</td>
+<td><strong>Phase-3 option</strong>, not MVP. Phantun needs
+<code>CAP_NET_RAW</code> / raw-socket privileges and a kernel that lets
+it inject TCP segments — heavier deploy surface. Recorded as a
+documented alternative; MVP UoT uses a <strong>real kernel TCP</strong>
+socket (<code>tokio::net::TcpStream</code>) for portability. [11-DR A3,
+A4]</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Decision (build stance):</strong> MVP
+<code>udp_over_tcp.rs</code> = <strong>real kernel TCP</strong>
+(<code>tokio::net::TcpStream</code>), Mullvad-style 2-byte length
+framing, optional opportunistic TLS wrap. Fake-TCP (Phantun-style) is a
+Phase-3 escape hatch for environments where even real-TCP UoT is
+throttled but raw-socket injection is available. This keeps the MVP
+last-rung <strong>portable and unprivileged</strong> at the cost of
+real-TCP HoL (§7) — the accepted tradeoff for &quot;keep a tunnel
+<em>possible</em>&quot; [01-DP §3.6].</p>
+<hr />
+<h2 id="3-module-surface-types-this-document-specifies">3. Module
+surface (types this document specifies)</h2>
+<div class="sourceCode" id="cb2"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-transport/src/udp_over_tcp.rs</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">async_trait::</span>async_trait<span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">bytes::</span><span class="op">{</span>Bytes<span class="op">,</span> BytesMut<span class="op">,</span> Buf<span class="op">,</span> BufMut<span class="op">};</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::net::</span>SocketAddr<span class="op">;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::sync::</span>Arc<span class="op">;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">tokio::io::</span><span class="op">{</span>AsyncReadExt<span class="op">,</span> AsyncWriteExt<span class="op">};</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">tokio::sync::</span>Mutex<span class="op">;</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="kw">crate</span><span class="pp">::error::</span>TransportError<span class="op">;</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="kw">crate</span><span class="pp">::health::</span>HealthCell<span class="op">;</span>          <span class="co">// shared with plain-udp/masque [01-DP §3.2]</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="kw">crate</span><span class="pp">::</span><span class="op">{</span>Transport<span class="op">,</span> TransportHealth<span class="op">};</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="co">/// Wire constant: the length prefix is a 2-byte big-endian (network order) u16,</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="co">/// giving a 0..=65535 byte datagram budget — strictly larger than any WG datagram</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="co">/// at any effective_mtu (WG max is well under 1500). [01-DP §3.6, §10]</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">const</span> UOT_LEN_PREFIX_BYTES<span class="op">:</span> <span class="dt">usize</span> <span class="op">=</span> <span class="dv">2</span><span class="op">;</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">const</span> UOT_MAX_DATAGRAM<span class="op">:</span> <span class="dt">usize</span> <span class="op">=</span> <span class="dt">u16</span><span class="pp">::</span><span class="cn">MAX</span> <span class="kw">as</span> <span class="dt">usize</span><span class="op">;</span> <span class="co">// 65535</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="co">/// The carrier sub-mode: plain TCP, or TCP wrapped in opportunistic TLS to look like HTTPS.</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="bu">Clone</span><span class="op">,</span> <span class="bu">Debug</span><span class="at">)]</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">enum</span> UotWrap <span class="op">{</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>    Plain<span class="op">,</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Opportunistic TLS camouflage; `sni` is the ClientHello SNI presented to blend with HTTPS.</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// NOT a security boundary — WG already provides confidentiality (I1). [01-DP §3.6 &quot;Optional TLS wrap&quot;]</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>    Tls <span class="op">{</span> sni<span class="op">:</span> <span class="dt">String</span> <span class="op">},</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a><span class="co">/// Live UoT transport. ONE TCP connection; `send`/`recv` exchange whole WG datagrams.</span></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> UdpOverTcp <span class="op">{</span></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Write half behind a mutex: TCP writes must be atomic per-frame (no interleave). (§6.4)</span></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>    wr<span class="op">:</span> Arc<span class="op">&lt;</span>Mutex<span class="op">&lt;</span>WriteHalf<span class="op">&gt;&gt;,</span></span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Read half + deframer state behind a mutex: recv() is the sole reader. (§6.5)</span></span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>    rd<span class="op">:</span> Arc<span class="op">&lt;</span>Mutex<span class="op">&lt;</span>ReadHalf<span class="op">&gt;&gt;,</span></span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>    peer<span class="op">:</span> SocketAddr<span class="op">,</span></span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>    kind<span class="op">:</span> <span class="op">&amp;</span><span class="ot">&#39;static</span> <span class="dt">str</span><span class="op">,</span>        <span class="co">// &quot;udp-over-tcp&quot; or &quot;udp-over-tcp-tls&quot;</span></span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a>    health<span class="op">:</span> HealthCell<span class="op">,</span></span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a><span class="co">/// Internal write side (either plain TcpStream write half or a TLS stream write half).</span></span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> WriteHalf <span class="op">{</span> inner<span class="op">:</span> TcpOrTlsWrite <span class="op">}</span></span>
+<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a><span class="co">/// Internal read side carrying the partial-frame reassembly buffer (§6.5).</span></span>
+<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> ReadHalf  <span class="op">{</span> inner<span class="op">:</span> TcpOrTlsRead<span class="op">,</span> acc<span class="op">:</span> BytesMut <span class="co">/* unconsumed bytes across reads */</span> <span class="op">}</span></span>
+<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a><span class="co">/// Sum type so the same framing code drives plain TCP and TLS-wrapped TCP without generics leaking</span></span>
+<span id="cb2-45"><a href="#cb2-45" aria-hidden="true" tabindex="-1"></a><span class="co">/// into the Transport object. (`TcpOrTls*` wrap tokio TcpStream halves or tokio-rustls TlsStream halves.)</span></span>
+<span id="cb2-46"><a href="#cb2-46" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> TcpOrTlsWrite <span class="op">{</span> Tcp(<span class="co">/* tokio write half */</span>)<span class="op">,</span> Tls(<span class="co">/* tokio-rustls write half */</span>) <span class="op">}</span></span>
+<span id="cb2-47"><a href="#cb2-47" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> TcpOrTlsRead  <span class="op">{</span> Tcp(<span class="co">/* tokio read half  */</span>)<span class="op">,</span> Tls(<span class="co">/* tokio-rustls read half  */</span>) <span class="op">}</span></span></code></pre></div>
+<p><code>UdpOverTcp</code> is constructed only by <code>dial()</code>
+(§4.1); it is never directly instantiated by callers. The
+<code>Arc&lt;Mutex&lt;..&gt;&gt;</code> split (separate write/read
+locks) lets <code>send</code> and <code>recv</code> run concurrently
+(full-duplex) while serialising multiple <code>send</code>s against each
+other so frames never interleave on the wire (§6.4).</p>
+<hr />
+<h2 id="4-the-transport-impl-nano-detail">4. The <code>Transport</code>
+impl (nano-detail)</h2>
+<h3 id="41-dial--establishing-the-carrier">4.1 <code>dial()</code> —
+establishing the carrier</h3>
+<p><code>dial(TransportConfig::UdpOverTcp { peer, tls_sni })</code>
+constructs a live <code>UdpOverTcp</code> within the bounded dial
+timeout; on timeout/refusal it returns <code>DialTimeout</code> /
+<code>HandshakeFailed</code>, which the orchestrator treats as &quot;this
+rung failed&quot; — but since UoT is the <strong>last</strong> rung, a
+failure here means the ladder is exhausted and the orchestrator emits
+<code>Down { reason }</code> rather than escalating [01-DP §5.3,
+§3.1].</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-transport/src/lib.rs::dial() dispatch arm for UdpOverTcp</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async</span> <span class="kw">fn</span> dial_udp_over_tcp(</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    peer<span class="op">:</span> SocketAddr<span class="op">,</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    tls_sni<span class="op">:</span> <span class="dt">Option</span><span class="op">&lt;</span><span class="dt">String</span><span class="op">&gt;,</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    dial_timeout<span class="op">:</span> <span class="pp">std::time::</span>Duration<span class="op">,</span>   <span class="co">// from TransportConfig defaults (§11)</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>UdpOverTcp<span class="op">,</span> TransportError<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 1. TCP connect with a hard timeout (UDP-blocking firewalls often *also* RST :51820/tcp,</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">//    so a fast, bounded connect is the common &quot;blocked&quot; signal). [11-DR A3]</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> tcp <span class="op">=</span> <span class="pp">tokio::time::</span>timeout(dial_timeout<span class="op">,</span> <span class="pp">tokio::net::TcpStream::</span>connect(peer))</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span><span class="kw">await</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span>map_err(<span class="op">|</span>_<span class="op">|</span> <span class="pp">TransportError::</span>DialTimeout)<span class="op">?</span>            <span class="co">// timed out → ladder exhausted</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span>map_err(<span class="op">|</span>e<span class="op">|</span> <span class="cf">match</span> e<span class="op">.</span>kind() <span class="op">{</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>            <span class="pp">std::io::ErrorKind::</span>ConnectionRefused</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>            <span class="op">|</span> <span class="pp">std::io::ErrorKind::</span>ConnectionReset <span class="op">=&gt;</span> <span class="pp">TransportError::</span>EndpointBlocked<span class="op">,</span> <span class="co">// RST = DPI/firewall</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>            _ <span class="op">=&gt;</span> <span class="pp">TransportError::</span>Io(e)<span class="op">,</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span>)<span class="op">?;</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 2. Disable Nagle: WG datagrams are latency-sensitive; Nagle would coalesce small frames</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>    <span class="co">//    and add up to ~40 ms of artificial delay on top of the HoL cost (§7). [TCP]</span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>    tcp<span class="op">.</span>set_nodelay(<span class="cn">true</span>)<span class="op">.</span>map_err(<span class="pp">TransportError::</span>Io)<span class="op">?;</span></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 3. Optional TLS wrap (opportunistic HTTPS camouflage; NOT a security boundary). (§5.4)</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> (wr<span class="op">,</span> rd<span class="op">,</span> kind) <span class="op">=</span> <span class="cf">match</span> tls_sni <span class="op">{</span></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>        <span class="cn">None</span> <span class="op">=&gt;</span> split_plain(tcp)<span class="op">,</span></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>        <span class="cn">Some</span>(sni) <span class="op">=&gt;</span> <span class="op">{</span></span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>            <span class="kw">let</span> tls <span class="op">=</span> tls_client_handshake(tcp<span class="op">,</span> <span class="op">&amp;</span>sni<span class="op">,</span> dial_timeout) <span class="co">// tokio-rustls; ALPN &quot;h2&quot;/&quot;http/1.1&quot;</span></span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>                <span class="op">.</span><span class="kw">await</span></span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>                <span class="op">.</span>map_err(<span class="op">|</span>e<span class="op">|</span> <span class="pp">TransportError::</span>HandshakeFailed(<span class="pp">format!</span>(<span class="st">&quot;uot-tls: {e}&quot;</span>)))<span class="op">?;</span></span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>            split_tls(tls)</span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>    <span class="op">};</span></span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>    <span class="cn">Ok</span>(UdpOverTcp <span class="op">{</span></span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a>        wr<span class="op">:</span> <span class="pp">Arc::</span>new(<span class="pp">Mutex::</span>new(WriteHalf <span class="op">{</span> inner<span class="op">:</span> wr <span class="op">}</span>))<span class="op">,</span></span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a>        rd<span class="op">:</span> <span class="pp">Arc::</span>new(<span class="pp">Mutex::</span>new(ReadHalf  <span class="op">{</span> inner<span class="op">:</span> rd<span class="op">,</span> acc<span class="op">:</span> <span class="pp">BytesMut::</span>with_capacity(<span class="dv">8</span> <span class="op">*</span> <span class="dv">1024</span>) <span class="op">}</span>))<span class="op">,</span></span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a>        peer<span class="op">,</span></span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a>        kind<span class="op">,</span></span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a>        health<span class="op">:</span> <span class="pp">HealthCell::</span>new()<span class="op">,</span></span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span>)</span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Notes:</p>
+<ul>
+<li><strong>No application handshake of its own.</strong> UoT carries
+the WG handshake as its first framed datagrams; the carrier is &quot;up&quot; the
+moment the TCP (and optional TLS) connection is established. The
+<em>tunnel</em> is up when WG completes its Noise IK handshake
+<strong>over</strong> UoT — that liveness is the orchestrator&#39;s concern
+via <code>TunnelStatus</code>, not UoT&#39;s [01-DP §5.2].</li>
+<li><strong><code>EndpointBlocked</code> vs
+<code>DialTimeout</code>:</strong> a TCP <strong>RST</strong>
+(refused/reset) → <code>EndpointBlocked</code> (active DPI/firewall
+verdict); a connect <strong>timeout</strong> → <code>DialTimeout</code>
+(blackhole). Both are terminal for the last rung; the distinction feeds
+the aggregate censorship telemetry (&quot;UoT EndpointBlocked in region R&quot; vs
+&quot;UoT timeout in region R&quot;, §13) [01-DP §5.3 step 6].</li>
+</ul>
+<h3 id="42-send--frame-one-wg-datagram">4.2 <code>send</code> — frame
+one WG datagram</h3>
+<div class="sourceCode" id="cb4"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>async_trait<span class="at">]</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> Transport <span class="cf">for</span> UdpOverTcp <span class="op">{</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">async</span> <span class="kw">fn</span> send(<span class="op">&amp;</span><span class="kw">self</span><span class="op">,</span> dg<span class="op">:</span> Bytes) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">,</span> TransportError<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Hard cap: WG datagram must fit the 2-byte length prefix (always true at any MTU,</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>        <span class="co">// but assert rather than truncate — I1 forbids mangling the opaque payload). (§5.2)</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> dg<span class="op">.</span>len() <span class="op">&gt;</span> UOT_MAX_DATAGRAM <span class="op">{</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="cn">Err</span>(<span class="pp">TransportError::</span>Oversize(dg<span class="op">.</span>len()))<span class="op">;</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> <span class="kw">mut</span> frame <span class="op">=</span> <span class="pp">BytesMut::</span>with_capacity(UOT_LEN_PREFIX_BYTES <span class="op">+</span> dg<span class="op">.</span>len())<span class="op">;</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>        frame<span class="op">.</span>put_u16(dg<span class="op">.</span>len() <span class="kw">as</span> <span class="dt">u16</span>)<span class="op">;</span>   <span class="co">// big-endian length prefix [01-DP §3.6]</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>        frame<span class="op">.</span>put_slice(<span class="op">&amp;</span>dg)<span class="op">;</span>             <span class="co">// opaque WG datagram, byte-for-byte (I1)</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>        <span class="co">// One mutex-guarded write_all: the whole frame lands contiguously; concurrent sends</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>        <span class="co">// serialise here so two frames never interleave on the byte stream (§6.4).</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> <span class="kw">mut</span> wr <span class="op">=</span> <span class="kw">self</span><span class="op">.</span>wr<span class="op">.</span>lock()<span class="op">.</span><span class="kw">await</span><span class="op">;</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>        wr<span class="op">.</span>inner<span class="op">.</span>write_all(<span class="op">&amp;</span>frame)<span class="op">.</span><span class="kw">await</span><span class="op">.</span>map_err(<span class="op">|</span>e<span class="op">|</span> <span class="op">{</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>            <span class="kw">self</span><span class="op">.</span>health<span class="op">.</span>mark_send_error()<span class="op">;</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>            map_io_to_transport(e)        <span class="co">// BrokenPipe/Reset → Closed/EndpointBlocked (§8)</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span>)<span class="op">?;</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>        <span class="co">// </span><span class="al">NOTE</span><span class="co">: no flush() needed — TCP_NODELAY is set, write_all hands bytes to the kernel.</span></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>        <span class="cn">Ok</span>(())</span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span></code></pre></div>
+<h3 id="43-recv--deframe-the-next-wg-datagram">4.3 <code>recv</code> —
+deframe the next WG datagram</h3>
+<div class="sourceCode" id="cb5"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>    <span class="kw">async</span> <span class="kw">fn</span> recv(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>Bytes<span class="op">,</span> TransportError<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> <span class="kw">mut</span> rd <span class="op">=</span> <span class="kw">self</span><span class="op">.</span>rd<span class="op">.</span>lock()<span class="op">.</span><span class="kw">await</span><span class="op">;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Pull whole frames out of the reassembly accumulator; read more bytes only when a</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>        <span class="co">// complete frame is not yet buffered. Cancel-safe: state lives in `rd.acc`, not on the</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>        <span class="co">// stack, so a dropped recv() future (e.g. in select!) loses no bytes. (§6.5)</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">loop</span> <span class="op">{</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="kw">let</span> <span class="cn">Some</span>(dg) <span class="op">=</span> try_take_frame(<span class="op">&amp;</span><span class="kw">mut</span> rd<span class="op">.</span>acc)<span class="op">?</span> <span class="op">{</span>   <span class="co">// (§6.6)</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>                <span class="kw">self</span><span class="op">.</span>health<span class="op">.</span>mark_recv()<span class="op">;</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> <span class="cn">Ok</span>(dg)<span class="op">;</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>            <span class="co">// Need more bytes: read into a scratch buffer, append to acc.</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>            <span class="kw">let</span> <span class="kw">mut</span> scratch <span class="op">=</span> [<span class="dv">0u8</span><span class="op">;</span> <span class="dv">16</span> <span class="op">*</span> <span class="dv">1024</span>]<span class="op">;</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>            <span class="kw">let</span> n <span class="op">=</span> rd<span class="op">.</span>inner<span class="op">.</span>read(<span class="op">&amp;</span><span class="kw">mut</span> scratch)<span class="op">.</span><span class="kw">await</span><span class="op">.</span>map_err(map_io_to_transport)<span class="op">?;</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> n <span class="op">==</span> <span class="dv">0</span> <span class="op">{</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> <span class="cn">Err</span>(<span class="pp">TransportError::</span>Closed)<span class="op">;</span>   <span class="co">// peer FIN / half-close (§6.3)</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>            rd<span class="op">.</span>acc<span class="op">.</span>put_slice(<span class="op">&amp;</span>scratch[<span class="op">..</span>n])<span class="op">;</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span></code></pre></div>
+<h3 id="44-kind-effective_mtu-health-close">4.4 <code>kind</code>,
+<code>effective_mtu</code>, <code>health</code>, <code>close</code></h3>
+<div class="sourceCode" id="cb6"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> kind(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="op">&amp;</span><span class="ot">&#39;static</span> <span class="dt">str</span> <span class="op">{</span> <span class="kw">self</span><span class="op">.</span>kind <span class="op">}</span> <span class="co">// &quot;udp-over-tcp&quot; | &quot;udp-over-tcp-tls&quot;</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> effective_mtu(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">u16</span> <span class="op">{</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Inner WG MTU budget left after TCP/TLS + 2-byte length prefix overhead. (§10)</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Plain UoT ~1380; TLS-wrapped is lower (TLS record overhead) — both reported here.</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">match</span> <span class="kw">self</span><span class="op">.</span>kind <span class="op">{</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;udp-over-tcp&quot;</span>     <span class="op">=&gt;</span> <span class="dv">1380</span><span class="op">,</span>  <span class="co">// TCP MSS − 2-byte length prefix [01-DP §10]</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;udp-over-tcp-tls&quot;</span> <span class="op">=&gt;</span> <span class="dv">1360</span><span class="op">,</span>  <span class="co">// additionally TLS record header+tag [TLS] (measure &amp; tune, §10)</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>            _                  <span class="op">=&gt;</span> <span class="dv">1380</span><span class="op">,</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> health(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> TransportHealth <span class="op">{</span> <span class="kw">self</span><span class="op">.</span>health<span class="op">.</span>snapshot() <span class="op">}</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">async</span> <span class="kw">fn</span> close(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">,</span> TransportError<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Graceful: flush + shutdown(Write) so the peer sees a clean FIN, then drop. Idempotent. (§6.3)</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> <span class="kw">mut</span> wr <span class="op">=</span> <span class="kw">self</span><span class="op">.</span>wr<span class="op">.</span>lock()<span class="op">.</span><span class="kw">await</span><span class="op">;</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> _ <span class="op">=</span> wr<span class="op">.</span>inner<span class="op">.</span>flush()<span class="op">.</span><span class="kw">await</span><span class="op">;</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> _ <span class="op">=</span> wr<span class="op">.</span>inner<span class="op">.</span>shutdown()<span class="op">.</span><span class="kw">await</span><span class="op">;</span>   <span class="co">// ignore errors — close is best-effort, idempotent</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>        <span class="cn">Ok</span>(())</span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><code>effective_mtu()</code> values are <strong>derived</strong>
+[01-DP §10 marks UoT ~1380 &quot;derived&quot;] and MUST be re-measured against
+the path in Phase 2 (record real MSS via the connected socket) rather
+than trusted as constants — the §11.4.6 honest stance: the table value
+is a planning floor, not a measured fact, until a
+<code>BENCH</code>/<code>MEM</code> run confirms it (§13).</p>
+<hr />
+<h2 id="5-wire-format-byte-exact">5. Wire format (byte-exact)</h2>
+<h3 id="51-the-frame">5.1 The frame</h3>
+<p>UoT puts a sequence of <strong>length-prefixed frames</strong> onto
+the TCP byte stream. Each frame:</p>
+<pre><code> byte:  0      1      2            2+L-1
+       ┌──────┬──────┬─────────────────────┐
+       │ LEN (u16 BE) │  WG datagram (opaque, L bytes)   │
+       └──────┴──────┴─────────────────────┘
+        \____________/ \____________________/
+          2-byte prefix     payload = exactly one WG datagram</code></pre>
+<ul>
+<li><strong>LEN</strong>: <code>u16</code>, <strong>big-endian / network
+byte order</strong>, = the length <code>L</code> of the WG datagram that
+follows (NOT including the 2 prefix bytes). Range
+<code>0..=65535</code>; in practice <code>L</code> ≈ 32..1420 [WG-PROTO]
+[01-DP §3.6, §10].</li>
+<li><strong>Payload</strong>: exactly <code>L</code> bytes of
+<strong>opaque</strong> WG datagram — UoT never inspects it (I1).</li>
+<li>Frames are <strong>back-to-back</strong> on the stream with no
+separator, no checksum, no sequence number: TCP already provides
+ordering, reliability, and integrity, so UoT adds only the length prefix
+needed to recover datagram boundaries from the byte stream (the sole job
+of UoT framing) [01-DP §3.6].</li>
+</ul>
+<h3 id="52-why-2-bytes--big-endian--no-checksum">5.2 Why 2 bytes /
+big-endian / no checksum</h3>
+<table>
+<thead>
+<tr>
+<th>Choice</th>
+<th>Rationale</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>2-byte length</strong></td>
+<td><code>u16</code> covers <code>0..=65535</code>, strictly larger than
+any WG datagram at any <code>effective_mtu</code> (max WG payload ≪
+1500) [WG-PROTO]; a 1-byte prefix could not. Matches Mullvad
+<code>udp-over-tcp</code>.</td>
+<td>[11-DR A4], [01-DP §3.6]</td>
+</tr>
+<tr>
+<td><strong>Big-endian</strong></td>
+<td>Network byte order is the wire convention; symmetric framer/deframer
+on both ends agree by spec, not by host endianness.</td>
+<td>[TCP convention]</td>
+</tr>
+<tr>
+<td><strong>No checksum / no seq</strong></td>
+<td>TCP delivers an ordered, error-checked, reliable stream; re-adding a
+checksum or sequence number would be redundant overhead. WG&#39;s own AEAD
+already authenticates the payload.</td>
+<td>[01-DP §3.6, I1]</td>
+</tr>
+<tr>
+<td><strong><code>Oversize</code> is a hard error</strong></td>
+<td>If a caller ever hands a datagram <code>&gt; 65535</code>
+(impossible at real MTU but defended), <code>send</code> returns
+<code>TransportError::Oversize</code> — UoT MUST NOT truncate or split
+the opaque payload (I1).</td>
+<td>[01-DP §3.1, §10 rule 3]</td>
+</tr>
+</tbody>
+</table>
+<h3 id="53-worked-example-handshake-init-datagram">5.3 Worked example
+(handshake-init datagram)</h3>
+<p>A WireGuard handshake-initiation datagram is 148 bytes on the wire
+[WG-PROTO; value cross-checked in 11-DR A3 &quot;fixed 148-byte
+handshake-init&quot;]. UoT frames it as:</p>
+<pre><code> 00 94 | &lt;148 opaque WG bytes&gt;
+  └┬─┘
+   └ 0x0094 = 148 (big-endian u16)
+total on TCP stream = 2 + 148 = 150 bytes</code></pre>
+<p>The deframer reads <code>0x0094</code> → expects 148 payload bytes →
+emits exactly the original 148-byte WG datagram up to <code>recv</code>.
+Byte-for-byte round-trip; no mangling (I1).</p>
+<h3 id="54-the-optional-tls-wrap-uotwraptls">5.4 The optional TLS wrap
+(<code>UotWrap::Tls</code>)</h3>
+<p>When <code>tls_sni</code> is <code>Some(sni)</code>, the entire UoT
+frame stream rides <strong>inside a TLS record stream</strong> so a
+passive observer on TCP :443 sees an HTTPS-looking handshake + encrypted
+records, not a bare length-prefixed stream [01-DP §3.6 &quot;Optional TLS
+wrap (<code>tls_sni</code>) to look like HTTPS&quot;].</p>
+<pre><code>L1:  IP
+L2:  TCP  (:443/tcp typically)
+        └ TLS records (ClientHello SNI = &lt;sni&gt;, ALPN h2/http1.1)   ← camouflage layer
+            └ UoT frames:  [u16 LEN][WG datagram] [u16 LEN][WG datagram] …
+                              └ opaque WG datagrams (I1)</code></pre>
+<ul>
+<li><strong>Camouflage only, NOT a security boundary.</strong> WG
+already provides confidentiality + integrity (I1); the TLS layer exists
+to make the flow resemble HTTPS to DPI, not to protect the payload. Its
+keys are unrelated to WG keys.</li>
+<li><strong>SNI</strong> is presented to blend with real HTTPS to the
+gateway&#39;s <code>:443/tcp</code> listener; the edge&#39;s <code>:443</code>
+listener already serves a believable decoy site to non-tunnel TLS (the
+masquerade property described for <code>masque-h3</code>) [01-DP §3.3
+&quot;Masquerade&quot;], so a probe that completes the TLS handshake but sends no
+valid framed WG handshake gets the decoy, not a UoT signature.</li>
+<li><strong>ALPN</strong> SHOULD advertise <code>h2</code> /
+<code>http/1.1</code> to match a browser; the inner bytes are UoT frames
+regardless of the advertised protocol (the ALPN is camouflage, the
+gateway routes by listener config). <code>UNVERIFIED</code>: exact
+ALPN/JA3 mimicry quality is a Phase-3 DPI-hardening concern (§1 TLS-443
+DPI note); MVP ships a standard <code>tokio-rustls</code>
+ClientHello.</li>
+</ul>
+<hr />
+<h2 id="6-state-machines--lifecycle">6. State machines &amp;
+lifecycle</h2>
+<h3 id="61-carrier-lifecycle-the-udpovertcp-object">6.1 Carrier
+lifecycle (the <code>UdpOverTcp</code> object)</h3>
+<pre class="mermaid"><code>stateDiagram-v2
+    [*] --&gt; Dialing: dial(UdpOverTcp{peer, tls_sni})
+    Dialing --&gt; TlsHandshake: TCP connected, tls_sni = Some
+    Dialing --&gt; Established: TCP connected, tls_sni = None
+    Dialing --&gt; DialFailed: timeout / RST
+    TlsHandshake --&gt; Established: TLS ClientHello..Finished OK
+    TlsHandshake --&gt; DialFailed: TLS error / timeout
+
+    Established --&gt; Established: send() / recv() frames
+    Established --&gt; Closing: close() called
+    Established --&gt; Broken: io error (BrokenPipe/Reset/FIN)
+    Closing --&gt; [*]: FIN sent, dropped
+    Broken --&gt; [*]: Closed/EndpointBlocked surfaced to orchestrator
+    DialFailed --&gt; [*]: DialTimeout/HandshakeFailed/EndpointBlocked → ladder EXHAUSTED (last rung)
+
+    note right of DialFailed
+      UoT is the LAST ladder rung [01-DP §5.3]:
+      a failure here = no tunnel possible →
+      orchestrator emits Down{reason}, not escalate.
+    end note
+    note right of Broken
+      A mid-session TCP break does NOT silently
+      degrade: surface Closed; orchestrator
+      re-dials per-network-remembered UoT (C2)
+      or emits Reconnecting→Down.
+    end note</code></pre>
+<h3 id="62-send-path-framing-fsm-per-datagram">6.2 Send-path framing FSM
+(per datagram)</h3>
+<pre class="mermaid"><code>stateDiagram-v2
+    [*] --&gt; CheckSize
+    CheckSize --&gt; Oversize: dg.len() &gt; 65535
+    CheckSize --&gt; BuildFrame: dg.len() &lt;= 65535
+    BuildFrame --&gt; AcquireWriteLock: put_u16(len) + put_slice(dg)
+    AcquireWriteLock --&gt; WriteAll: lock held (serialises frames)
+    WriteAll --&gt; Done: write_all OK
+    WriteAll --&gt; SendError: io error → mark_send_error
+    Oversize --&gt; [*]: Err(Oversize)
+    SendError --&gt; [*]: Err(Closed|EndpointBlocked)
+    Done --&gt; [*]: Ok(())</code></pre>
+<h3 id="63-close--half-close">6.3 Close &amp; half-close</h3>
+<ul>
+<li><strong>Graceful close (<code>close()</code>):</strong> flush write
+buffer → <code>shutdown(Write)</code> (sends TCP FIN) → drop.
+<strong>Idempotent</strong> — second <code>close()</code> is a no-op
+(locks + best-effort <code>flush</code>/<code>shutdown</code> ignore
+already-closed errors). The peer&#39;s <code>recv</code> then observes
+<code>read == 0</code> and returns <code>Closed</code>.</li>
+<li><strong>Peer FIN during <code>recv</code>:</strong>
+<code>read()</code> returns <code>0</code> → <code>recv</code> returns
+<code>TransportError::Closed</code>. The orchestrator treats this as a
+transport drop → <code>Reconnecting</code> (re-dial UoT) or, if re-dial
+also fails, <code>Down</code> [01-DP §5.2].</li>
+<li><strong>No silent half-open:</strong> UoT MUST NOT keep
+<code>send</code>ing into a write-closed socket pretending it is
+healthy; the first <code>send</code> after a peer RST surfaces
+<code>BrokenPipe</code>/<code>Reset</code> → <code>Closed</code>/
+<code>EndpointBlocked</code> via <code>map_io_to_transport</code> (§8).
+(Honesty over a fake-up tunnel — §11.4.6.)</li>
+</ul>
+<h3 id="64-write-atomicity-why-the-write-half-is-mutex-guarded">6.4
+Write atomicity (why the write half is mutex-guarded)</h3>
+<p>A WG datagram&#39;s frame (<code>[len][payload]</code>) MUST land
+<strong>contiguously</strong> on the TCP stream; if two
+<code>send</code> calls interleaved their <code>write_all</code>s, the
+deframer on the far end would read a corrupted length prefix. The
+<code>Arc&lt;Mutex&lt;WriteHalf&gt;&gt;</code> serialises all
+<code>send</code>s: each holds the lock across its single
+<code>write_all(&amp;frame)</code>, so frames are atomic with respect to
+one another. <code>recv</code> uses a <strong>separate</strong> lock
+(<code>Arc&lt;Mutex&lt;ReadHalf&gt;&gt;</code>), so the connection is
+full-duplex (a <code>send</code> never blocks a <code>recv</code>). This
+is the data-race / deadlock surface the <code>RACE</code> test type
+targets (§13).</p>
+<h3 id="65-receive-path-reassembly-the-partial-frame-problem">6.5
+Receive-path reassembly (the partial-frame problem)</h3>
+<p>TCP delivers a <strong>byte stream</strong>, not datagrams: one
+<code>read()</code> may return half a frame, several frames, or a frame
+split across two reads. The deframer keeps an accumulator
+<code>acc: BytesMut</code> across <code>recv</code> calls and is
+<strong>cancel-safe</strong> (the accumulator lives in
+<code>ReadHalf</code>, not on the <code>recv</code> future&#39;s stack, so
+dropping a <code>recv</code> in a <code>select!</code> loses no buffered
+bytes — the I2 cancel-safety contract [01-DP §3.1]).</p>
+<pre class="mermaid"><code>stateDiagram-v2
+    [*] --&gt; HaveHeader?: recv() entered, lock held
+    HaveHeader? --&gt; HavePayload?: acc.len() &gt;= 2
+    HaveHeader? --&gt; ReadMore: acc.len() &lt; 2
+    HavePayload? --&gt; EmitFrame: acc.len() &gt;= 2 + LEN
+    HavePayload? --&gt; ReadMore: acc.len() &lt; 2 + LEN
+    ReadMore --&gt; PeerClosed: read() == 0
+    ReadMore --&gt; HaveHeader?: read() &gt; 0, append to acc
+    EmitFrame --&gt; [*]: split off 2+LEN bytes, return WG datagram (LEN bytes)
+    PeerClosed --&gt; [*]: Err(Closed)</code></pre>
+<h3 id="66-try_take_frame-the-pure-deframer--fully-testable-in-isolation">6.6
+<code>try_take_frame</code> (the pure deframer — fully testable in
+isolation)</h3>
+<div class="sourceCode" id="cb13"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co">/// Pull exactly one complete frame out of `acc` if present; otherwise return Ok(None).</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="co">/// Pure function of the buffer → the `UNIT`-testable core of the deframer (§13).</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> try_take_frame(acc<span class="op">:</span> <span class="op">&amp;</span><span class="kw">mut</span> BytesMut) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span><span class="dt">Option</span><span class="op">&lt;</span>Bytes<span class="op">&gt;,</span> TransportError<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> acc<span class="op">.</span>len() <span class="op">&lt;</span> UOT_LEN_PREFIX_BYTES <span class="op">{</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="cn">Ok</span>(<span class="cn">None</span>)<span class="op">;</span>                          <span class="co">// not even a length prefix yet</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Peek the big-endian u16 length WITHOUT consuming it.</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> len <span class="op">=</span> <span class="dt">u16</span><span class="pp">::</span>from_be_bytes([acc[<span class="dv">0</span>]<span class="op">,</span> acc[<span class="dv">1</span>]]) <span class="kw">as</span> <span class="dt">usize</span><span class="op">;</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> total <span class="op">=</span> UOT_LEN_PREFIX_BYTES <span class="op">+</span> len<span class="op">;</span></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> acc<span class="op">.</span>len() <span class="op">&lt;</span> total <span class="op">{</span></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="cn">Ok</span>(<span class="cn">None</span>)<span class="op">;</span>                          <span class="co">// payload not fully arrived</span></span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>    acc<span class="op">.</span>advance(UOT_LEN_PREFIX_BYTES)<span class="op">;</span>            <span class="co">// drop the prefix</span></span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> dg <span class="op">=</span> acc<span class="op">.</span>split_to(len)<span class="op">.</span>freeze()<span class="op">;</span>          <span class="co">// take exactly `len` payload bytes</span></span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>    <span class="cn">Ok</span>(<span class="cn">Some</span>(dg))                                  <span class="co">// remaining bytes (next frame, partial) stay in acc</span></span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Edge cases this function MUST handle (each a <code>UNIT</code> test,
+§13):</p>
+<ol type="1">
+<li><code>acc</code> empty → <code>None</code>.</li>
+<li><code>acc</code> = 1 byte → <code>None</code> (header
+incomplete).</li>
+<li><code>acc</code> = <code>[0x00,0x94]</code> only → <code>None</code>
+(header complete, 0 payload bytes arrived).</li>
+<li><code>acc</code> = exactly one full frame → <code>Some(dg)</code>,
+<code>acc</code> emptied.</li>
+<li><code>acc</code> = 1.5 frames → <code>Some(first)</code>, second
+frame&#39;s partial bytes retained.</li>
+<li><code>acc</code> = 3 back-to-back frames → three successive
+<code>Some</code> across three calls, no read in between.</li>
+<li><code>LEN == 0</code> (a zero-length datagram) →
+<code>Some(empty Bytes)</code>. <strong>Policy:</strong> a 0-length
+frame is a protocol anomaly (WG never sends empty datagrams [WG-PROTO]);
+the <em>transport</em> returns it faithfully, and <code>helix-wg</code>
+drops it — UoT does not editorialise the opaque payload (I1). A flood of
+0-length frames is a DoS vector handled by the read-rate guard (§9 G4,
+§12).</li>
+</ol>
+<hr />
+<h2 id="7-the-head-of-line-blocking-tradeoff-the-defining-property">7.
+The head-of-line-blocking tradeoff (the defining property)</h2>
+<h3 id="71-why-hol-is-unavoidable-here">7.1 Why HoL is unavoidable
+here</h3>
+<p>WG datagrams are <strong>independent and loss-tolerant</strong> (I2):
+if datagram <em>k</em> is lost, datagram <em>k+1</em> is still useful,
+and WG&#39;s own state machine tolerates loss/reorder/replay. Carrying them
+over <strong>reliable, ordered TCP</strong> inverts that: if the TCP
+segment carrying datagram <em>k</em> is lost, TCP <strong>holds back
+every later byte</strong> (including datagrams <em>k+1, k+2, …</em>
+already received) until <em>k</em> is retransmitted and ACKed. That
+stall is <strong>head-of-line blocking</strong> — the structural cost of
+running a datagram protocol over a stream protocol [01-DP §0.1 I2, §3.6,
+04_P2 §1.2].</p>
+<pre class="mermaid"><code>sequenceDiagram
+    autonumber
+    participant WG as helix-wg (datagram producer)
+    participant Tx as UoT send()
+    participant Net as Lossy TCP path
+    participant Rx as UoT recv() (peer)
+    participant WGr as helix-wg (peer)
+
+    WG-&gt;&gt;Tx: dg #1 (frame [len|dg])
+    WG-&gt;&gt;Tx: dg #2
+    WG-&gt;&gt;Tx: dg #3
+    Tx-&gt;&gt;Net: TCP seg A (dg #1)
+    Tx-&gt;&gt;Net: TCP seg B (dg #2)  %% LOST
+    Tx-&gt;&gt;Net: TCP seg C (dg #3)
+    Net--&gt;&gt;Rx: seg A delivered
+    Rx-&gt;&gt;WGr: dg #1 deframed
+    Net--xRx: seg B LOST
+    Note over Rx: seg C arrives but TCP BUFFERS it —&lt;br/&gt;cannot deliver dg#3 until dg#2 (seg B) recovered.&lt;br/&gt;HEAD-OF-LINE BLOCKING.
+    Net--&gt;&gt;Rx: seg B retransmit (after RTO/dup-ACK)
+    Rx-&gt;&gt;WGr: dg #2 deframed
+    Rx-&gt;&gt;WGr: dg #3 deframed (was buffered)
+    Note over WG,WGr: With plain-udp, dg#3 would have arrived&lt;br/&gt;immediately; WG tolerates the dg#2 gap natively (I2).</code></pre>
+<h3 id="72-what-it-costs--how-the-orchestrator-bounds-the-damage">7.2
+What it costs &amp; how the orchestrator bounds the damage</h3>
+<table>
+<thead>
+<tr>
+<th>Effect</th>
+<th>Magnitude</th>
+<th>Mitigation in spec</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Added latency under loss</strong></td>
+<td>Each loss event stalls delivery by ≈ 1 TCP RTO (or fast-retransmit
+RTT). On a 5% loss path this is frequent — exactly the scenario where
+<code>masque-h3</code>/QUIC keeps higher goodput [01-DP §3.3 &quot;Loss
+resilience&quot;, 04_P0 §5.3].</td>
+<td>The ladder <strong>prefers QUIC carriers</strong> precisely because
+of this; UoT runs only when UDP (hence QUIC) is impossible (§1). The
+ladder ranks UoT <strong>last</strong> [01-DP §5.3].</td>
+</tr>
+<tr>
+<td><strong>Throughput ceiling</strong></td>
+<td>TCP congestion control + HoL caps goodput below
+<code>plain-udp</code>/QUIC on lossy/throttled links.</td>
+<td>Accepted: &quot;exists purely to keep a tunnel <em>possible</em>&quot; [01-DP
+§3.6]. <code>effective_mtu</code> and a <code>BENCH</code> run quantify
+it (§13).</td>
+</tr>
+<tr>
+<td><strong>WG retransmit interaction</strong></td>
+<td>WG also retransmits its handshake; over reliable TCP, WG retransmits
+are rarely needed (TCP already delivered them) — mostly benign,
+occasionally redundant work.</td>
+<td>No special handling — WG timers run unchanged
+(<code>helix-wg::tick</code>) [01-DP §4].</td>
+</tr>
+<tr>
+<td><strong>TCP-in-TCP meltdown risk</strong></td>
+<td>If the <em>inner</em> tunnelled traffic is itself TCP (the common
+case), you have TCP-over-WG-over-TCP; under loss the two congestion
+controllers can interact pathologically.</td>
+<td><code>UNVERIFIED</code> (classic &quot;TCP meltdown&quot; lore; not measured
+in this evidence base). Documented as a known risk; UoT is last-resort
+so the exposure window is minimised. A
+<code>STRESS</code>/<code>PERF</code> run under <code>netem loss</code>
+characterises it (§13) rather than assuming it.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Design stance:</strong> UoT does <strong>not</strong> try to
+fix HoL (that would mean reimplementing QUIC). It
+<strong>accepts</strong> HoL as the price of working on a UDP-blackholed
+network, and the <em>system</em> bounds the damage by only ever reaching
+UoT as the last rung. This is the honest, no-bluff framing: UoT is the
+transport that <strong>works when nothing else can</strong>, explicitly
+at the cost of being the slowest [01-DP §3.6].</p>
+<hr />
+<h2 id="8-error-taxonomy-mapping-io--transporterror">8. Error taxonomy
+(mapping IO → <code>TransportError</code>)</h2>
+<p>UoT reuses the shared <code>TransportError</code> enum [01-DP §3.1];
+it adds no new variants. The mapping from <code>std::io::Error</code>
+(and TLS error) to <code>TransportError</code> is the load-bearing
+contract:</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> map_io_to_transport(e<span class="op">:</span> <span class="pp">std::io::</span><span class="bu">Error</span>) <span class="op">-&gt;</span> TransportError <span class="op">{</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">use</span> <span class="pp">std::io::ErrorKind::</span><span class="op">*;</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">match</span> e<span class="op">.</span>kind() <span class="op">{</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>        BrokenPipe <span class="op">|</span> ConnectionAborted        <span class="op">=&gt;</span> <span class="pp">TransportError::</span>Closed<span class="op">,</span>        <span class="co">// local/peer closed write</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>        ConnectionReset                        <span class="op">=&gt;</span> <span class="pp">TransportError::</span>EndpointBlocked<span class="op">,</span> <span class="co">// RST mid-session = active block</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>        UnexpectedEof                          <span class="op">=&gt;</span> <span class="pp">TransportError::</span>Closed<span class="op">,</span>        <span class="co">// peer FIN mid-frame</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>        TimedOut                               <span class="op">=&gt;</span> <span class="pp">TransportError::</span>DialTimeout<span class="op">,</span>   <span class="co">// (read/connect timeout)</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>        _                                      <span class="op">=&gt;</span> <span class="pp">TransportError::</span>Io(e)<span class="op">,</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<table>
+<thead>
+<tr>
+<th><code>TransportError</code></th>
+<th>UoT trigger</th>
+<th>Orchestrator response [01-DP §5.3]</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>DialTimeout</code></td>
+<td>TCP connect (or TLS handshake) exceeded
+<code>dial_timeout</code>.</td>
+<td>Last rung → <code>Down { reason }</code> (ladder exhausted).</td>
+</tr>
+<tr>
+<td><code>HandshakeFailed(String)</code></td>
+<td>TLS handshake error (<code>UotWrap::Tls</code>).</td>
+<td>Last rung → <code>Down</code>.</td>
+</tr>
+<tr>
+<td><code>EndpointBlocked</code></td>
+<td>TCP RST on connect or mid-session reset — active firewall/DPI
+verdict.</td>
+<td><code>Down</code>; record &quot;UoT EndpointBlocked region R&quot; (aggregate,
+I5).</td>
+</tr>
+<tr>
+<td><code>Closed</code></td>
+<td>Peer FIN / broken pipe / EOF mid-frame.</td>
+<td><code>Reconnecting</code> → re-dial UoT (C2); persistent →
+<code>Down</code>.</td>
+</tr>
+<tr>
+<td><code>Oversize(usize)</code></td>
+<td><code>send</code> got a datagram <code>&gt; 65535</code> (defensive;
+impossible at real MTU).</td>
+<td>Bug-class; surfaced, never truncated (I1).</td>
+</tr>
+<tr>
+<td><code>Io(std::io::Error)</code></td>
+<td>Any other IO error.</td>
+<td><code>Reconnecting</code>; logged as aggregate counter only
+(I5).</td>
+</tr>
+</tbody>
+</table>
+<p><strong>§11.4.1 FAIL-bluff guard:</strong> a UoT failure MUST be a
+<em>genuine</em> transport failure, never a script artifact — e.g. a
+deframer panic on a malformed length prefix is a §11.4.1 violation; the
+deframer returns <code>Closed</code>/<code>Io</code>, it does not panic
+(the <code>RACE</code>/<code>CHAOS</code> tests assert no panic,
+§13).</p>
+<hr />
+<h2 id="9-edge-cases-closed-enumeration">9. Edge cases (closed
+enumeration)</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Edge case</th>
+<th>Required behaviour</th>
+<th>Test</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>E1</td>
+<td>Partial frame across reads (half a length prefix, then the
+rest).</td>
+<td>Accumulate in <code>acc</code>; emit only on a complete frame
+(§6.5).</td>
+<td><code>UNIT</code> (§6.6 cases 1–6)</td>
+</tr>
+<tr>
+<td>E2</td>
+<td>Multiple frames in one <code>read()</code>.</td>
+<td>Emit each on successive <code>recv</code> calls without an extra
+<code>read</code> (§6.6 case 6).</td>
+<td><code>UNIT</code></td>
+</tr>
+<tr>
+<td>E3</td>
+<td><code>LEN == 0</code> frame.</td>
+<td>Return empty <code>Bytes</code>; <code>helix-wg</code> drops it; do
+not editorialise (I1).</td>
+<td><code>UNIT</code> (§6.6 case 7)</td>
+</tr>
+<tr>
+<td>E4</td>
+<td><code>send</code> of an oversize datagram.</td>
+<td><code>Err(Oversize)</code>; never truncate/split (I1).</td>
+<td><code>UNIT</code></td>
+</tr>
+<tr>
+<td>E5</td>
+<td>Peer RST mid-session.</td>
+<td><code>recv</code>/<code>send</code> →
+<code>EndpointBlocked</code>/<code>Closed</code>; orchestrator re-dials
+or <code>Down</code>.</td>
+<td><code>CHAOS</code></td>
+</tr>
+<tr>
+<td>E6</td>
+<td>TCP connect succeeds but WG handshake never completes (port-forward
+to a black hole).</td>
+<td>Carrier &quot;up&quot; but tunnel never <code>Connected</code>; the
+orchestrator&#39;s WG-handshake timeout fires → escalate/<code>Down</code> —
+UoT itself reports healthy TCP, honestly (it <em>is</em> carrying
+bytes).</td>
+<td><code>E2E</code> (negative)</td>
+</tr>
+<tr>
+<td>E7</td>
+<td>TLS handshake to a non-UoT :443 (decoy site answered).</td>
+<td>TLS completes, but no valid framed WG handshake returns → WG
+handshake timeout → <code>Down</code> (the masquerade working
+<em>against</em> a misdirected client).</td>
+<td><code>SEC</code></td>
+</tr>
+<tr>
+<td>E8</td>
+<td>Slow-loris-style trickle (1 byte/sec) feeding <code>acc</code>.</td>
+<td>Read-idle + per-frame assembly timeout bounds buffering (§12);
+surface <code>Closed</code> on timeout, do not grow <code>acc</code>
+unbounded.</td>
+<td><code>STRESS</code>, <code>DDOS</code> (Phase 2)</td>
+</tr>
+<tr>
+<td>E9</td>
+<td>Concurrent <code>send</code>s from multiple tasks.</td>
+<td>Serialised by the write mutex; frames never interleave (§6.4).</td>
+<td><code>RACE</code>, <code>CONC</code></td>
+</tr>
+<tr>
+<td>E10</td>
+<td><code>recv</code> future dropped in a <code>select!</code> then
+re-entered.</td>
+<td>Cancel-safe: <code>acc</code> retains buffered bytes; no datagram
+lost (§6.5).</td>
+<td><code>UNIT</code>, <code>RACE</code></td>
+</tr>
+<tr>
+<td>E11</td>
+<td>NAT/firewall idle-timeout kills an idle TCP connection
+silently.</td>
+<td>WG keepalives (<code>helix-wg::tick</code>) generate periodic framed
+traffic [01-DP §4]; a dead connection surfaces as <code>Closed</code> on
+next <code>send</code>.</td>
+<td><code>CHAOS</code></td>
+</tr>
+<tr>
+<td>E12</td>
+<td>Maliciously huge <code>LEN</code> (e.g. <code>0xFFFF</code>) with no
+payload following.</td>
+<td><code>try_take_frame</code> returns <code>None</code> and waits; the
+per-frame assembly timeout (§12) caps the wait → <code>Closed</code>;
+<code>acc</code> is bounded by <code>UOT_MAX_DATAGRAM</code> so memory
+cannot blow up.</td>
+<td><code>SEC</code>, <code>STRESS</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="10-mtu--overhead-budget">10. MTU &amp; overhead budget</h2>
+<p>The inner WG MTU over UoT =
+<code>min(effective_mtu(), path-MTU-discovered)</code> [01-DP §10 rule
+1].</p>
+<table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Overhead</th>
+<th>Note</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>L1 IP</td>
+<td>20 (v4) / 40 (v6) [IP]</td>
+<td>path-dependent</td>
+</tr>
+<tr>
+<td>L2 TCP</td>
+<td>20 base (+ options) [TCP]</td>
+<td>TCP header</td>
+</tr>
+<tr>
+<td>UoT length prefix</td>
+<td><strong>2</strong></td>
+<td>the only byte UoT adds [01-DP §3.6]</td>
+</tr>
+<tr>
+<td>(TLS wrap, if <code>UotWrap::Tls</code>)</td>
+<td>TLS record header 5 + AEAD tag 16 ≈ <strong>21/record</strong>
+[TLS]</td>
+<td>camouflage variant only</td>
+</tr>
+<tr>
+<td><strong>Reported <code>effective_mtu()</code></strong></td>
+<td>plain <strong>1380</strong>, TLS <strong>1360</strong></td>
+<td>both <strong>derived</strong> [01-DP §10]; <strong>measure &amp;
+tune</strong> in Phase 2 (§13)</td>
+</tr>
+</tbody>
+</table>
+<p>Rules (inherited [01-DP §10]):</p>
+<ol type="1">
+<li>Inner WG MTU =
+<code>min(transport.effective_mtu(), path-MTU)</code>.</li>
+<li>DAITA padding (if active) is added <em>after</em> WG encrypt and
+counts against the transport budget, not the inner MTU [01-DP §10 rule
+2, §9].</li>
+<li><code>Oversize</code> is a hard error — the orchestrator lowers the
+inner MTU rather than letting UoT truncate (I1) [01-DP §10 rule 3].</li>
+<li>The <code>effective_mtu()</code> constants are <strong>planning
+floors</strong>, not measured facts (§11.4.6); a
+<code>BENCH</code>/<code>MEM</code> run replaces them with the real
+connected-socket MSS (§13).</li>
+</ol>
+<hr />
+<h2 id="11-config-knobs">11. Config knobs</h2>
+<p><code>TransportConfig::UdpOverTcp { peer, tls_sni }</code> is the
+public, NetworkMap-resolved config [01-DP §3.1]. Internal tunables
+(defaults; coordinator may override per-network via the policy
+push):</p>
+<table>
+<thead>
+<tr>
+<th>Knob</th>
+<th>Type</th>
+<th>Default</th>
+<th>Meaning</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>peer</code></td>
+<td><code>SocketAddr</code></td>
+<td>from NetworkMap</td>
+<td>gateway TCP endpoint (typically <code>:443/tcp</code> for TLS
+variant, or <code>:51820/tcp</code>).</td>
+<td>[01-DP §3.1]</td>
+</tr>
+<tr>
+<td><code>tls_sni</code></td>
+<td><code>Option&lt;String&gt;</code></td>
+<td><code>None</code></td>
+<td><code>Some(sni)</code> enables the opportunistic TLS wrap
+(§5.4).</td>
+<td>[01-DP §3.1]</td>
+</tr>
+<tr>
+<td><code>dial_timeout</code></td>
+<td><code>Duration</code></td>
+<td>5 s <code>UNVERIFIED</code> (planning default; not pinned in
+evidence base)</td>
+<td>bound on TCP+TLS connect before <code>DialTimeout</code>.</td>
+<td>derived</td>
+</tr>
+<tr>
+<td><code>tcp_nodelay</code></td>
+<td><code>bool</code></td>
+<td><code>true</code> (always)</td>
+<td>disable Nagle (§4.1).</td>
+<td>[TCP]</td>
+</tr>
+<tr>
+<td><code>read_idle_timeout</code></td>
+<td><code>Duration</code></td>
+<td>30 s <code>UNVERIFIED</code></td>
+<td>no bytes (incl. WG keepalive) for this long → <code>Closed</code>
+(§9 E11).</td>
+<td>derived</td>
+</tr>
+<tr>
+<td><code>frame_assembly_timeout</code></td>
+<td><code>Duration</code></td>
+<td>10 s <code>UNVERIFIED</code></td>
+<td>a partial frame must complete within this; else <code>Closed</code>
+(§9 E12 slow-loris guard).</td>
+<td>derived</td>
+</tr>
+<tr>
+<td><code>max_acc_bytes</code></td>
+<td><code>usize</code></td>
+<td><code>UOT_MAX_DATAGRAM</code> (65535)</td>
+<td>reassembly buffer hard cap; a single frame can never exceed it (§9
+E12).</td>
+<td>spec</td>
+</tr>
+</tbody>
+</table>
+<p>All <code>Duration</code> defaults are tagged <code>UNVERIFIED</code>
+because the evidence base does not pin them; they are planning values to
+be calibrated against the netns rig in Phase 2, <strong>not</strong>
+invented facts (§11.4.6). The per-network failure budget that governs
+<em>when the ladder escalates to/past UoT</em> lives in
+<code>TransportPolicy.budget</code>, not here [01-DP §5.3].</p>
+<hr />
+<h2 id="12-security-considerations">12. Security considerations</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Concern</th>
+<th>Spec response</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>S1</td>
+<td><strong>Transport must not see plaintext (I1).</strong></td>
+<td>UoT frames an opaque WG datagram; it never parses/decrypts. The
+2-byte prefix is the only added byte.</td>
+<td>[01-DP §0.1 I1]</td>
+</tr>
+<tr>
+<td>S2</td>
+<td><strong>TLS wrap is camouflage, not security.</strong></td>
+<td>WG provides confidentiality/integrity; the TLS layer only resembles
+HTTPS to DPI. Its compromise does not expose payload.</td>
+<td>[01-DP §3.6, I1]</td>
+</tr>
+<tr>
+<td>S3</td>
+<td><strong>DPI fingerprinting of a bare length-prefixed
+stream.</strong></td>
+<td>Plain UoT on a non-443 port is fingerprintable; the TLS variant +
+edge decoy-site masquerade raises the bar. Reality-grade mimicry
+deferred to Phase 3 (§1 UNVERIFIED note).</td>
+<td>[11-DR A3], [01-DP §3.3]</td>
+</tr>
+<tr>
+<td>S4</td>
+<td><strong>Active probing of the :443/tcp listener.</strong></td>
+<td>The edge serves a believable decoy to any TLS client that does not
+produce a valid framed WG handshake (§9 E7), returning nothing useful to
+a prober.</td>
+<td>[01-DP §3.3 masquerade], [11-DR A3 active-probing]</td>
+</tr>
+<tr>
+<td>S5</td>
+<td><strong>Reassembly-buffer DoS (huge <code>LEN</code>,
+slow-loris).</strong></td>
+<td><code>max_acc_bytes</code> caps memory at one max datagram;
+<code>frame_assembly_timeout</code> + <code>read_idle_timeout</code>
+bound trickle attacks; surface <code>Closed</code>, never OOM (§9
+E8/E12).</td>
+<td>spec (§11)</td>
+</tr>
+<tr>
+<td>S6</td>
+<td><strong>No-logging by construction (I5).</strong></td>
+<td>Only aggregate counters (bytes, frames, reconnects,
+EndpointBlocked-per-region); no per-datagram/per-connection durable
+state.</td>
+<td>[01-DP §0.1 I5], [SYNTHESIS §7]</td>
+</tr>
+<tr>
+<td>S7</td>
+<td><strong>Deframer robustness (no panic on malformed
+input).</strong></td>
+<td><code>try_take_frame</code> is total over arbitrary byte input — it
+returns <code>None</code>/<code>Closed</code>, never panics (a panic
+would be a §11.4.1 FAIL-bluff + a DoS).</td>
+<td>§6.6, §11.4.1</td>
+</tr>
+<tr>
+<td>S8</td>
+<td><strong>Secret handling.</strong></td>
+<td>UoT holds no WG keys; TLS keys (camouflage) are ephemeral, never
+logged (§11.4.10).</td>
+<td>[§11.4.10]</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="13-test-points-114169-taxonomy-10-qa-1">13. Test points
+(§11.4.169 taxonomy [10-QA §1])</h2>
+<p>Per §11.4.169 the <code>udp_over_tcp.rs</code> workable item declares
+the closed set of test types below; any warranted-but-absent type is an
+explicit <code>NOT_APPLICABLE: &lt;reason&gt;</code> / §11.4.3
+<code>SKIP</code>, never an omission [10-QA §1]. Four-layer coverage per
+§11.4.4(b) (pre-build gate + post-build + runtime-on-clean-target +
+paired §1.1 mutation) and §11.4.50 determinism (N=3 / N=10) apply to
+every PASS.</p>
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>Scope for UoT</th>
+<th>Captured-evidence shape (§11.4.5/.69/.107)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>UNIT</code></td>
+<td><code>try_take_frame</code> (§6.6 cases 1–7), <code>send</code>
+frame builder, <code>map_io_to_transport</code>,
+<code>effective_mtu</code> per wrap. Mocks allowed <strong>only
+here</strong> (§11.4.27).</td>
+<td><code>cargo test</code> pass log; property test:
+<code>deframe(frame(dg)) == dg</code> for random <code>dg</code>
+(round-trip identity, I1).</td>
+</tr>
+<tr>
+<td><code>INT</code></td>
+<td>Real <code>tokio::net::TcpStream</code> loopback (+
+<code>tokio-rustls</code> TLS variant) carrying real WG datagrams
+between two <code>helix-wg</code> instances; no mocks.</td>
+<td>testcontainers / loopback log; pcap of the framed stream.</td>
+</tr>
+<tr>
+<td><code>E2E</code></td>
+<td>netns rig with <strong>all UDP dropped</strong> (<code>nft</code>
+drop udp); ladder escalates to UoT; <code>curl</code> reaches an
+authorized LAN host through the real tunnel [04_P0 §3 rig].</td>
+<td><code>curl</code> HTTP 200 body hash from overlay netns + pcap
+showing TCP-only carriage +
+<code>StatusReport.transport==&quot;udp-over-tcp&quot;</code>.</td>
+</tr>
+<tr>
+<td><code>FA</code></td>
+<td>The above E2E self-driving, re-runnable <code>-count=3</code>, zero
+human-in-loop (§11.4.98).</td>
+<td><code>make qa</code> one-shot exit 0, identical evidence hashes ×3
+(§11.4.50).</td>
+</tr>
+<tr>
+<td><code>SEC</code></td>
+<td>Decoy-site response to a TLS probe that sends no valid WG handshake
+(E7); deframer no-panic on fuzzed input (S7); no plaintext on wire (I1)
+via pcap.</td>
+<td>pcap (no WG signature in clear), fuzz corpus pass, decoy-response
+capture.</td>
+</tr>
+<tr>
+<td><code>STRESS</code></td>
+<td>≥100 iters / ≥30 s sustained framed throughput; ≥10 parallel
+<code>send</code>s (write-mutex serialisation); slow-loris +
+huge-<code>LEN</code> buffer-cap (E8/E12) [§11.4.85].</td>
+<td><code>stress_chaos.sh ab_stress_*</code> latency.json;
+<code>acc</code> bytes bounded ≤ 65535 (counter).</td>
+</tr>
+<tr>
+<td><code>CHAOS</code></td>
+<td>Mid-session TCP RST / FIN / iface flap; recovery re-dials UoT and
+restores reachability (E5/E11) [§11.4.85].</td>
+<td><code>ab_chaos_*</code> recovery_trace.log;
+<code>TunnelStatus</code> event trace
+<code>Connected→Reconnecting→Connected</code>.</td>
+</tr>
+<tr>
+<td><code>CONC</code></td>
+<td>Concurrent multi-task <code>send</code> + <code>recv</code>
+full-duplex; no interleaved frames, no lost update (E9/E10).</td>
+<td>Go/Rust harness pass; ordered-frame assertion.</td>
+</tr>
+<tr>
+<td><code>RACE</code></td>
+<td><code>cargo +nightly</code> loom / tsan on the write-lock /
+read-lock + <code>acc</code> cancel-safety (§6.4/§6.5).</td>
+<td>loom report 0 findings; no panic.</td>
+</tr>
+<tr>
+<td><code>MEM</code></td>
+<td><code>acc</code> reassembly buffer never exceeds
+<code>max_acc_bytes</code>; no leak over a soak; (iOS path inherits the
+general MEM ceiling — UoT itself is allocation-light).</td>
+<td><code>/proc</code>/Instruments RSS flat over soak; buffer high-water
+counter.</td>
+</tr>
+<tr>
+<td><code>BENCH</code></td>
+<td>UoT goodput + p99 framing latency vs <code>plain-udp</code>
+baseline, <strong>under <code>netem loss 0/1/5%</code></strong> —
+quantifies the HoL penalty (§7) so the ladder cost model is real.</td>
+<td><code>bench.sh</code> CSV [04_P0 §8]; goodput-vs-loss curve showing
+UoT degrading faster than QUIC (the documented tradeoff).</td>
+</tr>
+<tr>
+<td><code>PERF</code></td>
+<td>latency p50/p99 vs SLO budget; TCP-in-TCP interaction characterised
+under loss (§7.2 UNVERIFIED risk → measured, not assumed).</td>
+<td>histogram metrics; loss-sweep report.</td>
+</tr>
+<tr>
+<td><code>REC</code></td>
+<td>window-scoped MP4 of the Console/Access showing
+<code>Connected { transport: &quot;udp-over-tcp&quot; }</code> on a UDP-blocked
+network (§11.4.154/.155) + media-validation verdict (§11.4.163).</td>
+<td><code>panoptic</code> capture → <code>vision_engine</code> PASS
+verdict.</td>
+</tr>
+<tr>
+<td><code>CHAL</code>/<code>HQA</code></td>
+<td>A <code>challenges</code>/<code>helix_qa</code> bank entry scoring
+PASS only on the E2E captured evidence above (§11.4.27/.107).</td>
+<td>bank <code>result.json</code> PASS citing the pcap +
+<code>curl</code> artifacts.</td>
+</tr>
+<tr>
+<td><code>DDOS</code></td>
+<td>handshake-flood / huge-<code>LEN</code> flood against the edge
+:443/tcp UoT listener.</td>
+<td><code>NOT_APPLICABLE: single-node-selfhost (Phase 2)</code> [10-QA
+§1, 04_P1 §11] — parked, re-arms with HA.</td>
+</tr>
+<tr>
+<td><code>SCALE</code></td>
+<td>N simulated UoT clients holding TCP carriers.</td>
+<td><code>NOT_APPLICABLE: single-node-selfhost (Phase 2)</code> [10-QA
+§1]; partial soak only at MVP.</td>
+</tr>
+<tr>
+<td><code>UI</code>/<code>UX</code></td>
+<td>covered by <code>REC</code> + the shared client-core status
+walkthrough (transport label surfaces in the UI).</td>
+<td><code>flutter</code> golden + flow walkthrough vision verdict.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Anti-bluff acceptance gate (the one that matters):</strong>
+the headline UoT claim — <em>&quot;a tunnel comes up when all UDP is
+blocked&quot;</em> — is proven by the <code>E2E</code>/<code>FA</code> row:
+<code>nft</code> drops <strong>all</strong> UDP, the ladder escalates to
+UoT, and <code>curl</code> reaches a real LAN host through the real
+tunnel, with a pcap proving TCP-only carriage and <strong>zero</strong>
+UDP egress. Config-only / &quot;the code path exists&quot; PASS is forbidden
+(§11.4 / §11.4.69) — the captured <code>curl</code> 200 + pcap is the
+evidence [01-DP §12.1, 04_P2 §1.2 acceptance].</p>
+<hr />
+<h2 id="14-build-checklist--cross-references">14. Build checklist &amp;
+cross-references</h2>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Owns</th>
+<th>Phase</th>
+<th>Gate</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>helix-transport/src/udp_over_tcp.rs</code></td>
+<td><code>UdpOverTcp</code>, framing, <code>dial_udp_over_tcp</code>,
+deframer</td>
+<td>2</td>
+<td>— (Phase-2 transport set) [01-DP §12]</td>
+</tr>
+<tr>
+<td><code>TransportConfig::UdpOverTcp</code> arm in
+<code>lib.rs::dial()</code></td>
+<td>dispatch</td>
+<td>2</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>helix-core/src/ladder.rs</code> last-rung ordering</td>
+<td>UoT ranked last in restricted <code>order</code></td>
+<td>1→2</td>
+<td>[01-DP §5.3]</td>
+</tr>
+</tbody>
+</table>
+<p>Cross-references: the <code>Transport</code> trait +
+<code>dial()</code> ladder [01-DP §3.1]; the escalation sequence [01-DP
+§5.3, §5.4]; the MTU budget [01-DP §10]; <code>plain-udp</code> (the
+baseline UoT is measured against, §7.2) [01-DP §3.2 /
+<code>transport-plain-udp.md</code>]; <code>masque-h3</code> (the QUIC
+carrier the ladder prefers <em>before</em> UoT) [01-DP §3.3 /
+<code>transport-masque-quic.md</code>]; <code>shadowsocks</code> (the
+sibling TCP-riding carrier with the same HoL caveat) [01-DP §3.5]; the
+§11.4.169 taxonomy [10-QA §1].</p>
+<hr />
+<p><em>End of UDP-over-TCP transport nano-detail spec (Volume 2, Data
+Plane). Deepens [01-DP §3.6]. The <code>Transport</code> trait it
+implements is a frozen Phase-0 contract [01-DP §3.1]; this module is a
+Phase-2 deliverable [01-DP §12, 04_P2 §1.2]. All <code>UNVERIFIED</code>
+tags mark facts not grounded in the evidence base (TLS-443 DPI residual,
+TCP-in-TCP meltdown magnitude, the timeout defaults) and are to be
+resolved by measurement, not assumption (§11.4.6).</em></p>
+</body>
+</html>

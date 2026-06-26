@@ -1,0 +1,1548 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Control-Plane Architecture &amp; Wiring</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Control-Plane Architecture &amp; Wiring</h1>
+</header>
+<h1 id="control-plane-architecture--wiring">Control-Plane Architecture
+&amp; Wiring</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-06-25T00:00:00Z</p>
+<blockquote>
+<p>Master technical specification — Volume 3, document 03-A of the
+HelixVPN set. Scope: the <strong>Go modular monolith</strong> at the
+structural level — the binaries (<code>cmd/helixd</code>,
+<code>cmd/helixvpnctl</code>), the <code>internal/</code> package
+layout, the wiring rules that keep package boundaries equal to future
+service boundaries, the dependency-injection / composition root, and the
+mechanical gates that enforce all of it. This document <em>deepens</em>
+the &quot;Control-Plane Architecture &amp; Wiring&quot; material of [02_CP §1] —
+it does not re-specify the data model (§2 of 02_CP), the policy compiler
+(§7), or the agent contract byte-evolution (doc 03-B). It stops at the
+seams where those documents begin and names the interface each
+exposes.</p>
+<p>This is a SPEC: it describes the implementation precisely enough to
+build, but builds nothing. Evidence cited inline by id — [02_CP §n] =
+the pass-1 control-plane overview, [04_P1] = HelixVPN-Phase1-MVP.md,
+[04_ARCH §n] = HelixVPN-Architecture-Refined.md, [research-go_cp §n] =
+the cited Go-stack research, [SYNTHESIS §n] = the cross-document
+synthesis. Unproven assertions are marked <strong>UNVERIFIED</strong>
+per constitution §11.4.6 — never fabricated.</p>
+</blockquote>
+<hr />
+<h2 id="0-what-this-document-owns-and-the-constraints-every-line-obeys">0.
+What this document owns, and the constraints every line obeys</h2>
+<p>This document owns the <strong>shape</strong> of the control plane:
+how one Go binary is decomposed into packages, how those packages are
+allowed to reference each other, how they are assembled at process
+start, how the assembled graph is started and stopped, and how the
+structure is mechanically prevented from decaying. Functional behaviour
+(DDL, the compiler algorithm, the wire contract) lives in sibling
+documents and is referenced here only at its interface.</p>
+<h3 id="01-governing-invariants-inherited-from-02_cp-01-restated-as-wiring-law">0.1
+Governing invariants (inherited from [02_CP §0.1], restated as wiring
+law)</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Invariant</th>
+<th>Wiring consequence specified here</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>C1</td>
+<td>Go is never in the packet path.</td>
+<td>The binary holds <strong>zero</strong> forwarding code; the only
+outbound network effects are Postgres, Redis, and
+<code>stream.Send</code> deltas. A startup assertion (§6.4) refuses to
+bind a raw <code>tun</code>/<code>AF_PACKET</code> socket.</td>
+<td>[04_ARCH §2.1]</td>
+</tr>
+<tr>
+<td>C2</td>
+<td>Postgres = truth, Redis = ephemeral.</td>
+<td><code>internal/store</code> is the <strong>only</strong> package
+importing <code>pgx</code>; <code>internal/events</code> is the
+<strong>only</strong> package importing <code>redis</code>. A dep-graph
+gate (§5.1) fails on any other importer.</td>
+<td>[04_P1], [SYNTHESIS §2]</td>
+</tr>
+<tr>
+<td>C3</td>
+<td>No-logging by construction.</td>
+<td>No package may declare a struct/table/log-line carrying per-flow
+data; the schema-lint (sibling §2.4) plus a source-lint (§5.4 here)
+enforce it.</td>
+<td>[04_ARCH §7]</td>
+</tr>
+<tr>
+<td>C4</td>
+<td>Default-deny, need-to-know.</td>
+<td><code>coordinator</code> receives the <em>already-filtered</em> peer
+set from <code>policy</code>; it has <strong>no</strong> code path that
+reads a peer the compiler did not grant (§4.3).</td>
+<td>[04_ARCH §3.4]</td>
+</tr>
+<tr>
+<td>C5</td>
+<td>Push, don&#39;t poll; p99 &lt; 1 s convergence.</td>
+<td>The composition root wires an
+<strong>event→coordinator→stream</strong> fan-out with no polling loop;
+the SLO is a wired histogram, not a comment (§7).</td>
+<td>[04_P1 §4/§10]</td>
+</tr>
+<tr>
+<td>C6</td>
+<td>Device private keys never leave the device.</td>
+<td><code>pki</code> and <code>identity</code> accept only a 32-byte
+public key; no field in any internal struct is named/typed to hold a WG
+private key (§5.4 source-lint denylist).</td>
+<td>[04_P1 §6]</td>
+</tr>
+<tr>
+<td>C7</td>
+<td><strong>Package boundaries == future service
+boundaries.</strong></td>
+<td>The central rule of this document: every
+<code>internal/&lt;module&gt;</code> is a Phase-2 extractable service.
+§3 and §5 make the boundary load-bearing, not aspirational.</td>
+<td>[04_P1 §1]</td>
+</tr>
+<tr>
+<td>C8</td>
+<td>Tenant isolation at the database (RLS).</td>
+<td>Every module reaches the DB <strong>only</strong> through
+<code>store.WithTenant</code>; a custom analyzer (§5.3) flags raw
+<code>db.Query</code>/<code>pool.Exec</code> outside
+<code>internal/store</code>.</td>
+<td>[04_P1 §2.2]</td>
+</tr>
+</tbody>
+</table>
+<h3 id="02-settled-stack-floor-for-this-layer-versions-are-the-build-floor-not-a-guess">0.2
+Settled stack floor for this layer (versions are the build floor, not a
+guess)</h3>
+<p>Go <strong>1.25</strong> (minimum required by connect-go v1.20.0
+[research-go_cp §2]) · Gin <strong>v1.12.0</strong> ·
+<code>connectrpc.com/connect</code> <strong>v1.20.0</strong> +
+<code>buf</code> codegen · <code>jackc/pgx/v5</code>
+<strong>v5.10.0</strong> + <code>pgxpool</code> · <code>sqlc</code>
+<strong>v1.31.1</strong> (sqlc.yaml version <code>&quot;2&quot;</code>,
+<code>engine: postgresql</code>, <code>sql_package: &quot;pgx/v5&quot;</code>) ·
+<code>redis/go-redis/v9</code> · <code>goose</code>
+<strong>v3.27.1</strong> migrations · <code>spf13/cobra</code> for the
+CLI · <code>prometheus/client_golang</code> for metrics · rootless
+Podman per §11.4.161 + <code>vasic-digital/containers</code> per
+§11.4.76 [research-go_cp §1–6, SYNTHESIS §2/§8]. The proto package is
+<strong><code>helix.coordinator.v1</code></strong> (unified across the
+whole spec set; the Go import alias is <code>coordinatorv1</code>).</p>
+<hr />
+<h2 id="1-the-two-binaries">1. The two binaries</h2>
+<p>One Go module (<code>github.com/vasic-digital/helix-go</code>), two
+<code>main</code> packages. Both import only <code>internal/*</code>
+packages — never each other.</p>
+<h3 id="11-cmdhelixd--the-long-running-control-plane">1.1
+<code>cmd/helixd</code> — the long-running control plane</h3>
+<p><code>helixd</code> is the server. Its <code>main</code> does
+<strong>four</strong> things and nothing else (everything substantive is
+delegated to the composition root, §6):</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// cmd/helixd/main.go</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> main<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    cfg <span class="op">:=</span> config<span class="op">.</span>Load<span class="op">()</span>                         <span class="co">// env + flags → typed Config (§1.3)</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> err <span class="op">:=</span> config<span class="op">.</span>Validate<span class="op">(</span>cfg<span class="op">);</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span> <span class="co">// fail-fast on bad config</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>        fatal<span class="op">(</span><span class="st">&quot;config: %v&quot;</span><span class="op">,</span> err<span class="op">)</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    ctx<span class="op">,</span> stop <span class="op">:=</span> signal<span class="op">.</span>NotifyContext<span class="op">(</span>context<span class="op">.</span>Background<span class="op">(),</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>        os<span class="op">.</span>Interrupt<span class="op">,</span> syscall<span class="op">.</span>SIGTERM<span class="op">)</span>           <span class="co">// graceful-shutdown root context</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">defer</span> stop<span class="op">()</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    app<span class="op">,</span> err <span class="op">:=</span> composeApp<span class="op">(</span>ctx<span class="op">,</span> cfg<span class="op">)</span>             <span class="co">// composition root — wires all modules (§6)</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>        fatal<span class="op">(</span><span class="st">&quot;compose: %v&quot;</span><span class="op">,</span> err<span class="op">)</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> err <span class="op">:=</span> app<span class="op">.</span>Run<span class="op">(</span>ctx<span class="op">);</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span>         <span class="co">// blocks until ctx cancelled or fatal</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>        fatal<span class="op">(</span><span class="st">&quot;run: %v&quot;</span><span class="op">,</span> err<span class="op">)</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    <span class="co">// app.Run returns after a clean shutdown sequence (§6.5).</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><code>fatal</code> writes a structured log line and exits non-zero.
+<code>main</code> contains <strong>no</strong> business logic,
+<strong>no</strong> <code>pgx</code>/<code>redis</code>/<code>gin</code>
+import, and <strong>no</strong> module construction — those live in
+<code>composeApp</code> so the wiring is testable in isolation (a unit
+test calls <code>composeApp</code> against the
+<code>containers</code>-booted infra and asserts the graph is
+well-formed, §8).</p>
+<h3 id="12-cmdhelixvpnctl--the-bootstrap--ops-cli-cobra">1.2
+<code>cmd/helixvpnctl</code> — the bootstrap &amp; ops CLI (Cobra)</h3>
+<p><code>helixvpnctl</code> is a short-lived operator tool. It shares
+<code>internal/*</code> packages with <code>helixd</code> (it is
+<em>not</em> a separate API client — it calls the same module
+constructors directly for DB-touching ops, and the REST/Connect API for
+runtime ops). Command tree:</p>
+<pre><code>helixvpnctl
+├── bootstrap            # render Podman quadlets + .env.example + first-run wizard (§11 of 02_CP)
+├── migrate up|down|status|redo     # goose against $HELIX_DB_URL (runs as helix_owner, BYPASSRLS)
+├── tenant create|list|delete       # WithSystem ops: create tenant + overlay_pool (§4 ipam)
+├── enroll-token mint|list|revoke   # identity: mint single-use hashed enroll tokens (§9 of 02_CP)
+├── policy compile|activate|rollback # policy dry-run/activate via API (admin token)
+├── device list|revoke              # registry/pki ops
+└── doctor                          # preflight: DB reachable, role is non-superuser, RLS forced, redis up</code></pre>
+<p><code>migrate</code> is the <strong>one</strong> command that
+connects as the migration owner (<code>helix_owner</code>, the
+<code>BYPASSRLS</code> role per [research-go_cp §4]); every other
+DB-touching subcommand connects as <code>helix_app_login</code> and goes
+through <code>store.WithTenant</code>/<code>WithSystem</code>.
+<code>doctor</code> is the operator-facing instantiation of the §6.4
+startup assertions and exits non-zero (machine-greppable) if any floor
+invariant is violated.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// cmd/helixvpnctl/cmd/doctor.go — the preflight verdict (composes §6.4)</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> runDoctor<span class="op">(</span>cmd <span class="op">*</span>cobra<span class="op">.</span>Command<span class="op">,</span> _ <span class="op">[]</span><span class="dt">string</span><span class="op">)</span> <span class="dt">error</span> <span class="op">{</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    checks <span class="op">:=</span> <span class="op">[]</span>doctorCheck<span class="op">{</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>        <span class="op">{</span><span class="st">&quot;db-reachable&quot;</span><span class="op">,</span>        checkDBPing<span class="op">},</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>        <span class="op">{</span><span class="st">&quot;db-role-nonsuper&quot;</span><span class="op">,</span>    checkRoleNotSuperuser<span class="op">},</span>   <span class="co">// SELECT rolsuper,rolbypassrls (C8)</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>        <span class="op">{</span><span class="st">&quot;rls-forced&quot;</span><span class="op">,</span>          checkRLSForcedAllTables<span class="op">},</span> <span class="co">// every tenant table has FORCE RLS</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>        <span class="op">{</span><span class="st">&quot;redis-reachable&quot;</span><span class="op">,</span>     checkRedisPing<span class="op">},</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>        <span class="op">{</span><span class="st">&quot;schema-no-traffic&quot;</span><span class="op">,</span>   checkSchemaLintClean<span class="op">},</span>    <span class="co">// sibling §2.4 lint, run live</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>        <span class="op">{</span><span class="st">&quot;migrations-current&quot;</span><span class="op">,</span>  checkGooseVersionMatch<span class="op">},</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">var</span> failed <span class="dt">int</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> _<span class="op">,</span> c <span class="op">:=</span> <span class="kw">range</span> checks <span class="op">{</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> err <span class="op">:=</span> c<span class="op">.</span>fn<span class="op">(</span>cmd<span class="op">.</span>Context<span class="op">());</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>            fmt<span class="op">.</span>Printf<span class="op">(</span><span class="st">&quot;FAIL  %-20s %v</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">,</span> c<span class="op">.</span>name<span class="op">,</span> err<span class="op">);</span> failed<span class="op">++</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>            fmt<span class="op">.</span>Printf<span class="op">(</span><span class="st">&quot;PASS  %-20s</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">,</span> c<span class="op">.</span>name<span class="op">)</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> failed <span class="op">&gt;</span> <span class="dv">0</span> <span class="op">{</span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> fmt<span class="op">.</span>Errorf<span class="op">(</span><span class="st">&quot;doctor: %d/%d checks failed&quot;</span><span class="op">,</span> failed<span class="op">,</span> <span class="bu">len</span><span class="op">(</span>checks<span class="op">))</span></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="ot">nil</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="13-typed-configuration-internalconfig">1.3 Typed configuration
+(<code>internal/config</code>)</h3>
+<p>Configuration is a single immutable struct loaded once at start; no
+package reads <code>os.Getenv</code> directly (a source-lint, §5.4,
+forbids <code>os.Getenv</code> outside <code>internal/config</code>).
+This keeps config a first-class wiring input.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/config/config.go</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Config <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    DBURL          <span class="dt">string</span>        <span class="co">// postgres://helix_app_login@host/helix?sslmode=verify-full</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    RedisURL       <span class="dt">string</span>        <span class="co">// redis://host:6379/0</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    ListenAddr     <span class="dt">string</span>        <span class="co">// &quot;:8443&quot;</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    TLSCertFile    <span class="dt">string</span>        <span class="co">// gateway server cert</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    TLSKeyFile     <span class="dt">string</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    CADir          <span class="dt">string</span>        <span class="co">// tenant CA material dir (§11.4.10 — never logged)</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    DeviceCertTTL  time<span class="op">.</span>Duration <span class="co">// default 24h (§9.3 of 02_CP)</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    KeepAlive      time<span class="op">.</span>Duration <span class="co">// stream keepalive, default 20s</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    ReconcileSLO   time<span class="op">.</span>Duration <span class="co">// SLO budget for the histogram bucket boundary, default 1s</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>    SendQueueDepth <span class="dt">int</span>           <span class="co">// per-stream bounded queue, default 256 (§4.4 back-pressure)</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>    OIDCIssuer     <span class="dt">string</span>        <span class="co">// optional; empty =&gt; anonymous-only mode</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>    LogLevel       <span class="dt">string</span>        <span class="co">// debug|info|warn|error</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>    Env            <span class="dt">string</span>        <span class="co">// dev|staging|prod</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> Load<span class="op">()</span> Config <span class="op">{</span> <span class="co">/* env first, flag override; no I/O beyond env+flags */</span> <span class="op">}</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a><span class="co">// Validate fails fast: DBURL parseable, ListenAddr bindable shape, TTL&gt;0,</span></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a><span class="co">// SendQueueDepth&gt;0, TLS pair both-or-neither, prod requires verify-full sslmode.</span></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> Validate<span class="op">(</span>c Config<span class="op">)</span> <span class="dt">error</span></span></code></pre></div>
+<p>Secrets (DB password, CA key) are referenced by URL/path, never
+embedded in <code>Config</code> as plaintext literals in a way that
+could be logged; <code>Config</code> has a
+<code>String()</code>/<code>LogValue()</code> that redacts the DB
+password and never prints <code>CADir</code> contents (§11.4.10).</p>
+<hr />
+<h2 id="2-package-layout--the-modular-monolith">2. Package layout — the
+modular monolith</h2>
+<p>One binary, many <code>internal/</code> packages, deployed as one
+rootless container. The layout is identical to [02_CP §1.1] and is
+reproduced here as the authority for the wiring rules that follow.</p>
+<pre><code>helix-go/
+├── cmd/
+│   ├── helixd/                  # control-plane binary — main + composeApp only (§1.1, §6)
+│   └── helixvpnctl/             # Cobra ops CLI (§1.2)
+├── internal/
+│   ├── config/                  # typed Config, env/flag load + validate (§1.3) — leaf, imports nothing internal
+│   ├── store/                   # pgxpool, WithTenant/WithSystem (RLS), sqlc Queries — ONLY pgx importer (C2/C8)
+│   ├── events/                  # Bus abstraction; Redis Streams impl — ONLY redis importer (C2/D3)
+│   ├── telemetry/               # Prometheus registry + control-action audit sink (§7)
+│   ├── identity/                # tenants, users, OIDC, anonymous enroll tokens
+│   ├── registry/                # devices, connectors, advertised prefixes, presence
+│   ├── ipam/                    # overlay ULA /48 allocation + 4via6 site-ids (D4)
+│   ├── pki/                     # WG pubkey registry, short-lived device certs, revoke
+│   ├── policy/                  # ACL model + pure versioned compiler (§7 of 02_CP)
+│   ├── coordinator/             # in-mem topology graph, deltas, WatchNetworkMap streams (owns NO tables, R2)
+│   ├── api/                     # Gin REST + Connect (agents) + WS/SSE; auth middleware/interceptors
+│   └── app/                     # composition root: composeApp + lifecycle Run/Shutdown (§6)
+├── gen/                         # buf-generated Go from proto (helix.coordinator.v1) — generated, never hand-edited
+├── proto/                       # helix/coordinator/v1/*.proto → buf generate (Go/Dart/Rust)
+├── openapi/                     # REST contract → generated Dart/TS app clients
+├── migrations/                  # goose SQL — schema authority (CI-linted, sibling §2.4)
+└── tools/
+    ├── schemalint/              # no-traffic-table lint (sibling §2.4)
+    └── depgraph/                # the wiring-rule gate (§5.1)</code></pre>
+<p><strong>Layering (strict, acyclic).</strong> Five tiers; an import
+may only point <em>down</em> a tier (or sideways within tier 3
+<em>through interfaces only</em>, never a concrete store):</p>
+<pre class="mermaid"><code>graph TD
+    subgraph T1[Tier 1 - leaves, no internal deps]
+        config
+    end
+    subgraph T2[Tier 2 - infrastructure]
+        store
+        events
+        telemetry
+    end
+    subgraph T3[Tier 3 - domain modules - talk via interfaces + events]
+        identity
+        registry
+        ipam
+        pki
+        policy
+        coordinator
+    end
+    subgraph T4[Tier 4 - edge]
+        api
+    end
+    subgraph T5[Tier 5 - composition root]
+        app
+    end
+    T5 --&gt; T4
+    T5 --&gt; T3
+    T4 --&gt; T3
+    T3 --&gt; T2
+    T3 --&gt; T1
+    T2 --&gt; T1
+    coordinator -. interface only .-&gt; registry
+    coordinator -. interface only .-&gt; policy
+    coordinator -. interface only .-&gt; pki</code></pre>
+<p>The dotted edges are the load-bearing ones: <code>coordinator</code>
+depends on <code>registry</code>, <code>policy</code>, <code>pki</code>
+<strong>only through their exported interfaces</strong> (§3), never
+their stores. This is what makes C7 mechanical.</p>
+<hr />
+<h2 id="3-inter-module-interface-surface-the-seams">3. Inter-module
+interface surface (the seams)</h2>
+<p>Every Tier-3 module exposes a single Go interface in
+<code>iface.go</code>; the concrete implementation is package-private
+(lowercase <code>service</code> struct). A consumer holds the
+<strong>interface</strong>, the composition root supplies the
+<strong>implementation</strong>. This is the Phase-2 split seam: replace
+the interface&#39;s in-process implementation with a Connect client and the
+module becomes a service with no caller change [04_P1 §12].</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/registry/iface.go</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Registry <span class="kw">interface</span> <span class="op">{</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    EnrollDevice<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> in EnrollInput<span class="op">)</span> <span class="op">(</span>Device<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    SetPrefixes<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> connectorID uuid<span class="op">.</span>UUID<span class="op">,</span> cidrs <span class="op">[]</span>netip<span class="op">.</span>Prefix<span class="op">)</span> <span class="op">([]</span>Conflict<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    DevicesForTenant<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> t uuid<span class="op">.</span>UUID<span class="op">)</span> <span class="op">([]</span>Device<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    MarkPresence<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> deviceID uuid<span class="op">.</span>UUID<span class="op">,</span> online <span class="dt">bool</span><span class="op">,</span> rttMS <span class="dt">uint32</span><span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    Revoke<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> deviceID uuid<span class="op">.</span>UUID<span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/policy/iface.go — pure, deterministic, versioned</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Compiler <span class="kw">interface</span> <span class="op">{</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>    Compile<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> t uuid<span class="op">.</span>UUID<span class="op">,</span> spec Spec<span class="op">)</span> <span class="op">(</span>CompiledPolicy<span class="op">,</span> <span class="dt">error</span><span class="op">)</span> <span class="co">// dry-run safe</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>    Activate<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> t uuid<span class="op">.</span>UUID<span class="op">,</span> version <span class="dt">int64</span><span class="op">)</span> <span class="dt">error</span>              <span class="co">// atomic flip</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>    ActiveFor<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> t uuid<span class="op">.</span>UUID<span class="op">)</span> <span class="op">(</span>CompiledPolicy<span class="op">,</span> <span class="dt">error</span><span class="op">)</span>          <span class="co">// coordinator hydrate</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/pki/iface.go</span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> PKI <span class="kw">interface</span> <span class="op">{</span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>    IssueDeviceCert<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> deviceID uuid<span class="op">.</span>UUID<span class="op">,</span> ttl time<span class="op">.</span>Duration<span class="op">)</span> <span class="op">(</span>Cert<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>    Revoke<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> deviceID uuid<span class="op">.</span>UUID<span class="op">)</span> <span class="dt">error</span> <span class="co">// &lt; 1s propagation (C5)</span></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>    Resolve<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> certSerial <span class="dt">string</span><span class="op">)</span> <span class="op">(</span>DeviceIdentity<span class="op">,</span> <span class="dt">error</span><span class="op">)</span> <span class="co">// mTLS authDevice (§8.2)</span></span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/ipam/iface.go</span></span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> IPAM <span class="kw">interface</span> <span class="op">{</span></span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a>    ProvisionPool<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> t uuid<span class="op">.</span>UUID<span class="op">)</span> <span class="dt">error</span>                 <span class="co">// on tenant create</span></span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a>    AllocOverlayIP<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> q <span class="op">*</span>db<span class="op">.</span>Queries<span class="op">,</span> t uuid<span class="op">.</span>UUID<span class="op">)</span> <span class="op">(</span>netip<span class="op">.</span>Addr<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a>    AllocSiteID<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> connectorID uuid<span class="op">.</span>UUID<span class="op">)</span> <span class="op">(</span><span class="dt">uint16</span><span class="op">,</span> <span class="dt">error</span><span class="op">)</span> <span class="co">// 4via6 (D4)</span></span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/identity/iface.go</span></span>
+<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Identity <span class="kw">interface</span> <span class="op">{</span></span>
+<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a>    MintEnrollToken<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> t uuid<span class="op">.</span>UUID<span class="op">,</span> kind DeviceKind<span class="op">,</span> ttl time<span class="op">.</span>Duration<span class="op">)</span> <span class="op">(</span>Token<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a>    ConsumeEnrollToken<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> raw <span class="dt">string</span><span class="op">)</span> <span class="op">(</span>TokenClaim<span class="op">,</span> <span class="dt">error</span><span class="op">)</span> <span class="co">// atomic single-use</span></span>
+<span id="cb7-35"><a href="#cb7-35" aria-hidden="true" tabindex="-1"></a>    AuthenticateOIDC<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> idToken <span class="dt">string</span><span class="op">)</span> <span class="op">(</span>Principal<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb7-36"><a href="#cb7-36" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb7-37"><a href="#cb7-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-38"><a href="#cb7-38" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/events/iface.go — bus-agnostic (D3: Redis Streams now, NATS later)</span></span>
+<span id="cb7-39"><a href="#cb7-39" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Bus <span class="kw">interface</span> <span class="op">{</span></span>
+<span id="cb7-40"><a href="#cb7-40" aria-hidden="true" tabindex="-1"></a>    Publish<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> stream <span class="dt">string</span><span class="op">,</span> env Envelope<span class="op">)</span> <span class="op">(</span>id <span class="dt">string</span><span class="op">,</span> err <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb7-41"><a href="#cb7-41" aria-hidden="true" tabindex="-1"></a>    Subscribe<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> group<span class="op">,</span> consumer <span class="dt">string</span><span class="op">,</span> streams <span class="op">...</span><span class="dt">string</span><span class="op">)</span> <span class="op">(&lt;-</span><span class="kw">chan</span> Envelope<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb7-42"><a href="#cb7-42" aria-hidden="true" tabindex="-1"></a>    Ack<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> stream<span class="op">,</span> group<span class="op">,</span> id <span class="dt">string</span><span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb7-43"><a href="#cb7-43" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb7-44"><a href="#cb7-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-45"><a href="#cb7-45" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/telemetry/iface.go</span></span>
+<span id="cb7-46"><a href="#cb7-46" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Metrics <span class="kw">interface</span> <span class="op">{</span></span>
+<span id="cb7-47"><a href="#cb7-47" aria-hidden="true" tabindex="-1"></a>    ReconcileObserve<span class="op">(</span>d time<span class="op">.</span>Duration<span class="op">)</span>               <span class="co">// helix_reconcile_seconds</span></span>
+<span id="cb7-48"><a href="#cb7-48" aria-hidden="true" tabindex="-1"></a>    StreamGauge<span class="op">(</span>delta <span class="dt">int</span><span class="op">)</span>                           <span class="co">// helix_open_streams</span></span>
+<span id="cb7-49"><a href="#cb7-49" aria-hidden="true" tabindex="-1"></a>    EventDLQInc<span class="op">(</span>stream <span class="dt">string</span><span class="op">)</span>                       <span class="co">// helix_events_dlq_total</span></span>
+<span id="cb7-50"><a href="#cb7-50" aria-hidden="true" tabindex="-1"></a>    Audit<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> ev AuditEvent<span class="op">)</span> <span class="dt">error</span>  <span class="co">// control-action audit sink (C3: never traffic)</span></span>
+<span id="cb7-51"><a href="#cb7-51" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><strong>Interface discipline (enforced by §5.2).</strong> A Tier-3
+package&#39;s <code>iface.go</code> may import only: the standard library,
+<code>github.com/google/uuid</code>, <code>net/netip</code>, and
+<strong>its own package&#39;s value types</strong>. It MUST NOT import
+another <code>internal/&lt;module&gt;</code> package — types crossing a
+seam are either primitives or types owned by the callee.
+<code>coordinator</code> consuming <code>policy.CompiledPolicy</code> is
+legal because <code>CompiledPolicy</code> is <code>policy</code>&#39;s own
+exported value type; <code>coordinator</code> importing
+<code>policy</code>&#39;s internal <code>service</code> is not.</p>
+<blockquote>
+<p><strong>Decision D3 (event bus) — restated at the wiring
+layer.</strong> The <code>Bus</code> interface is the seam. Redis
+Streams is the MVP implementation
+(<code>internal/events/redis.go</code>), NATS JetStream is a Phase-2
+implementation (<code>internal/events/nats.go</code>) selected by
+<code>composeApp</code> from <code>Config.Env</code>/URL scheme — a
+transport swap, not a rewrite [02_CP §1.3, SYNTHESIS §3].
+<strong>UNVERIFIED:</strong> the NATS implementation does not exist in
+Phase 1; only the interface and the Redis impl are built. The claim
+&quot;swap is mechanical&quot; is a design property of the seam, validated by the
+Phase-2 plan, not by running code today.</p>
+</blockquote>
+<hr />
+<h2 id="4-wiring-rules-r1r6--enforced-not-aspirational">4. Wiring rules
+(R1–R6) — enforced, not aspirational</h2>
+<p>Each rule has (a) a one-line statement, (b) the failure mode it
+prevents, and (c) the mechanical gate (§5) that fails the build when
+violated.</p>
+<table>
+<thead>
+<tr>
+<th>Rule</th>
+<th>Statement</th>
+<th>Prevents</th>
+<th>Gate</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>R1</strong></td>
+<td>No cross-store imports. A module reads another module&#39;s data only
+through the §3 interface, never by importing <code>internal/store</code>
+for the other module&#39;s tables.</td>
+<td>Hidden coupling that makes the Phase-2 split a rewrite (C7).</td>
+<td>§5.1 depgraph</td>
+</tr>
+<tr>
+<td><strong>R2</strong></td>
+<td><code>coordinator</code> owns no durable tables. Its only state is
+the in-memory per-tenant graph + open streams (a cache hydrated from
+Postgres + events).</td>
+<td>A second source of truth competing with Postgres (C2).</td>
+<td>§5.1 + §8 hydrate test</td>
+</tr>
+<tr>
+<td><strong>R3</strong></td>
+<td>Every topology/policy-changing DB write emits an event in the
+<strong>same unit of work</strong>. The bus is the only path by which
+<code>coordinator</code> learns of change.</td>
+<td>Silent drift: DB changed, edges did not converge (C5).</td>
+<td>§5.5 write-emits-event analyzer + §8</td>
+</tr>
+<tr>
+<td><strong>R4</strong></td>
+<td>Every DB access is tenant-scoped: no query runs outside
+<code>store.WithTenant</code>/<code>WithSystem</code>.</td>
+<td>Cross-tenant leak even with a forgotten <code>WHERE</code>
+(C8).</td>
+<td>§5.3 raw-query analyzer</td>
+</tr>
+<tr>
+<td><strong>R5</strong></td>
+<td>Only <code>internal/store</code> imports <code>pgx</code>; only
+<code>internal/events</code> imports <code>redis</code>; only
+<code>internal/api</code> imports <code>gin</code>/<code>connect</code>
+transport.</td>
+<td>Infra leaking into domain logic; untestable modules.</td>
+<td>§5.1 import-whitelist</td>
+</tr>
+<tr>
+<td><strong>R6</strong></td>
+<td>Domain modules (Tier 3) are constructed with their dependencies
+passed in (constructor injection); no module reaches a package-level
+singleton or <code>init()</code>-time global.</td>
+<td>Untestable graph, hidden order-of-init bugs, two test runs sharing
+state.</td>
+<td>§5.6 no-global analyzer + review</td>
+</tr>
+</tbody>
+</table>
+<h3 id="41-r1-in-practice--the-coordinator-never-imports-another-store">4.1
+R1 in practice — the coordinator never imports another store</h3>
+<div class="sourceCode" id="cb8"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/coordinator/coordinator.go — CORRECT (depends on interfaces)</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Coordinator <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    reg    registry<span class="op">.</span>Registry      <span class="co">// interface, not registry.service</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    pol    policy<span class="op">.</span>Compiler        <span class="co">// interface</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    pki    pki<span class="op">.</span>PKI                <span class="co">// interface</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    bus    events<span class="op">.</span>Bus             <span class="co">// interface</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    mx     telemetry<span class="op">.</span>Metrics      <span class="co">// interface</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>    graph  <span class="kw">map</span><span class="op">[</span>uuid<span class="op">.</span>UUID<span class="op">]*</span>tenantGraph</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>    subs   <span class="op">*</span>subRegistry           <span class="co">// open WatchNetworkMap streams</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>    mu     sync<span class="op">.</span>RWMutex</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a><span class="co">// FORBIDDEN (would fail §5.1): import &quot;github.com/vasic-digital/helix-go/internal/store&quot;</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a><span class="co">//   func (c *Coordinator) loadDevices(...) { c.store.Query(&quot;SELECT ... FROM devices&quot;) }</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a><span class="co">// The coordinator must call c.reg.DevicesForTenant(...) instead.</span></span></code></pre></div>
+<h3 id="42-r3-in-practice--write-and-emit-atomicity">4.2 R3 in practice
+— write-and-emit atomicity</h3>
+<p>The event publish rides <strong>inside</strong> the same
+<code>WithTenant</code> transaction as the write, so a committed write
+always has a published event and a rolled-back write publishes nothing.
+(Redis publish is not transactional with Postgres; the contract is
+&quot;publish on the success path before returning&quot;; idempotent coordinator
+reactions, §4.4, tolerate a duplicate, and the §5.5 analyzer catches a
+write with no publish on its success path. An at-least-once bus +
+idempotent consumer means a missed-publish-after-commit is the only
+residual risk, mitigated by a periodic reconcile sweep, §7.4.)</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/policy/activate.go — write + emit in one unit of work</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>s <span class="op">*</span>service<span class="op">)</span> Activate<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> t uuid<span class="op">.</span>UUID<span class="op">,</span> version <span class="dt">int64</span><span class="op">)</span> <span class="dt">error</span> <span class="op">{</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> s<span class="op">.</span>store<span class="op">.</span>WithTenant<span class="op">(</span>ctx<span class="op">,</span> t<span class="op">,</span> <span class="kw">func</span><span class="op">(</span>q <span class="op">*</span>db<span class="op">.</span>Queries<span class="op">)</span> <span class="dt">error</span> <span class="op">{</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> err <span class="op">:=</span> q<span class="op">.</span>DeactivateAllPolicies<span class="op">(</span>ctx<span class="op">,</span> t<span class="op">);</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span> <span class="cf">return</span> err <span class="op">}</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> err <span class="op">:=</span> q<span class="op">.</span>ActivatePolicyVersion<span class="op">(</span>ctx<span class="op">,</span> db<span class="op">.</span>ActivateParams<span class="op">{</span>TenantID<span class="op">:</span> t<span class="op">,</span> Version<span class="op">:</span> version<span class="op">});</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> err</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>        _<span class="op">,</span> err <span class="op">:=</span> s<span class="op">.</span>bus<span class="op">.</span>Publish<span class="op">(</span>ctx<span class="op">,</span> <span class="st">&quot;events:policy&quot;</span><span class="op">,</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>            events<span class="op">.</span>New<span class="op">(</span><span class="st">&quot;policy.compiled&quot;</span><span class="op">,</span> t<span class="op">,</span> <span class="st">&quot;system&quot;</span><span class="op">,</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="dt">any</span><span class="op">{</span><span class="st">&quot;version&quot;</span><span class="op">:</span> version<span class="op">}))</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> err <span class="co">// if publish fails, the tx rolls back — no silent half-apply</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>    <span class="op">})</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="43-r-need-to-know--coordinator-cannot-read-an-ungranted-peer-c4">4.3
+R-need-to-know — coordinator cannot read an ungranted peer (C4)</h3>
+<p><code>coordinator.buildMap</code> consumes only
+<code>policy.CompiledPolicy.VisibleTo[node]</code>; it has no direct
+path to &quot;all devices in tenant&quot;. The only API it has from
+<code>registry</code> returns devices, but the <em>map construction</em>
+iterates the policy-filtered visibility set, so a device the compiler
+did not grant never enters a <code>NetworkMap</code>. This is verified
+by a unit test that builds a map for a node with an empty visibility set
+and asserts <code>len(peers)==0</code> even when the tenant has many
+devices (§8).</p>
+<h3 id="44-back-pressure--idempotency-the-bound-that-keeps-the-slo-honest">4.4
+Back-pressure &amp; idempotency (the bound that keeps the SLO
+honest)</h3>
+<p>Each open stream has a bounded send queue
+(<code>Config.SendQueueDepth</code>, default 256). A consumer that fills
+its queue is <strong>dropped and forced to reconnect-with-
+snapshot</strong> — this is memory back-pressure, not unbounded growth,
+and is the mechanism behind the 24 h-soak &quot;memory slope ≈ 0&quot; SLO (§7.3).
+Every delta is recomputed from current graph state, so a
+replayed/duplicate event produces an identical delta (idempotent),
+making at-least-once delivery safe [02_CP §5.4].</p>
+<hr />
+<h2 id="5-mechanical-enforcement-gates-the-wiring-cannot-decay">5.
+Mechanical enforcement gates (the wiring cannot decay)</h2>
+<p>Per §11.4.110 (clash detection) + §11.4.27 (no-fakes) + §1.1 (paired
+mutation), each rule has a pre-build gate <strong>and</strong> a paired
+mutation that proves the gate catches the violation. All gates run
+locally (§11.4.156 — no remote CI). The gates live in
+<code>tools/depgraph</code> and as <code>golangci-lint</code> custom
+analyzers.</p>
+<h3 id="51-toolsdepgraph--import-graph-gate-r1-r2-r5">5.1
+<code>tools/depgraph</code> — import-graph gate (R1, R2, R5)</h3>
+<p>Parses <code>go list -deps -json ./...</code> and asserts the import
+edges against a declared allow-list:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co">// tools/depgraph/rules.go (illustrative allow-list)</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="kw">var</span> allowed <span class="op">=</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">][]</span><span class="dt">string</span><span class="op">{</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;internal/config&quot;</span><span class="op">:</span>      <span class="op">{},</span>                                  <span class="co">// leaf</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;internal/store&quot;</span><span class="op">:</span>       <span class="op">{</span><span class="st">&quot;internal/config&quot;</span><span class="op">},</span>                 <span class="co">// + pgx (whitelisted infra)</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;internal/events&quot;</span><span class="op">:</span>      <span class="op">{</span><span class="st">&quot;internal/config&quot;</span><span class="op">},</span>                 <span class="co">// + redis</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;internal/telemetry&quot;</span><span class="op">:</span>   <span class="op">{</span><span class="st">&quot;internal/config&quot;</span><span class="op">,</span> <span class="st">&quot;internal/store&quot;</span><span class="op">},</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;internal/identity&quot;</span><span class="op">:</span>    <span class="op">{</span><span class="st">&quot;internal/config&quot;</span><span class="op">,</span> <span class="st">&quot;internal/store&quot;</span><span class="op">,</span> <span class="st">&quot;internal/events&quot;</span><span class="op">,</span> <span class="st">&quot;internal/telemetry&quot;</span><span class="op">},</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;internal/registry&quot;</span><span class="op">:</span>    <span class="op">{</span><span class="st">&quot;internal/config&quot;</span><span class="op">,</span> <span class="st">&quot;internal/store&quot;</span><span class="op">,</span> <span class="st">&quot;internal/events&quot;</span><span class="op">,</span> <span class="st">&quot;internal/telemetry&quot;</span><span class="op">,</span> <span class="st">&quot;internal/ipam&quot;</span><span class="op">},</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;internal/ipam&quot;</span><span class="op">:</span>        <span class="op">{</span><span class="st">&quot;internal/config&quot;</span><span class="op">,</span> <span class="st">&quot;internal/store&quot;</span><span class="op">},</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;internal/pki&quot;</span><span class="op">:</span>         <span class="op">{</span><span class="st">&quot;internal/config&quot;</span><span class="op">,</span> <span class="st">&quot;internal/store&quot;</span><span class="op">,</span> <span class="st">&quot;internal/events&quot;</span><span class="op">,</span> <span class="st">&quot;internal/telemetry&quot;</span><span class="op">},</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;internal/policy&quot;</span><span class="op">:</span>      <span class="op">{</span><span class="st">&quot;internal/config&quot;</span><span class="op">,</span> <span class="st">&quot;internal/store&quot;</span><span class="op">,</span> <span class="st">&quot;internal/events&quot;</span><span class="op">,</span> <span class="st">&quot;internal/telemetry&quot;</span><span class="op">},</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;internal/coordinator&quot;</span><span class="op">:</span> <span class="op">{</span><span class="st">&quot;internal/config&quot;</span><span class="op">,</span> <span class="st">&quot;internal/events&quot;</span><span class="op">,</span> <span class="st">&quot;internal/telemetry&quot;</span><span class="op">,</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>                             <span class="st">&quot;internal/registry&quot;</span><span class="op">,</span> <span class="st">&quot;internal/policy&quot;</span><span class="op">,</span> <span class="st">&quot;internal/pki&quot;</span><span class="op">},</span> <span class="co">// interfaces only — NO store</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;internal/api&quot;</span><span class="op">:</span>         <span class="op">{</span><span class="st">&quot;internal/config&quot;</span><span class="op">,</span> <span class="st">&quot;internal/identity&quot;</span><span class="op">,</span> <span class="st">&quot;internal/registry&quot;</span><span class="op">,</span> <span class="st">&quot;internal/ipam&quot;</span><span class="op">,</span></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>                             <span class="st">&quot;internal/pki&quot;</span><span class="op">,</span> <span class="st">&quot;internal/policy&quot;</span><span class="op">,</span> <span class="st">&quot;internal/coordinator&quot;</span><span class="op">,</span> <span class="st">&quot;internal/telemetry&quot;</span><span class="op">,</span> <span class="st">&quot;internal/events&quot;</span><span class="op">},</span></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;internal/app&quot;</span><span class="op">:</span>         <span class="op">{</span><span class="st">&quot;*&quot;</span><span class="op">},</span> <span class="co">// composition root may import all</span></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a><span class="co">// Infra whitelist: pgx allowed ONLY under internal/store; redis ONLY under internal/events;</span></span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a><span class="co">// gin + connectrpc ONLY under internal/api. A violation prints the offending edge and exits 1.</span></span></code></pre></div>
+<p><strong>Edge case — <code>coordinator</code> MUST NOT appear with
+<code>internal/store</code> in its dep set.</strong> The gate
+special-cases this: <code>coordinator → store</code> is the canonical
+R1/R2 violation and produces a dedicated error message naming the
+rule.</p>
+<p><strong>Paired §1.1 mutation:</strong> add
+<code>import _ &quot;…/internal/store&quot;</code> to
+<code>internal/coordinator/coordinator.go</code> →
+<code>tools/depgraph</code> MUST exit non-zero; remove it → exit
+zero.</p>
+<h3 id="52-interface-purity-check-r1-seam-discipline">5.2
+Interface-purity check (R1 seam discipline)</h3>
+<p>A small analyzer asserts each
+<code>internal/&lt;module&gt;/iface.go</code> imports no other
+<code>internal/&lt;module&gt;</code> package (stdlib + <code>uuid</code>
++ <code>netip</code> + own package only, §3). <strong>Mutation:</strong>
+make <code>registry/iface.go</code> import <code>internal/policy</code>
+→ analyzer FAILs.</p>
+<h3 id="53-raw-query-analyzer-r4--tenant-scope">5.3 Raw-query analyzer
+(R4 — tenant scope)</h3>
+<p>A <code>golangci-lint</code> custom analyzer flags any call to
+<code>pool.Query</code>/<code>pool.Exec</code>/ <code>conn.Query</code>
+(the pgx surface) made outside <code>internal/store</code>, and any
+<code>db.New(</code> constructed outside a
+<code>WithTenant</code>/<code>WithSystem</code> closure.
+<strong>Mutation:</strong> add a raw
+<code>s.pool.Query(ctx, &quot;SELECT * FROM devices&quot;)</code> in
+<code>internal/registry</code> → analyzer FAILs.</p>
+<h3 id="54-source-lint-denylist-c3-c6-config-only-env">5.4 Source-lint
+denylist (C3, C6, config-only-env)</h3>
+<p>A regex/AST source-lint (a sibling to the schema-lint, sibling §2.4)
+rejects:</p>
+<table>
+<thead>
+<tr>
+<th>Class</th>
+<th>Denied pattern</th>
+<th>Invariant</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Traffic logging</td>
+<td>identifiers
+<code>src_ip</code>/<code>dst_ip</code>/<code>bytes_in</code>/<code>packet_count</code>/<code>flow</code>/<code>netflow</code>/<code>sni_host</code>
+in any struct field, log key, or table</td>
+<td>C3</td>
+</tr>
+<tr>
+<td>WG private key</td>
+<td>identifiers
+<code>wg_priv</code>/<code>private_key</code>/<code>privkey</code>/<code>secret_key</code>
+typed as <code>[]byte</code>/<code>[32]byte</code> reachable from
+<code>identity</code>/<code>pki</code>/<code>registry</code></td>
+<td>C6</td>
+</tr>
+<tr>
+<td>Stray env read</td>
+<td><code>os.Getenv(</code> outside <code>internal/config</code></td>
+<td>§1.3</td>
+</tr>
+<tr>
+<td>Stray infra</td>
+<td><code>import &quot;…/pgx&quot;</code> outside <code>store</code>,
+<code>import &quot;…/redis&quot;</code> outside <code>events</code></td>
+<td>R5</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Mutation:</strong> add a struct field
+<code>SrcIP netip.Addr</code> to a registry type → lint FAILs.</p>
+<h3 id="55-write-emits-event-analyzer-r3">5.5 Write-emits-event analyzer
+(R3)</h3>
+<p>A heuristic AST analyzer: any exported method whose body contains a
+<code>store.WithTenant</code> closure that calls a mutating sqlc method
+(<code>Insert*</code>/
+<code>Update*</code>/<code>Delete*</code>/<code>Activate*</code>/<code>Deactivate*</code>
+on topology/policy tables) MUST also contain a <code>bus.Publish</code>
+on the closure&#39;s success path. This is a <strong>best-effort</strong>
+gate (it cannot prove semantic completeness — marked
+<strong>UNVERIFIED</strong> as a total guarantee); the authoritative R3
+proof is the §8 integration test asserting that a device-revoke write
+produces a <code>device.revoked</code> event observed on the bus.
+<strong>Mutation:</strong> delete the <code>bus.Publish</code> from
+<code>policy.Activate</code> → analyzer warns AND the integration test
+FAILs (no event → coordinator never converges → SLO assertion times
+out).</p>
+<h3 id="56-no-global-analyzer-r6">5.6 No-global analyzer (R6)</h3>
+<p>Flags package-level mutable <code>var</code> of a service/struct type
+and non-trivial <code>init()</code> functions in Tier-2/3 packages
+(constants and registered Prometheus collectors in
+<code>telemetry</code> are allow-listed). <strong>Mutation:</strong> add
+<code>var defaultCoordinator *Coordinator</code> package-global →
+analyzer FAILs.</p>
+<hr />
+<h2 id="6-composition-root--dependency-injection-internalapp">6.
+Composition root &amp; dependency injection
+(<code>internal/app</code>)</h2>
+<p>The composition root is the <strong>only</strong> place modules are
+constructed and wired. Phase 1 uses <strong>explicit constructor
+injection</strong> (no DI framework) — the wiring is a single readable
+function, which is the point: the dependency graph is auditable in one
+screen, and the Phase-2 split is &quot;replace one constructor call with a
+Connect-client constructor.&quot;</p>
+<h3 id="61-construction-order-topological-matches-the-2-tiers">6.1
+Construction order (topological, matches the §2 tiers)</h3>
+<div class="sourceCode" id="cb11"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/app/compose.go</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> App <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    cfg   config<span class="op">.</span>Config</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    store <span class="op">*</span>store<span class="op">.</span>Store</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    bus   events<span class="op">.</span>Bus</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>    mx    telemetry<span class="op">.</span>Metrics</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>    coord <span class="op">*</span>coordinator<span class="op">.</span>Coordinator</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>    srv   <span class="op">*</span>http<span class="op">.</span>Server          <span class="co">// Gin + Connect multiplexed on one listener (§6.3)</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>    closers <span class="op">[]</span>io<span class="op">.</span>Closer         <span class="co">// reverse-ordered shutdown (§6.5)</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> composeApp<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> cfg config<span class="op">.</span>Config<span class="op">)</span> <span class="op">(*</span>App<span class="op">,</span> <span class="dt">error</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>    <span class="co">// --- Tier 1/2: infrastructure first ---</span></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>    st<span class="op">,</span> err <span class="op">:=</span> store<span class="op">.</span>Open<span class="op">(</span>ctx<span class="op">,</span> cfg<span class="op">.</span>DBURL<span class="op">)</span>            <span class="co">// pgxpool; verifies non-superuser role (§6.4)</span></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span> <span class="cf">return</span> <span class="ot">nil</span><span class="op">,</span> fmt<span class="op">.</span>Errorf<span class="op">(</span><span class="st">&quot;store: %w&quot;</span><span class="op">,</span> err<span class="op">)</span> <span class="op">}</span></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>    bus<span class="op">,</span> err <span class="op">:=</span> events<span class="op">.</span>Open<span class="op">(</span>ctx<span class="op">,</span> cfg<span class="op">.</span>RedisURL<span class="op">)</span>        <span class="co">// Redis Streams impl (D3 seam)</span></span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span> <span class="cf">return</span> <span class="ot">nil</span><span class="op">,</span> fmt<span class="op">.</span>Errorf<span class="op">(</span><span class="st">&quot;bus: %w&quot;</span><span class="op">,</span> err<span class="op">)</span> <span class="op">}</span></span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a>    mx <span class="op">:=</span> telemetry<span class="op">.</span>New<span class="op">(</span>st<span class="op">)</span>                           <span class="co">// Prometheus registry + audit sink</span></span>
+<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a>    <span class="co">// --- Tier 3: domain modules, dependencies passed in (R6) ---</span></span>
+<span id="cb11-23"><a href="#cb11-23" aria-hidden="true" tabindex="-1"></a>    ipm <span class="op">:=</span> ipam<span class="op">.</span>New<span class="op">(</span>st<span class="op">)</span></span>
+<span id="cb11-24"><a href="#cb11-24" aria-hidden="true" tabindex="-1"></a>    idn <span class="op">:=</span> identity<span class="op">.</span>New<span class="op">(</span>st<span class="op">,</span> bus<span class="op">,</span> mx<span class="op">)</span></span>
+<span id="cb11-25"><a href="#cb11-25" aria-hidden="true" tabindex="-1"></a>    pkis <span class="op">:=</span> pki<span class="op">.</span>New<span class="op">(</span>st<span class="op">,</span> bus<span class="op">,</span> mx<span class="op">,</span> cfg<span class="op">.</span>CADir<span class="op">,</span> cfg<span class="op">.</span>DeviceCertTTL<span class="op">)</span></span>
+<span id="cb11-26"><a href="#cb11-26" aria-hidden="true" tabindex="-1"></a>    reg <span class="op">:=</span> registry<span class="op">.</span>New<span class="op">(</span>st<span class="op">,</span> bus<span class="op">,</span> mx<span class="op">,</span> ipm<span class="op">)</span></span>
+<span id="cb11-27"><a href="#cb11-27" aria-hidden="true" tabindex="-1"></a>    pol <span class="op">:=</span> policy<span class="op">.</span>New<span class="op">(</span>st<span class="op">,</span> bus<span class="op">,</span> mx<span class="op">)</span></span>
+<span id="cb11-28"><a href="#cb11-28" aria-hidden="true" tabindex="-1"></a>    coord <span class="op">:=</span> coordinator<span class="op">.</span>New<span class="op">(</span>reg<span class="op">,</span> pol<span class="op">,</span> pkis<span class="op">,</span> bus<span class="op">,</span> mx<span class="op">,</span> coordinator<span class="op">.</span>Opts<span class="op">{</span></span>
+<span id="cb11-29"><a href="#cb11-29" aria-hidden="true" tabindex="-1"></a>        KeepAlive<span class="op">:</span>      cfg<span class="op">.</span>KeepAlive<span class="op">,</span></span>
+<span id="cb11-30"><a href="#cb11-30" aria-hidden="true" tabindex="-1"></a>        SendQueueDepth<span class="op">:</span> cfg<span class="op">.</span>SendQueueDepth<span class="op">,</span></span>
+<span id="cb11-31"><a href="#cb11-31" aria-hidden="true" tabindex="-1"></a>    <span class="op">})</span></span>
+<span id="cb11-32"><a href="#cb11-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-33"><a href="#cb11-33" aria-hidden="true" tabindex="-1"></a>    <span class="co">// --- Tier 4: API edge (REST + Connect + WS/SSE) ---</span></span>
+<span id="cb11-34"><a href="#cb11-34" aria-hidden="true" tabindex="-1"></a>    handler <span class="op">:=</span> api<span class="op">.</span>New<span class="op">(</span>api<span class="op">.</span>Deps<span class="op">{</span></span>
+<span id="cb11-35"><a href="#cb11-35" aria-hidden="true" tabindex="-1"></a>        Identity<span class="op">:</span> idn<span class="op">,</span> Registry<span class="op">:</span> reg<span class="op">,</span> IPAM<span class="op">:</span> ipm<span class="op">,</span> PKI<span class="op">:</span> pkis<span class="op">,</span></span>
+<span id="cb11-36"><a href="#cb11-36" aria-hidden="true" tabindex="-1"></a>        Policy<span class="op">:</span> pol<span class="op">,</span> Coordinator<span class="op">:</span> coord<span class="op">,</span> Metrics<span class="op">:</span> mx<span class="op">,</span> Bus<span class="op">:</span> bus<span class="op">,</span></span>
+<span id="cb11-37"><a href="#cb11-37" aria-hidden="true" tabindex="-1"></a>        OIDCIssuer<span class="op">:</span> cfg<span class="op">.</span>OIDCIssuer<span class="op">,</span></span>
+<span id="cb11-38"><a href="#cb11-38" aria-hidden="true" tabindex="-1"></a>    <span class="op">})</span></span>
+<span id="cb11-39"><a href="#cb11-39" aria-hidden="true" tabindex="-1"></a>    srv <span class="op">:=</span> <span class="op">&amp;</span>http<span class="op">.</span>Server<span class="op">{</span>Addr<span class="op">:</span> cfg<span class="op">.</span>ListenAddr<span class="op">,</span> Handler<span class="op">:</span> handler<span class="op">}</span></span>
+<span id="cb11-40"><a href="#cb11-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-41"><a href="#cb11-41" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">&amp;</span>App<span class="op">{</span></span>
+<span id="cb11-42"><a href="#cb11-42" aria-hidden="true" tabindex="-1"></a>        cfg<span class="op">:</span> cfg<span class="op">,</span> store<span class="op">:</span> st<span class="op">,</span> bus<span class="op">:</span> bus<span class="op">,</span> mx<span class="op">:</span> mx<span class="op">,</span> coord<span class="op">:</span> coord<span class="op">,</span> srv<span class="op">:</span> srv<span class="op">,</span></span>
+<span id="cb11-43"><a href="#cb11-43" aria-hidden="true" tabindex="-1"></a>        closers<span class="op">:</span> <span class="op">[]</span>io<span class="op">.</span>Closer<span class="op">{</span>srv2closer<span class="op">(</span>srv<span class="op">),</span> coord<span class="op">,</span> busCloser<span class="op">(</span>bus<span class="op">),</span> st<span class="op">},</span> <span class="co">// reverse order</span></span>
+<span id="cb11-44"><a href="#cb11-44" aria-hidden="true" tabindex="-1"></a>    <span class="op">},</span> <span class="ot">nil</span></span>
+<span id="cb11-45"><a href="#cb11-45" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>The construction order is <strong>forced</strong> by the type
+signatures: <code>registry.New</code> <em>requires</em> an
+<code>ipam.IPAM</code>, so <code>ipam</code> must be built first; the
+compiler enforces the topological order, which is itself a (weak) wiring
+check.</p>
+<h3 id="62-why-explicit-injection-not-wirefx-decision-honest-trade-off">6.2
+Why explicit injection, not <code>wire</code>/<code>fx</code> (decision,
+honest trade-off)</h3>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Pro</th>
+<th>Con</th>
+<th>Verdict</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Explicit constructors (chosen)</strong></td>
+<td>One readable wiring function; zero magic; compiler-enforced order;
+trivial to unit-test <code>composeApp</code></td>
+<td>Manual edits when a dep is added</td>
+<td><strong>Phase 1</strong> — the graph is small (≤12 modules);
+readability &gt; automation</td>
+</tr>
+<tr>
+<td><code>google/wire</code> (codegen)</td>
+<td>Compile-time DI, no runtime reflection</td>
+<td>Extra build step; generated <code>wire_gen.go</code> to review</td>
+<td>Phase-2 candidate if the graph grows</td>
+</tr>
+<tr>
+<td><code>uber/fx</code> (runtime)</td>
+<td>Lifecycle hooks, large-app ergonomics</td>
+<td>Runtime reflection; obscures the graph; harder anti-bluff audit</td>
+<td>Rejected — opacity conflicts with the auditable-wiring goal</td>
+</tr>
+</tbody>
+</table>
+<p><strong>UNVERIFIED:</strong> the claim &quot;explicit injection scales
+fine to Phase 2&quot; is a design judgement; if the module count grows past
+the point where the wiring function is unreadable in one screen, migrate
+to <code>wire</code> (it preserves explicit constructors, so the
+migration is mechanical).</p>
+<h3 id="63-one-listener-two-surfaces-gin--connect-multiplexed">6.3 One
+listener, two surfaces (Gin + Connect multiplexed)</h3>
+<p><code>api.New</code> returns a single <code>http.Handler</code> that
+routes Connect RPC paths to the Connect mux and everything else to Gin,
+on one <code>http.Server</code> [research-go_cp §1/§2/§7]. Connect
+handlers are plain <code>http.Handler</code>s, so the top-level mux
+dispatches by path prefix:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/api/router.go</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> New<span class="op">(</span>d Deps<span class="op">)</span> http<span class="op">.</span>Handler <span class="op">{</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    gw <span class="op">:=</span> gin<span class="op">.</span>New<span class="op">()</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    gw<span class="op">.</span>Use<span class="op">(</span>recovery<span class="op">(),</span> reqID<span class="op">(),</span> accessLog<span class="op">(</span>d<span class="op">.</span>Metrics<span class="op">))</span> <span class="co">// gin.New() not gin.Default() (research-go_cp §1)</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    registerREST<span class="op">(</span>gw<span class="op">,</span> d<span class="op">)</span>                                <span class="co">// /v1/* REST (§8.1 of 02_CP)</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    registerWS<span class="op">(</span>gw<span class="op">,</span> d<span class="op">)</span>                                  <span class="co">// /v1/stream WS/SSE</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>    connectMux <span class="op">:=</span> http<span class="op">.</span>NewServeMux<span class="op">()</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>    path<span class="op">,</span> h <span class="op">:=</span> coordinatorv1connect<span class="op">.</span>NewCoordinatorHandler<span class="op">(</span>   <span class="co">// helix.coordinator.v1</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>        newCoordinatorServer<span class="op">(</span>d<span class="op">),</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>        connect<span class="op">.</span>WithInterceptors<span class="op">(</span>authInterceptor<span class="op">(</span>d<span class="op">.</span>PKI<span class="op">),</span> validateInterceptor<span class="op">()))</span></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>    connectMux<span class="op">.</span>Handle<span class="op">(</span>path<span class="op">,</span> h<span class="op">)</span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>    top <span class="op">:=</span> http<span class="op">.</span>NewServeMux<span class="op">()</span></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>    top<span class="op">.</span>Handle<span class="op">(</span><span class="st">&quot;/helix.coordinator.v1/&quot;</span><span class="op">,</span> connectMux<span class="op">)</span>   <span class="co">// typed RPC + server-streaming</span></span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>    top<span class="op">.</span>Handle<span class="op">(</span><span class="st">&quot;/grpc.&quot;</span><span class="op">,</span> connectMux<span class="op">)</span>                    <span class="co">// gRPC reflection/health</span></span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>    top<span class="op">.</span>Handle<span class="op">(</span><span class="st">&quot;/&quot;</span><span class="op">,</span> gw<span class="op">)</span>                                  <span class="co">// everything else → Gin</span></span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a>    <span class="co">// h2c so HTTP/2 (server-streaming) works without TLS in dev; TLS-ALPN in prod.</span></span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> h2c<span class="op">.</span>NewHandler<span class="op">(</span>top<span class="op">,</span> <span class="op">&amp;</span>http2<span class="op">.</span>Server<span class="op">{})</span></span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>The Connect server speaks gRPC, gRPC-Web, and the Connect protocol
+from one handler with no Envoy [research-go_cp §2], so a future WASM
+Console reuses the same <code>Coordinator</code> service. <strong>Edge
+case (research-go_cp §2):</strong> a server-streaming response is always
+HTTP 200 even on error — the error rides the trailer; clients read the
+trailer status, never the HTTP code. The §8 integration test asserts an
+auth failure mid-stream surfaces as a Connect error code, not a
+200-with-empty- body.</p>
+<h3 id="64-startup-assertions-the-floor-run-before-serving">6.4 Startup
+assertions (the floor, run before serving)</h3>
+<p><code>App.Run</code> runs these <em>before</em> binding the listener
+and aborts (exit non-zero) on any failure — they are the §11.4.108
+runtime signatures that prove the floor invariants are live, not
+promised:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/app/run.go (assertion list)</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>a <span class="op">*</span>App<span class="op">)</span> preflight<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">)</span> <span class="dt">error</span> <span class="op">{</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">// C8: app role must NOT be superuser/bypassrls (else RLS silently bypassed)</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> super<span class="op">,</span> bypass<span class="op">,</span> _ <span class="op">:=</span> a<span class="op">.</span>store<span class="op">.</span>RoleFlags<span class="op">(</span>ctx<span class="op">);</span> super <span class="op">||</span> bypass <span class="op">{</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> fmt<span class="op">.</span>Errorf<span class="op">(</span><span class="st">&quot;refusing to start: DB role has superuser=%v bypassrls=%v (RLS would be bypassed)&quot;</span><span class="op">,</span> super<span class="op">,</span> bypass<span class="op">)</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>    <span class="co">// C8: every tenant-scoped table must have FORCE ROW LEVEL </span><span class="al">SECURITY</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> missing<span class="op">,</span> _ <span class="op">:=</span> a<span class="op">.</span>store<span class="op">.</span>TablesMissingForceRLS<span class="op">(</span>ctx<span class="op">);</span> <span class="bu">len</span><span class="op">(</span>missing<span class="op">)</span> <span class="op">&gt;</span> <span class="dv">0</span> <span class="op">{</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> fmt<span class="op">.</span>Errorf<span class="op">(</span><span class="st">&quot;refusing to start: FORCE RLS missing on %v&quot;</span><span class="op">,</span> missing<span class="op">)</span></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>    <span class="co">// C1: no packet-path — assert no raw tun/AF_PACKET capability is held</span></span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> hasRawNetCapability<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> fmt<span class="op">.</span>Errorf<span class="op">(</span><span class="st">&quot;refusing to start: process holds raw-socket capability (control plane must not be in packet path)&quot;</span><span class="op">)</span></span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>    <span class="co">// C2: redis reachable but losing it must not block start of existing-tunnel serving (fail-static)</span></span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>    a<span class="op">.</span>bus<span class="op">.</span>PingOrWarn<span class="op">(</span>ctx<span class="op">)</span></span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="ot">nil</span></span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="65-lifecycle--run-and-graceful-shutdown">6.5 Lifecycle —
+<code>Run</code> and graceful shutdown</h3>
+<div class="sourceCode" id="cb14"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>a <span class="op">*</span>App<span class="op">)</span> Run<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">)</span> <span class="dt">error</span> <span class="op">{</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> err <span class="op">:=</span> a<span class="op">.</span>preflight<span class="op">(</span>ctx<span class="op">);</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span> <span class="cf">return</span> err <span class="op">}</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">// hydrate coordinator graph from Postgres before accepting streams (R2)</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> err <span class="op">:=</span> a<span class="op">.</span>coord<span class="op">.</span>Hydrate<span class="op">(</span>ctx<span class="op">);</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span> <span class="cf">return</span> fmt<span class="op">.</span>Errorf<span class="op">(</span><span class="st">&quot;hydrate: %w&quot;</span><span class="op">,</span> err<span class="op">)</span> <span class="op">}</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>    <span class="co">// start the event consumers (coordinator subscribes to the bus, §5 of 02_CP)</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>    g<span class="op">,</span> gctx <span class="op">:=</span> errgroup<span class="op">.</span>WithContext<span class="op">(</span>ctx<span class="op">)</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>    g<span class="op">.</span>Go<span class="op">(</span><span class="kw">func</span><span class="op">()</span> <span class="dt">error</span> <span class="op">{</span> <span class="cf">return</span> a<span class="op">.</span>coord<span class="op">.</span>ConsumeEvents<span class="op">(</span>gctx<span class="op">)</span> <span class="op">})</span> <span class="co">// events → graph → deltas</span></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>    g<span class="op">.</span>Go<span class="op">(</span><span class="kw">func</span><span class="op">()</span> <span class="dt">error</span> <span class="op">{</span> <span class="cf">return</span> a<span class="op">.</span>coord<span class="op">.</span>DLQSweeper<span class="op">(</span>gctx<span class="op">)</span> <span class="op">})</span>    <span class="co">// XAUTOCLAIM reclaim (§5.4 of 02_CP)</span></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>    g<span class="op">.</span>Go<span class="op">(</span><span class="kw">func</span><span class="op">()</span> <span class="dt">error</span> <span class="op">{</span>                                       <span class="co">// serve</span></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> err <span class="op">:=</span> a<span class="op">.</span>srv<span class="op">.</span>ListenAndServe<span class="op">();</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">&amp;&amp;</span> err <span class="op">!=</span> http<span class="op">.</span>ErrServerClosed <span class="op">{</span> <span class="cf">return</span> err <span class="op">}</span></span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="ot">nil</span></span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>    <span class="op">})</span></span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>    g<span class="op">.</span>Go<span class="op">(</span><span class="kw">func</span><span class="op">()</span> <span class="dt">error</span> <span class="op">{</span>                                       <span class="co">// shutdown on ctx cancel</span></span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>        <span class="op">&lt;-</span>gctx<span class="op">.</span>Done<span class="op">()</span></span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a>        sctx<span class="op">,</span> cancel <span class="op">:=</span> context<span class="op">.</span>WithTimeout<span class="op">(</span>context<span class="op">.</span>Background<span class="op">(),</span> <span class="dv">15</span><span class="op">*</span>time<span class="op">.</span>Second<span class="op">)</span></span>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a>        <span class="cf">defer</span> cancel<span class="op">()</span></span>
+<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a>        _ <span class="op">=</span> a<span class="op">.</span>srv<span class="op">.</span>Shutdown<span class="op">(</span>sctx<span class="op">)</span>        <span class="co">// stop accepting; drain in-flight; close streams gracefully</span></span>
+<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a>        a<span class="op">.</span>closeAll<span class="op">()</span>                     <span class="co">// reverse-order closers: srv, coord, bus, store</span></span>
+<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="ot">nil</span></span>
+<span id="cb14-22"><a href="#cb14-22" aria-hidden="true" tabindex="-1"></a>    <span class="op">})</span></span>
+<span id="cb14-23"><a href="#cb14-23" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> g<span class="op">.</span>Wait<span class="op">()</span></span>
+<span id="cb14-24"><a href="#cb14-24" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Shutdown order is the reverse of construction: stop the HTTP server
+(closing open <code>WatchNetworkMap</code> streams cleanly so agents
+reconnect-with-snapshot), then the coordinator (flush queues, mark
+presence offline), then the bus, then the store pool. A
+<code>coordinator</code> stream close flips device presence offline
+(<code>device.offline</code> event) so peers learn the relay is
+gone.</p>
+<hr />
+<h2 id="7-the-1-s-convergence-slo-as-a-wired-property">7. The &lt;1 s
+convergence SLO as a wired property</h2>
+<p>The &quot;p99 &lt; 1 s&quot; promise [C5, 04_P1 §10] is not a comment — it is a
+wired histogram with a budget boundary, plus the fan-out path that must
+stay within it.</p>
+<h3 id="71-the-path-the-budget-covers">7.1 The path the budget
+covers</h3>
+<pre class="mermaid"><code>sequenceDiagram
+    autonumber
+    participant Mut as mutating module (policy/registry/pki)
+    participant PG as Postgres (RLS)
+    participant Bus as Redis Streams
+    participant Coord as coordinator
+    participant Edge as agent stream (WatchNetworkMap)
+    Mut-&gt;&gt;PG: write (WithTenant tx)
+    Mut-&gt;&gt;Bus: XADD events:* (same unit of work, R3)
+    Bus--&gt;&gt;Coord: XReadGroup delivers Envelope
+    Note over Coord: t0 = event-receive (histogram start)
+    Coord-&gt;&gt;Coord: apply to in-mem graph; compute minimal affected set (§6.4 of 02_CP)
+    loop each affected open stream
+        Coord-&gt;&gt;Edge: stream.Send(MapDelta)
+    end
+    Note over Coord: t1 = last stream.Send (histogram stop) -- helix_reconcile_seconds = t1-t0</code></pre>
+<p>The histogram measures <strong>event-receive → last
+<code>stream.Send</code></strong> for the affected set — the portion the
+control plane owns. DB-write and bus-deliver latency are measured
+separately (<code>helix_write_seconds</code>, bus lag) so a regression
+is attributable to the right stage, not lumped.</p>
+<h3 id="72-the-wired-metrics-internaltelemetry">7.2 The wired metrics
+(<code>internal/telemetry</code>)</h3>
+<div class="sourceCode" id="cb16"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="kw">var</span> <span class="op">(</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>    reconcile <span class="op">=</span> prometheus<span class="op">.</span>NewHistogram<span class="op">(</span>prometheus<span class="op">.</span>HistogramOpts<span class="op">{</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>        Name<span class="op">:</span> <span class="st">&quot;helix_reconcile_seconds&quot;</span><span class="op">,</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>        Help<span class="op">:</span> <span class="st">&quot;event-receive to last stream.Send for the affected set&quot;</span><span class="op">,</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>        Buckets<span class="op">:</span> <span class="op">[]</span><span class="dt">float64</span><span class="op">{</span><span class="fl">.005</span><span class="op">,</span> <span class="fl">.01</span><span class="op">,</span> <span class="fl">.025</span><span class="op">,</span> <span class="fl">.05</span><span class="op">,</span> <span class="fl">.1</span><span class="op">,</span> <span class="fl">.25</span><span class="op">,</span> <span class="fl">.5</span><span class="op">,</span> <span class="dv">1</span><span class="op">,</span> <span class="fl">2.5</span><span class="op">},</span> <span class="co">// 1s is a bucket boundary == SLO</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">})</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>    openStreams <span class="op">=</span> prometheus<span class="op">.</span>NewGauge<span class="op">(</span>prometheus<span class="op">.</span>GaugeOpts<span class="op">{</span>Name<span class="op">:</span> <span class="st">&quot;helix_open_streams&quot;</span><span class="op">})</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>    dlqTotal    <span class="op">=</span> prometheus<span class="op">.</span>NewCounterVec<span class="op">(</span>prometheus<span class="op">.</span>CounterOpts<span class="op">{</span>Name<span class="op">:</span> <span class="st">&quot;helix_events_dlq_total&quot;</span><span class="op">},</span> <span class="op">[]</span><span class="dt">string</span><span class="op">{</span><span class="st">&quot;stream&quot;</span><span class="op">})</span></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>    rss         <span class="op">=</span> prometheus<span class="op">.</span>NewGauge<span class="op">(</span>prometheus<span class="op">.</span>GaugeOpts<span class="op">{</span>Name<span class="op">:</span> <span class="st">&quot;process_resident_memory_bytes&quot;</span><span class="op">})</span> <span class="co">// soak slope≈0</span></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div>
+<h3 id="73-slo-acceptance-numbers-anti-bluff-measured--02_cp-102">7.3
+SLO acceptance numbers (anti-bluff, measured — [02_CP §10.2])</h3>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Target</th>
+<th>Measured by</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>event → delta-on-wire</td>
+<td><strong>p99 &lt; 1 s</strong></td>
+<td><code>helix_reconcile_seconds</code> p99 over the soak window</td>
+</tr>
+<tr>
+<td>device revoke → edge enforced</td>
+<td>&lt; 1 s</td>
+<td>revoke-to-WG-peer-removed timer on the edge</td>
+</tr>
+<tr>
+<td>coordinator RSS @ 10k streams</td>
+<td>slope ≈ 0 over 24 h</td>
+<td><code>process_resident_memory_bytes</code> linear-fit slope</td>
+</tr>
+<tr>
+<td>enrollment round-trip</td>
+<td>&lt; 500 ms</td>
+<td>API histogram</td>
+</tr>
+<tr>
+<td>policy compile (1k devices)</td>
+<td>&lt; 200 ms</td>
+<td>compiler benchmark</td>
+</tr>
+</tbody>
+</table>
+<h3 id="74-reconcile-sweep-the-r3-residual-risk-backstop">7.4 Reconcile
+sweep (the R3 residual-risk backstop)</h3>
+<p>A low-frequency (default 60 s) background sweep recomputes each
+tenant&#39;s graph from Postgres and diffs it against the in-memory graph;
+any divergence (the rare publish-after-commit miss, §4.2) emits the
+missing delta and increments <code>helix_reconcile_repairs_total</code>.
+A non-zero repair counter under steady state is a §11.4.6 forensic
+signal, not a silent self-heal — it is alerted, investigated, and the
+root cause fixed, never normalised.</p>
+<hr />
+<h2 id="8-error-taxonomy--propagation-across-seams">8. Error taxonomy
+&amp; propagation across seams</h2>
+<p>Errors crossing a §3 interface MUST carry a stable, typed
+classification so the API edge maps them to the right HTTP/Connect code
+and the coordinator reacts correctly. Hidden
+<code>errors.New(&quot;failed&quot;)</code> strings are forbidden across
+seams.</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/apperr/apperr.go — the cross-seam error vocabulary</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Kind <span class="dt">int</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> <span class="op">(</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>    KindInvalid      Kind <span class="op">=</span> <span class="ot">iota</span> <span class="co">// bad input            → 400 / CodeInvalidArgument</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>    KindUnauthorized             <span class="co">// bad/expired token     → 401 / CodeUnauthenticated</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>    KindForbidden                <span class="co">// RBAC/RLS/revoked       → 403 / CodePermissionDenied</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>    KindNotFound                 <span class="co">// missing tenant/device  → 404 / CodeNotFound</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>    KindConflict                 <span class="co">// version/CIDR collision → 409 / CodeAlreadyExists | CodeAborted</span></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>    KindFailedPrecond            <span class="co">// policy dry-run reject  → 412 / CodeFailedPrecondition</span></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>    KindExhausted                <span class="co">// send-queue full        → 429 / CodeResourceExhausted</span></span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>    KindInternal                 <span class="co">// bug / infra            → 500 / CodeInternal</span></span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>    KindUnavailable              <span class="co">// DB/redis down          → 503 / CodeUnavailable</span></span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Error <span class="kw">struct</span> <span class="op">{</span> Kind Kind<span class="op">;</span> Op <span class="dt">string</span><span class="op">;</span> Err <span class="dt">error</span><span class="op">;</span> Fields <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="dt">any</span> <span class="op">}</span></span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>e <span class="op">*</span>Error<span class="op">)</span> Error<span class="op">()</span> <span class="dt">string</span> <span class="op">{</span> <span class="cf">return</span> e<span class="op">.</span>Op <span class="op">+</span> <span class="st">&quot;: &quot;</span> <span class="op">+</span> e<span class="op">.</span>Err<span class="op">.</span>Error<span class="op">()</span> <span class="op">}</span></span>
+<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>e <span class="op">*</span>Error<span class="op">)</span> Unwrap<span class="op">()</span> <span class="dt">error</span> <span class="op">{</span> <span class="cf">return</span> e<span class="op">.</span>Err <span class="op">}</span></span></code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Edge case</th>
+<th>Producing module</th>
+<th>Kind</th>
+<th>API mapping</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Enroll token already consumed</td>
+<td>identity</td>
+<td><code>KindForbidden</code></td>
+<td>403 / <code>PermissionDenied</code></td>
+</tr>
+<tr>
+<td>Enroll token expired</td>
+<td>identity</td>
+<td><code>KindUnauthorized</code></td>
+<td>401 / <code>Unauthenticated</code></td>
+</tr>
+<tr>
+<td>Overlay-IP pool race (lost the row lock)</td>
+<td>ipam</td>
+<td>retried internally; surfaces <code>KindConflict</code> only after N
+retries</td>
+<td>409</td>
+</tr>
+<tr>
+<td>Policy <code>dst</code> CIDR not in any
+<code>advertised_prefixes</code></td>
+<td>policy (dry-run)</td>
+<td><code>KindFailedPrecond</code></td>
+<td>412</td>
+</tr>
+<tr>
+<td>Two connectors advertise overlapping CIDR</td>
+<td>registry</td>
+<td>non-blocking <code>route.conflict.detected</code> event +
+<code>KindConflict</code> only if hard-collision</td>
+<td>409 or surfaced in Console</td>
+</tr>
+<tr>
+<td><code>exitNodes</code> resolves to a connector</td>
+<td>policy (dry-run)</td>
+<td><code>KindFailedPrecond</code></td>
+<td>412</td>
+</tr>
+<tr>
+<td>Watch from a revoked device</td>
+<td>api/coordinator</td>
+<td><code>KindForbidden</code></td>
+<td>Connect <code>PermissionDenied</code>, stream force-closed</td>
+</tr>
+<tr>
+<td>Slow consumer fills send queue</td>
+<td>coordinator</td>
+<td><code>KindExhausted</code></td>
+<td>stream dropped → client reconnect-with-snapshot</td>
+</tr>
+<tr>
+<td>Postgres unreachable on write</td>
+<td>store</td>
+<td><code>KindUnavailable</code></td>
+<td>503; existing tunnels keep forwarding (fail-static, C1)</td>
+</tr>
+<tr>
+<td>Redis unreachable</td>
+<td>events</td>
+<td><code>KindUnavailable</code> warn; coordinator serves last known
+graph (fail-static)</td>
+<td>503 on writes that need a publish</td>
+</tr>
+</tbody>
+</table>
+<p>The API edge has a single
+<code>mapError(err) connect.Code / http status</code> translator; the
+coordinator special-cases <code>KindForbidden</code> (drop the stream)
+and <code>KindExhausted</code> (back-pressure) and treats everything
+else on the event path as retryable (re-queued via the PEL, §5.4 of
+02_CP).</p>
+<hr />
+<h2 id="9-concurrency-model--shared-state-safety">9. Concurrency model
+&amp; shared-state safety</h2>
+<table>
+<thead>
+<tr>
+<th>State</th>
+<th>Owner</th>
+<th>Protection</th>
+<th>Failure prevented</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>in-mem per-tenant graph</td>
+<td><code>coordinator</code></td>
+<td><code>sync.RWMutex</code> per tenant; reads (buildMap) take RLock,
+event-apply takes Lock</td>
+<td>torn graph during fan-out</td>
+</tr>
+<tr>
+<td>open-stream registry (<code>subRegistry</code>)</td>
+<td><code>coordinator</code></td>
+<td>sharded <code>sync.Map</code> keyed by device id; each stream has
+its own bounded chan</td>
+<td>head-of-line blocking across agents</td>
+</tr>
+<tr>
+<td>per-stream send queue</td>
+<td>one goroutine per stream</td>
+<td>buffered chan depth <code>SendQueueDepth</code>; full ⇒
+drop+close</td>
+<td>unbounded memory (the soak SLO)</td>
+</tr>
+<tr>
+<td>pgx pool</td>
+<td><code>store</code></td>
+<td><code>pgxpool</code> internal; <code>SET LOCAL</code> is tx-scoped
+so tenant context <strong>cannot</strong> leak across pooled conns
+[research-go_cp §4]</td>
+<td>cross-tenant context bleed</td>
+</tr>
+<tr>
+<td>Redis consumer group</td>
+<td><code>coordinator</code> consumers</td>
+<td>one consumer name per <code>helixd</code> host id;
+<code>XAUTOCLAIM</code> reclaims a crashed consumer&#39;s PEL</td>
+<td>lost events on coordinator crash (§11.4.147)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Load-bearing rule (research-go_cp §4):</strong> the tenant
+pin is <code>SET LOCAL</code> (transaction-scoped), never plain
+<code>SET</code> — a plain <code>SET</code> persists for the pooled
+connection&#39;s life and the next request inherits the previous tenant&#39;s
+scope (the #1 silent isolation break). The §5.3 analyzer + the §8 RLS
+cross-tenant test together guarantee it.</p>
+<p>No blocking call (DB, Redis, network) is ever made while holding the
+coordinator&#39;s graph lock — the lock is held only for the in-memory
+apply/diff; the <code>stream.Send</code> fan-out happens after RUnlock,
+enqueuing into per-stream chans (constitution mandatory principle 2: no
+blocking ops in a shared-lock region).</p>
+<hr />
+<h2 id="10-test-points--tied-to-the-114169-comprehensive-test-type-mandate">10.
+Test points — tied to the §11.4.169 comprehensive test-type mandate</h2>
+<p>§11.4.169 (the live constitution anchor mandating comprehensive
+test-type coverage) requires every component carry the full applicable
+test-type set with captured evidence (§11.4.5/§11.4.69) and a paired
+§1.1 mutation. The wiring layer maps as follows; each row is a workable
+item (§11.4.93).</p>
+<table>
+<thead>
+<tr>
+<th>Test type</th>
+<th>What it asserts for the wiring layer</th>
+<th>Evidence / fixture</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Unit</strong></td>
+<td><code>composeApp</code> builds a non-nil graph with all deps
+non-nil; <code>config.Validate</code> rejects every malformed field;
+<code>apperr.mapError</code> is total over <code>Kind</code>;
+coordinator buildMap with empty visibility ⇒ 0 peers (C4)</td>
+<td>go test <code>-count=3</code> deterministic (§11.4.50)</td>
+</tr>
+<tr>
+<td><strong>Dep-graph gate (pre-build)</strong></td>
+<td>R1/R2/R5 import allow-list holds; the §5 analyzers run clean</td>
+<td><code>tools/depgraph</code> exit 0; analyzer report</td>
+</tr>
+<tr>
+<td><strong>Paired §1.1 mutation</strong></td>
+<td>each gate FAILs on its planted violation (import <code>store</code>
+into <code>coordinator</code>; <code>os.Getenv</code> in
+<code>registry</code>; <code>SrcIP</code> field; drop
+<code>bus.Publish</code>; package-global coordinator)</td>
+<td>per-mutation FAIL log captured</td>
+</tr>
+<tr>
+<td><strong>Store / RLS</strong></td>
+<td>tenant A cannot read tenant B even with a crafted query under
+<code>FORCE RLS</code>, running as <code>helix_app</code></td>
+<td>RLS denial test output [02_CP §10.3]</td>
+</tr>
+<tr>
+<td><strong>Integration</strong></td>
+<td>enroll → advertise → policy → <code>WatchNetworkMap</code>: assert
+the delta stream content <strong>and</strong>
+<code>helix_reconcile_seconds</code> p99 &lt; 1 s; assert a revoke
+produces <code>device.revoked</code> (R3) and force-closes the
+stream</td>
+<td>Postgres+Redis booted on-demand via
+<code>vasic-digital/containers</code> (§11.4.76 — not ad-hoc
+<code>docker run</code>); captured stream transcript</td>
+</tr>
+<tr>
+<td><strong>Lifecycle</strong></td>
+<td><code>App.Run</code> preflight aborts on a superuser DB role /
+missing FORCE RLS / raw-socket capability; graceful shutdown closes
+streams and flips presence offline</td>
+<td>preflight FAIL exit-code + shutdown trace</td>
+</tr>
+<tr>
+<td><strong>Soak (stress)</strong></td>
+<td>N simulated agents hold streams 24 h while policies flap; assert
+convergence SLO holds and <code>process_resident_memory_bytes</code>
+slope ≈ 0 (back-pressure works)</td>
+<td>RSS time-series, slope fit</td>
+</tr>
+<tr>
+<td><strong>Chaos (§11.4.85)</strong></td>
+<td>kill the coordinator mid-fan-out → <code>XAUTOCLAIM</code> reclaims
+its PEL, no event lost (§11.4.147); kill Redis → control plane serves
+last graph (fail-static, C1)</td>
+<td>recovery trace, event-count reconciliation</td>
+</tr>
+<tr>
+<td><strong>Schema-lint meta-test</strong></td>
+<td>a planted <code>connections(src_ip,…)</code> table makes the
+no-traffic lint FAIL; removing it passes (C3)</td>
+<td>lint FAIL/PASS pair</td>
+</tr>
+<tr>
+<td><strong>Challenge (helix_qa)</strong></td>
+<td>drive enroll→policy→delta end-to-end and score PASS only on the
+captured &lt;1 s evidence (§11.4.5/.69/.107)</td>
+<td>Challenge <code>result.json</code> + reconcile histogram</td>
+</tr>
+</tbody>
+</table>
+<p>Every PASS uses <code>ab_pass_with_evidence</code> citing the
+captured artefact (§11.4.69); no metadata-only / grep-only PASS (§11.4
+anti-bluff). The dep-graph and analyzer gates are the §11.4.108 runtime
+signatures proving the wiring rules are live.</p>
+<hr />
+<h2 id="11-phase-2-split-seam-why-boundaries--service-boundaries-proven">11.
+Phase-2 split seam (why boundaries == service boundaries, proven)</h2>
+<p>C7 is the central claim of this document; here is <em>why</em> the
+Phase-1 wiring makes the split mechanical, not a rewrite [04_P1
+§12]:</p>
+<ol type="1">
+<li>Every Tier-3 module is consumed <strong>only</strong> through its §3
+interface (enforced by §5.1/§5.2). To extract <code>policy</code> into
+its own service, write
+<code>policyclient.New(connAddr) policy.Compiler</code> (a Connect
+client that satisfies the <em>same</em> <code>Compiler</code> interface)
+and change <strong>one line</strong> in <code>composeApp</code>
+(<code>pol := policyclient.New(cfg.PolicyAddr)</code> instead of
+<code>policy.New(...)</code>). No caller of <code>pol.Compile</code>
+changes.</li>
+<li><code>coordinator</code> already owns no tables (R2) and is
+stateless-on-restart (rebuilds the graph from Postgres + events on boot,
+§6.5), so it scales horizontally behind a load balancer with no
+reshaping — the Phase-2 K8s <code>replicas: 3</code> deployment [02_CP
+§11.3] works because the seam was drawn here.</li>
+<li>The <code>events.Bus</code> interface (D3) swaps Redis Streams →
+NATS JetStream by selecting a different implementation in
+<code>composeApp</code> — multi-region fan-out without touching any
+producer/consumer call site.</li>
+<li>The wire contract (<code>helix.coordinator.v1</code>) is already a
+network protocol over Connect, so an &quot;in-process&quot; module and a &quot;remote&quot;
+service speak the <em>same</em> contract; there is no
+internal-vs-external API divergence to reconcile.</li>
+</ol>
+<p><strong>Honest boundary (§11.4.6):</strong> this document proves the
+seams <em>permit</em> the split; it does <strong>not</strong> claim the
+split has been executed or benchmarked. The Phase-2 services, the NATS
+implementation, and the K8s HA topology are <strong>UNVERIFIED</strong>
+as running code in Phase 1 — they are design seams whose correctness is
+asserted by the interface discipline and the gates, validated by the §10
+tests, and will be proven by the Phase-2 deliverable, not before.</p>
+<hr />
+<h2 id="12-helix-ecosystem--constitution-wiring-this-layer">12.
+Helix-ecosystem &amp; constitution wiring (this layer)</h2>
+<table>
+<thead>
+<tr>
+<th>Submodule / clause</th>
+<th>Use in the architecture &amp; wiring layer</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>vasic-digital/containers</code> (§11.4.76/§11.4.161)</td>
+<td>sole container orchestration: boot Postgres/Redis on-demand for the
+§10 integration/soak/chaos suites; render the rootless quadlets — no
+ad-hoc <code>docker</code>/<code>podman</code></td>
+</tr>
+<tr>
+<td><code>helix_qa</code> + <code>challenges</code>
+(§11.4.27/§11.4.5/.69/.107/.169)</td>
+<td>the §10 test-type matrix + the enroll→policy→delta Challenge
+asserting &lt;1 s with captured evidence</td>
+</tr>
+<tr>
+<td><code>docs_chain</code> (§11.4.106)</td>
+<td>mechanizes this doc&#39;s HTML/PDF/DOCX export + turns the §10 workable
+items into git-tracked DB rows (§11.4.93)</td>
+</tr>
+<tr>
+<td><code>security</code> (§7)</td>
+<td>reviews the RLS-role/mTLS/CA-key wiring; pairs with the §5.4
+source-lint + sibling §2.4 schema-lint</td>
+</tr>
+<tr>
+<td>§11.4.151/.155</td>
+<td>release-prefixed image tag (<code>helixvpn-0.1.0</code>) + recording
+prefixes for QA evidence</td>
+</tr>
+<tr>
+<td>§11.4.156</td>
+<td>NO active CI — every §5 gate + §10 test runs locally (pre-build +
+meta-test)</td>
+</tr>
+<tr>
+<td>§11.4.113</td>
+<td>no force-push across the helix-go repo + its owned submodules</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="sources">Sources</h2>
+<p>[02_CP] <code>docs/research/mvp/final/02-control-plane.md</code>
+(pass-1 control-plane overview — package layout §1, DDL/RLS §2, IPAM §3,
+proto §4, events §5, coordinator §6, policy §7, API/authz §8,
+identity/PKI §9, SLOs §10, deploy §11, phase plan §13) · [04_P1]
+<code>HelixVPN-Phase1-MVP.md</code> (modular monolith, R1–R4 wiring,
+coordinator, Phase-2 seams §12) · [04_ARCH §4]
+<code>HelixVPN-Architecture-Refined.md</code> (control/data separation,
+schema-generated clients, no-logging, default-deny) · [research-go_cp]
+Go-stack research (Gin v1.12.0 §1; connect-go v1.20.0 + buf +
+protovalidate §2; sqlc v1.31.1 + pgx v5.10.0 §3; Postgres RLS
+<code>SET LOCAL</code> + <code>FORCE RLS</code> §4; Redis Streams
+<code>XAUTOCLAIM</code>/DLQ §5; goose v3.27.1 §6; single-server
+composition §7 — all accessed 2026-06-25) · [SYNTHESIS] cross-document
+synthesis (stack floor §2, decisions D3/D4 §3, ecosystem wiring §8,
+constitution bindings §9).</p>
+</body>
+</html>

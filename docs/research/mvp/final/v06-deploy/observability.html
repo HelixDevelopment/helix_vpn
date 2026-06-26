@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Observability (Prometheus / Grafana-as-code, SLOs &amp; alerts)</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Observability (Prometheus / Grafana-as-code, SLOs
+&amp; alerts)</h1>
+</header>
+<h1 id="observability-prometheus--grafana-as-code-slos--alerts">Observability
+(Prometheus / Grafana-as-code, SLOs &amp; alerts)</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-06-25T12:00:00Z</p>
+<blockquote>
+<p>Master technical specification — Volume 6 (Deployment, Tooling &amp;
+Operations), nano-detail document <code>observability.md</code>. Scope:
+the <strong>operator-facing observability stack</strong> for HelixVPN —
+Prometheus scrape config, the complete metric catalogue (all
+<strong>counts/gauges</strong>, no traffic or flow logs, per the
+no-logging promise C3), SLO definitions, concrete
+<strong>PromQL</strong> alert rules, and <strong>Grafana
+dashboards-as-code</strong>. It is the deployment-side consumer of the
+series that <code>[svc-telemetry]</code> <em>emits</em> — telemetry owns
+the series, <code>deploy/</code> owns the dashboards + alert rules
+<code>[svc-telemetry §0.1]</code>. This is a SPEC (describe the
+implementation; do not build the product). Evidence cited inline:
+<code>[05 §N]</code>
+(<code>05-repo-layout-tooling-and-helix-ecosystem.md</code>),
+<code>[svc-telemetry §N]</code>, <code>[svc-coordinator §N]</code>,
+<code>[svc-events §N]</code>, <code>[kubernetes §N]</code>. The privacy
+boundary (C3 — counts only, never flows) is load-bearing throughout.
+Unproven facts are marked <code>UNVERIFIED</code> per §11.4.6.</p>
+</blockquote>
+<hr />
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#0-the-observability-charter--counts-never-flows">0. The
+observability charter — counts, never flows</a></li>
+<li><a href="#1-topology--who-scrapes-what">1. Topology — who scrapes
+what</a></li>
+<li><a href="#2-the-complete-metric-catalogue-countsgauges-only">2. The
+complete metric catalogue (counts/gauges only)</a></li>
+<li><a href="#3-slos--the-promises-made-falsifiable">3. SLOs — the
+promises made falsifiable</a></li>
+<li><a href="#4-alert-rules-concrete-promql">4. Alert rules (concrete
+PromQL)</a></li>
+<li><a href="#5-scrape-config--label-cardinality-safety">5. Scrape
+config &amp; label-cardinality safety</a></li>
+<li><a href="#6-grafana-dashboards-as-code">6. Grafana
+dashboards-as-code</a></li>
+<li><a href="#7-the-no-logging-boundary-restated-for-observability">7.
+The no-logging boundary, restated for observability</a></li>
+<li><a href="#8-anti-bluff-evidence">8. Anti-bluff evidence</a></li>
+<li><a href="#9-unverified-register">9. UNVERIFIED register</a></li>
+<li><a href="#sources-verified">Sources verified</a></li>
+</ul>
+<hr />
+<h2 id="0-the-observability-charter--counts-never-flows">0. The
+observability charter — counts, never flows</h2>
+<p>HelixVPN&#39;s observability is constrained by a privacy invariant before
+it is shaped by an operational one. From
+<code>[svc-telemetry §0]</code>:</p>
+<blockquote>
+<p>telemetry exposes &quot;Counts and gauges only — <strong>never per-packet,
+per-flow, per-destination data</strong> (C3).&quot; Permitted labels:
+<code>stream</code>, <code>group</code>, <code>consumer</code>,
+<code>event_type</code>, <code>code</code>, <code>version</code>.
+<strong>Forbidden labels:</strong> <code>tenant_id</code>,
+<code>device_id</code>, <code>overlay_ip</code>, <code>src_ip</code>,
+<code>dst_ip</code>, any high-cardinality or PII/traffic-shaped key
+<code>[svc-telemetry §3.1]</code>.</p>
+</blockquote>
+<p>So this document specifies an observability stack that is
+operationally useful <strong>and</strong> structurally incapable of
+becoming a connection log. The two design pressures resolve as:</p>
+<ol type="1">
+<li><strong>Every series is an aggregate</strong> — a histogram of
+convergence latency, a gauge of open streams, a counter of revokes. None
+carries who-talked-to-whom.</li>
+<li><strong>The headline SLO is convergence</strong>, not throughput —
+HelixVPN measures &quot;did the network map reach the agent in &lt; 1 s,&quot; not
+&quot;how many bytes flowed&quot; (it deliberately cannot measure the latter, C3)
+<code>[svc-telemetry §3.2]</code>.</li>
+</ol>
+<hr />
+<h2 id="1-topology--who-scrapes-what">1. Topology — who scrapes
+what</h2>
+<pre class="mermaid"><code>flowchart LR
+  subgraph helixd[helixd control plane]
+    M9[/metrics :9090&lt;br/&gt;private prometheus.Registry/]
+  end
+  subgraph edge[helix-edge data plane]
+    ME[/metrics&lt;br/&gt;handshakes, transport mix — edge-owned/]
+  end
+  PROM[Prometheus&lt;br/&gt;scrape internal only §5] --&gt; M9
+  PROM -. separate job .-&gt; ME
+  PROM --&gt; RULES[recording + alerting rules §4]
+  PROM --&gt; GRAF[Grafana dashboards-as-code §6]
+  RULES --&gt; AM[Alertmanager → pager/Slack]
+  classDef ext fill:#eef,stroke:#557;
+  class PROM,GRAF,AM ext;</code></pre>
+<p>Two scrape targets, two ownership boundaries
+<code>[svc-telemetry §0.1]</code>:</p>
+<ul>
+<li><strong><code>helixd:9090/metrics</code></strong> — control-plane
+internal state (convergence, event lag, stream depth, audit counts,
+presence gauge, Go runtime). Owned by <code>internal/telemetry</code>
+via a <strong>private</strong> <code>prometheus.Registry</code> (not the
+global default, to keep the series set auditable,
+<code>[svc-telemetry §3]</code>). Scraped <strong>internal-only</strong>
+— never on the public <code>443</code> listener (§5,
+<code>[svc-telemetry §8.3]</code>).</li>
+<li><strong><code>helix-edge:/metrics</code></strong> — edge-side
+handshake/transport metrics, owned by the Rust edge
+<code>[svc-telemetry §0.1]</code>, scraped as a separate Prometheus job.
+<strong>UNVERIFIED</strong> exact edge series names (the edge&#39;s own
+<code>/metrics</code> is the data-plane spec&#39;s concern); this document
+scopes the control-plane series and treats the edge job as a
+configured-but-out-of-scope target.</li>
+</ul>
+<hr />
+<h2 id="2-the-complete-metric-catalogue-countsgauges-only">2. The
+complete metric catalogue (counts/gauges only)</h2>
+<p>The canonical declarations live in
+<code>internal/telemetry/metrics.go</code>
+<code>[svc-telemetry §3]</code> and
+<code>internal/events/metrics.go</code> <code>[svc-events §8.2]</code>.
+Consolidated catalogue (deployment-side view):</p>
+<h3 id="21-convergence--real-time-slo-series--the--1-s-promise-made-falsifiable">2.1
+Convergence / real-time SLO series — the &lt; 1 s promise made
+falsifiable</h3>
+<table>
+<thead>
+<tr>
+<th>Series</th>
+<th>Type</th>
+<th>Meaning</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>helix_reconcile_seconds</code></td>
+<td>histogram</td>
+<td>event-receive → <code>MapDelta</code> on the
+<code>WatchNetworkMap</code> wire (the headline SLO)</td>
+<td><code>[svc-telemetry §3.2]</code>, measured at coordinator
+<code>[svc-telemetry §6.1]</code></td>
+</tr>
+<tr>
+<td><code>helix_event_lag_seconds{stream}</code></td>
+<td>histogram</td>
+<td><code>Envelope.ts</code> → consumer pickup (bus delivery latency —
+the convergence-fault discriminator)</td>
+<td><code>[svc-telemetry §3.2/§6.2]</code></td>
+</tr>
+<tr>
+<td><code>helix_event_bus_seconds{type}</code></td>
+<td>histogram</td>
+<td>outbox <code>created_at</code> → consumer receive (whole publish
+path)</td>
+<td><code>[svc-events §8.2]</code></td>
+</tr>
+<tr>
+<td><code>helix_event_outbox_lag_seconds</code></td>
+<td>histogram</td>
+<td>outbox <code>created_at</code> → relayed (<code>XADD</code>
+succeeded)</td>
+<td><code>[svc-events §8.2]</code></td>
+</tr>
+<tr>
+<td><code>helix_revoke_enforce_seconds</code></td>
+<td>histogram</td>
+<td><code>device.revoke</code> accepted → peer-removal delta on wire
+(security SLO)</td>
+<td><code>[svc-telemetry §3.2]</code></td>
+</tr>
+<tr>
+<td><code>helix_stream_pending_entries{stream,group}</code></td>
+<td>gauge</td>
+<td>Redis PEL depth (un-acked backlog — stuck-consumer leading
+indicator)</td>
+<td><code>[svc-telemetry §3.2]</code>,
+<code>[svc-events §8.3]</code></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>The histogram buckets for <code>helix_reconcile_seconds</code>
+straddle 1.0 deliberately (<code>{… 0.5, 0.75, 1.0, 2.5, 5.0}</code>) so
+<code>histogram_quantile(0.99, …) &lt; 1.0</code> is directly readable
+<code>[svc-telemetry §3.2]</code> — a unit test asserts the buckets
+straddle the SLO (<code>[svc-telemetry §10 T-UNIT-4]</code>).</p>
+</blockquote>
+<h3 id="22-topology--load-gauges--active-peer--stream-counts-all-counts-c3">2.2
+Topology / load gauges — active-peer &amp; stream counts (all COUNTS,
+C3)</h3>
+<table>
+<thead>
+<tr>
+<th>Series</th>
+<th>Type</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>helix_open_watch_streams</code></td>
+<td>gauge</td>
+<td>current open <code>WatchNetworkMap</code> streams (coordinator load)
+<code>[svc-telemetry §3.2]</code></td>
+</tr>
+<tr>
+<td><code>helix_fanout_affected_nodes</code></td>
+<td>histogram</td>
+<td>size of the minimal affected set per event (should be small)
+<code>[svc-coordinator §7.2]</code></td>
+</tr>
+<tr>
+<td><code>helix_graph_nodes{tenant}</code></td>
+<td>gauge</td>
+<td>nodes in the in-mem graph — <em>NOTE: tenant label flagged
+below</em> <code>[svc-coordinator §7.2]</code></td>
+</tr>
+<tr>
+<td><code>helix_presence_online_devices</code></td>
+<td>gauge</td>
+<td>devices currently online in Redis TTL presence (the active-peer
+gauge) <code>[svc-telemetry §3.3]</code></td>
+</tr>
+<tr>
+<td><code>helix_backpressure_drops_total</code></td>
+<td>counter</td>
+<td>slow-consumer stream drops <code>[svc-coordinator §7.2]</code></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>UNVERIFIED / cardinality flag — <code>{tenant}</code>
+labels.</strong> <code>[svc-coordinator §7.2]</code> declares
+<code>helix_open_streams{tenant}</code> and
+<code>helix_graph_nodes{tenant}</code>, but
+<code>[svc-telemetry §3.1]</code> <strong>forbids</strong>
+<code>tenant_id</code> as a label (unbounded + leaks tenant population).
+These two specs disagree. This document resolves it conservatively per
+§11.4.6: <strong>the deployment-side catalogue treats per-tenant
+breakdowns as forbidden on <code>/metrics</code></strong> and routes any
+genuine per-tenant count behind the authenticated REST
+<code>/v1/stats</code> (<code>[svc-telemetry §3.1]</code>), not
+Prometheus. The unit test <code>[svc-telemetry §10 T-UNIT-3]</code>
+(every collector&#39;s label set ⊆ allow-list) is the mechanical enforcer; a
+<code>{tenant}</code> label that survives is a test failure, not a
+dashboard feature. This contradiction is surfaced, not silently
+picked.</p>
+</blockquote>
+<h3 id="23-handshake-failure--event-health-counters">2.3
+Handshake-failure &amp; event-health counters</h3>
+<table>
+<thead>
+<tr>
+<th>Series</th>
+<th>Type</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>helix_events_dlq_total{stream,group}</code></td>
+<td>counter</td>
+<td>poison events dead-lettered (any sustained increase alerts)
+<code>[svc-events §8.2]</code></td>
+</tr>
+<tr>
+<td><code>helix_events_published_total{type}</code></td>
+<td>counter</td>
+<td>events published, by type <code>[svc-events §8.2]</code></td>
+</tr>
+<tr>
+<td><code>helix_event_react_errors_total{type}</code></td>
+<td>counter</td>
+<td>failed reactions, by type <code>[svc-events §8.2]</code></td>
+</tr>
+<tr>
+<td><code>helix_audit_events_total{action}</code></td>
+<td>counter</td>
+<td>control-action audit rows, by closed-vocabulary action
+<code>[svc-telemetry §3.3]</code></td>
+</tr>
+<tr>
+<td><code>helix_audit_write_errors_total{code}</code></td>
+<td>counter</td>
+<td>audit-sink failures by error code
+<code>[svc-telemetry §3.3]</code></td>
+</tr>
+<tr>
+<td><code>helix_presence_backend_up</code></td>
+<td>gauge (0/1)</td>
+<td>Redis presence backend reachable
+<code>[svc-telemetry §5.4]</code></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Handshake-fail rate is split-owned.</strong> The
+<em>control-plane</em> analogue of &quot;handshake failure&quot; is
+<code>helix_event_react_errors_total</code> +
+<code>helix_events_dlq_total</code> (a reaction/event that could not be
+processed). The <strong>transport handshake-fail rate</strong>
+(WG/MASQUE handshakes that fail at the edge) lives on the
+<strong>edge</strong> <code>/metrics</code>
+<code>[svc-telemetry §0.1, §1]</code>, not in the Go control plane; it
+is scraped from the edge job (§1) and its series names are UNVERIFIED
+here (data-plane spec owns them). The dashboards (§6) panel both,
+clearly labelled by owner.</p>
+</blockquote>
+<h3 id="24-runtime--build-series-go-collectors">2.4 Runtime / build
+series (Go collectors)</h3>
+<p><code>go_goroutines</code>, <code>go_gc_duration_seconds</code>,
+<code>process_resident_memory_bytes</code> (the 24 h-soak no-leak SLO
+series), and <code>helix_build_info{version,commit}</code> (version =
+release prefix <code>helix_vpn-…</code>, §11.4.151)
+<code>[svc-telemetry §3.3]</code>. Registered explicitly into the
+private registry so the global default-collector duplication is avoided
+<code>[svc-telemetry §3]</code>.</p>
+<hr />
+<h2 id="3-slos--the-promises-made-falsifiable">3. SLOs — the promises
+made falsifiable</h2>
+<table>
+<thead>
+<tr>
+<th>SLO</th>
+<th>Series + query</th>
+<th>Threshold</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>convergence p99 &lt; 1 s</td>
+<td><code>histogram_quantile(0.99, sum(rate(helix_reconcile_seconds_bucket[5m])) by (le))</code></td>
+<td><code>&gt; 1.0</code> for 2 m</td>
+<td><code>[svc-telemetry §3.4]</code>, C5</td>
+</tr>
+<tr>
+<td>revoke &lt; 1 s</td>
+<td><code>histogram_quantile(0.99, sum(rate(helix_revoke_enforce_seconds_bucket[5m])) by (le))</code></td>
+<td><code>&gt; 1.0</code></td>
+<td><code>[svc-telemetry §3.4]</code></td>
+</tr>
+<tr>
+<td>event lag healthy</td>
+<td><code>histogram_quantile(0.99, sum(rate(helix_event_lag_seconds_bucket{stream=&quot;events:policy&quot;}[5m])) by (le))</code></td>
+<td><code>&gt; 0.5</code></td>
+<td><code>[svc-telemetry §3.4]</code></td>
+</tr>
+<tr>
+<td>event bus path p99</td>
+<td><code>histogram_quantile(0.99, sum(rate(helix_event_bus_seconds_bucket[5m])) by (le))</code></td>
+<td><code>&gt; 0.25</code> for 5 m</td>
+<td><code>[svc-events §8.4]</code></td>
+</tr>
+<tr>
+<td>outbox relay lag</td>
+<td><code>histogram_quantile(0.99, sum(rate(helix_event_outbox_lag_seconds_bucket[5m])) by (le))</code></td>
+<td><code>&gt; 0.5</code> for 5 m</td>
+<td><code>[svc-events §8.4]</code></td>
+</tr>
+<tr>
+<td>backlog not growing</td>
+<td><code>helix_stream_pending_entries</code></td>
+<td><code>&gt; 1000</code> for 5 m</td>
+<td><code>[svc-telemetry §3.4]</code>,
+<code>[svc-events §8.4]</code></td>
+</tr>
+<tr>
+<td>no DLQ accumulation</td>
+<td><code>increase(helix_events_dlq_total[15m])</code></td>
+<td><code>&gt; 0</code></td>
+<td><code>[svc-telemetry §3.4]</code></td>
+</tr>
+<tr>
+<td>coordinator no leak</td>
+<td><code>deriv(process_resident_memory_bytes[6h])</code></td>
+<td><code>&gt; 0</code> sustained over soak</td>
+<td><code>[svc-telemetry §3.4]</code></td>
+</tr>
+</tbody>
+</table>
+<p>The convergence + revoke SLOs are the load-bearing ones; the rest are
+the <em>discriminators</em> that tell an operator <strong>where</strong>
+a breach lives — <code>[svc-telemetry §6.2]</code>: &quot;if convergence
+breaches 1 s, the lag series says whether the bus or the coordinator is
+at fault.&quot; That decomposition is the systematic-debugging discriminator
+(§11.4.102 spirit) baked into the metric set.</p>
+<hr />
+<h2 id="4-alert-rules-concrete-promql">4. Alert rules (concrete
+PromQL)</h2>
+<p>Rules-as-code live in <code>deploy/grafana/</code> (or
+<code>deploy/prometheus/rules/</code>), versioned, reviewed, deployed
+with the manifests — telemetry only emits the series;
+<code>deploy/</code> owns the rules
+<code>[svc-telemetry §0.1/§3.4]</code>.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># deploy/prometheus/rules/helixvpn-slo.rules.yaml</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">groups</span><span class="kw">:</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> helixvpn-convergence</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">rules</span><span class="kw">:</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">alert</span><span class="kw">:</span><span class="at"> HelixConvergenceSLOBreached</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">expr</span><span class="kw">:</span><span class="at"> histogram_quantile(0.99, sum(rate(helix_reconcile_seconds_bucket[5m])) by (le)) &gt; 1.0</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">for</span><span class="kw">:</span><span class="at"> 2m</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">labels</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">severity</span><span class="kw">:</span><span class="at"> page </span><span class="kw">}</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">annotations</span><span class="kw">:</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">summary</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;convergence p99 &gt; 1s (C5 SLO breach)&quot;</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">description</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;event→delta-on-wire p99 has exceeded 1s for 2m. Check helix_event_lag_seconds to localize bus-vs-coordinator [svc-telemetry §6.2].&quot;</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">alert</span><span class="kw">:</span><span class="at"> HelixRevokeSLOBreached</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">expr</span><span class="kw">:</span><span class="at"> histogram_quantile(0.99, sum(rate(helix_revoke_enforce_seconds_bucket[5m])) by (le)) &gt; 1.0</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">for</span><span class="kw">:</span><span class="at"> 1m</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">labels</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">severity</span><span class="kw">:</span><span class="at"> page </span><span class="kw">}</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">annotations</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">summary</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;device revoke enforcement p99 &gt; 1s (security SLO)&quot;</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> helixvpn-bus-health</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">rules</span><span class="kw">:</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">alert</span><span class="kw">:</span><span class="at"> HelixDLQAccumulating</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">expr</span><span class="kw">:</span><span class="at"> increase(helix_events_dlq_total[15m]) &gt; 0</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">for</span><span class="kw">:</span><span class="at"> 0m</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">labels</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">severity</span><span class="kw">:</span><span class="at"> page </span><span class="kw">}</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">annotations</span><span class="kw">:</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">summary</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;events dead-lettered — poison event(s)&quot;</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">description</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Inspect with `XRANGE &lt;stream&gt;:dlq - +`; fix cause; `helixvpnctl events replay-dlq &lt;stream&gt;` [svc-events §6.5].&quot;</span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">alert</span><span class="kw">:</span><span class="at"> HelixStreamBacklogGrowing</span></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">expr</span><span class="kw">:</span><span class="at"> max(helix_stream_pending_entries) by (stream, group) &gt; 1000</span></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">for</span><span class="kw">:</span><span class="at"> 5m</span></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">labels</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">severity</span><span class="kw">:</span><span class="at"> warn </span><span class="kw">}</span></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">annotations</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">summary</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;consumer PEL depth &gt; 1000 — stuck/slow consumer [svc-events §8.3]&quot;</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">alert</span><span class="kw">:</span><span class="at"> HelixEventLagHigh</span></span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">expr</span><span class="kw">:</span><span class="at"> histogram_quantile(0.99, sum(rate(helix_event_lag_seconds_bucket[5m])) by (le)) &gt; 0.5</span></span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">for</span><span class="kw">:</span><span class="at"> 5m</span></span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">labels</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">severity</span><span class="kw">:</span><span class="at"> warn </span><span class="kw">}</span></span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">annotations</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">summary</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;bus delivery lag p99 &gt; 0.5s — Redis/relay degraded&quot;</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> helixvpn-runtime</span></span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">rules</span><span class="kw">:</span></span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">alert</span><span class="kw">:</span><span class="at"> HelixCoordinatorMemoryLeak</span></span>
+<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">expr</span><span class="kw">:</span><span class="at"> deriv(process_resident_memory_bytes{job=&quot;helixd&quot;}[6h]) &gt; 0</span></span>
+<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">for</span><span class="kw">:</span><span class="at"> 30m</span></span>
+<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">labels</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">severity</span><span class="kw">:</span><span class="at"> warn </span><span class="kw">}</span></span>
+<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">annotations</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">summary</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;helixd RSS slope &gt; 0 over 6h — possible leak (24h-soak SLO) [svc-telemetry §3.4]&quot;</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb2-45"><a href="#cb2-45" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">alert</span><span class="kw">:</span><span class="at"> HelixPresenceBackendDown</span></span>
+<span id="cb2-46"><a href="#cb2-46" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">expr</span><span class="kw">:</span><span class="at"> helix_presence_backend_up == 0</span></span>
+<span id="cb2-47"><a href="#cb2-47" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">for</span><span class="kw">:</span><span class="at"> 1m</span></span>
+<span id="cb2-48"><a href="#cb2-48" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">labels</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">severity</span><span class="kw">:</span><span class="at"> warn </span><span class="kw">}</span></span>
+<span id="cb2-49"><a href="#cb2-49" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">annotations</span><span class="kw">:</span></span>
+<span id="cb2-50"><a href="#cb2-50" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">summary</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Redis presence backend unreachable&quot;</span></span>
+<span id="cb2-51"><a href="#cb2-51" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">description</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Presence unknowable; tunnels UNAFFECTED (fail-static C1) [svc-telemetry §5.4]. Audit still writes (fail-closed).&quot;</span></span>
+<span id="cb2-52"><a href="#cb2-52" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">alert</span><span class="kw">:</span><span class="at"> HelixReadinessFlapping</span></span>
+<span id="cb2-53"><a href="#cb2-53" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">expr</span><span class="kw">:</span><span class="at"> count(up{job=&quot;helixd&quot;} == 1) &lt; 1</span></span>
+<span id="cb2-54"><a href="#cb2-54" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">for</span><span class="kw">:</span><span class="at"> 1m</span></span>
+<span id="cb2-55"><a href="#cb2-55" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">labels</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">severity</span><span class="kw">:</span><span class="at"> page </span><span class="kw">}</span></span>
+<span id="cb2-56"><a href="#cb2-56" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">annotations</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">summary</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;no ready helixd replica — control plane API down (data plane may still forward)&quot;</span><span class="at"> </span><span class="kw">}</span></span></code></pre></div>
+<blockquote>
+<p>Severity discipline: <code>severity: page</code> for the two &lt; 1 s
+SLOs + DLQ + total-control-plane-down (operator-actionable now);
+<code>severity: warn</code> for degradations that fail-static (presence
+backend down, memory slope, lag) — they do not drop tunnels (C1) and so
+are not pages.</p>
+</blockquote>
+<hr />
+<h2 id="5-scrape-config--label-cardinality-safety">5. Scrape config
+&amp; label-cardinality safety</h2>
+<div class="sourceCode" id="cb3"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># deploy/prometheus/scrape/helixvpn.yaml  (Prometheus scrape_configs fragment)</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">scrape_configs</span><span class="kw">:</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">job_name</span><span class="kw">:</span><span class="at"> helixd</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">metrics_path</span><span class="kw">:</span><span class="at"> /metrics</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">scheme</span><span class="kw">:</span><span class="at"> http</span><span class="co">                       # internal port :9090 — NEVER the public 443 [svc-telemetry §8.3]</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">kubernetes_sd_configs</span><span class="kw">:</span><span class="at"> </span><span class="kw">[{</span><span class="at"> </span><span class="fu">role</span><span class="kw">:</span><span class="at"> pod</span><span class="kw">,</span><span class="at"> </span><span class="fu">namespaces</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">names</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">helixvpn</span><span class="kw">]</span><span class="at"> </span><span class="kw">}</span><span class="at"> </span><span class="kw">}]</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">relabel_configs</span><span class="kw">:</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">source_labels</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">__meta_kubernetes_pod_label_app</span><span class="kw">]</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">action</span><span class="kw">:</span><span class="at"> keep</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">regex</span><span class="kw">:</span><span class="at"> helixd</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">source_labels</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">__meta_kubernetes_pod_container_port_number</span><span class="kw">]</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">action</span><span class="kw">:</span><span class="at"> keep</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">regex</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;9090&quot;</span><span class="co">                   # scrape ONLY the metrics port, not :8443 (agent API)</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">job_name</span><span class="kw">:</span><span class="at"> helix-edge</span><span class="co">                # separate ownership boundary (§1) — edge-owned series</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">metrics_path</span><span class="kw">:</span><span class="at"> /metrics</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">kubernetes_sd_configs</span><span class="kw">:</span><span class="at"> </span><span class="kw">[{</span><span class="at"> </span><span class="fu">role</span><span class="kw">:</span><span class="at"> pod</span><span class="kw">,</span><span class="at"> </span><span class="fu">namespaces</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">names</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">helixvpn</span><span class="kw">]</span><span class="at"> </span><span class="kw">}</span><span class="at"> </span><span class="kw">}]</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">relabel_configs</span><span class="kw">:</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">source_labels</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">__meta_kubernetes_pod_label_app</span><span class="kw">]</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">action</span><span class="kw">:</span><span class="at"> keep</span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">regex</span><span class="kw">:</span><span class="at"> helix-edge</span></span></code></pre></div>
+<p>Two hard rules, both mechanically enforced:</p>
+<ol type="1">
+<li><strong><code>/metrics</code> is internal-only.</strong> It carries
+no PII (C3) but still reveals operational shape (tenant population via
+gauges, deploy version), so it is bound to the internal port
+<code>:9090</code> and gated by network isolation / mTLS for the scraper
+— never published on the public <code>443</code> listener
+<code>[svc-telemetry §8.3, kubernetes §7]</code>. The scrape job keeps
+only the <code>:9090</code> port.</li>
+<li><strong>Label cardinality is bounded by construction.</strong> Every
+registered collector&#39;s label set ⊆ the allow-list (<code>stream</code>,
+<code>group</code>, <code>consumer</code>, <code>event_type</code>,
+<code>code</code>, <code>version</code>); a unit test asserts it
+(<code>[svc-telemetry §10 T-UNIT-3]</code>). Prometheus relabeling does
+NOT add <code>tenant_id</code>/<code>device_id</code> — and there is
+nothing to add, because the exporter never emits them. The §2.2
+<code>{tenant}</code> contradiction is resolved on the <em>exporter</em>
+side (drop the label), not patched in scrape config.</li>
+</ol>
+<hr />
+<h2 id="6-grafana-dashboards-as-code">6. Grafana dashboards-as-code</h2>
+<p>Dashboards are JSON-as-code under
+<code>deploy/grafana/dashboards/</code>, provisioned (not click-built),
+so they version + review + deploy with the manifests
+<code>[05 §2 deploy/grafana, svc-telemetry §0.1]</code>.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># deploy/grafana/provisioning/dashboards.yaml</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">apiVersion</span><span class="kw">:</span><span class="at"> </span><span class="dv">1</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="fu">providers</span><span class="kw">:</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> helixvpn</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">folder</span><span class="kw">:</span><span class="at"> HelixVPN</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">type</span><span class="kw">:</span><span class="at"> file</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">options</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">path</span><span class="kw">:</span><span class="at"> /var/lib/grafana/dashboards/helixvpn </span><span class="kw">}</span></span></code></pre></div>
+<p>Three canonical dashboards (each a versioned JSON; panels described,
+not dumped):</p>
+<table>
+<thead>
+<tr>
+<th>Dashboard</th>
+<th>Panels (PromQL)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Convergence SLO</strong></td>
+<td><code>helix_reconcile_seconds</code> p50/p99 heatmap + the 1.0s SLO
+line; <code>helix_revoke_enforce_seconds</code> p99;
+<code>helix_event_lag_seconds{stream}</code> per-stream (the
+bus-vs-coordinator discriminator);
+<code>helix_fanout_affected_nodes</code> (minimal-set sanity)</td>
+</tr>
+<tr>
+<td><strong>Bus health</strong></td>
+<td><code>helix_stream_pending_entries{stream,group}</code> depth;
+<code>rate(helix_events_published_total{type}[5m])</code>;
+<code>increase(helix_events_dlq_total[1h])</code>;
+<code>helix_event_outbox_lag_seconds</code> p99</td>
+</tr>
+<tr>
+<td><strong>Control-plane runtime</strong></td>
+<td><code>helix_open_watch_streams</code>;
+<code>helix_presence_online_devices</code> (active-peer gauge) +
+<code>helix_presence_backend_up</code>;
+<code>process_resident_memory_bytes</code> (24h soak);
+<code>go_goroutines</code>;
+<code>rate(helix_audit_events_total{action}[5m])</code> (control-action
+audit volume — counts only)</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>A fourth <strong>edge transport</strong> dashboard panels the edge
+job&#39;s handshake/transport-mix series (§2.3), clearly separated as
+data-plane-owned. Its exact panels are UNVERIFIED (edge series names)
+and stubbed as a placeholder provider pointing at the edge job — NOT
+fabricated with invented series names.</p>
+</blockquote>
+<p>The §11.4.168 exported-document discipline applies to any rendered
+dashboard screenshots committed as evidence: a committed dashboard
+PNG/PDF must visually render (no raw JSON leaking as body text) and pass
+independent visual validation.</p>
+<hr />
+<h2 id="7-the-no-logging-boundary-restated-for-observability">7. The
+no-logging boundary, restated for observability</h2>
+<p>This is the section an auditor reads. Everything above is counts and
+gauges; <strong>nothing</strong> here can reconstruct
+who-talked-to-whom:</p>
+<ul>
+<li><strong>No flow/traffic series exist.</strong> There is no
+<code>bytes_total</code>, no <code>flows</code>, no
+<code>src_ip</code>/<code>dst_ip</code> label anywhere in the catalogue
+(§2). The schema-lint <code>[svc-telemetry §7]</code> forbids the
+<em>durable</em> shape; the label allow-list test
+<code>[svc-telemetry §10 T-UNIT-3]</code> forbids the <em>metric</em>
+shape. Both are runtime signatures (§11.4.108) asserted against the live
+system, not just the source.</li>
+<li><strong>Presence is a count, not a log.</strong>
+<code>helix_presence_online_devices</code> is a single gauge; the
+per-device presence lives in TTL Redis and is never copied to Postgres
+or to a metric label <code>[svc-telemetry §5]</code>. You can see
+<em>how many</em> devices are online, never <em>which</em> on
+<code>/metrics</code>.</li>
+<li><strong>Audit is control-actions only.</strong>
+<code>helix_audit_events_total{action}</code> counts revokes /
+policy-activations by closed-vocabulary action
+<code>[svc-telemetry §3.3/§4.2]</code> — never traffic. The
+<code>action</code> label is a bounded closed set, so it cannot grow
+toward a traffic log.</li>
+<li><strong><code>/metrics</code> is not public (§5).</strong> Even the
+aggregate shape is internal-only <code>[svc-telemetry §8.3]</code>.</li>
+</ul>
+<p>The observability stack is therefore <em>provably</em> incapable of
+being a connection log — which is the whole point: a VPN&#39;s observability
+must not undo its privacy promise.</p>
+<hr />
+<h2 id="8-anti-bluff-evidence">8. Anti-bluff evidence</h2>
+<table>
+<thead>
+<tr>
+<th>Claim</th>
+<th>Captured-evidence proof (§11.4.5/§11.4.69)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>convergence SLO is real &amp; falsifiable (§3)</td>
+<td>perf test drives a policy flip @ 10k streams;
+<code>helix_reconcile_seconds</code> p99 &lt; 1 s histogram dump
+<code>[svc-telemetry §10 T-PERF-1]</code></td>
+</tr>
+<tr>
+<td>no forbidden labels reach Prometheus (§2.2/§5)</td>
+<td>label-audit unit test green
+<code>[svc-telemetry §10 T-UNIT-3]</code>; paired mutation adding a
+<code>device_id</code> label → test FAILs</td>
+</tr>
+<tr>
+<td>alert fires on real breach (§4)</td>
+<td>inject latency to push p99 &gt; 1 s →
+<code>HelixConvergenceSLOBreached</code> fires in Alertmanager; recorded
+alert</td>
+</tr>
+<tr>
+<td><code>/metrics</code> not on public 443 (§5/§7)</td>
+<td>scan: <code>:443</code> carries no exposition, <code>:9090</code>
+intra-cluster only <code>[svc-telemetry §10 T-SEC-1]</code></td>
+</tr>
+<tr>
+<td>dashboards provision from code (§6)</td>
+<td><code>kubectl apply</code> → Grafana shows the 3 dashboards with no
+manual click; screenshot per §11.4.159</td>
+</tr>
+<tr>
+<td>no-logging holds (§7)</td>
+<td><code>schemalint</code> green against the <strong>deployed</strong>
+DB (runtime signature §11.4.108)
+<code>[svc-telemetry §10 T-CHAL-1]</code>; paired mutation planting a
+<code>connections(src_ip…)</code> table → FAIL</td>
+</tr>
+</tbody>
+</table>
+<p>A dashboard that renders but whose underlying series are stubbed/zero
+is a §11.4 bluff — every panel must bind a real, populated series under
+a real load, captured.</p>
+<hr />
+<h2 id="9-unverified-register">9. UNVERIFIED register</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>UNVERIFIED item</th>
+<th>Why / status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>U1</td>
+<td>Edge <code>/metrics</code> series names (handshake-fail, transport
+mix) (§2.3)</td>
+<td>data-plane spec owns them; this doc scopes control-plane series
+only</td>
+</tr>
+<tr>
+<td>U2</td>
+<td><code>{tenant}</code>-labelled gauges in
+<code>[svc-coordinator §7.2]</code> vs the §3.1 allow-list ban
+(§2.2)</td>
+<td>resolved conservatively here (forbid on <code>/metrics</code>); the
+cross-doc contradiction is flagged, not silently picked</td>
+</tr>
+<tr>
+<td>U3</td>
+<td>Prometheus naming-convention exact wording
+(<code>_seconds</code>/<code>_total</code> suffix rules)</td>
+<td>standard practice; exact spec wording UNVERIFIED
+<code>[svc-telemetry §3.1]</code></td>
+</tr>
+<tr>
+<td>U4</td>
+<td><code>/metrics</code> port-vs-path isolation final choice (§5)</td>
+<td>spec mandates <em>some</em> network isolation; port-separation is
+the recommended default, not validated
+<code>[svc-telemetry §8.3]</code></td>
+</tr>
+<tr>
+<td>U5</td>
+<td>Alertmanager routing/receivers (pager/Slack)</td>
+<td>deployment-environment specific; the rules carry
+<code>severity</code> labels, the routing tree is operator config</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="sources-verified">Sources verified</h2>
+<ul>
+<li><code>05-repo-layout-tooling-and-helix-ecosystem.md</code> §2
+(<code>deploy/grafana</code> dashboards-as-code, telemetry counters
+only), §7 (substrates) — <code>[05]</code>.</li>
+<li><code>v03-control-plane/svc-telemetry.md</code> §0/§0.1 (charter,
+ownership boundaries: telemetry emits, deploy owns dashboards/rules), §3
+(private registry, full series declarations), §3.1 (label allow-list /
+forbidden labels), §3.2/§3.3 (convergence + audit + presence + runtime
+series), §3.4 (SLO→alert mapping), §5 (TTL presence), §5.4 (presence
+drift / <code>helix_presence_backend_up</code>), §6.1/§6.2 (where
+convergence is measured + the lag discriminator), §7 (no-logging
+schema-lint), §8.3 (scrape security / internal-only), §10 (T-UNIT-3
+label audit, T-PERF-1, T-SEC-1, T-CHAL-1) —
+<code>[svc-telemetry]</code>.</li>
+<li><code>v03-control-plane/svc-coordinator.md</code> §7.2
+(<code>helix_fanout_affected_nodes</code>,
+<code>helix_open_streams</code>, the <code>{tenant}</code> label
+contradiction), §7.3 (SLO acceptance numbers) —
+<code>[svc-coordinator]</code>.</li>
+<li><code>v03-control-plane/svc-events.md</code> §6.5 (DLQ +
+<code>replay-dlq</code>), §8.2 (events metric set), §8.3 (PEL-depth
+gauge), §8.4 (alert thresholds) — <code>[svc-events]</code>.</li>
+<li><code>v06-deploy/kubernetes.md</code> §5 (scrape annotations /
+metrics port), §7 (metrics Service, internal-only) —
+<code>[kubernetes]</code> (sibling).</li>
+</ul>
+<p><em>Constitution bindings applied: §11.4.44 (revision header),
+§11.4.6 (no-guessing — the §2.2 cross-doc <code>{tenant}</code>-label
+contradiction surfaced + resolved conservatively, UNVERIFIED register
+§9), §11.4.102 (the lag-discriminator decomposition =
+systematic-debugging baked in), §11.4.108 (no-logging runtime signature:
+schema-lint + label-audit against the deployed system), §11.4.168
+(visual validation of any committed dashboard render), §11.4.5/.69
+(captured-evidence anti-bluff proofs §8).</em></p>
+</body>
+</html>

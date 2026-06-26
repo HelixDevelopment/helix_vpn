@@ -1,0 +1,1604 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Data Model — full Postgres DDL + RLS</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Data Model — full Postgres DDL + RLS</h1>
+</header>
+<h1 id="data-model--full-postgres-ddl--rls">Data Model — full Postgres
+DDL + RLS</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-06-25T00:00:00Z</p>
+<blockquote>
+<p>Master technical specification — Volume 3 (Control Plane, Go),
+nano-detail deepening of <a href="../02-control-plane.md">02-control-plane.md §2</a>. Scope: the
+<strong>complete, runnable Postgres schema</strong> that is the single
+source of truth for HelixVPN identity, topology and policy — every
+table, type, constraint, FK, index; the Row-Level Security (RLS) regime
+that enforces multi-tenant isolation at the database under a
+non-superuser role; the <code>SET LOCAL</code> per-tx pattern;
+goose/atlas migrations; sqlc typed queries; and the <strong>provable
+absence</strong> of any connection/traffic/flow table (no-logging by
+construction). This is a SPEC — it describes the implementation exactly;
+it does not build the product. Source evidence cited inline by id:
+[04_P1] HelixVPN-Phase1-MVP.md, [04_ARCH §N]
+HelixVPN-Architecture-Refined.md, [research-go_cp] the control-plane
+overview doc 02, [SYNTHESIS §N] the cross-document synthesis. Unproven
+assertions are marked <code>UNVERIFIED</code> per constitution
+§11.4.6.</p>
+</blockquote>
+<hr />
+<h2 id="0-position-ownership--governing-invariants">0. Position,
+ownership &amp; governing invariants</h2>
+<p>This document owns <strong><code>helix-go/internal/store</code> and
+<code>helix-go/migrations</code></strong> — the durable-state layer of
+the control plane. It is the authoritative, byte-level expansion of the
+abbreviated DDL in [research-go_cp §2]. It does <strong>not</strong> own
+the in-memory coordinator graph (volatile, doc 02 §6), the Redis event
+bus (ephemeral, doc 02 §5), the wire <code>.proto</code> (doc 02 §4 /
+doc 03), or the policy <em>compiler</em> (doc 02 §7 — but it owns the
+<code>policies</code> table the compiler reads/writes).</p>
+<h3 id="01-invariants-this-layer-must-mechanically-enforce">0.1
+Invariants this layer must mechanically enforce</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Invariant</th>
+<th>Mechanism in THIS document</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>C2</td>
+<td>Postgres is the single source of truth; Redis is ephemeral.</td>
+<td>All identity/topology/policy in the 11 tables below; no durable
+state elsewhere.</td>
+<td>[04_P1], [SYNTHESIS §2]</td>
+</tr>
+<tr>
+<td>C3</td>
+<td>No-logging by construction — the schema holds no
+connection/traffic/packet/flow table.</td>
+<td>§7 schema-lint gate + the exhaustive forbidden-shape allowlist.</td>
+<td>[04_ARCH §7], [04_P1 §2], [SYNTHESIS §7]</td>
+</tr>
+<tr>
+<td>C4</td>
+<td>Default-deny, need-to-know.</td>
+<td><code>policies.spec</code> is the only grant source; no implicit
+visibility row exists.</td>
+<td>[04_ARCH §3.4], [04_P1 §3]</td>
+</tr>
+<tr>
+<td>C6</td>
+<td>Device private keys never leave the device.</td>
+<td><code>devices.wg_pubkey bytea</code> stores only the 32-byte public
+key; no private-key column exists anywhere.</td>
+<td>[04_P1 §6], [SYNTHESIS §7]</td>
+</tr>
+<tr>
+<td>C8</td>
+<td>Multi-tenant isolation enforced at the database via RLS under a
+non-superuser role — not merely <code>WHERE</code>.</td>
+<td>§4 RLS (<code>ENABLE</code> + <code>FORCE</code>), §5
+<code>helix_app</code>/<code>helix_owner</code>/<code>helix_sys</code>
+roles, §6 <code>WithTenant</code>.</td>
+<td>[04_P1 §2.2]</td>
+</tr>
+</tbody>
+</table>
+<h3 id="02-settled-stack-floor-this-layer">0.2 Settled stack floor (this
+layer)</h3>
+<p>PostgreSQL 16 (<code>row_security=on</code>); <code>pgx/v5</code>
+pool; <code>sqlc</code> (compile-checked typed queries);
+<code>goose</code> SQL migrations as the schema authority with
+<code>atlas</code> as the declarative drift/CI checker; extension
+<code>pgcrypto</code> for <code>gen_random_uuid()</code> (built-in to PG
+13+ but declared explicitly). Containers booted on-demand for
+integration tests via the <code>vasic-digital/containers</code>
+submodule (§11.4.76) — never ad-hoc <code>docker run</code> [SYNTHESIS
+§8].</p>
+<hr />
+<h2 id="1-entity-relationship-overview">1. Entity-relationship
+overview</h2>
+<pre class="mermaid"><code>erDiagram
+    TENANTS ||--o{ USERS : &quot;owns&quot;
+    TENANTS ||--o{ DEVICES : &quot;owns&quot;
+    TENANTS ||--o{ GROUPS : &quot;owns&quot;
+    TENANTS ||--o{ POLICIES : &quot;owns&quot;
+    TENANTS ||--|| OVERLAY_POOLS : &quot;has-one&quot;
+    TENANTS ||--o{ AUDIT_EVENTS : &quot;records&quot;
+    USERS ||--o{ DEVICES : &quot;may-own&quot;
+    DEVICES ||--o| CONNECTORS : &quot;is-a (kind=connector)&quot;
+    CONNECTORS ||--o{ ADVERTISED_PREFIXES : &quot;advertises&quot;
+    GROUPS ||--o{ GROUP_MEMBERS : &quot;contains&quot;
+    DEVICES ||--o{ GROUP_MEMBERS : &quot;member-of&quot;
+    DEVICES ||--o{ DEVICE_CERTS : &quot;holds&quot;
+
+    TENANTS { uuid id PK; text name; timestamptz created_at }
+    USERS {
+        uuid id PK; uuid tenant_id FK; text email &quot;nullable anon&quot;
+        text oidc_sub &quot;nullable SSO&quot;; user_role role
+    }
+    DEVICES {
+        uuid id PK; uuid tenant_id FK; uuid user_id FK &quot;nullable&quot;
+        device_kind kind; bytea wg_pubkey &quot;32B Curve25519 PUBLIC only (C6)&quot;
+        inet overlay_ip &quot;tenant ULA /48&quot;; timestamptz last_seen_at &quot;coarse&quot;
+        timestamptz revoked_at
+    }
+    CONNECTORS { uuid device_id PK,FK; uuid tenant_id FK; text site_name; int site_id }
+    ADVERTISED_PREFIXES {
+        uuid id PK; uuid tenant_id FK; uuid connector_id FK; cidr cidr; boolean enabled
+    }
+    GROUPS { uuid id PK; uuid tenant_id FK; text name }
+    GROUP_MEMBERS { uuid tenant_id FK; uuid group_id PK,FK; uuid device_id PK,FK }
+    POLICIES {
+        uuid id PK; uuid tenant_id FK; jsonb spec; bigint version &quot;monotonic per tenant&quot;
+        boolean active; timestamptz compiled_at
+    }
+    OVERLAY_POOLS { uuid tenant_id PK,FK; cidr ula_prefix; bigint next_host; int next_site_id }
+    DEVICE_CERTS {
+        uuid id PK; uuid tenant_id FK; uuid device_id FK; text serial
+        timestamptz not_after; boolean revoked
+    }
+    AUDIT_EVENTS {
+        bigint id PK; uuid tenant_id FK; text actor; text action; text target; jsonb meta
+    }</code></pre>
+<p>Ten tenant-scoped tables (every one carries <code>tenant_id</code>
+and gets identical RLS, §4). Two PostgreSQL enums
+(<code>user_role</code>, <code>device_kind</code>). <code>tenants</code>
+is the only non-tenant-scoped table — it <em>is</em> the tenant root;
+RLS on it would be self-referential, so it is governed by the
+<code>helix_sys</code> role (§5.3) instead, and is never reachable from
+a request-scoped <code>helix_app</code> connection except through its
+own row (§4.3).</p>
+<hr />
+<h2 id="2-full-ddl--migrations-goose-ordered">2. Full DDL — migrations
+(goose, ordered)</h2>
+<p>The migration set below is the authoritative schema. Files live under
+<code>helix-go/migrations/</code> named
+<code>NNNN_&lt;slug&gt;.sql</code> and run as <code>helix_owner</code>
+(§5.1). Every file is reversible (<code>-- +goose Down</code>). goose
+statement boundaries (<code>-- +goose StatementBegin/End</code>) wrap
+any statement containing a semicolon-bearing body (functions,
+<code>DO</code> blocks). Atlas (§8.2) re-derives the same schema
+declaratively and fails CI on drift.</p>
+<h3 id="21-0001_extensions_and_rolessql">2.1
+<code>0001_extensions_and_roles.sql</code></h3>
+<div class="sourceCode" id="cb2"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- +goose Up</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- pgcrypto provides gen_random_uuid(); explicit so a fresh cluster is reproducible (§11.4.77).</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> EXTENSION <span class="cf">IF</span> <span class="kw">NOT</span> <span class="kw">EXISTS</span> pgcrypto;</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co">-- Three roles, least-privilege (C8). Created idempotently so re-running the migration is safe.</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="co">-- helix_owner : owns the schema; runs migrations; NEVER used by request handlers.</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="co">-- helix_app   : request-scoped role; RLS APPLIES to it (non-superuser, non-owner).</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="co">-- helix_sys   : narrow system role for tenant-create + cross-tenant ops; NOT a superuser.</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="co">-- +goose StatementBegin</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>DO $$</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="cf">BEGIN</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  <span class="cf">IF</span> <span class="kw">NOT</span> <span class="kw">EXISTS</span> (<span class="kw">SELECT</span> <span class="dv">1</span> <span class="kw">FROM</span> pg_roles <span class="kw">WHERE</span> rolname <span class="op">=</span> <span class="st">&#39;helix_app&#39;</span>) <span class="cf">THEN</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">CREATE</span> <span class="kw">ROLE</span> helix_app NOLOGIN;</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>  <span class="cf">END</span> <span class="cf">IF</span>;</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>  <span class="cf">IF</span> <span class="kw">NOT</span> <span class="kw">EXISTS</span> (<span class="kw">SELECT</span> <span class="dv">1</span> <span class="kw">FROM</span> pg_roles <span class="kw">WHERE</span> rolname <span class="op">=</span> <span class="st">&#39;helix_sys&#39;</span>) <span class="cf">THEN</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    <span class="kw">CREATE</span> <span class="kw">ROLE</span> helix_sys NOLOGIN;</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>  <span class="cf">END</span> <span class="cf">IF</span>;</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>END$$;</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="co">-- +goose StatementEnd</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="co">-- +goose Down</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a><span class="kw">DROP</span> EXTENSION <span class="cf">IF</span> <span class="kw">EXISTS</span> pgcrypto;</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a><span class="co">-- Roles are NOT dropped on Down: they may own grants on other DBs; dropping is an ops decision.</span></span></code></pre></div>
+<blockquote>
+<p>Note: <code>helix_owner</code> is the database/schema owner created
+at cluster provisioning (outside migrations, by
+<code>helixvpnctl bootstrap</code>), because a role cannot be the owner
+of the schema it is created inside. <code>helix_app</code> and
+<code>helix_sys</code> are created here. The LOGIN roles that
+<code>helixd</code> actually authenticates as
+(<code>helix_app_login</code>, <code>helix_sys_login</code>) are
+<code>GRANT</code>ed membership in <code>helix_app</code> /
+<code>helix_sys</code> respectively (§5.2) and carry passwords managed
+per §11.4.10 — never in a migration, never git-tracked.</p>
+</blockquote>
+<h3 id="22-0002_enumssql">2.2 <code>0002_enums.sql</code></h3>
+<div class="sourceCode" id="cb3"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- +goose Up</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TYPE</span> user_role   <span class="kw">AS</span> ENUM (<span class="st">&#39;admin&#39;</span>,<span class="st">&#39;operator&#39;</span>,<span class="st">&#39;member&#39;</span>);</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TYPE</span> device_kind <span class="kw">AS</span> ENUM (<span class="st">&#39;client&#39;</span>,<span class="st">&#39;connector&#39;</span>);</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co">-- +goose Down</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="kw">DROP</span> <span class="kw">TYPE</span> device_kind;</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="kw">DROP</span> <span class="kw">TYPE</span> user_role;</span></code></pre></div>
+<p><code>user_role</code> ordering is semantic (<code>admin</code> &gt;
+<code>operator</code> &gt; <code>member</code>) — used by the RBAC
+middleware (doc 02 §8.1), not by SQL comparison (enums compare by
+declaration order, which here matches the privilege lattice; the
+application MUST NOT rely on that and instead maps explicitly).</p>
+<h3 id="23-0003_tenancy_identitysql">2.3
+<code>0003_tenancy_identity.sql</code></h3>
+<div class="sourceCode" id="cb4"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- +goose Up</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- ============ tenants (the tenancy root; NOT RLS-scoped — see §4.3) ============</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> tenants (</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">id</span>          uuid <span class="kw">PRIMARY</span> <span class="kw">KEY</span> <span class="kw">DEFAULT</span> gen_random_uuid(),</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  name        text <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">CHECK</span> (<span class="fu">length</span>(name) <span class="kw">BETWEEN</span> <span class="dv">1</span> <span class="kw">AND</span> <span class="dv">200</span>),</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  created_at  timestamptz <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> now()</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="co">-- ============ users ============</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> users (</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>  <span class="kw">id</span>          uuid <span class="kw">PRIMARY</span> <span class="kw">KEY</span> <span class="kw">DEFAULT</span> gen_random_uuid(),</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>  tenant_id   uuid <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">REFERENCES</span> tenants(<span class="kw">id</span>) <span class="kw">ON</span> <span class="kw">DELETE</span> <span class="kw">CASCADE</span>,</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>  email       text,                       <span class="co">-- NULLABLE: anonymous device-token users store NO PII (C6)</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>  oidc_sub    text,                       <span class="co">-- NULLABLE: present only when SSO is used</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>  <span class="kw">role</span>        user_role <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> <span class="st">&#39;member&#39;</span>,</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>  created_at  timestamptz <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> now(),</span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- Partial UNIQUEs: two anonymous users (both NULL email) are allowed; two named users</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- sharing an email within a tenant are not. A plain UNIQUE(tenant_id,email) would (in</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- Postgres) permit many NULLs anyway, but the partial index documents intent and is index-lean.</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>  <span class="kw">CONSTRAINT</span> users_email_not_blank <span class="kw">CHECK</span> (email <span class="kw">IS</span> <span class="kw">NULL</span> <span class="kw">OR</span> <span class="fu">length</span>(email) <span class="op">&gt;</span> <span class="dv">0</span>)</span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">UNIQUE</span> <span class="kw">INDEX</span> users_tenant_email_uq    <span class="kw">ON</span> users (tenant_id, email)    <span class="kw">WHERE</span> email    <span class="kw">IS</span> <span class="kw">NOT</span> <span class="kw">NULL</span>;</span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">UNIQUE</span> <span class="kw">INDEX</span> users_tenant_oidcsub_uq  <span class="kw">ON</span> users (tenant_id, oidc_sub) <span class="kw">WHERE</span> oidc_sub <span class="kw">IS</span> <span class="kw">NOT</span> <span class="kw">NULL</span>;</span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a><span class="co">-- +goose Down</span></span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a><span class="kw">DROP</span> <span class="kw">TABLE</span> users;</span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a><span class="kw">DROP</span> <span class="kw">TABLE</span> tenants;</span></code></pre></div>
+<blockquote>
+<p>Refinement over [04_P1 §2.1], which used table-level
+<code>UNIQUE (tenant_id, email)</code>: the partial unique indexes make
+the &quot;many anonymous users, no PII&quot; posture (C6) explicit and avoid
+relying on the NULL-distinctness subtlety of <code>UNIQUE</code>.
+Behaviourally compatible.</p>
+</blockquote>
+<h3 id="24-0004_devicessql">2.4 <code>0004_devices.sql</code></h3>
+<div class="sourceCode" id="cb5"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- +goose Up</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- ============ devices (clients AND connectors — one table, kind discriminator) ============</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> devices (</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">id</span>            uuid <span class="kw">PRIMARY</span> <span class="kw">KEY</span> <span class="kw">DEFAULT</span> gen_random_uuid(),</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  tenant_id     uuid <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">REFERENCES</span> tenants(<span class="kw">id</span>) <span class="kw">ON</span> <span class="kw">DELETE</span> <span class="kw">CASCADE</span>,</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  user_id       uuid <span class="kw">REFERENCES</span> users(<span class="kw">id</span>) <span class="kw">ON</span> <span class="kw">DELETE</span> <span class="kw">SET</span> <span class="kw">NULL</span>,  <span class="co">-- NULLABLE: anon device w/o user</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  kind          device_kind <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  name          text <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">CHECK</span> (<span class="fu">length</span>(name) <span class="kw">BETWEEN</span> <span class="dv">1</span> <span class="kw">AND</span> <span class="dv">200</span>),</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  wg_pubkey     bytea <span class="kw">NOT</span> <span class="kw">NULL</span>,            <span class="co">-- EXACTLY 32 bytes, Curve25519 PUBLIC key only (C6)</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>  overlay_ip    inet <span class="kw">NOT</span> <span class="kw">NULL</span>,            <span class="co">-- allocated from tenant ULA /48 (D4); see overlay_pools</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>  os            text,                     <span class="co">-- ios|android|linux|windows|macos|harmonyos|aurora (free text, validated app-side)</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>  enrolled_at   timestamptz <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> now(),</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>  last_seen_at  timestamptz,              <span class="co">-- COARSE presence (heartbeat-refreshed, NOT per-packet, C3)</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>  revoked_at    timestamptz,             <span class="co">-- NULL = active; non-NULL = revoked (soft, for audit)</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>  <span class="kw">CONSTRAINT</span> devices_wg_pubkey_len <span class="kw">CHECK</span> (octet_length(wg_pubkey) <span class="op">=</span> <span class="dv">32</span>),</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- overlay_ip is stored as inet; enforce it is a single host (no /prefix) and IPv6 (ULA, D4).</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>  <span class="kw">CONSTRAINT</span> devices_overlay_is_host <span class="kw">CHECK</span> (masklen(overlay_ip) <span class="op">=</span> <span class="dv">128</span>),</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>  <span class="kw">CONSTRAINT</span> devices_overlay_is_v6   <span class="kw">CHECK</span> (family(overlay_ip) <span class="op">=</span> <span class="dv">6</span>),</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>  <span class="kw">UNIQUE</span> (tenant_id, wg_pubkey),</span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>  <span class="kw">UNIQUE</span> (tenant_id, overlay_ip)</span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a><span class="co">-- Hot lookups: by tenant (list), by pubkey within tenant (enroll dedupe / cert resolve),</span></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a><span class="co">-- and active-only filtering for the coordinator hydrate.</span></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> devices_tenant_idx        <span class="kw">ON</span> devices (tenant_id);</span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> devices_tenant_active_idx <span class="kw">ON</span> devices (tenant_id) <span class="kw">WHERE</span> revoked_at <span class="kw">IS</span> <span class="kw">NULL</span>;</span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a><span class="co">-- +goose Down</span></span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a><span class="kw">DROP</span> <span class="kw">TABLE</span> devices;</span></code></pre></div>
+<p><strong>Decisions captured in the constraints.</strong>
+<code>octet_length(wg_pubkey)=32</code> is the database-level proof of
+C6 (a 32-byte value is a Curve25519 public key; a private key is also 32
+bytes, so the <em>length</em> alone does not distinguish them — the
+guarantee is procedural: <code>Enroll</code> only ever receives the
+device-generated public key, and there is no column anywhere to store a
+private key). The <code>masklen=128</code>/<code>family=6</code> checks
+make <code>overlay_ip</code> a single ULA host, never a subnet, never
+IPv4 — matching D4 (IPv6 ULA <code>/48</code> per tenant) and preventing
+a malformed allocation from corrupting IPAM.</p>
+<h3 id="25-0005_connectors_prefixessql">2.5
+<code>0005_connectors_prefixes.sql</code></h3>
+<div class="sourceCode" id="cb6"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- +goose Up</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- A connector IS a device (kind=&#39;connector&#39;) with a 1:1 detail row. Inherits all device</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co">-- machinery (enroll, cert, revoke); the asymmetry (advertises CIDRs) lives below.</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> connectors (</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  device_id   uuid <span class="kw">PRIMARY</span> <span class="kw">KEY</span> <span class="kw">REFERENCES</span> devices(<span class="kw">id</span>) <span class="kw">ON</span> <span class="kw">DELETE</span> <span class="kw">CASCADE</span>,</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  tenant_id   uuid <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">REFERENCES</span> tenants(<span class="kw">id</span>) <span class="kw">ON</span> <span class="kw">DELETE</span> <span class="kw">CASCADE</span>,</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  site_name   text <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">CHECK</span> (<span class="fu">length</span>(site_name) <span class="kw">BETWEEN</span> <span class="dv">1</span> <span class="kw">AND</span> <span class="dv">200</span>),</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  site_id     <span class="dt">int</span>  <span class="kw">NOT</span> <span class="kw">NULL</span>,             <span class="co">-- per-tenant 4via6 site index (D4 §3.2); from overlay_pools.next_site_id</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  <span class="kw">CONSTRAINT</span> connectors_site_id_range <span class="kw">CHECK</span> (site_id <span class="kw">BETWEEN</span> <span class="dv">1</span> <span class="kw">AND</span> <span class="dv">65535</span>),</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>  <span class="kw">UNIQUE</span> (tenant_id, site_id)</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="co">-- CIDRs a connector advertises into the overlay. enabled=false soft-disables without delete.</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> advertised_prefixes (</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>  <span class="kw">id</span>            uuid <span class="kw">PRIMARY</span> <span class="kw">KEY</span> <span class="kw">DEFAULT</span> gen_random_uuid(),</span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>  tenant_id     uuid <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">REFERENCES</span> tenants(<span class="kw">id</span>) <span class="kw">ON</span> <span class="kw">DELETE</span> <span class="kw">CASCADE</span>,</span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>  connector_id  uuid <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">REFERENCES</span> connectors(device_id) <span class="kw">ON</span> <span class="kw">DELETE</span> <span class="kw">CASCADE</span>,</span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>  cidr          cidr <span class="kw">NOT</span> <span class="kw">NULL</span>,           <span class="co">-- RFC1918 LAN prefix, e.g. 192.168.50.0/24</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>  enabled       <span class="dt">boolean</span> <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> <span class="kw">true</span>,</span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>  created_at    timestamptz <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> now(),</span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- The SAME connector must not advertise the identical CIDR twice; cross-connector overlap is</span></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- ALLOWED (it is a real topology condition resolved by 4via6 site disambiguation, D4) and is</span></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- surfaced as route.conflict.detected (doc 02 §5.3), NOT blocked here.</span></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>  <span class="kw">UNIQUE</span> (tenant_id, connector_id, cidr)</span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> advertised_prefixes_conn_idx    <span class="kw">ON</span> advertised_prefixes (tenant_id, connector_id);</span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> advertised_prefixes_enabled_idx <span class="kw">ON</span> advertised_prefixes (tenant_id) <span class="kw">WHERE</span> enabled;</span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a><span class="co">-- +goose Down</span></span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a><span class="kw">DROP</span> <span class="kw">TABLE</span> advertised_prefixes;</span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a><span class="kw">DROP</span> <span class="kw">TABLE</span> connectors;</span></code></pre></div>
+<p><code>connectors.site_id</code> is added here (it was implicit in
+[research-go_cp §3.2 &quot;per-connector site-id&quot;]; this document makes it a
+stored, uniquely-constrained column allocated from
+<code>overlay_pools.next_site_id</code>, §2.8). It is the index embedded
+in the <code>4via6</code> prefix
+<code>fd7a:helix:&lt;rand&gt;:&lt;site-id&gt;::/96</code> so a colliding
+IPv4 LAN is deterministically addressable.</p>
+<h3 id="26-0006_groupssql">2.6 <code>0006_groups.sql</code></h3>
+<div class="sourceCode" id="cb7"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- +goose Up</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> <span class="kw">groups</span> (</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">id</span>          uuid <span class="kw">PRIMARY</span> <span class="kw">KEY</span> <span class="kw">DEFAULT</span> gen_random_uuid(),</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  tenant_id   uuid <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">REFERENCES</span> tenants(<span class="kw">id</span>) <span class="kw">ON</span> <span class="kw">DELETE</span> <span class="kw">CASCADE</span>,</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  name        text <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">CHECK</span> (<span class="fu">length</span>(name) <span class="kw">BETWEEN</span> <span class="dv">1</span> <span class="kw">AND</span> <span class="dv">200</span>),</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  created_at  timestamptz <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> now(),</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">UNIQUE</span> (tenant_id, name)</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="co">-- group_members carries tenant_id REDUNDANTLY (vs the source&#39;s 2-col PK) so RLS applies to it</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="co">-- directly — a refinement over [04_P1 §2.1] which left the join table un-RLS&#39;d. The composite</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="co">-- PK (group_id, device_id) is preserved; a CHECK ties the redundant tenant_id to the parents</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a><span class="co">-- via FK (the FKs alone cannot assert all three agree, so see the trigger in §4.4).</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> group_members (</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>  tenant_id   uuid <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">REFERENCES</span> tenants(<span class="kw">id</span>) <span class="kw">ON</span> <span class="kw">DELETE</span> <span class="kw">CASCADE</span>,</span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_id</span>    uuid <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">REFERENCES</span> <span class="kw">groups</span>(<span class="kw">id</span>)   <span class="kw">ON</span> <span class="kw">DELETE</span> <span class="kw">CASCADE</span>,</span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>  device_id   uuid <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">REFERENCES</span> devices(<span class="kw">id</span>)  <span class="kw">ON</span> <span class="kw">DELETE</span> <span class="kw">CASCADE</span>,</span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>  <span class="kw">PRIMARY</span> <span class="kw">KEY</span> (<span class="fu">group_id</span>, device_id)</span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> group_members_tenant_idx <span class="kw">ON</span> group_members (tenant_id);</span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> group_members_device_idx <span class="kw">ON</span> group_members (tenant_id, device_id);</span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a><span class="co">-- +goose Down</span></span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a><span class="kw">DROP</span> <span class="kw">TABLE</span> group_members;</span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a><span class="kw">DROP</span> <span class="kw">TABLE</span> <span class="kw">groups</span>;</span></code></pre></div>
+<h3 id="27-0007_policiessql">2.7 <code>0007_policies.sql</code></h3>
+<div class="sourceCode" id="cb8"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- +goose Up</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> policies (</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">id</span>           uuid <span class="kw">PRIMARY</span> <span class="kw">KEY</span> <span class="kw">DEFAULT</span> gen_random_uuid(),</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  tenant_id    uuid <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">REFERENCES</span> tenants(<span class="kw">id</span>) <span class="kw">ON</span> <span class="kw">DELETE</span> <span class="kw">CASCADE</span>,</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  spec         jsonb <span class="kw">NOT</span> <span class="kw">NULL</span>,           <span class="co">-- the declarative ACL document (doc 02 §7.1)</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  version      bigint <span class="kw">NOT</span> <span class="kw">NULL</span>,          <span class="co">-- monotonic per tenant (allocated app-side, §3.4)</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  active       <span class="dt">boolean</span> <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> <span class="kw">false</span>,</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  compiled_at  timestamptz,              <span class="co">-- set when this version is activated (compiled artifact valid)</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>  created_at   timestamptz <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> now(),</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>  <span class="kw">CONSTRAINT</span> policies_version_positive <span class="kw">CHECK</span> (version <span class="op">&gt;</span> <span class="dv">0</span>),</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>  <span class="kw">UNIQUE</span> (tenant_id, version)</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a><span class="co">-- AT MOST ONE active policy per tenant. Instant rollback = activate an older version in one tx</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a><span class="co">-- (deactivate-all then activate-N). The partial unique index makes the flip atomic (doc 02 §7.4).</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">UNIQUE</span> <span class="kw">INDEX</span> policies_one_active_per_tenant <span class="kw">ON</span> policies (tenant_id) <span class="kw">WHERE</span> active;</span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a><span class="co">-- +goose Down</span></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a><span class="kw">DROP</span> <span class="kw">TABLE</span> policies;</span></code></pre></div>
+<h3 id="28-0008_overlay_poolssql">2.8
+<code>0008_overlay_pools.sql</code></h3>
+<div class="sourceCode" id="cb9"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- +goose Up</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- One row per tenant: the ULA /48 plus the two monotonic allocators (host + 4via6 site).</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> overlay_pools (</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  tenant_id     uuid <span class="kw">PRIMARY</span> <span class="kw">KEY</span> <span class="kw">REFERENCES</span> tenants(<span class="kw">id</span>) <span class="kw">ON</span> <span class="kw">DELETE</span> <span class="kw">CASCADE</span>,</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  ula_prefix    cidr <span class="kw">NOT</span> <span class="kw">NULL</span>,           <span class="co">-- fd7a:helix:&lt;rand&gt;::/48 (D4); generated at tenant create</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  next_host     bigint <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> <span class="dv">2</span>,   <span class="co">-- ::1 reserved for the gateway; hosts start at ::2</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  next_site_id  <span class="dt">int</span>    <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> <span class="dv">1</span>,   <span class="co">-- per-connector 4via6 site index allocator</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>  <span class="kw">CONSTRAINT</span> overlay_prefix_is_v6  <span class="kw">CHECK</span> (family(ula_prefix) <span class="op">=</span> <span class="dv">6</span>),</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>  <span class="kw">CONSTRAINT</span> overlay_prefix_is_48  <span class="kw">CHECK</span> (masklen(ula_prefix) <span class="op">=</span> <span class="dv">48</span>),</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>  <span class="kw">CONSTRAINT</span> overlay_prefix_is_ula <span class="kw">CHECK</span> (ula_prefix <span class="op">&lt;&lt;</span> <span class="st">&#39;fc00::/7&#39;</span>),  <span class="co">-- inside the ULA space</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>  <span class="kw">CONSTRAINT</span> overlay_next_host_ok  <span class="kw">CHECK</span> (next_host <span class="kw">BETWEEN</span> <span class="dv">2</span> <span class="kw">AND</span> <span class="dv">1152921504606846976</span>),</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>  <span class="kw">CONSTRAINT</span> overlay_next_site_ok  <span class="kw">CHECK</span> (next_site_id <span class="kw">BETWEEN</span> <span class="dv">1</span> <span class="kw">AND</span> <span class="dv">65535</span>)</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a><span class="co">-- +goose Down</span></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a><span class="kw">DROP</span> <span class="kw">TABLE</span> overlay_pools;</span></code></pre></div>
+<p><code>next_host</code> and <code>next_site_id</code> are bumped with
+<code>UPDATE ... RETURNING</code> under a row lock so two concurrent
+enrollments/attachments never collide (§3.3, §6.3). The
+<code>&lt;&lt; &#39;fc00::/7&#39;</code> check is the database-level proof the
+allocated prefix is genuinely ULA (D4), not a routable address.</p>
+<h3 id="29-0009_device_certssql">2.9
+<code>0009_device_certs.sql</code></h3>
+<div class="sourceCode" id="cb10"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- +goose Up</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- Short-lived control-channel mTLS certs (≈24h). NO private key stored — pki holds the CA key</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="co">-- out-of-band (KMS/offline); this table records issued cert metadata + revocation state.</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> device_certs (</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">id</span>           uuid <span class="kw">PRIMARY</span> <span class="kw">KEY</span> <span class="kw">DEFAULT</span> gen_random_uuid(),</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>  tenant_id    uuid <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">REFERENCES</span> tenants(<span class="kw">id</span>) <span class="kw">ON</span> <span class="kw">DELETE</span> <span class="kw">CASCADE</span>,</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>  device_id    uuid <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">REFERENCES</span> devices(<span class="kw">id</span>) <span class="kw">ON</span> <span class="kw">DELETE</span> <span class="kw">CASCADE</span>,</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>  serial       text <span class="kw">NOT</span> <span class="kw">NULL</span>,            <span class="co">-- cert serial; the lookup key from mTLS handshake (doc 02 §8.2)</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>  not_after    timestamptz <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>  revoked      <span class="dt">boolean</span> <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> <span class="kw">false</span>,</span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>  created_at   timestamptz <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> now(),</span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>  <span class="kw">UNIQUE</span> (tenant_id, serial)</span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a><span class="co">-- Resolve an active cert fast (authDevice path); revoked/expired filtered in query (§3.7).</span></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> device_certs_active_idx <span class="kw">ON</span> device_certs (tenant_id, device_id) <span class="kw">WHERE</span> <span class="kw">NOT</span> revoked;</span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> device_certs_serial_idx <span class="kw">ON</span> device_certs (tenant_id, serial)    <span class="kw">WHERE</span> <span class="kw">NOT</span> revoked;</span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a><span class="co">-- +goose Down</span></span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a><span class="kw">DROP</span> <span class="kw">TABLE</span> device_certs;</span></code></pre></div>
+<h3 id="210-0010_audit_eventssql">2.10
+<code>0010_audit_events.sql</code></h3>
+<div class="sourceCode" id="cb11"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- +goose Up</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- CONTROL actions only — NEVER traffic/flows/packets (C3). This is the ONLY append log; it</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="co">-- records who did what to the control plane (revoke, policy activate, enroll-token mint), never</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="co">-- anything about user data flows.</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> audit_events (</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">id</span>          bigint <span class="kw">GENERATED</span> ALWAYS <span class="kw">AS</span> IDENTITY <span class="kw">PRIMARY</span> <span class="kw">KEY</span>,</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>  tenant_id   uuid <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">REFERENCES</span> tenants(<span class="kw">id</span>) <span class="kw">ON</span> <span class="kw">DELETE</span> <span class="kw">CASCADE</span>,</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>  actor       text <span class="kw">NOT</span> <span class="kw">NULL</span>,            <span class="co">-- user uuid (as text) or the literal &quot;system&quot;</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>  action      text <span class="kw">NOT</span> <span class="kw">NULL</span>,            <span class="co">-- dotted verb, e.g. &quot;device.revoke&quot;,&quot;policy.activate&quot;</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>  target      text,                     <span class="co">-- the affected entity id (nullable)</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>  ts          timestamptz <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> now(),</span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>  meta        jsonb,                    <span class="co">-- structured context; MUST NOT contain traffic data (lint §7)</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>  <span class="kw">CONSTRAINT</span> audit_action_shape <span class="kw">CHECK</span> (action ~ <span class="st">&#39;^[a-z_]+\.[a-z_]+$&#39;</span>)</span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> audit_events_tenant_ts_idx <span class="kw">ON</span> audit_events (tenant_id, ts <span class="kw">DESC</span>);</span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a><span class="co">-- +goose Down</span></span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a><span class="kw">DROP</span> <span class="kw">TABLE</span> audit_events;</span></code></pre></div>
+<h3 id="211-column-type-rationale-nano-detail">2.11 Column-type
+rationale (nano-detail)</h3>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Why exactly this type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>*.id</code> (most)</td>
+<td><code>uuid</code> DEFAULT <code>gen_random_uuid()</code></td>
+<td>Tenant-opaque, non-enumerable PKs; safe to expose in URLs; no
+cross-tenant guessability.</td>
+</tr>
+<tr>
+<td><code>audit_events.id</code></td>
+<td><code>bigint GENERATED ALWAYS AS IDENTITY</code></td>
+<td>Append-only ordered log wants a cheap monotonic key +
+<code>ts DESC</code> index; UUID would bloat the hot index.</td>
+</tr>
+<tr>
+<td><code>devices.wg_pubkey</code></td>
+<td><code>bytea</code> (CHECK len=32)</td>
+<td>Raw 32-byte Curve25519 key; <code>bytea</code> avoids base64
+round-trips and stores the exact wire bytes (C6).</td>
+</tr>
+<tr>
+<td><code>devices.overlay_ip</code></td>
+<td><code>inet</code> (CHECK /128, v6)</td>
+<td>Native IPv6 host type; enables <code>inet</code> containment ops and
+a single-host guarantee (D4).</td>
+</tr>
+<tr>
+<td><code>advertised_prefixes.cidr</code>,
+<code>overlay_pools.ula_prefix</code></td>
+<td><code>cidr</code></td>
+<td>Network-prefix type; <code>&lt;&lt;</code>/<code>&gt;&gt;</code>
+containment for conflict + ULA checks; rejects host bits set.</td>
+</tr>
+<tr>
+<td><code>policies.spec</code>, <code>audit_events.meta</code></td>
+<td><code>jsonb</code></td>
+<td>Binary JSON: indexable, dedup-keyed, validated; <code>spec</code> is
+the compiler input (doc 02 §7).</td>
+</tr>
+<tr>
+<td><code>*.created_at</code>/<code>ts</code>/<code>not_after</code>/<code>last_seen_at</code></td>
+<td><code>timestamptz</code></td>
+<td>Always UTC-anchored; never naive <code>timestamp</code>.</td>
+</tr>
+<tr>
+<td><code>connectors.site_id</code>,
+<code>overlay_pools.next_site_id</code></td>
+<td><code>int</code> (CHECK 1..65535)</td>
+<td>16-bit <code>4via6</code> site index fits the
+<code>/96</code>→<code>/48</code> site field; <code>int</code> for
+arithmetic headroom.</td>
+</tr>
+<tr>
+<td>roles enum</td>
+<td><code>user_role</code>/<code>device_kind</code></td>
+<td>Closed sets enforced at the type level; a typo&#39;d <code>kind</code>
+is a write error, not a silent bug.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="3-sqlc-typed-queries-the-only-sql-helixd-runs">3. sqlc typed
+queries (the only SQL <code>helixd</code> runs)</h2>
+<p>All SQL lives in <code>helix-go/internal/store/queries/*.sql</code>;
+<code>sqlc generate</code> emits <code>internal/store/db/*.go</code>
+with a <code>Queries</code> struct whose methods take
+<code>pgx</code>-compatible args. Per wiring-rule R4 (doc 02 §1.2) no
+handler issues raw <code>db.Query</code> — a <code>golangci-lint</code>
+custom analyzer flags it. Every query below is parameterized; RLS (§4)
+is the tenant floor so most do <strong>not</strong> carry a
+<code>WHERE tenant_id = $1</code> — but the IPAM/cert hot paths add it
+for index selectivity (RLS predicate + explicit predicate both apply;
+the explicit one steers the planner).</p>
+<h3 id="31-sqlcyaml">3.1 <code>sqlc.yaml</code></h3>
+<div class="sourceCode" id="cb12"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">version</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;2&quot;</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sql</span><span class="kw">:</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">engine</span><span class="kw">:</span><span class="at"> postgresql</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">schema</span><span class="kw">:</span><span class="at">  </span><span class="st">&quot;migrations/&quot;</span><span class="co">                 # the goose DDL IS the schema authority</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">queries</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;internal/store/queries/&quot;</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">gen</span><span class="kw">:</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">go</span><span class="kw">:</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">package</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;db&quot;</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">out</span><span class="kw">:</span><span class="at">     </span><span class="st">&quot;internal/store/db&quot;</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">sql_package</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;pgx/v5&quot;</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">emit_pointers_for_null_types</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">overrides</span><span class="kw">:</span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="kw">-</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">db_type</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;uuid&quot;</span><span class="kw">,</span><span class="at">        </span><span class="fu">go_type</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;github.com/google/uuid.UUID&quot;</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="kw">-</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">db_type</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;inet&quot;</span><span class="kw">,</span><span class="at">        </span><span class="fu">go_type</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;net/netip.Addr&quot;</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="kw">-</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">db_type</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;cidr&quot;</span><span class="kw">,</span><span class="at">        </span><span class="fu">go_type</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;net/netip.Prefix&quot;</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="kw">-</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">db_type</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;timestamptz&quot;</span><span class="kw">,</span><span class="at"> </span><span class="fu">go_type</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;time.Time&quot;</span><span class="at"> </span><span class="kw">}</span></span></code></pre></div>
+<h3 id="32-device-queries--queriesdevicessql">3.2 Device queries —
+<code>queries/devices.sql</code></h3>
+<div class="sourceCode" id="cb13"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- name: InsertDevice :one</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="kw">INSERT</span> <span class="kw">INTO</span> devices (tenant_id, user_id, kind, name, wg_pubkey, overlay_ip, os)</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="kw">VALUES</span> ($<span class="dv">1</span>, $<span class="dv">2</span>, $<span class="dv">3</span>, $<span class="dv">4</span>, $<span class="dv">5</span>, $<span class="dv">6</span>, $<span class="dv">7</span>)</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="kw">RETURNING</span> <span class="op">*</span>;</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="co">-- name: DevicesForTenant :many</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> devices <span class="kw">WHERE</span> revoked_at <span class="kw">IS</span> <span class="kw">NULL</span> <span class="kw">ORDER</span> <span class="kw">BY</span> enrolled_at;</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a><span class="co">-- name: DeviceByPubkey :one</span></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> devices <span class="kw">WHERE</span> wg_pubkey <span class="op">=</span> $<span class="dv">1</span>;          <span class="co">-- RLS scopes to current tenant</span></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a><span class="co">-- name: TouchPresence :exec</span></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a><span class="kw">UPDATE</span> devices <span class="kw">SET</span> last_seen_at <span class="op">=</span> now() <span class="kw">WHERE</span> <span class="kw">id</span> <span class="op">=</span> $<span class="dv">1</span>;   <span class="co">-- COARSE; heartbeat only (C3)</span></span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a><span class="co">-- name: RevokeDevice :exec</span></span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a><span class="kw">UPDATE</span> devices <span class="kw">SET</span> revoked_at <span class="op">=</span> now() <span class="kw">WHERE</span> <span class="kw">id</span> <span class="op">=</span> $<span class="dv">1</span>;     <span class="co">-- soft revoke; audit retains the row</span></span></code></pre></div>
+<h3 id="33-ipam-allocation--queriesipamsql-concurrency-safe">3.3 IPAM
+allocation — <code>queries/ipam.sql</code> (concurrency-safe)</h3>
+<div class="sourceCode" id="cb14"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- name: ProvisionOverlayPool :one</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- Called once at tenant create (within WithSystem). ula_prefix generated app-side (random /48).</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="kw">INSERT</span> <span class="kw">INTO</span> overlay_pools (tenant_id, ula_prefix) <span class="kw">VALUES</span> ($<span class="dv">1</span>, $<span class="dv">2</span>)</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="kw">RETURNING</span> <span class="op">*</span>;</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="co">-- name: BumpOverlayNextHost :one</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="co">-- Atomic next-host hand-out. The UPDATE ... RETURNING takes a row lock; two concurrent</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="co">-- enrollments serialise on it and CANNOT receive the same host id. ::1 reserved (default 2).</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a><span class="kw">UPDATE</span> overlay_pools</span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>   <span class="kw">SET</span> next_host <span class="op">=</span> next_host <span class="op">+</span> <span class="dv">1</span></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a> <span class="kw">WHERE</span> tenant_id <span class="op">=</span> $<span class="dv">1</span></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a><span class="kw">RETURNING</span> ula_prefix, next_host <span class="op">-</span> <span class="dv">1</span> <span class="kw">AS</span> host_id;   <span class="co">-- returns the value JUST consumed</span></span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a><span class="co">-- name: BumpNextSiteId :one</span></span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a><span class="co">-- Atomic per-connector 4via6 site index (D4). Same row-lock serialisation as host alloc.</span></span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a><span class="kw">UPDATE</span> overlay_pools</span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a>   <span class="kw">SET</span> next_site_id <span class="op">=</span> next_site_id <span class="op">+</span> <span class="dv">1</span></span>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a> <span class="kw">WHERE</span> tenant_id <span class="op">=</span> $<span class="dv">1</span></span>
+<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a><span class="kw">RETURNING</span> next_site_id <span class="op">-</span> <span class="dv">1</span> <span class="kw">AS</span> site_id;</span></code></pre></div>
+<p><code>BumpOverlayNextHost</code> returns <code>next_host - 1</code>
+(the value just consumed) so the Go layer computes
+<code>embedHost(ula_prefix.Addr().As16(), host_id)</code> (doc 02 §3.2)
+without a second round trip. Because the whole call runs inside
+<code>WithTenant</code> (§6) the <code>UPDATE</code> is inside the
+request transaction and the lock is held only until commit.</p>
+<h3 id="34-policy-queries--queriespoliciessql">3.4 Policy queries —
+<code>queries/policies.sql</code></h3>
+<div class="sourceCode" id="cb15"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- name: NextPolicyVersion :one</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- Monotonic per tenant. COALESCE handles the first policy (no rows yet → version 1).</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="fu">COALESCE</span>(<span class="fu">MAX</span>(version), <span class="dv">0</span>) <span class="op">+</span> <span class="dv">1</span> <span class="kw">AS</span> next_version <span class="kw">FROM</span> policies;</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="co">-- name: InsertPolicy :one</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="kw">INSERT</span> <span class="kw">INTO</span> policies (tenant_id, spec, version) <span class="kw">VALUES</span> ($<span class="dv">1</span>, $<span class="dv">2</span>, $<span class="dv">3</span>) <span class="kw">RETURNING</span> <span class="op">*</span>;</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="co">-- name: DeactivateAllPolicies :exec</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a><span class="kw">UPDATE</span> policies <span class="kw">SET</span> active <span class="op">=</span> <span class="kw">false</span> <span class="kw">WHERE</span> active;     <span class="co">-- RLS scopes to tenant</span></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a><span class="co">-- name: ActivatePolicyVersion :exec</span></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a><span class="kw">UPDATE</span> policies <span class="kw">SET</span> active <span class="op">=</span> <span class="kw">true</span>, compiled_at <span class="op">=</span> now() <span class="kw">WHERE</span> version <span class="op">=</span> $<span class="dv">1</span>;</span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a><span class="co">-- name: ActivePolicy :one</span></span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> policies <span class="kw">WHERE</span> active;                 <span class="co">-- at most one (partial unique index)</span></span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a><span class="co">-- name: PolicyByVersion :one</span></span>
+<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> policies <span class="kw">WHERE</span> version <span class="op">=</span> $<span class="dv">1</span>;</span></code></pre></div>
+<p><code>NextPolicyVersion</code> + <code>InsertPolicy</code> run in one
+<code>WithTenant</code> tx; the <code>UNIQUE(tenant_id,version)</code>
+constraint is the race backstop — if two admins insert concurrently, one
+commit wins and the loser retries (the application catches the
+unique-violation and re-reads <code>NextPolicyVersion</code>).</p>
+<h3 id="35-connector--prefix-queries--queriesconnectorssql">3.5
+Connector / prefix queries — <code>queries/connectors.sql</code></h3>
+<div class="sourceCode" id="cb16"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- name: InsertConnector :one</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="kw">INSERT</span> <span class="kw">INTO</span> connectors (device_id, tenant_id, site_name, site_id) <span class="kw">VALUES</span> ($<span class="dv">1</span>, $<span class="dv">2</span>, $<span class="dv">3</span>, $<span class="dv">4</span>)</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="kw">RETURNING</span> <span class="op">*</span>;</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="co">-- name: SetAdvertisedPrefix :one</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="kw">INSERT</span> <span class="kw">INTO</span> advertised_prefixes (tenant_id, connector_id, cidr)</span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="kw">VALUES</span> ($<span class="dv">1</span>, $<span class="dv">2</span>, $<span class="dv">3</span>)</span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a><span class="kw">ON</span> CONFLICT (tenant_id, connector_id, cidr) DO <span class="kw">UPDATE</span> <span class="kw">SET</span> enabled <span class="op">=</span> <span class="kw">true</span></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a><span class="kw">RETURNING</span> <span class="op">*</span>;</span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a><span class="co">-- name: DisablePrefix :exec</span></span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a><span class="kw">UPDATE</span> advertised_prefixes <span class="kw">SET</span> enabled <span class="op">=</span> <span class="kw">false</span> <span class="kw">WHERE</span> <span class="kw">id</span> <span class="op">=</span> $<span class="dv">1</span>;</span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a><span class="co">-- name: EnabledPrefixesForTenant :many</span></span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> advertised_prefixes <span class="kw">WHERE</span> enabled <span class="kw">ORDER</span> <span class="kw">BY</span> connector_id, cidr;</span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a><span class="co">-- name: ConflictingPrefixes :many</span></span>
+<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a><span class="co">-- Two ENABLED prefixes from DIFFERENT connectors whose CIDRs overlap → route.conflict (D4).</span></span>
+<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> a.<span class="kw">id</span>, a.connector_id, a.cidr, b.<span class="kw">id</span> <span class="kw">AS</span> other_id, b.connector_id <span class="kw">AS</span> other_connector, b.cidr <span class="kw">AS</span> other_cidr</span>
+<span id="cb16-20"><a href="#cb16-20" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> advertised_prefixes a</span>
+<span id="cb16-21"><a href="#cb16-21" aria-hidden="true" tabindex="-1"></a>  <span class="kw">JOIN</span> advertised_prefixes b</span>
+<span id="cb16-22"><a href="#cb16-22" aria-hidden="true" tabindex="-1"></a>    <span class="kw">ON</span> a.connector_id <span class="op">&lt;&gt;</span> b.connector_id</span>
+<span id="cb16-23"><a href="#cb16-23" aria-hidden="true" tabindex="-1"></a>   <span class="kw">AND</span> (a.cidr &amp;&amp; b.cidr)              <span class="co">-- inet/cidr overlap operator</span></span>
+<span id="cb16-24"><a href="#cb16-24" aria-hidden="true" tabindex="-1"></a> <span class="kw">WHERE</span> a.enabled <span class="kw">AND</span> b.enabled <span class="kw">AND</span> a.<span class="kw">id</span> <span class="op">&lt;</span> b.<span class="kw">id</span>;</span></code></pre></div>
+<h3 id="36-group-queries--queriesgroupssql">3.6 Group queries —
+<code>queries/groups.sql</code></h3>
+<div class="sourceCode" id="cb17"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- name: InsertGroup :one</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="kw">INSERT</span> <span class="kw">INTO</span> <span class="kw">groups</span> (tenant_id, name) <span class="kw">VALUES</span> ($<span class="dv">1</span>, $<span class="dv">2</span>) <span class="kw">RETURNING</span> <span class="op">*</span>;</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="co">-- name: AddGroupMember :exec</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="kw">INSERT</span> <span class="kw">INTO</span> group_members (tenant_id, <span class="fu">group_id</span>, device_id) <span class="kw">VALUES</span> ($<span class="dv">1</span>, $<span class="dv">2</span>, $<span class="dv">3</span>)</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a><span class="kw">ON</span> CONFLICT (<span class="fu">group_id</span>, device_id) DO <span class="kw">NOTHING</span>;</span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a><span class="co">-- name: GroupMembersForTenant :many</span></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> gm.<span class="fu">group_id</span>, gm.device_id <span class="kw">FROM</span> group_members gm <span class="kw">ORDER</span> <span class="kw">BY</span> gm.<span class="fu">group_id</span>;</span></code></pre></div>
+<h3 id="37-cert-queries--queriescertssql">3.7 Cert queries —
+<code>queries/certs.sql</code></h3>
+<div class="sourceCode" id="cb18"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- name: InsertDeviceCert :one</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="kw">INSERT</span> <span class="kw">INTO</span> device_certs (tenant_id, device_id, serial, not_after) <span class="kw">VALUES</span> ($<span class="dv">1</span>, $<span class="dv">2</span>, $<span class="dv">3</span>, $<span class="dv">4</span>)</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="kw">RETURNING</span> <span class="op">*</span>;</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="co">-- name: ActiveCertBySerial :one</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a><span class="co">-- The authDevice hot path (doc 02 §8.2): mTLS serial → cert → device, rejecting revoked/expired.</span></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> c.<span class="op">*</span>, d.<span class="kw">id</span> <span class="kw">AS</span> d_id, d.revoked_at <span class="kw">AS</span> d_revoked</span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> device_certs c <span class="kw">JOIN</span> devices d <span class="kw">ON</span> d.<span class="kw">id</span> <span class="op">=</span> c.device_id</span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a> <span class="kw">WHERE</span> c.serial <span class="op">=</span> $<span class="dv">1</span> <span class="kw">AND</span> <span class="kw">NOT</span> c.revoked <span class="kw">AND</span> c.not_after <span class="op">&gt;</span> now();</span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a><span class="co">-- name: RevokeCertsForDevice :exec</span></span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a><span class="kw">UPDATE</span> device_certs <span class="kw">SET</span> revoked <span class="op">=</span> <span class="kw">true</span> <span class="kw">WHERE</span> device_id <span class="op">=</span> $<span class="dv">1</span>;</span></code></pre></div>
+<h3 id="38-audit-query--queriesauditsql">3.8 Audit query —
+<code>queries/audit.sql</code></h3>
+<div class="sourceCode" id="cb19"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- name: AppendAudit :exec</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="kw">INSERT</span> <span class="kw">INTO</span> audit_events (tenant_id, actor, action, target, meta) <span class="kw">VALUES</span> ($<span class="dv">1</span>, $<span class="dv">2</span>, $<span class="dv">3</span>, $<span class="dv">4</span>, $<span class="dv">5</span>);</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="co">-- name: AuditTail :many</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> audit_events <span class="kw">ORDER</span> <span class="kw">BY</span> ts <span class="kw">DESC</span> <span class="kw">LIMIT</span> $<span class="dv">1</span>;</span></code></pre></div>
+<hr />
+<h2 id="4-row-level-security--tenant-isolation-at-the-database-c8">4.
+Row-Level Security — tenant isolation at the database (C8)</h2>
+<p>RLS is the <strong>floor</strong>, not the only line of defence. Even
+a handler that forgets <code>WHERE tenant_id</code> cannot read another
+tenant&#39;s rows, because Postgres evaluates the policy predicate on every
+row [04_P1 §2.2]. This is strictly stronger than
+<code>WHERE</code>-clause discipline: it survives a bug, a crafted
+query, and a SQL-injection that escapes the intended predicate.</p>
+<h3 id="41-the-policy-applied-to-every-tenant-scoped-table">4.1 The
+policy applied to every tenant-scoped table</h3>
+<div class="sourceCode" id="cb20"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- +goose Up  (migration 0011_rls.sql) — applied identically to ALL TEN tenant-scoped tables:</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="co">--   users, devices, connectors, advertised_prefixes, groups, group_members,</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="co">--   policies, overlay_pools, device_certs, audit_events</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="co">-- (tenants is governed by helix_sys, NOT RLS — see §4.3)</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">TABLE</span> devices <span class="kw">ENABLE</span> <span class="kw">ROW</span> <span class="kw">LEVEL</span> SECURITY;</span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">TABLE</span> devices <span class="kw">FORCE</span>  <span class="kw">ROW</span> <span class="kw">LEVEL</span> SECURITY;   <span class="co">-- applies EVEN to the table owner (hardening, §4.2)</span></span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> POLICY tenant_isolation <span class="kw">ON</span> devices</span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>  <span class="kw">USING</span>      (tenant_id <span class="op">=</span> current_setting(<span class="st">&#39;app.tenant_id&#39;</span>):<span class="ch">:uuid</span>)   <span class="co">-- read/update/delete visibility</span></span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>  <span class="kw">WITH</span> <span class="kw">CHECK</span> (tenant_id <span class="op">=</span> current_setting(<span class="st">&#39;app.tenant_id&#39;</span>):<span class="ch">:uuid</span>);  <span class="co">-- insert/update row must match</span></span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a><span class="co">-- ... identical block repeated for the other nine tables ...</span></span></code></pre></div>
+<p>The <code>USING</code> clause filters rows for
+<code>SELECT</code>/<code>UPDATE</code>/<code>DELETE</code>; the
+<code>WITH CHECK</code> clause rejects any
+<code>INSERT</code>/<code>UPDATE</code> that would write a row with a
+foreign <code>tenant_id</code> — so a handler cannot <em>plant</em> a
+row into another tenant either. A single <code>CREATE POLICY</code> with
+both clauses covers all four verbs.</p>
+<h3 id="42-why-force-the-hardening-refinement-over-04_p1-22">4.2 Why
+<code>FORCE</code> (the hardening refinement over [04_P1 §2.2])</h3>
+<p><code>ENABLE ROW LEVEL SECURITY</code> alone does
+<strong>not</strong> apply to the table <em>owner</em> — and migrations
+create the tables as <code>helix_owner</code>, which would therefore
+silently bypass RLS if <code>helixd</code> ever connected as the owner.
+<code>FORCE ROW LEVEL SECURITY</code> closes that gap: the policy
+applies even to the owner. Combined with the §5 role split (helixd never
+authenticates as the owner) this is belt-and-braces. Superusers and
+roles with <code>BYPASSRLS</code> still bypass — which is exactly why
+§5/§6.1 assert <code>helix_app_login</code> has neither attribute,
+checked at startup.</p>
+<h3 id="43-tenants-is-deliberately-not-rls-scoped">4.3
+<code>tenants</code> is deliberately NOT RLS-scoped</h3>
+<p><code>tenants</code> <em>is</em> the tenancy root: a row&#39;s own
+<code>id</code> is the tenant id, so a self-referential RLS predicate
+(<code>id = current_setting(&#39;app.tenant_id&#39;)</code>) would let a
+request-scoped connection read only its own tenant row — acceptable —
+but tenant <em>creation</em> (no <code>app.tenant_id</code> exists yet)
+must happen through <code>helix_sys</code> (§5.3). Decision:
+<code>tenants</code> has <strong>no</strong> RLS; the
+<code>helix_app</code> role is <strong>not</strong> granted
+<code>INSERT</code>/<code>UPDATE</code>/<code>DELETE</code> on it (only
+<code>SELECT</code> of its own row via a view-less direct grant scoped
+by a <code>tenant_self</code> policy below). This keeps tenant lifecycle
+in the narrow <code>helix_sys</code> lane.</p>
+<div class="sourceCode" id="cb21"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- tenants gets a minimal self-read policy so a request CAN read its own tenant name, nothing else:</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">TABLE</span> tenants <span class="kw">ENABLE</span> <span class="kw">ROW</span> <span class="kw">LEVEL</span> SECURITY;</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">TABLE</span> tenants <span class="kw">FORCE</span>  <span class="kw">ROW</span> <span class="kw">LEVEL</span> SECURITY;</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> POLICY tenant_self <span class="kw">ON</span> tenants</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">FOR</span> <span class="kw">SELECT</span> <span class="kw">USING</span> (<span class="kw">id</span> <span class="op">=</span> current_setting(<span class="st">&#39;app.tenant_id&#39;</span>):<span class="ch">:uuid</span>);</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a><span class="co">-- No INSERT/UPDATE/DELETE policy for helix_app → those verbs are denied to it entirely.</span></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a><span class="co">-- helix_sys (§5.3) runs tenant create via a </span><span class="al">SECURITY</span><span class="co"> DEFINER function or a BYPASSRLS-free grant.</span></span></code></pre></div>
+<blockquote>
+<p><code>current_setting(&#39;app.tenant_id&#39;)</code> raises if the GUC is
+unset. For <code>helix_app</code> paths this is a <em>feature</em>: a
+query that runs without <code>SET LOCAL app.tenant_id</code> (a
+forgotten <code>WithTenant</code>) errors loudly rather than leaking.
+<code>WithSystem</code> (§6.4) sets the GUC to a sentinel for the few
+cross-tenant ops. UNVERIFIED: exact error class/SQLSTATE of an unset-GUC
+cast under all PG16 minor versions — the integration test (§9) asserts
+the observed behaviour rather than assuming it.</p>
+</blockquote>
+<h3 id="44-cross-table-tenant-coherence-group_members-trigger">4.4
+Cross-table tenant coherence (group_members trigger)</h3>
+<p><code>group_members</code> references <code>groups</code> and
+<code>devices</code> by id; the three <code>tenant_id</code>s must
+agree. FKs cannot express &quot;all three tenants are equal&quot;, and RLS
+<code>WITH CHECK</code> only validates <code>group_members</code>&#39;s own
+<code>tenant_id</code>. A constraint trigger closes the gap:</p>
+<div class="sourceCode" id="cb22"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- +goose StatementBegin</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">OR</span> <span class="kw">REPLACE</span> <span class="kw">FUNCTION</span> assert_group_member_tenant() RETURNS <span class="kw">trigger</span> <span class="kw">AS</span> $$</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="cf">BEGIN</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">IF</span> (<span class="kw">SELECT</span> tenant_id <span class="kw">FROM</span> <span class="kw">groups</span>  <span class="kw">WHERE</span> <span class="kw">id</span> <span class="op">=</span> <span class="kw">NEW</span>.<span class="fu">group_id</span>)  <span class="op">&lt;&gt;</span> <span class="kw">NEW</span>.tenant_id</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">OR</span> (<span class="kw">SELECT</span> tenant_id <span class="kw">FROM</span> devices <span class="kw">WHERE</span> <span class="kw">id</span> <span class="op">=</span> <span class="kw">NEW</span>.device_id) <span class="op">&lt;&gt;</span> <span class="kw">NEW</span>.tenant_id <span class="cf">THEN</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>    RAISE <span class="kw">EXCEPTION</span> <span class="st">&#39;group_member tenant mismatch (group=% device=% tenant=%)&#39;</span>,</span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>      <span class="kw">NEW</span>.<span class="fu">group_id</span>, <span class="kw">NEW</span>.device_id, <span class="kw">NEW</span>.tenant_id <span class="kw">USING</span> ERRCODE <span class="op">=</span> <span class="st">&#39;check_violation&#39;</span>;</span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>  <span class="cf">END</span> <span class="cf">IF</span>;</span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>  <span class="kw">RETURN</span> <span class="kw">NEW</span>;</span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>END$$ LANGUAGE plpgsql;</span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a><span class="co">-- +goose StatementEnd</span></span>
+<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">CONSTRAINT</span> <span class="kw">TRIGGER</span> group_members_tenant_coherent</span>
+<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a>  <span class="kw">AFTER</span> <span class="kw">INSERT</span> <span class="kw">OR</span> <span class="kw">UPDATE</span> <span class="kw">ON</span> group_members</span>
+<span id="cb22-14"><a href="#cb22-14" aria-hidden="true" tabindex="-1"></a>  <span class="cf">FOR</span> <span class="kw">EACH</span> <span class="kw">ROW</span> <span class="kw">EXECUTE</span> <span class="kw">FUNCTION</span> assert_group_member_tenant();</span></code></pre></div>
+<p>The same pattern applies to <code>connectors</code>,
+<code>advertised_prefixes</code>, and <code>device_certs</code> (each
+has a <code>tenant_id</code> that must equal its parent
+device/connector&#39;s tenant). One trigger per table; bodies are
+structurally identical. UNVERIFIED: whether the sub-<code>SELECT</code>s
+inside the trigger themselves run under RLS — they execute as the
+function definer&#39;s privileges only if <code>SECURITY DEFINER</code>;
+here they are <code>SECURITY INVOKER</code> (default) so they see the
+same RLS scope, which is correct because both rows must be in the
+current tenant anyway.</p>
+<pre class="mermaid"><code>flowchart TD
+    Q[&quot;helixd handler issues SQL on a pooled conn&quot;] --&gt; WT{&quot;inside WithTenant?&quot;}
+    WT -- no --&gt; ERR[&quot;current_setting(&#39;app.tenant_id&#39;) unset → query ERRORS (fail-loud)&quot;]
+    WT -- yes --&gt; SL[&quot;SET LOCAL app.tenant_id = T (tx-scoped GUC)&quot;]
+    SL --&gt; RLS[&quot;RLS predicate: tenant_id = T on every row (USING + WITH CHECK)&quot;]
+    RLS --&gt; ROLE{&quot;connected as?&quot;}
+    ROLE -- &quot;helix_app_login (no superuser, no BYPASSRLS)&quot; --&gt; OK[&quot;only tenant T rows visible/writable&quot;]
+    ROLE -- &quot;owner/superuser&quot; --&gt; FORCE[&quot;FORCE RLS still applies to owner; startup aborts if BYPASSRLS&quot;]
+    OK --&gt; COH[&quot;constraint trigger: cross-table tenant coherence (§4.4)&quot;]</code></pre>
+<hr />
+<h2 id="5-database-roles--least-privilege">5. Database roles &amp; least
+privilege</h2>
+<h3 id="51-helix_owner--schema-owner-migrations-only">5.1
+<code>helix_owner</code> — schema owner, migrations only</h3>
+<p>Owns the database, schema <code>public</code>, all tables, types,
+sequences, functions. Migrations (<code>goose up</code>) run as
+<code>helix_owner</code>. <strong><code>helixd</code> never
+authenticates as <code>helix_owner</code>.</strong> Because
+<code>FORCE ROW LEVEL SECURITY</code> is set, even
+<code>helix_owner</code> is RLS-bound on <code>SELECT</code>/etc., but
+<code>helix_owner</code> may carry <code>BYPASSRLS</code> for migration
+DDL convenience — it is never on a request path, so this is safe.</p>
+<h3 id="52-helix_app--the-request-scoped-role-rls-applies">5.2
+<code>helix_app</code> — the request-scoped role (RLS applies)</h3>
+<div class="sourceCode" id="cb24"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- +goose Up (migration 0012_grants.sql)</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- helix_app is NOLOGIN; helixd logs in as helix_app_login (a LOGIN role member of helix_app).</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a><span class="kw">GRANT</span> <span class="kw">USAGE</span> <span class="kw">ON</span> <span class="kw">SCHEMA</span> <span class="kw">public</span> <span class="kw">TO</span> helix_app;</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="kw">GRANT</span> <span class="kw">SELECT</span>, <span class="kw">INSERT</span>, <span class="kw">UPDATE</span>, <span class="kw">DELETE</span> <span class="kw">ON</span> <span class="kw">ALL</span> <span class="kw">TABLES</span> <span class="kw">IN</span> <span class="kw">SCHEMA</span> <span class="kw">public</span> <span class="kw">TO</span> helix_app;</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a><span class="kw">GRANT</span> <span class="kw">USAGE</span>, <span class="kw">SELECT</span> <span class="kw">ON</span> <span class="kw">ALL</span> SEQUENCES <span class="kw">IN</span> <span class="kw">SCHEMA</span> <span class="kw">public</span> <span class="kw">TO</span> helix_app;</span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a><span class="co">-- tenants: helix_app gets ONLY SELECT (tenant_self policy, §4.3); revoke write verbs explicitly.</span></span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a><span class="kw">REVOKE</span> <span class="kw">INSERT</span>, <span class="kw">UPDATE</span>, <span class="kw">DELETE</span> <span class="kw">ON</span> tenants <span class="kw">FROM</span> helix_app;</span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a><span class="co">-- Future tables inherit the grant via default privileges set by the owner:</span></span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">DEFAULT</span> <span class="kw">PRIVILEGES</span> <span class="kw">IN</span> <span class="kw">SCHEMA</span> <span class="kw">public</span></span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a>  <span class="kw">GRANT</span> <span class="kw">SELECT</span>, <span class="kw">INSERT</span>, <span class="kw">UPDATE</span>, <span class="kw">DELETE</span> <span class="kw">ON</span> <span class="kw">TABLES</span> <span class="kw">TO</span> helix_app;</span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a><span class="co">-- +goose Down</span></span>
+<span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a><span class="kw">REVOKE</span> <span class="kw">ALL</span> <span class="kw">ON</span> <span class="kw">ALL</span> <span class="kw">TABLES</span> <span class="kw">IN</span> <span class="kw">SCHEMA</span> <span class="kw">public</span> <span class="kw">FROM</span> helix_app;</span></code></pre></div>
+<p><code>helix_app_login</code> (created out-of-band by
+<code>helixvpnctl bootstrap</code>, password per §11.4.10) carries
+<strong>neither</strong> <code>SUPERUSER</code> <strong>nor</strong>
+<code>BYPASSRLS</code> <strong>nor</strong> <code>CREATEROLE</code> —
+asserted at startup (§6.1).</p>
+<h3 id="53-helix_sys--narrow-cross-tenant-role">5.3
+<code>helix_sys</code> — narrow cross-tenant role</h3>
+<p>Used only by <code>WithSystem</code> (§6.4) for tenant create,
+<code>overlay_pools</code> provisioning at tenant create, and the
+handful of genuinely cross-tenant maintenance jobs. It is granted
+<code>INSERT</code> on <code>tenants</code> and
+<code>overlay_pools</code> and <code>SELECT</code> where needed; it is
+<strong>not</strong> a superuser and does <strong>not</strong> carry
+<code>BYPASSRLS</code> — instead <code>WithSystem</code> sets
+<code>app.tenant_id</code> to a per-operation sentinel and the few
+queries it runs are explicit and reviewed. Most of the system never
+touches it.</p>
+<pre class="mermaid"><code>flowchart LR
+    M[&quot;goose migrate&quot;] --&gt; O[&quot;helix_owner (owns schema; BYPASSRLS ok; NEVER request path)&quot;]
+    H[&quot;helixd request handler&quot;] --&gt; AL[&quot;helix_app_login → member of helix_app (RLS-bound)&quot;]
+    H2[&quot;helixd tenant-create / cross-tenant&quot;] --&gt; SL[&quot;helix_sys_login → member of helix_sys (narrow grants)&quot;]
+    AL -. &quot;no SUPERUSER, no BYPASSRLS, no CREATEROLE (asserted §6.1)&quot; .-&gt; AL</code></pre>
+<hr />
+<h2 id="6-the-set-local-per-transaction-pattern">6. The
+<code>SET LOCAL</code> per-transaction pattern</h2>
+<h3 id="61-startup-safety-assertion-run-once-on-boot-before-serving">6.1
+Startup safety assertion (run once on boot, before serving)</h3>
+<div class="sourceCode" id="cb26"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/store/safety.go</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="co">// MustVerifyAppRole aborts boot if helixd connected with a role that can bypass RLS.</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>s <span class="op">*</span>Store<span class="op">)</span> MustVerifyAppRole<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">)</span> <span class="dt">error</span> <span class="op">{</span></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">var</span> super<span class="op">,</span> bypass <span class="dt">bool</span></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> err <span class="op">:=</span> s<span class="op">.</span>pool<span class="op">.</span>QueryRow<span class="op">(</span>ctx<span class="op">,</span></span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>        <span class="st">`SELECT rolsuper, rolbypassrls FROM pg_roles WHERE rolname = current_user`</span><span class="op">,</span></span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">).</span>Scan<span class="op">(&amp;</span>super<span class="op">,</span> <span class="op">&amp;</span>bypass<span class="op">);</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> fmt<span class="op">.</span>Errorf<span class="op">(</span><span class="st">&quot;role self-check: %w&quot;</span><span class="op">,</span> err<span class="op">)</span></span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> super <span class="op">||</span> bypass <span class="op">{</span></span>
+<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> fmt<span class="op">.</span>Errorf<span class="op">(</span><span class="st">&quot;FATAL: helixd must run as a non-superuser, non-BYPASSRLS role &quot;</span><span class="op">+</span></span>
+<span id="cb26-12"><a href="#cb26-12" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;(current_user has super=%v bypassrls=%v) — RLS (C8) would be defeated&quot;</span><span class="op">,</span> super<span class="op">,</span> bypass<span class="op">)</span></span>
+<span id="cb26-13"><a href="#cb26-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb26-14"><a href="#cb26-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="ot">nil</span></span>
+<span id="cb26-15"><a href="#cb26-15" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="62-withtenant--the-only-request-path-db-entry-r4">6.2
+<code>WithTenant</code> — the only request-path DB entry (R4)</h3>
+<div class="sourceCode" id="cb27"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/store/tenant.go</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="co">//</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a><span class="co">// WithTenant runs fn inside ONE transaction whose RLS scope is pinned to tenantID.</span></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a><span class="co">// set_config(name, value, is_local=true) == SET LOCAL: the GUC is transaction-scoped and</span></span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a><span class="co">// CANNOT leak across pooled connections (it is reset on COMMIT/ROLLBACK). This is the load-</span></span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a><span class="co">// bearing reason a connection-pool + RLS is safe together.</span></span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>s <span class="op">*</span>Store<span class="op">)</span> WithTenant<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> tenantID uuid<span class="op">.</span>UUID<span class="op">,</span></span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>    fn <span class="kw">func</span><span class="op">(</span>q <span class="op">*</span>db<span class="op">.</span>Queries<span class="op">)</span> <span class="dt">error</span><span class="op">)</span> <span class="dt">error</span> <span class="op">{</span></span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a>    tx<span class="op">,</span> err <span class="op">:=</span> s<span class="op">.</span>pool<span class="op">.</span>BeginTx<span class="op">(</span>ctx<span class="op">,</span> pgx<span class="op">.</span>TxOptions<span class="op">{})</span>   <span class="co">// default isolation: READ COMMITTED</span></span>
+<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> fmt<span class="op">.</span>Errorf<span class="op">(</span><span class="st">&quot;begin tenant tx: %w&quot;</span><span class="op">,</span> err<span class="op">)</span></span>
+<span id="cb27-13"><a href="#cb27-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb27-14"><a href="#cb27-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">defer</span> <span class="kw">func</span><span class="op">()</span> <span class="op">{</span> _ <span class="op">=</span> tx<span class="op">.</span>Rollback<span class="op">(</span>ctx<span class="op">)</span> <span class="op">}()</span>           <span class="co">// no-op after a successful Commit</span></span>
+<span id="cb27-15"><a href="#cb27-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-16"><a href="#cb27-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> _<span class="op">,</span> err <span class="op">:=</span> tx<span class="op">.</span>Exec<span class="op">(</span>ctx<span class="op">,</span></span>
+<span id="cb27-17"><a href="#cb27-17" aria-hidden="true" tabindex="-1"></a>        <span class="st">`SELECT set_config(&#39;app.tenant_id&#39;, $1, true)`</span><span class="op">,</span> tenantID<span class="op">.</span>String<span class="op">());</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb27-18"><a href="#cb27-18" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> fmt<span class="op">.</span>Errorf<span class="op">(</span><span class="st">&quot;pin tenant %s: %w&quot;</span><span class="op">,</span> tenantID<span class="op">,</span> err<span class="op">)</span></span>
+<span id="cb27-19"><a href="#cb27-19" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb27-20"><a href="#cb27-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> err <span class="op">:=</span> fn<span class="op">(</span>db<span class="op">.</span>New<span class="op">(</span>tx<span class="op">));</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb27-21"><a href="#cb27-21" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> err                                    <span class="co">// rollback via defer; tenant scope discarded</span></span>
+<span id="cb27-22"><a href="#cb27-22" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb27-23"><a href="#cb27-23" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> tx<span class="op">.</span>Commit<span class="op">(</span>ctx<span class="op">)</span></span>
+<span id="cb27-24"><a href="#cb27-24" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="63-why-set-local-not-set-is-mandatory-under-pooling">6.3 Why
+<code>SET LOCAL</code> (not <code>SET</code>) is mandatory under
+pooling</h3>
+<p>A plain <code>SET app.tenant_id = ...</code> (session-scoped) on a
+pooled connection would persist after the connection returns to the pool
+— the <strong>next</strong> request reusing that connection would
+inherit a stale tenant scope, a catastrophic cross-tenant leak.
+<code>SET LOCAL</code> / <code>set_config(..., true)</code> binds the
+GUC to the transaction lifetime: it is automatically cleared on
+<code>COMMIT</code> or <code>ROLLBACK</code>, so the connection returns
+to the pool <em>clean</em>. This is the single most important
+correctness property of the layer and is asserted directly by a test
+(§9, concurrency/atomicity type) that interleaves two tenants on one
+pooled connection and proves no bleed.</p>
+<h3 id="64-withsystem--the-narrow-exception">6.4 <code>WithSystem</code>
+— the narrow exception</h3>
+<div class="sourceCode" id="cb28"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/store/system.go — tenant create + cross-tenant ops ONLY; uses the helix_sys role.</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>s <span class="op">*</span>Store<span class="op">)</span> WithSystem<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> fn <span class="kw">func</span><span class="op">(</span>q <span class="op">*</span>db<span class="op">.</span>Queries<span class="op">)</span> <span class="dt">error</span><span class="op">)</span> <span class="dt">error</span> <span class="op">{</span></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>    tx<span class="op">,</span> err <span class="op">:=</span> s<span class="op">.</span>sysPool<span class="op">.</span>BeginTx<span class="op">(</span>ctx<span class="op">,</span> pgx<span class="op">.</span>TxOptions<span class="op">{})</span>  <span class="co">// sysPool authenticates as helix_sys_login</span></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span> <span class="cf">return</span> err <span class="op">}</span></span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">defer</span> <span class="kw">func</span><span class="op">()</span> <span class="op">{</span> _ <span class="op">=</span> tx<span class="op">.</span>Rollback<span class="op">(</span>ctx<span class="op">)</span> <span class="op">}()</span></span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">// sentinel scope: the all-zero UUID; tenants/overlay_pools writes here are reviewed &amp; narrow.</span></span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> _<span class="op">,</span> err <span class="op">:=</span> tx<span class="op">.</span>Exec<span class="op">(</span>ctx<span class="op">,</span></span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a>        <span class="st">`SELECT set_config(&#39;app.tenant_id&#39;, $1, true)`</span><span class="op">,</span> uuid<span class="op">.</span>Nil<span class="op">.</span>String<span class="op">());</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> err</span>
+<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb28-11"><a href="#cb28-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> err <span class="op">:=</span> fn<span class="op">(</span>db<span class="op">.</span>New<span class="op">(</span>tx<span class="op">));</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span> <span class="cf">return</span> err <span class="op">}</span></span>
+<span id="cb28-12"><a href="#cb28-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> tx<span class="op">.</span>Commit<span class="op">(</span>ctx<span class="op">)</span></span>
+<span id="cb28-13"><a href="#cb28-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<pre class="mermaid"><code>sequenceDiagram
+    autonumber
+    participant H as helixd handler
+    participant P as pgx pool (helix_app_login)
+    participant PG as Postgres (RLS, FORCE)
+    H-&gt;&gt;P: BeginTx
+    P-&gt;&gt;PG: BEGIN
+    H-&gt;&gt;PG: SELECT set_config(&#39;app.tenant_id&#39;, T, true)   %% SET LOCAL, tx-scoped
+    H-&gt;&gt;PG: sqlc query (e.g. DevicesForTenant)
+    PG--&gt;&gt;H: only rows WHERE tenant_id = T (RLS USING)
+    alt fn returns error
+        H-&gt;&gt;PG: ROLLBACK  %% GUC cleared, conn returns clean
+    else success
+        H-&gt;&gt;PG: COMMIT     %% GUC cleared, conn returns clean
+    end
+    Note over P,PG: next request on this pooled conn has NO app.tenant_id → fail-loud if unscoped</code></pre>
+<hr />
+<h2 id="7-no-logging-by-construction--provable-absence-c3">7. No-logging
+by construction — provable absence (C3)</h2>
+<p>The strongest privacy claim HelixVPN makes is mechanical, not
+promised: <strong>there is no table, view, or column in which
+connection/traffic/flow/packet data could be stored.</strong> The schema
+above contains identity, topology, and policy only. A pre-build gate
+proves it.</p>
+<h3 id="71-the-forbidden-shape-lint">7.1 The forbidden-shape lint</h3>
+<div class="sourceCode" id="cb30"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="co">// tools/schemalint/main.go — runs in the pre-build sweep (constitution §11.4.27 / §1.1 / §11.4.108).</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Parses every migrations/*.sql AND introspects the live schema (information_schema), then FAILS</span></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a><span class="co">// the build if any table/view/column matches a traffic-logging shape.</span></span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a><span class="kw">var</span> forbiddenTables <span class="op">=</span> regexp<span class="op">.</span>MustCompile<span class="op">(</span></span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">`(?i)\b(connections?|sessions?|flows?|traffic|packets?|netflow|bandwidth_samples?|dns_queries?|conn_log|access_log|flow_records?)\b`</span><span class="op">)</span></span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a><span class="kw">var</span> forbiddenCols <span class="op">=</span> regexp<span class="op">.</span>MustCompile<span class="op">(</span></span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>  <span class="st">`(?i)\b(src_ip|dst_ip|dest_ip|source_ip|src_port|dst_port|dest_port|bytes_(in|out)|tx_bytes|rx_bytes|packet_count|payload|sni_host|query_name|dns_name)\b`</span><span class="op">)</span></span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a><span class="co">// EXCEPTION ALLOWLIST — the ONLY ip/port-shaped identifiers permitted, each justified:</span></span>
+<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a><span class="co">//   devices.overlay_ip          (identity: the device&#39;s stable overlay address, not a flow)</span></span>
+<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a><span class="co">//   devices.wg_pubkey           (identity: the WG public key)</span></span>
+<span id="cb30-12"><a href="#cb30-12" aria-hidden="true" tabindex="-1"></a><span class="co">//   advertised_prefixes.cidr    (topology: a connector-advertised LAN prefix)</span></span>
+<span id="cb30-13"><a href="#cb30-13" aria-hidden="true" tabindex="-1"></a><span class="co">//   overlay_pools.ula_prefix    (topology: the tenant ULA /48)</span></span>
+<span id="cb30-14"><a href="#cb30-14" aria-hidden="true" tabindex="-1"></a><span class="co">//   connectors.site_id          (topology: the 4via6 site index)</span></span>
+<span id="cb30-15"><a href="#cb30-15" aria-hidden="true" tabindex="-1"></a><span class="co">// The lint asserts these are the EXHAUSTIVE set of address-shaped columns; ANY other match FAILS.</span></span></code></pre></div>
+<h3 id="72-the-11-paired-mutation-proves-the-gate-is-not-a-bluff">7.2
+The §1.1 paired mutation (proves the gate is not a bluff)</h3>
+<div class="sourceCode" id="cb31"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- tools/schemalint/testdata/mutation_connections.sql — a deliberately-forbidden migration.</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> connections (        <span class="co">-- MUTATION: must make the lint FAIL</span></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">id</span>        bigint <span class="kw">GENERATED</span> ALWAYS <span class="kw">AS</span> IDENTITY <span class="kw">PRIMARY</span> <span class="kw">KEY</span>,</span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>  src_ip    inet,                 <span class="co">-- forbidden column shape</span></span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>  dst_ip    inet,                 <span class="co">-- forbidden column shape</span></span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>  bytes_in  bigint,</span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>  bytes_out bigint</span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a>);</span></code></pre></div>
+<p>The meta-test asserts: with the mutation present the lint exits
+non-zero (<code>FAIL</code>); removed, it exits zero
+(<code>PASS</code>). This is the runtime signature (§11.4.108) that C3
+is <em>live</em>, not merely documented — an analyzer that passes its
+golden-bad fixture is itself the bluff (§11.4.107(10)).</p>
+<h3 id="73-audit-is-the-only-append-log--and-it-is-control-only">7.3
+Audit is the only append log — and it is control-only</h3>
+<p><code>audit_events</code> records <em>control actions</em>
+(<code>device.revoke</code>, <code>policy.activate</code>,
+<code>enroll_token.mint</code>) with an
+<code>action ~ &#39;^[a-z_]+\.[a-z_]+$&#39;</code> shape check and a
+<code>meta jsonb</code> that the §7.1 lint also scans for forbidden keys
+— so even the audit log cannot smuggle a <code>src_ip</code>. Coarse
+presence (<code>devices.last_seen_at</code>) is the only time-varying
+device field, and it is a single heartbeat-refreshed timestamp, never a
+per-packet or per-flow record.</p>
+<pre class="mermaid"><code>flowchart TD
+    SRC[&quot;migrations/*.sql + live information_schema&quot;] --&gt; LINT[&quot;schemalint regex + allowlist&quot;]
+    LINT --&gt; T{&quot;forbidden table/col match outside allowlist?&quot;}
+    T -- yes --&gt; FAIL[&quot;BUILD FAILS (C3 violated)&quot;]
+    T -- no --&gt; PASS[&quot;BUILD PASSES (C3 proven live)&quot;]
+    MUT[&quot;§1.1 mutation: add connections(src_ip,...)&quot;] -. &quot;must flip&quot; .-&gt; FAIL</code></pre>
+<hr />
+<h2 id="8-migration-tooling--goose-authority--atlas-drift-gate">8.
+Migration tooling — goose (authority) + atlas (drift gate)</h2>
+<h3 id="81-goose--the-schema-authority">8.1 goose — the schema
+authority</h3>
+<p><code>goose</code> SQL migrations under
+<code>helix-go/migrations/</code> are the source of truth;
+<code>sqlc</code> reads them for type generation (§3.1). Apply with
+<code>goose -dir migrations postgres &quot;$HELIX_DB_OWNER_URL&quot; up</code>
+(authenticated as <code>helix_owner</code>). Each file is up/down
+reversible. <code>helixvpnctl migrate</code> wraps goose so operators
+never call it raw; it runs the §6.1 role self-check afterward against
+<code>helix_app_login</code>.</p>
+<h3 id="82-atlas--declarative-drift-detection-cipre-build-local-only-per-114156">8.2
+atlas — declarative drift detection (CI/pre-build, local-only per
+§11.4.156)</h3>
+<p>Atlas re-derives the expected schema from the goose-applied database
+and <strong>fails the pre-build sweep on any drift</strong> between
+<code>migrations/</code> and a hand-edited live schema:</p>
+<pre class="hcl"><code># atlas.hcl
+env &quot;local&quot; {
+  url     = getenv(&quot;HELIX_DB_OWNER_URL&quot;)
+  dev     = &quot;docker://postgres/16/helix_dev&quot;   # ephemeral dev DB (containers submodule §11.4.76)
+  migration { dir = &quot;file://migrations&quot; }
+}</code></pre>
+<p><code>atlas migrate lint</code> + <code>atlas schema diff</code> run
+in the local gate (no remote CI per §11.4.156). A declarative diff
+catching an unmigrated <code>ALTER TABLE</code> is the second mechanical
+guard (the first being goose&#39;s own version table) that the live schema
+equals the committed authority.</p>
+<h3 id="83-migration-ordering--the-risk-descending-rule-114132">8.3
+Migration ordering &amp; the risk-descending rule (§11.4.132)</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>File</th>
+<th>Why this order</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0001</td>
+<td>extensions + roles</td>
+<td>nothing references tables yet; roles must exist before grants</td>
+</tr>
+<tr>
+<td>0002</td>
+<td>enums</td>
+<td>referenced by tables</td>
+</tr>
+<tr>
+<td>0003</td>
+<td>tenants + users</td>
+<td>tenancy root before anything FK-ing it</td>
+</tr>
+<tr>
+<td>0004</td>
+<td>devices</td>
+<td>FKs tenants, users</td>
+</tr>
+<tr>
+<td>0005</td>
+<td>connectors + advertised_prefixes</td>
+<td>FK devices</td>
+</tr>
+<tr>
+<td>0006</td>
+<td>groups + group_members</td>
+<td>FK devices</td>
+</tr>
+<tr>
+<td>0007</td>
+<td>policies</td>
+<td>FK tenants</td>
+</tr>
+<tr>
+<td>0008</td>
+<td>overlay_pools</td>
+<td>FK tenants</td>
+</tr>
+<tr>
+<td>0009</td>
+<td>device_certs</td>
+<td>FK devices</td>
+</tr>
+<tr>
+<td>0010</td>
+<td>audit_events</td>
+<td>FK tenants</td>
+</tr>
+<tr>
+<td>0011</td>
+<td>RLS enable/force/policies + coherence triggers</td>
+<td>tables must exist first; this is the correctness floor</td>
+</tr>
+<tr>
+<td>0012</td>
+<td>grants + default privileges</td>
+<td>last; references all tables</td>
+</tr>
+</tbody>
+</table>
+<p>RLS (0011) lands as early as the tables permit — it is the
+irreversible correctness floor, validated first (§11.4.132
+risk-descending: a tenant leak is the highest-severity failure in this
+layer).</p>
+<hr />
+<h2 id="9-test-points--mandatory-comprehensive-coverage-114169">9. Test
+points — mandatory comprehensive coverage (§11.4.169)</h2>
+<p>§11.4.169 mandates the CLOSED enumerated test-type set, each to
+as-close-to-100% as the domain permits, every PASS citing rock-solid
+captured physical evidence (§11.4.5/.69/.107), zero bluff; the only
+permitted absence is an honest §11.4.3 SKIP-with-reason. This is the
+per-type coverage map for the data-model layer.</p>
+<table>
+<thead>
+<tr>
+<th>Test type (§11.4.169)</th>
+<th>Concrete data-model test point</th>
+<th>Evidence captured</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>unit</strong></td>
+<td><code>embedHost</code> overlay-IP composition is deterministic;
+<code>NextPolicyVersion</code> COALESCE returns 1 on empty; type
+overrides round-trip (<code>netip.Addr</code>↔︎<code>inet</code>).</td>
+<td>Go test logs + golden vectors.</td>
+</tr>
+<tr>
+<td><strong>integration</strong> (real PG via containers §11.4.76)</td>
+<td>Full migrate (goose up 0001–0012), then enroll→advertise→policy
+insert→activate against a real Postgres 16 booted by the containers
+submodule.</td>
+<td>Container boot log + query result snapshots.</td>
+</tr>
+<tr>
+<td><strong>integration — RLS isolation</strong></td>
+<td>Tenant A connection (helix_app_login, <code>WithTenant(A)</code>)
+executes <code>SELECT * FROM devices</code> and gets ZERO of tenant B&#39;s
+rows even with a crafted <code>OR tenant_id = B</code>; an
+<code>INSERT</code> of a B-tenant row is rejected by
+<code>WITH CHECK</code>. Run with <code>FORCE RLS</code> on.</td>
+<td>Captured query output (0 rows) + the rejected-insert error.</td>
+</tr>
+<tr>
+<td><strong>e2e</strong></td>
+<td><code>helixvpnctl bootstrap</code> → create tenant (WithSystem) →
+enroll a device → read back via <code>helix_app_login</code> — the whole
+role/RLS/SET-LOCAL chain end to end.</td>
+<td>CLI transcript + DB state diff.</td>
+</tr>
+<tr>
+<td><strong>full-automation</strong> (deterministic §11.4.50)</td>
+<td>The integration suite re-runs <code>-count=3</code>, byte-identical
+PASS each iteration; ephemeral DB torn down + rebooted per run.</td>
+<td>3× identical run hashes.</td>
+</tr>
+<tr>
+<td><strong>Challenges</strong> (challenges submodule §11.4.27(B))</td>
+<td>A Challenge drives create-tenant→enroll→policy and asserts
+cross-tenant denial, scoring PASS only on captured 0-row evidence.</td>
+<td>Challenge <code>result.json</code> + captured rows.</td>
+</tr>
+<tr>
+<td><strong>HelixQA</strong> (helix_qa submodule)</td>
+<td>A <code>store</code> test bank: RLS, IPAM concurrency, schema-lint,
+migration up/down round-trip; run in an autonomous QA session.</td>
+<td>HelixQA session report.</td>
+</tr>
+<tr>
+<td><strong>DDoS / load-flood</strong></td>
+<td>10k concurrent <code>WithTenant</code> enrollments against the pool;
+assert no connection exhaustion, no GUC bleed, bounded p99 insert
+latency.</td>
+<td>Latency histogram + error count = 0.</td>
+</tr>
+<tr>
+<td><strong>security</strong> (§11.4.10 + security submodule)</td>
+<td>Role self-check (<code>MustVerifyAppRole</code>) aborts boot under a
+superuser/BYPASSRLS role; no credential in any migration or log;
+<code>WITH CHECK</code> blocks tenant-spoofing inserts.</td>
+<td>Boot-abort log + grep-clean credential audit.</td>
+</tr>
+<tr>
+<td><strong>stress + chaos</strong> (§11.4.85)</td>
+<td>Kill the DB mid-<code>WithTenant</code> (chaos): the tx rolls back,
+GUC clears, the pooled conn recovers clean; disk-full on
+<code>audit_events</code> append degrades, never corrupts.</td>
+<td>Recovery trace + post-chaos RLS still intact.</td>
+</tr>
+<tr>
+<td><strong>concurrency / atomicity</strong></td>
+<td>Two tenants interleaved on ONE pooled connection prove
+<code>SET LOCAL</code> scoping (§6.3); <code>BumpOverlayNextHost</code>
+under N goroutines yields N distinct host ids (no double-alloc).</td>
+<td>Distinct-id set assertion + interleave log.</td>
+</tr>
+<tr>
+<td><strong>race-condition / deadlock</strong></td>
+<td><code>-race</code> build of the IPAM + pool paths; concurrent
+<code>Activate</code> flips never violate
+<code>policies_one_active_per_tenant</code>; no lock-order inversion
+between <code>devices</code>/<code>group_members</code> triggers.</td>
+<td><code>go test -race</code> clean + unique-violation retry log.</td>
+</tr>
+<tr>
+<td><strong>memory</strong></td>
+<td>24h soak of repeated <code>WithTenant</code> cycles;
+<code>process_resident_memory_bytes</code> slope ≈ 0 (no pgx conn/GUC
+leak).</td>
+<td>RSS time series slope.</td>
+</tr>
+<tr>
+<td><strong>benchmarking / performance</strong></td>
+<td><code>EnabledPrefixesForTenant</code> +
+<code>ActiveCertBySerial</code> index-only/partial-index plans verified
+via <code>EXPLAIN</code>; policy insert+activate p99 within the doc-02
+§10.2 budget.</td>
+<td><code>EXPLAIN (ANALYZE)</code> output + bench numbers.</td>
+</tr>
+</tbody>
+</table>
+<p>Four-layer enforcement (§11.4.4(b)): pre-build (schema-lint §7, atlas
+drift §8.2, sqlc compile), post-build (migrate up/down on a real
+container), runtime-on-clean-target (RLS denial proven on a
+freshly-migrated DB, §11.4.108/.139), paired §1.1 mutations (§7.2
+connections-table; an RLS-policy strip that must make the isolation test
+FAIL; a <code>FORCE</code>→<code>ENABLE</code>-only downgrade that must
+let the owner read cross-tenant). Any genuinely-infeasible point is an
+honest §11.4.3 SKIP-with-reason, never a silent gap.</p>
+<hr />
+<h2 id="10-edge-cases--error-taxonomy">10. Edge cases &amp; error
+taxonomy</h2>
+<table>
+<thead>
+<tr>
+<th>Edge case</th>
+<th>Behaviour</th>
+<th>Where enforced</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Query runs without <code>WithTenant</code> (forgotten scope)</td>
+<td><code>current_setting(&#39;app.tenant_id&#39;)::uuid</code> errors → query
+fails loud, no leak.</td>
+<td>RLS predicate (§4.3)</td>
+</tr>
+<tr>
+<td>Two concurrent enrollments</td>
+<td>Row-locked <code>BumpOverlayNextHost</code> serialises; distinct
+host ids.</td>
+<td>§3.3 / §6.3</td>
+</tr>
+<tr>
+<td>Two admins insert a policy at once</td>
+<td><code>UNIQUE(tenant_id,version)</code> rejects the loser; app
+catches <code>23505</code>, re-reads <code>NextPolicyVersion</code>,
+retries.</td>
+<td>§2.7 / §3.4</td>
+</tr>
+<tr>
+<td>Concurrent <code>Activate</code> of different versions</td>
+<td><code>policies_one_active_per_tenant</code> partial-unique makes the
+deactivate-all+activate flip atomic; second flip retries.</td>
+<td>§2.7 / §3.4</td>
+</tr>
+<tr>
+<td>Overlapping CIDRs from two connectors</td>
+<td>NOT blocked — surfaced as <code>route.conflict.detected</code>;
+resolved by 4via6 site index (D4).</td>
+<td>§3.5 ConflictingPrefixes</td>
+</tr>
+<tr>
+<td>Anonymous user (no email/SSO)</td>
+<td><code>users.email</code>/<code>oidc_sub</code> NULL; partial-unique
+indexes permit many anon users (C6).</td>
+<td>§2.3</td>
+</tr>
+<tr>
+<td>Revoked device</td>
+<td><code>revoked_at</code> set (soft); excluded by
+<code>devices_tenant_active_idx</code> queries; certs revoked; open
+stream force-closed (doc 02 §8.2).</td>
+<td>§3.2 / §3.7</td>
+</tr>
+<tr>
+<td>group_member tenant mismatch</td>
+<td>Constraint trigger raises <code>check_violation</code>.</td>
+<td>§4.4</td>
+</tr>
+<tr>
+<td>Malformed overlay IP (subnet or IPv4)</td>
+<td><code>masklen=128</code>/<code>family=6</code> CHECK rejects the
+insert.</td>
+<td>§2.4</td>
+</tr>
+<tr>
+<td>Non-ULA pool prefix</td>
+<td><code>ula_prefix &lt;&lt; &#39;fc00::/7&#39;</code> CHECK rejects.</td>
+<td>§2.8</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Error taxonomy (Go side, mapped from PG
+SQLSTATE):</strong></p>
+<table>
+<thead>
+<tr>
+<th>SQLSTATE</th>
+<th>Go sentinel</th>
+<th>Meaning</th>
+<th>Handler action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>23505</code> unique_violation</td>
+<td><code>ErrConflict</code></td>
+<td>dup pubkey / overlay_ip / policy version</td>
+<td>409 (REST) / <code>AlreadyExists</code> (Connect); version path
+retries</td>
+</tr>
+<tr>
+<td><code>23503</code> foreign_key_violation</td>
+<td><code>ErrNotFound</code></td>
+<td>parent tenant/device gone</td>
+<td>404 / <code>NotFound</code></td>
+</tr>
+<tr>
+<td><code>23514</code> check_violation</td>
+<td><code>ErrInvalid</code></td>
+<td>bad pubkey len / overlay shape / tenant-coherence trigger</td>
+<td>400 / <code>InvalidArgument</code></td>
+</tr>
+<tr>
+<td><code>22023</code>/unset GUC</td>
+<td><code>ErrUnscoped</code></td>
+<td>query ran outside <code>WithTenant</code></td>
+<td>500 + alert (a bug, never a client error)</td>
+</tr>
+<tr>
+<td><code>P0001</code> raise_exception</td>
+<td><code>ErrInvalid</code></td>
+<td>coherence trigger message</td>
+<td>400 / <code>InvalidArgument</code></td>
+</tr>
+<tr>
+<td>context deadline</td>
+<td><code>ErrTimeout</code></td>
+<td>tx exceeded budget</td>
+<td>503 + retry-after</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="11-cross-references--provenance">11. Cross-references &amp;
+provenance</h2>
+<ul>
+<li><strong>Coordinator</strong> consumes the compiled view of
+<code>policies</code> + <code>devices</code> +
+<code>advertised_prefixes</code> (doc 02 §6); this layer only stores +
+serves the rows. <strong>Compiler</strong> (doc 02 §7) reads
+<code>policies.spec</code>, writes
+<code>version</code>/<code>active</code>/<code>compiled_at</code>.</li>
+<li><strong>Proto package</strong> is <code>helix.coordinator.v1</code>
+(unified across the set; doc 02 §4) — the
+<code>EnrollResponse.overlay_ip</code> string is the §2.4
+<code>devices.overlay_ip</code> rendered, the
+<code>Peer.allowed_ips</code> are compiled from <code>policies</code> +
+<code>advertised_prefixes</code>.</li>
+<li><strong>Events</strong> (doc 02 §5): every mutation here is followed
+(same logical unit of work) by an <code>events.Publish</code> (R3) —
+e.g. <code>InsertDevice</code> → <code>device.enrolled</code>,
+<code>Activate</code> → <code>policy.compiled</code>.</li>
+<li><strong>Constitution wiring</strong>: containers submodule for
+on-demand test infra (§11.4.76); helix_qa + challenges for the §9
+anti-bluff suites (§11.4.27/.5/.69/.107); §11.4.169 test-type ledger
+above; §11.4.10 credentials (role passwords never git-tracked);
+§11.4.156 local-only gates; §11.4.132 risk-descending migration order;
+§11.4.108/.139 runtime-signature (RLS proven on a clean DB).</li>
+</ul>
+<h3 id="sources">Sources</h3>
+<p>[04_P1] HelixVPN-Phase1-MVP.md — control-plane DDL, RLS, role split,
+no-log lint, IPAM, policy versioning · [04_ARCH §3/§4/§7]
+HelixVPN-Architecture-Refined.md — ULA /48 + 4via6 (D4), no-logging,
+default-deny, generated clients · [research-go_cp §2/§3/§7] doc 02
+control-plane overview (the Data Model section this document deepens) ·
+[SYNTHESIS §2/§3/§7/§8/§9] cross-document synthesis (stack floor, D3/D4
+decisions, privacy invariants, ecosystem + constitution bindings).</p>
+</body>
+</html>

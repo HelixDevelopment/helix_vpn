@@ -1,0 +1,1317 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Token export pipeline — one JSON source → every consumable form</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Token export pipeline — one JSON source → every
+consumable form</h1>
+</header>
+<h1 id="token-export-pipeline--one-json-source--every-consumable-form">Token
+export pipeline — one JSON source → every consumable form</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-06-25T12:00:00Z</p>
+<blockquote>
+<p>Master technical specification — Volume 10 (Design System),
+nano-detail deep-dive. This document <strong>owns</strong> the
+<strong>build pipeline</strong> that turns <code>helix_design</code>&#39;s
+one canonical JSON token source into <strong>every</strong> consumable
+platform form: the transform tool (a
+<strong>Style-Dictionary-class</strong> generator — role named, exact
+tool choice surfaced as a decision), the per-target emit (CSS custom
+properties light+dark, Dart <code>ThemeExtension</code> +
+<code>ThemeData</code>, SwiftUI, Jetpack Compose Material3
+<code>ColorScheme</code>, ArkTS HarmonyOS resources, C/Qt header</p>
+<ul>
+<li>QML singleton), each with a <strong>concrete output sample</strong>,
+the <strong>drift gate</strong> (generated output MUST match a fresh
+regenerate — a hand-edited derived form fails the build,
+§11.4.108-style), the §11.4.65 / §11.4.168 export + visual- validation
+hook, and how OpenDesign&#39;s <code>tokens.css</code> feeds
+<strong>in</strong> as one authoring input (D-DESIGN-3 round-trip).</li>
+</ul>
+<p><strong>SPEC-ONLY.</strong> It describes <em>the pipeline
+contract</em> — the transforms, the output shapes, the gates — not the
+shipping <code>helix_design</code> build. The <strong>token
+model</strong> (tiers, <code>$value</code>/<code>$type</code> envelope,
+naming, theming axes) is owned by [<code>design-tokens.md</code>]; the
+<strong>colour values + contrast</strong> by
+[<code>color-system.md</code>]; the <strong>type/icon/motion</strong>
+token families by [<code>typography-iconography-motion.md</code>]; the
+<strong>submodule layout + the <code>export/targets/*.ts</code>
+placement + OpenDesign relationship</strong> by
+[<code>00-overview-and-submodule.md</code>] (§4, §6, §10) and
+[<code>opendesign-foundation.md</code>]. This document is
+<strong>original HelixVPN design work</strong> (the pipeline
+architecture is owned here, layered on the verified OpenDesign
+facts).</p>
+<p><strong>Boundary with sibling docs.</strong> Owns: the transform
+stages, the per-target output samples, the drift gate, the
+round-trip-with-OpenDesign mechanics, the §11.4.65/.168 export hook.
+Consumes: the JSON schema + the <code>$type</code>→target mapping table
+[<code>design-tokens.md</code> §3.2]; the 8-platform target list +
+<code>dist/**</code>-is-a-build-derivative rule
+[<code>00-overview-and-submodule.md</code> §4/§6, DS-I6]; the verified
+fact that OpenDesign does <strong>not</strong> emit Dart/Swift/Compose/
+ArkTS/C-Qt (so these exporters are <code>helix_design</code>&#39;s own)
+[<code>opendesign-foundation.md</code> §0/§1.2].</p>
+<p><strong>Evidence base.</strong> <code>[DT §N]</code> =
+<code>final/v10-design/design-tokens.md</code>; <code>[COLOR §N]</code>
+= <code>final/v10-design/color-system.md</code>; <code>[TIM §N]</code> =
+<code>final/v10-design/typography-iconography-motion.md</code>;
+<code>[OV §N]</code> =
+<code>final/v10-design/00-overview-and-submodule.md</code>;
+<code>[OD §N]</code> =
+<code>final/v10-design/opendesign-foundation.md</code>;
+<code>[SPINE §N]</code> = <code>final/SPECIFICATION.md</code>. Claims
+not grounded in the evidence base or in this document&#39;s own original
+design choices are tagged <code>UNVERIFIED</code> per constitution
+§11.4.6 — never fabricated. The <strong>exact</strong> transform-library
+API shapes (the precise <code>dist/**</code> byte forms) are pinned by
+the pipeline&#39;s own contract test and tagged <code>UNVERIFIED</code>
+until that test exists.</p>
+</blockquote>
+<hr />
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#0-the-pipeline-at-a-glance">0. The pipeline at a
+glance</a></li>
+<li><a href="#1-inputs--json-source--the-opendesign-round-trip">1.
+Inputs — JSON source + the OpenDesign round-trip</a></li>
+<li><a href="#2-the-transform-tool-style-dictionary-class--role--decision">2.
+The transform tool (Style-Dictionary-class) — role &amp;
+decision</a></li>
+<li><a href="#3-the-transform-stages-resolve--theme-split--per-target-format">3.
+The transform stages (resolve → theme-split → per-target
+format)</a></li>
+<li><a href="#4-per-target-output-samples-concrete">4. Per-target output
+samples (concrete)</a>
+<ul>
+<li><a href="#41-css-custom-properties-light--dark">4.1 CSS custom
+properties (light + dark)</a></li>
+<li><a href="#42-dart--themeextension--themedata">4.2 Dart —
+ThemeExtension + ThemeData</a></li>
+<li><a href="#43-swiftui--generated-tokens--asset-catalog">4.3 SwiftUI —
+generated tokens + asset catalog</a></li>
+<li><a href="#44-jetpack-compose--material3-colorscheme--typography">4.4
+Jetpack Compose — Material3 ColorScheme + Typography</a></li>
+<li><a href="#45-arkts--harmonyos-resources--appstorage">4.5 ArkTS —
+HarmonyOS resources / AppStorage</a></li>
+<li><a href="#46-c--qt--header--qml-singleton">4.6 C / Qt — header + QML
+singleton</a></li>
+</ul></li>
+<li><a href="#5-the-drift-gate-generated-must-match-source">5. The drift
+gate (generated MUST match source)</a></li>
+<li><a href="#6-the-11465--11468-export--visual-validation-hook">6. The
+§11.4.65 / §11.4.168 export + visual-validation hook</a></li>
+<li><a href="#7-how-opendesigns-tokenscss-feeds-in">7. How OpenDesign&#39;s
+tokens.css feeds in</a></li>
+<li><a href="#8-the-full-pipeline-diagram">8. The full pipeline
+diagram</a></li>
+<li><a href="#9-surfaced-decisions--cross-doc-contracts">9. Surfaced
+decisions &amp; cross-doc contracts</a></li>
+<li><a href="#sources-verified">Sources verified</a></li>
+</ul>
+<hr />
+<h2 id="0-the-pipeline-at-a-glance">0. The pipeline at a glance</h2>
+<p><code>helix_design</code> holds <strong>one</strong> authored source
+of truth — the tiered JSON token tree (<code>tokens/**</code> +
+<code>presets/**</code>, [DT §3], [OV §4]). The export pipeline
+(<code>export/</code>) is the machine that turns that one source into
+the <strong>seven</strong> forms the 3 apps × 8 platforms consume, so
+<strong>no platform ever re-types a token by hand</strong> (DS-I6, [OV
+§0.2]). The pipeline is the <strong>enforcement</strong> of the
+one-source / zero-drift rule: the only way a platform theme can diverge
+from source is a hand-edit of a generated file, and the drift gate (§5)
+catches that hand-edit.</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Stage</th>
+<th>Input</th>
+<th>Output</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><strong>Load + merge</strong></td>
+<td><code>tokens/**</code> JSON files + active
+<code>presets/&lt;brand&gt;/</code></td>
+<td>one in-memory token dictionary</td>
+</tr>
+<tr>
+<td>2</td>
+<td><strong>Resolve references</strong></td>
+<td>the dictionary</td>
+<td>every <code>{ref}</code> dereferenced to a literal
+(same-<code>$type</code>-checked)</td>
+</tr>
+<tr>
+<td>3</td>
+<td><strong>Theme-split</strong></td>
+<td>the resolved dictionary</td>
+<td>a <code>light</code> table + a <code>dark</code> table per [DT
+§5.1]</td>
+</tr>
+<tr>
+<td>4</td>
+<td><strong>Per-target format</strong></td>
+<td>the two theme tables</td>
+<td><code>dist/{css,dart,swift,compose,arkts,cqt,json}/**</code></td>
+</tr>
+<tr>
+<td>5</td>
+<td><strong>Drift gate</strong></td>
+<td>a fresh re-run</td>
+<td>byte-compare vs the committed package-source forms (§5)</td>
+</tr>
+<tr>
+<td>6</td>
+<td><strong>Export + visual-validate</strong></td>
+<td>the docs + the emitted forms</td>
+<td>§11.4.65 <code>.html</code>/<code>.pdf</code> siblings + §11.4.168
+visual validation</td>
+</tr>
+</tbody>
+</table>
+<pre class="mermaid"><code>flowchart LR
+    SRC[&quot;tokens/** + presets/&amp;lt;brand&amp;gt;/ (authored JSON)&quot;]
+    OD[&quot;OpenDesign tokens.css (authoring round-trip §7)&quot;]
+    OD -.-&gt;|&quot;D-DESIGN-3 (b): css→json import&quot;| SRC
+    SRC --&gt; L[&quot;1 load+merge&quot;] --&gt; R[&quot;2 resolve refs&quot;] --&gt; T[&quot;3 theme-split (light/dark)&quot;]
+    T --&gt; F[&quot;4 per-target format&quot;]
+    F --&gt; CSS[&quot;dist/css/helix.css&quot;]
+    F --&gt; DART[&quot;dist/dart + ThemeExtension&quot;]
+    F --&gt; SWIFT[&quot;dist/swift/HelixTokens.swift&quot;]
+    F --&gt; COMPOSE[&quot;dist/compose/HelixTokens.kt&quot;]
+    F --&gt; ARKTS[&quot;dist/arkts/helix_tokens.ets&quot;]
+    F --&gt; CQT[&quot;dist/cqt/helix_tokens.h + Theme.qml&quot;]
+    F --&gt; JSON[&quot;dist/json/tokens.json&quot;]
+    F --&gt; G[&quot;5 drift gate (byte-match a fresh re-run)&quot;]
+    F --&gt; X[&quot;6 §11.4.65 export + §11.4.168 visual-validate&quot;]
+    JSON -.-&gt;|&quot;export target → tokens.css&quot;| OD</code></pre>
+<hr />
+<h2 id="1-inputs--json-source--the-opendesign-round-trip">1. Inputs —
+JSON source + the OpenDesign round-trip</h2>
+<h3 id="11-the-primary-input--the-tiered-json-source">1.1 The primary
+input — the tiered JSON source</h3>
+<p>The authored input is the three-tier JSON tree [DT §3, OV §4]:</p>
+<pre><code>helix_design/tokens/
+├── primitive/   color.json type.json space.json radius.json elevation.json
+│                motion.json zindex.json breakpoints.json icon.json
+├── semantic/    color.light.json color.dark.json type.json space.json
+│                elevation.json motion.json border.json
+└── component/   connect_button.json status_chip.json exit_picker.json …
+helix_design/presets/&lt;brand&gt;/   brand.json connection_state.json</code></pre>
+<p>The active <strong>brand preset</strong> ([OV §5.4]) is selected at
+build time (<code>--preset presets/helix/</code>, default HelixVPN; a
+future app drops <code>presets/&lt;x&gt;/</code>). The preset supplies
+the values the semantic tier references — the <strong>only</strong>
+place brand-specific values live (DS-I1, [OV §3]).</p>
+<h3 id="12-the-secondary-input--opendesign-tokenscss-round-trip">1.2 The
+secondary input — OpenDesign <code>tokens.css</code> (round-trip)</h3>
+<p>OpenDesign authoring/refinement [OD §6] edits the HelixVPN design
+system&#39;s <code>tokens.css</code>. Per <strong>D-DESIGN-3</strong> ([OV
+§10.2]) the project <strong>leans (b)</strong> — JSON is the source,
+<code>tokens.css</code> is a <strong>generated export target</strong>
+that OpenDesign consumes/previews; refinement edits made <em>in</em>
+OpenDesign are reconciled <strong>back</strong> into
+<code>tokens/**</code> (a <code>css→json</code> import diff). The
+round-trip touches only the <strong>verified</strong> OpenDesign surface
+(CSS custom properties, [OD §4]) — never an unverified OpenDesign API.
+§7 details the mechanics.</p>
+<hr />
+<h2 id="2-the-transform-tool-style-dictionary-class--role--decision">2.
+The transform tool (Style-Dictionary-class) — role &amp; decision</h2>
+<h3 id="21-the-role">2.1 The role</h3>
+<p>The transform tool is a <strong>token-build engine</strong> that:
+loads a tiered token tree, resolves <code>{ref}</code> references,
+applies per-platform <strong>transforms</strong> (e.g.
+<code>#RRGGBB</code> → Dart <code>Color(0xAARRGGBB)</code>,
+<code>16px</code> → Compose <code>16.dp</code>), and runs per-platform
+<strong>formatters</strong> that emit a file in the target language.
+This is exactly the <strong>Style-Dictionary</strong> category of tool
+(Amazon&#39;s open-source design-token build system is the canonical
+example; the W3C Design-Tokens Community Group format the ecosystem
+converges on is the <code>$value</code>/<code>$type</code> envelope [DT
+§3.1] this project already authors in).</p>
+<h3 id="22-the-decision">2.2 The decision</h3>
+<blockquote>
+<p><strong>D-EXP-1 (open, §9) — exact transform engine.</strong> The
+pipeline is specified against the <strong>Style-Dictionary-class
+role</strong> (§2.1), not hard-bound to one library, so the choice is
+surfaced, not silently made (§11.4.6):</p>
+<table>
+<thead>
+<tr>
+<th>Candidate</th>
+<th>Note</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Style Dictionary</strong> (amzn, v4)</td>
+<td>the reference implementation; native W3C-DTCG
+<code>$type</code>/<code>$value</code> support, custom
+transforms/formats in TS; the <strong>lean</strong> default</td>
+</tr>
+<tr>
+<td><strong>Terrazzo</strong> (formerly <code>cobalt-ui</code>)</td>
+<td>W3C-DTCG-native, TS-first, plugin per target</td>
+</tr>
+<tr>
+<td>a <strong>bespoke TS generator</strong> in
+<code>export/build.ts</code></td>
+<td>full control, no dep; more code to own/test</td>
+</tr>
+</tbody>
+</table>
+<p>Lean: <strong>Style Dictionary v4</strong> (mature, DTCG-native,
+custom-format API covers all 6 non-JSON targets), with bespoke
+formatters for the targets it lacks built-in (ArkTS, C/Qt). The engine
+is a <strong>build-time dev dependency</strong> declared in
+<code>helix-deps.yaml build_toolchain</code> ([OV §7.2]) — never a
+runtime dependency of the consuming apps.
+<strong><code>UNVERIFIED</code></strong> until the Volume-10 review
+ratifies the exact library + pins its version per §11.4.99; the
+<em>pipeline contract</em> (stages §3, outputs §4, drift gate §5) holds
+regardless of which engine fills the role.</p>
+</blockquote>
+<blockquote>
+<p><strong>Honest boundary (§11.4.6 / [OD §0]).</strong> OpenDesign does
+<strong>NOT</strong> itself emit Dart/Swift/Compose/ArkTS/C-Qt
+(verified, [OD §1.2]). These exporters are therefore
+<strong><code>helix_design</code>&#39;s own</strong> Style-Dictionary-class
+pipeline — <em>not</em> an OpenDesign feature. If a future requirement
+is &quot;OpenDesign itself emits a Compose form&quot;, that is an
+<strong>extend-OpenDesign-upstream</strong> task per §11.4.74 ([OD §7],
+D-DESIGN-4) — not assumed here.</p>
+</blockquote>
+<hr />
+<h2 id="3-the-transform-stages-resolve--theme-split--per-target-format">3.
+The transform stages (resolve → theme-split → per-target format)</h2>
+<h3 id="31-stage-12--load-merge-resolve">3.1 Stage 1–2 — load, merge,
+resolve</h3>
+<p>The loader merges every <code>tokens/**</code> file + the active
+preset into one dictionary, then resolves references depth-first.
+Resolution is <strong>total</strong> and <strong>type-checked</strong>
+([DT §3.1]): a <code>{ref}</code> MUST resolve to an existing token of
+the <strong>same <code>$type</code></strong>, else the build
+<strong>fails</strong> (never a silent default, §11.4.6 + [DT §9
+<code>CM-token-refs-resolve</code>]).</p>
+<h3 id="32-stage-3--theme-split">3.2 Stage 3 — theme-split</h3>
+<p>Only <strong>themed</strong> categories (<code>color</code>,
+<code>elevation</code>, a small <code>border</code>/<code>opacity</code>
+set [DT §3.1/§6]) carry a <code>{light, dark}</code> fork. Stage 3
+produces <strong>two</strong> fully-resolved flat tables — a
+<code>light</code> table and a <code>dark</code> table — where every
+themed token has collapsed to its theme-specific literal and every
+non-themed token (space, radius, type metrics, motion, z, breakpoints,
+[DT §6]) appears identically in both. The two tables are the input to
+every formatter, so <strong>every</strong> target emits a light
+<strong>and</strong> a dark form (a target emitting one theme fails [OV
+§12 <code>DS-LIGHT-DARK-COMPLETE</code>]).</p>
+<h3 id="33-stage-4--per-target-format">3.3 Stage 4 — per-target
+format</h3>
+<p>Each target is a <code>transform-set</code> + a
+<code>formatter</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Target</th>
+<th>Transform highlights (<code>$type</code> → form, [DT §3.2])</th>
+<th>Formatter emits</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CSS</td>
+<td>color→<code>#RRGGBB[AA]</code>,
+dim→<code>px</code>/<code>rem</code>, dur→<code>ms</code>,
+bezier→<code>cubic-bezier()</code></td>
+<td><code>:root</code> (light) + <code>[data-theme=dark]</code> (dark)
+custom-property blocks</td>
+</tr>
+<tr>
+<td>Dart</td>
+<td>color→<code>Color(0xAARRGGBB)</code>, dim→<code>double</code>
+logical px, weight→<code>FontWeight.wNNN</code>,
+dur→<code>Duration</code></td>
+<td>a tokens file + a <code>ThemeExtension&lt;HelixTokens&gt;</code>
+with <code>.light()</code>/<code>.dark()</code></td>
+</tr>
+<tr>
+<td>SwiftUI</td>
+<td>color→<code>Color(.sRGB,…)</code>/asset-catalog entry,
+dim→<code>CGFloat</code>, weight→<code>Font.Weight</code></td>
+<td>a <code>HelixTokens.swift</code> + a <code>.xcassets</code> colorset
+per themed colour</td>
+</tr>
+<tr>
+<td>Compose</td>
+<td>color→<code>Color(0x…)</code>,
+dim→<code>.dp</code>/<code>.sp</code>,
+weight→<code>FontWeight.WNNN</code></td>
+<td>a <code>HelixTokens.kt</code> with
+<code>lightColors</code>/<code>darkColors</code> + an M3
+<code>ColorScheme</code> builder</td>
+</tr>
+<tr>
+<td>ArkTS</td>
+<td>color→<code>$rrggbb</code>/resource,
+dim→<code>vp</code>/<code>fp</code></td>
+<td>a <code>helix_tokens.ets</code> + <code>resources/base</code> +
+<code>resources/dark</code> qualifier sets</td>
+</tr>
+<tr>
+<td>C/Qt</td>
+<td>color→<code>QColor(&quot;#…&quot;)</code>, dim→int px</td>
+<td>a <code>helix_tokens.h</code> (<code>#define</code>) + a
+<code>Theme.qml</code> singleton (light/dark property sets)</td>
+</tr>
+<tr>
+<td>JSON</td>
+<td>identity (resolved)</td>
+<td><code>dist/json/tokens.json</code> — the flattened resolved source
+(other tooling + the §7 css round-trip read it)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="4-per-target-output-samples-concrete">4. Per-target output
+samples (concrete)</h2>
+<p>Every sample below is a <strong>valid, self-consistent</strong> emit
+of the <strong>same</strong> small token slice —
+<code>color.semantic.surface.default</code>, <code>text.primary</code>,
+<code>action.primary</code>, <code>state.connected.fill</code>,
+<code>state.danger.fill</code>, <code>font.semantic.title.lg</code>,
+<code>space.scale.4</code>, <code>radius.scale.full</code>,
+<code>motion.semantic.connectPulse</code> — in <strong>both</strong>
+themes. Colour literals match [COLOR §2/§3]; type metrics match [TIM
+§1.1]; scales match [DT §6]. <strong>No placeholders, no TODO</strong>
+(§11.4.6).</p>
+<h3 id="41-css-custom-properties-light--dark">4.1 CSS custom properties
+(light + dark)</h3>
+<p><code>dist/css/helix.css</code> — light on <code>:root</code>, dark
+on <code>[data-theme=&quot;dark&quot;]</code> (consumed by the Console Web build +
+any web chrome, [OV §6]). A
+<code>@media (prefers-color-scheme: dark)</code> block mirrors the
+attribute so OS dark works without an explicit
+<code>data-theme</code>.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode css"><code class="sourceCode css"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">/* dist/css/helix.css — GENERATED, do not edit (drift gate §5) */</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="in">:root</span> {</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="co">/* color — light */</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="va">--hx-color-surface-default</span><span class="ch">:</span> <span class="cn">#FFFFFF</span><span class="op">;</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="va">--hx-color-text-primary</span><span class="ch">:</span>    <span class="cn">#151920</span><span class="op">;</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="va">--hx-color-action-primary</span><span class="ch">:</span>  <span class="cn">#2F47C4</span><span class="op">;</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="va">--hx-color-state-connected-fill</span><span class="ch">:</span> <span class="cn">#15803D</span><span class="op">;</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  <span class="va">--hx-color-state-danger-fill</span><span class="ch">:</span>    <span class="cn">#DC2626</span><span class="op">;</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  <span class="co">/* type (theme-invariant) */</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>  <span class="va">--hx-font-title-lg-family</span><span class="ch">:</span> <span class="st">&#39;Inter&#39;</span><span class="op">,</span> <span class="dv">system-ui</span><span class="op">,</span> <span class="dv">sans-serif</span><span class="op">;</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>  <span class="va">--hx-font-title-lg-size</span><span class="ch">:</span>   <span class="dv">20</span><span class="dt">px</span><span class="op">;</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>  <span class="va">--hx-font-title-lg-line</span><span class="ch">:</span>   <span class="dv">1.30</span><span class="op">;</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>  <span class="va">--hx-font-title-lg-weight</span><span class="ch">:</span> <span class="dv">600</span><span class="op">;</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>  <span class="co">/* scales (theme-invariant) */</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>  <span class="va">--hx-space-4</span><span class="ch">:</span>        <span class="dv">16</span><span class="dt">px</span><span class="op">;</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>  <span class="va">--hx-radius-full</span><span class="ch">:</span>    <span class="dv">9999</span><span class="dt">px</span><span class="op">;</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>  <span class="va">--hx-motion-connect-pulse-dur</span><span class="ch">:</span>  <span class="dv">1200</span><span class="dt">ms</span><span class="op">;</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>  <span class="va">--hx-motion-connect-pulse-ease</span><span class="ch">:</span> cubic-bezier<span class="fu">(</span><span class="dv">0.4</span><span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="dv">0.6</span><span class="op">,</span> <span class="dv">1</span><span class="fu">)</span><span class="op">;</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a><span class="ex">[</span><span class="ss">data-theme</span><span class="op">=</span><span class="st">&quot;dark&quot;</span><span class="ex">]</span> {</span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>  <span class="va">--hx-color-surface-default</span><span class="ch">:</span> <span class="cn">#151920</span><span class="op">;</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>  <span class="va">--hx-color-text-primary</span><span class="ch">:</span>    <span class="cn">#EDEFF3</span><span class="op">;</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>  <span class="va">--hx-color-action-primary</span><span class="ch">:</span>  <span class="cn">#3D5AF1</span><span class="op">;</span></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>  <span class="va">--hx-color-state-connected-fill</span><span class="ch">:</span> <span class="cn">#22C55E</span><span class="op">;</span></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>  <span class="va">--hx-color-state-danger-fill</span><span class="ch">:</span>    <span class="cn">#F87171</span><span class="op">;</span></span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a><span class="im">@media</span> <span class="fu">(</span><span class="kw">prefers-color-scheme</span><span class="ch">:</span> <span class="dv">dark</span><span class="fu">)</span> {</span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>  <span class="in">:root:not(</span><span class="ex">[</span><span class="ss">data-theme</span><span class="op">=</span><span class="st">&quot;light&quot;</span><span class="ex">]</span><span class="in">)</span> {</span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>    <span class="va">--hx-color-surface-default</span><span class="ch">:</span> <span class="cn">#151920</span><span class="op">;</span></span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>    <span class="va">--hx-color-text-primary</span><span class="ch">:</span>    <span class="cn">#EDEFF3</span><span class="op">;</span></span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>    <span class="va">--hx-color-action-primary</span><span class="ch">:</span>  <span class="cn">#3D5AF1</span><span class="op">;</span></span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>    <span class="va">--hx-color-state-connected-fill</span><span class="ch">:</span> <span class="cn">#22C55E</span><span class="op">;</span></span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>    <span class="va">--hx-color-state-danger-fill</span><span class="ch">:</span>    <span class="cn">#F87171</span><span class="op">;</span></span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a><span class="im">@media</span> <span class="fu">(</span><span class="kw">prefers-reduced-motion</span><span class="ch">:</span> <span class="dv">reduce</span><span class="fu">)</span> {</span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a>  <span class="in">:root</span> { <span class="va">--hx-motion-connect-pulse-dur</span><span class="ch">:</span> <span class="dv">0</span><span class="dt">ms</span><span class="op">;</span> } <span class="co">/* [TIM §8.1] */</span></span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="42-dart--themeextension--themedata">4.2 Dart — ThemeExtension +
+ThemeData</h3>
+<p><code>dist/dart/helix_tokens.dart</code> — a
+<code>ThemeExtension</code> carrying every token so a widget reads
+<code>Theme.of(context).extension&lt;HelixTokens&gt;()!</code>; plus a
+<code>ThemeData</code> light/dark pair the <code>helix-ui</code>
+<code>MaterialApp(theme:, darkTheme:)</code> consumes ([DT §5.1], [OV
+§6]).</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode dart"><code class="sourceCode dart"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// dist/dart/helix_tokens.dart — GENERATED, do not edit (drift gate §5)</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="st">&#39;package:flutter/material.dart&#39;</span>;</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>@immutable</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> HelixTokens <span class="kw">extends</span> ThemeExtension<span class="op">&lt;</span>HelixTokens<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">final</span> Color surfaceDefault<span class="op">,</span> textPrimary<span class="op">,</span> actionPrimary<span class="op">,</span> stateConnected<span class="op">,</span> stateDanger;</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">final</span> Duration connectPulseDur;</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">const</span> HelixTokens(<span class="op">{</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    required <span class="kw">this</span><span class="op">.</span>surfaceDefault<span class="op">,</span> required <span class="kw">this</span><span class="op">.</span>textPrimary<span class="op">,</span> required <span class="kw">this</span><span class="op">.</span>actionPrimary<span class="op">,</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    required <span class="kw">this</span><span class="op">.</span>stateConnected<span class="op">,</span> required <span class="kw">this</span><span class="op">.</span>stateDanger<span class="op">,</span> required <span class="kw">this</span><span class="op">.</span>connectPulseDur<span class="op">,</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span>);</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">static</span> <span class="at">const</span> light <span class="op">=</span> HelixTokens(</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>    surfaceDefault<span class="op">:</span> Color(<span class="dv">0xFFFFFFFF</span>)<span class="op">,</span> textPrimary<span class="op">:</span> Color(<span class="dv">0xFF151920</span>)<span class="op">,</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>    actionPrimary<span class="op">:</span>  Color(<span class="dv">0xFF2F47C4</span>)<span class="op">,</span> stateConnected<span class="op">:</span> Color(<span class="dv">0xFF15803D</span>)<span class="op">,</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>    stateDanger<span class="op">:</span>    Color(<span class="dv">0xFFDC2626</span>)<span class="op">,</span> connectPulseDur<span class="op">:</span> Duration(milliseconds<span class="op">:</span> <span class="dv">1200</span>));</span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>  <span class="at">static</span> <span class="at">const</span> dark <span class="op">=</span> HelixTokens(</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>    surfaceDefault<span class="op">:</span> Color(<span class="dv">0xFF151920</span>)<span class="op">,</span> textPrimary<span class="op">:</span> Color(<span class="dv">0xFFEDEFF3</span>)<span class="op">,</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>    actionPrimary<span class="op">:</span>  Color(<span class="dv">0xFF3D5AF1</span>)<span class="op">,</span> stateConnected<span class="op">:</span> Color(<span class="dv">0xFF22C55E</span>)<span class="op">,</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>    stateDanger<span class="op">:</span>    Color(<span class="dv">0xFFF87171</span>)<span class="op">,</span> connectPulseDur<span class="op">:</span> Duration(milliseconds<span class="op">:</span> <span class="dv">1200</span>));</span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>  <span class="kw">@override</span></span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>  HelixTokens copyWith(<span class="op">{</span>Color<span class="op">?</span> surfaceDefault<span class="op">,</span> Color<span class="op">?</span> textPrimary<span class="op">,</span> Color<span class="op">?</span> actionPrimary<span class="op">,</span></span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>      Color<span class="op">?</span> stateConnected<span class="op">,</span> Color<span class="op">?</span> stateDanger<span class="op">,</span> Duration<span class="op">?</span> connectPulseDur<span class="op">}</span>) <span class="op">=&gt;</span> HelixTokens(</span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>    surfaceDefault<span class="op">:</span> surfaceDefault <span class="op">??</span> <span class="kw">this</span><span class="op">.</span>surfaceDefault<span class="op">,</span></span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>    textPrimary<span class="op">:</span> textPrimary <span class="op">??</span> <span class="kw">this</span><span class="op">.</span>textPrimary<span class="op">,</span></span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>    actionPrimary<span class="op">:</span> actionPrimary <span class="op">??</span> <span class="kw">this</span><span class="op">.</span>actionPrimary<span class="op">,</span></span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a>    stateConnected<span class="op">:</span> stateConnected <span class="op">??</span> <span class="kw">this</span><span class="op">.</span>stateConnected<span class="op">,</span></span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a>    stateDanger<span class="op">:</span> stateDanger <span class="op">??</span> <span class="kw">this</span><span class="op">.</span>stateDanger<span class="op">,</span></span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a>    connectPulseDur<span class="op">:</span> connectPulseDur <span class="op">??</span> <span class="kw">this</span><span class="op">.</span>connectPulseDur);</span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a>  <span class="kw">@override</span></span>
+<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a>  HelixTokens lerp(ThemeExtension<span class="op">&lt;</span>HelixTokens<span class="op">&gt;?</span> other<span class="op">,</span> <span class="dt">double</span> t) <span class="op">{</span></span>
+<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (other <span class="kw">is</span><span class="op">!</span> HelixTokens) <span class="kw">return</span> <span class="kw">this</span>;</span>
+<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a>    <span class="kw">return</span> HelixTokens(</span>
+<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a>      surfaceDefault<span class="op">:</span> Color<span class="op">.</span>lerp(surfaceDefault<span class="op">,</span> other<span class="op">.</span>surfaceDefault<span class="op">,</span> t)<span class="op">!,</span></span>
+<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a>      textPrimary<span class="op">:</span> Color<span class="op">.</span>lerp(textPrimary<span class="op">,</span> other<span class="op">.</span>textPrimary<span class="op">,</span> t)<span class="op">!,</span></span>
+<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a>      actionPrimary<span class="op">:</span> Color<span class="op">.</span>lerp(actionPrimary<span class="op">,</span> other<span class="op">.</span>actionPrimary<span class="op">,</span> t)<span class="op">!,</span></span>
+<span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a>      stateConnected<span class="op">:</span> Color<span class="op">.</span>lerp(stateConnected<span class="op">,</span> other<span class="op">.</span>stateConnected<span class="op">,</span> t)<span class="op">!,</span></span>
+<span id="cb4-40"><a href="#cb4-40" aria-hidden="true" tabindex="-1"></a>      stateDanger<span class="op">:</span> Color<span class="op">.</span>lerp(stateDanger<span class="op">,</span> other<span class="op">.</span>stateDanger<span class="op">,</span> t)<span class="op">!,</span></span>
+<span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a>      connectPulseDur<span class="op">:</span> t <span class="op">&lt;</span> <span class="fl">0.5</span> <span class="op">?</span> connectPulseDur <span class="op">:</span> other<span class="op">.</span>connectPulseDur);</span>
+<span id="cb4-42"><a href="#cb4-42" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb4-43"><a href="#cb4-43" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb4-44"><a href="#cb4-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-45"><a href="#cb4-45" aria-hidden="true" tabindex="-1"></a><span class="at">const</span> _titleLg <span class="op">=</span> TextStyle(fontFamily<span class="op">:</span> <span class="st">&#39;Inter&#39;</span><span class="op">,</span> fontSize<span class="op">:</span> <span class="dv">20</span><span class="op">,</span> height<span class="op">:</span> <span class="fl">1.30</span><span class="op">,</span> fontWeight<span class="op">:</span> FontWeight<span class="op">.</span>w600);</span>
+<span id="cb4-46"><a href="#cb4-46" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-47"><a href="#cb4-47" aria-hidden="true" tabindex="-1"></a>ThemeData helixLight() <span class="op">=&gt;</span> ThemeData(</span>
+<span id="cb4-48"><a href="#cb4-48" aria-hidden="true" tabindex="-1"></a>  useMaterial3<span class="op">:</span> <span class="cn">true</span><span class="op">,</span> brightness<span class="op">:</span> Brightness<span class="op">.</span>light<span class="op">,</span></span>
+<span id="cb4-49"><a href="#cb4-49" aria-hidden="true" tabindex="-1"></a>  scaffoldBackgroundColor<span class="op">:</span> <span class="at">const</span> Color(<span class="dv">0xFFFFFFFF</span>)<span class="op">,</span></span>
+<span id="cb4-50"><a href="#cb4-50" aria-hidden="true" tabindex="-1"></a>  colorScheme<span class="op">:</span> <span class="at">const</span> ColorScheme<span class="op">.</span>light(</span>
+<span id="cb4-51"><a href="#cb4-51" aria-hidden="true" tabindex="-1"></a>    primary<span class="op">:</span> Color(<span class="dv">0xFF2F47C4</span>)<span class="op">,</span> surface<span class="op">:</span> Color(<span class="dv">0xFFFFFFFF</span>)<span class="op">,</span> onSurface<span class="op">:</span> Color(<span class="dv">0xFF151920</span>))<span class="op">,</span></span>
+<span id="cb4-52"><a href="#cb4-52" aria-hidden="true" tabindex="-1"></a>  textTheme<span class="op">:</span> <span class="at">const</span> TextTheme(titleLarge<span class="op">:</span> _titleLg)<span class="op">,</span></span>
+<span id="cb4-53"><a href="#cb4-53" aria-hidden="true" tabindex="-1"></a>  extensions<span class="op">:</span> <span class="at">const</span> [HelixTokens<span class="op">.</span>light]);</span>
+<span id="cb4-54"><a href="#cb4-54" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-55"><a href="#cb4-55" aria-hidden="true" tabindex="-1"></a>ThemeData helixDark() <span class="op">=&gt;</span> ThemeData(</span>
+<span id="cb4-56"><a href="#cb4-56" aria-hidden="true" tabindex="-1"></a>  useMaterial3<span class="op">:</span> <span class="cn">true</span><span class="op">,</span> brightness<span class="op">:</span> Brightness<span class="op">.</span>dark<span class="op">,</span></span>
+<span id="cb4-57"><a href="#cb4-57" aria-hidden="true" tabindex="-1"></a>  scaffoldBackgroundColor<span class="op">:</span> <span class="at">const</span> Color(<span class="dv">0xFF151920</span>)<span class="op">,</span></span>
+<span id="cb4-58"><a href="#cb4-58" aria-hidden="true" tabindex="-1"></a>  colorScheme<span class="op">:</span> <span class="at">const</span> ColorScheme<span class="op">.</span>dark(</span>
+<span id="cb4-59"><a href="#cb4-59" aria-hidden="true" tabindex="-1"></a>    primary<span class="op">:</span> Color(<span class="dv">0xFF3D5AF1</span>)<span class="op">,</span> surface<span class="op">:</span> Color(<span class="dv">0xFF151920</span>)<span class="op">,</span> onSurface<span class="op">:</span> Color(<span class="dv">0xFFEDEFF3</span>))<span class="op">,</span></span>
+<span id="cb4-60"><a href="#cb4-60" aria-hidden="true" tabindex="-1"></a>  textTheme<span class="op">:</span> <span class="at">const</span> TextTheme(titleLarge<span class="op">:</span> _titleLg)<span class="op">,</span></span>
+<span id="cb4-61"><a href="#cb4-61" aria-hidden="true" tabindex="-1"></a>  extensions<span class="op">:</span> <span class="at">const</span> [HelixTokens<span class="op">.</span>dark]);</span></code></pre></div>
+<blockquote>
+<p>Dart colour is <code>Color(0xAARRGGBB)</code> — the leading
+<code>FF</code> is full alpha; an 8-hex token like
+<code>#1519201A</code> ([DT §4] light-card shadow) emits
+<code>Color(0x1A151920)</code>.</p>
+</blockquote>
+<h3 id="43-swiftui--generated-tokens--asset-catalog">4.3 SwiftUI —
+generated tokens + asset catalog</h3>
+<p><code>dist/swift/HelixTokens.swift</code> — a generated Swift file
+referencing <strong>asset-catalog colorsets</strong> (the idiomatic
+SwiftUI way to carry light+dark: one named colorset holds both
+appearances, resolved by <code>@Environment(\.colorScheme)</code>
+automatically). The exporter emits both the <code>.swift</code> accessor
+and the <code>.xcassets</code> colorset JSON.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode swift"><code class="sourceCode swift"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">// dist/swift/HelixTokens.swift — GENERATED, do not edit (drift gate §5)</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="im">SwiftUI</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span> <span class="kw">enum</span> HelixTokens <span class="op">{</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">// colours resolve light/dark automatically via the asset catalog (below)</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="kw">static</span> <span class="kw">let</span> <span class="va">surfaceDefault</span> <span class="op">=</span> Color<span class="op">(</span><span class="st">&quot;HXSurfaceDefault&quot;</span><span class="op">,</span> bundle<span class="op">:</span> <span class="op">.</span>module<span class="op">)</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="kw">static</span> <span class="kw">let</span> <span class="va">textPrimary</span>    <span class="op">=</span> Color<span class="op">(</span><span class="st">&quot;HXTextPrimary&quot;</span><span class="op">,</span>    bundle<span class="op">:</span> <span class="op">.</span>module<span class="op">)</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="kw">static</span> <span class="kw">let</span> <span class="va">actionPrimary</span>  <span class="op">=</span> Color<span class="op">(</span><span class="st">&quot;HXActionPrimary&quot;</span><span class="op">,</span>  bundle<span class="op">:</span> <span class="op">.</span>module<span class="op">)</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="kw">static</span> <span class="kw">let</span> <span class="va">stateConnected</span> <span class="op">=</span> Color<span class="op">(</span><span class="st">&quot;HXStateConnected&quot;</span><span class="op">,</span> bundle<span class="op">:</span> <span class="op">.</span>module<span class="op">)</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="kw">static</span> <span class="kw">let</span> <span class="va">stateDanger</span>    <span class="op">=</span> Color<span class="op">(</span><span class="st">&quot;HXStateDanger&quot;</span><span class="op">,</span>    bundle<span class="op">:</span> <span class="op">.</span>module<span class="op">)</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    <span class="co">// type (theme-invariant)</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="kw">static</span> <span class="kw">let</span> <span class="va">titleLg</span> <span class="op">=</span> Font<span class="op">.</span>custom<span class="op">(</span><span class="st">&quot;Inter&quot;</span><span class="op">,</span> size<span class="op">:</span> <span class="dv">20</span><span class="op">).</span>weight<span class="op">(.</span>semibold<span class="op">)</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    <span class="co">// scale / motion (theme-invariant)</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="kw">static</span> <span class="kw">let</span> <span class="va">space4</span><span class="op">:</span> CGFloat <span class="op">=</span> <span class="dv">16</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="kw">static</span> <span class="kw">let</span> <span class="va">radiusFull</span><span class="op">:</span> CGFloat <span class="op">=</span> <span class="dv">9999</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="kw">static</span> <span class="kw">let</span> <span class="va">connectPulse</span><span class="op">:</span> Double <span class="op">=</span> <span class="fl">1.200</span>   <span class="co">// seconds</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="er">//</span> <span class="er">dist/swift/Resources/HelixColors.xcassets/HXStateConnected.colorset/Contents.json</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="er">//</span> <span class="er">GENERATED</span> <span class="er">—</span> <span class="er">one</span> <span class="er">colorset</span> <span class="er">per</span> <span class="er">themed</span> <span class="er">colour,</span> <span class="er">light</span> <span class="er">+</span> <span class="er">dark</span> <span class="er">appearance</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;colors&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span> <span class="dt">&quot;idiom&quot;</span><span class="fu">:</span> <span class="st">&quot;universal&quot;</span><span class="fu">,</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;color&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;color-space&quot;</span><span class="fu">:</span> <span class="st">&quot;srgb&quot;</span><span class="fu">,</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;components&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;red&quot;</span><span class="fu">:</span> <span class="st">&quot;0x15&quot;</span><span class="fu">,</span> <span class="dt">&quot;green&quot;</span><span class="fu">:</span> <span class="st">&quot;0x80&quot;</span><span class="fu">,</span> <span class="dt">&quot;blue&quot;</span><span class="fu">:</span> <span class="st">&quot;0x3D&quot;</span><span class="fu">,</span> <span class="dt">&quot;alpha&quot;</span><span class="fu">:</span> <span class="st">&quot;1.000&quot;</span> <span class="fu">}</span> <span class="fu">}</span> <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span> <span class="dt">&quot;idiom&quot;</span><span class="fu">:</span> <span class="st">&quot;universal&quot;</span><span class="fu">,</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;appearances&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="fu">{</span> <span class="dt">&quot;appearance&quot;</span><span class="fu">:</span> <span class="st">&quot;luminosity&quot;</span><span class="fu">,</span> <span class="dt">&quot;value&quot;</span><span class="fu">:</span> <span class="st">&quot;dark&quot;</span> <span class="fu">}</span> <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;color&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;color-space&quot;</span><span class="fu">:</span> <span class="st">&quot;srgb&quot;</span><span class="fu">,</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;components&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;red&quot;</span><span class="fu">:</span> <span class="st">&quot;0x22&quot;</span><span class="fu">,</span> <span class="dt">&quot;green&quot;</span><span class="fu">:</span> <span class="st">&quot;0xC5&quot;</span><span class="fu">,</span> <span class="dt">&quot;blue&quot;</span><span class="fu">:</span> <span class="st">&quot;0x5E&quot;</span><span class="fu">,</span> <span class="dt">&quot;alpha&quot;</span><span class="fu">:</span> <span class="st">&quot;1.000&quot;</span> <span class="fu">}</span> <span class="fu">}</span> <span class="fu">}</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;info&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;author&quot;</span><span class="fu">:</span> <span class="st">&quot;helix_design exporter&quot;</span><span class="fu">,</span> <span class="dt">&quot;version&quot;</span><span class="fu">:</span> <span class="dv">1</span> <span class="fu">}</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<blockquote>
+<p>The native shim&#39;s font is the <strong>system font</strong> for the
+tiny NE-extension surface ([TIM §2.2 D-TYPE-1]) —
+<code>Font.custom(&quot;Inter&quot;,…)</code> above is for any iOS/macOS surface
+that <em>does</em> bundle the brand font; the colorset (palette) reaches
+<strong>all</strong> native surfaces regardless of font.</p>
+</blockquote>
+<h3 id="44-jetpack-compose--material3-colorscheme--typography">4.4
+Jetpack Compose — Material3 ColorScheme + Typography</h3>
+<p><code>dist/compose/HelixTokens.kt</code> — a Compose object plus
+<code>lightColorScheme()</code> / <code>darkColorScheme()</code>
+Material3 builders the Android quick-settings tile / notification
+surfaces consume ([OV §6]).</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode kotlin"><code class="sourceCode kotlin"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">// dist/compose/HelixTokens.kt — GENERATED, do not edit (drift gate §5)</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="kw">package</span> <span class="im">com</span><span class="op">.</span><span class="im">helixvpn</span><span class="op">.</span><span class="im">design</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="im">androidx</span><span class="op">.</span><span class="im">compose</span><span class="op">.</span><span class="im">material3</span><span class="op">.*</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="im">androidx</span><span class="op">.</span><span class="im">compose</span><span class="op">.</span><span class="im">ui</span><span class="op">.</span><span class="im">graphics</span><span class="op">.</span><span class="im">Color</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="im">androidx</span><span class="op">.</span><span class="im">compose</span><span class="op">.</span><span class="im">ui</span><span class="op">.</span><span class="im">text</span><span class="op">.</span><span class="im">TextStyle</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="im">androidx</span><span class="op">.</span><span class="im">compose</span><span class="op">.</span><span class="im">ui</span><span class="op">.</span><span class="im">text</span><span class="op">.</span><span class="im">font</span><span class="op">.</span><span class="im">FontWeight</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="im">androidx</span><span class="op">.</span><span class="im">compose</span><span class="op">.</span><span class="im">ui</span><span class="op">.</span><span class="im">unit</span><span class="op">.</span><span class="im">dp</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="im">androidx</span><span class="op">.</span><span class="im">compose</span><span class="op">.</span><span class="im">ui</span><span class="op">.</span><span class="im">unit</span><span class="op">.</span><span class="im">sp</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="kw">object</span> HelixColors <span class="op">{</span>            <span class="co">// raw tokens (both themes)</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>  <span class="kw">val</span> <span class="va">SurfaceLight</span> <span class="op">=</span> Color<span class="op">(</span><span class="bn">0xFFFFFFFF</span><span class="op">);</span> <span class="kw">val</span> <span class="va">SurfaceDark</span> <span class="op">=</span> Color<span class="op">(</span><span class="bn">0xFF151920</span><span class="op">)</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>  <span class="kw">val</span> <span class="va">OnSurfaceLight</span> <span class="op">=</span> Color<span class="op">(</span><span class="bn">0xFF151920</span><span class="op">);</span> <span class="kw">val</span> <span class="va">OnSurfaceDark</span> <span class="op">=</span> Color<span class="op">(</span><span class="bn">0xFFEDEFF3</span><span class="op">)</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>  <span class="kw">val</span> <span class="va">ActionLight</span> <span class="op">=</span> Color<span class="op">(</span><span class="bn">0xFF2F47C4</span><span class="op">);</span> <span class="kw">val</span> <span class="va">ActionDark</span> <span class="op">=</span> Color<span class="op">(</span><span class="bn">0xFF3D5AF1</span><span class="op">)</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>  <span class="kw">val</span> <span class="va">ConnectedLight</span> <span class="op">=</span> Color<span class="op">(</span><span class="bn">0xFF15803D</span><span class="op">);</span> <span class="kw">val</span> <span class="va">ConnectedDark</span> <span class="op">=</span> Color<span class="op">(</span><span class="bn">0xFF22C55E</span><span class="op">)</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>  <span class="kw">val</span> <span class="va">DangerLight</span> <span class="op">=</span> Color<span class="op">(</span><span class="bn">0xFFDC2626</span><span class="op">);</span> <span class="kw">val</span> <span class="va">DangerDark</span> <span class="op">=</span> Color<span class="op">(</span><span class="bn">0xFFF87171</span><span class="op">)</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> <span class="va">HelixLightColorScheme</span><span class="op">:</span> ColorScheme <span class="op">=</span> lightColorScheme<span class="op">(</span></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>  primary <span class="op">=</span> HelixColors<span class="op">.</span>ActionLight<span class="op">,</span> surface <span class="op">=</span> HelixColors<span class="op">.</span>SurfaceLight<span class="op">,</span></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>  onSurface <span class="op">=</span> HelixColors<span class="op">.</span>OnSurfaceLight<span class="op">,</span> error <span class="op">=</span> HelixColors<span class="op">.</span>DangerLight<span class="op">)</span></span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> <span class="va">HelixDarkColorScheme</span><span class="op">:</span> ColorScheme <span class="op">=</span> darkColorScheme<span class="op">(</span></span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>  primary <span class="op">=</span> HelixColors<span class="op">.</span>ActionDark<span class="op">,</span> surface <span class="op">=</span> HelixColors<span class="op">.</span>SurfaceDark<span class="op">,</span></span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>  onSurface <span class="op">=</span> HelixColors<span class="op">.</span>OnSurfaceDark<span class="op">,</span> error <span class="op">=</span> HelixColors<span class="op">.</span>DangerDark<span class="op">)</span></span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a><span class="kw">object</span> HelixType <span class="op">{</span></span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a>  <span class="kw">val</span> <span class="va">TitleLg</span> <span class="op">=</span> TextStyle<span class="op">(</span>fontSize <span class="op">=</span> <span class="fl">20.</span>sp<span class="op">,</span> lineHeight <span class="op">=</span> <span class="fl">26.</span>sp<span class="op">,</span> fontWeight <span class="op">=</span> FontWeight<span class="op">.</span>W600<span class="op">)</span></span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a><span class="kw">object</span> HelixScale <span class="op">{</span> <span class="kw">val</span> <span class="va">Space4</span> <span class="op">=</span> <span class="fl">16.</span>dp<span class="op">;</span> <span class="kw">val</span> <span class="va">RadiusFull</span> <span class="op">=</span> <span class="fl">9999.</span>dp <span class="op">}</span></span>
+<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a><span class="kw">object</span> HelixMotion <span class="op">{</span> <span class="kw">const</span> <span class="kw">val</span> <span class="va">ConnectPulseMs</span> <span class="op">=</span> <span class="dv">1200L</span> <span class="op">}</span></span>
+<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a><span class="co">// &quot;connected&quot; is not an M3 slot → exposed as a HelixColors token the StatusChip reads.</span></span></code></pre></div>
+<blockquote>
+<p>Material3&#39;s <code>ColorScheme</code> has no &quot;connected/danger-state&quot;
+slot, so the connection-state colours ([COLOR §3]) are exposed as
+<strong><code>HelixColors</code> tokens</strong> the
+<code>StatusChip</code>/<code>ConnectButton</code> read directly (the
+[DT §8] component-token seam), while the M3 slots
+(<code>primary</code>/<code>surface</code>/<code>error</code>) carry the
+brand + error mapping for stock M3 widgets.</p>
+</blockquote>
+<h3 id="45-arkts--harmonyos-resources--appstorage">4.5 ArkTS — HarmonyOS
+resources / AppStorage</h3>
+<p><code>dist/arkts/helix_tokens.ets</code> + the HarmonyOS resource
+qualifier tree — light in <code>resources/base/element/</code>, dark in
+<code>resources/dark/element/</code> (HarmonyOS resolves the qualifier
+by system theme), consumed by the HarmonyOS VPN-ability surfaces ([OV
+§6]).</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co">// dist/arkts/helix_tokens.ets — GENERATED, do not edit (drift gate §5)</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="kw">class</span> HelixTokens {</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="co">// colour tokens resolve light/dark via the resource qualifier tree (below)</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">static</span> <span class="kw">readonly</span> surfaceDefault<span class="op">:</span> Resource <span class="op">=</span> <span class="fu">$r</span>(<span class="st">&#39;app.color.hx_surface_default&#39;</span>)<span class="op">;</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">static</span> <span class="kw">readonly</span> textPrimary<span class="op">:</span>    Resource <span class="op">=</span> <span class="fu">$r</span>(<span class="st">&#39;app.color.hx_text_primary&#39;</span>)<span class="op">;</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">static</span> <span class="kw">readonly</span> actionPrimary<span class="op">:</span>  Resource <span class="op">=</span> <span class="fu">$r</span>(<span class="st">&#39;app.color.hx_action_primary&#39;</span>)<span class="op">;</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">static</span> <span class="kw">readonly</span> stateConnected<span class="op">:</span> Resource <span class="op">=</span> <span class="fu">$r</span>(<span class="st">&#39;app.color.hx_state_connected&#39;</span>)<span class="op">;</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  <span class="kw">static</span> <span class="kw">readonly</span> stateDanger<span class="op">:</span>    Resource <span class="op">=</span> <span class="fu">$r</span>(<span class="st">&#39;app.color.hx_state_danger&#39;</span>)<span class="op">;</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>  <span class="co">// type / scale / motion (theme-invariant)</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>  <span class="kw">static</span> <span class="kw">readonly</span> titleLgSize<span class="op">:</span> <span class="dt">number</span> <span class="op">=</span> <span class="dv">20</span><span class="op">;</span>        <span class="co">// fp</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>  <span class="kw">static</span> <span class="kw">readonly</span> titleLgWeight<span class="op">:</span> <span class="dt">number</span> <span class="op">=</span> <span class="dv">600</span><span class="op">;</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>  <span class="kw">static</span> <span class="kw">readonly</span> space4<span class="op">:</span> <span class="dt">number</span> <span class="op">=</span> <span class="dv">16</span><span class="op">;</span>             <span class="co">// vp</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>  <span class="kw">static</span> <span class="kw">readonly</span> radiusFull<span class="op">:</span> <span class="dt">number</span> <span class="op">=</span> <span class="dv">9999</span><span class="op">;</span>       <span class="co">// vp</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>  <span class="kw">static</span> <span class="kw">readonly</span> connectPulseMs<span class="op">:</span> <span class="dt">number</span> <span class="op">=</span> <span class="dv">1200</span><span class="op">;</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="er">//</span> <span class="er">dist/arkts/resources/base/element/color.json</span>  <span class="er">(LIGHT</span> <span class="er">—</span> <span class="er">system</span> <span class="er">default)</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span> <span class="dt">&quot;color&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">{</span> <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;hx_surface_default&quot;</span><span class="fu">,</span> <span class="dt">&quot;value&quot;</span><span class="fu">:</span> <span class="st">&quot;#FFFFFF&quot;</span> <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">{</span> <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;hx_text_primary&quot;</span><span class="fu">,</span>    <span class="dt">&quot;value&quot;</span><span class="fu">:</span> <span class="st">&quot;#151920&quot;</span> <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">{</span> <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;hx_action_primary&quot;</span><span class="fu">,</span>  <span class="dt">&quot;value&quot;</span><span class="fu">:</span> <span class="st">&quot;#2F47C4&quot;</span> <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">{</span> <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;hx_state_connected&quot;</span><span class="fu">,</span> <span class="dt">&quot;value&quot;</span><span class="fu">:</span> <span class="st">&quot;#15803D&quot;</span> <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">{</span> <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;hx_state_danger&quot;</span><span class="fu">,</span>    <span class="dt">&quot;value&quot;</span><span class="fu">:</span> <span class="st">&quot;#DC2626&quot;</span> <span class="fu">}</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="ot">]</span> <span class="fu">}</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="er">//</span> <span class="er">dist/arkts/resources/dark/element/color.json</span>  <span class="er">(DARK</span> <span class="er">—</span> <span class="er">resolved</span> <span class="er">when</span> <span class="er">system</span> <span class="er">dark)</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span> <span class="dt">&quot;color&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">{</span> <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;hx_surface_default&quot;</span><span class="fu">,</span> <span class="dt">&quot;value&quot;</span><span class="fu">:</span> <span class="st">&quot;#151920&quot;</span> <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">{</span> <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;hx_text_primary&quot;</span><span class="fu">,</span>    <span class="dt">&quot;value&quot;</span><span class="fu">:</span> <span class="st">&quot;#EDEFF3&quot;</span> <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">{</span> <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;hx_action_primary&quot;</span><span class="fu">,</span>  <span class="dt">&quot;value&quot;</span><span class="fu">:</span> <span class="st">&quot;#3D5AF1&quot;</span> <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">{</span> <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;hx_state_connected&quot;</span><span class="fu">,</span> <span class="dt">&quot;value&quot;</span><span class="fu">:</span> <span class="st">&quot;#22C55E&quot;</span> <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">{</span> <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;hx_state_danger&quot;</span><span class="fu">,</span>    <span class="dt">&quot;value&quot;</span><span class="fu">:</span> <span class="st">&quot;#F87171&quot;</span> <span class="fu">}</span></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a><span class="ot">]</span> <span class="fu">}</span></span></code></pre></div>
+<blockquote>
+<p><strong><code>UNVERIFIED</code> (U-EXP-1).</strong> The exact ArkTS
+<code>$r(&#39;app.color.…&#39;)</code> resolver key form + the
+<code>resources/dark/</code> qualifier directory name are
+HarmonyOS-SDK-version dependent; stated as the <em>intended</em> mapping
+per [DT §3.2 U-DT-1], pinned + re-verified per §11.4.99 against the live
+HarmonyOS docs before the ArkTS exporter ships. Not asserted as fact
+(§11.4.6).</p>
+</blockquote>
+<h3 id="46-c--qt--header--qml-singleton">4.6 C / Qt — header + QML
+singleton</h3>
+<p><code>dist/cqt/helix_tokens.h</code> (<code>#define</code> constants
+for C/C++) + <code>dist/cqt/Theme.qml</code> (a QML singleton exposing a
+<code>light</code>/<code>dark</code> property set, switched by a
+<code>theme</code> property) — consumed by the Aurora Qt/C++ surfaces
+([OV §6]).</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co">// dist/cqt/helix_tokens.h — GENERATED, do not edit (drift gate §5)</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#ifndef HELIX_TOKENS_H</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="pp">#define HELIX_TOKENS_H</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="co">/* light */</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#define HX_LIGHT_SURFACE_DEFAULT </span><span class="st">&quot;#FFFFFF&quot;</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#define HX_LIGHT_TEXT_PRIMARY    </span><span class="st">&quot;#151920&quot;</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#define HX_LIGHT_ACTION_PRIMARY  </span><span class="st">&quot;#2F47C4&quot;</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="pp">#define HX_LIGHT_STATE_CONNECTED </span><span class="st">&quot;#15803D&quot;</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="pp">#define HX_LIGHT_STATE_DANGER    </span><span class="st">&quot;#DC2626&quot;</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="co">/* dark */</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="pp">#define HX_DARK_SURFACE_DEFAULT  </span><span class="st">&quot;#151920&quot;</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a><span class="pp">#define HX_DARK_TEXT_PRIMARY     </span><span class="st">&quot;#EDEFF3&quot;</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a><span class="pp">#define HX_DARK_ACTION_PRIMARY   </span><span class="st">&quot;#3D5AF1&quot;</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a><span class="pp">#define HX_DARK_STATE_CONNECTED  </span><span class="st">&quot;#22C55E&quot;</span></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a><span class="pp">#define HX_DARK_STATE_DANGER     </span><span class="st">&quot;#F87171&quot;</span></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a><span class="co">/* type / scale / motion (theme-invariant) */</span></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a><span class="pp">#define HX_FONT_TITLE_LG_SIZE_PX </span><span class="dv">20</span></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a><span class="pp">#define HX_FONT_TITLE_LG_WEIGHT  </span><span class="dv">600</span></span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a><span class="pp">#define HX_SPACE_4_PX            </span><span class="dv">16</span></span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a><span class="pp">#define HX_RADIUS_FULL_PX        </span><span class="dv">9999</span></span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a><span class="pp">#define HX_MOTION_CONNECT_PULSE_MS </span><span class="dv">1200</span></span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif </span><span class="co">/* HELIX_TOKENS_H */</span></span></code></pre></div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode qml"><code class="sourceCode qml"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co">// dist/cqt/Theme.qml — GENERATED QML singleton, do not edit (drift gate §5)</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="kw">pragma</span> Singleton</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span><span class="im"> QtQuick 2.15</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="ot">QtObject</span> {</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">property</span> <span class="dt">bool</span> dark: <span class="kw">false</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">readonly</span> <span class="kw">property</span> <span class="dt">color</span> surfaceDefault: dark <span class="op">?</span> <span class="st">&quot;#151920&quot;</span> <span class="op">:</span> <span class="st">&quot;#FFFFFF&quot;</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">readonly</span> <span class="kw">property</span> <span class="dt">color</span> textPrimary:    dark <span class="op">?</span> <span class="st">&quot;#EDEFF3&quot;</span> <span class="op">:</span> <span class="st">&quot;#151920&quot;</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">readonly</span> <span class="kw">property</span> <span class="dt">color</span> actionPrimary:  dark <span class="op">?</span> <span class="st">&quot;#3D5AF1&quot;</span> <span class="op">:</span> <span class="st">&quot;#2F47C4&quot;</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">readonly</span> <span class="kw">property</span> <span class="dt">color</span> stateConnected: dark <span class="op">?</span> <span class="st">&quot;#22C55E&quot;</span> <span class="op">:</span> <span class="st">&quot;#15803D&quot;</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">readonly</span> <span class="kw">property</span> <span class="dt">color</span> stateDanger:    dark <span class="op">?</span> <span class="st">&quot;#F87171&quot;</span> <span class="op">:</span> <span class="st">&quot;#DC2626&quot;</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">readonly</span> <span class="kw">property</span> <span class="dt">int</span>   titleLgSize:    <span class="dv">20</span></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">readonly</span> <span class="kw">property</span> <span class="dt">int</span>   titleLgWeight:  <span class="dv">600</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">readonly</span> <span class="kw">property</span> <span class="dt">int</span>   space4:         <span class="dv">16</span></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">readonly</span> <span class="kw">property</span> <span class="dt">int</span>   radiusFull:     <span class="dv">9999</span></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">readonly</span> <span class="kw">property</span> <span class="dt">int</span>   connectPulseMs: <span class="dv">1200</span></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<blockquote>
+<p><strong><code>UNVERIFIED</code> (U-EXP-2).</strong> The exact QML
+singleton registration form (<code>qmldir</code>
+<code>singleton Theme 1.0 Theme.qml</code>) and whether Aurora&#39;s Qt
+build uses a resource (<code>.qrc</code>) vs. a module import is
+Aurora-Qt-version dependent; pinned + re-verified per §11.4.99 before
+the C/Qt exporter ships ([DT §3.2 U-DT-1]).</p>
+</blockquote>
+<hr />
+<h2 id="5-the-drift-gate-generated-must-match-source">5. The drift gate
+(generated MUST match source)</h2>
+<p>The drift gate is the <strong>load-bearing</strong> §11.4.108-class
+mechanism: it makes a hand-edit of a generated form a <strong>build
+failure</strong>, so the only way to change a platform&#39;s tokens is to
+change the JSON source + regenerate.</p>
+<h3 id="51-what-it-asserts">5.1 What it asserts</h3>
+<pre><code>DS-DRIFT  (the §11.4.108 SOURCE→ARTIFACT equality gate for tokens):
+  1. run `pnpm export` into a CLEAN temp dir
+  2. byte-compare each freshly-generated form against the committed package-source form
+  3. ANY difference ⇒ FAIL (the committed form was hand-edited or the source drifted)</code></pre>
+<p>The comparison is <strong>byte-for-byte</strong> (after a
+deterministic format pass, so formatter non-determinism — map ordering,
+trailing newline — is normalised at generation, never papered over at
+compare time). A generated file carries a
+<code>GENERATED, do not edit</code> banner + a content hash header; the
+gate also asserts the hash matches the file body (a hand-edit that
+forgets to update the banner is still caught by the byte-compare).</p>
+<h3 id="52-why-byte-compare-not-looks-equivalent">5.2 Why byte-compare,
+not &quot;looks equivalent&quot;</h3>
+<p>Per §11.4.108 (runtime-signature / artifact-byte equality) and
+§11.4.6 (no-guessing): &quot;the Dart and the CSS <em>look</em> like the same
+colour&quot; is not a proof the source and the artifact agree. The
+byte-compare against a fresh re-run is the <strong>captured
+evidence</strong> that <code>dist/**</code> (and the checked-in
+package-source Dart, [OV §4 D-DESIGN-2]) is exactly what the current
+<code>tokens/**</code> produces — no drift, no stale form from a
+previous source state.</p>
+<h3 id="53-the-paired-mutation-11">5.3 The paired mutation (§1.1)</h3>
+<table>
+<thead>
+<tr>
+<th>Gate</th>
+<th>Mutation that MUST make it FAIL</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>DS-DRIFT</code></td>
+<td>hand-edit one hex in <code>helix_tokens.dart</code> (e.g.
+<code>0xFF2F47C4</code> → <code>0xFF000000</code>) without touching
+<code>tokens/**</code> → the fresh re-run differs → FAIL</td>
+</tr>
+<tr>
+<td><code>DS-DRIFT</code> (source side)</td>
+<td>change a <code>tokens/**</code> value but commit the
+<strong>old</strong> <code>dist/**</code> → fresh re-run differs → FAIL
+(forces regenerate-on-source-change)</td>
+</tr>
+<tr>
+<td><code>DS-EXPORT-FORM-VALID</code> ([OV §12])</td>
+<td>emit syntactically-broken Dart (drop a <code>;</code>) →
+<code>dart analyze</code> fails → FAIL (the form must also
+<em>parse</em> in its toolchain, §11.4.110 build-readiness)</td>
+</tr>
+<tr>
+<td><code>DS-LIGHT-DARK-COMPLETE</code> ([OV §12])</td>
+<td>delete the dark colorset appearance / the
+<code>[data-theme=dark]</code> block → a theme is missing → FAIL
+([TIM]/[COLOR] light+dark mandate)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="54-where-the-gate-runs">5.4 Where the gate runs</h3>
+<pre class="mermaid"><code>flowchart LR
+    edit[&quot;edit tokens/** OR (forbidden) edit a dist/** form&quot;]
+    edit --&gt; pc[&quot;pre-commit hook (§11.4.75)&quot;]
+    pc --&gt;|&quot;runs DS-DRIFT on staged&quot;| v{match fresh re-run?}
+    v --&gt;|no| block[&quot;BLOCK commit — regenerate or revert the hand-edit&quot;]
+    v --&gt;|yes| ci[&quot;helix_design CI / pre-build (§11.4.32)&quot;]
+    ci --&gt;|&quot;DS-DRIFT + DS-EXPORT-FORM-VALID + DS-LIGHT-DARK-COMPLETE&quot;| go[&quot;GO&quot;]
+    consumer[&quot;consuming app pre-build (helix-ui)&quot;] --&gt;|&quot;pointer bump bumps tokens → re-run drift + visual-regression (DS-I5)&quot;| go</code></pre>
+<p>The gate runs at three seams: the <strong>pre-commit</strong> hook
+(§11.4.75, blocks a hand-edit landing), <code>helix_design</code>
+<strong>CI/pre-build</strong> (§11.4.32 post-pull sweep), and the
+<strong>consuming app&#39;s</strong> pre-build when a submodule-pointer bump
+changes tokens ([OV §8] — a token change triggers the app&#39;s
+visual-regression suite, DS-I5).</p>
+<hr />
+<h2 id="6-the-11465--114168-export--visual-validation-hook">6. The
+§11.4.65 / §11.4.168 export + visual-validation hook</h2>
+<h3 id="61-11465--markdown-export-of-the-pipeline--token-docs">6.1
+§11.4.65 — Markdown export of the pipeline + token docs</h3>
+<p>Every Volume-10 doc (this one included) travels in the submodule
+(<code>helix_design/docs/v10-design/</code>, [OV §4]) and is a
+§11.4.65-scope Markdown doc: each edit regenerates synchronized
+<code>.html</code> + <code>.pdf</code> siblings, and (for the §11.4.153
+feature-status class) <code>.docx</code>. The pipeline&#39;s own run
+produces a machine-readable <strong>export manifest</strong>
+(<code>dist/.export-manifest.json</code> — every emitted form + its
+content hash + the source-commit it was generated from) that the docs
+reference, so a reader of the rendered token reference sees exactly
+which source produced it.</p>
+<h3 id="62-114168--visual-validation-of-the-rendered-token-reference">6.2
+§11.4.168 — visual validation of the rendered token reference</h3>
+<p>Because the token reference docs contain <strong>rendered swatches +
+Mermaid diagrams</strong> (this doc&#39;s pipeline diagram, the [COLOR]
+swatch map, the [TIM] type-scale diagram), the §11.4.168
+exported-document validation applies: an <strong>independent</strong>
+check confirms the exported <code>.pdf</code>/<code>.html</code> (a)
+carries the content faithfully, (b) shows <strong>no raw Mermaid/diagram
+source as body text</strong> (the §11.4.168 forensic failure), and (c)
+renders every diagram as an <strong>image</strong> + every swatch as a
+visible colour block. <code>pdftotext</code> catches raw source leaking
+as text; <code>pdfimages</code> confirms the diagrams rasterised; the
+self-validated golden-good/golden-bad analyzer ([§11.4.107(10)]) is
+seeded with a known-bad export (raw <code>flowchart</code> source in the
+body) that MUST FAIL the gate.</p>
+<h3 id="63-the-combined-hook">6.3 The combined hook</h3>
+<pre class="mermaid"><code>flowchart LR
+    src[&quot;edit tokens/** OR a v10-design doc&quot;]
+    src --&gt; exp[&quot;pnpm export (forms) + sync_all_markdown_exports (docs)&quot;]
+    exp --&gt; drift[&quot;DS-DRIFT (§5)&quot;]
+    exp --&gt; mdsync[&quot;§11.4.65: .html/.pdf(/.docx) siblings refreshed&quot;]
+    mdsync --&gt; vv[&quot;§11.4.168 visual validation:&lt;br/&gt;pdftotext (no raw diagram source) +&lt;br/&gt;pdfimages (diagrams rasterised) +&lt;br/&gt;swatch-block present&quot;]
+    drift --&gt; gate{all GO?}
+    vv --&gt; gate
+    gate --&gt;|no| iterate[&quot;fix → re-export → re-validate (§11.4.134 iterate-to-GO)&quot;]
+    gate --&gt;|yes| done[&quot;commit / publish&quot;]</code></pre>
+<p>A token-doc PDF that ships raw <code>flowchart TD …</code> as
+readable text, or a swatch table with no rendered colour blocks, is a
+§11.4.168 violation — a release blocker — caught here, never shipped
+(the [COLOR §5]/[TIM §4] no-overlay rule extended to the
+<em>documentation</em> of the design system).</p>
+<hr />
+<h2 id="7-how-opendesigns-tokenscss-feeds-in">7. How OpenDesign&#39;s
+tokens.css feeds in</h2>
+<h3 id="71-the-round-trip-d-design-3-lean-b">7.1 The round-trip
+(D-DESIGN-3, lean (b))</h3>
+<p>Per [OV §10.2] / [OD §4–§5] the project leans
+<strong>JSON-as-source</strong>: <code>tokens.css</code> is a
+<strong>generated export target</strong> (one more formatter,
+<code>export/targets/css.ts</code> →
+<code>opendesign/helix/tokens.css</code>) that OpenDesign consumes as
+the active design system; refinement edits a designer makes <em>in</em>
+OpenDesign land in that <code>tokens.css</code>, and a
+<strong><code>css→json</code> reconciliation</strong> imports the diff
+back into <code>tokens/**</code> so the polyglot exports stay in sync
+(DS-I6).</p>
+<pre class="mermaid"><code>sequenceDiagram
+    participant J as tokens/** (JSON source of truth)
+    participant E as export/targets/css.ts
+    participant ODC as opendesign/helix/tokens.css
+    participant OD as OpenDesign (desktop / od CLI / MCP)
+    participant REC as css→json reconciler
+    J-&gt;&gt;E: pnpm export (themed, light+dark)
+    E-&gt;&gt;ODC: write tokens.css (:root + [data-theme=dark])
+    ODC-&gt;&gt;OD: set active system; designer/agent refines
+    OD--&gt;&gt;ODC: refinement edits (tokens.css tweaks)
+    ODC-&gt;&gt;REC: diff tokens.css vs last-generated
+    REC-&gt;&gt;J: apply the human edits back into tokens/** (same-$type)
+    J-&gt;&gt;E: re-export ALL polyglot forms (drift gate §5 + visual §6)</code></pre>
+<h3 id="72-why-the-round-trip-is-safe-only-verified-opendesign-surface">7.2
+Why the round-trip is safe (only verified OpenDesign surface)</h3>
+<p>The round-trip touches <strong>only</strong> <code>tokens.css</code>
+— CSS custom properties, the <strong>verified</strong> OpenDesign token
+form ([OD §3.3/§4]). It does <strong>not</strong> depend on any
+<code>UNVERIFIED</code> OpenDesign API (no theme-engine knobs, no
+multi-language export OD lacks, [OD §1.2]). The <code>css→json</code>
+reconciler is <code>helix_design</code>-owned (a CSS parser → token-path
+mapper); it maps <code>--hx-color-state-connected-fill</code> ↔︎
+<code>color.semantic.state.connected.fill</code> by the [DT §2] naming
+convention (<code>--hx-</code> prefix + <code>-</code> for
+<code>.</code>). A <code>tokens.css</code> edit that does not map
+cleanly to a known token path is surfaced to the operator (§11.4.6 —
+never silently dropped or guessed), not auto-merged.</p>
+<blockquote>
+<p><strong><code>UNVERIFIED</code> (U-EXP-3).</strong> Whether
+OpenDesign&#39;s renderer honours the <code>[data-theme=&quot;dark&quot;]</code> block
+the css exporter emits, or expects a different dark-mode convention
+(twin &quot;HelixVPN Light&quot;/&quot;HelixVPN Dark&quot; systems,
+<code>prefers-color-scheme</code>) is [OD §5.2 U4] — confirmed against a
+live built-in OpenDesign <code>tokens.css</code> in the refinement pass.
+If twin systems are required, the css exporter emits
+<code>opendesign/helix-light/tokens.css</code> +
+<code>opendesign/helix-dark/tokens.css</code> from the same JSON source
+— a <strong>formatter option</strong>, not a token-source change (the
+JSON stays the single source). Not asserted as fact (§11.4.6).</p>
+</blockquote>
+<hr />
+<h2 id="8-the-full-pipeline-diagram">8. The full pipeline diagram</h2>
+<pre class="mermaid"><code>flowchart TB
+    subgraph IN[&quot;INPUTS&quot;]
+        JSON[&quot;tokens/** + presets/&amp;lt;brand&amp;gt;/ (authored JSON, tiered, light+dark)&quot;]
+        ODCSS[&quot;OpenDesign tokens.css (round-trip §7)&quot;]
+    end
+    ODCSS -.-&gt;|&quot;css→json reconcile (D-DESIGN-3 b)&quot;| JSON
+    JSON --&gt; S1[&quot;1 load + merge (active preset)&quot;]
+    S1 --&gt; S2[&quot;2 resolve {refs} (same-$type, total — §3.1)&quot;]
+    S2 --&gt; S3[&quot;3 theme-split → light table + dark table (§3.2)&quot;]
+    S3 --&gt; S4[&quot;4 per-target format (Style-Dictionary-class — §2, §3.3)&quot;]
+
+    S4 --&gt; O1[&quot;dist/css/helix.css  (:root + [data-theme=dark] + @media — §4.1)&quot;]
+    S4 --&gt; O2[&quot;dist/dart + ThemeExtension + helixLight()/helixDark() (§4.2)&quot;]
+    S4 --&gt; O3[&quot;dist/swift/HelixTokens.swift + .xcassets colorsets (§4.3)&quot;]
+    S4 --&gt; O4[&quot;dist/compose/HelixTokens.kt + light/darkColorScheme (§4.4)&quot;]
+    S4 --&gt; O5[&quot;dist/arkts/helix_tokens.ets + resources/{base,dark} (§4.5)&quot;]
+    S4 --&gt; O6[&quot;dist/cqt/helix_tokens.h + Theme.qml singleton (§4.6)&quot;]
+    S4 --&gt; O7[&quot;dist/json/tokens.json (resolved) → feeds tokens.css (§7)&quot;]
+    O7 -.-&gt; ODCSS
+
+    O1 &amp; O2 &amp; O3 &amp; O4 &amp; O5 &amp; O6 &amp; O7 --&gt; G5[&quot;5 DS-DRIFT byte-gate + DS-EXPORT-FORM-VALID + DS-LIGHT-DARK-COMPLETE (§5)&quot;]
+    G5 --&gt; G6[&quot;6 §11.4.65 export + §11.4.168 visual-validate (§6)&quot;]
+    G6 --&gt; APPS
+
+    subgraph APPS[&quot;CONSUMING APPS (3 apps × 8 platforms)&quot;]
+        FL[&quot;Flutter helix-ui → Client / Console / Connector (Dart)&quot;]
+        WEB[&quot;Console Web (helix.css)&quot;]
+        IOS[&quot;iOS/macOS native shim (Swift colorsets)&quot;]
+        AND[&quot;Android tile/notif (Compose)&quot;]
+        HM[&quot;HarmonyOS ability (ArkTS)&quot;]
+        AU[&quot;Aurora Qt surface (C/Qt)&quot;]
+    end
+    O2 --&gt; FL
+    O1 --&gt; WEB
+    O3 --&gt; IOS
+    O4 --&gt; AND
+    O5 --&gt; HM
+    O6 --&gt; AU</code></pre>
+<hr />
+<h2 id="9-surfaced-decisions--cross-doc-contracts">9. Surfaced decisions
+&amp; cross-doc contracts</h2>
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>Decision / contract</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>D-EXP-1</strong> <code>UNVERIFIED</code></td>
+<td>Transform engine = a <strong>Style-Dictionary-class</strong> tool;
+lean <strong>Style Dictionary v4</strong> (DTCG-native) + bespoke
+formatters for ArkTS/C-Qt. Build-time dev dep only. Exact library +
+pinned version ratified at Volume-10 review per §11.4.99.</td>
+<td>open</td>
+</tr>
+<tr>
+<td><strong>D-EXP-2</strong></td>
+<td>Theme is handled by <strong>theme-split</strong> (Stage 3) into two
+resolved tables, so every target emits light <strong>and</strong> dark;
+no target emits one theme ([OV §12
+<code>DS-LIGHT-DARK-COMPLETE</code>]).</td>
+<td>decided</td>
+</tr>
+<tr>
+<td><strong>D-EXP-3</strong></td>
+<td><code>tokens.css</code> is a <strong>generated export
+target</strong> (D-DESIGN-3 (b)), OpenDesign consumes it; refinement
+round-trips back via the <code>css→json</code> reconciler (§7) — JSON
+stays the single source.</td>
+<td>recommended (leans (b))</td>
+</tr>
+<tr>
+<td><strong>D-EXP-4</strong></td>
+<td>SwiftUI light/dark via <strong>asset-catalog colorsets</strong>
+(idiomatic), not runtime <code>colorScheme</code> branching; Compose via
+<code>light/darkColorScheme</code>; ArkTS via
+<code>resources/{base,dark}</code>; CSS via
+<code>[data-theme]</code>+<code>@media</code>; C/Qt via a
+<code>dark</code>-property QML singleton.</td>
+<td>decided (per §4)</td>
+</tr>
+<tr>
+<td><strong>C-EXP-A</strong> (consumes)</td>
+<td>The JSON schema + the <code>$type</code>→target mapping table [DT
+§3.2] is this pipeline&#39;s <strong>input contract</strong>; a
+<code>$type</code> added there is a new transform here.</td>
+<td>contract</td>
+</tr>
+<tr>
+<td><strong>C-EXP-B</strong> (consumes)</td>
+<td>The 8-platform target list + the
+<code>dist/**</code>-is-a-build-derivative + checked-in-package-Dart
+rule [OV §4/§6, D-DESIGN-2].</td>
+<td>contract</td>
+</tr>
+<tr>
+<td><strong>C-EXP-C</strong> (consumes)</td>
+<td>The verified fact OpenDesign does <strong>not</strong> emit
+Dart/Swift/Compose/ArkTS/C-Qt [OD §1.2] — so these exporters are
+<code>helix_design</code>-owned, not an OpenDesign feature.</td>
+<td>contract</td>
+</tr>
+<tr>
+<td><strong>C-EXP-D</strong> (provides)</td>
+<td>The drift gate (§5) is the §11.4.108 SOURCE→ARTIFACT equality proof
+the whole design system rests on; the §6 visual-validation is the
+§11.4.168 proof for the rendered token docs.</td>
+<td>contract</td>
+</tr>
+<tr>
+<td><strong>U-EXP-1</strong> <code>UNVERIFIED</code></td>
+<td>Exact ArkTS <code>$r(&#39;app.color.…&#39;)</code> resolver +
+<code>resources/dark/</code> qualifier form (HarmonyOS-SDK-version
+dependent) — pinned + re-verified per §11.4.99 before the ArkTS exporter
+ships.</td>
+<td>open</td>
+</tr>
+<tr>
+<td><strong>U-EXP-2</strong> <code>UNVERIFIED</code></td>
+<td>Exact QML singleton registration
+(<code>qmldir</code>/<code>.qrc</code>) + Aurora-Qt module form — pinned
++ re-verified per §11.4.99 before the C/Qt exporter ships.</td>
+<td>open</td>
+</tr>
+<tr>
+<td><strong>U-EXP-3</strong> <code>UNVERIFIED</code></td>
+<td>OpenDesign&#39;s canonical dark-mode <code>tokens.css</code> convention
+(<code>[data-theme]</code> vs <code>prefers-color-scheme</code> vs twin
+systems, [OD §5.2 U4]) — confirmed against a live built-in system in the
+refinement pass; css exporter has a twin-systems formatter option
+ready.</td>
+<td>open</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="sources-verified">Sources verified</h2>
+<ul>
+<li><strong>The pipeline architecture (stages, theme-split, per-target
+transforms + formatters, the drift gate, the round-trip mechanics, the
+§11.4.65/.168 export hook) and every per-target output sample
+(§4)</strong> — <strong>NO external source needed — original HelixVPN
+design work</strong>, layered on the well-established
+Style-Dictionary-class token-build pattern and each platform&#39;s idiomatic
+theme carrier (CSS custom properties + <code>[data-theme]</code>;
+Flutter <code>ThemeExtension</code>/ <code>ThemeData</code>; SwiftUI
+asset-catalog colorsets; Compose Material3 <code>ColorScheme</code>;
+HarmonyOS <code>resources/{base,dark}</code> qualifiers; Qt QML
+singleton). The exact per-platform idioms are the documented conventions
+of each framework; the <em>pipeline</em> that emits them is HelixVPN&#39;s
+own design.</li>
+<li><strong>The W3C Design-Tokens Community-Group
+<code>$value</code>/<code>$type</code> envelope + the Style-Dictionary
+build-engine category (Stage transforms/formatters)</strong> — the DTCG
+format the token source [DT §3.1] already authors in, and the
+Style-Dictionary (amzn) reference implementation of a token-build
+engine; the exact engine + version is <strong>D-EXP-1
+<code>UNVERIFIED</code></strong>, ratified + pinned per §11.4.99 at the
+Volume-10 review (not asserted as a settled fact here).</li>
+<li><strong>The token model (tiers,
+<code>$value</code>/<code>$type</code> envelope, naming, theming axes,
+the <code>$type</code>→target mapping), the colour hexes, the type
+metrics, the scales</strong> —
+<code>final/v10-design/design-tokens.md</code> §3/§5/§6,
+<code>final/v10-design/color-system.md</code> §2/§3,
+<code>final/v10-design/typography-iconography-motion.md</code> §1/§6
+(siblings, this wave, read 2026-06-25). Every literal in the §4 samples
+is reproduced from those documents to keep the samples valid (no
+placeholders).</li>
+<li><strong>The submodule layout (<code>export/targets/*.ts</code>,
+<code>dist/**</code>-is-a-build-derivative, the checked-in package-Dart
+D-DESIGN-2), the 8-platform target list, the OpenDesign relationship +
+the verified absence of OpenDesign multi-language export</strong> —
+<code>final/v10-design/00-overview-and-submodule.md</code> §4/§6/§10 +
+<code>final/v10-design/opendesign-foundation.md</code>
+§0/§1.2/§3.3/§4/§5.2 (siblings, read 2026-06-25). The &quot;OpenDesign does
+not emit Dart/Swift/Compose/ArkTS/C-Qt&quot; finding is grounded there
+(web-verified 2026-06-25), not assumed.</li>
+<li><strong>Constitution clauses</strong> §11.4.6 (no-guessing),
+§11.4.32 (post-pull validation sweep), §11.4.65 (universal Markdown
+export), §11.4.75 (mechanical enforcement / pre-commit), §11.4.99
+(latest-source cross-reference), §11.4.107(10) (self-validated
+analyzer), §11.4.108 (SOURCE→ARTIFACT equality — the drift gate&#39;s
+class), §11.4.110 (build-readiness / form-must-parse), §11.4.134
+(iterate-to-GO), §11.4.162 (OpenDesign mandate), §11.4.168 (exported-doc
+visual validation) — constitution submodule text embedded in this repo&#39;s
+<code>constitution/CLAUDE.md</code>, accessed 2026-06-25.</li>
+<li>Items explicitly marked <code>UNVERIFIED</code> (U-EXP-1 ArkTS
+resolver, U-EXP-2 QML registration, U-EXP-3 OpenDesign dark-mode
+convention, D-EXP-1 exact engine) are pending their named contract test
+/ §11.4.99 verification pass per §11.4.6 — not asserted as fact.</li>
+</ul>
+</body>
+</html>

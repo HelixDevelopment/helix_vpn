@@ -1,0 +1,1427 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>telemetry service</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">telemetry service</h1>
+</header>
+<h1 id="telemetry-service">telemetry service</h1>
+<p><strong>Revision:</strong> 2 <strong>Last modified:</strong>
+2026-06-26T12:00:00Z</p>
+<blockquote>
+<p>Master technical specification — Volume 3 (Control Plane, Go),
+nano-detail service spec. Deepens the telemetry part of [02 §1.1 /
+§4.174-row, §5.1, §10.2] — the <code>internal/telemetry</code> package
+of the <code>helixd</code> modular monolith. This is a SPEC (describe
+the implementation; do not build the product). Source evidence cited
+inline: [04_P1] HelixVPN-Phase1-MVP.md, [04_ARCH §N]
+HelixVPN-Architecture-Refined.md, [research-go_cp] the pass-1
+control-plane doc <code>final/02-control-plane.md</code>, [SYNTHESIS §N]
+the cross-document synthesis. Unproven claims are marked
+<code>UNVERIFIED</code> per constitution §11.4.6 — never fabricated.</p>
+</blockquote>
+<hr />
+<h2 id="0-position-ownership-and-the-one-sentence-contract">0. Position,
+ownership, and the one-sentence contract</h2>
+<p>The <code>telemetry</code> service is the control plane&#39;s
+<strong>observability + audit + presence sink</strong>. It owns three
+responsibilities and <strong>nothing else</strong>:</p>
+<ol type="1">
+<li><strong>Aggregate counters + health</strong> — Prometheus exposition
+of control-plane internal state (convergence latency, event lag, stream
+depth, Go runtime, build info) plus liveness/readiness health probes.
+Counts and gauges only — <strong>never per-packet, per-flow,
+per-destination data</strong> (C3).</li>
+<li><strong>Control-action audit</strong> — append-only ingestion of
+<code>audit_events</code> rows describing <em>who did what to the
+control plane</em> (revoke a device, activate a policy).
+<strong>Never</strong> traffic, flows, or destinations [04_ARCH §7,
+04_P1 §11.4, C3].</li>
+<li><strong>Live presence in TTL Redis</strong> — the ephemeral
+<code>device:&lt;id&gt;:presence</code> key set whose <strong>deliberate
+non-durability operationalizes the no-logging promise</strong> [04_ARCH
+§4.5/§4.6]: online/offline state lives only in Redis with a TTL, so the
+durable store never accumulates a connection log.</li>
+</ol>
+<p>It additionally <strong>owns the no-logging-as-code
+invariant</strong>: the CI schema-lint that fails the build if any
+durable connection/traffic/packet/flow table appears (§7). The lint
+lives in <code>tools/schemalint</code> but is <em>governed</em> by this
+service because the privacy guarantee is telemetry&#39;s charter.</p>
+<h3 id="01-what-this-service-does-not-own-boundaries">0.1 What this
+service does NOT own (boundaries)</h3>
+<table>
+<thead>
+<tr>
+<th>Concern</th>
+<th>Owner</th>
+<th>Why not telemetry</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Computing/streaming network maps</td>
+<td><code>coordinator</code> [research-go_cp §6]</td>
+<td>telemetry only <em>measures</em> convergence; it never builds a
+map</td>
+</tr>
+<tr>
+<td>Emitting domain events</td>
+<td>producers
+(<code>identity</code>/<code>registry</code>/<code>policy</code>)
+[research-go_cp §5]</td>
+<td>telemetry is a <em>consumer</em> of <code>events:*</code>, never a
+producer of domain events</td>
+</tr>
+<tr>
+<td>Durable identity/topology/policy tables</td>
+<td><code>store</code> [research-go_cp §2]</td>
+<td>telemetry owns only <code>audit_events</code> writes + presence
+(Redis)</td>
+</tr>
+<tr>
+<td>Edge-side metrics (handshakes, transport mix, bytes-per-peer)</td>
+<td>Rust edge [04_ARCH §9]</td>
+<td>out of the Go control plane; the edge runs its own
+<code>/metrics</code> [04_ARCH §9]</td>
+</tr>
+<tr>
+<td>Grafana dashboards / Alertmanager rules</td>
+<td><code>deploy/</code> [04_ARCH §9]</td>
+<td>telemetry exposes the series; dashboards-as-code consume them</td>
+</tr>
+</tbody>
+</table>
+<h3 id="02-the-governing-invariants-this-service-must-obey-subset-of-research-go_cp-01">0.2
+The governing invariants this service must obey (subset of
+[research-go_cp §0.1])</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Invariant</th>
+<th>This service&#39;s obligation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>C2</td>
+<td>Postgres = truth; Redis = ephemeral</td>
+<td>presence is Redis-only (TTL); losing Redis loses no durable
+state</td>
+</tr>
+<tr>
+<td>C3</td>
+<td>No-logging by construction</td>
+<td>exposes only aggregate counters; audits only control actions;
+<em>governs</em> the schema-lint</td>
+</tr>
+<tr>
+<td>C5</td>
+<td>Push, don&#39;t poll; convergence p99 &lt; 1 s</td>
+<td>measures <code>event→delta-on-wire</code> and makes &lt; 1 s a
+falsifiable series</td>
+</tr>
+<tr>
+<td>C8</td>
+<td>Multi-tenant isolation at the DB (RLS)</td>
+<td><code>audit_events</code> writes run through
+<code>store.WithTenant</code>; metrics carry no tenant PII</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="1-package-layout--wiring">1. Package layout &amp; wiring</h2>
+<pre><code>internal/telemetry/
+├── iface.go         # Telemetry interface (the only surface other modules import)
+├── service.go       # concrete Service; wires registry + audit sink + presence + consumers
+├── metrics.go       # the Prometheus metric registry (all collectors declared here)
+├── audit.go         # AuditSink: validate → WithTenant insert → (optional) live fan-out
+├── presence.go      # PresenceTracker: Redis TTL set/refresh/expire + gauge sync
+├── health.go        # /healthz (liveness) + /readyz (readiness) handlers
+├── consumers.go     # event-stream consumers that derive metrics (event lag, dlq, presence)
+├── http.go          # mounts /metrics, /healthz, /readyz on the shared listener
+└── slo.go           # convergence/lag/depth recording helpers used by coordinator+events
+tools/schemalint/
+└── main.go          # the no-logging CI gate (§7) — governed by telemetry, run pre-build</code></pre>
+<p>Wiring rule (extends [research-go_cp §1.2 R3/R4]): <strong>telemetry
+is a pure consumer.</strong> It MUST NOT mutate topology/policy and MUST
+NOT publish domain events. Its only writes are (a)
+<code>audit_events</code> rows (through <code>store.WithTenant</code>,
+R4) and (b) Redis presence keys. A <code>golangci-lint</code> custom
+analyzer flags any <code>events.Publish</code> call inside
+<code>internal/telemetry</code> (telemetry never produces domain
+events).</p>
+<h3 id="11-the-interface-surface-go-signatures">1.1 The interface
+surface (Go signatures)</h3>
+<div class="sourceCode" id="cb2"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/telemetry/iface.go</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">package</span> telemetry</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="op">(</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;context&quot;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;net/http&quot;</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;time&quot;</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;github.com/google/uuid&quot;</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="co">// Telemetry is the only surface other modules import (R1: interface, not store).</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Telemetry <span class="kw">interface</span> <span class="op">{</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ---- audit (control actions only — C3) ----</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    Audit<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> ev AuditRecord<span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ---- presence (ephemeral, Redis TTL — C2/C3) ----</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    MarkOnline<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> tenantID<span class="op">,</span> deviceID uuid<span class="op">.</span>UUID<span class="op">,</span> ttl time<span class="op">.</span>Duration<span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    MarkOffline<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> tenantID<span class="op">,</span> deviceID uuid<span class="op">.</span>UUID<span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>    RefreshPresence<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> tenantID<span class="op">,</span> deviceID uuid<span class="op">.</span>UUID<span class="op">,</span> ttl time<span class="op">.</span>Duration<span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>    IsOnline<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> tenantID<span class="op">,</span> deviceID uuid<span class="op">.</span>UUID<span class="op">)</span> <span class="op">(</span><span class="dt">bool</span><span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ---- SLO recording (called from coordinator/events hot paths) ----</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>    ObserveReconcile<span class="op">(</span>d time<span class="op">.</span>Duration<span class="op">)</span>             <span class="co">// event→delta-on-wire (§6.1)</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>    ObserveEventLag<span class="op">(</span>stream <span class="dt">string</span><span class="op">,</span> d time<span class="op">.</span>Duration<span class="op">)</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>    SetStreamDepth<span class="op">(</span>stream<span class="op">,</span> group <span class="dt">string</span><span class="op">,</span> depth <span class="dt">float64</span><span class="op">)</span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>    SetOpenStreams<span class="op">(</span>n <span class="dt">int</span><span class="op">)</span>                          <span class="co">// current WatchNetworkMap streams</span></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>    IncDLQ<span class="op">(</span>stream <span class="dt">string</span><span class="op">)</span></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ---- HTTP surface (mounted on the shared listener, §8 of research-go_cp) ----</span></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>    MetricsHandler<span class="op">()</span> http<span class="op">.</span>Handler  <span class="co">// GET /metrics  (Prometheus text exposition)</span></span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>    HealthHandler<span class="op">()</span>  http<span class="op">.</span>Handler  <span class="co">// GET /healthz  (liveness)</span></span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>    ReadyHandler<span class="op">()</span>   http<span class="op">.</span>Handler  <span class="co">// GET /readyz   (readiness)</span></span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a><span class="co">// AuditRecord is the in-memory shape an emitter hands to Audit(); it maps 1:1 to the</span></span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a><span class="co">// audit_events row [research-go_cp §2.2]. There is NO ip/port/bytes field — by design (C3).</span></span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> AuditRecord <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a>    TenantID uuid<span class="op">.</span>UUID         <span class="co">// RLS scope</span></span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a>    Actor    <span class="dt">string</span>            <span class="co">// user-uuid | &quot;system&quot;</span></span>
+<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a>    Action   AuditAction       <span class="co">// closed vocabulary, §4.2</span></span>
+<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a>    Target   <span class="dt">string</span>            <span class="co">// e.g. device-uuid, policy-version; opaque to telemetry</span></span>
+<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a>    Meta     <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="dt">any</span>    <span class="co">// small JSON; lint-checked to carry no traffic shape (§4.4)</span></span>
+<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a>    TraceID  <span class="dt">string</span>            <span class="co">// correlates to the originating Envelope.trace_id [research-go_cp §5.2]</span></span>
+<span id="cb2-45"><a href="#cb2-45" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><code>Telemetry</code> is constructed once in <code>cmd/helixd</code>
+and injected into <code>coordinator</code>, <code>events</code>,
+<code>api</code>, <code>policy</code>, <code>pki</code>,
+<code>registry</code>. No module imports
+<code>internal/telemetry</code>&#39;s concrete types.</p>
+<hr />
+<h2 id="2-component-diagram">2. Component diagram</h2>
+<pre class="mermaid"><code>flowchart TD
+    subgraph helixd [helixd control-plane process]
+        COORD[coordinator] --&gt;|ObserveReconcile / SetOpenStreams| TEL[telemetry.Service]
+        EVT[events.Bus consumer] --&gt;|ObserveEventLag / SetStreamDepth / IncDLQ| TEL
+        API[api Gin] --&gt;|Audit / MarkOnline-Offline| TEL
+        POL[policy] --&gt;|Audit policy.activate| TEL
+        PKI[pki] --&gt;|Audit device.revoke| TEL
+        TEL --&gt;|WithTenant INSERT| PG[(Postgres audit_events RLS)]
+        TEL --&gt;|SET EX / DEL presence| RD[(Redis TTL presence)]
+        TEL --&gt;|register collectors| REG[prometheus.Registry]
+    end
+    REG --&gt;|GET /metrics| PROM[Prometheus scraper]
+    PROM --&gt; GRAF[Grafana dashboards as code]
+    PROM --&gt; ALERT[Alertmanager convergence p99 &gt; 1s]
+    LINT[tools/schemalint pre-build gate] -.governs.-&gt; PG
+    classDef ext fill:#eef,stroke:#557;
+    class PROM,GRAF,ALERT ext;</code></pre>
+<hr />
+<h2 id="3-prometheus-metric-registry-the-complete-series-set">3.
+Prometheus metric registry (the complete series set)</h2>
+<p>All collectors are declared in <code>metrics.go</code> and registered
+into a <strong>private</strong> <code>*prometheus.Registry</code> (not
+the global default — avoids the Go-runtime default-collector duplication
+and keeps the series set auditable). <code>MetricsHandler()</code>
+returns <code>promhttp.HandlerFor(reg, …)</code>. [research-go_cp §10.2
+names <code>helix_reconcile_seconds</code>,
+<code>helix_events_dlq_total</code>,
+<code>process_resident_memory_bytes</code>; this section is their
+canonical, complete declaration.]</p>
+<h3 id="31-naming--label-conventions">3.1 Naming &amp; label
+conventions</h3>
+<ul>
+<li>Prefix <code>helix_</code> for every custom series. SI base units in
+the suffix (<code>_seconds</code>, <code>_bytes</code>,
+<code>_total</code>) per Prometheus convention [UNVERIFIED-exact-wording
+but standard practice].</li>
+<li><strong>Label cardinality is bounded by construction (C3
+corollary).</strong> Permitted labels: <code>stream</code>,
+<code>group</code>, <code>consumer</code>, <code>event_type</code>,
+<code>code</code> (error taxonomy §9), <code>version</code> (build).
+<strong>Forbidden labels:</strong> <code>tenant_id</code>,
+<code>device_id</code>, <code>overlay_ip</code>, <code>src_ip</code>,
+<code>dst_ip</code>, any high-cardinality or PII/traffic-shaped key. A
+per-tenant breakdown is NEVER a Prometheus label (it would leak tenant
+population + be unbounded) — per-tenant counters, if ever needed, live
+behind the authenticated REST <code>/v1/stats</code> (§5.2), not
+<code>/metrics</code>. A unit test asserts every registered collector&#39;s
+label set is a subset of the allow-list (§10 T-UNIT-3).</li>
+</ul>
+<h3 id="32-convergence--real-time-slo-series-the--1-s-promise-made-falsifiable">3.2
+Convergence / real-time SLO series (the &lt; 1 s promise made
+falsifiable)</h3>
+<div class="sourceCode" id="cb4"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// metrics.go (excerpt)</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">var</span> <span class="op">(</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    ReconcileSeconds <span class="op">=</span> prometheus<span class="op">.</span>NewHistogram<span class="op">(</span>prometheus<span class="op">.</span>HistogramOpts<span class="op">{</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>        Name<span class="op">:</span> <span class="st">&quot;helix_reconcile_seconds&quot;</span><span class="op">,</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>        Help<span class="op">:</span> <span class="st">&quot;event-receive → MapDelta written to the WatchNetworkMap stream (C5 convergence).&quot;</span><span class="op">,</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>        <span class="co">// buckets straddle the 1s SLO so p99&lt;1s is directly readable:</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>        Buckets<span class="op">:</span> <span class="op">[]</span><span class="dt">float64</span><span class="op">{</span><span class="fl">0.005</span><span class="op">,</span> <span class="fl">0.01</span><span class="op">,</span> <span class="fl">0.025</span><span class="op">,</span> <span class="fl">0.05</span><span class="op">,</span> <span class="fl">0.1</span><span class="op">,</span> <span class="fl">0.25</span><span class="op">,</span> <span class="fl">0.5</span><span class="op">,</span> <span class="fl">0.75</span><span class="op">,</span> <span class="fl">1.0</span><span class="op">,</span> <span class="fl">2.5</span><span class="op">,</span> <span class="fl">5.0</span><span class="op">},</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">})</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    EventLagSeconds <span class="op">=</span> prometheus<span class="op">.</span>NewHistogramVec<span class="op">(</span>prometheus<span class="op">.</span>HistogramOpts<span class="op">{</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>        Name<span class="op">:</span> <span class="st">&quot;helix_event_lag_seconds&quot;</span><span class="op">,</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>        Help<span class="op">:</span> <span class="st">&quot;Envelope.ts → consumer pickup (bus delivery latency, §6.2).&quot;</span><span class="op">,</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>        Buckets<span class="op">:</span> <span class="op">[]</span><span class="dt">float64</span><span class="op">{</span><span class="fl">0.001</span><span class="op">,</span> <span class="fl">0.005</span><span class="op">,</span> <span class="fl">0.01</span><span class="op">,</span> <span class="fl">0.05</span><span class="op">,</span> <span class="fl">0.1</span><span class="op">,</span> <span class="fl">0.5</span><span class="op">,</span> <span class="fl">1.0</span><span class="op">,</span> <span class="fl">5.0</span><span class="op">},</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">},</span> <span class="op">[]</span><span class="dt">string</span><span class="op">{</span><span class="st">&quot;stream&quot;</span><span class="op">})</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>    StreamDepth <span class="op">=</span> prometheus<span class="op">.</span>NewGaugeVec<span class="op">(</span>prometheus<span class="op">.</span>GaugeOpts<span class="op">{</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>        Name<span class="op">:</span> <span class="st">&quot;helix_stream_pending_entries&quot;</span><span class="op">,</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>        Help<span class="op">:</span> <span class="st">&quot;Redis Stream consumer-group PEL depth (un-acked backlog, §6.3).&quot;</span><span class="op">,</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>    <span class="op">},</span> <span class="op">[]</span><span class="dt">string</span><span class="op">{</span><span class="st">&quot;stream&quot;</span><span class="op">,</span> <span class="st">&quot;group&quot;</span><span class="op">})</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>    OpenStreams <span class="op">=</span> prometheus<span class="op">.</span>NewGauge<span class="op">(</span>prometheus<span class="op">.</span>GaugeOpts<span class="op">{</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>        Name<span class="op">:</span> <span class="st">&quot;helix_open_watch_streams&quot;</span><span class="op">,</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>        Help<span class="op">:</span> <span class="st">&quot;current open WatchNetworkMap server streams (coordinator load).&quot;</span><span class="op">,</span></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>    <span class="op">})</span></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>    DLQTotal <span class="op">=</span> prometheus<span class="op">.</span>NewCounterVec<span class="op">(</span>prometheus<span class="op">.</span>CounterOpts<span class="op">{</span></span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>        Name<span class="op">:</span> <span class="st">&quot;helix_events_dlq_total&quot;</span><span class="op">,</span></span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>        Help<span class="op">:</span> <span class="st">&quot;events routed to the dead-letter path after the delivery-count ceiling (§5.4 research-go_cp).&quot;</span><span class="op">,</span></span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>    <span class="op">},</span> <span class="op">[]</span><span class="dt">string</span><span class="op">{</span><span class="st">&quot;stream&quot;</span><span class="op">})</span></span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>    RevokeEnforceSeconds <span class="op">=</span> prometheus<span class="op">.</span>NewHistogram<span class="op">(</span>prometheus<span class="op">.</span>HistogramOpts<span class="op">{</span></span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>        Name<span class="op">:</span> <span class="st">&quot;helix_revoke_enforce_seconds&quot;</span><span class="op">,</span></span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a>        Help<span class="op">:</span> <span class="st">&quot;device.revoke accepted → peer-removal delta on wire (revocation SLO, §9.3 research-go_cp).&quot;</span><span class="op">,</span></span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a>        Buckets<span class="op">:</span> <span class="op">[]</span><span class="dt">float64</span><span class="op">{</span><span class="fl">0.01</span><span class="op">,</span> <span class="fl">0.05</span><span class="op">,</span> <span class="fl">0.1</span><span class="op">,</span> <span class="fl">0.25</span><span class="op">,</span> <span class="fl">0.5</span><span class="op">,</span> <span class="fl">0.75</span><span class="op">,</span> <span class="fl">1.0</span><span class="op">,</span> <span class="fl">2.5</span><span class="op">},</span></span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a>    <span class="op">})</span></span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div>
+<h3 id="33-audit--presence--runtime-series">3.3 Audit / presence /
+runtime series</h3>
+<div class="sourceCode" id="cb5"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">var</span> <span class="op">(</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    AuditEventsTotal <span class="op">=</span> prometheus<span class="op">.</span>NewCounterVec<span class="op">(</span>prometheus<span class="op">.</span>CounterOpts<span class="op">{</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>        Name<span class="op">:</span> <span class="st">&quot;helix_audit_events_total&quot;</span><span class="op">,</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>        Help<span class="op">:</span> <span class="st">&quot;control-action audit rows written, by action (NEVER traffic, C3).&quot;</span><span class="op">,</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">},</span> <span class="op">[]</span><span class="dt">string</span><span class="op">{</span><span class="st">&quot;action&quot;</span><span class="op">})</span> <span class="co">// action label is the closed §4.2 vocabulary — bounded cardinality</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    PresenceOnline <span class="op">=</span> prometheus<span class="op">.</span>NewGauge<span class="op">(</span>prometheus<span class="op">.</span>GaugeOpts<span class="op">{</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>        Name<span class="op">:</span> <span class="st">&quot;helix_presence_online_devices&quot;</span><span class="op">,</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>        Help<span class="op">:</span> <span class="st">&quot;devices currently flagged online in Redis TTL presence (ephemeral, §5).&quot;</span><span class="op">,</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    <span class="op">})</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    AuditWriteErrors <span class="op">=</span> prometheus<span class="op">.</span>NewCounterVec<span class="op">(</span>prometheus<span class="op">.</span>CounterOpts<span class="op">{</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>        Name<span class="op">:</span> <span class="st">&quot;helix_audit_write_errors_total&quot;</span><span class="op">,</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>        Help<span class="op">:</span> <span class="st">&quot;audit-sink failures by error code (§9 taxonomy).&quot;</span><span class="op">,</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">},</span> <span class="op">[]</span><span class="dt">string</span><span class="op">{</span><span class="st">&quot;code&quot;</span><span class="op">})</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    BuildInfo <span class="op">=</span> prometheus<span class="op">.</span>NewGaugeVec<span class="op">(</span>prometheus<span class="op">.</span>GaugeOpts<span class="op">{</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>        Name<span class="op">:</span> <span class="st">&quot;helix_build_info&quot;</span><span class="op">,</span> Help<span class="op">:</span> <span class="st">&quot;1, labelled with version/commit (release prefix §11.4.151).&quot;</span><span class="op">,</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>    <span class="op">},</span> <span class="op">[]</span><span class="dt">string</span><span class="op">{</span><span class="st">&quot;version&quot;</span><span class="op">,</span> <span class="st">&quot;commit&quot;</span><span class="op">})</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a><span class="co">// Go runtime + process collectors are registered explicitly into the private registry:</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a><span class="co">//   reg.MustRegister(collectors.NewGoCollector(), collectors.NewProcessCollector(...))</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a><span class="co">// → exposes go_goroutines, go_gc_duration_seconds, process_resident_memory_bytes</span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a><span class="co">//   (the §10.2 24h-soak no-leak SLO series, research-go_cp).</span></span></code></pre></div>
+<h3 id="34-slo--alert-mapping-rules-as-code-live-in-deploy-telemetry-only-emits-the-series">3.4
+SLO → alert mapping (rules-as-code live in <code>deploy/</code>,
+telemetry only emits the series)</h3>
+<table>
+<thead>
+<tr>
+<th>SLO</th>
+<th>Series + query</th>
+<th>Alert threshold</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>convergence p99 &lt; 1 s [C5, 04_ARCH §9]</td>
+<td><code>histogram_quantile(0.99, rate(helix_reconcile_seconds_bucket[5m]))</code></td>
+<td><code>&gt; 1.0</code> for 2 m</td>
+</tr>
+<tr>
+<td>revoke &lt; 1 s [research-go_cp §9.3]</td>
+<td><code>histogram_quantile(0.99, rate(helix_revoke_enforce_seconds_bucket[5m]))</code></td>
+<td><code>&gt; 1.0</code></td>
+</tr>
+<tr>
+<td>event lag healthy</td>
+<td><code>histogram_quantile(0.99, rate(helix_event_lag_seconds_bucket{stream=&quot;events:policy&quot;}[5m]))</code></td>
+<td><code>&gt; 0.5</code></td>
+</tr>
+<tr>
+<td>backlog not growing</td>
+<td><code>helix_stream_pending_entries</code></td>
+<td><code>&gt; 1000</code> for 5 m</td>
+</tr>
+<tr>
+<td>no DLQ accumulation</td>
+<td><code>increase(helix_events_dlq_total[15m])</code></td>
+<td><code>&gt; 0</code></td>
+</tr>
+<tr>
+<td>coordinator no leak [research-go_cp §10.2]</td>
+<td><code>deriv(process_resident_memory_bytes[6h])</code></td>
+<td><code>&gt; 0</code> sustained over soak</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>The recommendation to make <strong>event-lag</strong> and
+<strong>map-convergence-time</strong> first-class, alert-on-p99&gt;1s
+SLOs is taken verbatim from [04_ARCH §9].</p>
+</blockquote>
+<hr />
+<h2 id="4-control-action-audit-the-audit_events-sink">4. Control-action
+audit (the audit_events sink)</h2>
+<h3 id="41-storage-the-row-is-owned-by-store-the-write-path-is-owned-here">4.1
+Storage (the row is owned by <code>store</code>; the <em>write path</em>
+is owned here)</h3>
+<p>The DDL is canonical in [research-go_cp §2.2] — reproduced for
+completeness, with the telemetry-side constraints made explicit:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> audit_events (</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">id</span>          bigint <span class="kw">GENERATED</span> ALWAYS <span class="kw">AS</span> IDENTITY <span class="kw">PRIMARY</span> <span class="kw">KEY</span>,</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  tenant_id   uuid <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">REFERENCES</span> tenants(<span class="kw">id</span>) <span class="kw">ON</span> <span class="kw">DELETE</span> <span class="kw">CASCADE</span>,</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  actor       text <span class="kw">NOT</span> <span class="kw">NULL</span>,             <span class="co">-- user id / &quot;system&quot;</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  action      text <span class="kw">NOT</span> <span class="kw">NULL</span>,             <span class="co">-- closed vocabulary (§4.2)</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  target      text,                      <span class="co">-- opaque id (device/policy/connector)</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  ts          timestamptz <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> now(),</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  meta        jsonb                       <span class="co">-- small; lint-checked shape (§4.4)</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> <span class="kw">ON</span> audit_events (tenant_id, ts <span class="kw">DESC</span>);</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="co">-- RLS (C8): FORCE ROW LEVEL </span><span class="al">SECURITY</span><span class="co"> + tenant_isolation, identical to every tenant table</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="co">-- [research-go_cp §2.3]. The sink writes ONLY through store.WithTenant — never raw db.Exec (R4).</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="co">-- Append-only by policy: helix_app is granted INSERT + SELECT on audit_events but NOT</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="co">-- UPDATE/DELETE → an audit row cannot be mutated or erased by the request-path role.</span></span></code></pre></div>
+<blockquote>
+<p><strong>Append-only is a grant, not a trigger</strong> (simplest
+mechanical guarantee):
+<code>REVOKE UPDATE, DELETE ON audit_events FROM helix_app;</code>.
+Retention pruning (if ever enabled) runs as the out-of-band
+<code>helix_sys</code> role on a schedule, not from request handling.
+Phase 1 default: <strong>no auto-prune</strong> — control-action audit
+is low-volume and operator-valuable; a documented
+<code>helixvpnctl audit prune --before &lt;ts&gt;</code> exists for
+GDPR-style erasure but is operator-driven, not automatic.</p>
+</blockquote>
+<h3 id="42-closed-action-vocabulary-auditaction">4.2 Closed action
+vocabulary (<code>AuditAction</code>)</h3>
+<p>Audit covers <strong>control actions only</strong>. The vocabulary is
+a closed Go enum so the <code>action</code> Prometheus label and the
+lint allow-list are bounded and a typo cannot mint a new
+high-cardinality value.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> AuditAction <span class="dt">string</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> <span class="op">(</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    ActionDeviceEnrolled     AuditAction <span class="op">=</span> <span class="st">&quot;device.enrolled&quot;</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    ActionDeviceRevoked      AuditAction <span class="op">=</span> <span class="st">&quot;device.revoke&quot;</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    ActionDeviceCertIssued   AuditAction <span class="op">=</span> <span class="st">&quot;device.cert.issued&quot;</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    ActionDeviceCertRotated  AuditAction <span class="op">=</span> <span class="st">&quot;device.cert.rotated&quot;</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    ActionPolicyCreated      AuditAction <span class="op">=</span> <span class="st">&quot;policy.create&quot;</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    ActionPolicyActivated    AuditAction <span class="op">=</span> <span class="st">&quot;policy.activate&quot;</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    ActionPolicyRolledBack   AuditAction <span class="op">=</span> <span class="st">&quot;policy.rollback&quot;</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>    ActionConnectorAttached  AuditAction <span class="op">=</span> <span class="st">&quot;connector.attached&quot;</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>    ActionPrefixesChanged    AuditAction <span class="op">=</span> <span class="st">&quot;connector.prefixes.changed&quot;</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>    ActionEnrollTokenMinted  AuditAction <span class="op">=</span> <span class="st">&quot;enroll_token.mint&quot;</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>    ActionEnrollTokenUsed    AuditAction <span class="op">=</span> <span class="st">&quot;enroll_token.used&quot;</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>    ActionTenantCreated      AuditAction <span class="op">=</span> <span class="st">&quot;tenant.create&quot;</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>    ActionUserRoleChanged    AuditAction <span class="op">=</span> <span class="st">&quot;user.role.change&quot;</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>    ActionAuthLogin          AuditAction <span class="op">=</span> <span class="st">&quot;auth.login&quot;</span>          <span class="co">// OIDC/account login (control-action audit)</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>    ActionAuthEnrollDenied   AuditAction <span class="op">=</span> <span class="st">&quot;auth.enroll.denied&quot;</span>  <span class="co">// rejected enroll attempt (abuse signal)</span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a><span class="kw">var</span> auditVocabulary <span class="op">=</span> <span class="kw">map</span><span class="op">[</span>AuditAction<span class="op">]</span><span class="kw">struct</span><span class="op">{}{</span> <span class="co">/* all of the above */</span> <span class="op">}</span></span></code></pre></div>
+<blockquote>
+<p><strong>Reconciled (§11.4.35, 2026-06-26):</strong>
+<code>auth.login</code> + <code>auth.enroll.denied</code> are adopted
+into this canonical <code>AuditAction</code> enum (they are legitimate
+control-action audits — a login and a rejected enroll, never traffic).
+This enum is the superset source of truth; <code>[04-SEC §7]</code> and
+<code>[audit-and-compliance §4]</code> mirror it (<code>D-AC-1</code>
+resolved).</p>
+</blockquote>
+<p><code>Audit()</code> rejects any <code>Action</code> not in
+<code>auditVocabulary</code> with <code>ErrUnknownAuditAction</code>
+(§9) — a closed set is the mechanical guarantee that audit never
+silently grows toward traffic logging.</p>
+<p>These actions map directly onto the §5.3 event taxonomy
+[research-go_cp §5.3]: a producer that emits a domain event (e.g.
+<code>policy.compiled</code>) and the audit it writes
+(<code>policy.activate</code>) share the <code>Envelope.trace_id</code>,
+so the audit row and the bus event are correlatable.</p>
+<h3 id="43-ingestion-paths-synchronous-write--event-derived-write">4.3
+Ingestion paths (synchronous write + event-derived write)</h3>
+<p>Two paths land the same row; both go through one validated sink so
+the C3/RLS guarantees hold once.</p>
+<pre class="mermaid"><code>flowchart LR
+    A[api / policy / pki&lt;br/&gt;control action handler] --&gt;|Audit(rec) synchronous| S{AuditSink.validate}
+    B[events consumer&lt;br/&gt;device.revoked / policy.compiled] --&gt;|derive AuditRecord| S
+    S --&gt;|reject| E[ErrUnknownAuditAction /&lt;br/&gt;ErrAuditMetaShape §9]
+    S --&gt;|ok| W[store.WithTenant INSERT audit_events]
+    W --&gt;|ok| M[AuditEventsTotal.WithLabelValues action .Inc]
+    W --&gt;|err| EM[AuditWriteErrors.Inc code]
+    M --&gt;|optional| LIVE[publish to events:audit-live&lt;br/&gt;for Console GET /v1/stream §5.2 research-go_cp]</code></pre>
+<ul>
+<li><strong>Synchronous path (authoritative):</strong> a handler
+performing a privileged mutation calls <code>Audit()</code> <em>inside
+the same logical unit of work</em> as the mutation it records, so a
+committed <code>policy.activate</code> cannot exist without its audit
+row. Implementation: the handler&#39;s <code>WithTenant</code> closure does
+both the domain write and the audit insert in one transaction (atomic —
+either both land or neither). This is the <strong>primary</strong> path
+and the one DoD asserts.</li>
+<li><strong>Event-derived path (best-effort enrichment):</strong> the
+events consumer (§6) may <em>also</em> derive an audit row from a bus
+event for Console live-streaming. To avoid double-write it is
+<strong>idempotent on
+<code>(tenant_id, trace_id, action)</code></strong> — a partial unique
+index guards it:
+<div class="sourceCode" id="cb9"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">UNIQUE</span> <span class="kw">INDEX</span> audit_dedup <span class="kw">ON</span> audit_events (tenant_id, (meta<span class="op">-&gt;&gt;</span><span class="st">&#39;trace_id&#39;</span>), action)</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">WHERE</span> meta ? <span class="st">&#39;trace_id&#39;</span>;</span></code></pre></div>
+An insert that collides is swallowed as a no-op (the synchronous path
+already wrote it). For Phase 1 the <strong>synchronous path is
+canonical</strong> and the event-derived path is OFF by default
+(<code>Meta.trace_id</code> still recorded for correlation) — enabled
+only when the Console live-audit feed is wired. [UNVERIFIED that both
+paths are simultaneously needed in MVP; spec keeps the synchronous path
+as the single source and documents the dedup index as the seam if the
+feed is added.]</li>
+</ul>
+<h3 id="44-meta-shape-guard-audit-must-not-become-a-traffic-log-through-the-back-door">4.4
+Meta-shape guard (audit must not become a traffic log through the back
+door)</h3>
+<p><code>Audit()</code> runs a <code>meta</code> shape check before
+insert: the JSON keys are matched against the same forbidden-column
+regex the schema-lint uses (§7) — <code>src_ip</code>,
+<code>dst_ip</code>, <code>bytes_in</code>, <code>payload</code>,
+<code>sni_host</code>, etc. A control-action audit carrying a
+<code>dst_ip</code> key is rejected with <code>ErrAuditMetaShape</code>.
+This closes the &quot;log traffic inside <code>meta.jsonb</code>&quot; evasion of
+C3.</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co">// audit.go (excerpt)</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>s <span class="op">*</span>AuditSink<span class="op">)</span> validate<span class="op">(</span>r AuditRecord<span class="op">)</span> <span class="dt">error</span> <span class="op">{</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> _<span class="op">,</span> ok <span class="op">:=</span> auditVocabulary<span class="op">[</span>r<span class="op">.</span>Action<span class="op">];</span> <span class="op">!</span>ok <span class="op">{</span> <span class="cf">return</span> ErrUnknownAuditAction <span class="op">}</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">len</span><span class="op">(</span>r<span class="op">.</span>Meta<span class="op">)</span> <span class="op">&gt;</span> maxMetaKeys <span class="op">{</span> <span class="cf">return</span> ErrAuditMetaShape <span class="op">}</span> <span class="co">// bound the blob (default 16 keys)</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> k <span class="op">:=</span> <span class="kw">range</span> r<span class="op">.</span>Meta <span class="op">{</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> forbiddenMetaKey<span class="op">.</span>MatchString<span class="op">(</span>k<span class="op">)</span> <span class="op">{</span> <span class="cf">return</span> ErrAuditMetaShape <span class="op">}</span> <span class="co">// §7 regex shared</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="ot">nil</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="45-audit-authz-who-may-read-audit">4.5 Audit authz (who may
+<em>read</em> audit)</h3>
+<p>Writing audit is internal (any control handler).
+<strong>Reading</strong> audit is RBAC-gated at the REST layer
+[research-go_cp §8.1]: <code>GET /v1/audit</code> requires
+<code>admin</code> or <code>operator</code>; <code>member</code> is
+denied. RLS is the floor — even an mis-scoped query returns only the
+caller&#39;s tenant rows (C8). Metrics (<code>/metrics</code>) carry
+<strong>no</strong> audit content, only the
+<code>helix_audit_events_total{action}</code> aggregate count.</p>
+<table>
+<thead>
+<tr>
+<th>Route</th>
+<th>admin</th>
+<th>operator</th>
+<th>member</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GET /v1/audit</code> (list, tenant-scoped)</td>
+<td>✓</td>
+<td>✓</td>
+<td>✗</td>
+</tr>
+<tr>
+<td><code>GET /metrics</code> (aggregate counts only)</td>
+<td>scrape-network only (mTLS/allow-list, §8.3)</td>
+<td>—</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="5-live-presence-in-ttl-redis-operationalizes-no-logging">5. Live
+presence in TTL Redis (operationalizes no-logging)</h2>
+<p>Presence is the mechanism that lets the system know <em>which devices
+are online right now</em> <strong>without a durable session/connection
+table</strong> — the literal operationalization of the no-logging
+promise [04_ARCH §4.5: &quot;Live session/presence state lives in Redis
+(ephemeral, TTL&#39;d) so the durable store never accumulates a connection
+log&quot;; §4.6: <code>device:&lt;id&gt;:presence</code>, TTL refreshed by
+heartbeat].</p>
+<h3 id="51-key-schema--ttl">5.1 Key schema &amp; TTL</h3>
+<table>
+<thead>
+<tr>
+<th>Key</th>
+<th>Type</th>
+<th>Value</th>
+<th>TTL</th>
+<th>Set/refreshed by</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>presence:{tenant}:{device}</code></td>
+<td>string</td>
+<td><code>&quot;1&quot;</code> (or compact JSON
+<code>{&quot;t&quot;:&quot;masque-h3&quot;,&quot;rtt&quot;:21}</code>)</td>
+<td><code>PRESENCE_TTL</code> (default <strong>45 s</strong>)</td>
+<td><code>MarkOnline</code>/<code>RefreshPresence</code> on each
+<code>ReportStatus</code>/<code>WatchNetworkMap</code> heartbeat</td>
+</tr>
+<tr>
+<td><code>presence:{tenant}:set</code></td>
+<td>set (members)</td>
+<td>device-ids currently online</td>
+<td>— (members self-expire via the keyspace-notification reaper,
+§5.3)</td>
+<td>reaper + Mark*</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>TTL = <strong>3× the agent heartbeat interval</strong> (heartbeat
+default 15 s [research-go_cp §4 <code>KeepAlive</code> 20 s /
+<code>StatusReport</code>]; presence TTL 45 s gives 2 missed beats of
+grace before &quot;offline&quot;). The exact heartbeat cadence is the agent
+contract&#39;s; presence TTL is derived from it, never invented (§11.4.6) —
+<code>PRESENCE_TTL = 3 * HEARTBEAT_INTERVAL</code>.</li>
+<li>The value is <strong>health-only</strong> (current transport + rtt).
+It carries <strong>no destination, no bytes, no flow</strong> (C3) —
+same restriction as the <code>StatusReport</code> proto message
+[research-go_cp §4].</li>
+<li>Presence is <strong>never</strong> copied to Postgres.
+<code>devices.last_seen_at</code> is a <em>coarse</em> timestamp
+(refreshed at most every <code>LAST_SEEN_COARSEN</code> = 5 min, not
+per-heartbeat) so even the durable &quot;last seen&quot; cannot reconstruct a
+session timeline [research-go_cp §2.2 &quot;COARSE presence&quot;].</li>
+</ul>
+<h3 id="52-presence-operations-go">5.2 Presence operations (Go)</h3>
+<div class="sourceCode" id="cb11"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co">// presence.go</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>p <span class="op">*</span>PresenceTracker<span class="op">)</span> MarkOnline<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> t<span class="op">,</span> d uuid<span class="op">.</span>UUID<span class="op">,</span> ttl time<span class="op">.</span>Duration<span class="op">)</span> <span class="dt">error</span> <span class="op">{</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    key <span class="op">:=</span> presenceKey<span class="op">(</span>t<span class="op">,</span> d<span class="op">)</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    pipe <span class="op">:=</span> p<span class="op">.</span>rdb<span class="op">.</span>TxPipeline<span class="op">()</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    pipe<span class="op">.</span>Set<span class="op">(</span>ctx<span class="op">,</span> key<span class="op">,</span> presenceVal<span class="op">(</span><span class="co">/*transport,rtt*/</span><span class="op">),</span> ttl<span class="op">)</span>   <span class="co">// SET key val EX ttl</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>    pipe<span class="op">.</span>SAdd<span class="op">(</span>ctx<span class="op">,</span> setKey<span class="op">(</span>t<span class="op">),</span> d<span class="op">.</span>String<span class="op">())</span>                     <span class="co">// membership for fast count/list</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>    _<span class="op">,</span> err <span class="op">:=</span> pipe<span class="op">.</span>Exec<span class="op">(</span>ctx<span class="op">)</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> err <span class="op">==</span> <span class="ot">nil</span> <span class="op">{</span> telemetry<span class="op">.</span>PresenceOnline<span class="op">.</span>Inc<span class="op">()</span> <span class="op">}</span>          <span class="co">// gauge sync (best-effort, §5.4)</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> err</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>p <span class="op">*</span>PresenceTracker<span class="op">)</span> RefreshPresence<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> t<span class="op">,</span> d uuid<span class="op">.</span>UUID<span class="op">,</span> ttl time<span class="op">.</span>Duration<span class="op">)</span> <span class="dt">error</span> <span class="op">{</span></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>    <span class="co">// GETEX key EX ttl  (refresh TTL without resetting transport/rtt unless changed)</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> p<span class="op">.</span>rdb<span class="op">.</span>Expire<span class="op">(</span>ctx<span class="op">,</span> presenceKey<span class="op">(</span>t<span class="op">,</span> d<span class="op">),</span> ttl<span class="op">).</span>Err<span class="op">()</span>    <span class="co">// online→online, no gauge change</span></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>p <span class="op">*</span>PresenceTracker<span class="op">)</span> MarkOffline<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> t<span class="op">,</span> d uuid<span class="op">.</span>UUID<span class="op">)</span> <span class="dt">error</span> <span class="op">{</span></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>    pipe <span class="op">:=</span> p<span class="op">.</span>rdb<span class="op">.</span>TxPipeline<span class="op">()</span></span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>    pipe<span class="op">.</span>Del<span class="op">(</span>ctx<span class="op">,</span> presenceKey<span class="op">(</span>t<span class="op">,</span> d<span class="op">))</span></span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a>    pipe<span class="op">.</span>SRem<span class="op">(</span>ctx<span class="op">,</span> setKey<span class="op">(</span>t<span class="op">),</span> d<span class="op">.</span>String<span class="op">())</span></span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a>    _<span class="op">,</span> err <span class="op">:=</span> pipe<span class="op">.</span>Exec<span class="op">(</span>ctx<span class="op">)</span></span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> err <span class="op">==</span> <span class="ot">nil</span> <span class="op">{</span> telemetry<span class="op">.</span>PresenceOnline<span class="op">.</span>Dec<span class="op">()</span> <span class="op">}</span></span>
+<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> err</span>
+<span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>The <code>helix_presence_online_devices</code> gauge is the
+<strong>derived</strong> count. To survive gauge/Redis drift (§5.4) it
+is <strong>periodically reconciled</strong> from
+<code>SCARD presence:*:set</code> (authoritative), not trusted as a
+running tally alone.</p>
+<h3 id="53-presence-state-machine-ttl-expiry--offline-event">5.3
+Presence state machine (TTL expiry → offline event)</h3>
+<pre class="mermaid"><code>stateDiagram-v2
+    [*] --&gt; Offline
+    Offline --&gt; Online: MarkOnline (WatchNetworkMap opened / first heartbeat)
+    Online --&gt; Online: RefreshPresence (heartbeat within TTL)
+    Online --&gt; Offline: MarkOffline (stream Close / explicit logout)
+    Online --&gt; Expiring: TTL elapsed, key evicted by Redis
+    Expiring --&gt; Offline: keyspace-notification reaper emits device.offline\n+ SREM + gauge.Dec
+    note right of Expiring
+        Redis keyspace notification (Kx: expired)
+        is consumed by the presence reaper.
+        A silently-expired key MUST still produce
+        a device.offline event so the coordinator
+        flips relay availability (§11.4.144 spirit:
+        an absent device is never silently dropped).
+    end note</code></pre>
+<ul>
+<li>Redis is configured with <code>notify-keyspace-events Ex</code> so
+expired-key events fire. The reaper subscribes to
+<code>__keyevent@&lt;db&gt;__:expired</code>, parses the device id,
+emits <code>device.offline</code> on <code>events:presence</code>,
+<code>SREM</code>s the membership set, and <code>Dec</code>s the gauge.
+<strong>The expiry → offline event is mandatory</strong>: a presence key
+that lapses without an <code>device.offline</code> would leave the
+coordinator advertising a dead relay (the corpus-hole /
+fabricated-continuity failure class, constitution §11.4.144).</li>
+<li><strong>UNVERIFIED:</strong> Redis keyspace expiry notifications are
+best-effort and can be delayed under load [Redis docs note expired
+events fire when the key is <em>accessed</em> or actively expired].
+Mitigation: a belt-and-suspenders sweeper runs every
+<code>PRESENCE_SWEEP</code> (default 30 s) doing
+<code>SMEMBERS presence:*:set</code> and <code>EXISTS</code> per member,
+reaping memberships whose key is gone. This is the reconciliation that
+also corrects the gauge (§5.4). The sweeper is the authoritative offline
+detector; keyspace notifications are the low-latency fast path.</li>
+</ul>
+<h3 id="54-drift--failure-handling">5.4 Drift &amp; failure
+handling</h3>
+<table>
+<thead>
+<tr>
+<th>Failure</th>
+<th>Effect</th>
+<th>Handling</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Redis down (C2: ephemeral)</td>
+<td>presence unknowable; <strong>no durable state lost</strong></td>
+<td><code>IsOnline</code> returns <code>ErrPresenceUnavailable</code>
+(§9); coordinator treats unknown as &quot;assume reachable via relay, mark
+degraded&quot; — never errors a tunnel (fail-static C1).
+<code>helix_presence_online_devices</code> goes stale; a
+<code>helix_presence_backend_up</code> gauge (0/1) signals it.</td>
+</tr>
+<tr>
+<td>gauge vs <code>SCARD</code> drift</td>
+<td>online count wrong on dashboard</td>
+<td><code>PRESENCE_SWEEP</code> reconciles
+<code>PresenceOnline.Set(float64(total SCARD across tenants))</code>
+every sweep</td>
+</tr>
+<tr>
+<td>keyspace notification missed</td>
+<td>device stuck &quot;online&quot;</td>
+<td>sweeper reaps it within <code>PRESENCE_SWEEP</code>; offline latency
+≤ <code>PRESENCE_TTL + PRESENCE_SWEEP</code></td>
+</tr>
+<tr>
+<td>split-brain (two helixd)</td>
+<td>both write same key</td>
+<td>idempotent (SET is last-writer-wins; SADD is a set) — harmless</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="6-deriving-slo-metrics-from-the-event-backbone">6. Deriving SLO
+metrics from the event backbone</h2>
+<p>Telemetry runs a consumer in the <code>telemetry</code> consumer
+group on the <code>events:*</code> streams [research-go_cp §5.1] purely
+to <strong>measure</strong> — it never reacts to topology. It computes
+three of the four headline series here; the fourth
+(<code>helix_reconcile_seconds</code>) is recorded by the coordinator at
+the point of <code>stream.Send</code> and merely <em>registered</em>
+here.</p>
+<h3 id="61-convergence-latency-helix_reconcile_seconds">6.1 Convergence
+latency (<code>helix_reconcile_seconds</code>)</h3>
+<p>Measured <strong>at the coordinator</strong>, not in telemetry&#39;s
+consumer, because only the coordinator knows the exact
+<code>stream.Send</code> instant. The coordinator stamps each enqueued
+delta with the originating <code>Envelope.ts</code> and calls
+<code>telemetry.ObserveReconcile(time.Since(env.Ts))</code> immediately
+after a successful <code>stream.Send</code>. Telemetry owns the
+histogram; the coordinator owns the measurement point. This is the
+<strong>event-receive → delta-on-wire</strong> definition from
+[research-go_cp §10.2] — end-to-end the admin-perceived &quot;policy edit
+reflected &lt; 1 s&quot; is a <em>superset</em> (REST → compile → activate →
+bus → this), tracked separately by the §10.1 reconciliation sequence&#39;s
+per-hop timers.</p>
+<pre class="mermaid"><code>sequenceDiagram
+    autonumber
+    participant Pol as policy
+    participant Bus as Redis Streams (events:policy)
+    participant Coord as coordinator
+    participant Tel as telemetry
+    participant Edge as agent stream
+    Pol-&gt;&gt;Bus: XADD {policy.compiled, ts=T0}
+    Bus--&gt;&gt;Coord: XReadGroup delivers (consumer pickup = T1)
+    Coord-&gt;&gt;Tel: ObserveEventLag(&quot;events:policy&quot;, T1-T0)
+    Coord-&gt;&gt;Coord: recompute minimal affected set
+    Coord-&gt;&gt;Edge: stream.Send(MapDelta)  (on-wire = T2)
+    Coord-&gt;&gt;Tel: ObserveReconcile(T2-T0)   %% the &lt; 1s SLO sample
+    Note over Tel: histogram_quantile(0.99, helix_reconcile_seconds) MUST stay &lt; 1.0</code></pre>
+<h3 id="62-event-lag-helix_event_lag_secondsstream">6.2 Event lag
+(<code>helix_event_lag_seconds{stream}</code>)</h3>
+<p>Telemetry&#39;s own consumer reads each <code>events:*</code> stream and
+observes <code>time.Now() - Envelope.ts</code> at pickup. This isolates
+<strong>bus delivery latency</strong> from coordinator compute time — if
+convergence breaches 1 s, the lag series says whether the bus or the
+coordinator is at fault (the systematic-debugging discriminator,
+§11.4.102 spirit).</p>
+<h3 id="63-stream-depth-helix_stream_pending_entriesstreamgroup">6.3
+Stream depth
+(<code>helix_stream_pending_entries{stream,group}</code>)</h3>
+<p>A ticker (default 5 s) runs
+<code>XPENDING &lt;stream&gt; &lt;group&gt;</code> (the summary form)
+for each (stream, group) pair in the §5.1 matrix and
+<code>SetStreamDepth(stream, group, float64(count))</code>. A growing
+PEL means a stuck/slow consumer — the back-pressure signal that
+complements the coordinator&#39;s bounded send-queue [research-go_cp §6.4].
+The DLQ counter (<code>helix_events_dlq_total</code>) is incremented by
+the events package&#39;s <code>XAUTOCLAIM</code> sweeper when an entry
+exceeds the delivery-count ceiling [research-go_cp §5.4]; telemetry only
+owns the counter declaration + <code>IncDLQ</code>.</p>
+<hr />
+<h2 id="7-no-logging-as-code--the-ci-schema-lint-c3-enforced-mechanically">7.
+No-logging-as-code — the CI schema-lint (C3 enforced mechanically)</h2>
+<p>This is the privacy guarantee turned into a build gate. The lint is
+canonical in [research-go_cp §2.4]; this section is its nano-detail spec
+because the invariant is telemetry&#39;s charter.</p>
+<h3 id="71-what-it-parses-and-what-it-forbids">7.1 What it parses and
+what it forbids</h3>
+<div class="sourceCode" id="cb14"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co">// tools/schemalint/main.go  (run in pre-build; constitution §11.4.27 / §1.1 / §11.4.108 runtime sig)</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="kw">package</span> main</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Parses BOTH migrations/*.sql (static) AND the live information_schema (dynamic) so a table that</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="co">// exists in the DB but not in a migration (drift) is also caught.</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="kw">var</span> forbiddenTables <span class="op">=</span> regexp<span class="op">.</span>MustCompile<span class="op">(</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">`(?i)\b(connections?|sessions?|flows?|traffic|packets?|netflow|bandwidth_samples?|dns_queries?|`</span> <span class="op">+</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">`conn_log|access_log|session_log)\b`</span><span class="op">)</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a><span class="kw">var</span> forbiddenCols <span class="op">=</span> regexp<span class="op">.</span>MustCompile<span class="op">(</span></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">`(?i)\b(src_ip|dst_ip|dest_ip|src_port|dst_port|bytes_(in|out)|packet_count|payload|sni_host|`</span> <span class="op">+</span></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">`flow_id|session_id|conn_id)\b`</span><span class="op">)</span></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a><span class="co">// Exception allow-list (the ONLY ip/port/key columns permitted, asserted exhaustive):</span></span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a><span class="co">//   devices.overlay_ip   (inet)  — identity, the device&#39;s own stable overlay addr (C6, not traffic)</span></span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a><span class="co">//   devices.wg_pubkey    (bytea) — identity, 32B Curve25519 public key</span></span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a><span class="co">//   advertised_prefixes.cidr (cidr) — topology, a connector&#39;s advertised network</span></span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a><span class="co">//   overlay_pools.ula_prefix (cidr) — IPAM</span></span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a><span class="co">// Any ip/port/cidr-shaped column NOT in this allow-list → FAIL.</span></span></code></pre></div>
+<h3 id="72-the-gates-verdict-logic--runtime-signature">7.2 The gate&#39;s
+verdict logic + runtime signature</h3>
+<pre class="mermaid"><code>flowchart TD
+    START[pre-build gate runs schemalint] --&gt; PARSE[parse migrations/ + live information_schema]
+    PARSE --&gt; T{forbidden table name match?}
+    T -- yes --&gt; FAIL[exit 1: &#39;C3 violation: durable traffic table &lt;name&gt;&#39;]
+    T -- no --&gt; C{ip/port/cidr column outside allow-list?}
+    C -- yes --&gt; FAIL
+    C -- no --&gt; M{meta jsonb on audit carries forbidden key shape?}
+    M -- yes --&gt; FAIL
+    M -- no --&gt; PASS[exit 0: no-logging invariant intact]
+    FAIL --&gt; BLOCK[build BLOCKED — release-blocker §11.4]</code></pre>
+<ul>
+<li><strong>Runtime signature (§11.4.108):</strong> a green
+<code>schemalint</code> exit 0 against the <em>live</em> schema is the
+observable proving C3 is <em>active</em>, not merely promised. The
+§11.4.169 test matrix wires this as a post-deploy assertion against the
+deployed DB, not just the migration files.</li>
+<li><strong>Paired §1.1 mutation:</strong> a test migration adding
+<code>connections(src_ip inet, dst_ip inet, bytes bigint, ts timestamptz)</code>
+MUST make the lint FAIL; removing it MUST make it pass. An analyzer that
+passes its golden-bad fixture is itself a bluff gate
+(§11.4.107(10)).</li>
+</ul>
+<h3 id="73-edge-cases-the-lint-must-handle-no-false-pass-no-false-fail">7.3
+Edge cases the lint must handle (no false-pass, no false-fail)</h3>
+<table>
+<thead>
+<tr>
+<th>Case</th>
+<th>Expected</th>
+<th>Rationale</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>connections</code> table added</td>
+<td>FAIL</td>
+<td>direct C3 breach</td>
+</tr>
+<tr>
+<td><code>device_connections_count bigint</code> column on
+<code>devices</code></td>
+<td>FAIL</td>
+<td><code>connections?</code> word-boundary match; if a legitimate
+aggregate is truly needed it must be a Prometheus counter, not a
+column</td>
+</tr>
+<tr>
+<td><code>audit_events.meta</code> containing
+<code>{&quot;src_ip&quot;:&quot;…&quot;}</code> at runtime</td>
+<td>FAIL via meta-shape guard (§4.4)</td>
+<td>traffic-via-jsonb evasion</td>
+</tr>
+<tr>
+<td><code>advertised_prefixes.cidr</code></td>
+<td>PASS</td>
+<td>on the topology allow-list</td>
+</tr>
+<tr>
+<td><code>overlay_ip</code> on <code>devices</code></td>
+<td>PASS</td>
+<td>identity allow-list (the device&#39;s own addr, C6)</td>
+</tr>
+<tr>
+<td>a <code>view</code> named <code>traffic_summary</code> over only
+counts</td>
+<td>FAIL</td>
+<td>privacy is about <em>shape</em>; rename to
+<code>metrics_summary</code> — the name itself is a forbidden signal;
+reviewer decides per §11.4.6, lint defaults to FAIL (safe)</td>
+</tr>
+<tr>
+<td>comment line mentioning <code>bytes_out</code></td>
+<td>PASS</td>
+<td>the parser strips SQL comments before matching (no false-fail on
+prose)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="8-http-surface-scrape-security-and-lifecycle">8. HTTP surface,
+scrape security, and lifecycle</h2>
+<h3 id="81-endpoints-mounted-on-the-shared-listener-research-go_cp-8">8.1
+Endpoints (mounted on the shared listener [research-go_cp §8])</h3>
+<table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Method</th>
+<th>Handler</th>
+<th>Auth</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/metrics</code></td>
+<td>GET</td>
+<td><code>MetricsHandler</code> (promhttp)</td>
+<td>scrape-network only (§8.3)</td>
+</tr>
+<tr>
+<td><code>/healthz</code></td>
+<td>GET</td>
+<td><code>HealthHandler</code> (liveness)</td>
+<td>none (intra-pod)</td>
+</tr>
+<tr>
+<td><code>/readyz</code></td>
+<td>GET</td>
+<td><code>ReadyHandler</code> (readiness)</td>
+<td>none (intra-pod)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="82-health-vs-readiness-semantics">8.2 Health vs readiness
+semantics</h3>
+<div class="sourceCode" id="cb16"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co">// health.go</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="co">// /healthz — liveness: the process event loop is alive. Returns 200 unless the process is wedged.</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="co">//   Deliberately does NOT depend on Postgres/Redis (a DB blip must not trigger a pod restart loop).</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="co">// /readyz  — readiness: dependencies usable. 200 iff Postgres reachable (SELECT 1, 200ms timeout)</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="co">//   AND Redis reachable (PING). A failing /readyz removes helixd from the LB/endpoints but does NOT</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="co">//   kill it (existing WatchNetworkMap streams keep serving from the in-mem graph — fail-static C1).</span></span></code></pre></div>
+<ul>
+<li>Liveness MUST be cheap and dependency-free (DB down ≠ restart).
+Readiness gates <em>new</em> traffic only. This split is the standard
+k8s probe contract [UNVERIFIED-exact-citation but standard practice];
+for the rootless-Podman MVP the quadlet uses <code>HealthCmd</code> on
+<code>/healthz</code> [research-go_cp §11.1].</li>
+</ul>
+<h3 id="83-scrape-security-metrics-must-not-leak-the-series-set-to-the-world">8.3
+Scrape security (<code>/metrics</code> must not leak the series set to
+the world)</h3>
+<p><code>/metrics</code> carries no PII (C3 §3.1) but still reveals
+operational shape (tenant population via gauges, deploy version). It is
+exposed <strong>only on the internal scrape network</strong>: bound to
+the pod-internal interface, or gated by an allow-list / mTLS for the
+Prometheus scraper. <code>helixvpnctl bootstrap</code> renders the
+scrape config so <code>/metrics</code> is never published on the public
+<code>443</code> listener [research-go_cp §11.1 publishes only
+<code>443:8443</code> for the agent/app API; <code>/metrics</code> is a
+separate internal port, default <code>9090</code>]. UNVERIFIED whether
+MVP uses port-separation vs path-ACL — spec mandates <em>some</em>
+network isolation; port-separation is the recommended default.</p>
+<hr />
+<h2 id="9-error-taxonomy">9. Error taxonomy</h2>
+<p>Telemetry never aborts a control action because of its own failure
+(observability is best-effort <em>relative to the user action</em>,
+authoritative <em>relative to audit</em>). The split:</p>
+<table>
+<thead>
+<tr>
+<th>Code (<code>code</code> label)</th>
+<th>Meaning</th>
+<th>Caller-visible effect</th>
+<th>Recovery</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ErrUnknownAuditAction</code></td>
+<td><code>Action</code> not in closed vocabulary (§4.2)</td>
+<td>audit insert refused; <strong>the control action is rolled
+back</strong> (audit is part of its tx)</td>
+<td>fix the emitter — a missing action is a coding defect,
+fail-closed</td>
+</tr>
+<tr>
+<td><code>ErrAuditMetaShape</code></td>
+<td><code>meta</code> carries forbidden key / too many keys (§4.4)</td>
+<td>audit refused → control action rolled back (C3 fail-closed)</td>
+<td>strip the offending key</td>
+</tr>
+<tr>
+<td><code>ErrAuditWrite</code></td>
+<td>Postgres insert failed (down/timeout)</td>
+<td>control action rolled back (atomic tx) — <strong>no silent
+loss</strong></td>
+<td>retried by the caller&#39;s normal error path;
+<code>helix_audit_write_errors_total{code}</code> increments</td>
+</tr>
+<tr>
+<td><code>ErrPresenceUnavailable</code></td>
+<td>Redis down/timeout on a presence op</td>
+<td><strong>control action NOT failed</strong> (presence is ephemeral
+C2); coordinator treats state as &quot;unknown→assume-reachable, degraded&quot;
+(fail-static C1)</td>
+<td><code>helix_presence_backend_up</code>=0; recovers when Redis
+returns</td>
+</tr>
+<tr>
+<td><code>ErrMetricRegister</code></td>
+<td>duplicate collector at startup</td>
+<td><strong>fatal at boot</strong> (programmer error)</td>
+<td>abort before serving — never half-registered</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Audit fails closed; presence fails static.</strong> This
+asymmetry is deliberate and load-bearing: an unrecordable
+<em>control</em> action must not proceed un-audited (accountability),
+but an unknowable <em>presence</em> must never break an existing tunnel
+(C1 fail-static, C2 ephemeral). Conflating them would either lose audit
+or brick tunnels on a Redis blip.</p>
+</blockquote>
+<hr />
+<h2 id="10-test-points-tied-to-constitution-114169-test-type-coverage">10.
+Test points (tied to constitution §11.4.169 test-type coverage)</h2>
+<blockquote>
+<p><strong>NOTE on §11.4.169:</strong> the task states §11.4.169 is now
+a live constitution anchor mandating comprehensive test-type coverage.
+The full verbatim clause text is <strong>UNVERIFIED</strong> against the
+constitution submodule in this writing context (§11.4.6 — not
+fabricated); the test matrix below is mapped to the established
+test-type taxonomy of §11.4.27 (unit / integration / e2e /
+full-automation / security / stress / chaos / performance / Challenge)
+which §11.4.169 strengthens. Every PASS cites captured evidence per
+§11.4.5/§11.4.69/§11.4.107.</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Type (§11.4.27/§11.4.169)</th>
+<th>Asserts</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>T-UNIT-1</td>
+<td>unit</td>
+<td><code>AuditSink.validate</code> rejects every non-vocabulary action
++ every forbidden <code>meta</code> key; accepts the closed set</td>
+<td>table-test report</td>
+</tr>
+<tr>
+<td>T-UNIT-2</td>
+<td>unit</td>
+<td>presence TTL derivation
+<code>PRESENCE_TTL == 3*HEARTBEAT_INTERVAL</code>;
+<code>MarkOnline/Refresh/Offline</code> Redis command sequences</td>
+<td>mini-redis transcript</td>
+</tr>
+<tr>
+<td>T-UNIT-3</td>
+<td>unit</td>
+<td><strong>every registered collector&#39;s label set ⊆ allow-list</strong>
+(no <code>tenant_id</code>/<code>device_id</code>/ip labels) — C3
+cardinality guard (§3.1)</td>
+<td>label-audit assertion</td>
+</tr>
+<tr>
+<td>T-UNIT-4</td>
+<td>unit</td>
+<td>histogram buckets straddle 1.0 so p99&lt;1s is directly readable
+(§3.2)</td>
+<td>bucket assertion</td>
+</tr>
+<tr>
+<td>T-STORE-1</td>
+<td>integration (RLS)</td>
+<td>tenant A cannot read tenant B&#39;s <code>audit_events</code> even with
+crafted query under <code>FORCE ROW LEVEL SECURITY</code> as
+<code>helix_app</code>; <code>REVOKE UPDATE,DELETE</code> makes a row
+immutable</td>
+<td>psql transcript</td>
+</tr>
+<tr>
+<td>T-INT-1</td>
+<td>integration</td>
+<td>Postgres+Redis booted <strong>on-demand via
+<code>vasic-digital/containers</code></strong> (§11.4.76, <em>not</em>
+ad-hoc docker); drive enroll→online→heartbeat→offline; assert presence
+key set/TTL/expiry + <code>device.offline</code> emitted on key
+expiry</td>
+<td>captured Redis + event log</td>
+</tr>
+<tr>
+<td>T-INT-2</td>
+<td>integration</td>
+<td>a committed <code>policy.activate</code> always has its
+<code>audit_events</code> row (atomic tx); a forced insert failure rolls
+back the activation</td>
+<td>tx-log evidence</td>
+</tr>
+<tr>
+<td>T-LINT-1</td>
+<td>meta-test (§1.1)</td>
+<td>schema-lint FAILs on the planted
+<code>connections(src_ip,dst_ip,bytes)</code> migration; PASSes after
+removal; golden-bad fixture FAILs (analyzer self-validation
+§11.4.107(10))</td>
+<td>lint exit codes</td>
+</tr>
+<tr>
+<td>T-PERF-1</td>
+<td>performance</td>
+<td><code>helix_reconcile_seconds</code> p99 &lt; 1 s under a synthetic
+policy-flap load (the SLO benchmark)</td>
+<td>histogram dump</td>
+</tr>
+<tr>
+<td>T-SOAK-1</td>
+<td>soak/stress (§11.4.85)</td>
+<td>N=10k open streams over 24 h;
+<code>process_resident_memory_bytes</code> slope ≈ 0; presence gauge
+stays reconciled to <code>SCARD</code></td>
+<td>grafana export</td>
+</tr>
+<tr>
+<td>T-CHAOS-1</td>
+<td>chaos (§11.4.85)</td>
+<td>kill Redis mid-run → control actions keep succeeding (audit still
+writes), <code>IsOnline</code>→<code>ErrPresenceUnavailable</code>,
+<code>helix_presence_backend_up</code>=0, no tunnel error (fail-static
+C1); recover → gauge re-reconciles</td>
+<td>chaos transcript</td>
+</tr>
+<tr>
+<td>T-CHAOS-2</td>
+<td>chaos</td>
+<td>drop a keyspace-expiry notification → sweeper reaps within
+<code>PRESENCE_SWEEP</code>; offline latency ≤
+<code>PRESENCE_TTL+PRESENCE_SWEEP</code></td>
+<td>timing capture</td>
+</tr>
+<tr>
+<td>T-SEC-1</td>
+<td>security</td>
+<td><code>/metrics</code> not reachable on the public <code>443</code>
+listener; <code>GET /v1/audit</code> denied to <code>member</code>;
+audit <code>meta</code> cannot smuggle <code>dst_ip</code></td>
+<td>scan + RBAC matrix</td>
+</tr>
+<tr>
+<td>T-CHAL-1</td>
+<td>Challenge (§11.4.27/§11.4.5)</td>
+<td>full enroll→policy→delta drive asserts the &lt; 1 s convergence
+series AND <code>schemalint</code> green against the <em>deployed</em>
+DB (runtime signature §11.4.108), captured evidence</td>
+<td>challenge result.json</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="11-phase-1-task-breakdown-workable-items-11493">11. Phase-1 task
+breakdown (workable items, §11.4.93)</h2>
+<p>Risk-descending (§11.4.132): the no-logging lint + RLS audit are the
+irreversible privacy/correctness floor and land first.</p>
+<ul>
+<li><strong>TEL-T1 — no-logging gate.</strong>
+<code>tools/schemalint</code> (§7) static+live parse + allow-list +
+meta-shape regex; paired §1.1 mutation (T-LINT-1); wire into pre-build +
+post-deploy runtime signature.</li>
+<li><strong>TEL-T2 — audit sink.</strong> <code>AuditAction</code>
+closed vocab (§4.2); <code>AuditSink.validate</code> (§4.4);
+<code>WithTenant</code> insert + <code>REVOKE UPDATE,DELETE</code>;
+<code>helix_audit_events_total</code>; T-UNIT-1/T-STORE-1/T-INT-2.</li>
+<li><strong>TEL-T3 — presence.</strong> <code>PresenceTracker</code>
+Redis SET/SADD/Expire/Del (§5.2); keyspace-expiry reaper +
+<code>PRESENCE_SWEEP</code> sweeper (§5.3); gauge reconcile (§5.4);
+T-UNIT-2/T-INT-1/T-CHAOS-1/2.</li>
+<li><strong>TEL-T4 — metric registry.</strong> private
+<code>prometheus.Registry</code>; all §3 collectors + Go/process
+collectors; label allow-list test T-UNIT-3; <code>/metrics</code>
+handler + scrape isolation (§8.3) + T-SEC-1.</li>
+<li><strong>TEL-T5 — SLO recording.</strong>
+<code>ObserveReconcile/EventLag/SetStreamDepth/IncDLQ/SetOpenStreams</code>
+(§6); coordinator + events call-sites; T-PERF-1; alert rules-as-code in
+<code>deploy/</code>.</li>
+<li><strong>TEL-T6 — health.</strong> <code>/healthz</code>
+(dependency-free liveness) + <code>/readyz</code> (PG+Redis readiness)
+(§8.2); quadlet <code>HealthCmd</code> wiring.</li>
+<li><strong>TEL-T7 — soak + Challenge.</strong> T-SOAK-1 (24 h, no-leak)
++ T-CHAL-1 (end-to-end &lt; 1 s + deployed-DB lint green) via
+<code>helix_qa</code>/<code>challenges</code> (§11.4.27).</li>
+</ul>
+<hr />
+<h2 id="12-phase-2-forward-seams-additive-not-a-rewrite">12. Phase-2
+forward seams (additive, not a rewrite)</h2>
+<p>The MVP series + interfaces extend without reshaping: the
+<code>Telemetry</code> interface is bus/store-agnostic, so the
+NATS-JetStream swap (D3) changes only <code>consumers.go</code>&#39;s stream
+reads; per-region federation adds a <code>region</code> label (still
+bounded) to the SLO histograms; the optional ClickHouse aggregate sink
+[04_ARCH §4.165 <code>telemetry … ClickHouse optional</code>] mounts
+behind the same <code>Telemetry</code> interface as an <em>export</em>
+of already-aggregated counters — <strong>never</strong> a connection log
+(C3 holds across phases, lint gates Phase 2 too); presence migrates to
+NATS KV/Redis-cluster with the same TTL contract.</p>
+<hr />
+<h3 id="sources">Sources</h3>
+<p>[04_P1] HelixVPN-Phase1-MVP.md §§4–5,10,11.4 (audit table, Redis
+presence, no-logging CI lint, convergence SLO) · [04_ARCH]
+HelixVPN-Architecture-Refined.md §4.5/§4.6 (ephemeral Redis presence
+operationalizes no-logging), §4.165-row (<code>telemetry</code>:
+counters/health/audit, Prometheus, ClickHouse optional), §7
+(no-logging-as-code + control-only audit), §9 (Prometheus/Grafana,
+event-lag + convergence p99&gt;1s as first-class SLOs) ·
+[research-go_cp] final/02-control-plane.md §1.1 (<code>telemetry</code>
+package), §2.2/§2.3/§2.4 (audit DDL, RLS, schema-lint), §5 (event
+streams + envelope + taxonomy), §6/§10.2 (coordinator convergence +
+<code>helix_reconcile_seconds</code>/<code>helix_events_dlq_total</code>/
+<code>process_resident_memory_bytes</code>), §8 (multiplexed listener +
+RBAC), §11.1 (quadlet) · [SYNTHESIS] §2 (stack floor), §7 (no-logging
+invariants), §8
+(<code>containers</code>/<code>helix_qa</code>/<code>challenges</code>
+wiring), §9 (constitution bindings). Proto package
+<code>helix.coordinator.v1</code> confirmed unified [research-go_cp §4].
+UNVERIFIED markers: §11.4.169 verbatim text; Prometheus
+naming-convention exact wording; k8s probe-contract citation;
+<code>/metrics</code> port-vs-path isolation choice — flagged inline per
+§11.4.6.</p>
+</body>
+</html>

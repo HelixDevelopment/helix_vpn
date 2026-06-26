@@ -1,0 +1,1508 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Identity &amp; Enrollment — the key-never-leaves invariant</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Identity &amp; Enrollment — the key-never-leaves
+invariant</h1>
+</header>
+<h1 id="identity--enrollment--the-key-never-leaves-invariant">Identity
+&amp; Enrollment — the key-never-leaves invariant</h1>
+<p><strong>Revision:</strong> 2 <strong>Last modified:</strong>
+2026-06-26T12:00:00Z</p>
+<blockquote>
+<p>Master technical specification — Volume 5 (Security &amp; Privacy),
+nano-detail document <strong>identity-and-enrollment</strong>. Deepens
+the <strong>identity + enrollment slice</strong> of the security spine
+[<code>04-security-privacy-pki.md</code> §2–§3] from a
+<em>security-and-privacy</em> lens: the identity model (tenants, users,
+SSO via OIDC, anonymous device tokens for privacy-VPN mode), the
+device-enrollment protocol and its load-bearing invariant — <strong>the
+device private key is generated on the device and NEVER leaves
+it</strong> (S2, &quot;the key-never-leaves invariant&quot;) — the OIDC
+Authorization-Code + PKCE integration and claim→role binding, the
+anonymous device-token (account-number, no-PII) path, and re-enrollment
++ device revocation. SPEC ONLY — it <em>describes</em> the security
+properties the build must have; it builds nothing. This document is the
+<strong>security/privacy contract</strong>; the <strong>control-plane
+mechanics</strong> (Go interfaces, DDL/RLS, atomic single-use
+consumption) live in [<code>v03-control-plane/svc-identity.md</code>],
+the <strong>cert lifecycle</strong> in
+[<code>v03-control-plane/svc-pki.md</code>] and the sibling
+[<code>pki-and-certs.md</code>], and the <strong>threat
+justification</strong> in the sibling [<code>threat-model.md</code>].
+Sources cited inline by id: <code>[04_ARCH §N]</code>
+(HelixVPN-Architecture-Refined.md), <code>[04_P1 §N]</code>
+(HelixVPN-Phase1-MVP.md), <code>[research-pki_pq_nat]</code> (the cited
+PKI/PQ/NAT research), <code>[SYNTHESIS §N]</code>, and sibling specs by
+filename. Invariant ids <code>S1</code>–<code>S11</code> are those of
+[<code>04-security-privacy-pki.md</code> §0.1]; threat ids
+<code>T-*</code>/<code>LP-*</code> are those of
+[<code>threat-model.md</code>]. Any claim not grounded in the evidence
+base is flagged <strong>UNVERIFIED</strong> per constitution §11.4.6 —
+never fabricated; any measured-latency figure is stated as a
+<strong>target</strong>, never a result.</p>
+</blockquote>
+<hr />
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#0-position-ownership--the-invariants-this-document-guards">0.
+Position, ownership &amp; the invariants this document guards</a></li>
+<li><a href="#1-the-identity-model--two-postures-one-device-spine">1.
+The identity model — two postures, one device spine</a></li>
+<li><a href="#2-the-key-never-leaves-invariant-s2">2. The
+key-never-leaves invariant (S2)</a></li>
+<li><a href="#3-device-enrollment--the-protocol">3. Device enrollment —
+the protocol</a></li>
+<li><a href="#4-oidc-sso-integration--managed-posture">4. OIDC SSO
+integration — managed posture</a></li>
+<li><a href="#5-anonymous-device-token-path--the-privacy-posture">5.
+Anonymous device-token path — the privacy posture</a></li>
+<li><a href="#6-enroll-token-security">6. Enroll-token security</a></li>
+<li><a href="#7-re-enrollment--device-revocation">7. Re-enrollment &amp;
+device revocation</a></li>
+<li><a href="#8-threat-mapping--what-enrollment-defends">8. Threat
+mapping — what enrollment defends</a></li>
+<li><a href="#9-test--validation-mapping-1141169">9. Test &amp;
+validation mapping (§11.4.169)</a></li>
+<li><a href="#10-phase-2-forward-seams">10. Phase-2 forward
+seams</a></li>
+<li><a href="#sources-verified">Sources verified</a></li>
+</ul>
+<hr />
+<h2 id="0-position-ownership--the-invariants-this-document-guards">0.
+Position, ownership &amp; the invariants this document guards</h2>
+<p>Enrollment is the single most security-critical protocol in HelixVPN:
+it mints a network identity for a brand-new device <em>without that
+device ever surrendering its WireGuard private key</em> and <em>without
+an unauthenticated party being able to enroll</em> [04_P1 §6.2]. Every
+other security property — zero-trust routing, sub-second revocation,
+no-logging — assumes the identity established here is sound. This
+document owns the <strong>security/privacy contract</strong> of that
+protocol; it cites, never re-defines, the control-plane wiring.</p>
+<h3 id="01-what-this-document-owns-vs-references">0.1 What this document
+owns vs. references</h3>
+<table>
+<thead>
+<tr>
+<th>Concern</th>
+<th>Owner</th>
+<th>Relationship here</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Identity model <strong>security properties</strong> (what an
+attacker can/cannot do)</td>
+<td><strong>this doc</strong></td>
+<td>authoritative</td>
+</tr>
+<tr>
+<td>The <strong>key-never-leaves invariant</strong> (S2) and its proof
+obligations</td>
+<td><strong>this doc</strong></td>
+<td>authoritative</td>
+</tr>
+<tr>
+<td>Enrollment <strong>protocol security</strong> (anti-replay, PoP,
+no-PII path)</td>
+<td><strong>this doc</strong></td>
+<td>authoritative</td>
+</tr>
+<tr>
+<td>OIDC <strong>security</strong> (PKCE, JWKS pinning, nonce/state,
+claim→role trust)</td>
+<td><strong>this doc</strong></td>
+<td>authoritative</td>
+</tr>
+<tr>
+<td><code>Identity</code> Go interface, DDL/RLS, atomic token
+consumption</td>
+<td>[<code>v03-control-plane/svc-identity.md</code>]</td>
+<td>referenced</td>
+</tr>
+<tr>
+<td>Cert issuance / CSR signing / cert lifecycle</td>
+<td>[<code>v03-control-plane/svc-pki.md</code>],
+[<code>pki-and-certs.md</code>]</td>
+<td>referenced</td>
+</tr>
+<tr>
+<td>Overlay-IP allocation, device rows, presence</td>
+<td><code>ipam</code>/<code>registry</code> (Volume 3)</td>
+<td>referenced</td>
+</tr>
+<tr>
+<td>Threat justification (STRIDE/LINDDUN rows)</td>
+<td>[<code>threat-model.md</code>]</td>
+<td>referenced</td>
+</tr>
+</tbody>
+</table>
+<h3 id="02-the-invariants-this-document-is-the-guardian-of">0.2 The
+invariants this document is the guardian of</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Invariant (verbatim from [<code>04-security-privacy-pki.md</code>
+§0.1])</th>
+<th>This doc&#39;s role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>S2</strong></td>
+<td><strong>Device private keys never leave the device.</strong> The
+control plane only ever sees the 32-byte Curve25519 <em>public</em>
+key.</td>
+<td>§2 is the full proof obligation set</td>
+</tr>
+<tr>
+<td><strong>S4</strong></td>
+<td><strong>Short-lived control-channel mTLS.</strong> Every agent
+authenticates with a ≤24 h device cert.</td>
+<td>§3.4 mints it; lifecycle in [<code>pki-and-certs.md</code>]</td>
+</tr>
+<tr>
+<td><strong>S5</strong></td>
+<td><strong>Revocation latency == convergence SLO (p99 &lt; 1 s, a
+TARGET).</strong></td>
+<td>§7.2 originates the cascade</td>
+</tr>
+<tr>
+<td><strong>S11</strong></td>
+<td><strong>The CA root + Postgres are the only secrets to
+protect.</strong></td>
+<td>§6 keeps enroll-token plaintext out of the store</td>
+</tr>
+<tr>
+<td><strong>—</strong></td>
+<td><strong>Anonymous-by-default for end users</strong> (Mullvad
+&quot;account number, no PII&quot;).</td>
+<td>§5 is the no-PII path</td>
+</tr>
+</tbody>
+</table>
+<p>A violation of any is a release blocker (§11.4.169 / the §11.4
+anti-bluff covenant), not a tunable.</p>
+<hr />
+<h2 id="1-the-identity-model--two-postures-one-device-spine">1. The
+identity model — two postures, one device spine</h2>
+<p>HelixVPN ships <strong>two identity postures</strong> that bind to
+the <strong>same</strong> <code>devices</code> table and the
+<strong>same</strong> cert chain [04_P1 §6.1]. The posture decides
+<em>how a human (or none) is associated with a device</em>; it does
+<strong>not</strong> change the cryptographic device-enrollment spine
+(§2–§3).</p>
+<pre class="mermaid"><code>flowchart TB
+    subgraph Managed[&quot;Managed posture (organisations)&quot;]
+        OIDC[&quot;OIDC IdP (Keycloak / Authentik / Auth0 / Entra / Okta)&quot;]
+        UserO[&quot;users row: kind=oidc, email?, oidc_sub&quot;]
+    end
+    subgraph Anon[&quot;Anonymous posture (privacy-VPN end users)&quot;]
+        Tok[&quot;device enroll token / account number — NO email, NO SSO&quot;]
+        UserA[&quot;users row: kind=anonymous, email=NULL, oidc_sub=NULL&quot;]
+    end
+    subgraph Spine[&quot;Shared device spine (identical for both postures)&quot;]
+        Dev[&quot;devices row (tenant-scoped)&quot;]
+        WG[&quot;WG public key (32B) — private NEVER leaves device (S2)&quot;]
+        Leaf[&quot;mTLS device leaf cert (≤24h, S4)&quot;]
+    end
+    OIDC --&gt; UserO --&gt; Dev
+    Tok --&gt; UserA --&gt; Dev
+    Dev --&gt; WG
+    Dev --&gt; Leaf</code></pre>
+<table>
+<thead>
+<tr>
+<th>Posture</th>
+<th>Who authenticates</th>
+<th>What PII is stored</th>
+<th>Reverse-link to a human</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Managed (OIDC)</strong></td>
+<td>A human, via the tenant&#39;s IdP</td>
+<td><code>oidc_sub</code> (always), <code>email</code> (when the IdP
+provides it)</td>
+<td>yes — by the tenant&#39;s own choice (stated, not hidden; LP-I-1
+residual)</td>
+<td>[04_P1 §6.1], §4</td>
+</tr>
+<tr>
+<td><strong>Anonymous</strong></td>
+<td>A high-entropy token / account number, no human identity</td>
+<td>none — <code>email=NULL</code>, <code>oidc_sub=NULL</code>; only
+<code>argon2id(secret)</code> stored</td>
+<td><strong>none by design</strong> (LP-I-1 mitigated)</td>
+<td>[04_P1 §6.1], [04_ARCH §6], §5</td>
+</tr>
+</tbody>
+</table>
+<p>HelixVPN is, in the managed posture, an OIDC <strong>Relying Party —
+never an IdP</strong>: it stores no passwords and runs no credential
+database [<code>04-security-privacy-pki.md</code> §2.1]. The anonymous
+posture is the privacy-VPN front end&#39;s <strong>default for end
+users</strong> and is the LINDDUN <em>Identifying</em> mitigation
+LP-I-1: there is no human to tie a tunnel to.</p>
+<blockquote>
+<p><strong>Design note — RBAC vs. device reach.</strong> Human roles
+(<code>admin &gt; operator &gt; member</code>,
+[<code>v03-control-plane/svc-identity.md</code> §7.3]) govern
+<em>Console/API</em> authorisation only. A <em>device&#39;s</em> reach is
+never a role — it is compiled need-to-know policy
+([<code>v03-control-plane/svc-policy.md</code>]). A device principal
+that tries to authorise via RBAC is rejected
+(<code>PrincipalDevice ⇒ ErrForbidden</code>, AZ4) — closing T-COORD-E-1
+/ T-CP-E-1 at the identity layer.</p>
+</blockquote>
+<hr />
+<h2 id="2-the-key-never-leaves-invariant-s2">2. The key-never-leaves
+invariant (S2)</h2>
+<p>This is the spine of enrollment security and the reason WireGuard&#39;s
+&quot;the public key IS the device identity&quot; model [research-pki_pq_nat §1.1]
+is safe to build on. The device generates its keypair locally; the
+control plane learns only the <strong>public</strong> half. An attacker
+who fully owns the control plane (C-INS) still never possesses a
+device&#39;s WG private key.</p>
+<h3 id="21-what-never-leaves-means--the-proof-obligations">2.1 What
+&quot;never leaves&quot; means — the proof obligations</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Obligation</th>
+<th>Mechanism</th>
+<th>Verified by</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>K1</strong></td>
+<td>The WG private key is generated <strong>on the device</strong> by a
+CSPRNG.</td>
+<td><code>helix-core</code> <code>X25519.gen()</code> at enroll time
+[<code>04-security-privacy-pki.md</code> §3.2]</td>
+<td>unit: re-derive pub from a known priv fixture, assert the stored
+value equals the <em>public</em>
+([<code>v03-control-plane/svc-pki.md</code> §3.3])</td>
+</tr>
+<tr>
+<td><strong>K2</strong></td>
+<td>Only the 32-byte <strong>public</strong> key is transmitted
+(<code>EnrollRequest.wg_pubkey</code>).</td>
+<td>wire contract names <code>wg_pubkey</code>; agent sends the public
+half only</td>
+<td>§1.1 mutation: feed a private-shaped key → handler MUST reject</td>
+</tr>
+<tr>
+<td><strong>K3</strong></td>
+<td>No control-plane table has a private-key column.</td>
+<td><code>device_wg_keys.wg_pubkey</code> only; CA keys in KMS/sealed
+([<code>v03-control-plane/svc-pki.md</code> §3.3])</td>
+<td>schema-lint asserts no
+<code>*_private*</code>/<code>*_secret*</code> cleartext column</td>
+</tr>
+<tr>
+<td><strong>K4</strong></td>
+<td>The key is <strong>sealed in the OS keystore</strong>, never
+serialised out, never logged.</td>
+<td><code>KeyStore.seal</code>; <code>Zeroizing</code> on drop; FFI
+exposes <em>operations</em>, not raw bytes
+[<code>04-security-privacy-pki.md</code> §3.3]</td>
+<td>security test: attempt to read a sealed key via FFI → blocked;
+log-grep finds no key bytes</td>
+</tr>
+<tr>
+<td><strong>K5</strong></td>
+<td>A second leaf key (Ed25519, control channel) is
+<strong>also</strong> device-generated; only its CSR/public crosses the
+wire.</td>
+<td>CSR proof-of-possession (§3.3)</td>
+<td>sign refused on a CSR whose key the requester does not hold
+(T-PKI-S-1)</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>The 32-byte ambiguity, handled honestly (§11.4.6).</strong> A
+Curve25519 private key is <em>also</em> 32 bytes, so a length check
+alone cannot distinguish public from private. The structural guarantee a
+private key is never <em>accepted</em> is threefold: (a) the API
+contract names the field <code>wg_pubkey</code>; (b) the agent only ever
+transmits the public half (K1/K2); (c) a §1.1 mutation test re-derives
+the public key from a known-private fixture and asserts the stored value
+equals the <em>public</em>, never the private
+([<code>v03-control-plane/svc-pki.md</code> §3.3]). The invariant is
+enforced by the test, not by the byte length.</p>
+</blockquote>
+<h3 id="22-two-device-keypairs-two-planes-deliberately-uncoupled">2.2
+Two device keypairs, two planes (deliberately uncoupled)</h3>
+<p>The device generates <strong>two</strong> keypairs at enroll; they
+live on <strong>independent</strong> key planes so a compromise of one
+does not cascade [<code>04-security-privacy-pki.md</code> §1.2,
+§4.1]:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-core/crates/helix-pki/src/enroll.rs — the device-side contract (skeleton)</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> EnrolledIdentity <span class="op">{</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> device_id<span class="op">:</span>  <span class="dt">String</span><span class="op">,</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> overlay_ip<span class="op">:</span> IpAddr<span class="op">,</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> wg_secret<span class="op">:</span>  StaticSecret<span class="op">,</span> <span class="co">// X25519 PRIVATE — sealed in OS keystore, NEVER serialised out (S2/K4)</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> cert_der<span class="op">:</span>   <span class="dt">Vec</span><span class="op">&lt;</span><span class="dt">u8</span><span class="op">&gt;,</span>      <span class="co">// current mTLS leaf (public material)</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> cert_key<span class="op">:</span>   SigningKey<span class="op">,</span>   <span class="co">// Ed25519 leaf PRIVATE — also sealed (S2/K4)</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> ca_chain<span class="op">:</span>   <span class="dt">Vec</span><span class="op">&lt;</span><span class="dt">Vec</span><span class="op">&lt;</span><span class="dt">u8</span><span class="op">&gt;&gt;,</span> <span class="co">// root + issuing CA, for pinning the control channel</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> renew_at<span class="op">:</span>   SystemTime<span class="op">,</span>   <span class="co">// = not_after - renew_window (auto-renew before expiry, §7.1)</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">trait</span> Enroller <span class="op">{</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Generates WG + leaf keypairs LOCALLY, builds a CSR, calls Coordinator.Enroll,</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// and persists the result via KeyStore. POSTCONDITION (S2): no private key is ever</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// returned by value to FFI, logged, or written outside the sealed keystore.</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> enroll(<span class="op">&amp;</span><span class="kw">self</span><span class="op">,</span> token<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span><span class="op">,</span> kind<span class="op">:</span> DeviceKind<span class="op">,</span> ks<span class="op">:</span> <span class="op">&amp;</span><span class="kw">dyn</span> KeyStore)</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>        <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>EnrolledIdentity<span class="op">,</span> EnrollError<span class="op">&gt;;</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Plane</th>
+<th>Keypair</th>
+<th>Purpose</th>
+<th>Crosses the wire?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Control-identity</strong></td>
+<td>Ed25519 leaf (CSR)</td>
+<td>authenticate the mTLS control channel (<code>WatchNetworkMap</code>
+etc., S4)</td>
+<td>CSR (public) only</td>
+</tr>
+<tr>
+<td><strong>Data</strong></td>
+<td>X25519 WG static</td>
+<td>decrypt the tunnel (WG Noise IK)</td>
+<td>32-byte public key only</td>
+</tr>
+</tbody>
+</table>
+<p>Compromising a device leaf cert does <strong>not</strong> yield the
+WG private key, and stealing the WG key does <strong>not</strong>
+authenticate the control RPC — both must be valid for a device to
+<em>learn</em> its peers (map) <strong>and</strong> <em>reach</em> them
+(tunnel) [<code>04-security-privacy-pki.md</code> §1.2].</p>
+<h3 id="23-platform-key-storage--keystore-first-software-fallback-with-warning">2.3
+Platform key storage — keystore-first,
+software-fallback-with-warning</h3>
+<p>The seal target is the strongest the platform exposes (this is the
+AS-WGK / AS-LEAF mitigation T-CLI-I-1):</p>
+<table>
+<thead>
+<tr>
+<th>Platform</th>
+<th>Sealed by</th>
+<th>Hardware-backed when present</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>iOS / macOS</td>
+<td>Keychain</td>
+<td>Secure Enclave</td>
+</tr>
+<tr>
+<td>Android</td>
+<td>Keystore</td>
+<td>StrongBox / TEE</td>
+</tr>
+<tr>
+<td>Windows</td>
+<td>DPAPI</td>
+<td>TPM</td>
+</tr>
+<tr>
+<td>Linux</td>
+<td>libsecret</td>
+<td>TPM2</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb3"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">trait</span> KeyStore <span class="op">{</span>                                   <span class="co">// implemented per shim (Volume 6)</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> seal(<span class="op">&amp;</span><span class="kw">self</span><span class="op">,</span> label<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span><span class="op">,</span> secret<span class="op">:</span> <span class="op">&amp;</span>[<span class="dt">u8</span>]) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">,</span> KeyStoreError<span class="op">&gt;;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> open(<span class="op">&amp;</span><span class="kw">self</span><span class="op">,</span> label<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span>) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>Zeroizing<span class="op">&lt;</span><span class="dt">Vec</span><span class="op">&lt;</span><span class="dt">u8</span><span class="op">&gt;&gt;,</span> KeyStoreError<span class="op">&gt;;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> wipe(<span class="op">&amp;</span><span class="kw">self</span><span class="op">,</span> label<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span>) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">,</span> KeyStoreError<span class="op">&gt;;</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>A software fallback is permitted <strong>only with a logged
+warning</strong> [<code>04-security-privacy-pki.md</code> §3.3]; a
+device whose keystore is <em>already</em> defeated is the honest
+residual <strong>R-DEV</strong> ([<code>threat-model.md</code> §10]) —
+keys are sealed against <em>extraction</em>, but a rooted device (C-DEV)
+can invoke key operations in place. Hardware-bound attestation that
+closes R-DEV is Phase-2 (§10, [<code>04-security-privacy-pki.md</code>
+§3.5]).</p>
+<hr />
+<h2 id="3-device-enrollment--the-protocol">3. Device enrollment — the
+protocol</h2>
+<h3 id="31-enrollment-sequence-security-annotated">3.1 Enrollment
+sequence (security-annotated)</h3>
+<pre class="mermaid"><code>sequenceDiagram
+    autonumber
+    actor Admin as Console / Admin (operator+)
+    participant ID as identity (Go)
+    participant PKI as pki (Go)
+    participant IPAM as ipam (Go)
+    participant Dev as Device (helix-core)
+    participant Coord as coordinator (Go)
+    participant Edge as Rust edge (kernel WG)
+
+    Admin-&gt;&gt;ID: POST /v1/enroll-tokens {kind, site?, ttl, max_uses}  (PermMintEnrollToken)
+    ID-&gt;&gt;ID: token = rand256; store argon2id(token); audit &quot;token.create&quot;
+    ID--&gt;&gt;Admin: {token, qr}  — PLAINTEXT SHOWN ONCE (never persisted, AS-TOKEN)
+    Admin--&gt;&gt;Dev: out-of-band: paste token / scan QR
+
+    Note over Dev: Device generates WG + leaf keypairs LOCALLY.&lt;br/&gt;Private keys NEVER leave the device (S2 / K1).
+    Dev-&gt;&gt;Dev: (wg_priv, wg_pub) = X25519.gen()
+    Dev-&gt;&gt;Dev: (leaf_priv, csr) = Ed25519.gen(); CSR CN = pending device-id
+
+    Dev-&gt;&gt;Coord: Enroll{enroll_token, wg_pubkey, csr, os, name, kind}  (only PUBLIC material, K2)
+    Coord-&gt;&gt;ID: verify token (const-time hash, TTL, uses, bind_kind)
+    alt token invalid / expired / exhausted
+        ID--&gt;&gt;Coord: DENY
+        Coord--&gt;&gt;Dev: PermissionDenied  (no identity leaked — no oracle, §6.2)
+    else token valid
+        ID-&gt;&gt;IPAM: allocate overlay IP (tenant ULA /48)
+        IPAM--&gt;&gt;ID: fd7a:helix:&lt;t&gt;::N
+        ID-&gt;&gt;ID: INSERT devices(...); used_count++; emit device.enrolled
+        ID-&gt;&gt;PKI: SignDeviceCert(csr, device_id, ttl=24h)
+        PKI-&gt;&gt;PKI: verify CSR proof-of-possession (T-PKI-S-1); sign with tenant issuing CA
+        PKI--&gt;&gt;ID: {leaf, serial}; INSERT device_certs + device_wg_keys (one tx)
+        ID--&gt;&gt;Coord: EnrollResponse{device_id, overlay_ip, device_cert, ca_chain, gateway}
+        Coord--&gt;&gt;Dev: EnrollResponse
+        Note over Dev: persist sealed cert + keys in OS keystore (S2 / K4)
+        Dev-&gt;&gt;Coord: WatchNetworkMap (mTLS using the NEW device cert, S4)
+        Coord-&gt;&gt;Edge: add WG peer (pubkey, AllowedIPs from compiled policy)
+        Coord--&gt;&gt;Dev: NetworkMap snapshot (policy-filtered peers, S3)
+    end</code></pre>
+<p>Five security properties are visible in this one flow: (1) the
+plaintext token is shown <strong>once</strong> and never stored
+(AS-TOKEN); (2) only public key material crosses the wire (S2/K2); (3) a
+bad token returns an opaque <code>PermissionDenied</code> with no
+field-level oracle (§6.2); (4) token-burn + device-insert + IP-alloc +
+cert-issue are <strong>one transaction</strong> so a partial enrollment
+is impossible ([<code>v03-control-plane/svc-identity.md</code> §6]); (5)
+the freshly-minted leaf is the credential for the very next call
+(<code>WatchNetworkMap</code>), so the unauthenticated enroll RPC is the
+<em>only</em> unauthenticated agent RPC.</p>
+<h3 id="32-the-enroll-wire-contract-security-relevant-fields">3.2 The
+<code>Enroll</code> wire contract (security-relevant fields)</h3>
+<p>The CSR field is what makes the device cert mint from a device-held
+private key (proof-of-possession) rather than from a server-generated
+key — the structural defence against T-PKI-S-1.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode protobuf"><code class="sourceCode protobuf"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-proto: the security-relevant Enroll messages (package helix.coordinator.v1)</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="kw">message</span> EnrollRequest {</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">string</span>     enroll_token <span class="op">=</span> <span class="dv">1</span>;  <span class="co">// single/bounded-use, TTL&#39;d; verified by hash (§6, no oracle)</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">bytes</span>      wg_pubkey    <span class="op">=</span> <span class="dv">2</span>;  <span class="co">// 32-byte Curve25519 PUBLIC key; private stays on device (S2/K2)</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">bytes</span>      csr          <span class="op">=</span> <span class="dv">3</span>;  <span class="co">// PKCS#10 CSR, Ed25519 leaf key generated ON device (S2/K5)</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">string</span>     os           <span class="op">=</span> <span class="dv">4</span>;  <span class="co">// ios|android|linux|windows|macos|harmonyos|aurora</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">string</span>     name         <span class="op">=</span> <span class="dv">5</span>;</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  DeviceKind kind         <span class="op">=</span> <span class="dv">6</span>;  <span class="co">// CLIENT | CONNECTOR — must match token bind_kind</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">bytes</span>      attestation  <span class="op">=</span> <span class="dv">7</span>;  <span class="co">// OPTIONAL platform key-attestation blob; empty in MVP (§10)</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="kw">message</span> EnrollResponse {</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>  <span class="dt">string</span>         device_id   <span class="op">=</span> <span class="dv">1</span>;</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>  <span class="dt">string</span>         overlay_ip  <span class="op">=</span> <span class="dv">2</span>;  <span class="co">// e.g. &quot;fd7a:helix:1::2&quot;</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>  <span class="dt">bytes</span>          device_cert <span class="op">=</span> <span class="dv">3</span>;  <span class="co">// X.509 leaf, signed by tenant issuing CA, not_after = now+24h</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>  <span class="kw">repeated</span> <span class="dt">bytes</span> ca_chain    <span class="op">=</span> <span class="dv">4</span>;  <span class="co">// root + issuing CA — the agent PINS the root (T-COORD-T-1)</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>  GatewayInfo    gateway     <span class="op">=</span> <span class="dv">5</span>;</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>  <span class="dt">uint32</span>         cert_ttl_s  <span class="op">=</span> <span class="dv">6</span>;  <span class="co">// renew-before-window hint for the core (§7.1)</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p><code>protovalidate</code> field constraints enforce
+<code>wg_pubkey</code> length == 32, <code>enroll_token</code>
+non-empty, <code>kind ∈ {CLIENT, CONNECTOR}</code> declaratively next to
+the contract ([<code>v03-control-plane/svc-identity.md</code> §8.1]); a
+malformed request is <code>InvalidArgument</code>, never a panic
+(§11.4.1 — no FAIL-bluff).</p>
+<h3 id="33-anti-replay--abuse-controls-on-enroll">3.3 Anti-replay &amp;
+abuse controls on <code>Enroll</code></h3>
+<table>
+<thead>
+<tr>
+<th>Control</th>
+<th>Mechanism</th>
+<th>Threat closed</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Constant-time token check</strong></td>
+<td>candidate <code>enroll_tokens</code> rows hash-compared in constant
+time; failure returns <code>PermissionDenied</code> with no field-level
+detail (no enumeration oracle)</td>
+<td>token enumeration</td>
+</tr>
+<tr>
+<td><strong>CSR proof-of-possession</strong></td>
+<td>the CSR signature is verified before signing; the leaf public key in
+the CSR must match the signer</td>
+<td>T-PKI-S-1 (sign a key you don&#39;t hold)</td>
+</tr>
+<tr>
+<td><strong>Rate limiting</strong></td>
+<td>per-source-IP and per-tenant Redis token buckets on
+<code>Enroll</code>; exponential backoff;
+<code>auth.enroll.denied</code> audit</td>
+<td>T-PKI-D-1, T-CONN-D-1 (enroll flood)</td>
+</tr>
+<tr>
+<td><strong>One pubkey, one device</strong></td>
+<td><code>UNIQUE (tenant_id, wg_pubkey)</code>
+([<code>v03-control-plane/svc-pki.md</code> §3.3])</td>
+<td>WG-key re-use across devices</td>
+</tr>
+<tr>
+<td><strong><code>kind</code> must match token</strong></td>
+<td>a <code>connector</code> token cannot enroll a <code>client</code>
+device (<code>ErrKindMismatch</code>)</td>
+<td>privilege-shape confusion</td>
+</tr>
+</tbody>
+</table>
+<p>Rate-limit buckets hold <strong>counters + timestamps only</strong> —
+never IPs, destinations, or flows (privacy invariant: this is abuse
+metering, not a connection log; LP-L-1 stays clean).</p>
+<hr />
+<h2 id="4-oidc-sso-integration--managed-posture">4. OIDC SSO integration
+— managed posture</h2>
+<p>Managed tenants log a human into the Console with
+<strong>Authorization Code + PKCE</strong>, validate the ID token
+against the IdP&#39;s JWKS, and <strong>JIT-provision</strong> a
+<code>users</code> row [04_P1 §6.1]. The IdP is <em>any</em> compliant
+OIDC provider; Keycloak/Authentik are reference IdPs but nothing is
+provider-specific.</p>
+<h3 id="41-the-flow--its-security-gates">4.1 The flow &amp; its security
+gates</h3>
+<pre class="mermaid"><code>sequenceDiagram
+    autonumber
+    participant B as Browser (Console — public client)
+    participant API as api (Gin)
+    participant ID as identity
+    participant R as Redis (state TTL 10m)
+    participant IDP as OIDC IdP
+    participant PG as Postgres (RLS)
+    B-&gt;&gt;API: GET /v1/oidc/{provider}/login
+    API-&gt;&gt;ID: BeginOIDC(tenant, provider, redirectURI)
+    ID-&gt;&gt;R: SETEX oidc:state:&lt;s&gt; {nonce, verifier, tenant, provider}
+    ID--&gt;&gt;B: 302 → IdP authorize?code_challenge=S256&amp;state=&lt;s&gt;&amp;nonce=&lt;n&gt;
+    B-&gt;&gt;IDP: authenticate (IdP-side; Helix NEVER sees the password)
+    IDP--&gt;&gt;B: 302 → /callback?code&amp;state
+    B-&gt;&gt;API: GET callback?code&amp;state
+    API-&gt;&gt;ID: CompleteOIDC{code, state}
+    ID-&gt;&gt;R: GETDEL oidc:state:&lt;s&gt;   (single-use; missing ⇒ ErrStateInvalid — replay rejected)
+    ID-&gt;&gt;IDP: POST /token (code + code_verifier)   [PKCE]
+    IDP--&gt;&gt;ID: id_token (JWT)
+    ID-&gt;&gt;IDP: GET /jwks (cached) → verify sig, iss, aud, exp, nonce
+    ID-&gt;&gt;PG: upsert user by (tenant, oidc_sub) [JIT]; map claim → role
+    ID-&gt;&gt;PG: INSERT session (token_hash = sha256(opaque))
+    ID--&gt;&gt;B: Set-Cookie helix_session=&lt;raw&gt;; HttpOnly; Secure; SameSite=Lax</code></pre>
+<table>
+<thead>
+<tr>
+<th>Gate</th>
+<th>What it stops</th>
+<th>Threat</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>PKCE <code>S256</code></strong></td>
+<td>code interception/injection even for a public client</td>
+<td>T-CP-S-2 (forged-code path)</td>
+</tr>
+<tr>
+<td><strong><code>state</code> single-use
+(<code>GETDEL</code>)</strong></td>
+<td>CSRF / login-fixation / replay of the callback</td>
+<td>request forgery</td>
+</tr>
+<tr>
+<td><strong><code>nonce</code> bound to the ID token</strong></td>
+<td>replay of a previously-issued ID token</td>
+<td>token replay</td>
+</tr>
+<tr>
+<td><strong>JWKS sig + <code>iss</code>/<code>aud</code>
+pinning</strong></td>
+<td>a forged/foreign ID token granting admin</td>
+<td>T-CP-S-2</td>
+</tr>
+<tr>
+<td><strong><code>alg=none</code> rejected</strong></td>
+<td>unsigned-token forgery</td>
+<td>T-CP-S-2</td>
+</tr>
+</tbody>
+</table>
+<p>The <code>state</code> carries the tenant + provider + PKCE verifier
++ nonce in Redis with a short TTL; a callback whose state is
+missing/expired/replayed is <code>ErrStateInvalid</code> (single-use is
+the defence). HelixVPN never sees the user&#39;s password — authentication
+happens entirely IdP-side.</p>
+<h3 id="42-claim--role-binding--the-idp-is-the-role-authority-re-evaluated-every-login">4.2
+Claim → role binding — the IdP is the role authority, re-evaluated every
+login</h3>
+<div class="sourceCode" id="cb7"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">// role = role_map[ valueAt(claims, role_claim) ] ?? oidc_providers.default_role</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="co">// highest role wins on multiple groups: admin &gt; operator &gt; member.</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>role <span class="op">:=</span> mapRole<span class="op">(</span>prov<span class="op">,</span> idt<span class="op">)</span></span></code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Rule</th>
+<th>Security property</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Role asserted from an IdP <strong>group claim</strong>, mapped per
+tenant (<code>role_map</code>), never client-supplied</td>
+<td>the client cannot self-elevate (a tampered claim fails the JWKS sig
+check first)</td>
+</tr>
+<tr>
+<td>Role <strong>refreshed on every login</strong></td>
+<td>an IdP-side group removal <strong>demotes on next sign-in</strong> —
+no stale <code>admin</code></td>
+</tr>
+<tr>
+<td>Removed from all mapped groups ⇒ falls to <code>default_role</code>
+(default <code>member</code>)</td>
+<td>never silently retains a privilege</td>
+</tr>
+<tr>
+<td>A <code>SuspendedAt</code> user ⇒ <code>ErrUserSuspended</code>, no
+session</td>
+<td>suspension denies login immediately</td>
+</tr>
+</tbody>
+</table>
+<p>The trust boundary here is explicit: HelixVPN <strong>trusts the
+IdP</strong> to assert group membership; a compromised IdP is
+<strong>out of scope</strong> [<code>threat-model.md</code> §1.2]
+(residual of T-CP-S-2). Library choice (<code>coreos/go-oidc</code> over
+<code>x/oauth2</code>) and exact pinned versions are
+<strong>UNVERIFIED</strong> until implementation and MUST be re-verified
+against the IdP&#39;s current docs before shipping (§11.4.99,
+[<code>v03-control-plane/svc-identity.md</code> §4]).</p>
+<hr />
+<h2 id="5-anonymous-device-token-path--the-privacy-posture">5. Anonymous
+device-token path — the privacy posture</h2>
+<p>The privacy-VPN default: a device obtains identity + cert with
+<strong>no email and no SSO</strong> — the Mullvad &quot;account number, no
+PII&quot; stance [04_P1 §6.1, 04_ARCH §6]. This is the LINDDUN
+<em>Identifying</em> mitigation LP-I-1: there is no human to which the
+tunnel can be tied.</p>
+<h3 id="51-two-anonymous-front-doors-both-no-pii">5.1 Two anonymous
+front doors (both no-PII)</h3>
+<table>
+<thead>
+<tr>
+<th>Front door</th>
+<th>Use</th>
+<th>Secret</th>
+<th>Stored as</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Device enroll token</strong></td>
+<td>one device joins (paste/QR)</td>
+<td>256-bit base32-Crockford string (<code>het_…</code>)</td>
+<td><code>argon2id(token)</code> (hash only)</td>
+</tr>
+<tr>
+<td><strong>Account number</strong></td>
+<td>a human-memorable login for a privacy account (Mullvad-style)</td>
+<td>16-digit decimal, grouped <code>####-####-####-####</code></td>
+<td><code>argon2id(number)</code> (hash only)</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb8"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- the anonymous account: a users row with NO PII + an accounts row whose ONLY</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- authenticator is a hashed high-entropy number ([`v03-control-plane/svc-identity.md` §2.2]).</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="co">-- users:    kind=&#39;anonymous&#39;, email=NULL, oidc_sub=NULL</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="co">-- accounts: number_hash = argon2id(number), number_last4 (display hint, NOT a secret)</span></span></code></pre></div>
+<blockquote>
+<p><strong>Design D-ID1 — account-number entropy (carried from
+[<code>v03-control-plane/svc-identity.md</code> §3]).</strong> 16
+decimal digits ≈ <strong>53.1 bits</strong> of entropy; this is the
+<em>display</em> secret. Online-guessing resistance comes from (a)
+storing only <code>argon2id(number)</code>, (b) rate-limiting
+<code>LoginAccount</code> per <code>(tenant, ua_hash)</code> bucket, and
+(c) treating the number as a bearer credential the operator must store
+securely. That Mullvad uses exactly 16 digits internally is
+<strong>UNVERIFIED</strong> (not in the cited research) — 16 is
+<em>our</em> design, not a claim about Mullvad&#39;s implementation
+(§11.4.6).</p>
+</blockquote>
+<h3 id="52-what-the-anonymous-path-guarantees--and-its-honest-boundary">5.2
+What the anonymous path guarantees — and its honest boundary</h3>
+<table>
+<thead>
+<tr>
+<th>Guarantee</th>
+<th>Mechanism</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>No reverse-link to a human</strong></td>
+<td><code>email=NULL</code>, <code>oidc_sub=NULL</code>; the device is
+owned by a synthetic anonymous user scoped to the tenant; no directory
+maps the number to a person</td>
+</tr>
+<tr>
+<td><strong>No password to phish</strong></td>
+<td>the only authenticator is the high-entropy secret; argon2id verify
+is constant-time (hit and miss cost the same wall-clock)</td>
+</tr>
+<tr>
+<td><strong>Lost secret is unrecoverable by design</strong></td>
+<td>there is no &quot;reset&quot; path — no PII to recover against; the operator
+mints a fresh account</td>
+</tr>
+<tr>
+<td><strong>Secret never persisted in plaintext</strong></td>
+<td>only <code>argon2id(secret)</code> stored; the plaintext is returned
+to the caller exactly once</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Honest boundary (§11.4.6).</strong> Anonymous
+<em>enrollment</em> removes the human link in the <strong>stored
+data</strong>. It does not make the user anonymous to a <strong>network
+observer</strong> (C-PASV/C-NAT) — that is the job of transport
+obfuscation + the no-logging invariant (S6), and traffic-analysis
+correlation remains the residual <strong>R-TA</strong>
+([<code>threat-model.md</code> §10]). Anonymous mode closes LP-I-1
+(identifying via <em>stored</em> data), not LP-D-1 (detecting VPN use on
+the wire).</p>
+</blockquote>
+<blockquote>
+<p><strong>D-ID2 — anonymous login needs a tenant scope.</strong>
+Because the <code>accounts</code> table is RLS-scoped, the raw number
+alone cannot identify a tenant. MVP routes anonymous login
+tenant-addressed (<code>POST /v1/t/{tenant}/account/login</code>); a
+global <code>number→tenant</code> directory is <strong>out of
+scope</strong> — it would be a cross-tenant index that weakens isolation
+(C8). Multi-tenant-SaaS anonymous login is a Phase-2 decision (§10,
+[<code>v03-control-plane/svc-identity.md</code> §3.2]).</p>
+</blockquote>
+<hr />
+<h2 id="6-enroll-token-security">6. Enroll-token security</h2>
+<p>An enroll token is the device-bootstrap secret: a single-use (or
+bounded-multi-use), short-lived, <strong>hashed</strong> credential an
+<code>operator</code>/<code>admin</code> mints and hands (paste/QR) to a
+device, redeemed exactly once in the <code>Enroll</code> RPC. It is the
+<em>only</em> unauthenticated agent RPC&#39;s credential.</p>
+<h3 id="61-token-security-properties">6.1 Token security properties</h3>
+<blockquote>
+<p><strong>Reconciled (§11.4.35, 2026-06-26):</strong> the enroll token
+is hashed with <strong>Argon2id only</strong> — the earlier
+&quot;<code>sha256(raw)</code> (or argon2id)&quot; alternative is dropped. It is a
+bootstrap <strong>bearer</strong> credential, so a memory-hard hash
+(matching the overview + [<code>no-logging-as-code</code>]) is required;
+a plain <code>sha256</code> is reserved for opaque high-rate session
+tokens, not this bearer secret.</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Mechanism</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>High entropy</strong></td>
+<td>256-bit <code>randomBytes(32)</code>, <code>het_</code>-prefixed
+(greppable), base32-no-pad</td>
+<td>infeasible to guess</td>
+</tr>
+<tr>
+<td><strong>Hash-at-rest only</strong></td>
+<td><code>argon2id(raw)</code> stored; raw returned
+<strong>once</strong></td>
+<td>a DB read never yields a usable token (AS-TOKEN; S11-class
+hygiene)</td>
+</tr>
+<tr>
+<td><strong>Short TTL</strong></td>
+<td>clamped to <code>[5m, 24h]</code>, default 1h</td>
+<td>a leaked token expires fast</td>
+</tr>
+<tr>
+<td><strong>Single / bounded use</strong></td>
+<td><code>max_uses</code> (default 1); atomic conditional consume</td>
+<td>no double-spend</td>
+</tr>
+<tr>
+<td><strong>Kind-bound</strong></td>
+<td><code>bind_kind ∈ {client, connector}</code> enforced at
+<code>Enroll</code></td>
+<td>a connector token can&#39;t mint a client device</td>
+</tr>
+<tr>
+<td><strong>Audited mint</strong></td>
+<td><code>enroll_token.minted</code> event carries
+<code>{token_id, kind}</code> — <strong>never the raw
+token</strong></td>
+<td>the audit trail itself doesn&#39;t leak the secret</td>
+</tr>
+</tbody>
+</table>
+<h3 id="62-atomic-single-use-consumption-no-double-spend">6.2 Atomic
+single-use consumption (no double-spend)</h3>
+<p>The double-spend hazard is two devices racing the same token.
+Atomicity is a <strong>conditional
+<code>UPDATE … RETURNING</code></strong> — the row lock serialises the
+racers and the <code>WHERE consumed_at IS NULL</code> guard guarantees
+exactly one wins ([<code>v03-control-plane/svc-identity.md</code>
+§5.2]):</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- name: ConsumeEnrollToken :one  (runs INSIDE the Enroll transaction)</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="kw">UPDATE</span> enroll_tokens</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>   <span class="kw">SET</span> consumed_at <span class="op">=</span> now(), consumed_device <span class="op">=</span> sqlc.arg(device_id)</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a> <span class="kw">WHERE</span> tenant_id   <span class="op">=</span> current_setting(<span class="st">&#39;app.tenant_id&#39;</span>):<span class="ch">:uuid</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>   <span class="kw">AND</span> token_hash  <span class="op">=</span> sqlc.arg(token_hash)</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>   <span class="kw">AND</span> consumed_at <span class="kw">IS</span> <span class="kw">NULL</span>          <span class="co">-- single-use guard</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>   <span class="kw">AND</span> revoked_at  <span class="kw">IS</span> <span class="kw">NULL</span>          <span class="co">-- not revoked</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>   <span class="kw">AND</span> expires_at  <span class="op">&gt;</span> now()          <span class="co">-- not expired</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a> <span class="kw">RETURNING</span> <span class="kw">id</span>, kind, site_name, bind_user_id;</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="co">-- zero rows updated ⇒ token already used / expired / revoked / wrong-tenant ⇒ ErrTokenUnusable</span></span></code></pre></div>
+<p>The anti-bluff acceptance test is <strong>N=100 concurrent
+<code>Enroll</code> of one token ⇒ exactly 1 success</strong>
+([<code>v03-control-plane/svc-identity.md</code> §11]); the paired §1.1
+mutation removes the <code>AND consumed_at IS NULL</code> guard and
+asserts the test now sees <strong>2</strong> successes (the gate is
+proven not a tautology).</p>
+<h3 id="63-enroll-token-state-machine">6.3 Enroll-token state
+machine</h3>
+<pre class="mermaid"><code>stateDiagram-v2
+    [*] --&gt; Minted : MintEnrollToken (hashed, TTL ∈ [5m,24h])
+    Minted --&gt; Consumed : Enroll RPC — conditional UPDATE wins (single-use)
+    Minted --&gt; Expired  : now() &gt; expires_at
+    Minted --&gt; Revoked  : operator revokes (POST /v1/enroll-tokens/{id}/revoke)
+    Consumed --&gt; [*]
+    Expired  --&gt; [*]
+    Revoked  --&gt; [*]
+    note right of Consumed
+      A second Enroll with the same raw token
+      updates ZERO rows → ErrTokenUnusable.
+      No state lets a token be consumed twice.
+    end note</code></pre>
+<p>The only legal terminal-by-success transition is
+<code>Minted → Consumed</code>; every other terminal state rejects
+redemption.</p>
+<hr />
+<h2 id="7-re-enrollment--device-revocation">7. Re-enrollment &amp;
+device revocation</h2>
+<h3 id="71-re-enrollment--degrade-to-re-enroll-never-silent-failure">7.1
+Re-enrollment — degrade-to-re-enroll, never silent failure</h3>
+<p>A device&#39;s mTLS leaf is short-lived (≤24 h, S4). The
+<strong>agent</strong> proactively renews it over the <strong>existing
+authenticated channel</strong> at <code>T − renewSkew</code>
+(<code>renewSkew = max(1h, 0.2 × TTL)</code> → ~4.8 h before a 24 h cert
+expires) — <strong>no enroll token, no human</strong>
+([<code>v03-control-plane/svc-pki.md</code> §6.1]). Renewal is a
+re-issue over the authenticated channel: same <code>device_id</code>,
+new serial + <code>not_after</code>, WG key unchanged. The security
+properties:</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Detail</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>No privilege escalation on renew</strong></td>
+<td>renewal is authenticated by the <em>current still-valid</em> leaf —
+it never needs the enroll token again, so it cannot widen scope</td>
+</tr>
+<tr>
+<td><strong>Make-before-break</strong></td>
+<td>both old and new leaves are valid during the overlap; the old flips
+to <code>renewed</code> (the only non-<code>active</code> status
+<code>AuthDevice</code> tolerates, and only until its
+<code>not_after</code>) — no mid-stream cutoff</td>
+</tr>
+<tr>
+<td><strong>Degrade to re-enroll</strong></td>
+<td>a <em>missed</em> renewal (agent offline past expiry) degrades to
+full re-enrollment with a fresh token — <strong>never a silent
+failure</strong> [04_P1 §6.3]</td>
+</tr>
+</tbody>
+</table>
+<p>A full re-enrollment (lost device, wiped keystore, missed-renewal
+expiry) is the §3 protocol run again with a fresh enroll token; the new
+keypairs are generated locally exactly as before (S2 holds across
+re-enrollment — a re-enrolling device never re-uses or transmits old
+private material).</p>
+<h3 id="72-device-revocation--origin-of-the-sub-second-cascade-s5">7.2
+Device revocation — origin of the sub-second cascade (S5)</h3>
+<p>Revocation is the security analogue of the convergence SLO: the same
+push-don&#39;t-poll machinery that propagates a route change propagates a
+revocation. Identity is the <strong>origin</strong>;
+<code>coordinator</code> measures the tail.</p>
+<pre class="mermaid"><code>sequenceDiagram
+    autonumber
+    actor Op as Admin / automated trigger (PermRevokeDevice / PermManageUsers)
+    participant API as api (Gin)
+    participant ID as identity/pki
+    participant Bus as Redis Streams (events:devices)
+    participant Coord as coordinator
+    participant Edge as Rust edge (kernel WG)
+    participant Peers as Affected peers&#39; open WatchNetworkMap streams
+
+    Op-&gt;&gt;API: POST /v1/devices/{id}:revoke   (RBAC: admin)
+    API-&gt;&gt;ID: tx{ devices.revoked_at=now; device_certs.revoked=true; retire WG key; audit }
+    ID-&gt;&gt;Bus: XADD device.revoked {device_id, tenant_id, wg_pubkey, serial}
+    par fan-out (all within the &lt; 1 s TARGET budget)
+        Bus-&gt;&gt;Coord: consume device.revoked
+        Coord-&gt;&gt;Edge: remove WG peer (pubkey) + drop verdict-map entries
+        Coord-&gt;&gt;Peers: MapDelta{remove peer device_id}  (need-to-know S3)
+    and
+        Coord-&gt;&gt;Coord: blacklist cert serial in the in-mem revocation set
+    end
+    Note over Edge,Peers: kernel WG peer gone ⇒ no further handshake/data;&lt;br/&gt;the revoked device&#39;s OWN control stream is force-closed.</code></pre>
+<p>The two cooperating teeth (belt-and-suspenders [research-pki_pq_nat
+§1.2/§1.3]): <strong>(a) stop renewing</strong> the short-lived mTLS
+cert → it self-expires within ≤24 h (defence-in-depth floor),
+<strong>and (b) remove the WG public key</strong> from every peer set →
+instant data-path cutoff. There is <strong>no CRL/OCSP on the data
+path</strong> — short-lived certs + active push obviate online
+revocation checking.</p>
+<blockquote>
+<p><strong>Latency is a TARGET, not a measured result
+(§11.4.6).</strong> The revoke→edge-enforced budget is <strong>p99 &lt;
+1 s</strong> as a design target measured by the
+<code>helix_pki_revoke_seconds</code> histogram
+([<code>v03-control-plane/svc-pki.md</code> §10.3]); it is
+<strong>UNVERIFIED</strong> as an achieved number until the §9 soak
+captures it. The sub-second <em>race window</em> is honest, not zero —
+residual <strong>R-RACE</strong> ([<code>threat-model.md</code> §10]);
+the floor is fail-static (a stale grant never fails <em>open</em>), and
+≤24 h cert expiry is the hard ceiling even if a push is missed.</p>
+</blockquote>
+<h3 id="73-user-suspension-cascades-to-every-owned-device">7.3 User
+suspension cascades to every owned device</h3>
+<p><code>SuspendUser</code> / <code>RevokeAccount</code> fan out to:
+session revoke (human Console access dies immediately), cert revoke
+(control channel dies), and <strong>N</strong>
+<code>device.revoked</code> events (data-path peers removed within the
+convergence budget). All session/cert writes commit in the same tenant
+transaction; the events publish in-tx so no device is left half-revoked
+([<code>v03-control-plane/svc-identity.md</code> §10]). A guard
+(<code>AZ3</code>) forbids the last active <code>admin</code> from
+suspending themselves — preventing an un-administerable tenant.</p>
+<hr />
+<h2 id="8-threat-mapping--what-enrollment-defends">8. Threat mapping —
+what enrollment defends</h2>
+<p>Every mechanism above closes specific threats from
+[<code>threat-model.md</code>]; conversely no mechanism here is
+unjustified (§11.4 — a control with no threat is a removal
+candidate).</p>
+<table>
+<thead>
+<tr>
+<th>Mechanism (this doc)</th>
+<th>Invariant</th>
+<th>Threats closed ([<code>threat-model.md</code>])</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Device keys generated on-device, sealed in OS keystore</td>
+<td>S2</td>
+<td>T-CLI-I-1, T-PKI-S-1 (partial)</td>
+</tr>
+<tr>
+<td>CSR proof-of-possession at sign</td>
+<td>—</td>
+<td>T-PKI-S-1 (sign a key you don&#39;t hold)</td>
+</tr>
+<tr>
+<td>mTLS leaf ≤24 h + auto-renew over authenticated channel</td>
+<td>S4</td>
+<td>T-CLI-S-1, T-CP-S-1, T-COORD-S-1</td>
+</tr>
+<tr>
+<td>OIDC PKCE + JWKS pin + nonce/state single-use</td>
+<td>S4</td>
+<td>T-CP-S-2 (forged ID token / replay)</td>
+</tr>
+<tr>
+<td>Claim→role re-evaluated every login</td>
+<td>—</td>
+<td>stale-privilege elevation (T-CP-E-1 adjacent)</td>
+</tr>
+<tr>
+<td>Anonymous enroll (no email / no SSO)</td>
+<td>—</td>
+<td><strong>LP-I-1</strong> (identifying), LP-N-1 (partial)</td>
+</tr>
+<tr>
+<td>Enroll token: hashed, single-use, TTL, kind-bound</td>
+<td>S11</td>
+<td>AS-TOKEN abuse, T-PKI-D-1 (enroll flood)</td>
+</tr>
+<tr>
+<td>Constant-time token check, no field oracle</td>
+<td>—</td>
+<td>token enumeration</td>
+</tr>
+<tr>
+<td>Sub-second revocation cascade (origin)</td>
+<td>S5</td>
+<td>T-PKI-E-1 (revoked device keeps access)</td>
+</tr>
+<tr>
+<td>RLS <code>FORCE ROW LEVEL SECURITY</code> under the app RBAC</td>
+<td>P6</td>
+<td>T-CP-T-1, T-CP-I-1 (cross-tenant)</td>
+</tr>
+</tbody>
+</table>
+<p>The two honest residuals enrollment leaves open are
+<strong>R-DEV</strong> (a fully-compromised device can use sealed keys
+in place — closed only by Phase-2 hardware attestation) and the
+managed-mode PII choice behind <strong>LP-I-1</strong> (a tenant that
+<em>opts into</em> OIDC stores <code>email</code> — stated, not
+hidden).</p>
+<hr />
+<h2 id="9-test--validation-mapping-114169">9. Test &amp; validation
+mapping (§11.4.169)</h2>
+<p>Per constitution <strong>§11.4.169</strong> (comprehensive test-type
+coverage) composing §11.4.27 (no-fakes-beyond-unit),
+§11.4.5/§11.4.69/§11.4.107 (captured evidence), §11.4.85 (stress+chaos),
+§1.1 (paired mutation). Integration spins Postgres+Redis on-demand via
+the <code>vasic-digital/containers</code> submodule (§11.4.76 — never
+ad-hoc <code>docker run</code>). Every PASS cites a captured-evidence
+artefact; mocks live <strong>only</strong> in unit tests.</p>
+<table>
+<thead>
+<tr>
+<th>Capability</th>
+<th>Unit</th>
+<th>Integration (real PG+Redis)</th>
+<th>Security / fuzz</th>
+<th>Stress / chaos</th>
+<th>Paired §1.1 mutation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Key-never-leaves (S2 / K1–K5)</strong></td>
+<td>re-derive pub from known priv fixture; assert stored == public,
+never private</td>
+<td>enroll → assert <code>device_wg_keys.wg_pubkey</code> is the public
+half</td>
+<td>attempt FFI read of sealed key → blocked; log-grep finds no key
+bytes</td>
+<td>—</td>
+<td>feed a private-shaped key → enroll handler MUST reject (else
+FAIL)</td>
+</tr>
+<tr>
+<td><strong>Enroll-token single-use</strong></td>
+<td>state-machine transitions (Diagram §6.3)</td>
+<td>mint → consume → re-consume = <code>ErrTokenUnusable</code></td>
+<td>token-guess fuzz over <code>het_</code> space</td>
+<td><strong>N=100 concurrent Enroll of one token ⇒ exactly 1
+success</strong></td>
+<td>drop <code>AND consumed_at IS NULL</code> guard → 2 successes → test
+FAILs</td>
+</tr>
+<tr>
+<td><strong>OIDC login</strong></td>
+<td><code>mapRole</code> claim→role; nonce/state checks</td>
+<td>full auth-code+PKCE vs a Keycloak/Authentik container; JIT
+provision; role refresh on re-login</td>
+<td>tampered ID-token sig rejected; replayed <code>state</code>
+rejected; <code>alg=none</code> rejected</td>
+<td>—</td>
+<td>accept <code>nonce</code> mismatch → replay test FAILs</td>
+</tr>
+<tr>
+<td><strong>Anonymous account</strong></td>
+<td><code>genAccountNumber</code> unbiased (χ² over digits); argon2id
+calibration 30–150 ms</td>
+<td>create → login → session; lost-number unrecoverable</td>
+<td>constant-time hit vs miss; online-guess throttle</td>
+<td>login brute-force ⇒ <code>ErrRateLimited</code></td>
+<td>store plaintext number → schema-lint FAILs</td>
+</tr>
+<tr>
+<td><strong>Enroll all-or-nothing</strong></td>
+<td>—</td>
+<td>cert-issue failure ⇒ token NOT burned, IP NOT consumed (retry same
+token)</td>
+<td>—</td>
+<td>SIGKILL <code>helixd</code> mid-enroll ⇒ no orphan cert without
+device row</td>
+<td>drop the in-tx publish (R3) → coordinator never adds peer → DoD test
+FAILs</td>
+</tr>
+<tr>
+<td><strong>Revocation cascade (origin, S5)</strong></td>
+<td>last-admin guard (AZ3)</td>
+<td>suspend/revoke → sessions dead + N <code>device.revoked</code>
+emitted; revoke→edge <strong>target p99 &lt; 1 s</strong> captured</td>
+<td>suspended user cannot re-login</td>
+<td>suspend a user owning 1k devices, all events emitted</td>
+<td>drop in-tx publish → peer never removed → SLO test FAILs</td>
+</tr>
+<tr>
+<td><strong>No-PII privacy (LP-I-1)</strong></td>
+<td>—</td>
+<td>anonymous enroll ⇒
+<code>users.email IS NULL AND oidc_sub IS NULL</code></td>
+<td>grep live schema — anonymous device has no human link</td>
+<td>—</td>
+<td>set <code>email</code> on an anonymous user → privacy invariant test
+FAILs</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Anti-bluff floor (§11.4.107(10)).</strong> Each analyzer/gate
+above ships with a golden-good + golden-bad fixture pair so the gate
+provably cannot pass everything; a security &quot;PASS&quot; is valid only with
+captured evidence that the <em>attack was attempted and blocked</em> — a
+green assertion that the mitigation &quot;exists&quot; is necessary, never
+sufficient. The enroll-DoD acceptance is the [04_P1 §11] &quot;enroll a
+client; reach an authorized LAN host; <em>deny</em> an unauthorized one&quot;
+criterion captured at packet level.</p>
+</blockquote>
+<hr />
+<h2 id="10-phase-2-forward-seams-additive-not-a-rewrite">10. Phase-2
+forward seams (additive, not a rewrite)</h2>
+<p>The enrollment interfaces extend without reshaping
+[<code>v03-control-plane/svc-identity.md</code> §12, 04_P1 §12]:</p>
+<ul>
+<li><strong>Platform attestation</strong> — the reserved
+<code>EnrollRequest.attestation</code> field carries Apple App Attest /
+Android Key Attestation / Windows TPM attestation so a Phase-2 tenant
+can require hardware-bound WG/leaf keys — closing residual
+<strong>R-DEV</strong>. The wire format already reserves the slot so it
+need not change later [<code>04-security-privacy-pki.md</code>
+§3.5].</li>
+<li><strong>SCIM provisioning + group sync</strong> —
+<code>oidc_providers</code> gains push-provisioning + directory sync,
+replacing per-login JIT for large tenants (role mapping stays the
+same).</li>
+<li><strong>WebAuthn / passkey step-up</strong> — <code>sessions</code>
+gains a hardware-second-factor step-up for <code>admin</code> actions
+(revoke, CA rotation).</li>
+<li><strong>Anonymous recovery codes</strong> — <code>accounts</code>
+gains optional recovery codes (still no PII) and a multi-tenant
+<code>number→tenant</code> directory behind an explicit operator opt-in
+(the §5 D-ID2 deferral).</li>
+<li><strong>Service extraction</strong> — the <code>Identity</code>
+interface itself is the seam along which a standalone
+<code>identity</code> service splits from the monolith; the
+<code>Bus</code> / <code>store.WithTenant</code> / <code>pki</code> /
+<code>ipam</code> boundaries already in place make the extraction
+wiring, not redesign.</li>
+</ul>
+<p>Phase 2 is additive because Phase 1 drew the seams — the
+<code>Enroll</code> proto, the two key planes, the OIDC provider table,
+the anonymous-account model — in the right places, honouring §11.4.6 (no
+silent reshape).</p>
+<hr />
+<h2 id="sources-verified">Sources verified</h2>
+<ul>
+<li>[<code>04-security-privacy-pki.md</code>] HelixVPN security spine —
+§0.1 invariants S1–S11, §1 trust model + two-channel auth, §2 identity
+(OIDC managed + anonymous device tokens), §3 enrollment
+<ul>
+<li>§3.2 Enroll proto + §3.3 device-side key handling/keystore + §3.4
+anti-replay + §3.5 attestation, §4 PKI/cert lifecycle, §4.6 revocation
+&lt; 1 s (target). (Read 2026-06-25.)</li>
+</ul></li>
+<li>[<code>v03-control-plane/svc-identity.md</code>] — §1 ownership +
+<code>Identity</code> interface, §2 DDL/RLS
+(oidc_providers/accounts/enroll_tokens/sessions/api_tokens), §3
+anonymous accounts (D-ID1/2, account-number entropy), §4 OIDC
+auth-code+PKCE + claim→role, §5 enroll-token mint + atomic single-use
+consumption, §6 Enroll orchestration (one tx), §7 RBAC (AZ1–AZ4), §10
+suspend/revoke cascade, §11 test matrix, §12 Phase-2 seams. (Read
+2026-06-25.)</li>
+<li>[<code>v03-control-plane/svc-pki.md</code>] — §1 WG-no-native-PKI
+baseline + SPIFFE two-identity split, §5 issuance (CSR PoP), §6
+auto-renew (renewSkew, make-before-break), §9 revocation two-teeth.
+(Read 2026-06-25.)</li>
+<li>[<code>pki-and-certs.md</code>] (sibling) — CA hierarchy, cert
+profiles, revocation &lt; 1 s target, PQ material slot — referenced for
+the cert lifecycle this doc mints into.</li>
+<li>[<code>threat-model.md</code>] (sibling) — attacker classes
+(C-DEV/C-INS/C-NAT…), threats T-CLI-S-1 / T-CLI-I-1 / T-CP-S-2 /
+T-PKI-S-1 / T-PKI-E-1, privacy threats LP-I-1 / LP-N-1, residuals R-DEV
+/ R-RACE. (Read 2026-06-25.)</li>
+<li>[research-pki_pq_nat] — §1.1 WireGuard native identity (public key
+IS the identity, revocation trivial, no built-in PKI), §1.2/§1.3
+SPIFFE/SPIRE short-lived-mTLS two-identity split,
+generate-the-WG-private-key-on-device, revocation = stop-renew +
+remove-pubkey. Access date 2026-06-25.</li>
+<li>[04_P1] HelixVPN-Phase1-MVP.md §6 (two identity modes, enrollment
+flow, key-never-leaves, 24h cert, revoke &lt; 1 s), §11 DoD
+(authorized/denied acceptance). [04_ARCH] §4.1/§6/§7 (identity service,
+Mullvad parity anonymous account #, OIDC + anonymous device tokens).
+[SYNTHESIS] §1/§7 (roles, security/privacy invariants). — cited via the
+spine doc.</li>
+<li>Constitution §11.4.6 (no-guessing — UNVERIFIED marks; latency stated
+as target), §11.4.10 (credentials never logged),
+§11.4.27/§11.4.85/§11.4.107/§11.4.169/§1.1 (test-type coverage +
+self-validated analyzers), §11.4.76 (containers submodule), §11.4.99
+(latest-source verification for OIDC libs/flows before shipping).</li>
+</ul>
+</body>
+</html>

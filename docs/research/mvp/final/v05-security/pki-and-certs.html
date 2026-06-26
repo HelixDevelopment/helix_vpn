@@ -1,0 +1,1540 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>PKI &amp; Certificates — the tenant CA, short-lived mTLS, and sub-second revocation</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">PKI &amp; Certificates — the tenant CA, short-lived
+mTLS, and sub-second revocation</h1>
+</header>
+<h1 id="pki--certificates--the-tenant-ca-short-lived-mtls-and-sub-second-revocation">PKI
+&amp; Certificates — the tenant CA, short-lived mTLS, and sub-second
+revocation</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-06-25T12:00:00Z</p>
+<blockquote>
+<p>Master technical specification — Volume 5 (Security &amp; Privacy),
+nano-detail document <strong>pki-and-certs</strong>. Deepens the
+<strong>PKI slice</strong> of the security spine
+[<code>04-security-privacy-pki.md</code> §4] from a <em>security</em>
+lens, grounded in the cited research [<code>research-pki_pq_nat</code>]:
+the <strong>CA hierarchy</strong> (root → tenant issuing CA →
+short-lived device leaf), the <strong>certificate lifecycle</strong>
+(issue / renew / rotate / revoke) with a state diagram, the
+<strong>short-lived mTLS device certs</strong> (TTL, auto-renew before
+expiry), <strong>revocation</strong> (target sub-second propagation via
+the event/coordinator path — stated as a TARGET, never a measured
+result, §11.4.6), <strong>mTLS everywhere on the control plane</strong>,
+the <strong>post-quantum material slot</strong> (hybrid PSK-into-WG, see
+sibling [<code>post-quantum.md</code>] / spine §9), <strong>key
+storage</strong> (KMS/HSM with software fallback; device-side
+secure-element where available), and the concrete <strong>cert profiles
+/ fields / TTLs / rotation timers</strong>. SPEC ONLY — it
+<em>describes</em> the credential-lifecycle properties the build must
+have; it builds nothing. The <strong>control-plane mechanics</strong>
+(Go <code>PKI</code> interface, DDL/RLS, signer seam) live in
+[<code>v03-control-plane/svc-pki.md</code>]; the <strong>enrollment
+protocol</strong> in the sibling
+[<code>identity-and-enrollment.md</code>]; the <strong>threat
+justification</strong> in [<code>threat-model.md</code>]. Sources cited
+inline by id: <code>[research-pki_pq_nat §N]</code> (the cited
+PKI/PQ/NAT research — the primary evidence base for this doc),
+<code>[04_ARCH §N]</code>, <code>[04_P1 §N]</code>,
+<code>[SYNTHESIS §N]</code>, sibling specs by filename. Invariants
+<code>S1</code>–<code>S11</code> per
+[<code>04-security-privacy-pki.md</code> §0.1];
+<code>P1</code>–<code>P7</code> per
+[<code>v03-control-plane/svc-pki.md</code> §1.3]; threat ids
+<code>T-*</code> per [<code>threat-model.md</code>]. Unproven facts are
+<strong>UNVERIFIED</strong> per §11.4.6; any latency figure is a
+<strong>target</strong>, never a result.</p>
+</blockquote>
+<hr />
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#0-position-ownership--governing-invariants">0. Position,
+ownership &amp; governing invariants</a></li>
+<li><a href="#1-why-pki-is-built-around-wireguard-not-inside-it">1. Why
+PKI is built AROUND WireGuard, not inside it</a></li>
+<li><a href="#2-the-ca-hierarchy">2. The CA hierarchy</a></li>
+<li><a href="#3-certificate-profiles--fields-ttls-key-algorithms">3.
+Certificate profiles — fields, TTLs, key algorithms</a></li>
+<li><a href="#4-certificate-lifecycle--the-state-machine">4. Certificate
+lifecycle — the state machine</a></li>
+<li><a href="#5-short-lived-mtls-device-certs--auto-renew">5.
+Short-lived mTLS device certs &amp; auto-renew</a></li>
+<li><a href="#6-rotation--devices-cas-wg-keys-pq-psk">6. Rotation —
+devices, CAs, WG keys, PQ PSK</a></li>
+<li><a href="#7-revocation--the-sub-second-target">7. Revocation — the
+sub-second target</a></li>
+<li><a href="#8-mtls-everywhere-on-the-control-plane">8. mTLS everywhere
+on the control plane</a></li>
+<li><a href="#9-post-quantum-material-slot-hybrid-never-pq-only">9.
+Post-quantum material slot (hybrid, never PQ-only)</a></li>
+<li><a href="#10-key-storage--kmshsm-secure-element-software-fallback">10. Key
+storage — KMS/HSM, secure element, software fallback</a></li>
+<li><a href="#11-threat-mapping--testvalidation-1141169">11. Threat
+mapping &amp; test/validation (§11.4.169)</a></li>
+<li><a href="#12-phase-2-forward-seams">12. Phase-2 forward
+seams</a></li>
+<li><a href="#sources-verified">Sources verified</a></li>
+</ul>
+<hr />
+<h2 id="0-position-ownership--governing-invariants">0. Position,
+ownership &amp; governing invariants</h2>
+<p>The PKI is the credential-lifecycle authority that makes WireGuard&#39;s
+keys-only identity model safe to operate at scale: it adds the cert
+lifecycle, granular revocation, and rotation that WireGuard itself does
+not have [research-pki_pq_nat §1.1]. This document owns the
+<strong>security contract</strong> of that PKI; it cites, never
+re-defines, the Go wiring.</p>
+<h3 id="01-what-this-document-owns-vs-references">0.1 What this document
+owns vs. references</h3>
+<table>
+<thead>
+<tr>
+<th>Concern</th>
+<th>Owner</th>
+<th>Relationship here</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CA-hierarchy <strong>security model</strong> (isolation, blast
+radius, offline root)</td>
+<td><strong>this doc</strong></td>
+<td>authoritative</td>
+</tr>
+<tr>
+<td>Cert <strong>profiles</strong> (fields, TTLs, key usage) and their
+security rationale</td>
+<td><strong>this doc</strong></td>
+<td>authoritative</td>
+</tr>
+<tr>
+<td>Cert <strong>lifecycle</strong> security (issue/renew/rotate/revoke
+properties)</td>
+<td><strong>this doc</strong></td>
+<td>authoritative</td>
+</tr>
+<tr>
+<td>Revocation <strong>target</strong> + the two-teeth model</td>
+<td><strong>this doc</strong></td>
+<td>authoritative</td>
+</tr>
+<tr>
+<td>PQ material <strong>slot</strong> security (hybrid-never-PQ-only,
+what is/isn&#39;t stored)</td>
+<td><strong>this doc</strong></td>
+<td>authoritative</td>
+</tr>
+<tr>
+<td>Key-storage <strong>security</strong> (KMS/HSM, secure element,
+fallback)</td>
+<td><strong>this doc</strong></td>
+<td>authoritative</td>
+</tr>
+<tr>
+<td>Go <code>PKI</code> interface, DDL/RLS, <code>CASigner</code> seam,
+hot-path <code>AuthDevice</code></td>
+<td>[<code>v03-control-plane/svc-pki.md</code>]</td>
+<td>referenced</td>
+</tr>
+<tr>
+<td>Enrollment protocol (CSR PoP, key-never-leaves)</td>
+<td>[<code>identity-and-enrollment.md</code>]</td>
+<td>referenced</td>
+</tr>
+<tr>
+<td>PQ handshake mechanics (KEM exchange, PSK derivation)</td>
+<td>[<code>post-quantum.md</code>] / spine §9</td>
+<td>referenced</td>
+</tr>
+<tr>
+<td>Threat justification</td>
+<td>[<code>threat-model.md</code>]</td>
+<td>referenced</td>
+</tr>
+</tbody>
+</table>
+<h3 id="02-governing-invariants-every-clause-below-obeys-these">0.2
+Governing invariants (every clause below obeys these)</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Invariant</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>P1 / S2</strong></td>
+<td><strong>Device private keys never leave the device.</strong> The
+control plane receives/stores only the 32-byte WG <em>public</em>
+key.</td>
+<td>[research-pki_pq_nat §1.3], [<code>04-security-privacy-pki.md</code>
+§0.1]</td>
+</tr>
+<tr>
+<td><strong>P2 / S4</strong></td>
+<td><strong>Short-lived control-channel certs.</strong> Default
+device-cert TTL ≈ <strong>24 h</strong>; agent auto-renews ahead of
+expiry; revocation-latency <em>target</em> == the <strong>p99 &lt; 1
+s</strong> convergence SLO.</td>
+<td>[04_P1 §6.3], [<code>v03-control-plane/svc-pki.md</code> §10.2]</td>
+</tr>
+<tr>
+<td><strong>P3 / S11</strong></td>
+<td><strong>The tenant CA key is the one true secret.</strong> KMS/HSM
+or offline; it + Postgres are the only stateful things to protect. Never
+git-tracked, never logged (§11.4.10).</td>
+<td>[04_P1 §6.3], [04_ARCH §10]</td>
+</tr>
+<tr>
+<td><strong>P4 / S10</strong></td>
+<td><strong>Hybrid-never-PQ-only PQ.</strong> PQ is a <strong>PSK fed
+into WG</strong> (Mullvad/Rosenpass pattern), classical X25519 + ML-KEM;
+never a forked WG handshake, never PQ-only.</td>
+<td>[research-pki_pq_nat §2.1/§2.4]</td>
+</tr>
+<tr>
+<td><strong>P5</strong></td>
+<td><strong>Default-deny, fail-closed.</strong> A revoked or expired
+credential never authenticates; an unknown serial is rejected, not
+trusted.</td>
+<td>[<code>v03-control-plane/svc-pki.md</code> §1.3]</td>
+</tr>
+<tr>
+<td><strong>P6</strong></td>
+<td><strong>Every credential mutation emits a bus event</strong> so
+<code>coordinator</code>/<code>audit</code> react without polling.</td>
+<td>[<code>v03-control-plane/svc-pki.md</code> §1.3]</td>
+</tr>
+<tr>
+<td><strong>P7</strong></td>
+<td><strong>Tenant-isolated at the DB</strong> — every PKI table
+RLS-scoped under <code>FORCE ROW LEVEL SECURITY</code>.</td>
+<td>[<code>v03-control-plane/svc-pki.md</code> §1.3]</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="1-why-pki-is-built-around-wireguard-not-inside-it">1. Why PKI is
+built AROUND WireGuard, not inside it</h2>
+<p>WireGuard has <strong>no native PKI</strong> [research-pki_pq_nat
+§1.1]: one Curve25519 keypair per device, the <strong>public key IS the
+device identity</strong>, access = adding the peer&#39;s public key to the
+peer set, and <strong>revocation is structurally trivial</strong> —
+remove the public key and the device is instantly cut off; there is
+<em>no</em> CA, cert expiry, CRL, OCSP, or enrollment protocol in
+WireGuard itself. So the cert/PKI lifecycle, granular revocation, and
+rotation are built <strong>around</strong> WireGuard, not inside it.</p>
+<p>The chosen pattern is the SPIFFE/SPIRE-style <strong>two-identity
+split</strong> [research-pki_pq_nat §1.2]:</p>
+<ol type="1">
+<li>a <strong>long-lived device-attestation cert</strong> (CA-signed
+leaf proving &quot;I am a genuine enrolled device of tenant T&quot;, optionally
+TPM/Secure-Enclave-bound), and</li>
+<li>a <strong>short-lived mTLS credential</strong> (the per-device
+control-channel cert, &quot;I am authorised to call the control API right
+now&quot;), auto-rotated by the agent before expiry.</li>
+</ol>
+<p>Revocation therefore has <strong>two cooperating teeth</strong>
+(belt-and-suspenders, the dominant 2025 model) [research-pki_pq_nat
+§1.2/§1.3]:</p>
+<ul>
+<li><strong>(a) stop renewing</strong> the short-lived mTLS cert → it
+self-expires within its TTL, <strong>and</strong></li>
+<li><strong>(b) remove the WG public key</strong> from every peer set →
+instant data-path cutoff.</li>
+</ul>
+<blockquote>
+<p><strong>Two key spaces, one device.</strong> The CA-signed cert
+governs the <strong>control channel</strong>; the WG public key governs
+the <strong>data channel</strong>. They are <strong>independent</strong>
+(P1/S2, [<code>identity-and-enrollment.md</code> §2.2]) — a cert is
+<strong>not</strong> a WG key, and the CA never issues WG keys; WG keys
+are <em>registered</em> public keys, not <em>issued</em> certs. This
+separation is why a cert compromise does not yield tunnel decryption and
+vice versa.</p>
+</blockquote>
+<hr />
+<h2 id="2-the-ca-hierarchy">2. The CA hierarchy</h2>
+<p>Each tenant gets its <strong>own</strong> isolated certificate
+hierarchy — there is no shared global root. Multi-tenant isolation
+reaches into the <strong>trust anchor</strong>, not just the row filter
+([<code>v03-control-plane/svc-pki.md</code> §2.1]).</p>
+<pre class="mermaid"><code>graph TD
+    subgraph TenantT[&quot;Tenant T — isolated trust domain (no shared global root)&quot;]
+        ROOT[&quot;Tenant Root CA&lt;br/&gt;Ed25519, ~10y, OFFLINE / KMS / HSM (P3/S11)&lt;br/&gt;CA:TRUE pathlen:1, keyUsage keyCertSign,cRLSign&quot;]
+        ISS[&quot;Issuing CA (intermediate)&lt;br/&gt;Ed25519, ~1y, ONLINE signer (helixd/pki)&lt;br/&gt;CA:TRUE pathlen:0 — signs every device leaf&quot;]
+        DEVMTLS[&quot;Device control-channel leaf&lt;br/&gt;Ed25519, ~24h (P2/S4)&lt;br/&gt;CA:FALSE, EKU clientAuth(+serverAuth)&lt;br/&gt;SAN URI spiffe://T/device/&amp;lt;id&amp;gt;&quot;]
+        DEVATT[&quot;Device attestation leaf (Phase-2)&lt;br/&gt;Ed25519, ~90d&lt;br/&gt;&#39;genuine enrolled device of T&#39;&lt;br/&gt;TPM / Secure-Enclave-bound when present&quot;]
+    end
+    ROOT --&gt;|signs ONCE per tenant, then sealed| ISS
+    ISS --&gt;|signs every ~24h| DEVMTLS
+    ISS --&gt;|signs at enroll| DEVATT
+    DEVMTLS -.-&gt;|presented on| Channel[&quot;Connect mTLS control channel (TB-2)&quot;]</code></pre>
+<h3 id="21-the-three-tiers-and-their-security-properties">2.1 The three
+tiers and their security properties</h3>
+<table>
+<thead>
+<tr>
+<th>Tier</th>
+<th>Alg / TTL</th>
+<th>Where the key lives</th>
+<th>Security property</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Tenant Root CA</strong></td>
+<td>Ed25519 / ~10 y</td>
+<td><strong>offline or KMS/HSM</strong> (P3) — used
+<strong>once</strong> per tenant to sign the issuing CA, then sealed;
+private key never touches the request path</td>
+<td>theft mints arbitrary trusted identities (AS-CA, the &quot;one true
+secret&quot;) — so it is kept off the hot path entirely</td>
+</tr>
+<tr>
+<td><strong>Issuing CA (intermediate)</strong></td>
+<td>Ed25519 / ~1 y</td>
+<td><strong>online</strong> signer (the key <code>pki</code> actually
+uses); KMS data-key-sealed or KMS-resident</td>
+<td>rotating/compromising it does <strong>not</strong> require
+re-establishing the root — smaller blast radius, cleaner revocation</td>
+</tr>
+<tr>
+<td><strong>Device control-channel leaf</strong></td>
+<td>Ed25519 / ~24 h</td>
+<td>device OS keystore (private), CA-signed (public)</td>
+<td>short TTL caps blast radius (S4); SPIFFE SAN binds it to a
+<code>device_id</code> (T-COORD-T-1)</td>
+</tr>
+<tr>
+<td><strong>Device attestation leaf</strong></td>
+<td>Ed25519 / ~90 d</td>
+<td>device keystore, TPM/SE-bound when present</td>
+<td><strong>Phase-2</strong> — Phase-1 schema-provisions it but issues
+the mTLS leaf only; the device row + consumed enroll token are the
+Phase-1 attestation surrogate (stated honestly, §11.4.6)</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>CA topology decision (carried from
+[<code>04-security-privacy-pki.md</code> §4.2]).</strong> <strong>MVP
+default = single online issuing CA under an offline/KMS root</strong>
+(option B in the spine: two-tier with the root offline and a short-lived
+online intermediate). The <code>ca_chain</code> delivered to the device
+at enroll has length ≥ 1, so clients <strong>pin a chain from day
+one</strong>; promoting topology (e.g. adding a second regional
+intermediate) is <em>additive</em> — the chain grows, honouring §11.4.6
+(no silent reshape).</p>
+</blockquote>
+<h3 id="22-chain-delivery--verification-mutual-pinning">2.2 Chain
+delivery &amp; verification (mutual pinning)</h3>
+<ul>
+<li>The <code>EnrollResponse</code> ships the device leaf <strong>plus
+the issuing-CA cert</strong> so the agent builds and pins the chain root
+→ issuing → leaf.</li>
+<li>The agent <strong>pins the tenant root CA public key</strong>
+(delivered once at enroll) and verifies every future leaf/issuing cert
+against it — so a rogue control plane cannot substitute a different root
+(closes a control-plane-MITM substitution; T-COORD-T-1 adjacent).</li>
+<li>The control plane (Connect server) verifies the
+<strong>client</strong> leaf against the tenant&#39;s issuing CA on
+<strong>every</strong> handshake (§8) — the auth is mutual.</li>
+</ul>
+<h3 id="23-key-algorithm-choice--ed25519-with-an-honest-escape-hatch">2.3
+Key-algorithm choice — Ed25519, with an honest escape hatch</h3>
+<p>Ed25519 for all CA + leaf signing: small keys, fast sign/verify, no
+parameter pitfalls, broad TLS 1.3 support. <strong>UNVERIFIED</strong>
+whether every target platform&#39;s mTLS stack (HarmonyOS Network Kit,
+Aurora Qt TLS) accepts Ed25519 client certs; if a platform rejects them,
+that tenant&#39;s issuing CA MAY be provisioned as
+<strong>ECDSA-P256</strong> instead — the <code>ca_keys.key_alg</code>
+column carries the choice so the issuer is algorithm-agnostic
+([<code>v03-control-plane/svc-pki.md</code> §2.1]). This is a per-tenant
+provisioning decision, <strong>not</strong> a code branch on the hot
+path.</p>
+<hr />
+<h2 id="3-certificate-profiles--fields-ttls-key-algorithms">3.
+Certificate profiles — fields, TTLs, key algorithms</h2>
+<p>The cert profile is <strong>enforced in the signer, not taken from a
+request field</strong> — a requester cannot ask for a long-lived or
+wildcard cert (closes T-PKI-T-1). Concrete X.509 fields, TLS 1.3
+mutual:</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Device control-channel leaf</th>
+<th>Tenant Root CA</th>
+<th>Issuing CA (intermediate)</th>
+<th>Device attestation leaf (Ph2)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Key alg</strong></td>
+<td>Ed25519 (ECDSA-P256 fallback, §2.3)</td>
+<td>Ed25519</td>
+<td>Ed25519</td>
+<td>Ed25519</td>
+</tr>
+<tr>
+<td><strong>Validity</strong></td>
+<td><strong>≤ 24 h</strong> (P2)</td>
+<td>~10 y (offline)</td>
+<td>~1 y</td>
+<td>~90 d</td>
+</tr>
+<tr>
+<td><strong><code>subject</code></strong></td>
+<td><code>CN=&lt;device_id&gt;, O=&lt;tenant_id&gt;</code></td>
+<td><code>CN=HelixVPN Tenant CA &lt;tenant_id&gt;</code></td>
+<td><code>CN=HelixVPN Issuing CA &lt;tenant_id&gt;</code></td>
+<td><code>CN=&lt;device_id&gt;</code></td>
+</tr>
+<tr>
+<td><strong><code>subjectAltName</code></strong></td>
+<td>URI
+<code>spiffe://&lt;tenant_id&gt;/device/&lt;device_id&gt;</code></td>
+<td>—</td>
+<td>—</td>
+<td>URI
+<code>spiffe://&lt;tenant_id&gt;/device/&lt;device_id&gt;</code></td>
+</tr>
+<tr>
+<td><strong><code>keyUsage</code></strong></td>
+<td><code>digitalSignature</code></td>
+<td><code>keyCertSign, cRLSign</code></td>
+<td><code>keyCertSign, cRLSign</code></td>
+<td><code>digitalSignature</code></td>
+</tr>
+<tr>
+<td><strong><code>extKeyUsage</code></strong></td>
+<td><code>clientAuth</code> (+<code>serverAuth</code> for the
+gateway-facing edge cert)</td>
+<td>—</td>
+<td>—</td>
+<td><code>clientAuth</code></td>
+</tr>
+<tr>
+<td><strong><code>basicConstraints</code></strong></td>
+<td><code>CA:FALSE</code></td>
+<td><code>CA:TRUE, pathlen:1</code></td>
+<td><code>CA:TRUE, pathlen:0</code></td>
+<td><code>CA:FALSE</code></td>
+</tr>
+<tr>
+<td><strong><code>serialNumber</code></strong></td>
+<td>20 random bytes (the mTLS lookup key + revocation-set key)</td>
+<td>random</td>
+<td>random</td>
+<td>20 random bytes</td>
+</tr>
+<tr>
+<td><strong>custom ext</strong></td>
+<td><code>helix.deviceKind = client | connector</code></td>
+<td>—</td>
+<td>—</td>
+<td>attestation evidence ref</td>
+</tr>
+</tbody>
+</table>
+<p>Key security choices: the <strong>≤ 24 h leaf validity is the primary
+revocation mechanism</strong> — even if active sub-second revocation
+(§7) somehow misses, the cert <strong>expires within a day</strong> (S4
+defence-in-depth). The <strong>SPIFFE SAN</strong> is a <em>structured
+URI bound to the device at issuance</em> [research-pki_pq_nat §1.2] (not
+an IP or hostname), so <code>AuthDevice</code> can assert the leaf&#39;s SAN
+matches the resolved device — a cert presented for the wrong device is
+rejected (<code>ErrSpiffeMismatch</code>, a cert-swap attack signal).
+mTLS is <strong>TLS 1.3 only — no downgrade</strong>
+([<code>04-security-privacy-pki.md</code> §4.3]).</p>
+<hr />
+<h2 id="4-certificate-lifecycle--the-state-machine">4. Certificate
+lifecycle — the state machine</h2>
+<pre class="mermaid"><code>stateDiagram-v2
+    [*] --&gt; Active: IssueDeviceCert (CSR PoP verified, device_certs row inserted)
+    Active --&gt; Renewed: RenewDeviceCert (new leaf Active; old flips Renewed)
+    Active --&gt; Expired: now ≥ not_after, never renewed
+    Active --&gt; Revoked: Revoke() / device.revoked event
+    Renewing --&gt; Revoked: device.revoked DURING renewal
+    Renewed --&gt; [*]: GC after audit window
+    Expired --&gt; [*]: control channel rejected; device must re-enroll
+    Revoked --&gt; [*]: kept as revocation evidence until device delete
+    note right of Active
+      Exactly ONE Active mtls cert per device
+      (one_active_mtls_per_device unique idx).
+      AuthDevice accepts Active, OR Renewed until its
+      own not_after (make-before-break overlap, §5).
+    end note
+    note right of Revoked
+      Terminal. Never returns to Active. AuthDevice
+      rejects on Revoked|Expired (fail-closed, P5).
+      Serial blacklisted in the revoke cache (§7).
+    end note</code></pre>
+<p>The lifecycle is <strong>fail-closed</strong> (P5): the only
+non-<code>Active</code> status <code>AuthDevice</code> tolerates is
+<code>Renewed</code>, and only until that leaf&#39;s <code>not_after</code>
+(the renew overlap); <code>Revoked</code> and <code>Expired</code> are
+hard rejections; an <strong>unknown serial is rejected, not
+trusted</strong>. The <code>Revoked</code> state is <em>kept</em> (not
+GC&#39;d immediately) as revocation evidence.</p>
+<hr />
+<h2 id="5-short-lived-mtls-device-certs--auto-renew">5. Short-lived mTLS
+device certs &amp; auto-renew</h2>
+<h3 id="51-why-short-lived-the-spiffe-2025-model">5.1 Why short-lived
+(the SPIFFE 2025 model)</h3>
+<p>2025 best practice keeps SVID/mTLS TTL <strong>≤ 60 min for hot
+paths</strong>, auto-rotated by the agent before expiry, so revocation
+becomes largely &quot;stop renewing&quot; — the credential self-expires within the
+TTL window, <strong>avoiding CRL/OCSP distribution latency</strong>
+[research-pki_pq_nat §1.2]. HelixVPN&#39;s ≈ 24 h device-cert TTL [04_P1
+§6.3] is the deliberate balance for a fleet of mobile devices that go
+offline: short enough to be the defence-in-depth revocation floor, long
+enough that a device asleep overnight is not forced to re-enroll. (A
+tenant MAY tighten the TTL; the issuer clamps it to
+<code>[renewSkew, 7d]</code>.)</p>
+<h3 id="52-auto-renew--agent-driven-over-the-existing-authenticated-channel">5.2
+Auto-renew — agent-driven, over the existing authenticated channel</h3>
+<p>The <strong>agent</strong> drives renewal over the <strong>existing
+authenticated channel</strong> [04_P1 §6.3, research-pki_pq_nat §1.2].
+It renews at <code>T − renewSkew</code> where
+<code>renewSkew = max(1h, 0.2 × TTL)</code> → for a 24 h TTL the agent
+renews <strong>~4.8 h before expiry</strong>, giving generous margin for
+a flapping link. The renew RPC is authenticated by the <em>current
+still-valid</em> leaf, so <strong>renewal never needs the enroll token
+again</strong> — no privilege escalation path opens at renew.</p>
+<pre class="mermaid"><code>sequenceDiagram
+    autonumber
+    participant Dev as Agent (helix-core)
+    participant API as api / coordinator
+    participant PKI as pki
+    participant Store as Postgres (RLS)
+    participant Bus as events bus
+    Note over Dev: T − renewSkew reached (≈4.8h before a 24h expiry)
+    Dev-&gt;&gt;API: RenewCert{device_id, new_leaf_pub}  (mTLS w/ CURRENT leaf; only PUBLIC key, P1)
+    API-&gt;&gt;PKI: AuthDevice(current leaf) → ok, not revoked/expired (fail-closed, P5)
+    API-&gt;&gt;PKI: RenewDeviceCert{prior_cert_id, ttl=24h}
+    PKI-&gt;&gt;Store: INSERT new leaf Active + flip prior → Renewed + audit (ONE tx)
+    PKI-&gt;&gt;Bus: publish cert.renewed
+    PKI--&gt;&gt;API: Cert{new leaf, issuing chain, not_after}
+    API--&gt;&gt;Dev: RenewResponse{device_cert, issuing_ca, not_after}
+    Dev-&gt;&gt;API: reconnect WatchNetworkMap with NEW leaf (old still valid until ITS not_after)</code></pre>
+<p>Properties: the new leaf is inserted <code>Active</code> and the
+prior flips <code>Renewed</code> (so the
+<code>one_active_mtls_per_device</code> unique index holds);
+<code>renewed_from</code> chains predecessor → successor; the <strong>WG
+key is unchanged</strong> (renewal ≠ WG rotation — those are
+independent, §6.2); both leaves are valid during the overlap so the open
+<code>WatchNetworkMap</code> stream is never mid-stream-cut
+([<code>v03-control-plane/svc-pki.md</code> §6]).</p>
+<h3 id="53-server-side-expiry-sweeper--safety-net-not-the-primary-path">5.3
+Server-side expiry sweeper — safety net, not the primary path</h3>
+<p>A leader-elected background sweeper runs every 60 s and marks any
+<code>Active</code> leaf whose <code>not_after</code> has passed as
+<code>Expired</code>:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">UPDATE</span> device_certs <span class="kw">SET</span> status<span class="op">=</span><span class="st">&#39;expired&#39;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a> <span class="kw">WHERE</span> status<span class="op">=</span><span class="st">&#39;active&#39;</span> <span class="kw">AND</span> not_after <span class="op">&lt;</span> now();</span></code></pre></div>
+<p>The sweeper is a <strong>safety net</strong> — the agent&#39;s proactive
+renewal (§5.2) is the primary path; the sweeper only catches agents that
+went away. An expired-but-still-streaming device is force-reconnected
+(its <code>AuthDevice</code> now fails → the stream closes at the next
+keepalive boundary).</p>
+<hr />
+<h2 id="6-rotation--devices-cas-wg-keys-pq-psk">6. Rotation — devices,
+CAs, WG keys, PQ PSK</h2>
+<p>Three independent key planes rotate on <strong>independent</strong>
+schedules so a rotation in one does not disturb the others:</p>
+<h3 id="61-device-leaf-cert--auto-24-h-cadence">6.1 Device leaf cert —
+auto, ~24 h cadence</h3>
+<p>Per §5.2: agent-driven, make-before-break, no token, no human. A
+missed renewal degrades to re-enrollment, never a silent failure.</p>
+<h3 id="62-device-wg-static-key--overlap-then-retire">6.2 Device WG
+static key — overlap-then-retire</h3>
+<p>WG-key rotation is <strong>independent of cert renewal</strong> (a
+device can keep its 24 h-cert cadence while rotating its WG key on a
+slower schedule or on demand). Default schedule 90 d
+(tenant-configurable) + immediately on relevant compromise. The rotating
+device generates a new keypair <strong>locally</strong> (P1 holds — the
+private never leaves) and registers the new <strong>public</strong> key;
+the coordinator swaps the edge peer key.</p>
+<blockquote>
+<p><strong>Overlap window — make-before-break.</strong> Because the MVP
+data path is hub-and-spoke through the gateway, the gateway holds
+<strong>both</strong> old+new WG peer keys for a short window (default
+<strong>30 s</strong>) so in-flight handshakes complete, then drops the
+old — preventing a momentary blackout. The 30 s value is
+<strong>UNVERIFIED</strong> as a tuned number; it MUST be validated by a
+rotation soak (zero dropped sessions across rotation) before being
+treated as fact ([<code>v03-control-plane/svc-pki.md</code> §7.2]).</p>
+</blockquote>
+<h3 id="63-issuing-ca-rotation--trusted-overlap">6.3 Issuing-CA rotation
+— trusted overlap</h3>
+<p>Scheduled ~annually or on suspected compromise: the <strong>offline
+root signs a new issuing CA</strong>; both old and new issuing certs are
+trusted during an overlap window (= the max device-cert TTL, 24 h) so
+in-flight 24 h leaves remain valid; after the window the old issuing CA
+is retired and new leaves are signed by the new issuing CA. Tracked as
+<code>ca_keys.status ∈ {active, retiring, retired}</code>. The blast
+radius is bounded to the intermediate — the root is untouched.</p>
+<h3 id="64-root-ca-rotation--rare-operator-gated">6.4 Root-CA rotation —
+rare, operator-gated</h3>
+<p>Multi-year, cross-sign the new root with the old during a long
+overlap. <strong>Operator-gated</strong> (§11.4.66 / §11.4.101 —
+irreversible, high blast radius, cannot be auto-decided): Phase-1 models
+the schema + the manual <code>helixvpnctl ca rotate-root</code> path;
+automation is Phase 2.</p>
+<h3 id="65-gateway-wg-static-key--pq-psk">6.5 Gateway WG static key
+&amp; PQ PSK</h3>
+<p>The <strong>gateway</strong> WG key rotates independently of devices
+(<code>helixvpnctl gateway keys</code>), pushed to clients as a
+<code>NetworkMap</code> delta. The <strong>PQ PSK</strong> (§9) rotates
+on every WG rekey interval — ephemeral, never persisted.</p>
+<table>
+<thead>
+<tr>
+<th>Rotation</th>
+<th>Default cadence</th>
+<th>Trigger</th>
+<th>Blast radius</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Device leaf cert</td>
+<td>~24 h (renewSkew ~4.8 h early)</td>
+<td>timer / on-demand</td>
+<td>one device, one channel</td>
+</tr>
+<tr>
+<td>Device WG static key</td>
+<td>~90 d</td>
+<td>timer / compromise</td>
+<td>one device, one tunnel (30 s overlap)</td>
+</tr>
+<tr>
+<td>Issuing CA</td>
+<td>~1 y</td>
+<td>timer / compromise</td>
+<td>tenant intermediate (24 h overlap)</td>
+</tr>
+<tr>
+<td>Root CA</td>
+<td>multi-year</td>
+<td>compromise (operator-gated)</td>
+<td>tenant trust anchor (long cross-sign)</td>
+</tr>
+<tr>
+<td>Gateway WG key</td>
+<td>operator-set</td>
+<td>operator</td>
+<td>all clients (map delta)</td>
+</tr>
+<tr>
+<td>PQ PSK</td>
+<td>every WG rekey (~120 s)</td>
+<td>rekey</td>
+<td>one session (ephemeral)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="7-revocation--the-sub-second-target">7. Revocation — the
+sub-second target</h2>
+<p>Revocation is the security analogue of the convergence SLO: the same
+push-don&#39;t-poll machinery that propagates a route change propagates a
+revocation. There is <strong>no CRL/OCSP on the data path</strong> —
+short-lived certs + active push obviate online revocation checking
+[research-pki_pq_nat §1.2].</p>
+<h3 id="71-the-two-teeth-p5-fail-closed">7.1 The two teeth (P5,
+fail-closed)</h3>
+<div class="sourceCode" id="cb5"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/pki: the revocation contract ([`v03-control-plane/svc-pki.md` §9.2])</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>s <span class="op">*</span>Service<span class="op">)</span> Revoke<span class="op">(</span>ctx<span class="op">,</span> deviceID<span class="op">,</span> reason<span class="op">)</span> <span class="dt">error</span> <span class="op">{</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ONE tenant tx:</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">//   tooth (a): mark the LIVE mtls cert revoked  → self-expiry safety net (≤24h ceiling)</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">//   tooth (b): retire the WG public key         → data path cut even before TTL</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">//   + audit row</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    <span class="co">// then: revokeCache.Add(serial)                 → instant hot-path reject (no DB round-trip)</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">//       bus.Publish(&quot;device.revoked&quot;, {device_id, serial, reason})  → coordinator fan-out</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<pre class="mermaid"><code>sequenceDiagram
+    autonumber
+    actor Admin as Console (admin)
+    participant API as api (Gin)
+    participant PKI as pki
+    participant Store as Postgres
+    participant Cache as in-mem revoke cache
+    participant Bus as Redis Streams
+    participant Coord as coordinator
+    participant Edge as Rust edge (kernel WG)
+    Admin-&gt;&gt;API: POST /v1/devices/{id}/revoke
+    API-&gt;&gt;PKI: Revoke(device, reason)
+    PKI-&gt;&gt;Store: revoke cert + retire WG key + audit (1 tx, atomic, P7)
+    PKI-&gt;&gt;Cache: add serial (hot-path reject instantly — no DB hit, §8.2)
+    PKI-&gt;&gt;Bus: XADD device.revoked
+    Bus--&gt;&gt;Coord: XReadGroup delivers
+    Coord-&gt;&gt;Coord: remove node; compute minimal affected set (need-to-know, S3)
+    loop each affected open WatchNetworkMap stream
+        Coord-&gt;&gt;Edge: stream.Send(MapDelta remove_peer_ids=[device])
+    end
+    Coord-&gt;&gt;Edge: force-close the revoked device&#39;s OWN stream (serial now in revoke cache)
+    Edge-&gt;&gt;Edge: remove kernel WG peer → data path cut, ZERO restarts
+    Note over Admin,Edge: event → enforced TARGET p99 &lt; 1 s (§7.3, a target — not yet a measured result)</code></pre>
+<p>The <strong>fast revocation cache</strong> (in-memory
+<code>map[serial]struct{}</code> hydrated from
+<code>device_certs WHERE status=&#39;revoked&#39;</code> on boot and updated by
+the <code>device.revoked</code> event) lets <code>AuthDevice</code>
+reject a revoked serial <strong>without a DB round-trip</strong> on the
+hot path — the data structure that makes the sub-second target
+achievable on open streams.</p>
+<h3 id="72-revoke-reason-closed-set-no-free-text-in-the-audit-trail">7.2
+Revoke-reason closed set (no free-text in the audit trail)</h3>
+<p><code>device_certs.revoked_reason ∈ { manual | compromise | superseded | deprovision }</code>
+— the <code>RevokeReason</code> enum stringified; any other value is
+rejected at the DB CHECK and the API validator, so no free-text reasons
+leak into the audit trail (keeps §11.4.6 no-guessing).</p>
+<h3 id="73-the-latency-budget-is-a-target-not-a-result-1146">7.3 The
+latency budget is a TARGET, not a result (§11.4.6)</h3>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th><strong>Target</strong></th>
+<th>How it will be measured</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>device revoke → edge WG-peer removed</td>
+<td><strong>p99 &lt; 1 s</strong></td>
+<td><code>helix_pki_revoke_seconds</code> histogram: revoke-call → edge
+confirms peer gone</td>
+</tr>
+<tr>
+<td>cert issue (enroll path)</td>
+<td>&lt; 150 ms</td>
+<td><code>helix_pki_issue_seconds</code></td>
+</tr>
+<tr>
+<td>cert renew round-trip</td>
+<td>&lt; 150 ms</td>
+<td><code>helix_pki_renew_seconds</code></td>
+</tr>
+<tr>
+<td><code>AuthDevice</code> hot path (cache hit)</td>
+<td>&lt; 1 ms</td>
+<td><code>helix_pki_authdevice_seconds</code></td>
+</tr>
+<tr>
+<td>WG-key rotation → no dropped session</td>
+<td>0 drops across the 30 s overlap</td>
+<td>rotation soak</td>
+</tr>
+<tr>
+<td>CA issuing-rotation overlap</td>
+<td>no leaf rejected during the 24 h window</td>
+<td>overlap soak</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>Every figure above is a <strong>design target / acceptance
+number</strong>, <strong>UNVERIFIED</strong> until the §11 soak captures
+the histogram on real hardware. The sub-second <em>race window</em> is
+honest, not zero — residual <strong>R-RACE</strong>
+([<code>threat-model.md</code> §10]); the floor is fail-static (a stale
+grant never fails <em>open</em>) and the ≤ 24 h cert expiry is the hard
+ceiling even if a push is missed.</p>
+</blockquote>
+<hr />
+<h2 id="8-mtls-everywhere-on-the-control-plane">8. mTLS everywhere on
+the control plane</h2>
+<p>Every agent RPC — <code>WatchNetworkMap</code> /
+<code>AdvertisePrefixes</code> / <code>ReportStatus</code> /
+<code>RenewCert</code> / <code>RotateWGKey</code> — is authenticated by
+the presented mTLS leaf (TLS 1.3 mutual). <code>Enroll</code> is the
+<strong>only</strong> unauthenticated agent RPC, and it validates a
+single-use hashed enroll token ([<code>identity-and-enrollment.md</code>
+§6]). REST/Console surfaces use OIDC/RBAC; the two channels share
+nothing (S4).</p>
+<h3 id="81-hot-path-device-authentication-authdevice-fail-closed">8.1
+Hot-path device authentication (<code>AuthDevice</code>,
+fail-closed)</h3>
+<div class="sourceCode" id="cb7"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">// the hot-path auth ([`v03-control-plane/svc-pki.md` §8.2]) — every check fails CLOSED (P5)</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>s <span class="op">*</span>Service<span class="op">)</span> AuthDevice<span class="op">(</span>ctx<span class="op">,</span> leaf <span class="op">*</span>x509<span class="op">.</span>Certificate<span class="op">)</span> <span class="op">(</span>AuthedDevice<span class="op">,</span> <span class="dt">error</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 1. chain: verify leaf against the tenant issuing CA (root pinned client-side, §2.2)</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> err <span class="op">:=</span> s<span class="op">.</span>verifyChain<span class="op">(</span>ctx<span class="op">,</span> leaf<span class="op">);</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span> <span class="cf">return</span> _<span class="op">,</span> ErrCertChainInvalid <span class="op">}</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 2. resolve serial → LIVE cert row (accepts Active OR Renewed-while-now&lt;not_after)</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    row<span class="op">,</span> err <span class="op">:=</span> s<span class="op">.</span>lookupBySerial<span class="op">(</span>ctx<span class="op">,</span> serialHex<span class="op">(</span>leaf<span class="op">.</span>SerialNumber<span class="op">))</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span>                          <span class="op">{</span> <span class="cf">return</span> _<span class="op">,</span> ErrCertUnknownSerial <span class="op">}</span> <span class="co">// unknown ⇒ REJECT</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> row<span class="op">.</span>Status <span class="op">==</span> <span class="st">&quot;revoked&quot;</span>             <span class="op">{</span> <span class="cf">return</span> _<span class="op">,</span> ErrCertRevoked <span class="op">}</span>        <span class="co">// belt + suspenders</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> time<span class="op">.</span>Now<span class="op">().</span>After<span class="op">(</span>row<span class="op">.</span>NotAfter<span class="op">)</span>      <span class="op">{</span> <span class="cf">return</span> _<span class="op">,</span> ErrCertExpired <span class="op">}</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 3. SPIFFE SAN in the leaf must match the resolved device (binding, not just serial)</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> leaf<span class="op">.</span>URIs<span class="op">[</span><span class="dv">0</span><span class="op">].</span>String<span class="op">()</span> <span class="op">!=</span> row<span class="op">.</span>SpiffeUri <span class="op">{</span> <span class="cf">return</span> _<span class="op">,</span> ErrSpiffeMismatch <span class="op">}</span>  <span class="co">// cert-swap signal</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> AuthedDevice<span class="op">{</span>DeviceID<span class="op">:</span> row<span class="op">.</span>DeviceID<span class="op">,</span> TenantID<span class="op">:</span> row<span class="op">.</span>TenantID<span class="op">,</span> CertID<span class="op">:</span> row<span class="op">.</span>ID<span class="op">},</span> <span class="ot">nil</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>The revoke-cache check makes step 2&#39;s revoked-serial rejection a
+<strong>memory lookup, not a DB hit</strong> — the property that lets
+revocation enforce on <strong>open</strong> streams within the
+sub-second target.</p>
+<h3 id="82-pki-rpcrest-surface--authz">8.2 PKI RPC/REST surface &amp;
+authz</h3>
+<table>
+<thead>
+<tr>
+<th>Route / RPC</th>
+<th>Auth</th>
+<th>Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Enroll</code> (Connect)</td>
+<td>enroll token (only unauth RPC)</td>
+<td>issue first leaf + register WG key (one tx)</td>
+</tr>
+<tr>
+<td><code>RenewCert</code> (Connect)</td>
+<td>current mTLS leaf</td>
+<td>re-issue ~24 h leaf over the existing channel</td>
+</tr>
+<tr>
+<td><code>RotateWGKey</code> (Connect)</td>
+<td>current mTLS leaf</td>
+<td>overlap-then-retire WG key swap</td>
+</tr>
+<tr>
+<td><code>POST /v1/devices/{id}/revoke</code></td>
+<td>RBAC admin</td>
+<td><code>Revoke()</code> → <code>device.revoked</code> (§7)</td>
+</tr>
+<tr>
+<td><code>POST /v1/ca/rotate-issuing</code></td>
+<td>RBAC admin</td>
+<td><code>RotateIssuingCA()</code> (24 h overlap)</td>
+</tr>
+<tr>
+<td><code>POST /v1/ca/rotate-root</code></td>
+<td>RBAC admin, <strong>operator-gated</strong></td>
+<td>manual root rotation (§6.4)</td>
+</tr>
+<tr>
+<td><code>POST /v1/tenants/{id}/pq</code></td>
+<td>RBAC admin</td>
+<td>enable/disable the PQ suite (§9)</td>
+</tr>
+</tbody>
+</table>
+<p>RBAC gates the route; RLS is the database <strong>floor</strong> even
+if RBAC is misconfigured (defense in depth).
+<code>RenewCert</code>/<code>RotateWGKey</code> carry <strong>only
+public</strong> key bytes (P1).</p>
+<hr />
+<h2 id="9-post-quantum-material-slot-hybrid-never-pq-only">9.
+Post-quantum material slot (hybrid, never PQ-only)</h2>
+<p>WireGuard&#39;s Curve25519 handshake is vulnerable to
+<strong>harvest-now-decrypt-later (HNDL)</strong>: an adversary records
+ciphertext today and decrypts it once quantum computers mature
+[research-pki_pq_nat §2.1]. HelixVPN closes this <strong>the way
+Mullvad/Rosenpass do — without forking WireGuard crypto</strong> — by
+deriving a <strong>pre-shared key (PSK)</strong> from a post-quantum KEM
+and mixing it into the WG handshake. The PKI&#39;s role here is the
+<strong>material slot + coordination metadata</strong>; the handshake
+mechanics live in the sibling [<code>post-quantum.md</code>] / spine
+§9.</p>
+<h3 id="91-hybrid-never-pq-only-p4--s10">9.1 Hybrid, never PQ-only (P4 /
+S10)</h3>
+<p>WireGuard already supports an optional symmetric PSK mixed into the
+Noise IK. If that PSK is established via a <strong>post-quantum
+KEM</strong>, the session gains PQ resistance <strong>even though the
+core handshake stays classical Curve25519</strong> — defence-in-depth:
+an attacker must break <strong>both</strong> the classical ECDH
+<strong>and</strong> the PQ KEM [research-pki_pq_nat §2.1]. This is why
+<strong>hybrid, never PQ-only</strong>: if the (younger,
+less-battle-tested) PQ KEM has a flaw, classical WG still protects; if
+quantum breaks classical ECDH, the PQ PSK still protects. WireGuard&#39;s
+own crypto is unchanged, so the result is &quot;cryptographically no less
+secure than WireGuard on its own&quot; plus PQ protection
+[research-pki_pq_nat §2.1].</p>
+<h3 id="92-what-the-control-plane-stores--metadata-only-never-the-psk">9.2
+What the control plane stores — metadata only, never the PSK</h3>
+<p>PQ is a <strong>PSK fed into WG</strong> established
+<strong>peer-to-peer / device↔︎gateway, ephemerally</strong>; the control
+plane stores only the <strong>metadata</strong> needed to coordinate PSK
+derivation ([<code>v03-control-plane/svc-pki.md</code> §3.4]):</p>
+<table>
+<thead>
+<tr>
+<th>Stored (control plane)</th>
+<th>NEVER stored</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>device&#39;s ML-KEM-768 <strong>public</strong> encapsulation key (~1184
+B)</td>
+<td>the derived <strong>PSK</strong></td>
+</tr>
+<tr>
+<td><code>psk_epoch</code> (monotonic counter, bumps each rotation)</td>
+<td>the ML-KEM <strong>decapsulation (private)</strong> key</td>
+</tr>
+<tr>
+<td>negotiated KEM suite (<code>none</code> |
+<code>x25519_mlkem768</code> |
+<code>x25519_mlkem768_mceliece</code>)</td>
+<td>the X25519 private half</td>
+</tr>
+</tbody>
+</table>
+<p>The control plane only <em>coordinates which suite + which epoch</em>
+applies, and ships the peer&#39;s <code>mlkem_pubkey</code> inside the
+network map so two endpoints can encapsulate to each other. <strong>The
+PSK itself is never seen by the control plane</strong> (P4).</p>
+<h3 id="93-kem-choice-decision-research-cited">9.3 KEM choice (decision,
+research-cited)</h3>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>KEM</th>
+<th>Rationale</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Primary</strong></td>
+<td><strong>ML-KEM-768 (FIPS 203)</strong> — hybrid X25519 +
+ML-KEM-768</td>
+<td>NIST-standardized 2024-08-13; CNSA 2.0 requires ML-KEM; good
+size/speed; broad library support [research-pki_pq_nat §2.4]</td>
+<td><strong>Default when PQ enabled</strong> (Phase-2 roadmap)</td>
+</tr>
+<tr>
+<td><strong>Conservative hybrid</strong></td>
+<td><strong>ML-KEM-768 + Classic McEliece</strong></td>
+<td>Mullvad&#39;s production parity (McEliece + ML-KEM); code-based is a
+very different hardness assumption — the HNDL hedge [research-pki_pq_nat
+§2.2]</td>
+<td><strong>Phase-2 opt-in</strong> for high-assurance tenants (McEliece
+public keys are large, amortised at setup/rekey)</td>
+</tr>
+<tr>
+<td><strong>External protocol</strong></td>
+<td><strong>Rosenpass</strong> (audited PQ key-exchange daemon feeding
+WG a PSK, 2-min refresh)</td>
+<td>independent symbolic analysis (ProVerif); clean separation;
+<code>mullvad/wgephemeralpeer</code> reference [research-pki_pq_nat
+§2.2/§2.3]</td>
+<td><strong>Evaluate in the Phase-2 PQ spike</strong></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Phase-1 status (honest, §11.4.6).</strong> PQ defaults to
+<code>kem=&#39;none&#39;, enabled=false</code>; the table + proto fields +
+plumbing <strong>exist</strong> so enabling PQ is config, not a schema
+change [SYNTHESIS §4 — PQ is Phase 2]. <strong>UNVERIFIED</strong>:
+Rosenpass&#39;s tagged release was still Kyber-512 (not yet ML-KEM) at
+research time [research-pki_pq_nat §2.3] — verify upstream before
+relying on ML-KEM in Rosenpass specifically. Do <strong>not</strong>
+claim PQ ships live in Phase 1.</p>
+</blockquote>
+<h3 id="94-pq-psk-epoch-rotation">9.4 PQ PSK epoch rotation</h3>
+<p>When enabled, the PSK is rotated by bumping <code>psk_epoch</code>
+and re-publishing the peer ML-KEM public keys in the network map; the
+endpoints re-derive a fresh PSK and mix it into the WG handshake.
+Rosenpass-style aggressive rotation refreshes the symmetric key every ~2
+min [research-pki_pq_nat §2.3]; HelixVPN&#39;s control-plane role is
+<strong>only</strong> to bump the epoch + ship the public keys — the PSK
+is established at the endpoints (P4). The PQ exchange rides the
+<strong>authenticated control channel</strong> (mTLS) so there is
+<strong>no new public listener</strong> to attack, and PQ ciphertexts
+are KB-scale so the exchange happens at <strong>session setup +
+rekey</strong>, not per packet — steady-state overhead is zero
+([<code>04-security-privacy-pki.md</code> §9.3]).</p>
+<hr />
+<h2 id="10-key-storage--kmshsm-secure-element-software-fallback">10. Key
+storage — KMS/HSM, secure element, software fallback</h2>
+<p>The two highest-value secrets (AS-CA, AS-WGK) live in deliberately
+different places, each as hardened as the platform allows.</p>
+<h3 id="101-the-ca-key--kmshsm-never-in-process-memory-p3s11">10.1 The
+CA key — KMS/HSM, never in process memory (P3/S11)</h3>
+<p>The raw CA private key is <strong>never stored in a plaintext
+column</strong> and, in the recommended deployment, <strong>never enters
+<code>helixd</code> process memory</strong>
+([<code>v03-control-plane/svc-pki.md</code> §3.1]):</p>
+<table>
+<thead>
+<tr>
+<th>Backend</th>
+<th>Mechanism</th>
+<th>Security property</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>KMS/HSM-backed</strong> (recommended)</td>
+<td><code>ca_keys.key_ref</code> = a KMS/HSM URN; signing is delegated
+(digest → KMS Sign API); the raw key stays in the HSM</td>
+<td>a control-plane compromise (C-INS) never yields the CA key —
+assumption <strong>A1</strong> ([<code>threat-model.md</code>
+§1.3])</td>
+</tr>
+<tr>
+<td><strong>File-sealed</strong> (self-host floor)</td>
+<td><code>ca_keys.key_sealed</code> = the DER private key
+envelope-encrypted under a KMS-wrapped data key; decrypted into a
+locked, zeroed-after buffer only at sign time</td>
+<td>the key at rest is ciphertext; in-memory exposure is bounded to the
+sign window</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb8"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co">// the signer seam — same interface, two backends ([`v03-control-plane/svc-pki.md` §4.3])</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> CASigner <span class="kw">interface</span> <span class="op">{</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    Sign<span class="op">(</span>ctx<span class="op">,</span> t uuid<span class="op">.</span>UUID<span class="op">,</span> tmpl <span class="op">*</span>x509<span class="op">.</span>Certificate<span class="op">,</span> leafPub crypto<span class="op">.</span>PublicKey<span class="op">)</span> <span class="op">([]</span><span class="dt">byte</span><span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="co">// kmsSigner: digest sent to KMS Sign API; raw key stays in the HSM.</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="co">// fileSigner: key_sealed envelope-decrypted into a locked, zeroed-after buffer.</span></span></code></pre></div>
+<p>A schema-lint asserts <strong>no column named
+<code>*_private*</code>/<code>*_secret*</code> holds cleartext</strong>
+(the §11 gate <code>CM-PKI-NO-PRIVATE-KEY-STORED</code>); the paired
+§1.1 mutation adds a plaintext key column and asserts the lint
+<strong>FAILs</strong>. The CA key is the highest residual
+<strong>R-CA</strong> ([<code>threat-model.md</code> §10]) — an insider
+with <strong>both</strong> DB and KMS-log access is the catastrophic
+case, shrunk (not eliminated) by the offline-root two-tier topology and
+Phase-2 HSM quorum.</p>
+<h3 id="102-the-device-keys--os-keystore--secure-element-s2">10.2 The
+device keys — OS keystore / secure element (S2)</h3>
+<p>Device WG + leaf private keys are sealed in the strongest store the
+platform exposes — Keychain</p>
+<ul>
+<li>Secure Enclave (Apple), Keystore + StrongBox/TEE (Android), DPAPI +
+TPM (Windows), libsecret + TPM2 (Linux) — with a software fallback
+<strong>only on a logged warning</strong>
+([<code>identity-and-enrollment.md</code> §2.3]). FFI exposes
+<em>operations</em>, not raw bytes; <code>Zeroizing</code> guarantees
+the bytes are wiped on drop. A device whose keystore is already defeated
+is residual <strong>R-DEV</strong> (closed only by Phase-2 hardware
+attestation).</li>
+</ul>
+<h3 id="103-the-pq-material--public-stored-private-ephemeral">10.3 The
+PQ material — public stored, private ephemeral</h3>
+<p>Per §9.2: the control plane stores only ML-KEM
+<strong>public</strong> encapsulation keys + the epoch counter; the
+decapsulation (private) key and the derived PSK are
+<strong>never</strong> persisted — they live in device + edge memory
+per-session and are wiped on rekey.</p>
+<hr />
+<h2 id="11-threat-mapping--testvalidation-114169">11. Threat mapping
+&amp; test/validation (§11.4.169)</h2>
+<h3 id="111-what-the-pki-defends-threat-modelmd">11.1 What the PKI
+defends ([<code>threat-model.md</code>])</h3>
+<table>
+<thead>
+<tr>
+<th>Mechanism (this doc)</th>
+<th>Invariant</th>
+<th>Threats closed</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CA key in KMS/HSM, never in process memory</td>
+<td>S11 / P3</td>
+<td>T-PKI-I-1 (read CA key), T-PKI-T-1 (forge profile)</td>
+</tr>
+<tr>
+<td>Cert profile fixed in the signer (≤24 h, <code>CA:FALSE</code>,
+<code>clientAuth</code>)</td>
+<td>S4</td>
+<td>T-PKI-T-1 (long-lived/wildcard cert)</td>
+</tr>
+<tr>
+<td>CSR proof-of-possession before sign</td>
+<td>—</td>
+<td>T-PKI-S-1 (sign a key you don&#39;t hold)</td>
+</tr>
+<tr>
+<td>Short-lived leaf + auto-renew over authenticated channel</td>
+<td>S4</td>
+<td>T-CLI-S-1, T-CP-S-1, T-COORD-S-1</td>
+</tr>
+<tr>
+<td>SPIFFE SAN bound at issuance; <code>AuthDevice</code> SAN check</td>
+<td>—</td>
+<td><code>ErrSpiffeMismatch</code> cert-swap</td>
+</tr>
+<tr>
+<td>Sub-second revocation, two teeth, revoke cache</td>
+<td>S5</td>
+<td>T-PKI-E-1 (revoked device keeps access)</td>
+</tr>
+<tr>
+<td>Fail-closed <code>AuthDevice</code> (unknown serial rejected)</td>
+<td>P5</td>
+<td>spoofed/forged-serial control access</td>
+</tr>
+<tr>
+<td>mTLS everywhere; two channels never conflated</td>
+<td>S4</td>
+<td>T-CP-S-1, T-COORD-S-1</td>
+</tr>
+<tr>
+<td>Hybrid PQ PSK (never PQ-only)</td>
+<td>S10 / P4</td>
+<td>T-DP-I-2 (harvest-now-decrypt-later)</td>
+</tr>
+<tr>
+<td>RLS <code>FORCE ROW LEVEL SECURITY</code> on every PKI table</td>
+<td>P7</td>
+<td>cross-tenant cert/CA read (T-CP-I-1)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="112-test-points-114169--comprehensive-test-type-coverage">11.2
+Test points (§11.4.169 — comprehensive test-type coverage)</h3>
+<p>Composing §11.4.27 (no-fakes-beyond-unit), §11.4.5/§11.4.69/§11.4.107
+(captured evidence), §11.4.85 (stress+chaos), §11.4.119 (single
+edge-resource owner for revoke/rotate tests), §1.1 (paired mutation).
+Integration spins Postgres+Redis on-demand via
+<code>vasic-digital/containers</code> (§11.4.76).</p>
+<table>
+<thead>
+<tr>
+<th>Test type</th>
+<th>Concrete <code>pki</code> test point</th>
+<th>Evidence / anti-bluff</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>unit</strong></td>
+<td>issued leaf has EKU <code>clientAuth(+serverAuth)</code>, ≤24 h
+<code>not_after</code>, SPIFFE SAN, <code>CA:FALSE</code>; revoke-reason
+round-trips</td>
+<td>golden cert DER asserted field-by-field</td>
+</tr>
+<tr>
+<td><strong>unit (property)</strong></td>
+<td><code>IssueDeviceCert</code> → <code>AuthDevice</code> accepts;
+revoked never authenticates (P5) — fuzz serials</td>
+<td>property test, 10k cases</td>
+</tr>
+<tr>
+<td><strong>unit (privacy, P1)</strong></td>
+<td>enroll/rotate handlers store the <em>public</em> WG key — re-derive
+pub from a known private fixture, assert stored == public</td>
+<td>§1.1 mutation: feed a private-shaped key → handler MUST reject</td>
+</tr>
+<tr>
+<td><strong>integration</strong></td>
+<td>enroll → issue → renew → revoke; assert <code>device_certs</code>
+state-machine transitions (§4)</td>
+<td>captured DB snapshots + bus event log</td>
+</tr>
+<tr>
+<td><strong>integration (RLS, P7)</strong></td>
+<td>tenant A cannot SELECT/UPDATE tenant B&#39;s
+<code>ca_keys</code>/<code>device_certs</code>/<code>device_wg_keys</code>
+as <code>helix_app</code> under
+<code>FORCE ROW LEVEL SECURITY</code></td>
+<td>denied-query capture</td>
+</tr>
+<tr>
+<td><strong>e2e</strong></td>
+<td>enroll → WatchNetworkMap (mTLS) → renew-over-channel → revoke →
+stream force-closed</td>
+<td>captured stream transcript</td>
+</tr>
+<tr>
+<td><strong>security</strong></td>
+<td><code>ErrSpiffeMismatch</code> cert-swap rejected; expired/revoked
+rejected; CA private key never in a process-memory dump nor any log line
+(P3); schema-lint asserts no cleartext
+<code>*_private*</code>/<code>*_secret*</code> column</td>
+<td>memory-scan + log-grep evidence; §1.1 adds a plaintext key column →
+lint FAILs</td>
+</tr>
+<tr>
+<td><strong>performance</strong></td>
+<td><code>IssueDeviceCert</code> &lt; 150 ms; <code>AuthDevice</code>
+cache-hit &lt; 1 ms (targets, §7.3)</td>
+<td><code>go test -bench</code> histograms</td>
+</tr>
+<tr>
+<td><strong>scaling</strong></td>
+<td>10k devices each with a live 24 h cert; renew-sweeper at 60 s stays
+bounded</td>
+<td><code>process_resident_memory_bytes</code> slope ≈ 0</td>
+</tr>
+<tr>
+<td><strong>stress</strong> (§11.4.85)</td>
+<td>N≥100 concurrent enroll+revoke on one tenant; no double-active-cert
+(unique idx holds); p50/p95/p99 recorded</td>
+<td><code>latency.json</code> captured</td>
+</tr>
+<tr>
+<td><strong>chaos</strong> (§11.4.85)</td>
+<td>SIGKILL <code>helixd</code> mid-issue (tx atomic → no orphan cert
+without device row); Redis drop mid-revoke (PEL reclaimed) → revoke
+still converges to the &lt; 1 s <strong>target</strong> on recovery</td>
+<td><code>recovery_trace.log</code></td>
+</tr>
+<tr>
+<td><strong>soak (24 h)</strong></td>
+<td>continuous 24 h-cert renewal churn + WG-key rotations; assert
+<strong>zero dropped sessions</strong> across the rotation overlap
+(validates the §6.2 30 s window, removing its <code>UNVERIFIED</code>
+tag)</td>
+<td>session-continuity counter</td>
+</tr>
+<tr>
+<td><strong>Challenge / HelixQA</strong></td>
+<td>a Challenge drives enroll→revoke and asserts edge WG-peer removed
+within the <strong>&lt; 1 s target</strong> with captured runtime
+evidence (the revoke-SLO anti-bluff)</td>
+<td><code>result.json</code> + captured timing</td>
+</tr>
+<tr>
+<td><strong>meta-test (§1.1)</strong></td>
+<td>every gate (<code>CM-PKI-NO-PRIVATE-KEY-STORED</code>,
+<code>CM-REVOKE-SLO</code>, the schema-lint) has a paired mutation that
+makes it FAIL</td>
+<td>mutation FAILs proven</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Anti-bluff floor (§11.4.107(10)).</strong> The revoke-SLO
+Challenge is valid only with captured evidence the <em>peer was actually
+removed and timed</em> — a green assertion that &quot;revocation exists&quot; is
+necessary, never sufficient. The &lt; 1 s figure is the
+<strong>acceptance target</strong> the soak must <em>measure</em>; until
+measured it is <strong>UNVERIFIED</strong> (§11.4.6), never reported as
+an achieved result.</p>
+</blockquote>
+<hr />
+<h2 id="12-phase-2-forward-seams-additive-not-a-rewrite">12. Phase-2
+forward seams (additive, not a rewrite)</h2>
+<p>The Phase-1 seams extend without reshaping
+([<code>v03-control-plane/svc-pki.md</code> §13]):</p>
+<ul>
+<li><strong>Attestation leaf hardware binding</strong> — the optional
+~90 d attestation leaf gains TPM / Secure-Enclave binding
+[research-pki_pq_nat §1.2], closing residual R-DEV.</li>
+<li><strong>PQ flip</strong> —
+<code>device_pq_material.enabled=true</code> with
+<code>kem=&#39;x25519_mlkem768&#39;</code> (Mullvad-parity adds
+<code>+mceliece</code>); the PSK feeds the WG handshake at the endpoints
+(Rosenpass / <code>wgephemeralpeer</code> template) [research-pki_pq_nat
+§2.2/§2.4] — <strong>config, not a schema change</strong>.</li>
+<li><strong>Signer upgrade</strong> — the <code>CASigner</code> swaps
+file-sealed → HSM with <strong>no caller change</strong> (the seam is
+already in place).</li>
+<li><strong>CA-rotation automation</strong> — replaces the
+operator-gated manual root path (§6.4).</li>
+<li><strong>Two-tier CA topology growth</strong> — <code>ca_chain</code>
+already ≥ 1, so adding a regional intermediate is the chain growing, not
+a redesign ([<code>04-security-privacy-pki.md</code> §4.2]).</li>
+<li><strong>Revoke-cache federation</strong> — across regional
+<code>helixd</code> over NATS JetStream (the <code>events.Bus</code>
+swap), keeping the sub-second target as the fleet scales.</li>
+</ul>
+<p>Phase 2 is additive because Phase 1 drew the seams — the
+<code>PKI</code> interface, the signer seam, the four RLS tables, the
+bus events, the PQ material slot — in the right places, honouring
+§11.4.6 (no silent reshape).</p>
+<hr />
+<h2 id="sources-verified">Sources verified</h2>
+<ul>
+<li>[research-pki_pq_nat] — the primary evidence base for this doc. §1.1
+WireGuard native identity (one Curve25519 keypair, public key IS the
+identity, revocation trivial = remove pubkey, no built-in
+PKI/CA/CRL/OCSP), §1.2 SPIFFE/SPIRE two-identity split (long-lived
+attestation + short-lived auto-rotated mTLS, ≤60 min hot-path TTL,
+structured-URI-bound-at-issuance, revocation = stop-renewing), §1.3
+generate-the-WG-private-key-on-device + two-teeth revocation, §2.1
+PSK-injection PQ (hybrid not PQ-only, &quot;no less secure than WG&quot;), §2.2
+Mullvad production (McEliece + ML-KEM, default-on-desktop 2025-01-09,
+<code>mullvad/wgephemeralpeer</code>, Kyber→ML-KEM), §2.3 Rosenpass
+(Rust, PSK 2-min refresh, ProVerif symbolic analysis, tagged release
+still Kyber-512), §2.4 FIPS-203 ML-KEM (NIST 2024-08-13, CNSA 2.0),
+hybrid X25519+ML-KEM-768. Access date 2026-06-25.</li>
+<li>[<code>04-security-privacy-pki.md</code>] HelixVPN security spine —
+§0.1 invariants S1–S11, §4 PKI (key hierarchy, CA topology decision A/B,
+cert profiles, §4.4 lifecycle state machine, §4.5 rotation, §4.6
+revocation &lt; 1 s target, §4.7 <code>pki</code>/<code>CASigner</code>
+contract), §9 hybrid PQ PSK (KEM choice, control-channel exchange, zero
+per-packet cost). (Read 2026-06-25.)</li>
+<li>[<code>v03-control-plane/svc-pki.md</code>] — §1 ownership +
+WG-no-PKI baseline + governing invariants P1–P7, §2 CA hierarchy (three
+tiers, Ed25519/ECDSA fallback, rotation), §3 DDL/RLS (ca_keys,
+device_certs extended, device_wg_keys, device_pq_material), §4
+<code>PKI</code> interface + signer seam, §5 issuance + state machine,
+§6 auto-renew (renewSkew, sweeper), §7 WG/PSK rotation, §8 proto +
+<code>AuthDevice</code> hot path + revoke cache, §9 events + revocation
+two-teeth, §10 errors + SLO targets, §11 test matrix, §12 task plan, §13
+Phase-2 seams. (Read 2026-06-25.)</li>
+<li>[<code>identity-and-enrollment.md</code>] (sibling) — §2
+key-never-leaves (two key planes, keystore), §3 enrollment protocol (CSR
+PoP), §6 enroll-token security, §7 re-enrollment &amp; revocation origin
+— referenced for the enrollment this PKI mints into. (Read
+2026-06-25.)</li>
+<li>[<code>threat-model.md</code>] (sibling) — assets
+AS-CA/AS-WGK/AS-LEAF/AS-PSK, threats T-PKI-* / T-CLI-S-1 / T-COORD-S-1 /
+T-DP-I-2, residuals R-CA / R-RACE / R-DEV / R-PQ, assumption A1 (CA key
+in KMS). (Read 2026-06-25.)</li>
+<li>[04_P1] HelixVPN-Phase1-MVP.md §6 (24 h cert, revoke &lt; 1 s,
+key-never-leaves). [04_ARCH] §4/§7/§10 (pki module, short-lived certs,
+CA = one true secret, backups = Postgres + CA root). [SYNTHESIS] §4 (PQ
+in Phase 2). — cited via the spine doc.</li>
+<li>Constitution §11.4.6 (no-guessing — UNVERIFIED marks; all latency
+stated as targets), §11.4.10 (CA key never logged/git-tracked),
+§11.4.27/§11.4.85/§11.4.107/§11.4.119/§11.4.169/§1.1 (test-type coverage
++ self-validated analyzers + single-resource-owner for edge tests),
+§11.4.66/§11.4.101 (operator-gated root rotation), §11.4.76 (containers
+submodule for integration infra).</li>
+</ul>
+</body>
+</html>

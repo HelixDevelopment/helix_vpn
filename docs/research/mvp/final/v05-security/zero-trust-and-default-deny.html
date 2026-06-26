@@ -1,0 +1,1291 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Zero-Trust Model &amp; Default-Deny Enforcement</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Zero-Trust Model &amp; Default-Deny Enforcement</h1>
+</header>
+<h1 id="zero-trust-model--default-deny-enforcement">Zero-Trust Model
+&amp; Default-Deny Enforcement</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-06-25T12:00:00Z</p>
+<blockquote>
+<p>Master technical specification — Volume 5 (Security &amp; Privacy),
+nano-detail document <strong>zero-trust-and-default-deny</strong>.
+Deepens the <strong>S1 zero-trust default-deny</strong> invariant of
+[<code>04-security-privacy-pki.md</code> §0.1/§1.3] into an
+implementation-grade contract: the no-implicit-trust-by-network-location
+model, the two policy enforcement points (control-plane compile-time +
+data-plane runtime), the least-privilege two-artifact output
+(<code>AllowedIPs</code> + verdict map), the need-to-know peer-filtering
+algorithm, fail-closed semantics on control-plane/policy unavailability,
+and a fully worked policy evaluation with Mermaid. SPEC ONLY — describe
+the implementation, do not build the product. This document
+<strong>references</strong> the policy compiler
+([<code>v03-control-plane/svc-policy.md</code>]) and the data-plane
+verdict-map renderer
+([<code>v02-data-plane/routing-and-addressing.md</code>]) rather than
+redefining them; it owns the <em>zero-trust property</em> and the
+<em>default-deny enforcement contract</em> that bind both. Sources cited
+inline by id: <code>[04_ARCH §N]</code>, <code>[04_P1 §N]</code>,
+<code>[research-pki_pq_nat]</code>, <code>[SYNTHESIS §N]</code>, and
+sibling specs by filename. Invariant ids:
+<code>S1</code>–<code>S11</code>
+([<code>04-security-privacy-pki.md</code> §0.1]);
+<code>P1</code>–<code>P8</code>
+([<code>v03-control-plane/svc-policy.md</code> §0.1]);
+<code>I5/I6/R1</code>–<code>R4</code>
+([<code>v02-data-plane/routing-and-addressing.md</code> §0.2]). Unproven
+facts are flagged <strong>UNVERIFIED</strong> per constitution §11.4.6 —
+never fabricated.</p>
+</blockquote>
+<hr />
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#0-position-ownership--governing-invariants">0. Position,
+ownership &amp; governing invariants</a></li>
+<li><a href="#1-the-zero-trust-model--no-implicit-trust-by-network-location">1.
+The zero-trust model — no implicit trust by network location</a></li>
+<li><a href="#2-authenticate-and-authorize--the-two-gates-every-peer-crosses">2.
+Authenticate AND authorize — the two gates every peer crosses</a></li>
+<li><a href="#3-the-two-policy-enforcement-points-compile-time--runtime">3. The
+two policy enforcement points (compile-time + runtime)</a></li>
+<li><a href="#4-default-deny-enforcement--the-empty-policy-denies-all">4.
+Default-deny enforcement — the empty policy denies all</a></li>
+<li><a href="#5-least-privilege-artifacts--allowedips--verdict-map">5.
+Least-privilege artifacts — AllowedIPs + verdict map</a></li>
+<li><a href="#6-need-to-know-peer-filtering--the-algorithm">6.
+Need-to-know peer filtering — the algorithm</a></li>
+<li><a href="#7-fail-closed-semantics--deny-on-unavailability-never-allow">7.
+Fail-closed semantics — deny on unavailability, never allow</a></li>
+<li><a href="#8-worked-policy-evaluation-end-to-end">8. Worked policy
+evaluation (end to end)</a></li>
+<li><a href="#9-edge-cases-defined-behavior-no-guessing">9. Edge cases
+(defined behavior, no guessing)</a></li>
+<li><a href="#10-test--validation-mapping-1141169">10. Test &amp;
+validation mapping (§11.4.169)</a></li>
+<li><a href="#sources-verified">Sources verified</a></li>
+</ul>
+<hr />
+<h2 id="0-position-ownership--governing-invariants">0. Position,
+ownership &amp; governing invariants</h2>
+<p>Zero-trust is the spine of HelixVPN: routing, no-logging, and
+revocation are all <em>properties of the build</em> only because nothing
+is trusted by default [04_ARCH §7]. The mechanisms that <em>realize</em>
+zero-trust live in other documents — the policy compiler in
+[<code>v03-control-plane/svc-policy.md</code>], the verdict-map renderer
+in [<code>v02-data-plane/routing-and-addressing.md</code>], the
+enrollment/PKI/mTLS in [<code>04-security-privacy-pki.md</code>].
+<strong>This document owns the zero-trust <em>contract</em></strong>
+that binds them: what &quot;no implicit trust&quot; means precisely, where it is
+enforced, and what &quot;default-deny&quot; and &quot;fail-closed&quot; must do under every
+condition.</p>
+<p>This document <strong>owns</strong>: the zero-trust property
+statement (§1), the authenticate-AND-authorize gate model (§2), the
+two-enforcement-point map (§3), the default-deny floor (§4), the
+least-privilege artifact contract (§5), the need-to-know filtering
+algorithm restated as a zero-trust obligation (§6), and the fail-closed
+semantics (§7).</p>
+<p>It does <strong>not</strong> own: the ACL DSL grammar, the compile
+algorithm, the version lifecycle, or the protobuf wire — all
+[<code>v03-control-plane/svc-policy.md</code>]; the FIB/4via6 mechanics
+or the nftables/eBPF rendering —
+[<code>v02-data-plane/routing-and-addressing.md</code>]; the auth
+handshakes themselves — [<code>04-security-privacy-pki.md</code>].</p>
+<h3 id="01-governing-invariants-every-clause-obeys-these">0.1 Governing
+invariants (every clause obeys these)</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Invariant</th>
+<th>Owner</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>S1</strong></td>
+<td>Zero-trust default-deny — no peer reaches anything without an
+explicit compiled policy rule; the empty policy denies all.</td>
+<td>[<code>04-security-privacy-pki.md</code> §0.1]</td>
+</tr>
+<tr>
+<td><strong>S3</strong></td>
+<td>Need-to-know map distribution — a device&#39;s map contains only the
+peers/routes its policy grants; filtered server-side before the
+wire.</td>
+<td>[<code>04-security-privacy-pki.md</code> §0.1]</td>
+</tr>
+<tr>
+<td><strong>S4</strong></td>
+<td>Two-channel auth — control (mTLS leaf cert) and data (WG Noise IK)
+are separate and both required.</td>
+<td>[<code>04-security-privacy-pki.md</code> §0.1]</td>
+</tr>
+<tr>
+<td><strong>P1</strong></td>
+<td>Default-deny, need-to-know — a device appears in another&#39;s map only
+via a compiled <code>accept</code> edge; no <code>deny</code> verb
+(absence is denial).</td>
+<td>[<code>v03-control-plane/svc-policy.md</code> §0.1]</td>
+</tr>
+<tr>
+<td><strong>P4</strong></td>
+<td>Fail-closed — a compile error rejects the change; it never degrades
+to allow-all or silently keeps the prior policy.</td>
+<td>[<code>v03-control-plane/svc-policy.md</code> §0.1]</td>
+</tr>
+<tr>
+<td><strong>I6</strong></td>
+<td>Default-deny at the data plane — no peer reaches anything without an
+explicit rule expressed as <code>AllowedIPs</code> + an edge verdict
+map.</td>
+<td>[<code>v02-data-plane/routing-and-addressing.md</code> §0.2]</td>
+</tr>
+<tr>
+<td><strong>R2</strong></td>
+<td>Peers delivered already policy-filtered (need-to-know): a node never
+learns of networks it cannot reach.</td>
+<td>[<code>v02-data-plane/routing-and-addressing.md</code> §0.2]</td>
+</tr>
+<tr>
+<td><strong>R3</strong></td>
+<td>The verdict map fails closed — absent/stale compiled policy ⇒
+drop.</td>
+<td>[<code>v02-data-plane/routing-and-addressing.md</code> §0.2]</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="1-the-zero-trust-model--no-implicit-trust-by-network-location">1.
+The zero-trust model — no implicit trust by network location</h2>
+<h3 id="11-the-principle">1.1 The principle</h3>
+<p>Classic VPNs are <strong>perimeter</strong> models: once you are &quot;on
+the network&quot; (past the VPN concentrator) you are implicitly trusted to
+reach everything on it. HelixVPN rejects this. The overlay is
+<strong>zero-trust</strong>: being enrolled, online, and
+cryptographically connected grants a device <strong>nothing</strong> by
+itself. Network <em>location</em> — &quot;I have an overlay address; I
+completed a WG handshake to the gateway&quot; — confers <strong>zero</strong>
+reachability. Every reachable peer and every reachable CIDR is the
+result of an <em>explicit, compiled, per-device</em> policy grant
+[04_ARCH §7, S1, P1].</p>
+<p>The contrast, stated as a contract:</p>
+<table>
+<thead>
+<tr>
+<th>Perimeter VPN (rejected)</th>
+<th>HelixVPN zero-trust (this spec)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>&quot;On the network&quot; ⇒ reach the whole subnet</td>
+<td>&quot;On the overlay&quot; ⇒ reach <strong>nothing</strong> until policy
+grants it</td>
+</tr>
+<tr>
+<td>Trust derives from IP/segment location</td>
+<td>Trust derives from <em>identity</em> (cert) <strong>plus</strong>
+<em>authorization</em> (compiled rule)</td>
+</tr>
+<tr>
+<td>One firewall at the perimeter</td>
+<td>Per-device least-privilege grant compiled into two enforcement
+layers</td>
+</tr>
+<tr>
+<td>A breached host can move laterally freely</td>
+<td>A breached host can reach only its compiled grant
+(microsegmentation)</td>
+</tr>
+<tr>
+<td>Map = the whole topology</td>
+<td>Map = only the need-to-know slice (S3/R2)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="12-what-no-implicit-trust-forbids--the-closed-list">1.2 What &quot;no
+implicit trust&quot; forbids — the closed list</h3>
+<p>A conforming implementation MUST NOT, anywhere, grant reachability
+from any of these implicit signals (each is the perimeter-trust
+anti-pattern):</p>
+<ol type="1">
+<li><strong>Enrollment</strong> — a freshly-enrolled device with no
+policy grant has an <strong>empty</strong> <code>AllowedIPs</code> and
+<strong>no</strong> verdict-map entry; it is online but isolated
+([<code>04-security-privacy-pki.md</code> §1.3]).</li>
+<li><strong>Online presence</strong> — being in Redis presence state
+grants nothing.</li>
+<li><strong>Overlay-address adjacency</strong> — sharing a tenant ULA
+/48 grants nothing; two devices in the same /48 cannot reach each other
+without a rule.</li>
+<li><strong>A completed WG handshake</strong> — the data channel being
+up grants nothing the map did not already authorize (the map <em>is</em>
+the set of peers it may handshake with).</li>
+<li><strong>Group membership alone</strong> — membership resolves to a
+device set, but a group reaches a destination only via an
+<code>accept</code> rule naming that group as <code>src</code>
+([<code>v03-control-plane/svc-policy.md</code> §4.1]).</li>
+</ol>
+<p>There is no &quot;default LAN&quot;, no &quot;trusted subnet&quot;, no implicit gateway
+full-tunnel. <strong>Absence of a rule is denial</strong> (P1) — there
+is no <code>deny</code> verb in the MVP model because there is nothing
+to subtract from; the base state is already deny-all.</p>
+<pre class="mermaid"><code>flowchart LR
+  E[&quot;Device enrolled + online + WG up&quot;]
+  Q{&quot;Is there a compiled&lt;br/&gt;accept rule granting it?&quot;}
+  E --&gt; Q
+  Q -- &quot;NO (the default)&quot; --&gt; D[&quot;DENY — empty AllowedIPs, no verdict entry, not in any peer&#39;s map (S1/P1/I6)&quot;]
+  Q -- &quot;YES&quot; --&gt; A[&quot;ALLOW — exactly the granted peer+CIDR+ports, nothing more (least privilege)&quot;]</code></pre>
+<hr />
+<h2 id="2-authenticate-and-authorize--the-two-gates-every-peer-crosses">2.
+Authenticate AND authorize — the two gates every peer crosses</h2>
+<p>Zero-trust requires <strong>both</strong> authentication (<em>who are
+you</em>) and authorization (<em>what may you reach</em>). HelixVPN
+keeps these on two separate, never-conflated channels (S4) — a property
+the threat model relies on (compromising one does not yield the other,
+[<code>threat-model.md</code> §5.2/§5.4]).</p>
+<table>
+<thead>
+<tr>
+<th>Gate</th>
+<th>Question</th>
+<th>Mechanism</th>
+<th>Owner</th>
+<th>Failure mode</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>G1 — Authenticate (control)</strong></td>
+<td><em>Who are you?</em></td>
+<td>mTLS with a ≤24 h CA-signed device leaf cert on every
+<code>Coordinator</code> RPC</td>
+<td>[<code>04-security-privacy-pki.md</code> §1.2/§4]</td>
+<td>no valid cert ⇒ stream refused; nothing learned</td>
+</tr>
+<tr>
+<td><strong>G2 — Authorize (compile)</strong></td>
+<td><em>What may you reach?</em></td>
+<td>the device&#39;s compiled <code>CompiledPolicy</code> slice
+(<code>VisibleTo</code>/<code>AllowedIPs</code>/<code>Verdicts</code>)</td>
+<td>[<code>v03-control-plane/svc-policy.md</code> §3]</td>
+<td>empty slice ⇒ reach nothing (default-deny)</td>
+</tr>
+<tr>
+<td><strong>G3 — Authenticate (data)</strong></td>
+<td><em>Are you the keyholder?</em></td>
+<td>WG Noise IK handshake to a peer pubkey delivered by G2&#39;s filtered
+map</td>
+<td>doc 01 / [<code>04-security-privacy-pki.md</code> §1.2]</td>
+<td>wrong key ⇒ handshake fails</td>
+</tr>
+<tr>
+<td><strong>G4 — Enforce (runtime)</strong></td>
+<td><em>Is this packet within the grant?</em></td>
+<td><code>AllowedIPs</code> cryptokey routing + verdict map at the
+edge</td>
+<td>[<code>v02-data-plane/routing-and-addressing.md</code> §6]</td>
+<td>outside grant ⇒ dropped</td>
+</tr>
+</tbody>
+</table>
+<p>A device must pass <strong>G1 to learn anything</strong>, <strong>G2
+to be granted anything</strong>, <strong>G3 to connect to a
+peer</strong>, and <strong>G4 to send a packet to it</strong>. The four
+gates are independent; bypassing one does not bypass the others. In
+particular, even a device that somehow obtained a peer&#39;s pubkey
+out-of-band cannot reach it: G4&#39;s <code>AllowedIPs</code> + verdict map
+drop the packet unless G2 compiled the grant.</p>
+<pre class="mermaid"><code>sequenceDiagram
+    autonumber
+    participant Dev as Device (helix-core)
+    participant Coord as coordinator
+    participant Pol as policy (CompiledPolicy)
+    participant Edge as Rust edge (verdict map)
+    Dev-&gt;&gt;Coord: WatchNetworkMap (mTLS leaf cert)   %% G1 authenticate
+    Coord-&gt;&gt;Coord: bind stream to device_id from the CERT (never client-supplied)
+    Coord-&gt;&gt;Pol: read CompiledPolicy.VisibleTo[device_id]   %% G2 authorize (need-to-know)
+    Pol--&gt;&gt;Coord: only the granted peers + AllowedIPs + Verdicts
+    Coord--&gt;&gt;Dev: NetworkMap (filtered slice ONLY) (S3/R2)
+    Dev-&gt;&gt;Edge: WG Noise IK to a granted peer&#39;s pubkey   %% G3 authenticate (data)
+    Dev-&gt;&gt;Edge: packet to granted CIDR:port
+    Edge-&gt;&gt;Edge: AllowedIPs match? verdict ACCEPT?   %% G4 enforce (runtime)
+    Edge--&gt;&gt;Dev: forward iff within grant; else DROP (default-deny, I6/R3)</code></pre>
+<hr />
+<h2 id="3-the-two-policy-enforcement-points-compile-time--runtime">3.
+The two policy enforcement points (compile-time + runtime)</h2>
+<p>Zero-trust in HelixVPN is enforced at <strong>two</strong> points —
+once when intent becomes least-privilege artifacts (control plane,
+compile-time) and once when packets meet those artifacts (data plane,
+runtime). This is the PDP/PEP split (policy decision point / policy
+enforcement point) made concrete.</p>
+<table>
+<thead>
+<tr>
+<th>Enforcement point</th>
+<th>Where</th>
+<th>What it decides/enforces</th>
+<th>Artifact</th>
+<th>Owner</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>EP1 — Compile-time (PDP)</strong></td>
+<td>Go control plane</td>
+<td>resolves the ACL into per-device need-to-know reachability; rejects
+anything default-deny does not grant</td>
+<td><code>CompiledPolicy</code> (§5)</td>
+<td>[<code>v03-control-plane/svc-policy.md</code> §4]</td>
+</tr>
+<tr>
+<td><strong>EP2a — Distribution filter (PEP at the wire)</strong></td>
+<td>coordinator</td>
+<td>filters each device&#39;s map to its <code>VisibleTo</code> slice
+<em>before</em> serialization (S3/R2)</td>
+<td>filtered <code>NetworkMap</code></td>
+<td>coordinator (doc 03)</td>
+</tr>
+<tr>
+<td><strong>EP2b — Runtime (PEP at the packet)</strong></td>
+<td>Rust edge / device</td>
+<td>drops any packet outside <code>AllowedIPs</code> (cryptokey routing)
+and outside the verdict map (default <code>DROP</code>)</td>
+<td>kernel WG <code>AllowedIPs</code> + nftables/eBPF verdict map</td>
+<td>[<code>v02-data-plane/routing-and-addressing.md</code> §6]</td>
+</tr>
+</tbody>
+</table>
+<p>The two-layer runtime (EP2b) is deliberate defense-in-depth: WG&#39;s own
+<code>AllowedIPs</code> cryptokey routing is a <em>coarse</em> CIDR
+gate, and the verdict map is the <em>fine</em> port-level gate;
+<strong>both must allow</strong> for a packet to pass, and <strong>both
+default to deny</strong> ([<code>v03-control-plane/svc-policy.md</code>
+§3 P3], I6). A bug in one layer is caught by the other.</p>
+<pre class="mermaid"><code>flowchart TB
+  subgraph PDP[&quot;EP1 — Policy Decision (compile-time, control plane)&quot;]
+    Spec[&quot;ACL spec (intent)&quot;] --&gt; Comp[&quot;compile() pure + deterministic (P2)&quot;]
+    Comp --&gt; CP[&quot;CompiledPolicy {VisibleTo, AllowedIPs, Verdicts, Via6, ExitNodes}&quot;]
+  end
+  subgraph PEPw[&quot;EP2a — PEP at the wire (coordinator)&quot;]
+    CP --&gt; Filt[&quot;filter to VisibleTo[device] (S3/R2)&quot;]
+    Filt --&gt; Map[&quot;NetworkMap (need-to-know slice)&quot;]
+  end
+  subgraph PEPp[&quot;EP2b — PEP at the packet (edge/device, runtime)&quot;]
+    Map --&gt; AIP[&quot;WG AllowedIPs (coarse CIDR gate)&quot;]
+    Map --&gt; VM[&quot;verdict map (fine port gate, default DROP)&quot;]
+    AIP --&gt; Out[&quot;packet forwarded IFF both ALLOW; else DROP (I6/R3)&quot;]
+    VM --&gt; Out
+  end</code></pre>
+<hr />
+<h2 id="4-default-deny-enforcement--the-empty-policy-denies-all">4.
+Default-deny enforcement — the empty policy denies all</h2>
+<h3 id="41-the-floor-the-empty-policy">4.1 The floor: the empty
+policy</h3>
+<p>The base case proves the model. A tenant with <strong>no ACL
+rules</strong> (only groups/hosts, or nothing at all) compiles to an
+<strong>all-empty</strong> <code>CompiledPolicy</code>: every map is
+empty, every <code>AllowedIPs</code> is empty, every verdict entry is
+absent. Result: <strong>everyone is denied everything</strong>
+([<code>v03-control-plane/svc-policy.md</code> §10 E1]). This is
+<strong>valid, not an error</strong> — it is the default-deny floor
+(P1/S1). Reachability is <em>added</em> by rules; it is never the
+starting state.</p>
+<h3 id="42-default-deny-at-each-layer-the-closed-table">4.2 Default-deny
+at each layer (the closed table)</h3>
+<table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>&quot;No grant&quot; state</th>
+<th>Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>CompiledPolicy.VisibleTo[d]</code></td>
+<td>empty set</td>
+<td>device <code>d</code> learns of no peers (S3)</td>
+</tr>
+<tr>
+<td><code>CompiledPolicy.AllowedIPs[d][peer]</code></td>
+<td>absent</td>
+<td>WG cryptokey routing drops all packets to/from <code>peer</code>
+(I6)</td>
+</tr>
+<tr>
+<td><code>CompiledPolicy.Verdicts[d][peer]</code></td>
+<td>absent / default</td>
+<td>edge verdict map default verdict is <code>DROP</code> (R3)</td>
+</tr>
+<tr>
+<td>coordinator distribution</td>
+<td>peer not in <code>VisibleTo</code></td>
+<td>peer never serialized into <code>d</code>&#39;s map (S3/R2)</td>
+</tr>
+<tr>
+<td>edge, no compiled policy at all</td>
+<td><code>policy: None</code></td>
+<td>the <code>RouteEngine</code> fails closed — every packet dropped
+([<code>v02-data-plane/routing-and-addressing.md</code> §1
+<code>policy: Option&lt;CompiledPolicy&gt;</code>
+<code>None ⇒ fail-closed (R3)</code>])</td>
+</tr>
+</tbody>
+</table>
+<h3 id="43-least-privilege-is-the-only-addition-path">4.3
+Least-privilege is the only addition path</h3>
+<p>A grant adds <strong>exactly</strong> the (peer, CIDR, ports) the
+rule names and <strong>nothing more</strong>
+([<code>v03-control-plane/svc-policy.md</code> §4.1]):</p>
+<ul>
+<li>A <code>host:554,80</code> grant adds
+<code>AllowedIPs = [host CIDR]</code> <em>and</em> a
+<code>Verdicts</code> entry restricting to TCP/UDP 554 and 80 — not all
+ports.</li>
+<li>A <code>*:*</code> grant is the operator&#39;s explicit choice to grant
+broad reach (no implicit narrowing, E2); it is still <em>compiled per
+device</em>, not an ambient &quot;trust the network&quot; rule.</li>
+<li>A device absent from <code>ExitNodes</code> cannot full-tunnel
+through the gateway, even if it can reach individual CIDRs
+([<code>v03-control-plane/svc-policy.md</code> §4.3]).</li>
+</ul>
+<p>No rule ever <em>widens</em> beyond its tokens, and the compiler is
+<strong>pure + deterministic</strong> (P2) so the same intent always
+yields the same least-privilege artifact — a property the §10 tests
+assert byte-for-byte.</p>
+<hr />
+<h2 id="5-least-privilege-artifacts--allowedips--verdict-map">5.
+Least-privilege artifacts — AllowedIPs + verdict map</h2>
+<p>The compiler emits the single source of zero-trust truth:
+<code>CompiledPolicy</code>. Restated from
+[<code>v03-control-plane/svc-policy.md</code> §3] for the zero-trust
+contract (this document references it, does not redefine the Go
+types):</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// from internal/policy/compiled.go — the per-(tenant,version) zero-trust artifact.</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> CompiledPolicy <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    Version   Version</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    SpecHash  <span class="op">[</span><span class="dv">32</span><span class="op">]</span><span class="dt">byte</span> <span class="co">// sha256(canonicalJSON(spec)) — ties artifact to intent (audit + dedup)</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ARTIFACT 1 — need-to-know visibility (S3/P1): src device -&gt; reachable peer set.</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    VisibleTo  <span class="kw">map</span><span class="op">[</span>DeviceID<span class="op">]</span><span class="kw">map</span><span class="op">[</span>DeviceID<span class="op">]</span><span class="kw">struct</span><span class="op">{}</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ARTIFACT 1b — coarse WG AllowedIPs (CIDR-only, I6): src -&gt; peer -&gt; CIDRs.</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    AllowedIPs <span class="kw">map</span><span class="op">[</span>DeviceID<span class="op">]</span><span class="kw">map</span><span class="op">[</span>DeviceID<span class="op">][]</span>netip<span class="op">.</span>Prefix</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ARTIFACT 2 — fine port-level verdict map (R3 default-DROP): src -&gt; peer -&gt; port rules.</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    Verdicts   <span class="kw">map</span><span class="op">[</span>DeviceID<span class="op">]</span><span class="kw">map</span><span class="op">[</span>DeviceID<span class="op">][]</span>PortRule</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 4via6 routes for colliding IPv4 LANs (D4): src -&gt; peer(connector) -&gt; mappings.</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>    Via6       <span class="kw">map</span><span class="op">[</span>DeviceID<span class="op">]</span><span class="kw">map</span><span class="op">[</span>DeviceID<span class="op">][]</span>Via6Route</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>    <span class="co">// exit-node grants: devices permitted to full-tunnel through the gateway.</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>    ExitNodes  <span class="kw">map</span><span class="op">[</span>DeviceID<span class="op">]</span><span class="kw">struct</span><span class="op">{}</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>The three reachability fields are the zero-trust enforcement
+surface:</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Role</th>
+<th>Default-deny meaning</th>
+<th>Enforced at</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>VisibleTo[d]</code></td>
+<td>who <code>d</code> may <em>learn about</em></td>
+<td>empty ⇒ learns nothing (S3)</td>
+<td>EP2a coordinator filter</td>
+</tr>
+<tr>
+<td><code>AllowedIPs[d][peer]</code></td>
+<td>which CIDRs <code>d</code> may <em>reach</em> via
+<code>peer</code></td>
+<td>absent ⇒ all dropped (I6, coarse)</td>
+<td>EP2b WG cryptokey routing</td>
+</tr>
+<tr>
+<td><code>Verdicts[d][peer]</code></td>
+<td>which ports of those CIDRs</td>
+<td>absent ⇒ default <code>DROP</code> (R3, fine)</td>
+<td>EP2b nftables/eBPF verdict map</td>
+</tr>
+</tbody>
+</table>
+<p><code>SpecHash</code> ties every artifact back to the exact authored
+intent (a zero-trust audit anchor — you can always prove <em>which</em>
+spec produced <em>this</em> grant), and <code>Version</code> makes
+rollback a flip to a previously-compiled artifact, never a recompile
+under pressure ([<code>v03-control-plane/svc-policy.md</code> §6
+P5]).</p>
+<blockquote>
+<p>The <code>Peer</code> protobuf the coordinator streams projects 1:1
+from these fields — <code>allowed_ips</code> from
+<code>AllowedIPs[self][peer]</code>, <code>verdicts</code> from
+<code>Verdicts[self][peer]</code>
+([<code>v03-control-plane/svc-policy.md</code> §7.2]). The wire delivers
+<em>only the filtered slice</em>, so a device physically never receives
+a peer it cannot reach (S3/R2) — least-privilege is enforced even at the
+byte level, not just at the firewall.</p>
+</blockquote>
+<hr />
+<h2 id="6-need-to-know-peer-filtering--the-algorithm">6. Need-to-know
+peer filtering — the algorithm</h2>
+<p>Need-to-know (S3/R2) is the zero-trust <em>distribution</em>
+obligation: filter the map <strong>server-side, before the
+wire</strong>, so a device&#39;s map contains only its grant. A device that
+should not reach <code>conn-B</code> never learns <code>conn-B</code>
+exists — preventing both reconnaissance and accidental over-share.</p>
+<h3 id="61-the-filtering-algorithm">6.1 The filtering algorithm</h3>
+<p>For a device <code>d</code> opening <code>WatchNetworkMap</code>
+(authenticated as <code>device_id = d</code> by its mTLS cert, G1/§2),
+the coordinator builds <code>d</code>&#39;s <code>NetworkMap</code> thus
+(deriving strictly from <code>CompiledPolicy</code>,
+[<code>v03-control-plane/svc-policy.md</code> §3/§4.1]):</p>
+<pre><code>buildMap(d, cp /* active CompiledPolicy */) -&gt; NetworkMap:
+  # ZERO-TRUST RULE: start from nothing; add only what cp grants.
+  m := NetworkMap{ peers: [] }                 # default-deny base (S1/P1)
+  for peer in sortedKeys(cp.VisibleTo[d]):     # ONLY the need-to-know set (S3)
+      if snapshot.Devices[peer].Revoked: continue   # revoked never visible (P1)
+      p := Peer{
+        device_id:   peer,
+        wg_pubkey:   snapshot.Devices[peer].WGPubKey,        # so d can do WG IK (G3)
+        allowed_ips: cp.AllowedIPs[d][peer],                 # coarse CIDR grant (I6)
+        verdicts:    cp.Verdicts[d][peer],                   # fine port grant (R3)
+        via6:        cp.Via6[d][peer],                       # 4via6 for colliding LANs (D4)
+        is_connector: snapshot.Devices[peer].Kind == CONNECTOR,
+        endpoint:    gatewayRelay,                           # MVP relays via gateway
+      }
+      m.peers.append(p)
+  m.dns := tunnelDNS; m.exit_allowed := (d in cp.ExitNodes)  # exit only if granted (§4.3)
+  return m                                       # contains EXACTLY d&#39;s grant — nothing else</code></pre>
+<p>Three zero-trust properties the algorithm guarantees:</p>
+<ol type="1">
+<li><strong>Server-authoritative identity</strong> — <code>d</code> is
+taken from the <em>cert</em>, never from a client field, so a device
+cannot ask for another device&#39;s map ([<code>threat-model.md</code> §5.5
+T-COORD-S-1]).</li>
+<li><strong>Filter before serialize</strong> — peers outside
+<code>VisibleTo[d]</code> are never placed in the message, so the
+over-share threat is closed at the data structure, not at a later
+firewall (S3/R2).</li>
+<li><strong>Revoked-exclusion</strong> — a revoked peer never enters
+<code>VisibleTo</code> (P1) and is re-checked here
+(belt-and-suspenders), tying into the <code>&lt;1 s</code> revocation
+pipeline (S5, [<code>04-security-privacy-pki.md</code> §4.6]).</li>
+</ol>
+<h3 id="62-delta-updates-preserve-need-to-know">6.2 Delta updates
+preserve need-to-know</h3>
+<p>When policy changes, the coordinator pushes a
+<strong><code>MapDelta</code></strong> (peer upsert/remove) to each
+affected open stream — the same need-to-know filter applies to the
+delta: a device only ever receives upserts for peers in its new
+<code>VisibleTo</code> and removals for peers leaving it
+([<code>v03-control-plane/svc-policy.md</code> §11]). A device never
+learns a peer it lost reach to <em>was</em> reachable beyond the removal
+itself; it never learns a peer it never had.</p>
+<hr />
+<h2 id="7-fail-closed-semantics--deny-on-unavailability-never-allow">7.
+Fail-closed semantics — deny on unavailability, never allow</h2>
+<p>Zero-trust must hold <strong>especially</strong> when something
+breaks. Every unavailability path resolves to <strong>deny</strong>,
+never to allow (P4/R3). &quot;When in doubt, drop&quot; is the contract.</p>
+<h3 id="71-the-fail-closed-table-closed-enumeration">7.1 The fail-closed
+table (closed enumeration)</h3>
+<table>
+<thead>
+<tr>
+<th>Failure condition</th>
+<th>Where</th>
+<th>Behavior</th>
+<th>Invariant</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Policy spec fails to compile</td>
+<td>control plane, EP1</td>
+<td><strong>reject</strong> the update; no row inserted; prior active
+policy stays live (never allow-all)</td>
+<td>P4</td>
+</tr>
+<tr>
+<td><code>dst</code> CIDR not covered by an advertised prefix</td>
+<td>EP1 dry-run</td>
+<td><strong>blocking</strong> <code>ERR_HOST_NOT_ADVERTISED</code>;
+change rejected</td>
+<td>P4/P7</td>
+</tr>
+<tr>
+<td>Edge has no compiled policy (<code>policy: None</code>)</td>
+<td>EP2b edge</td>
+<td><strong>drop every packet</strong> (the
+<code>Option&lt;CompiledPolicy&gt;</code> is <code>None</code>)</td>
+<td>R3</td>
+</tr>
+<tr>
+<td>Compiled policy is stale (delta not yet applied)</td>
+<td>EP2b edge</td>
+<td><strong>fail-static</strong>: keep enforcing the <em>old</em> policy
+(old tunnels keep forwarding under old rules) — never fail-open to
+allow-all</td>
+<td>R3 / [<code>v03-control-plane/svc-policy.md</code> §10.3]</td>
+</tr>
+<tr>
+<td>Control plane unreachable from a device</td>
+<td>device</td>
+<td>device keeps its <em>last</em> filtered map (fail-static to its
+existing grant); cannot <em>widen</em> without a new push; kill-switch
+keeps the leak window closed (S9)</td>
+<td>R3 / S9</td>
+</tr>
+<tr>
+<td>Coordinator stream drops</td>
+<td>coordinator</td>
+<td>the device re-authenticates (G1) and re-fetches; until then it has
+only its prior grant</td>
+<td>R2/R3</td>
+</tr>
+<tr>
+<td>Device revoked mid-flight</td>
+<td>control + edge</td>
+<td>revocation removes the peer + closes the stream in
+<code>&lt;1 s</code> (S5); a revoked grant is re-checked at activation
+(E5)</td>
+<td>S5 / P4</td>
+</tr>
+</tbody>
+</table>
+<h3 id="72-fail-static-is-not-fail-open--the-honest-distinction-1146">7.2
+Fail-static is not fail-open — the honest distinction (§11.4.6)</h3>
+<p>&quot;Fail-closed&quot; here has two faces, both deny-leaning, and the spec is
+precise about which:</p>
+<ul>
+<li><strong>Fail-closed (reject)</strong> — a <em>new</em> change that
+cannot be safely compiled/validated is <strong>rejected</strong>; the
+system does not adopt it (P4). Default-deny is preserved by <em>not
+widening</em>.</li>
+<li><strong>Fail-static (hold)</strong> — when a <em>delta</em> is in
+flight, edges keep enforcing the <strong>last known good</strong> policy
+until the new one lands; they never drop to allow-all and never blindly
+widen. This is the <code>&lt;1 s</code> convergence floor: a sub-second
+window of <em>old-but-correct</em> enforcement, never a window of
+<em>open</em> enforcement ([<code>v03-control-plane/svc-policy.md</code>
+§10.3]).</li>
+</ul>
+<p>Neither face ever resolves to &quot;allow because we&#39;re unsure&quot;. The
+honest boundary: the system guarantees <strong>no fail-open
+gap</strong>; it does <strong>not</strong> claim globally-atomic
+instantaneous convergence — there is a measured sub-second window where
+different edges may enforce different <em>(both valid, both
+deny-correct)</em> versions. <strong>UNVERIFIED:</strong> the exact p99
+of this window under 10k concurrent streams is a measured number the
+soak test produces ([<code>v03-control-plane/svc-policy.md</code>
+§10.3]) — this document states the <em>target</em>
+(<code>&lt;1 s</code>), not a measured result.</p>
+<pre class="mermaid"><code>stateDiagram-v2
+    [*] --&gt; DenyAll: no policy (None) — fail-closed floor (R3)
+    DenyAll --&gt; Enforcing: Activate(v) → edge receives compiled artifact
+    Enforcing --&gt; Enforcing: MapDelta applied (converged, &lt;1s target)
+    Enforcing --&gt; HoldingOld: delta in flight (fail-static — keep OLD policy)
+    HoldingOld --&gt; Enforcing: delta lands
+    Enforcing --&gt; Rejected: new spec fails compile/dry-run (P4)
+    Rejected --&gt; Enforcing: prior active policy UNCHANGED (never allow-all)
+    Enforcing --&gt; DenyPeer: device.revoked → peer removed &lt;1s (S5)
+    note right of HoldingOld
+      Fail-STATIC = old-but-correct deny enforcement.
+      NEVER fail-OPEN to allow-all. No leak window (S9).
+    end note</code></pre>
+<hr />
+<h2 id="8-worked-policy-evaluation-end-to-end">8. Worked policy
+evaluation (end to end)</h2>
+<p>Reusing the running example of
+[<code>v03-control-plane/svc-policy.md</code> §2.1/§4.3] to show
+zero-trust</p>
+<ul>
+<li>default-deny operating concretely. Tenant devices:
+<code>alice-laptop</code>, <code>bob-laptop</code> (group
+<code>admins</code>), <code>carol-laptop</code> (group
+<code>contractors</code>), <code>conn-A</code> (serves
+<code>10.10.0.0/24</code>, site 1), <code>conn-B</code> (serves
+<code>192.168.50.0/24</code>, site 2), gateway <code>gw</code>.</li>
+</ul>
+<p>Intent (the ACL):</p>
+<pre class="jsonc"><code>{
+  &quot;acls&quot;: [
+    { &quot;action&quot;: &quot;accept&quot;, &quot;src&quot;: [&quot;group:admins&quot;],      &quot;dst&quot;: [&quot;*:*&quot;] },
+    { &quot;action&quot;: &quot;accept&quot;, &quot;src&quot;: [&quot;group:contractors&quot;], &quot;dst&quot;: [&quot;warehouse-cams:554,80&quot;] }
+  ],
+  &quot;exitNodes&quot;: [&quot;group:admins&quot;]   // only admins may full-tunnel
+}</code></pre>
+<h3 id="81-evaluation--what-each-device-may-reach-and-may-not">8.1
+Evaluation — what each device may reach (and may NOT)</h3>
+<pre class="mermaid"><code>flowchart LR
+  subgraph admins[&quot;group:admins → *:*  (+ exit)&quot;]
+    AL[alice-laptop]
+    BL[bob-laptop]
+  end
+  CL[carol-laptop]
+  subgraph conns[&quot;connectors&quot;]
+    CA[&quot;conn-A 10.10.0.0/24 site1&quot;]
+    CB[&quot;conn-B 192.168.50.0/24 site2&quot;]
+  end
+  GW[(gateway exit)]
+
+  AL --&gt;|&quot;AllowedIPs 10.10.0.0/24 + via6 site1; all ports&quot;| CA
+  AL --&gt;|&quot;AllowedIPs 192.168.50.0/24 + via6 site2; all ports&quot;| CB
+  AL --&gt;|&quot;0.0.0.0/0 ::/0 EXIT (in ExitNodes)&quot;| GW
+  BL --&gt; CA
+  BL --&gt; CB
+  BL --&gt; GW
+  CL --&gt;|&quot;AllowedIPs 10.10.0.0/24 ; Verdicts TCP 554,80 ONLY ; via6 site1&quot;| CA
+  CL -. &quot;DEFAULT-DENY: no rule grants office-lan → NOT in VisibleTo, no AllowedIPs&quot; .-&gt; CB
+  CL -. &quot;DEFAULT-DENY: carol ∉ ExitNodes → no full-tunnel&quot; .-&gt; GW</code></pre>
+<h3 id="82-the-precise-compiled-slice-for-carol-laptop-least-privilege-made-concrete">8.2
+The precise compiled slice for <code>carol-laptop</code> (least
+privilege made concrete)</h3>
+<pre class="text"><code>VisibleTo[carol-laptop]          = { conn-A }                       # need-to-know: only conn-A (S3)
+AllowedIPs[carol-laptop][conn-A] = [ 10.10.0.0/24 ]                 # coarse grant (I6)
+Verdicts[carol-laptop][conn-A]   = [ {10.10.0.0/24, ANY, 554,554},  # fine: ports 554 + 80 ONLY (R3)
+                                     {10.10.0.0/24, ANY, 80,80} ]
+Via6[carol-laptop][conn-A]       = [ {10.10.0.0/24, fd7a:helix:rrrr:0001::/96} ]   # 4via6 (D4)
+ExitNodes                        ∌ carol-laptop                     # no full-tunnel (§4.3)
+# carol-laptop has NO entry for conn-B / office-lan → DEFAULT-DENY (S1/P1/I6)</code></pre>
+<h3 id="83-runtime-enforcement-of-carols-slice-ep2b-two-layers">8.3
+Runtime enforcement of carol&#39;s slice (EP2b, two layers)</h3>
+<p>A packet from <code>carol-laptop</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Destination attempt</th>
+<th>WG <code>AllowedIPs</code> (coarse)</th>
+<th>Verdict map (fine)</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>10.10.0.5:554</code> (TCP)</td>
+<td>match <code>10.10.0.0/24</code> ✓</td>
+<td>match <code>554</code> ✓</td>
+<td><strong>ALLOW</strong> — the granted camera port</td>
+</tr>
+<tr>
+<td><code>10.10.0.5:22</code> (SSH)</td>
+<td>match <code>10.10.0.0/24</code> ✓</td>
+<td>no rule → default <code>DROP</code></td>
+<td><strong>DENY</strong> — port not granted (least privilege)</td>
+</tr>
+<tr>
+<td><code>192.168.50.5:any</code></td>
+<td>no <code>AllowedIPs</code> → cryptokey-route DROP</td>
+<td>(never reached)</td>
+<td><strong>DENY</strong> — office-lan not granted (S1)</td>
+</tr>
+<tr>
+<td>full-tunnel <code>8.8.8.8</code></td>
+<td>not in <code>ExitNodes</code> → no <code>0.0.0.0/0</code> grant</td>
+<td>—</td>
+<td><strong>DENY</strong> — not an exit node</td>
+</tr>
+</tbody>
+</table>
+<p>The two layers are visible: even where the <em>coarse</em> CIDR layer
+would pass (<code>10.10.0.0/24</code>), the <em>fine</em> verdict map
+still denies the un-granted port — least privilege is enforced at
+<strong>both</strong> the CIDR and the port granularity, and the default
+at each is <strong>deny</strong> (I6/R3).</p>
+<h3 id="84-need-to-know-proven">8.4 Need-to-know proven</h3>
+<p><code>carol-laptop</code>&#39;s <code>NetworkMap</code> contains
+<strong>only <code>conn-A</code></strong>. It does not receive
+<code>conn-B</code>&#39;s pubkey, endpoint, or even its existence (S3/R2).
+Carol cannot reconnoiter the office LAN, cannot attempt a WG handshake
+to <code>conn-B</code> (no pubkey), and any packet toward
+<code>192.168.50.0/24</code> is dropped by cryptokey routing (no
+<code>AllowedIPs</code>). Three independent layers — <em>filtered
+map</em>, <em>cryptokey routing</em>, <em>verdict map</em> — each
+default-deny, all agree.</p>
+<hr />
+<h2 id="9-edge-cases-defined-behavior-no-guessing">9. Edge cases
+(defined behavior, no guessing)</h2>
+<p>Per §11.4.6, every boundary has a <em>defined</em> zero-trust
+behavior. These extend [<code>v03-control-plane/svc-policy.md</code>
+§10] with the zero-trust/default-deny lens.</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Edge case</th>
+<th>Defined behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Z1</td>
+<td>Newly-enrolled device, no policy grant</td>
+<td>Online but <strong>isolated</strong>: empty <code>AllowedIPs</code>,
+no verdict entry, in no peer&#39;s <code>VisibleTo</code>
+([<code>04-security-privacy-pki.md</code> §1.3]). The acceptance
+criterion &quot;enroll a client; deny an unauthorized host&quot; made
+concrete.</td>
+</tr>
+<tr>
+<td>Z2</td>
+<td>Empty ACL (only groups/hosts)</td>
+<td>Compiles to all-empty → <strong>everyone denied everything</strong>
+(default-deny floor, E1). Valid, not an error.</td>
+</tr>
+<tr>
+<td>Z3</td>
+<td>Device shares the tenant /48 with another</td>
+<td><strong>No reach</strong> without a rule — overlay adjacency confers
+nothing (§1.2 #3).</td>
+</tr>
+<tr>
+<td>Z4</td>
+<td>Device obtains a peer pubkey out-of-band</td>
+<td>Cannot reach it: G4 <code>AllowedIPs</code> + verdict map drop the
+packet (no compiled grant). Auth ≠ authorization.</td>
+</tr>
+<tr>
+<td>Z5</td>
+<td>Control plane unreachable from a device</td>
+<td>Fail-static to the <strong>last</strong> filtered map; cannot widen;
+kill-switch holds the leak window closed (S9).</td>
+</tr>
+<tr>
+<td>Z6</td>
+<td>Edge boots with no compiled policy</td>
+<td><code>policy: None</code> ⇒ <strong>drop everything</strong> until a
+policy lands (R3 fail-closed).</td>
+</tr>
+<tr>
+<td>Z7</td>
+<td>Policy update fails to compile</td>
+<td><strong>Rejected</strong> (P4); prior active policy stays live;
+never allow-all.</td>
+</tr>
+<tr>
+<td>Z8</td>
+<td>A granted device is revoked</td>
+<td>Removed from every <code>VisibleTo</code> + peer dropped + stream
+closed in <code>&lt;1 s</code> (S5); re-checked at activation (E5).</td>
+</tr>
+<tr>
+<td>Z9</td>
+<td>A wildcard <code>*:*</code> grant to a non-admin group</td>
+<td>Honored — the operator <em>explicitly</em> chose broad reach (E2).
+Zero-trust is &quot;no <em>implicit</em> trust&quot;; an explicit broad grant is
+the operator&#39;s authorized decision, still compiled per-device.</td>
+</tr>
+<tr>
+<td>Z10</td>
+<td>Two groups grant overlapping reach to one user</td>
+<td>Union — <code>accept</code> rules are additive (no <code>deny</code>
+to subtract, E6). The broader <em>explicit</em> grant wins; default-deny
+still governs everything ungranted.</td>
+</tr>
+<tr>
+<td>Z11</td>
+<td>Stale delta in flight across edges</td>
+<td>Fail-static (each edge enforces last-good); honest sub-second
+window, never fail-open (§7.2).</td>
+</tr>
+<tr>
+<td>Z12</td>
+<td><code>exitNodes</code> names a connector</td>
+<td><strong>Blocking</strong> <code>ERR_EXIT_IS_CONNECTOR</code> — a
+connector cannot be a full-tunnel exit (E7).</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="10-test--validation-mapping-114169">10. Test &amp; validation
+mapping (§11.4.169)</h2>
+<p>Zero-trust is anti-bluff: each property&#39;s PASS is captured evidence
+that an <em>unauthorized</em> attempt was actually
+<strong>denied</strong>, not merely that an authorized one succeeded — a
+green &quot;allow&quot; test is necessary, never sufficient
+([<code>v03-control-plane/svc-policy.md</code> §12 floor],
+§11.4.5/§11.4.69/§1.1).</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Test type</th>
+<th>Concrete test point</th>
+<th>Captured evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Default-deny floor (S1/E1/Z2)</td>
+<td>Unit</td>
+<td><code>Compile(emptyACL)</code> → all maps empty; assert no device
+reaches any other</td>
+<td>golden <code>compiled.json</code> byte-compare</td>
+</tr>
+<tr>
+<td>New device isolated (Z1)</td>
+<td>E2E (§11.4.98)</td>
+<td>enroll a client with no grant → assert empty <code>AllowedIPs</code>
++ cannot reach any LAN host (packet-level)</td>
+<td><code>docs/qa/&lt;run-id&gt;/</code> transcript + DROP pcap</td>
+</tr>
+<tr>
+<td>Least privilege port grant (§8.3)</td>
+<td>E2E</td>
+<td>carol reaches <code>10.10.0.0/24:554</code> <strong>and is
+denied</strong> <code>:22</code> and <code>192.168.50.0/24</code></td>
+<td>dual allow/deny pcap</td>
+</tr>
+<tr>
+<td>Need-to-know filter (S3/R2/§8.4)</td>
+<td>Integration</td>
+<td>carol&#39;s served map contains <strong>only</strong> conn-A; conn-B
+absent</td>
+<td>served-map byte-compare</td>
+</tr>
+<tr>
+<td>Fail-closed compile (P4/Z7)</td>
+<td>Integration + meta-test (§1.1)</td>
+<td>spec citing an unadvertised CIDR → <code>Update</code> rejects;
+assert <strong>no <code>policies</code> row inserted</strong>; mutate to
+skip the gate → test FAILs</td>
+<td>DB row-count before/after + mutate→FAIL log</td>
+</tr>
+<tr>
+<td>Edge fail-closed (R3/Z6)</td>
+<td>Integration</td>
+<td>start edge with <code>policy: None</code> → every packet
+dropped</td>
+<td>drop-counter trace</td>
+</tr>
+<tr>
+<td>Fail-static, not fail-open (§7.2/Z11)</td>
+<td>Chaos (§11.4.85)</td>
+<td>kill the policy push mid-delta → edges keep enforcing
+<strong>old</strong> policy; assert no allow-all window</td>
+<td><code>recovery_trace.log</code> + pcap (no leaked flow)</td>
+</tr>
+<tr>
+<td>Server-authoritative identity (§6.1 #1)</td>
+<td>Security</td>
+<td>a device requests another device&#39;s map → served <strong>its
+own</strong> slice only</td>
+<td>request/response capture</td>
+</tr>
+<tr>
+<td>Auth ≠ authorization (Z4/G4)</td>
+<td>Security</td>
+<td>send a packet to a known-pubkey peer with no compiled grant →
+dropped</td>
+<td>DROP pcap</td>
+</tr>
+<tr>
+<td>Revoked-exclusion (S5/Z8)</td>
+<td>Integration</td>
+<td>revoke a granted device → removed from <code>VisibleTo</code> + peer
+dropped, timed <code>&lt;1 s</code></td>
+<td>revoke-to-removed timer</td>
+</tr>
+<tr>
+<td>Two-layer enforcement (§3/§8.3)</td>
+<td>Meta-test (§1.1)</td>
+<td>(a) widen verdict default to <code>ACCEPT</code> → least-privilege
+port test FAILs; (b) skip <code>AllowedIPs</code> filter → CIDR-deny
+test FAILs</td>
+<td>mutate→FAIL→restore→PASS</td>
+</tr>
+<tr>
+<td>Determinism of the grant (P2)</td>
+<td>Unit/property</td>
+<td>compile same intent twice → byte-identical artifact (no
+nondeterministic widening)</td>
+<td>hash-equality log</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>Anti-bluff floor (the §0.1 covenant): a zero-trust &quot;PASS&quot; requires
+captured evidence that <strong>both</strong> an authorized edge
+succeeded <strong>and</strong> an unauthorized edge was denied — under
+the same build, same topology. The §1.1 mutations (skip the dry-run
+gate; widen the verdict default; drop the need-to-know filter; remove
+the revoked check) are the runtime signatures (§11.4.108) that
+S1/S3/P4/I6/R3 are <strong>live</strong>, not merely promised.</p>
+</blockquote>
+<hr />
+<h2 id="sources-verified">Sources verified</h2>
+<ul>
+<li>[<code>04-security-privacy-pki.md</code>] — §0.1 invariants S1
+(zero-trust default-deny), S3 (need-to-know map distribution), S4
+(two-channel auth), S5 (<code>&lt;1 s</code> revocation), S9
+(kill-switch); §1.2 two authentication channels; §1.3 default-deny
+realisation (empty <code>AllowedIPs</code> + no verdict entry =
+isolated); §4.6 revocation pipeline. (Read 2026-06-25.)</li>
+<li>[<code>v03-control-plane/svc-policy.md</code>] — §0.1 invariants P1
+(default-deny/need-to-know), P4 (fail-closed), P6 (RLS); §2.1 running
+ACL example; §3 <code>CompiledPolicy</code> {Version, SpecHash,
+VisibleTo, AllowedIPs, Verdicts, Via6, ExitNodes} + §3 P3 two-artifact
+model; §4.1 compile algorithm (default-deny base); §4.3 worked
+carol-laptop slice; §5 blocking/advisory taxonomy; §6 version lifecycle
++ instant rollback; §7.2 <code>Peer</code> projection; §10 edge cases
+(E1/E2/E6/E7) + §10.3 honest convergence-race boundary; §11 convergence
+SLO; §12 test matrix. (Read 2026-06-25.)</li>
+<li>[<code>v02-data-plane/routing-and-addressing.md</code>] — §0.2
+invariants I5/I6 (default-deny), R2 (need-to-know delivery), R3 (verdict
+map fails closed); §1 <code>RouteEngine</code>
+(<code>policy: Option&lt;CompiledPolicy&gt;</code>,
+<code>None ⇒ fail-closed</code>); §6 ACL→AllowedIPs + verdict-map
+compiler. (Read 2026-06-25.)</li>
+<li>[<code>threat-model.md</code>] (this volume) — §5.2/§5.4/§5.5
+component STRIDE referenced for the authenticate-vs-authorize separation
+and the over-share threat. (Authored alongside, 2026-06-25.)</li>
+<li>[04_ARCH] HelixVPN-Architecture-Refined.md §3.4 (overlay/policy,
+<code>AllowedIPs</code> + nftables/eBPF verdict map, ULA /48 + 4via6),
+§7 (zero-trust, no-logging) — cited via the sibling specs.</li>
+<li>[04_P1] HelixVPN-Phase1-MVP.md §7 (ACL model, two artifacts,
+fail-closed), §11 DoD (authorized/denied acceptance criterion) — cited
+via the sibling specs.</li>
+<li>[research-pki_pq_nat], [SYNTHESIS §1/§3/§7] — trust gradient, D4
+4via6, need-to-know. <strong>UNVERIFIED</strong> items (measured
+<code>&lt;1 s</code> convergence p99 under 10k streams; the exact
+stale-delta window distribution) are flagged inline per §11.4.6 and
+stated as targets, never results.</li>
+</ul>
+</body>
+</html>

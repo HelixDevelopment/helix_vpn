@@ -1,7 +1,7 @@
 # Audit & compliance
 
-**Revision:** 1
-**Last modified:** 2026-06-25T12:00:00Z
+**Revision:** 2
+**Last modified:** 2026-06-26T12:00:00Z
 
 > Master technical specification — **Volume 5 (Security & Privacy)**, nano-detail
 > deep-dive. This document **deepens** the audit + compliance posture of the master
@@ -279,17 +279,19 @@ const (
     ActionEnrollTokenUsed    AuditAction = "enroll_token.used"
     ActionTenantCreated      AuditAction = "tenant.create"
     ActionUserRoleChanged    AuditAction = "user.role.change"
+    ActionAuthLogin          AuditAction = "auth.login"          // login (control-action audit)
+    ActionAuthEnrollDenied   AuditAction = "auth.enroll.denied"  // rejected enroll (abuse signal)
 )
 // Audit() rejects any Action not in this closed set with ErrUnknownAuditAction (§9 telemetry).
 ```
 
-> **Note on `auth.login` / `auth.enroll.denied`.** The master security doc §7 lists
-> `auth.login` and `auth.enroll.denied` in its audited-actions narrative [04-SEC §7], while
-> the telemetry closed enum [svc-telemetry §4.2] does not yet include them. **This is a
-> tracked reconciliation item** (`UNVERIFIED` whether `auth.*` are MVP audit rows or
-> Phase-2 additions): the closed enum is the *mechanical* source of truth; adding
-> `auth.login`/`auth.enroll.denied` is an additive enum extension (the closed set grows, the
-> lint allow-list grows with it) — surfaced here, not silently resolved (§11.4.6/§11.4.66).
+> **Reconciled (§11.4.35, 2026-06-26) — `D-AC-1`: `auth.login` + `auth.enroll.denied` adopted
+> into the `AuditAction` enum.** The master security doc §7 and this taxonomy both list
+> `auth.login` and `auth.enroll.denied`; they are now adopted enum members in the canonical
+> closed set [svc-telemetry §4.2] (the superset source of truth) and mirrored here — no longer
+> an open reconciliation item. They are legitimate *control-action* audits (a login, a rejected
+> enroll), never traffic; adopting them is an additive enum extension (the closed set + lint
+> allow-list grow together), so audit still cannot silently drift toward traffic logging.
 
 ### 4.1 The taxonomy mapped to compliance categories
 
@@ -300,6 +302,7 @@ const (
 | **Policy lifecycle** | `policy.create`, `policy.activate`, `policy.rollback` | accountability for *who changed access rules* (change-management evidence) |
 | **Topology lifecycle** | `connector.attached`, `connector.prefixes.changed` | accountability for *what networks were exposed* |
 | **Authorisation** | `user.role.change` | accountability for *privilege grants* (least-privilege evidence) |
+| **Authentication** | `auth.login`, `auth.enroll.denied` | accountability for *who authenticated* + a rejected-enroll abuse signal (access-management evidence) |
 
 Every one of these is an *administrative* fact. **None** describes user traffic — which is
 the point: the audit trail is complete *for control actions* precisely because control

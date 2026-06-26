@@ -1,0 +1,1464 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Lightweight Obfuscation (LWO) Transport</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Lightweight Obfuscation (LWO) Transport</h1>
+</header>
+<h1 id="lightweight-obfuscation-lwo-transport">Lightweight Obfuscation
+(LWO) Transport</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-06-25T00:00:00Z</p>
+<blockquote>
+<p>Master technical specification — Volume 2 (Data Plane), nano-detail
+deepening of the <strong>Lightweight Obfuscation (LWO)
+Transport</strong> introduced at [01-data-plane §3.7]. Scope: keyed
+obfuscation of the WireGuard header bytes that DPI signatures key on,
+plus randomized padding — the cheapest obfuscation rung above plain UDP.
+This is a <strong>SPEC</strong> (describe what to build; do not write
+the shipping product). Sources cited inline by id:
+<code>[01-DP §N]</code> = the pass-1 data-plane overview;
+<code>[04_ARCH §N]</code> =
+<code>HelixVPN-Architecture-Refined.md</code>; <code>[04_P0 §N]</code> =
+<code>Phase0-Spike.md</code>; <code>[04_P2 §N]</code> = Phase-2 refined
+doc; <code>[SYNTHESIS §N]</code> = cross-document synthesis;
+<code>[WG-PROTOCOL]</code> = the public WireGuard protocol specification
+(wireguard.com/protocol, Noise-IK message formats — <strong>external
+standard</strong>, not the Helix evidence base; every byte offset taken
+from it is flagged). Anything not groundable is marked
+<code>UNVERIFIED</code> per §11.4.6.</p>
+</blockquote>
+<hr />
+<h2 id="0-position-in-the-system--what-this-document-owns">0. Position
+in the system &amp; what this document owns</h2>
+<p>LWO is one variant of the <code>Transport</code> trait [01-DP §3.1] —
+the single L2 carrier interface shared byte-for-byte by client,
+connector, and edge (invariant I4) [01-DP §0.1, 04_ARCH §134]. It
+carries <strong>already-encrypted WireGuard datagrams</strong> (I1) as
+<strong>unreliable UDP datagrams</strong> (I2): exactly one WG datagram
+per UDP packet, preserving WG&#39;s loss semantics with no head-of-line
+blocking — the same datagram-preserving property <code>plain-udp</code>
+has and that <code>shadowsocks</code> / <code>udp-over-tcp</code> lose
+[01-DP §3.5–§3.6].</p>
+<p>LWO is the <strong>first escalation rung above
+<code>plain-udp</code></strong> in the ladder because it is the cheapest
+non-default option: near-zero CPU, no QUIC handshake, no extra round
+trips [01-DP §3.7, 04_ARCH §129/§132/§385]. Default ladder order on a
+restricted network:
+<code>[ plain-udp, lwo, masque-h3, shadowsocks, udp-over-tcp ]</code>
+[01-DP §5.3].</p>
+<p><strong>What this document owns:</strong> the LWO wire format (byte
+layouts, both phase schemes), the key-derivation chain, the
+obfuscate/deobfuscate algorithms, the per-packet padding policy, the LWO
+<code>Transport</code> impl surface, its state machine, error taxonomy,
+config knobs, edge cases, security considerations (including the honest
+limits of cheap obfuscation), the MTU/perf budget, and the test
+matrix.</p>
+<p><strong>What it does NOT own:</strong> the <code>Transport</code>
+trait itself (frozen at [01-DP §3.1]); WG crypto (<code>helix-wg</code>,
+[01-DP §4]); the ladder selection algorithm
+(<code>helix-core/src/ladder.rs</code>, [01-DP §5.3] — LWO only
+contributes its <code>dial()</code> and <code>health()</code>);
+<code>NetworkMap</code> delivery of <code>session_key</code> (doc 03);
+DAITA shaping (a separate L2.5 stage, [01-DP §9] — LWO padding is
+<strong>not</strong> DAITA and makes no anti-fingerprinting claim beyond
+defeating the static WG signature).</p>
+<h3 id="01-lwo-specific-invariants-extend-the-01-data-plane-set">0.1
+LWO-specific invariants (extend the §0.1 data-plane set)</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Invariant</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>L1</td>
+<td>LWO is <strong>WG-agnostic</strong>: it never parses or interprets
+the WG datagram — it XOR-masks a fixed prefix and appends padding,
+treating the WG datagram as opaque bytes. This keeps it cheap (I2) and
+forward-compatible with any future WG message type.</td>
+<td>derived from [04_ARCH §129] &quot;in-house XOR/padding scheme&quot;</td>
+</tr>
+<tr>
+<td>L2</td>
+<td>LWO is <strong>per-packet stateless on the data path</strong> (Phase
+2 adds only a monotonic send counter); no per-packet durable state,
+consistent with no-logging-by-construction (I5).</td>
+<td>[01-DP §0.1 I5]</td>
+</tr>
+<tr>
+<td>L3</td>
+<td>The obfuscation key is <strong>separate from the WG keys</strong>
+(derived from a transport <code>session_key</code> pushed by the
+coordinator), so an LWO key compromise never touches WG
+confidentiality.</td>
+<td>analogous to <code>shadowsocks</code> &quot;session keys SEPARATE from WG
+keys&quot; [01-DP §3.5]</td>
+</tr>
+<tr>
+<td>L4</td>
+<td>A packet that fails LWO deobfuscation is <strong>dropped and
+counted, never propagated</strong> as a transport error — a
+corrupt/probe packet must not tear down a live tunnel (matches UDP&#39;s
+drop-on-corrupt).</td>
+<td>derived (I2 unreliable-datagram semantics)</td>
+</tr>
+<tr>
+<td>L5</td>
+<td>LWO defeats <strong>naive/static WG-signature DPI only</strong>; it
+is explicitly NOT a defense against an active probing adversary or a
+stateful entropy classifier (that is <code>masque-h3</code>&#39;s job). The
+honest boundary is stated and tested, never overclaimed (§11.4.6).</td>
+<td>[01-DP §3.7] &quot;naive WG fingerprinting&quot;; [04_ARCH §129] &quot;near-zero&quot;
+cost tier</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="1-threat-model--the-wireguard-signature-lwo-defeats">1. Threat
+model — the WireGuard signature LWO defeats</h2>
+<h3 id="11-what-a-passive-dpi-box-keys-on-the-wg-fingerprint">1.1 What a
+passive DPI box keys on (the WG fingerprint)</h3>
+<p>A WireGuard datagram on the wire begins with a fixed, low-entropy
+header. Per the public WireGuard protocol [WG-PROTOCOL §5.4]
+(<strong>external standard — byte offsets below are from the WG spec,
+not the Helix evidence base; flagged accordingly</strong>):</p>
+<pre><code>WG message framing (all little-endian):
+  byte 0      : message_type   ∈ {1,2,3,4}
+  bytes 1..3  : reserved_zero  = 0x00 0x00 0x00   (always three zero bytes)
+  bytes 4..   : type-specific payload
+
+  type 1 = Handshake Initiation   — TOTAL 148 bytes (fixed)   [WG-PROTOCOL §5.4.2]
+  type 2 = Handshake Response      — TOTAL  92 bytes (fixed)   [WG-PROTOCOL §5.4.3]
+  type 3 = Cookie Reply            — TOTAL  64 bytes (fixed)   [WG-PROTOCOL §5.4.7]
+  type 4 = Transport Data          — TOTAL ≥ 32 bytes (16B hdr + ≥16B AEAD)  [WG-PROTOCOL §5.4.6]
+
+  Handshake Initiation (type 1) field map [WG-PROTOCOL §5.4.2]:
+    [0]      type=1
+    [1..4]   reserved = 0,0,0
+    [4..8]   sender_index   (u32, little-endian, attacker-observable counter)
+    [8..40]  unencrypted_ephemeral (32B Curve25519 point — random-looking)
+    [40..88] encrypted_static (48B = 32B + 16B Poly1305 tag — random-looking)
+    [88..116] encrypted_timestamp (28B = 12B TAI64N + 16B tag — random-looking)
+    [116..132] mac1 (16B keyed-BLAKE2s — random-looking)
+    [132..148] mac2 (16B — random-looking or zero)
+
+  Transport Data (type 4) field map [WG-PROTOCOL §5.4.6]:
+    [0]      type=4
+    [1..4]   reserved = 0,0,0
+    [4..8]   receiver_index (u32, little-endian)
+    [8..16]  counter (u64, little-endian, MONOTONIC — the strongest plaintext signal)
+    [16..]   encrypted_encapsulated_packet (≥16B AEAD — random-looking)</code></pre>
+<p>Three independent, cheaply-computable DPI signatures fall out of
+this:</p>
+<ol type="1">
+<li><strong>The 4-byte prefix pattern</strong> —
+<code>byte[0] ∈ {1,2,3,4}</code> AND
+<code>byte[1..3] == 0x000000</code>. A single u32 mask/compare per
+packet flags WG with near-zero false positives against random UDP.
+<strong>This is the dominant signature.</strong></li>
+<li><strong>Fixed handshake lengths</strong> — a UDP packet of exactly
+<strong>148 / 92 / 64</strong> bytes to a fresh peer is a near-certain
+WG handshake, independent of payload [WG-PROTOCOL §5.4].</li>
+<li><strong>The transport counter</strong> — <code>byte[8..16]</code> of
+a type-4 packet increments by 1 per packet in a low-loss flow; a
+monotone little-endian u64 in a fixed offset is a strong stateful
+tell.</li>
+</ol>
+<h3 id="12-lwos-countermeasures-mapped-11-to-the-signatures">1.2 LWO&#39;s
+countermeasures (mapped 1:1 to the signatures)</h3>
+<table>
+<thead>
+<tr>
+<th>Signature</th>
+<th>LWO countermeasure</th>
+<th>Mechanism (§3)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>(1) 4-byte prefix <code>{1..4},0,0,0</code></td>
+<td>XOR-mask the first <code>header_obf_len</code> bytes (default 16, ≥
+the 4-byte prefix <strong>and</strong> the index/counter fields) with a
+keystream → prefix becomes uniform-random; the WG signature
+vanishes.</td>
+<td>§3.3 obfuscate</td>
+</tr>
+<tr>
+<td>(2) fixed lengths 148/92/64</td>
+<td>append <code>pad_len ∈ [pad_min, pad_max]</code> keyed-random
+padding bytes → the 148-byte init becomes a variable-length packet,
+breaking the fixed-length fingerprint.</td>
+<td>§3.4 padding</td>
+</tr>
+<tr>
+<td>(3) monotone counter at <code>[8..16]</code></td>
+<td>covered by (1) when <code>header_obf_len ≥ 16</code> — the counter
+falls inside the XOR-masked prefix and is masked with a per-packet
+keystream, so it no longer presents as a clean monotone u64.</td>
+<td>§3.3 obfuscate (note <code>header_obf_len</code> default = 16, not
+4, <strong>precisely</strong> to cover the counter)</td>
+</tr>
+</tbody>
+</table>
+<p>After LWO, every UDP packet on the wire is: an 8-byte cleartext
+random <code>seed</code>, followed by a prefix that is uniform-random
+(masked), followed by WG ciphertext that was already random-looking,
+followed by random-looking padding of varying length. To the dominant
+passive WG classifier there is no WG signature left. <strong>Honest
+boundary (L5):</strong> a <em>stateful entropy classifier</em> may still
+flag &quot;high-entropy UDP to :443-ish with no TLS/QUIC handshake&quot; — LWO
+does not claim to beat that; that is the escalation to
+<code>masque-h3</code> [01-DP §3.3].</p>
+<hr />
+<h2 id="2-where-lwo-sits--layering--ladder-placement">2. Where LWO sits
+— layering &amp; ladder placement</h2>
+<pre class="mermaid"><code>flowchart TB
+    subgraph CORE[&quot;helix-core orchestrator (§5)&quot;]
+        WG[&quot;helix-wg: WG encrypt/decrypt&lt;br/&gt;(opaque WG datagram out)&quot;]
+        LAD[&quot;ladder.rs: TransportPolicy&lt;br/&gt;rung order&quot;]
+    end
+    subgraph LWOC[&quot;helix-transport/src/lwo.rs (THIS DOC)&quot;]
+        OBF[&quot;obfuscate(): XOR prefix + pad&quot;]
+        DEOBF[&quot;deobfuscate(): strip pad + un-XOR&quot;]
+        SOCK[&quot;tokio UdpSocket&quot;]
+    end
+    WG -- &quot;Bytes (1 WG datagram)&quot; --&gt; OBF
+    OBF --&gt; SOCK
+    SOCK -- &quot;UDP to gateway:port&quot; --&gt; NET((&quot;wire&lt;br/&gt;(no WG signature)&quot;))
+    NET --&gt; SOCK
+    SOCK --&gt; DEOBF
+    DEOBF -- &quot;Bytes (1 WG datagram)&quot; --&gt; WG
+    LAD -. &quot;dial(Lwo{...}) on rung-2&quot; .-&gt; LWOC
+    classDef fixed fill:#1f4,stroke:#093,color:#000
+    classDef this fill:#39f,stroke:#036,color:#fff
+    class WG fixed
+    class OBF,DEOBF,SOCK this</code></pre>
+<p>LWO is selected when <code>plain-udp</code> (rung 1) exceeds its
+handshake failure budget — i.e. WG/UDP is being dropped by a
+signature-matching DPI box [01-DP §5.3 step 3, sequence at §5.4 &quot;Rung
+2&quot;]. Because LWO is also UDP, if the censor is dropping <em>all</em> UDP
+(not just WG-signed UDP), LWO will also fail its budget and the ladder
+escalates to <code>masque-h3</code> (TCP/443-shaped QUIC). LWO&#39;s value
+is precisely the <strong>common middle case</strong>: UDP is allowed,
+but packets carrying the WG signature are dropped.</p>
+<hr />
+<h2 id="3-wire-format--algorithms">3. Wire format &amp; algorithms</h2>
+<p>Two schemes ship across phases per [01-DP §3.7] (&quot;Phase 1 ships a
+basic XOR/padding scheme; Phase 2 hardens it to a proper per-session
+keyed scheme&quot;). The byte layout is identical at the framing level; the
+keystream source differs. <code>scheme_version</code> (config §11)
+selects which.</p>
+<h3 id="31-lwo-frame-layout-on-wire-one-per-udp-datagram">3.1 LWO frame
+layout (on-wire, one per UDP datagram)</h3>
+<pre><code> 0        1        ...      8                       8+L                 8+L+P
+ +--------+--------+--------+------------------------+-------------------+
+ | seed (8 bytes, cleartext)| obf(WG datagram), L B  | padding, P bytes  |
+ +--------+--------+--------+------------------------+-------------------+
+ |&lt;------ SEED_LEN=8 ------&gt;|&lt;-- WG datagram (XOR&#39;d  |&lt;-- keyed-random   |
+ |  per-packet random nonce |    over first H bytes) |    pad, length P  |
+ |  = keystream seed         |    rest = raw WG ct    |    derived from   |
+ |                           |    (already random)    |    seed (§3.4)    |
+ +---------------------------+------------------------+-------------------+
+
+  SEED_LEN  = 8   (constant)
+  L         = true WG datagram length (1 .. effective_mtu_inner); NOT on the wire —
+              recovered as  L = udp_payload_len - SEED_LEN - P
+  P         = pad_len(seed, pad_key)  ∈ [pad_min, pad_max]   (deterministic from seed; §3.4)
+  H         = min(L, header_obf_len)  bytes of the WG datagram that get XOR-masked
+  udp_payload_len = SEED_LEN + L + P   (== the bytes UDP hands us; known on recv)</code></pre>
+<p><strong>Why no explicit length field:</strong> <code>P</code> is a
+pure deterministic function of <code>(seed, pad_key)</code> (§3.4), and
+<code>udp_payload_len</code> is given by the UDP stack, so the receiver
+recovers <code>L = udp_payload_len − 8 − P</code> with
+<strong>zero</strong> extra header bytes. This minimizes overhead (the
+entire LWO framing cost is <code>SEED_LEN + P</code> = 8 + ~[0..16]
+bytes) and removes a plaintext length field that would itself be a
+fingerprint. (Phase 1&#39;s simpler variant carries a 1-byte obfuscated
+<code>pad_len</code>; see §3.5.)</p>
+<p><strong>Seed is cleartext by necessity:</strong> the receiver needs
+it to derive the same keystream and <code>pad_len</code>. An 8-byte
+random seed is itself indistinguishable from random and carries no WG
+signature; its only risk is keystream reuse on seed collision, bounded
+by the birthday term <code>≈ 2^-64</code> per pair (§10).</p>
+<h3 id="32-key-derivation-chain">3.2 Key derivation chain</h3>
+<p><code>session_key: SecretBytes</code> arrives in
+<code>TransportConfig::Lwo</code> from the coordinator&#39;s
+<code>NetworkMap</code> (doc 03), per-peer and rotatable. From it LWO
+derives two sub-keys via HKDF-SHA256 (RFC 5869):</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-transport/src/lwo.rs  — key schedule</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">hkdf::</span>Hkdf<span class="op">;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">sha2::</span>Sha256<span class="op">;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> LWO_INFO_OBF<span class="op">:</span> <span class="op">&amp;</span>[<span class="dt">u8</span>] <span class="op">=</span> <span class="st">b&quot;helix-lwo/v2/obf-key&quot;</span><span class="op">;</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> LWO_INFO_PAD<span class="op">:</span> <span class="op">&amp;</span>[<span class="dt">u8</span>] <span class="op">=</span> <span class="st">b&quot;helix-lwo/v2/pad-key&quot;</span><span class="op">;</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> SEED_LEN<span class="op">:</span> <span class="dt">usize</span>     <span class="op">=</span> <span class="dv">8</span><span class="op">;</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> LwoKeys <span class="op">{</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    obf_key<span class="op">:</span> [<span class="dt">u8</span><span class="op">;</span> <span class="dv">32</span>]<span class="op">,</span>   <span class="co">// ChaCha20 key for the header keystream (§3.3)</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    pad_key<span class="op">:</span> [<span class="dt">u8</span><span class="op">;</span> <span class="dv">16</span>]<span class="op">,</span>   <span class="co">// keyed PRF key for pad-length derivation (§3.4)</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="co">/// salt = a per-session 32-byte value also pushed in the NetworkMap (session_salt),</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="co">/// rotated whenever session_key rotates; binds the key schedule to one session.</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> derive_keys(session_key<span class="op">:</span> <span class="op">&amp;</span>SecretBytes<span class="op">,</span> session_salt<span class="op">:</span> <span class="op">&amp;</span>[<span class="dt">u8</span><span class="op">;</span> <span class="dv">32</span>]) <span class="op">-&gt;</span> LwoKeys <span class="op">{</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> hk <span class="op">=</span> <span class="pp">Hkdf::</span><span class="op">&lt;</span>Sha256<span class="op">&gt;</span><span class="pp">::</span>new(<span class="cn">Some</span>(session_salt)<span class="op">,</span> session_key<span class="op">.</span>expose())<span class="op">;</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> obf_key <span class="op">=</span> [<span class="dv">0u8</span><span class="op">;</span> <span class="dv">32</span>]<span class="op">;</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> pad_key <span class="op">=</span> [<span class="dv">0u8</span><span class="op">;</span> <span class="dv">16</span>]<span class="op">;</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>    hk<span class="op">.</span>expand(LWO_INFO_OBF<span class="op">,</span> <span class="op">&amp;</span><span class="kw">mut</span> obf_key)<span class="op">.</span>expect(<span class="st">&quot;hkdf obf&quot;</span>)<span class="op">;</span>   <span class="co">// 32 ≤ 255*32, infallible</span></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>    hk<span class="op">.</span>expand(LWO_INFO_PAD<span class="op">,</span> <span class="op">&amp;</span><span class="kw">mut</span> pad_key)<span class="op">.</span>expect(<span class="st">&quot;hkdf pad&quot;</span>)<span class="op">;</span></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>    LwoKeys <span class="op">{</span> obf_key<span class="op">,</span> pad_key <span class="op">}</span></span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><code>SecretBytes</code> is a zeroize-on-drop wrapper (the same
+<code>SecretBytes</code> used by
+<code>TransportConfig::Shadowsocks</code>/<code>Lwo</code> in [01-DP
+§3.1]); <code>obf_key</code>/<code>pad_key</code> live in a struct that
+also implements <code>Zeroize</code> on <code>Drop</code>. Keys never
+touch logs (§11.4.10).</p>
+<h3 id="33-the-keystream--header-obfuscation-phase-2--hardened">3.3 The
+keystream &amp; header obfuscation (Phase 2 — hardened)</h3>
+<div class="sourceCode" id="cb5"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">chacha20::cipher::</span><span class="op">{</span>KeyIvInit<span class="op">,</span> StreamCipher<span class="op">};</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">chacha20::</span>ChaCha20<span class="op">;</span>   <span class="co">// IETF ChaCha20: 32B key, 12B nonce, 32-bit block counter</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co">/// Derive a 12-byte ChaCha20 nonce from the 8-byte per-packet seed.</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="co">/// First 4 nonce bytes are a fixed domain tag so the same seed never collides</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="co">/// with the pad-PRF input space; last 8 are the seed.</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>inline<span class="at">]</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> seed_to_nonce(seed<span class="op">:</span> <span class="op">&amp;</span>[<span class="dt">u8</span><span class="op">;</span> SEED_LEN]) <span class="op">-&gt;</span> [<span class="dt">u8</span><span class="op">;</span> <span class="dv">12</span>] <span class="op">{</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> n <span class="op">=</span> [<span class="dv">0u8</span><span class="op">;</span> <span class="dv">12</span>]<span class="op">;</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    n[<span class="dv">0</span><span class="op">..</span><span class="dv">4</span>]<span class="op">.</span>copy_from_slice(<span class="st">b&quot;OBF1&quot;</span>)<span class="op">;</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    n[<span class="dv">4</span><span class="op">..</span><span class="dv">12</span>]<span class="op">.</span>copy_from_slice(seed)<span class="op">;</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    n</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a><span class="co">/// Obfuscate IN PLACE: XOR the first H = min(L, header_obf_len) bytes of `wg`</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a><span class="co">/// with the ChaCha20 keystream. Cost: one ChaCha20 init + H bytes of XOR (H ≤ 64</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a><span class="co">/// by default → a single ChaCha20 block). The remaining L-H bytes are untouched</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a><span class="co">/// (already-random WG ciphertext, no signature).</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> obfuscate_header(keys<span class="op">:</span> <span class="op">&amp;</span>LwoKeys<span class="op">,</span> seed<span class="op">:</span> <span class="op">&amp;</span>[<span class="dt">u8</span><span class="op">;</span> SEED_LEN]<span class="op">,</span> wg<span class="op">:</span> <span class="op">&amp;</span><span class="kw">mut</span> [<span class="dt">u8</span>]<span class="op">,</span> header_obf_len<span class="op">:</span> <span class="dt">usize</span>) <span class="op">{</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> h <span class="op">=</span> wg<span class="op">.</span>len()<span class="op">.</span>min(header_obf_len)<span class="op">;</span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> cipher <span class="op">=</span> <span class="pp">ChaCha20::</span>new((<span class="op">&amp;</span>keys<span class="op">.</span>obf_key)<span class="op">.</span>into()<span class="op">,</span> (<span class="op">&amp;</span>seed_to_nonce(seed))<span class="op">.</span>into())<span class="op">;</span></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>    cipher<span class="op">.</span>apply_keystream(<span class="op">&amp;</span><span class="kw">mut</span> wg[<span class="op">..</span>h])<span class="op">;</span>   <span class="co">// XOR mask; deobfuscate is the identical op</span></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><strong>Deobfuscation is the identical operation</strong> (XOR is its
+own inverse): re-derive the keystream from the cleartext
+<code>seed</code> and <code>obf_key</code>, XOR the first <code>H</code>
+bytes of the recovered <code>L</code>-byte WG region. No separate code
+path.</p>
+<p><strong><code>header_obf_len</code> default = 16</strong> (config
+§11): covers the 4-byte prefix, the 4-byte sender/receiver index, and
+(for type-4) the 8-byte counter — i.e. <em>every</em> low-entropy /
+monotone field in §1.1, in a single ChaCha20 block&#39;s worth of XOR. A
+<code>full</code> mode (<code>header_obf_len = u16::MAX</code>, clamped
+to <code>L</code>) XORs the entire datagram for maximum entropy
+flattening at a slightly higher (still linear, ~1 GB/s/core) cost;
+default stays header-only because the WG body is already random (L1,
+§1.1).</p>
+<h3 id="34-padding-policy-keyed-deterministic-from-seed">3.4 Padding
+policy (keyed, deterministic from seed)</h3>
+<div class="sourceCode" id="cb6"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">siphasher::sip::</span>SipHasher13<span class="op">;</span>   <span class="co">// fast keyed PRF; pad_key is the SipHash key</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::hash::</span><span class="bu">Hasher</span><span class="op">;</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co">/// pad_len is a DETERMINISTIC function of (seed, pad_key): the sender and receiver</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="co">/// compute the identical value with no length field on the wire.</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="co">/// Range [pad_min, pad_max] inclusive; both config knobs (§11). pad_max - pad_min + 1</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="co">/// MUST be ≥ 1.  Uniform over the range via rejection-free modulo on a 64-bit PRF</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="co">/// (bias ≤ 2^-58 for ranges ≤ 256 — negligible for a length distribution).</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> pad_len(keys<span class="op">:</span> <span class="op">&amp;</span>LwoKeys<span class="op">,</span> seed<span class="op">:</span> <span class="op">&amp;</span>[<span class="dt">u8</span><span class="op">;</span> SEED_LEN]<span class="op">,</span> pad_min<span class="op">:</span> <span class="dt">u16</span><span class="op">,</span> pad_max<span class="op">:</span> <span class="dt">u16</span>) <span class="op">-&gt;</span> <span class="dt">usize</span> <span class="op">{</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> span <span class="op">=</span> (pad_max <span class="op">-</span> pad_min) <span class="kw">as</span> <span class="dt">u64</span> <span class="op">+</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> h <span class="op">=</span> <span class="pp">SipHasher13::</span>new_with_key(<span class="op">&amp;{</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> <span class="kw">mut</span> k <span class="op">=</span> [<span class="dv">0u8</span><span class="op">;</span> <span class="dv">16</span>]<span class="op">;</span> k<span class="op">.</span>copy_from_slice(<span class="op">&amp;</span>keys<span class="op">.</span>pad_key)<span class="op">;</span> k</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>    h<span class="op">.</span>write(<span class="st">b&quot;PAD1&quot;</span>)<span class="op">;</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>    h<span class="op">.</span>write(seed)<span class="op">;</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>    (pad_min <span class="kw">as</span> <span class="dt">u64</span> <span class="op">+</span> (h<span class="op">.</span>finish() <span class="op">%</span> span)) <span class="kw">as</span> <span class="dt">usize</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a><span class="co">/// Padding CONTENT is keystream bytes (high-entropy, indistinguishable from the body),</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a><span class="co">/// generated from the same ChaCha20 stream advanced past the header region. Receiver</span></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a><span class="co">/// never needs to read padding content — it strips P bytes by length only (L4).</span></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> fill_padding(keys<span class="op">:</span> <span class="op">&amp;</span>LwoKeys<span class="op">,</span> seed<span class="op">:</span> <span class="op">&amp;</span>[<span class="dt">u8</span><span class="op">;</span> SEED_LEN]<span class="op">,</span> out<span class="op">:</span> <span class="op">&amp;</span><span class="kw">mut</span> [<span class="dt">u8</span>]) <span class="op">{</span></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> cipher <span class="op">=</span> <span class="pp">ChaCha20::</span>new((<span class="op">&amp;</span>keys<span class="op">.</span>obf_key)<span class="op">.</span>into()<span class="op">,</span> (<span class="op">&amp;</span>seed_to_nonce(seed))<span class="op">.</span>into())<span class="op">;</span></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>    <span class="co">// advance the cipher past the 64-byte header block so padding ≠ header keystream reuse</span></span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> skip <span class="op">=</span> [<span class="dv">0u8</span><span class="op">;</span> <span class="dv">64</span>]<span class="op">;</span></span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>    cipher<span class="op">.</span>apply_keystream(<span class="op">&amp;</span><span class="kw">mut</span> skip)<span class="op">;</span></span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> b <span class="kw">in</span> out<span class="op">.</span>iter_mut() <span class="op">{</span> <span class="op">*</span>b <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> <span class="op">}</span></span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>    cipher<span class="op">.</span>apply_keystream(out)<span class="op">;</span>   <span class="co">// out becomes pure keystream (random-looking)</span></span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><strong>Padding length distribution:</strong> uniform
+<code>[pad_min, pad_max]</code> per packet, keyed so a passive observer
+cannot predict or remove it. Defaults <code>pad_min = 0</code>,
+<code>pad_max = 16</code> (config §11). The WG handshake&#39;s three fixed
+lengths (148/92/64) thus spread across 17 distinct on-wire lengths each.
+<strong>Optional length-equalization mode</strong>
+(<code>pad_to_bucket</code>, §11): instead of a uniform range, pad each
+packet up to the next bucket boundary (e.g. multiples of 64) so the
+length histogram collapses to a few buckets — a stronger
+anti-length-fingerprint at higher average overhead. Default is the cheap
+uniform mode (L5: LWO is the <em>cheap</em> rung; bucket mode is the
+bridge toward DAITA [01-DP §9] without being DAITA).</p>
+<h3 id="35-phase-1-basic-scheme--scheme_version--1">3.5 Phase 1 (basic)
+scheme — <code>scheme_version = 1</code></h3>
+<p>Phase 1 ships before the full keyed keystream is hardened [01-DP
+§3.7]. It MUST interoperate on the same frame layout (§3.1) so the
+Phase-2 upgrade is a keystream swap, not a wire-format break:</p>
+<ul>
+<li><strong>Header mask:</strong> a <em>static</em> 32-byte mask
+<code>M = HKDF(session_key, &quot;helix-lwo/v1/mask&quot;)</code>, XORed over the
+first <code>H</code> bytes. <code>seed</code> is still present and still
+randomizes <code>pad_len</code>, but the header keystream does
+<strong>not</strong> depend on <code>seed</code> → identical header
+bytes mask to identical ciphertext across packets (the known
+weakness).</li>
+<li><strong>pad_len:</strong> carried as a 1-byte field at frame offset
+8, XORed with <code>M[0]</code> (so the explicit length variant of
+§3.1). Recovered as <code>P = wire[8] ^ M[0]</code>; the WG region
+starts at offset 9.</li>
+<li><strong>Honest limit (documented in code + tracker):</strong> the
+static mask is vulnerable to known-plaintext recovery — an adversary who
+knows the WG header structure (public) can XOR two captured LWO packets
+to cancel <code>M</code> and recover header deltas, then solve for
+<code>M</code>. Phase 1 LWO therefore defeats <em>only</em> a stateless
+signature-matcher that does not do this analysis, and is flagged
+<code>Operator-blocked</code>-grade for any active adversary until
+<code>scheme_version = 2</code> lands. This is stated, not hidden
+(§11.4.6, L5).</li>
+</ul>
+<p>The orchestrator MUST refuse to negotiate
+<code>scheme_version = 1</code> once a peer advertises <code>2</code> in
+its <code>NetworkMap</code> capability set (doc 03); v1 exists only for
+the Phase-1 milestone window.</p>
+<h3 id="36-send--receive-packet-flow">3.6 Send / receive packet
+flow</h3>
+<pre class="mermaid"><code>sequenceDiagram
+    autonumber
+    participant WG as helix-wg
+    participant L as LwoTransport
+    participant K as keys+rng
+    participant S as UdpSocket
+    participant E as Gateway edge (LWO de-obf)
+
+    Note over WG,E: SEND path (obfuscate)
+    WG-&gt;&gt;L: send(wg: Bytes, len = L)
+    L-&gt;&gt;K: seed = rng.fill(8B)
+    L-&gt;&gt;K: P = pad_len(seed, pad_key)          // deterministic
+    alt L + 8 + P &gt; effective_mtu_path
+        L--&gt;&gt;WG: Err(Oversize(L))               // hard error, no truncation (§9)
+    else fits
+        L-&gt;&gt;L: buf = [seed][wg copy][P bytes]
+        L-&gt;&gt;K: obfuscate_header(buf.wg_region, H = min(L, header_obf_len))
+        L-&gt;&gt;K: fill_padding(buf.pad_region)
+        L-&gt;&gt;S: send_to(buf, peer)
+        S-&gt;&gt;E: UDP datagram (no WG signature)
+        L--&gt;&gt;WG: Ok(())
+    end
+
+    Note over WG,E: RECV path (deobfuscate)
+    S-&gt;&gt;L: recv() → (raw, n = udp_payload_len)
+    L-&gt;&gt;L: seed = raw[0..8]
+    L-&gt;&gt;K: P = pad_len(seed, pad_key)
+    alt n &lt; 8 + 1 + P  (impossible split)
+        L-&gt;&gt;L: DROP + count lwo_deobf_drops      // L4: never an error
+        L-&gt;&gt;S: recv() again
+    else valid
+        L-&gt;&gt;L: L = n - 8 - P ; wg = raw[8 .. 8+L]
+        L-&gt;&gt;K: obfuscate_header(wg, H)           // XOR is self-inverse → recovers WG
+        L-&gt;&gt;L: health.mark_recv()
+        L--&gt;&gt;WG: Ok(Bytes::copy(wg))
+    end</code></pre>
+<hr />
+<h2 id="4-rust-api-surface-the-lwo-transport-impl">4. Rust API surface
+(the LWO <code>Transport</code> impl)</h2>
+<div class="sourceCode" id="cb8"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-transport/src/lwo.rs</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">async_trait::</span>async_trait<span class="op">;</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">bytes::</span>Bytes<span class="op">;</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::net::</span>SocketAddr<span class="op">;</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::sync::atomic::</span><span class="op">{</span>AtomicU64<span class="op">,</span> Ordering<span class="op">};</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="kw">crate</span><span class="pp">::</span><span class="op">{</span>Transport<span class="op">,</span> TransportError<span class="op">,</span> TransportHealth<span class="op">};</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="kw">crate</span><span class="pp">::health::</span>HealthCell<span class="op">;</span>     <span class="co">// shared with plain_udp (RTT EWMA, last-recv age)</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="co">/// Lightweight WG obfuscation carrier. Per-packet stateless on the data path (L2);</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="co">/// the only mutable state is the HealthCell and an optional monotonic send counter</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="co">/// used to refresh seeds under a (negligible) collision-avoidance policy.</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> LwoTransport <span class="op">{</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>    sock<span class="op">:</span>    <span class="pp">tokio::net::</span>UdpSocket<span class="op">,</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>    peer<span class="op">:</span>    SocketAddr<span class="op">,</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>    keys<span class="op">:</span>    LwoKeys<span class="op">,</span>                 <span class="co">// zeroized on drop (§3.2)</span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>    cfg<span class="op">:</span>     LwoParams<span class="op">,</span>               <span class="co">// header_obf_len, pad_min/max, scheme_version (§11)</span></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>    health<span class="op">:</span>  HealthCell<span class="op">,</span></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>    send_ctr<span class="op">:</span> AtomicU64<span class="op">,</span>              <span class="co">// mixed into the seed RNG to harden against seed reuse</span></span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>    drops<span class="op">:</span>   AtomicU64<span class="op">,</span>               <span class="co">// lwo_deobf_drops counter (L4, metrics §11.4.5)</span></span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a><span class="co">/// Tunable obfuscation parameters; all come from TransportConfig::Lwo / NetworkMap.</span></span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="bu">Clone</span><span class="op">,</span> <span class="bu">Copy</span><span class="op">,</span> <span class="bu">Debug</span><span class="at">)]</span></span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> LwoParams <span class="op">{</span></span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> scheme_version<span class="op">:</span> <span class="dt">u8</span><span class="op">,</span>   <span class="co">// 1 = static mask (Phase 1, §3.5); 2 = keyed keystream (§3.3)</span></span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> header_obf_len<span class="op">:</span> <span class="dt">u16</span><span class="op">,</span>  <span class="co">// default 16 (covers prefix+index+counter, §3.3)</span></span>
+<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> pad_min<span class="op">:</span> <span class="dt">u16</span><span class="op">,</span>         <span class="co">// default 0</span></span>
+<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> pad_max<span class="op">:</span> <span class="dt">u16</span><span class="op">,</span>         <span class="co">// default 16  (must be ≥ pad_min)</span></span>
+<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> pad_to_bucket<span class="op">:</span> <span class="dt">u16</span><span class="op">,</span>   <span class="co">// 0 = uniform range; else round length up to this multiple (§3.4)</span></span>
+<span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-31"><a href="#cb8-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-32"><a href="#cb8-32" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> <span class="bu">Default</span> <span class="cf">for</span> LwoParams <span class="op">{</span></span>
+<span id="cb8-33"><a href="#cb8-33" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> default() <span class="op">-&gt;</span> <span class="dt">Self</span> <span class="op">{</span></span>
+<span id="cb8-34"><a href="#cb8-34" aria-hidden="true" tabindex="-1"></a>        <span class="dt">Self</span> <span class="op">{</span> scheme_version<span class="op">:</span> <span class="dv">2</span><span class="op">,</span> header_obf_len<span class="op">:</span> <span class="dv">16</span><span class="op">,</span> pad_min<span class="op">:</span> <span class="dv">0</span><span class="op">,</span> pad_max<span class="op">:</span> <span class="dv">16</span><span class="op">,</span> pad_to_bucket<span class="op">:</span> <span class="dv">0</span> <span class="op">}</span></span>
+<span id="cb8-35"><a href="#cb8-35" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-36"><a href="#cb8-36" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-37"><a href="#cb8-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-38"><a href="#cb8-38" aria-hidden="true" tabindex="-1"></a><span class="co">/// Construct from the dial() ladder (§5.3). Binds a UDP socket, derives keys.</span></span>
+<span id="cb8-39"><a href="#cb8-39" aria-hidden="true" tabindex="-1"></a><span class="co">/// Validated: pad_max ≥ pad_min, header_obf_len ≥ 4, scheme_version ∈ {1,2}.</span></span>
+<span id="cb8-40"><a href="#cb8-40" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async</span> <span class="kw">fn</span> dial_lwo(</span>
+<span id="cb8-41"><a href="#cb8-41" aria-hidden="true" tabindex="-1"></a>    peer<span class="op">:</span> SocketAddr<span class="op">,</span> bind<span class="op">:</span> SocketAddr<span class="op">,</span></span>
+<span id="cb8-42"><a href="#cb8-42" aria-hidden="true" tabindex="-1"></a>    session_key<span class="op">:</span> SecretBytes<span class="op">,</span> session_salt<span class="op">:</span> [<span class="dt">u8</span><span class="op">;</span> <span class="dv">32</span>]<span class="op">,</span> cfg<span class="op">:</span> LwoParams<span class="op">,</span></span>
+<span id="cb8-43"><a href="#cb8-43" aria-hidden="true" tabindex="-1"></a>) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>LwoTransport<span class="op">,</span> TransportError<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb8-44"><a href="#cb8-44" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> cfg<span class="op">.</span>pad_max <span class="op">&lt;</span> cfg<span class="op">.</span>pad_min <span class="op">||</span> cfg<span class="op">.</span>header_obf_len <span class="op">&lt;</span> <span class="dv">4</span> <span class="op">||</span> <span class="op">!</span>(<span class="dv">1</span><span class="op">..=</span><span class="dv">2</span>)<span class="op">.</span>contains(<span class="op">&amp;</span>cfg<span class="op">.</span>scheme_version) <span class="op">{</span></span>
+<span id="cb8-45"><a href="#cb8-45" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="cn">Err</span>(<span class="pp">TransportError::</span>HandshakeFailed(<span class="st">&quot;invalid LwoParams&quot;</span><span class="op">.</span>into()))<span class="op">;</span></span>
+<span id="cb8-46"><a href="#cb8-46" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-47"><a href="#cb8-47" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> sock <span class="op">=</span> <span class="pp">tokio::net::UdpSocket::</span>bind(bind)<span class="op">.</span><span class="kw">await</span><span class="op">?;</span></span>
+<span id="cb8-48"><a href="#cb8-48" aria-hidden="true" tabindex="-1"></a>    sock<span class="op">.</span>connect(peer)<span class="op">.</span><span class="kw">await</span><span class="op">?;</span>        <span class="co">// connected UDP: lets recv() drop off-path datagrams cheaply</span></span>
+<span id="cb8-49"><a href="#cb8-49" aria-hidden="true" tabindex="-1"></a>    <span class="cn">Ok</span>(LwoTransport <span class="op">{</span></span>
+<span id="cb8-50"><a href="#cb8-50" aria-hidden="true" tabindex="-1"></a>        sock<span class="op">,</span> peer<span class="op">,</span></span>
+<span id="cb8-51"><a href="#cb8-51" aria-hidden="true" tabindex="-1"></a>        keys<span class="op">:</span> derive_keys(<span class="op">&amp;</span>session_key<span class="op">,</span> <span class="op">&amp;</span>session_salt)<span class="op">,</span></span>
+<span id="cb8-52"><a href="#cb8-52" aria-hidden="true" tabindex="-1"></a>        cfg<span class="op">,</span> health<span class="op">:</span> <span class="pp">HealthCell::</span>new()<span class="op">,</span> send_ctr<span class="op">:</span> <span class="pp">AtomicU64::</span>new(<span class="dv">0</span>)<span class="op">,</span> drops<span class="op">:</span> <span class="pp">AtomicU64::</span>new(<span class="dv">0</span>)<span class="op">,</span></span>
+<span id="cb8-53"><a href="#cb8-53" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span>)</span>
+<span id="cb8-54"><a href="#cb8-54" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-55"><a href="#cb8-55" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-56"><a href="#cb8-56" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>async_trait<span class="at">]</span></span>
+<span id="cb8-57"><a href="#cb8-57" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> Transport <span class="cf">for</span> LwoTransport <span class="op">{</span></span>
+<span id="cb8-58"><a href="#cb8-58" aria-hidden="true" tabindex="-1"></a>    <span class="kw">async</span> <span class="kw">fn</span> send(<span class="op">&amp;</span><span class="kw">self</span><span class="op">,</span> wg<span class="op">:</span> Bytes) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">,</span> TransportError<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb8-59"><a href="#cb8-59" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> l <span class="op">=</span> wg<span class="op">.</span>len()<span class="op">;</span></span>
+<span id="cb8-60"><a href="#cb8-60" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> l <span class="op">==</span> <span class="dv">0</span> <span class="op">{</span> <span class="cf">return</span> <span class="cn">Ok</span>(())<span class="op">;</span> <span class="op">}</span>                                   <span class="co">// §9 edge: empty → no-op</span></span>
+<span id="cb8-61"><a href="#cb8-61" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> seed <span class="op">=</span> <span class="kw">self</span><span class="op">.</span>next_seed()<span class="op">;</span>                                   <span class="co">// 8B, ctr-mixed RNG</span></span>
+<span id="cb8-62"><a href="#cb8-62" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> p <span class="op">=</span> <span class="kw">self</span><span class="op">.</span>pad_len(<span class="op">&amp;</span>seed)<span class="op">;</span></span>
+<span id="cb8-63"><a href="#cb8-63" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> total <span class="op">=</span> SEED_LEN <span class="op">+</span> l <span class="op">+</span> p<span class="op">;</span></span>
+<span id="cb8-64"><a href="#cb8-64" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> total <span class="op">&gt;</span> <span class="kw">self</span><span class="op">.</span>effective_mtu() <span class="kw">as</span> <span class="dt">usize</span> <span class="op">+</span> SEED_LEN <span class="co">/*hdr is accounted in eff_mtu*/</span> <span class="op">{</span></span>
+<span id="cb8-65"><a href="#cb8-65" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="cn">Err</span>(<span class="pp">TransportError::</span>Oversize(l))<span class="op">;</span>                   <span class="co">// §9: never truncate</span></span>
+<span id="cb8-66"><a href="#cb8-66" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb8-67"><a href="#cb8-67" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> <span class="kw">mut</span> buf <span class="op">=</span> <span class="dt">Vec</span><span class="pp">::</span>with_capacity(total)<span class="op">;</span></span>
+<span id="cb8-68"><a href="#cb8-68" aria-hidden="true" tabindex="-1"></a>        buf<span class="op">.</span>extend_from_slice(<span class="op">&amp;</span>seed)<span class="op">;</span></span>
+<span id="cb8-69"><a href="#cb8-69" aria-hidden="true" tabindex="-1"></a>        buf<span class="op">.</span>extend_from_slice(<span class="op">&amp;</span>wg)<span class="op">;</span></span>
+<span id="cb8-70"><a href="#cb8-70" aria-hidden="true" tabindex="-1"></a>        buf<span class="op">.</span>resize(total<span class="op">,</span> <span class="dv">0</span>)<span class="op">;</span></span>
+<span id="cb8-71"><a href="#cb8-71" aria-hidden="true" tabindex="-1"></a>        <span class="kw">self</span><span class="op">.</span>obfuscate(<span class="op">&amp;</span>seed<span class="op">,</span> <span class="op">&amp;</span><span class="kw">mut</span> buf[SEED_LEN<span class="op">..</span>SEED_LEN <span class="op">+</span> l])<span class="op">;</span>       <span class="co">// §3.3</span></span>
+<span id="cb8-72"><a href="#cb8-72" aria-hidden="true" tabindex="-1"></a>        <span class="kw">self</span><span class="op">.</span>fill_padding(<span class="op">&amp;</span>seed<span class="op">,</span> <span class="op">&amp;</span><span class="kw">mut</span> buf[SEED_LEN <span class="op">+</span> l<span class="op">..</span>])<span class="op">;</span>            <span class="co">// §3.4</span></span>
+<span id="cb8-73"><a href="#cb8-73" aria-hidden="true" tabindex="-1"></a>        <span class="kw">self</span><span class="op">.</span>sock<span class="op">.</span>send(<span class="op">&amp;</span>buf)<span class="op">.</span><span class="kw">await</span><span class="op">?;</span>                                  <span class="co">// connected UDP</span></span>
+<span id="cb8-74"><a href="#cb8-74" aria-hidden="true" tabindex="-1"></a>        <span class="cn">Ok</span>(())</span>
+<span id="cb8-75"><a href="#cb8-75" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-76"><a href="#cb8-76" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-77"><a href="#cb8-77" aria-hidden="true" tabindex="-1"></a>    <span class="kw">async</span> <span class="kw">fn</span> recv(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>Bytes<span class="op">,</span> TransportError<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb8-78"><a href="#cb8-78" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> <span class="kw">mut</span> buf <span class="op">=</span> <span class="pp">vec!</span>[<span class="dv">0u8</span><span class="op">;</span> (<span class="kw">self</span><span class="op">.</span>effective_mtu() <span class="kw">as</span> <span class="dt">usize</span>) <span class="op">+</span> SEED_LEN <span class="op">+</span> <span class="kw">self</span><span class="op">.</span>cfg<span class="op">.</span>pad_max <span class="kw">as</span> <span class="dt">usize</span> <span class="op">+</span> <span class="dv">64</span>]<span class="op">;</span></span>
+<span id="cb8-79"><a href="#cb8-79" aria-hidden="true" tabindex="-1"></a>        <span class="cf">loop</span> <span class="op">{</span></span>
+<span id="cb8-80"><a href="#cb8-80" aria-hidden="true" tabindex="-1"></a>            <span class="kw">let</span> n <span class="op">=</span> <span class="kw">self</span><span class="op">.</span>sock<span class="op">.</span>recv(<span class="op">&amp;</span><span class="kw">mut</span> buf)<span class="op">.</span><span class="kw">await</span><span class="op">?;</span>                   <span class="co">// cancel-safe (I2)</span></span>
+<span id="cb8-81"><a href="#cb8-81" aria-hidden="true" tabindex="-1"></a>            <span class="cf">match</span> <span class="kw">self</span><span class="op">.</span>deobfuscate(<span class="op">&amp;</span>buf[<span class="op">..</span>n]) <span class="op">{</span></span>
+<span id="cb8-82"><a href="#cb8-82" aria-hidden="true" tabindex="-1"></a>                <span class="cn">Some</span>(wg) <span class="op">=&gt;</span> <span class="op">{</span> <span class="kw">self</span><span class="op">.</span>health<span class="op">.</span>mark_recv()<span class="op">;</span> <span class="cf">return</span> <span class="cn">Ok</span>(wg)<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb8-83"><a href="#cb8-83" aria-hidden="true" tabindex="-1"></a>                <span class="cn">None</span> <span class="op">=&gt;</span> <span class="op">{</span> <span class="kw">self</span><span class="op">.</span>drops<span class="op">.</span>fetch_add(<span class="dv">1</span><span class="op">,</span> <span class="pp">Ordering::</span>Relaxed)<span class="op">;</span> <span class="cf">continue</span><span class="op">;</span> <span class="op">}</span> <span class="co">// L4: drop+loop</span></span>
+<span id="cb8-84"><a href="#cb8-84" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb8-85"><a href="#cb8-85" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb8-86"><a href="#cb8-86" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-87"><a href="#cb8-87" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-88"><a href="#cb8-88" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> kind(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="op">&amp;</span><span class="ot">&#39;static</span> <span class="dt">str</span> <span class="op">{</span> <span class="st">&quot;lwo&quot;</span> <span class="op">}</span></span>
+<span id="cb8-89"><a href="#cb8-89" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> effective_mtu(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">u16</span> <span class="op">{</span> <span class="dv">1400</span> <span class="op">}</span>    <span class="co">// plain-udp 1420 − SEED_LEN(8) − ~12 pad headroom (§10)</span></span>
+<span id="cb8-90"><a href="#cb8-90" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> health(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> TransportHealth <span class="op">{</span> <span class="kw">self</span><span class="op">.</span>health<span class="op">.</span>snapshot() <span class="op">}</span></span>
+<span id="cb8-91"><a href="#cb8-91" aria-hidden="true" tabindex="-1"></a>    <span class="kw">async</span> <span class="kw">fn</span> close(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">,</span> TransportError<span class="op">&gt;</span> <span class="op">{</span> <span class="cn">Ok</span>(()) <span class="op">}</span> <span class="co">// UDP: nothing to flush</span></span>
+<span id="cb8-92"><a href="#cb8-92" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co">// private helpers (sketch)</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> LwoTransport <span class="op">{</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> next_seed(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> [<span class="dt">u8</span><span class="op">;</span> SEED_LEN] <span class="op">{</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>        <span class="co">// 8 random bytes from a CSPRNG, mixed with the monotonic send counter so that</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>        <span class="co">// even a (broken) RNG returning a repeat cannot reuse a full seed within a session.</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> ctr <span class="op">=</span> <span class="kw">self</span><span class="op">.</span>send_ctr<span class="op">.</span>fetch_add(<span class="dv">1</span><span class="op">,</span> <span class="pp">Ordering::</span>Relaxed)<span class="op">;</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> <span class="kw">mut</span> s <span class="op">=</span> [<span class="dv">0u8</span><span class="op">;</span> SEED_LEN]<span class="op">;</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>        <span class="pp">rand::</span>rng()<span class="op">.</span>fill_bytes(<span class="op">&amp;</span><span class="kw">mut</span> s)<span class="op">;</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> cb <span class="op">=</span> ctr<span class="op">.</span>to_le_bytes()<span class="op">;</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> i <span class="kw">in</span> <span class="dv">0</span><span class="op">..</span>SEED_LEN <span class="op">{</span> s[i] <span class="op">^=</span> cb[i]<span class="op">;</span> <span class="op">}</span>     <span class="co">// counter is non-secret; only de-dups seeds</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>        s</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> pad_len(<span class="op">&amp;</span><span class="kw">self</span><span class="op">,</span> seed<span class="op">:</span> <span class="op">&amp;</span>[<span class="dt">u8</span><span class="op">;</span> SEED_LEN]) <span class="op">-&gt;</span> <span class="dt">usize</span> <span class="op">{</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> p <span class="op">=</span> pad_len(<span class="op">&amp;</span><span class="kw">self</span><span class="op">.</span>keys<span class="op">,</span> seed<span class="op">,</span> <span class="kw">self</span><span class="op">.</span>cfg<span class="op">.</span>pad_min<span class="op">,</span> <span class="kw">self</span><span class="op">.</span>cfg<span class="op">.</span>pad_max)<span class="op">;</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="kw">self</span><span class="op">.</span>cfg<span class="op">.</span>pad_to_bucket <span class="op">==</span> <span class="dv">0</span> <span class="op">{</span> p <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span> <span class="co">/* round-up-to-bucket variant, §3.4 */</span> p <span class="op">}</span></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> obfuscate(<span class="op">&amp;</span><span class="kw">self</span><span class="op">,</span> seed<span class="op">:</span> <span class="op">&amp;</span>[<span class="dt">u8</span><span class="op">;</span> SEED_LEN]<span class="op">,</span> region<span class="op">:</span> <span class="op">&amp;</span><span class="kw">mut</span> [<span class="dt">u8</span>]) <span class="op">{</span></span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>        <span class="cf">match</span> <span class="kw">self</span><span class="op">.</span>cfg<span class="op">.</span>scheme_version <span class="op">{</span></span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>            <span class="dv">2</span> <span class="op">=&gt;</span> obfuscate_header(<span class="op">&amp;</span><span class="kw">self</span><span class="op">.</span>keys<span class="op">,</span> seed<span class="op">,</span> region<span class="op">,</span> <span class="kw">self</span><span class="op">.</span>cfg<span class="op">.</span>header_obf_len <span class="kw">as</span> <span class="dt">usize</span>)<span class="op">,</span></span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a>            _ <span class="op">=&gt;</span> obfuscate_header_static_v1(<span class="op">&amp;</span><span class="kw">self</span><span class="op">.</span>keys<span class="op">,</span> region<span class="op">,</span> <span class="kw">self</span><span class="op">.</span>cfg<span class="op">.</span>header_obf_len <span class="kw">as</span> <span class="dt">usize</span>)<span class="op">,</span></span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> fill_padding(<span class="op">&amp;</span><span class="kw">self</span><span class="op">,</span> seed<span class="op">:</span> <span class="op">&amp;</span>[<span class="dt">u8</span><span class="op">;</span> SEED_LEN]<span class="op">,</span> out<span class="op">:</span> <span class="op">&amp;</span><span class="kw">mut</span> [<span class="dt">u8</span>]) <span class="op">{</span> fill_padding(<span class="op">&amp;</span><span class="kw">self</span><span class="op">.</span>keys<span class="op">,</span> seed<span class="op">,</span> out)<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Returns None ⇒ DROP (L4): never an error, never tears the tunnel down.</span></span>
+<span id="cb9-26"><a href="#cb9-26" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> deobfuscate(<span class="op">&amp;</span><span class="kw">self</span><span class="op">,</span> raw<span class="op">:</span> <span class="op">&amp;</span>[<span class="dt">u8</span>]) <span class="op">-&gt;</span> <span class="dt">Option</span><span class="op">&lt;</span>Bytes<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb9-27"><a href="#cb9-27" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> raw<span class="op">.</span>len() <span class="op">&lt;</span> SEED_LEN <span class="op">+</span> <span class="dv">1</span> <span class="op">{</span> <span class="cf">return</span> <span class="cn">None</span><span class="op">;</span> <span class="op">}</span></span>
+<span id="cb9-28"><a href="#cb9-28" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> <span class="kw">mut</span> seed <span class="op">=</span> [<span class="dv">0u8</span><span class="op">;</span> SEED_LEN]<span class="op">;</span> seed<span class="op">.</span>copy_from_slice(<span class="op">&amp;</span>raw[<span class="op">..</span>SEED_LEN])<span class="op">;</span></span>
+<span id="cb9-29"><a href="#cb9-29" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> p <span class="op">=</span> <span class="kw">self</span><span class="op">.</span>pad_len(<span class="op">&amp;</span>seed)<span class="op">;</span></span>
+<span id="cb9-30"><a href="#cb9-30" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> raw<span class="op">.</span>len() <span class="op">&lt;</span> SEED_LEN <span class="op">+</span> p <span class="op">+</span> <span class="dv">1</span> <span class="op">{</span> <span class="cf">return</span> <span class="cn">None</span><span class="op">;</span> <span class="op">}</span>     <span class="co">// pad can&#39;t exceed payload (with ≥1 WG byte)</span></span>
+<span id="cb9-31"><a href="#cb9-31" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> l <span class="op">=</span> raw<span class="op">.</span>len() <span class="op">-</span> SEED_LEN <span class="op">-</span> p<span class="op">;</span></span>
+<span id="cb9-32"><a href="#cb9-32" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> l <span class="op">==</span> <span class="dv">0</span> <span class="op">||</span> l <span class="op">&gt;</span> <span class="kw">self</span><span class="op">.</span>effective_mtu() <span class="kw">as</span> <span class="dt">usize</span> <span class="op">{</span> <span class="cf">return</span> <span class="cn">None</span><span class="op">;</span> <span class="op">}</span>   <span class="co">// sanity bound</span></span>
+<span id="cb9-33"><a href="#cb9-33" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> <span class="kw">mut</span> wg <span class="op">=</span> raw[SEED_LEN<span class="op">..</span>SEED_LEN <span class="op">+</span> l]<span class="op">.</span>to_vec()<span class="op">;</span></span>
+<span id="cb9-34"><a href="#cb9-34" aria-hidden="true" tabindex="-1"></a>        <span class="kw">self</span><span class="op">.</span>obfuscate(<span class="op">&amp;</span>seed<span class="op">,</span> <span class="op">&amp;</span><span class="kw">mut</span> wg[<span class="op">..</span>wg<span class="op">.</span>len()<span class="op">.</span>min(<span class="kw">self</span><span class="op">.</span>cfg<span class="op">.</span>header_obf_len <span class="kw">as</span> <span class="dt">usize</span>)])<span class="op">;</span> <span class="co">// self-inverse</span></span>
+<span id="cb9-35"><a href="#cb9-35" aria-hidden="true" tabindex="-1"></a>        <span class="cn">Some</span>(<span class="pp">Bytes::</span>from(wg))</span>
+<span id="cb9-36"><a href="#cb9-36" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb9-37"><a href="#cb9-37" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="41-transportconfig--dial-wiring">4.1
+<code>TransportConfig</code> &amp; <code>dial()</code> wiring</h3>
+<p>LWO is already a variant of the frozen <code>TransportConfig</code>
+enum [01-DP §3.1]:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co">// (from helix-transport/src/lib.rs — UNCHANGED, shown for context)</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>Lwo <span class="op">{</span> peer<span class="op">:</span> SocketAddr<span class="op">,</span> bind<span class="op">:</span> SocketAddr<span class="op">,</span> session_key<span class="op">:</span> SecretBytes <span class="op">},</span></span></code></pre></div>
+<p>This document <strong>proposes the additive fields</strong>
+<code>session_salt: [u8; 32]</code> and <code>params: LwoParams</code>
+on the <code>Lwo</code> variant so the coordinator can push the salt and
+per-region obfuscation tuning (<code>UNVERIFIED</code>: the pass-1 enum
+at [01-DP §3.1] shows only <code>peer/bind/session_key</code>; whether
+these two extra fields are added to the public enum or carried in a
+side-channel is a doc-03 <code>NetworkMap</code> schema decision —
+flagged for reconciliation when doc 03 lands). The <code>dial()</code>
+ladder routes <code>TransportConfig::Lwo{..}</code> →
+<code>dial_lwo()</code> (§4).</p>
+<hr />
+<h2 id="5-state-machine">5. State machine</h2>
+<p>LWO has almost no connection state (it is connectionless UDP), but
+the orchestrator-visible lifecycle and the key-rotation path are
+state-machine-worthy:</p>
+<pre class="mermaid"><code>stateDiagram-v2
+    [*] --&gt; Dialing: dial_lwo()
+    Dialing --&gt; Active: socket bound + keys derived
+    Dialing --&gt; Failed: bind/connect error → TransportError
+    Active --&gt; Active: send()/recv() (per-packet stateless, L2)
+    Active --&gt; Rekeying: NetworkMap pushes new session_key/salt
+    Rekeying --&gt; Active: derive_keys() swapped atomically;&lt;br/&gt;in-flight packets under old key DROP (L4)
+    Active --&gt; Closed: close() (idempotent, no-op flush)
+    Failed --&gt; [*]
+    Closed --&gt; [*]
+
+    note right of Active
+      No handshake state machine of LWO&#39;s own.
+      WG&#39;s own handshake rides INSIDE the obfuscated
+      datagrams; LWO never inspects it (L1).
+      health() = RTT EWMA + last-recv-age the ladder
+      uses to judge the rung (§5.3 of 01-DP).
+    end note
+    note right of Rekeying
+      Key rotation is the ONLY non-trivial transition.
+      A brief window where a few packets encrypted under
+      the previous obf_key arrive after the swap → they
+      fail the length/sanity check → dropped (L4) → WG&#39;s
+      retransmit/keepalive recovers. No tunnel teardown.
+    end note</code></pre>
+<p><strong>Rekeying detail:</strong> <code>derive_keys()</code> produces
+a fresh <code>LwoKeys</code>; the swap is a single
+<code>ArcSwap&lt;LwoKeys&gt;</code> (or
+<code>Mutex&lt;LwoKeys&gt;</code>) replacement. There is
+<strong>no</strong> negotiated cutover — LWO carries no control
+messages. Packets in flight under the old key deobfuscate to a wrong
+<code>L</code>/<code>P</code> and are dropped (L4); the WG layer above
+does not even notice (its own keepalive/retransmit [01-DP §4
+<code>tick</code>] covers the ≤ RTT gap). Rekey cadence is a coordinator
+policy (<code>rekey_interval</code>, §11); default rotation aligns with
+WG&#39;s own rekey (~120 s) so an LWO-key and a WG-key rotation coincide,
+minimizing distinct key-lifetime windows. <code>UNVERIFIED</code>: the
+exact coordinator rekey push mechanism is doc-03 territory.</p>
+<hr />
+<h2 id="6-error-taxonomy">6. Error taxonomy</h2>
+<p>LWO reuses the shared <code>TransportError</code> [01-DP §3.1,
+error.rs] and adds <strong>no new public variant</strong> (keeping the
+trait surface uniform). Mapping:</p>
+<table>
+<thead>
+<tr>
+<th>Condition</th>
+<th>Surfaced as</th>
+<th>Path</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>bind</code>/<code>connect</code> UDP socket failure at
+dial</td>
+<td><code>TransportError::Io</code></td>
+<td><code>dial_lwo</code></td>
+<td>propagates to the ladder → escalate rung (§5.3)</td>
+</tr>
+<tr>
+<td>invalid <code>LwoParams</code> (pad_max&lt;pad_min,
+header_obf_len&lt;4, bad scheme)</td>
+<td><code>TransportError::HandshakeFailed(&quot;invalid LwoParams&quot;)</code></td>
+<td><code>dial_lwo</code></td>
+<td>a config error reads as a handshake failure → ladder skips LWO</td>
+</tr>
+<tr>
+<td><code>send()</code> of a datagram that won&#39;t fit
+<code>eff_mtu</code> after seed+pad</td>
+<td><code>TransportError::Oversize(L)</code></td>
+<td><code>send</code></td>
+<td>hard error, <strong>never truncates</strong> (§9); orchestrator
+lowers inner WG MTU</td>
+</tr>
+<tr>
+<td>socket send/recv I/O error mid-session</td>
+<td><code>TransportError::Io</code></td>
+<td><code>send</code>/<code>recv</code></td>
+<td>repeated → health degrades → ladder may re-escalate</td>
+</tr>
+<tr>
+<td>a received packet fails deobfuscation (bad length split, sanity
+bound, probe traffic)</td>
+<td><strong>NOT an error</strong> — dropped +
+<code>lwo_deobf_drops++</code></td>
+<td><code>recv</code> (loops)</td>
+<td><strong>L4</strong>: corrupt/probe/old-key packets must not kill a
+live tunnel</td>
+</tr>
+<tr>
+<td>internal deobf logic invariant broken (would be a bug)</td>
+<td><code>debug_assert!</code> in debug; drop in release</td>
+<td><code>deobfuscate</code></td>
+<td>§11.4.1 — a script/logic bug must never masquerade as a product
+FAIL</td>
+</tr>
+</tbody>
+</table>
+<p>There is deliberately <strong>no <code>DeobfuscationFailed</code>
+public error</strong>: per L4 a failed deobfuscation is
+indistinguishable, from LWO&#39;s standpoint, from random noise/probe
+traffic, and the correct response is silent drop, not tunnel
+teardown.</p>
+<hr />
+<h2 id="7-edge-cases-enumerated-each-with-the-defined-behavior">7. Edge
+cases (enumerated, each with the defined behavior)</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Edge case</th>
+<th>Defined behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>E1</td>
+<td>Empty WG datagram (<code>L == 0</code>)</td>
+<td><code>send</code> returns <code>Ok(())</code> no-op; deobf rejects
+<code>L==0</code> (drop). WG never emits empty datagrams, but the guard
+is explicit.</td>
+</tr>
+<tr>
+<td>E2</td>
+<td>WG datagram smaller than <code>header_obf_len</code></td>
+<td><code>H = min(L, header_obf_len)</code> — XOR only the available
+<code>L</code> bytes; never reads past the buffer (§3.3 clamps).</td>
+</tr>
+<tr>
+<td>E3</td>
+<td><code>pad_max == 0</code> (padding disabled)</td>
+<td><code>pad_len</code> returns <code>pad_min</code> (=0) every packet
+→ no padding; LWO still obfuscates the header (signature 1) but does NOT
+break fixed lengths (signature 2). A valid cheap mode; flagged in
+metrics so an operator knows length-fingerprinting is unmitigated.</td>
+</tr>
+<tr>
+<td>E4</td>
+<td>Path MTU smaller than <code>eff_mtu</code> (PMTUD shrink)</td>
+<td>orchestrator lowers inner WG MTU (<code>min(eff_mtu, pmtu)</code>)
+[01-DP §10 rule 1]; a transient oversize before PMTUD converges →
+<code>Oversize</code> → WG re-emits smaller.</td>
+</tr>
+<tr>
+<td>E5</td>
+<td>Received UDP packet of length <code>&lt; SEED_LEN + 1</code></td>
+<td>cannot contain a seed + ≥1 WG byte → drop (L4). Defends against a
+truncating middlebox / runt probe.</td>
+</tr>
+<tr>
+<td>E6</td>
+<td>Received packet where <code>pad_len(seed)</code> ≥ payload (no room
+for WG bytes)</td>
+<td>drop (L4) — a spoofed/forged packet whose seed implies impossible
+split.</td>
+</tr>
+<tr>
+<td>E7</td>
+<td>Seed collision within a session (two packets, same 8-byte seed)</td>
+<td>keystream reused on the masked prefix only; counter-mixing (§4
+<code>next_seed</code>) makes a <em>full</em> collision require both an
+RNG repeat AND an equal send-counter low byte — practically impossible;
+residual risk <code>≈2^-64</code> per pair, accepted &amp; documented
+(§10).</td>
+</tr>
+<tr>
+<td>E8</td>
+<td>Coordinator pushes new <code>session_key</code> mid-flight
+(rekey)</td>
+<td>atomic key swap (§5); ≤1 RTT of old-key packets drop (L4); WG
+keepalive recovers. No teardown.</td>
+</tr>
+<tr>
+<td>E9</td>
+<td>Scheme downgrade attempt (peer advertises v2, attacker forces
+v1)</td>
+<td>the orchestrator MUST pin <code>scheme_version</code> from the
+authenticated <code>NetworkMap</code>, never from any on-wire signal
+(LWO carries none) → no in-band downgrade surface.</td>
+</tr>
+<tr>
+<td>E10</td>
+<td>DPI drops <em>all</em> UDP, not just WG-signed</td>
+<td>LWO&#39;s handshake budget is exhausted exactly like plain-udp&#39;s →
+ladder escalates to <code>masque-h3</code> (§2). LWO correctly fails
+fast rather than hanging.</td>
+</tr>
+<tr>
+<td>E11</td>
+<td>Off-path datagram delivered to a connected UDP socket</td>
+<td><code>sock.connect(peer)</code> causes the kernel to drop datagrams
+from other sources; any that slip through fail deobf → drop (L4).</td>
+</tr>
+<tr>
+<td>E12</td>
+<td><code>header_obf_len = full</code> (XOR whole datagram) on a
+max-size datagram</td>
+<td>multi-block ChaCha20 over ~1400 bytes; still O(L), ~1 GB/s/core;
+<code>eff_mtu</code> unaffected (padding budget unchanged).</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="8-security-considerations-honest-boundary--1146-l5">8. Security
+considerations (honest boundary — §11.4.6, L5)</h2>
+<ol type="1">
+<li><strong>What LWO IS for:</strong> defeating a <em>stateless,
+signature-matching</em> DPI box that blocks UDP packets exhibiting the
+WG fingerprint (§1.1 signatures 1–3). Against that adversary, Phase-2
+LWO removes all three signals at near-zero cost.</li>
+<li><strong>What LWO is NOT for</strong> (stated, never overclaimed):
+<ul>
+<li><em>Active probing.</em> A censor that replays/probes the gateway
+endpoint is not defeated by LWO (LWO has no anti-probe response). The
+anti-probe story is the <code>masque-h3</code> decoy site [01-DP
+§3.3].</li>
+<li><em>Stateful entropy / flow classifiers.</em> &quot;High-entropy UDP, no
+TLS/QUIC handshake, periodic small packets&quot; can still cluster.
+<code>pad_to_bucket</code> (§3.4) helps marginally; full defense is
+DAITA [01-DP §9] + <code>masque-h3</code>. LWO makes <strong>no
+traffic-analysis claim</strong>.</li>
+<li><em>Confidentiality / integrity.</em> LWO is <strong>obfuscation,
+not encryption</strong> — the WG datagram it wraps already provides AEAD
+confidentiality+integrity (I1). LWO&#39;s XOR keystream is NOT a security
+boundary; a recovered <code>obf_key</code> reveals only the
+(already-encrypted) header bytes, never WG plaintext (L3). LWO MUST NOT
+be relied on for any security property WG does not already provide.</li>
+</ul></li>
+<li><strong>Phase-1 static-mask weakness</strong> (§3.5):
+known-plaintext recovery of the static mask. Phase-1 LWO is a milestone
+artifact; it ships flagged and is auto-superseded by v2 (E9). Tracked as
+a known limitation, never presented as production-grade
+obfuscation.</li>
+<li><strong>Seed reuse → keystream reuse</strong> (E7): bounded to
+<code>≈2^-64</code> per packet pair by the 8-byte CSPRNG seed + counter
+mix; even on reuse only the masked <em>header</em> prefix leaks an XOR
+delta, not WG plaintext. Acceptable for the cheap rung;
+<code>masque-h3</code> is the answer where this risk is
+unacceptable.</li>
+<li><strong>Key separation</strong> (L3):
+<code>obf_key</code>/<code>pad_key</code> derive from a transport
+<code>session_key</code> distinct from WG keys, with their own salt and
+rotation; an LWO key compromise is contained to deobfuscation, never
+WG.</li>
+<li><strong>Replay / amplification:</strong> LWO neither adds nor
+mitigates replay beyond WG&#39;s own counter (WG drops replayed transport
+packets). LWO is not a reflection/amplification vector — it is a 1:1
+datagram wrapper with no response generation of its own.</li>
+<li><strong>No logging:</strong> <code>lwo_deobf_drops</code> and health
+are aggregate counters only (I5, §11.4.5); no per-packet/per-peer
+durable state.</li>
+</ol>
+<hr />
+<h2 id="9-mtu--overhead-budget">9. MTU &amp; overhead budget</h2>
+<p>LWO&#39;s wire overhead per packet =
+<code>SEED_LEN(8) + P(pad_len)</code>. With defaults
+<code>pad_max = 16</code>, the worst-case overhead is
+<code>8 + 16 = 24</code> bytes; average <code>8 + 8 = 16</code>.
+Reconciling with [01-DP §10] (which lists <code>lwo ≈ 1400</code>):</p>
+<pre><code>plain-udp inner WG MTU       = 1420                               [01-DP §10]
+  − SEED_LEN                 = 1412
+  − pad_max headroom (16)    = 1396  → reported effective_mtu()   = 1400 (rounded, conservative)</code></pre>
+<p>Rules (inherit [01-DP §10]):</p>
+<ol type="1">
+<li>inner WG MTU =
+<code>min(lwo.effective_mtu()=1400, path-MTU-discovered)</code>.</li>
+<li><code>effective_mtu()</code> already subtracts seed + worst-case
+padding, so a <code>send()</code> that respects it
+<strong>cannot</strong> exceed path MTU even at <code>pad_max</code>.
+The runtime <code>Oversize</code> guard (§4, E4) is a
+belt-and-suspenders against a stale inner-MTU during PMTUD shrink.</li>
+<li>Padding is added <em>after</em> WG encrypt and counts against the
+LWO budget, never the inner WG MTU ([01-DP §10] rule 2 — LWO padding
+behaves like the DAITA-padding rule).</li>
+</ol>
+<p><strong>CPU budget (the &quot;near-zero&quot; claim, [04_ARCH §129]):</strong>
+per packet = one CSPRNG draw (8 B) + one SipHash-1-3 (pad_len) + one
+ChaCha20 init + XOR of <code>H ≤ 64</code> bytes (header mode) +
+ChaCha20 of <code>P ≤ 16</code> padding bytes. All sub-microsecond on a
+modern core; the dominant cost remains the UDP syscall, shared with
+<code>plain-udp</code>. Target: LWO throughput ≥ <strong>95%</strong> of
+<code>plain-udp</code> throughput (the cheap-rung promise) — measured,
+not assumed (§12 PT/BT). This is far below <code>masque-h3</code>&#39;s QUIC
+overhead, which is exactly LWO&#39;s reason to exist [01-DP §3.7].</p>
+<hr />
+<h2 id="10-config-knobs-operator--coordinator-surface">10. Config knobs
+(operator + coordinator surface)</h2>
+<table>
+<thead>
+<tr>
+<th>Knob</th>
+<th>Type</th>
+<th>Default</th>
+<th>Source</th>
+<th>Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>scheme_version</code></td>
+<td><code>u8</code> ∈ {1,2}</td>
+<td><code>2</code></td>
+<td>NetworkMap</td>
+<td>1 = Phase-1 static mask (§3.5); 2 = keyed keystream (§3.3). v1
+auto-superseded (E9).</td>
+</tr>
+<tr>
+<td><code>header_obf_len</code></td>
+<td><code>u16</code> (≥4)</td>
+<td><code>16</code></td>
+<td>NetworkMap</td>
+<td>bytes of the WG datagram XOR-masked; 16 covers prefix+index+counter
+(§3.3); <code>u16::MAX</code>→full-datagram mask.</td>
+</tr>
+<tr>
+<td><code>pad_min</code></td>
+<td><code>u16</code></td>
+<td><code>0</code></td>
+<td>NetworkMap</td>
+<td>floor of the uniform padding range.</td>
+</tr>
+<tr>
+<td><code>pad_max</code></td>
+<td><code>u16</code> (≥ pad_min)</td>
+<td><code>16</code></td>
+<td>NetworkMap</td>
+<td>ceil of the uniform padding range; 0 disables padding (E3).</td>
+</tr>
+<tr>
+<td><code>pad_to_bucket</code></td>
+<td><code>u16</code></td>
+<td><code>0</code></td>
+<td>NetworkMap</td>
+<td>0 = uniform range; N = round each on-wire length up to a multiple of
+N (stronger length-equalization, §3.4).</td>
+</tr>
+<tr>
+<td><code>rekey_interval</code></td>
+<td><code>Duration</code></td>
+<td><code>120 s</code></td>
+<td>coordinator</td>
+<td>LWO key-rotation cadence; default aligned to WG rekey (§5).</td>
+</tr>
+<tr>
+<td><code>session_key</code></td>
+<td><code>SecretBytes</code></td>
+<td>— (required)</td>
+<td>NetworkMap</td>
+<td>root of the key schedule (§3.2); per-peer, rotatable.</td>
+</tr>
+<tr>
+<td><code>session_salt</code></td>
+<td><code>[u8;32]</code></td>
+<td>— (required)</td>
+<td>NetworkMap</td>
+<td>binds the key schedule to one session; rotates with
+<code>session_key</code>.</td>
+</tr>
+<tr>
+<td><code>bind</code></td>
+<td><code>SocketAddr</code></td>
+<td><code>0.0.0.0:0</code></td>
+<td>client config</td>
+<td>local UDP bind (ephemeral by default).</td>
+</tr>
+</tbody>
+</table>
+<p>Seed length (<code>SEED_LEN = 8</code>), the HKDF info strings, and
+the ChaCha20/SipHash choices are <strong>compile-time
+constants</strong>, not knobs — changing them is a wire-format break
+requiring a <code>scheme_version</code> bump (kept out of the runtime
+config surface deliberately).</p>
+<p><code>UNVERIFIED</code>: the precise field placement of
+<code>header_obf_len</code>/<code>pad_*</code>/<code>pad_to_bucket</code>
+in the <code>NetworkMap</code> schema is doc-03 territory; this doc
+fixes their semantics and defaults, doc 03 fixes their transport.</p>
+<hr />
+<h2 id="11-regionladder-integration-read-only-dependencies">11.
+Region/ladder integration (read-only dependencies)</h2>
+<ul>
+<li><strong>Ladder rung:</strong> LWO is <code>order[1]</code> in the
+restricted-network prior (§2); the coordinator may push a regional prior
+that starts directly at <code>lwo</code> for regions where naive
+WG-signature blocking is common but UDP is otherwise open, so users skip
+the plain-udp failure round-trip [01-DP §5.3 step 5].</li>
+<li><strong>Per-network memory:</strong> on a successful LWO connection
+the ladder remembers (SSID / gateway fingerprint → start at
+<code>lwo</code>) so reconnects on the same hostile network skip
+straight to it [01-DP §5.3 step 4]. LWO contributes only
+<code>health()</code>; the memory lives in <code>ladder.rs</code>.</li>
+<li><strong>Telemetry:</strong> &quot;lwo succeeded after N escalations in
+region R&quot; — aggregate only, feeds the Censorship-Evasion Success
+dashboard [01-DP §5.3 step 6, 04_ARCH §416]; plus
+<code>lwo_deobf_drops</code> as a health signal. No per-user data
+(I5).</li>
+</ul>
+<hr />
+<h2 id="12-test-matrix-114169-test-types--anti-bluff-captured-evidence">12.
+Test matrix (§11.4.169 test types — anti-bluff captured evidence)</h2>
+<blockquote>
+<p><code>UNVERIFIED</code>: §11.4.169 is named by the operator as the
+test-type taxonomy but is not present in the constitution text loaded
+for this session (loaded anchors end at §11.4.168). The concrete test
+types below are grounded in the canonical enumeration of §11.4.27 (unit
+/ integration / e2e / full-automation / security / DDoS / scaling /
+chaos / stress / performance / benchmarking) + §11.4.85 (stress+chaos) +
+§11.4.5/.69/.107 (captured evidence). The mapping is presented under the
+§11.4.169 label as instructed; reconcile the anchor number when
+§11.4.169 is available.</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>Test type</th>
+<th>LWO test point</th>
+<th>Captured-evidence artifact (§11.4.5/.69)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Unit</strong></td>
+<td><code>obfuscate_header</code> then deobfuscate (same seed/key)
+round-trips a WG datagram byte-identically, for <code>L</code> ∈ {1, 16,
+64, 148, 1400}; <code>header_obf_len</code> ∈ {4,16,full}.</td>
+<td><code>cargo test</code> vector table; per-case input/output
+hashes.</td>
+</tr>
+<tr>
+<td><strong>Unit</strong></td>
+<td><code>pad_len</code> is deterministic, uniform over
+<code>[pad_min,pad_max]</code> (χ² over 10⁶ seeds), and identical
+sender↔︎receiver.</td>
+<td>histogram CSV + χ² statistic.</td>
+</tr>
+<tr>
+<td><strong>Unit</strong></td>
+<td>key schedule: <code>derive_keys</code> matches a frozen HKDF-SHA256
+test vector (RFC 5869 style); keys zeroize on drop (miri/valgrind).</td>
+<td>committed test vector + zeroize proof.</td>
+</tr>
+<tr>
+<td><strong>Property/Fuzz</strong> (security)</td>
+<td><code>cargo fuzz</code> on <code>deobfuscate(arbitrary bytes)</code>
+— never panics, never reads OOB, always returns
+<code>Some(valid-len)</code> or <code>None</code>; corpus seeded with
+runt/oversize/forged-seed packets (E5/E6).</td>
+<td>fuzz corpus + zero-crash run log.</td>
+</tr>
+<tr>
+<td><strong>Integration</strong></td>
+<td>Linux netns: client <code>dial_lwo</code> ⇄ edge LWO de-obf ⇄ WG
+handshake completes; LAN host ping succeeds through the tunnel.</td>
+<td><code>ping</code> + <code>iperf3</code> CSV; netns topology
+script.</td>
+</tr>
+<tr>
+<td><strong>Integration / Security</strong></td>
+<td><strong>The signature test:</strong> <code>nft</code> rule drops UDP
+matching the WG 4-byte prefix <code>{1..4},0,0,0</code>; plain-udp
+tunnel FAILS, LWO tunnel SUCCEEDS through the same rule.
+<code>tshark</code> capture shows the LWO flow carries
+<strong>no</strong> WG-prefix and a <strong>non-constant</strong> length
+distribution.</td>
+<td>nft ruleset, before/after <code>tshark</code> pcap, length
+histogram, success/fail verdicts.</td>
+</tr>
+<tr>
+<td><strong>Integration</strong></td>
+<td>Ladder escalation: WG-signature DPI block → ladder walks
+<code>plain-udp</code> (fail) → <code>lwo</code> (success); the
+<code>TunnelStatus</code> event trace shows the ordered
+<code>Connecting → Reconnecting → Connected{transport:&quot;lwo&quot;}</code>.</td>
+<td>broadcast event trace [01-DP §5.4].</td>
+</tr>
+<tr>
+<td><strong>Chaos</strong> (§11.4.85)</td>
+<td>mid-session <code>session_key</code> rekey injection: tunnel
+survives (≤ RTT of dropped old-key packets, WG keepalive recovers, no
+teardown); kill the edge process mid-flow → ladder re-dials.</td>
+<td>drop-count trace + recovery timeline.</td>
+</tr>
+<tr>
+<td><strong>Chaos</strong></td>
+<td><code>tc netem loss 5% reorder 10%</code> on the LWO path: deobf
+drops only the lost/corrupt packets, never tears the tunnel (L4);
+goodput recorded.</td>
+<td>netem profile + goodput CSV + <code>lwo_deobf_drops</code>
+series.</td>
+</tr>
+<tr>
+<td><strong>Stress</strong> (§11.4.85)</td>
+<td>sustained ≥ 30 s / ≥ 10⁶ packets at line rate; no leak (RSS
+bounded), no deadlock; p50/p95/p99 per-packet obf latency recorded.</td>
+<td>latency.json + RSS series.</td>
+</tr>
+<tr>
+<td><strong>Performance / Benchmark</strong></td>
+<td>LWO throughput vs <code>plain-udp</code> on the same link ≥ 95% (§9
+promise); CPU/Gbps delta &lt; 5%; vs <code>masque-h3</code> shows the
+LWO cost advantage that justifies the rung.</td>
+<td><code>bench.sh</code> CSV: throughput, CPU/Gbps, latency for
+plain-udp / lwo / masque-h3.</td>
+</tr>
+<tr>
+<td><strong>Security (negative / overclaim guard)</strong></td>
+<td>the <strong>honest-limit</strong> test: a <em>static-mask v1</em>
+flow IS recoverable by a known-plaintext XOR analyzer (proves the
+§3.5/§8.3 weakness is real, not hand-waved); the v2 keyed flow is NOT
+(per-packet keystream). Asserts LWO never claims more than it delivers
+(L5, §11.4.6).</td>
+<td>analyzer output: v1 mask recovered, v2 not; self-validated
+golden-good/golden-bad fixtures (§11.4.107(10)).</td>
+</tr>
+<tr>
+<td><strong>Challenge / HelixQA</strong> (§11.4.27)</td>
+<td>end-to-end Challenge: a censored-region emulation where only LWO
+(not plain-udp) connects, scored PASS only on a captured working-tunnel
++ no-WG-signature pcap.</td>
+<td>HelixQA <code>result.json</code> + pcap evidence.</td>
+</tr>
+</tbody>
+</table>
+<p>Every PASS uses <code>ab_pass_with_evidence</code> citing the
+artifact path (§11.4.69); a config-only / grep-only PASS is a covenant
+violation. The <strong>G2-class wire-fingerprint check</strong>
+(<code>tshark</code> classifies the flow with no WG signature [01-DP
+§12.1]) is the central anti-bluff gate for LWO, exactly as it is for
+<code>masque-h3</code>.</p>
+<hr />
+<h2 id="13-file-by-file-build-checklist-lwo-slice">13. File-by-file
+build checklist (LWO slice)</h2>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Owns</th>
+<th>Phase</th>
+<th>Gate</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>helix-transport/src/lwo.rs</code></td>
+<td><code>LwoTransport</code>, <code>LwoParams</code>,
+<code>dial_lwo</code>, obfuscate/deobfuscate/pad</td>
+<td>1 (v1) → 2 (v2 hardened)</td>
+<td>the §12 signature + escalation tests</td>
+</tr>
+<tr>
+<td><code>helix-transport/src/lwo_keys.rs</code></td>
+<td><code>derive_keys</code>, <code>LwoKeys</code> (zeroize), HKDF
+schedule</td>
+<td>1</td>
+<td>key-schedule unit vector</td>
+</tr>
+<tr>
+<td><code>helix-transport/src/error.rs</code></td>
+<td>(no new variant — reuses <code>TransportError</code>)</td>
+<td>1</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>helix-transport/src/lib.rs</code></td>
+<td><code>TransportConfig::Lwo</code> routing in <code>dial()</code>
+(additive <code>session_salt</code>/<code>params</code> — §4.1)</td>
+<td>1</td>
+<td>dial-routing test</td>
+</tr>
+<tr>
+<td><code>helix-core/src/ladder.rs</code></td>
+<td>LWO as rung-1; per-network memory (read-only dep)</td>
+<td>1</td>
+<td>escalation test</td>
+</tr>
+</tbody>
+</table>
+<p>Phasing matches [01-DP §12]: <code>lwo</code> is <strong>Phase 1
+(basic, §3.5) → Phase 2 (hardened, §3.3)</strong>.</p>
+<hr />
+<h2 id="14-out-of-scope-for-this-document">14. Out of scope for this
+document</h2>
+<p>The <code>Transport</code> trait, <code>TransportHealth</code>,
+<code>TransportError</code> definitions (frozen, [01-DP §3.1]); the
+ladder selection algorithm and per-network memory store ([01-DP §5.3],
+<code>ladder.rs</code> — LWO is a consumer); <code>NetworkMap</code>
+delivery of
+<code>session_key</code>/<code>session_salt</code>/<code>LwoParams</code>
+and the exact schema field placement (doc 03); WG crypto and the WG
+handshake state machine ([01-DP §4]); DAITA shaping ([01-DP §9] — LWO
+padding is a cheap length-fingerprint breaker, <strong>not</strong>
+DAITA and makes no traffic-analysis claim, L5); <code>masque-h3</code> /
+<code>shadowsocks</code> / <code>udp-over-tcp</code> (sibling
+transports, [01-DP §3.3/§3.5/§3.6]); the coordinator rekey-push
+mechanism and regional-prior policy source (control plane, doc
+02/03).</p>
+<hr />
+<p><em>End of LWO transport specification (Volume 2, Data Plane). Pairs
+with [01-DP §3.7] (the rung it deepens), [01-DP §5.3] (the ladder that
+selects it), and doc 03 (<code>WatchNetworkMap</code> — the live source
+of
+<code>session_key</code>/<code>session_salt</code>/<code>LwoParams</code>).
+The frame layout (§3.1), key schedule (§3.2), and the
+<code>Transport</code> impl surface (§4) are the implementation-ready
+contracts; the Phase-1→Phase-2 path is a keystream swap on a stable wire
+format (§3.5).</em></p>
+</body>
+</html>

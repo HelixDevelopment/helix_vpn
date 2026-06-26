@@ -1,0 +1,1402 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>coordinator service (the brain)</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">coordinator service (the brain)</h1>
+</header>
+<h1 id="coordinator-service-the-brain">coordinator service (the
+brain)</h1>
+<p><strong>Revision:</strong> 2 <strong>Last modified:</strong>
+2026-06-26T12:00:00Z</p>
+<blockquote>
+<p>Master technical specification — Volume 3 (Control Plane, Go),
+document <code>svc-coordinator</code>. Scope: the
+<strong><code>internal/coordinator</code></strong> package — HelixVPN&#39;s
+brain. It holds a per-tenant in-memory topology graph (hydrated from
+Postgres on boot, kept fresh by events), owns every open
+<code>WatchNetworkMap</code> stream, and on each event computes the
+<strong>minimal affected agent set</strong> and pushes a
+<code>MapDelta</code> to exactly those agents — convergence p99 &lt; 1
+s. This document <em>deepens</em> the coordinator part of [02_CP §6] to
+nano-detail and is implementation-ready. It is a SPEC (describe the
+implementation; do not build the product). Evidence cited inline by id:
+[02_CP §N] (pass-1 control-plane spec
+<code>final/02-control-plane.md</code>), [04_P1 §N]
+(<code>HelixVPN-Phase1-MVP.md</code>), [04_ARCH §N]
+(<code>HelixVPN-Architecture-Refined.md</code>), [research-go_cp §N]
+(<code>v09-research/research-go_cp.md</code>), [SYNTHESIS §N]. Unproven
+facts are marked <code>UNVERIFIED</code> per §11.4.6.</p>
+</blockquote>
+<hr />
+<h2 id="0-what-this-package-owns-and-what-it-does-not">0. What this
+package owns, and what it does NOT</h2>
+<p>The coordinator is the <strong>only</strong> stateful-in-RAM,
+stateless-on-disk module. It is the runtime projection of Postgres truth
++ the live event stream into per-agent network maps.</p>
+<table>
+<thead>
+<tr>
+<th>It OWNS</th>
+<th>It does NOT own</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>The per-tenant in-memory <code>Graph</code> (devices, connectors,
+prefixes, groups, compiled policy, presence).</td>
+<td>Any durable table. R2: <code>coordinator</code> MUST NOT
+create/migrate a Postgres table [02_CP §1.2-R2, 04_P1 §4].</td>
+</tr>
+<tr>
+<td>The registry of open <code>WatchNetworkMap</code> streams
+(<code>subRegistry</code>).</td>
+<td>Identity/enrollment (owned by <code>identity</code>), IPAM, PKI
+issuance — read through their interfaces [02_CP §1.3].</td>
+</tr>
+<tr>
+<td>The fan-out engine: event → minimal affected set →
+<code>MapDelta</code> enqueue → <code>stream.Send</code>.</td>
+<td>Policy <em>compilation</em> (owned by <code>policy</code>;
+coordinator consumes <code>CompiledPolicy</code>) [02_CP §7].</td>
+</tr>
+<tr>
+<td>The monotonic per-tenant <strong>map version</strong> counter.</td>
+<td>The event <em>bus transport</em> (owned by <code>events</code>;
+coordinator is a consumer) [02_CP §5].</td>
+</tr>
+<tr>
+<td>The <code>helix_reconcile_seconds</code> SLO histogram +
+back-pressure.</td>
+<td>The Rust data path (edge reconciles WG peers from the delta — doc
+01) [C1].</td>
+</tr>
+</tbody>
+</table>
+<p>Governing invariants inherited verbatim from [02_CP §0.1]:
+<strong>C1</strong> Go never in the packet path (fail-static);
+<strong>C2</strong> Postgres = truth, Redis = ephemeral;
+<strong>C4</strong> default-deny need-to-know (a node only ever learns
+peers a compiled rule grants); <strong>C5</strong> push-don&#39;t-poll,
+snapshot-then-deltas, p99 &lt; 1 s; <strong>C7</strong> package boundary
+== future service boundary; <strong>C8</strong> RLS at the DB. The
+coordinator is the concrete embodiment of <strong>C4 + C5</strong>.</p>
+<p>The proto package is
+<strong><code>helix.coordinator.v1</code></strong> (unified across the
+document set); generated Go import alias <code>coordinatorv1</code>
+[02_CP §4 — note: the §4 <code>.proto</code>
+<code>option go_package</code> path retains the historical
+<code>helix/coordinator/v1</code> directory but the wire
+<code>package</code> is <code>helix.coordinator.v1</code>; this document
+uses the package name as canonical].</p>
+<hr />
+<h2 id="1-the-in-memory-topology-graph">1. The in-memory topology
+graph</h2>
+<h3 id="11-position-in-the-system">1.1 Position in the system</h3>
+<pre class="mermaid"><code>flowchart LR
+  subgraph PG[Postgres truth C2]
+    T[(devices / connectors /&lt;br/&gt;advertised_prefixes /&lt;br/&gt;groups / policies)]
+  end
+  subgraph BUS[Redis Streams D3]
+    E[[events:devices · routes ·&lt;br/&gt;policy · presence · gateway]]
+  end
+  subgraph COORD[internal/coordinator the brain]
+    H[hydrator&lt;br/&gt;boot snapshot]
+    G[per-tenant Graph&lt;br/&gt;RWMutex-guarded]
+    A[applier&lt;br/&gt;event to graph mutation]
+    F[fan-out engine&lt;br/&gt;minimal affected set]
+    S[subRegistry&lt;br/&gt;open WatchNetworkMap streams]
+  end
+  EDGE[Rust edge / agents&lt;br/&gt;reconcile WG peers C1]
+
+  T -- boot hydrate --&gt; H --&gt; G
+  E -- XReadGroup --&gt; A -- mutate --&gt; G
+  A -- changed node set --&gt; F
+  G -- buildMap/diff --&gt; F
+  F -- enqueue MapDelta --&gt; S
+  S -- stream.Send --&gt; EDGE</code></pre>
+<h3 id="12-graph-data-structures-go-nano-detail">1.2 Graph data
+structures (Go, nano-detail)</h3>
+<p>The graph is per-tenant. The coordinator holds a top-level
+<code>map[TenantID]*tenantState</code>, each <code>tenantState</code>
+independently locked so one tenant&#39;s churn never blocks another
+(per-tenant sharding is the concurrency unit) [04_P1 §4].</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/coordinator/graph.go</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">package</span> coordinator</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="op">(</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;net/netip&quot;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;sync&quot;</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;time&quot;</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;github.com/google/uuid&quot;</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="op">(</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    TenantID <span class="op">=</span> uuid<span class="op">.</span>UUID</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    DeviceID <span class="op">=</span> uuid<span class="op">.</span>UUID</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="co">// DeviceKind mirrors the DB enum device_kind and the proto enum DeviceKind [02_CP §2.2/§4].</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> DeviceKind <span class="dt">uint8</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> <span class="op">(</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>    KindUnspecified DeviceKind <span class="op">=</span> <span class="ot">iota</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>    KindClient</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>    KindConnector</span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a><span class="co">// PresenceState is the coordinator&#39;s view of an agent&#39;s liveness (Redis-fed, ephemeral C2).</span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> PresenceState <span class="dt">uint8</span></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> <span class="op">(</span></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>    PresenceUnknown PresenceState <span class="op">=</span> <span class="ot">iota</span> <span class="co">// never seen since boot</span></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>    PresenceOnline                       <span class="co">// an open stream OR a fresh heartbeat</span></span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>    PresenceOffline                      <span class="co">// stream closed AND heartbeat TTL expired</span></span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a><span class="co">// node is one device (client or connector) in the graph.</span></span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> node <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a>    ID         DeviceID</span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a>    Kind       DeviceKind</span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a>    WGPubKey   <span class="op">[</span><span class="dv">32</span><span class="op">]</span><span class="dt">byte</span> <span class="co">// Curve25519 public key only (C6: private never registered)</span></span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a>    OverlayIP  netip<span class="op">.</span>Addr</span>
+<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a>    OS         <span class="dt">string</span></span>
+<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a>    Presence   PresenceState</span>
+<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a>    LastRTTMS  <span class="dt">uint32</span>     <span class="co">// from ReportStatus; health only, NOT traffic (C3)</span></span>
+<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a>    LastSeen   time<span class="op">.</span>Time  <span class="co">// coarse; refreshed by heartbeat, not per-packet (C3)</span></span>
+<span id="cb2-45"><a href="#cb2-45" aria-hidden="true" tabindex="-1"></a>    Revoked    <span class="dt">bool</span>       <span class="co">// belt-and-suspenders mirror of devices.revoked_at</span></span>
+<span id="cb2-46"><a href="#cb2-46" aria-hidden="true" tabindex="-1"></a>    siteID     <span class="dt">uint32</span>     <span class="co">// connectors only: 4via6 site id (D4); 0 for clients</span></span>
+<span id="cb2-47"><a href="#cb2-47" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-48"><a href="#cb2-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-49"><a href="#cb2-49" aria-hidden="true" tabindex="-1"></a><span class="co">// connectorAdv holds a connector&#39;s advertised reachable CIDRs.</span></span>
+<span id="cb2-50"><a href="#cb2-50" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> connectorAdv <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb2-51"><a href="#cb2-51" aria-hidden="true" tabindex="-1"></a>    connectorID DeviceID</span>
+<span id="cb2-52"><a href="#cb2-52" aria-hidden="true" tabindex="-1"></a>    prefixes    <span class="op">[]</span>netip<span class="op">.</span>Prefix <span class="co">// from advertised_prefixes WHERE enabled</span></span>
+<span id="cb2-53"><a href="#cb2-53" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-54"><a href="#cb2-54" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-55"><a href="#cb2-55" aria-hidden="true" tabindex="-1"></a><span class="co">// tenantState is the per-tenant graph + version + the policy projection.</span></span>
+<span id="cb2-56"><a href="#cb2-56" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> tenantState <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb2-57"><a href="#cb2-57" aria-hidden="true" tabindex="-1"></a>    mu sync<span class="op">.</span>RWMutex</span>
+<span id="cb2-58"><a href="#cb2-58" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-59"><a href="#cb2-59" aria-hidden="true" tabindex="-1"></a>    tenantID TenantID</span>
+<span id="cb2-60"><a href="#cb2-60" aria-hidden="true" tabindex="-1"></a>    version  <span class="dt">uint64</span> <span class="co">// monotonic map version; bumped on every accepted mutation (C5)</span></span>
+<span id="cb2-61"><a href="#cb2-61" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-62"><a href="#cb2-62" aria-hidden="true" tabindex="-1"></a>    nodes      <span class="kw">map</span><span class="op">[</span>DeviceID<span class="op">]*</span>node</span>
+<span id="cb2-63"><a href="#cb2-63" aria-hidden="true" tabindex="-1"></a>    connectors <span class="kw">map</span><span class="op">[</span>DeviceID<span class="op">]*</span>connectorAdv     <span class="co">// subset of nodes with kind=connector</span></span>
+<span id="cb2-64"><a href="#cb2-64" aria-hidden="true" tabindex="-1"></a>    gateway    GatewayInfo                    <span class="co">// current gateway endpoint for this tenant</span></span>
+<span id="cb2-65"><a href="#cb2-65" aria-hidden="true" tabindex="-1"></a>    dns        DnsConfig                      <span class="co">// tenant DNS config</span></span>
+<span id="cb2-66"><a href="#cb2-66" aria-hidden="true" tabindex="-1"></a>    transport  TransportPolicy                <span class="co">// escalation ladder [02_CP §4]</span></span>
+<span id="cb2-67"><a href="#cb2-67" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-68"><a href="#cb2-68" aria-hidden="true" tabindex="-1"></a>    <span class="co">// compiled policy projection — the need-to-know truth (C4). Replaced wholesale on</span></span>
+<span id="cb2-69"><a href="#cb2-69" aria-hidden="true" tabindex="-1"></a>    <span class="co">// policy.compiled; never mutated field-by-field (compilation is pure+versioned §7 [02_CP]).</span></span>
+<span id="cb2-70"><a href="#cb2-70" aria-hidden="true" tabindex="-1"></a>    policy <span class="op">*</span>CompiledPolicy</span>
+<span id="cb2-71"><a href="#cb2-71" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-72"><a href="#cb2-72" aria-hidden="true" tabindex="-1"></a>    <span class="co">// versionedDeltas is a bounded ring of recent deltas keyed by the version they produced,</span></span>
+<span id="cb2-73"><a href="#cb2-73" aria-hidden="true" tabindex="-1"></a>    <span class="co">// enabling cheap known_version reconnect catch-up (§3.2). Capacity DELTA_RING_CAP (§6.4).</span></span>
+<span id="cb2-74"><a href="#cb2-74" aria-hidden="true" tabindex="-1"></a>    versionedDeltas <span class="op">*</span>deltaRing</span>
+<span id="cb2-75"><a href="#cb2-75" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-76"><a href="#cb2-76" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-77"><a href="#cb2-77" aria-hidden="true" tabindex="-1"></a><span class="co">// GatewayInfo / DnsConfig / TransportPolicy mirror the proto messages 1:1 [02_CP §4].</span></span>
+<span id="cb2-78"><a href="#cb2-78" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> GatewayInfo <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb2-79"><a href="#cb2-79" aria-hidden="true" tabindex="-1"></a>    Endpoint  <span class="dt">string</span></span>
+<span id="cb2-80"><a href="#cb2-80" aria-hidden="true" tabindex="-1"></a>    WGPubKey  <span class="op">[</span><span class="dv">32</span><span class="op">]</span><span class="dt">byte</span></span>
+<span id="cb2-81"><a href="#cb2-81" aria-hidden="true" tabindex="-1"></a>    MasqueSNI <span class="dt">string</span></span>
+<span id="cb2-82"><a href="#cb2-82" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-83"><a href="#cb2-83" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> DnsConfig <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb2-84"><a href="#cb2-84" aria-hidden="true" tabindex="-1"></a>    Resolvers <span class="op">[]</span><span class="dt">string</span></span>
+<span id="cb2-85"><a href="#cb2-85" aria-hidden="true" tabindex="-1"></a>    Search    <span class="op">[]</span><span class="dt">string</span></span>
+<span id="cb2-86"><a href="#cb2-86" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-87"><a href="#cb2-87" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> TransportPolicy <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb2-88"><a href="#cb2-88" aria-hidden="true" tabindex="-1"></a>    Order             <span class="op">[]</span><span class="dt">string</span> <span class="co">// e.g. [&quot;plain-udp&quot;,&quot;lwo&quot;,&quot;masque-h3&quot;]</span></span>
+<span id="cb2-89"><a href="#cb2-89" aria-hidden="true" tabindex="-1"></a>    AllowUserOverride <span class="dt">bool</span></span>
+<span id="cb2-90"><a href="#cb2-90" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-91"><a href="#cb2-91" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-92"><a href="#cb2-92" aria-hidden="true" tabindex="-1"></a><span class="co">// CompiledPolicy is produced by internal/policy.Compiler.Compile and consumed read-only here</span></span>
+<span id="cb2-93"><a href="#cb2-93" aria-hidden="true" tabindex="-1"></a><span class="co">// [02_CP §1.3/§7]. The coordinator NEVER recomputes it; it diffs successive versions.</span></span>
+<span id="cb2-94"><a href="#cb2-94" aria-hidden="true" tabindex="-1"></a><span class="co">// Canonical definition (full field set) is owned by svc-policy.md §3 — this is the</span></span>
+<span id="cb2-95"><a href="#cb2-95" aria-hidden="true" tabindex="-1"></a><span class="co">// same struct, reproduced read-only. Do NOT let the field set drift from svc-policy.md.</span></span>
+<span id="cb2-96"><a href="#cb2-96" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> CompiledPolicy <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb2-97"><a href="#cb2-97" aria-hidden="true" tabindex="-1"></a>    Version    <span class="dt">int64</span></span>
+<span id="cb2-98"><a href="#cb2-98" aria-hidden="true" tabindex="-1"></a>    SpecHash   <span class="op">[</span><span class="dv">32</span><span class="op">]</span><span class="dt">byte</span>                                 <span class="co">// sha256 of canonical spec (audit/dedup)</span></span>
+<span id="cb2-99"><a href="#cb2-99" aria-hidden="true" tabindex="-1"></a>    VisibleTo  <span class="kw">map</span><span class="op">[</span>DeviceID<span class="op">]</span><span class="kw">map</span><span class="op">[</span>DeviceID<span class="op">]</span><span class="kw">struct</span><span class="op">{}</span>       <span class="co">// need-to-know peer set (C4)</span></span>
+<span id="cb2-100"><a href="#cb2-100" aria-hidden="true" tabindex="-1"></a>    AllowedIPs <span class="kw">map</span><span class="op">[</span>DeviceID<span class="op">]</span><span class="kw">map</span><span class="op">[</span>DeviceID<span class="op">][]</span>netip<span class="op">.</span>Prefix <span class="co">// coarse WG AllowedIPs (ARTIFACT 1b)</span></span>
+<span id="cb2-101"><a href="#cb2-101" aria-hidden="true" tabindex="-1"></a>    Verdicts   <span class="kw">map</span><span class="op">[</span>DeviceID<span class="op">]</span><span class="kw">map</span><span class="op">[</span>DeviceID<span class="op">][]</span>PortRule     <span class="co">// fine port-level map (ARTIFACT 2; edge-enforced)</span></span>
+<span id="cb2-102"><a href="#cb2-102" aria-hidden="true" tabindex="-1"></a>    Via6       <span class="kw">map</span><span class="op">[</span>DeviceID<span class="op">]</span><span class="kw">map</span><span class="op">[</span>DeviceID<span class="op">][]</span>Via6Route    <span class="co">// 4via6 mappings (D4)</span></span>
+<span id="cb2-103"><a href="#cb2-103" aria-hidden="true" tabindex="-1"></a>    ExitNodes  <span class="kw">map</span><span class="op">[</span>DeviceID<span class="op">]</span><span class="kw">struct</span><span class="op">{}</span></span>
+<span id="cb2-104"><a href="#cb2-104" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-105"><a href="#cb2-105" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Via6Route <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb2-106"><a href="#cb2-106" aria-hidden="true" tabindex="-1"></a>    IPv4CIDR   netip<span class="op">.</span>Prefix</span>
+<span id="cb2-107"><a href="#cb2-107" aria-hidden="true" tabindex="-1"></a>    Via6Prefix netip<span class="op">.</span>Prefix</span>
+<span id="cb2-108"><a href="#cb2-108" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<blockquote>
+<p><strong>Architectural note (§11.4.6):</strong>
+<code>CompiledPolicy</code> carries the full field set above (canonical
+in <code>svc-policy.md §3</code>), but the coordinator&#39;s
+<code>buildMap</code> only ships coarse <code>AllowedIPs</code> +
+<code>Via6</code> over the wire — the proto <code>Peer</code> carries
+<code>allowed_ips</code> + <code>via6</code> but <strong>not</strong>
+port verdicts [02_CP §4 <code>Peer</code>]. The fine
+<code>Verdicts</code> map is enforced at the <strong>edge</strong>
+(nftables/eBPF, doc 01); whether it reaches the edge via a
+<em>separate</em> coordinator stream field or out-of-band is a
+doc-01/doc-03 decision, NOT resolved here — marked pending, not
+fabricated.</p>
+</blockquote>
+<h3 id="13-coordinator-top-level-type--lifecycle">1.3 Coordinator
+top-level type &amp; lifecycle</h3>
+<div class="sourceCode" id="cb3"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/coordinator/coordinator.go</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Coordinator <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    mu      sync<span class="op">.</span>RWMutex</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    tenants <span class="kw">map</span><span class="op">[</span>TenantID<span class="op">]*</span>tenantState</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    registry registry<span class="op">.</span>Registry <span class="co">// §1.3 [02_CP]; boot hydrate + presence reads</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    policy   policy<span class="op">.</span>Compiler   <span class="co">// read CompiledPolicy</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    bus      events<span class="op">.</span>Bus        <span class="co">// consume events (§4)</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    subs     <span class="op">*</span>subRegistry      <span class="co">// open streams (§3)</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    metrics  <span class="op">*</span>metrics          <span class="co">// helix_reconcile_seconds etc. (§7)</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    clock    <span class="kw">func</span><span class="op">()</span> time<span class="op">.</span>Time  <span class="co">// injectable for deterministic tests (§8)</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    hostID <span class="dt">string</span> <span class="co">// consumer name for XReadGroup/XAutoClaim (§4) [research-go_cp §5]</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a><span class="co">// Boot lifecycle: NewCoordinator → Hydrate(ctx) → Run(ctx) [04_P1 §4].</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> NewCoordinator<span class="op">(</span>deps Deps<span class="op">)</span> <span class="op">*</span>Coordinator <span class="op">{</span> <span class="co">/* wire deps; clock=time.Now */</span> <span class="op">}</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a><span class="co">// Hydrate rebuilds every tenant graph from Postgres truth BEFORE consuming any event, so the</span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a><span class="co">// graph is a faithful projection and the first delta is computed against a correct baseline (C2).</span></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>c <span class="op">*</span>Coordinator<span class="op">)</span> Hydrate<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a><span class="co">// Run starts the event-consumer loop (§4) + the XAutoClaim DLQ sweeper + the presence-TTL reaper.</span></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a><span class="co">// It blocks until ctx is cancelled; returns ctx.Err(). Idempotent reactions make replay safe.</span></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>c <span class="op">*</span>Coordinator<span class="op">)</span> Run<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">)</span> <span class="dt">error</span></span></code></pre></div>
+<h3 id="14-hydration-boot--exact-sequence">1.4 Hydration (boot) — exact
+sequence</h3>
+<pre class="mermaid"><code>sequenceDiagram
+  autonumber
+  participant Run as helixd boot
+  participant Coord as coordinator.Hydrate
+  participant Reg as registry
+  participant Pol as policy.Compiler
+  participant PG as Postgres (RLS)
+  Run-&gt;&gt;Coord: Hydrate(ctx)
+  Coord-&gt;&gt;Reg: TenantsWithDevices(ctx)
+  loop each tenant t (WithTenant scope C8)
+    Coord-&gt;&gt;Reg: DevicesForTenant(t)
+    Reg-&gt;&gt;PG: SELECT devices/connectors/advertised_prefixes
+    Coord-&gt;&gt;Pol: ActiveCompiledPolicy(t)
+    Pol-&gt;&gt;PG: SELECT policies WHERE active
+    Coord-&gt;&gt;Coord: build tenantState{nodes, connectors, policy, version:=active.Version}
+  end
+  Coord--&gt;&gt;Run: nil (ready) | error (abort boot — fail-closed)</code></pre>
+<p>Rules: (1) hydration runs inside <code>store.WithTenant</code> per
+tenant (RLS floor, C8) [02_CP §2.3]; (2) the initial
+<code>version</code> for a tenant is the <strong>active policy
+version</strong> — so a reconnecting agent&#39;s <code>known_version</code>
+is comparable across coordinator restarts (the version namespace is the
+policy-version namespace, not a process-local counter — this makes
+restarts transparent to agents, §3.2); (3) if
+<code>ActiveCompiledPolicy</code> returns none, the tenant graph is
+built default-deny (every node sees zero peers, C4) — never fail-open;
+(4) a hydration error for ANY tenant aborts boot (fail-closed, §11.4.6 —
+never serve a partially-true graph).</p>
+<hr />
+<h2 id="2-map-computation-per-node">2. Map computation (per node)</h2>
+<p><code>buildMap(node)</code> and <code>buildDelta(old, new)</code> are
+pure functions of <code>(graph, policy)</code> — given the same graph +
+policy version they are deterministic (a property test asserts this, §8)
+[02_CP §6.2].</p>
+<h3 id="21-buildmap--full-snapshot-for-one-node">2.1 buildMap — full
+snapshot for one node</h3>
+<div class="sourceCode" id="cb5"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/coordinator/build.go  (caller holds ts.mu.RLock)</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>ts <span class="op">*</span>tenantState<span class="op">)</span> buildMap<span class="op">(</span>self <span class="op">*</span>node<span class="op">)</span> <span class="op">*</span>coordinatorv1<span class="op">.</span>NetworkMap <span class="op">{</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    reachable <span class="op">:=</span> ts<span class="op">.</span>policy<span class="op">.</span>VisibleTo<span class="op">[</span>self<span class="op">.</span>ID<span class="op">]</span>            <span class="co">// need-to-know filter (C4)</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    peers <span class="op">:=</span> <span class="bu">make</span><span class="op">([]*</span>coordinatorv1<span class="op">.</span>Peer<span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="bu">len</span><span class="op">(</span>reachable<span class="op">))</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> pid <span class="op">:=</span> <span class="kw">range</span> reachable <span class="op">{</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>        p <span class="op">:=</span> ts<span class="op">.</span>nodes<span class="op">[</span>pid<span class="op">]</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> p <span class="op">==</span> <span class="ot">nil</span> <span class="op">||</span> p<span class="op">.</span>Revoked <span class="op">{</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>            <span class="cf">continue</span>                                       <span class="co">// never advertise a revoked/absent peer</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>        peers <span class="op">=</span> <span class="bu">append</span><span class="op">(</span>peers<span class="op">,</span> <span class="op">&amp;</span>coordinatorv1<span class="op">.</span>Peer<span class="op">{</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>            DeviceId<span class="op">:</span>    p<span class="op">.</span>ID<span class="op">.</span>String<span class="op">(),</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>            WgPubkey<span class="op">:</span>    p<span class="op">.</span>WGPubKey<span class="op">[:],</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>            AllowedIps<span class="op">:</span>  cidrsToStrings<span class="op">(</span>ts<span class="op">.</span>policy<span class="op">.</span>AllowedIPs<span class="op">[</span>self<span class="op">.</span>ID<span class="op">][</span>pid<span class="op">]),</span> <span class="co">// compiled CIDRs (C4)</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>            Endpoint<span class="op">:</span>    ts<span class="op">.</span>relayEndpoint<span class="op">(</span>p<span class="op">),</span>               <span class="co">// via gateway in MVP (hub-and-spoke)</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>            IsConnector<span class="op">:</span> p<span class="op">.</span>Kind <span class="op">==</span> KindConnector<span class="op">,</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>            Via6<span class="op">:</span>        via6ToProto<span class="op">(</span>ts<span class="op">.</span>policy<span class="op">.</span>Via6<span class="op">[</span>self<span class="op">.</span>ID<span class="op">][</span>pid<span class="op">]),</span> <span class="co">// 4via6 (D4)</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>        <span class="op">})</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>    sortPeersByID<span class="op">(</span>peers<span class="op">)</span>                                   <span class="co">// STABLE order ⇒ deterministic snapshot (§8)</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">&amp;</span>coordinatorv1<span class="op">.</span>NetworkMap<span class="op">{</span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>        Self<span class="op">:</span>      <span class="op">&amp;</span>coordinatorv1<span class="op">.</span>Node<span class="op">{</span>DeviceId<span class="op">:</span> self<span class="op">.</span>ID<span class="op">.</span>String<span class="op">(),</span> OverlayIp<span class="op">:</span> self<span class="op">.</span>OverlayIP<span class="op">.</span>String<span class="op">()},</span></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>        Gateway<span class="op">:</span>   ts<span class="op">.</span>gateway<span class="op">.</span>proto<span class="op">(),</span></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>        Peers<span class="op">:</span>     peers<span class="op">,</span></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>        Dns<span class="op">:</span>       ts<span class="op">.</span>dns<span class="op">.</span>proto<span class="op">(),</span></span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>        Transport<span class="op">:</span> ts<span class="op">.</span>transport<span class="op">.</span>proto<span class="op">(),</span></span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><code>relayEndpoint</code> always returns the gateway relay endpoint
+in the MVP (hub-and-spoke; direct P2P is Phase 2 —
+<code>Peer.endpoint</code> gains NAT-traversal candidates without
+reshaping) [02_CP §6.2/§14].</p>
+<h3 id="22-builddelta--minimal-diff-between-two-graph-states-for-one-node">2.2
+buildDelta — minimal diff between two graph states for one node</h3>
+<p>The delta is computed against the node&#39;s <strong>last-sent
+map</strong> (the coordinator tracks per-stream
+<code>lastVersion</code>; for a fresh recompute it diffs the old vs new
+peer sets). The diff is by <code>DeviceID</code>:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">// returns nil if the node&#39;s view is byte-unchanged (NO delta sent — quiet for unaffected nodes)</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> diffPeers<span class="op">(</span>old<span class="op">,</span> <span class="bu">new</span> <span class="kw">map</span><span class="op">[</span>DeviceID<span class="op">]*</span>coordinatorv1<span class="op">.</span>Peer<span class="op">)</span> <span class="op">*</span>coordinatorv1<span class="op">.</span>MapDelta <span class="op">{</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">var</span> d coordinatorv1<span class="op">.</span>MapDelta</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> id<span class="op">,</span> np <span class="op">:=</span> <span class="kw">range</span> <span class="bu">new</span> <span class="op">{</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> op<span class="op">,</span> ok <span class="op">:=</span> old<span class="op">[</span>id<span class="op">];</span> <span class="op">!</span>ok <span class="op">||</span> <span class="op">!</span>proto<span class="op">.</span>Equal<span class="op">(</span>op<span class="op">,</span> np<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>            d<span class="op">.</span>UpsertPeers <span class="op">=</span> <span class="bu">append</span><span class="op">(</span>d<span class="op">.</span>UpsertPeers<span class="op">,</span> np<span class="op">)</span> <span class="co">// added or changed</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> id <span class="op">:=</span> <span class="kw">range</span> old <span class="op">{</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> _<span class="op">,</span> ok <span class="op">:=</span> <span class="bu">new</span><span class="op">[</span>id<span class="op">];</span> <span class="op">!</span>ok <span class="op">{</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>            d<span class="op">.</span>RemovePeerIds <span class="op">=</span> <span class="bu">append</span><span class="op">(</span>d<span class="op">.</span>RemovePeerIds<span class="op">,</span> id<span class="op">.</span>String<span class="op">())</span> <span class="co">// peer no longer visible (C4)</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">len</span><span class="op">(</span>d<span class="op">.</span>UpsertPeers<span class="op">)</span> <span class="op">==</span> <span class="dv">0</span> <span class="op">&amp;&amp;</span> <span class="bu">len</span><span class="op">(</span>d<span class="op">.</span>RemovePeerIds<span class="op">)</span> <span class="op">==</span> <span class="dv">0</span> <span class="op">&amp;&amp;</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>        d<span class="op">.</span>Transport <span class="op">==</span> <span class="ot">nil</span> <span class="op">&amp;&amp;</span> d<span class="op">.</span>Dns <span class="op">==</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="ot">nil</span> <span class="co">// unchanged — this is how the minimal-affected-set stays minimal (§5)</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>    sortUpserts<span class="op">(&amp;</span>d<span class="op">)</span> <span class="co">// deterministic wire order (§8)</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">&amp;</span>d</span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Edge rule: <code>transport</code>/<code>dns</code> fields are
+populated in the delta <strong>only if changed</strong> [02_CP §4
+<code>MapDelta</code>]. A node whose <code>diffPeers</code> returns
+<code>nil</code> AND whose transport/dns are unchanged receives
+<strong>no</strong> <code>MapUpdate</code> for that event (it stays
+quiet) — this is the literal mechanism of &quot;never broadcast a full resync
+on a small change&quot; [02_CP §6.4].</p>
+<hr />
+<h2 id="3-open-stream-registry--the-watchnetworkmap-loop">3. Open-stream
+registry &amp; the WatchNetworkMap loop</h2>
+<h3 id="31-subregistry--the-open-stream-index">3.1 subRegistry — the
+open-stream index</h3>
+<div class="sourceCode" id="cb7"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/coordinator/subs.go</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> subscription <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    tenantID    TenantID</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    deviceID    DeviceID</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    lastVersion <span class="dt">uint64</span>                          <span class="co">// last version this stream has converged to</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    ch          <span class="kw">chan</span> <span class="op">*</span>coordinatorv1<span class="op">.</span>MapUpdate   <span class="co">// bounded send queue (cap SEND_QUEUE_CAP, §6.4)</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    cancel      context<span class="op">.</span>CancelFunc              <span class="co">// closes the stream on revoke/back-pressure</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    mu          sync<span class="op">.</span>Mutex</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> subRegistry <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>    mu sync<span class="op">.</span>RWMutex</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>    <span class="co">// tenant -&gt; device -&gt; set of subs (a device MAY hold &gt;1 stream: reconnect overlap, multi-NIC)</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>    byTenant <span class="kw">map</span><span class="op">[</span>TenantID<span class="op">]</span><span class="kw">map</span><span class="op">[</span>DeviceID<span class="op">]</span><span class="kw">map</span><span class="op">[*</span>subscription<span class="op">]</span><span class="kw">struct</span><span class="op">{}</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>r <span class="op">*</span>subRegistry<span class="op">)</span> add<span class="op">(</span>s <span class="op">*</span>subscription<span class="op">)</span>                          <span class="co">// registers + flips presence online</span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>r <span class="op">*</span>subRegistry<span class="op">)</span> remove<span class="op">(</span>s <span class="op">*</span>subscription<span class="op">)</span>                       <span class="co">// deregisters + maybe-offline</span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>r <span class="op">*</span>subRegistry<span class="op">)</span> forTenant<span class="op">(</span>t TenantID<span class="op">)</span> <span class="op">[]*</span>subscription          <span class="co">// fan-out enumeration</span></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>r <span class="op">*</span>subRegistry<span class="op">)</span> forDevice<span class="op">(</span>t TenantID<span class="op">,</span> d DeviceID<span class="op">)</span> <span class="op">[]*</span>subscription</span></code></pre></div>
+<p>A single device may legitimately hold more than one stream
+momentarily (a reconnect lands before the old stream&#39;s TCP FIN; a
+multi-homed device). Fan-out enqueues to <strong>every</strong> matching
+subscription; presence flips offline only when the device&#39;s
+<strong>last</strong> subscription closes AND its heartbeat TTL has
+lapsed (§4.4).</p>
+<h3 id="32-watchnetworkmap--the-streaming-handler-server-side">3.2
+WatchNetworkMap — the streaming handler (server side)</h3>
+<div class="sourceCode" id="cb8"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/coordinator/watch.go</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>c <span class="op">*</span>Coordinator<span class="op">)</span> WatchNetworkMap<span class="op">(</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    ctx context<span class="op">.</span>Context<span class="op">,</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    req <span class="op">*</span>connect<span class="op">.</span>Request<span class="op">[</span>coordinatorv1<span class="op">.</span>WatchRequest<span class="op">],</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    stream <span class="op">*</span>connect<span class="op">.</span>ServerStream<span class="op">[</span>coordinatorv1<span class="op">.</span>MapUpdate<span class="op">],</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="dt">error</span> <span class="op">{</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    dev<span class="op">,</span> err <span class="op">:=</span> authDevice<span class="op">(</span>ctx<span class="op">)</span> <span class="co">// mTLS device cert → device_certs → devices (§8.2 [02_CP])</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> connect<span class="op">.</span>NewError<span class="op">(</span>connect<span class="op">.</span>CodeUnauthenticated<span class="op">,</span> err<span class="op">)</span>        <span class="co">// E-AUTH (§4 err taxonomy)</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> dev<span class="op">.</span>Revoked <span class="op">{</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> connect<span class="op">.</span>NewError<span class="op">(</span>connect<span class="op">.</span>CodePermissionDenied<span class="op">,</span> errRevoked<span class="op">)</span> <span class="co">// E-REVOKED</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> req<span class="op">.</span>Msg<span class="op">.</span>DeviceId <span class="op">!=</span> <span class="st">&quot;&quot;</span> <span class="op">&amp;&amp;</span> req<span class="op">.</span>Msg<span class="op">.</span>DeviceId <span class="op">!=</span> dev<span class="op">.</span>ID<span class="op">.</span>String<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> connect<span class="op">.</span>NewError<span class="op">(</span>connect<span class="op">.</span>CodePermissionDenied<span class="op">,</span> errDeviceMismatch<span class="op">)</span> <span class="co">// E-IMPERSONATE</span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>    ts <span class="op">:=</span> c<span class="op">.</span>tenant<span class="op">(</span>dev<span class="op">.</span>TenantID<span class="op">)</span></span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> ts <span class="op">==</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> connect<span class="op">.</span>NewError<span class="op">(</span>connect<span class="op">.</span>CodeFailedPrecondition<span class="op">,</span> errNoTenant<span class="op">)</span>    <span class="co">// E-NOTENANT</span></span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>    sctx<span class="op">,</span> cancel <span class="op">:=</span> context<span class="op">.</span>WithCancel<span class="op">(</span>ctx<span class="op">)</span></span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>    sub <span class="op">:=</span> newSubscription<span class="op">(</span>dev<span class="op">.</span>TenantID<span class="op">,</span> dev<span class="op">.</span>ID<span class="op">,</span> cancel<span class="op">)</span></span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a>    c<span class="op">.</span>subs<span class="op">.</span>add<span class="op">(</span>sub<span class="op">)</span>        <span class="co">// registers + presence ONLINE + publishes device.online (§4.4)</span></span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a>    <span class="cf">defer</span> <span class="kw">func</span><span class="op">()</span> <span class="op">{</span></span>
+<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a>        c<span class="op">.</span>subs<span class="op">.</span>remove<span class="op">(</span>sub<span class="op">)</span> <span class="co">// deregister + maybe presence OFFLINE + device.offline</span></span>
+<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a>        cancel<span class="op">()</span></span>
+<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a>    <span class="op">}()</span></span>
+<span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-31"><a href="#cb8-31" aria-hidden="true" tabindex="-1"></a>    <span class="co">// (1) snapshot OR resume-from-known_version (cheap reconnect, C5) [02_CP §6.3, 04_P1 §3]</span></span>
+<span id="cb8-32"><a href="#cb8-32" aria-hidden="true" tabindex="-1"></a>    ts<span class="op">.</span>mu<span class="op">.</span>RLock<span class="op">()</span></span>
+<span id="cb8-33"><a href="#cb8-33" aria-hidden="true" tabindex="-1"></a>    cur <span class="op">:=</span> ts<span class="op">.</span>version</span>
+<span id="cb8-34"><a href="#cb8-34" aria-hidden="true" tabindex="-1"></a>    <span class="cf">switch</span> <span class="op">{</span></span>
+<span id="cb8-35"><a href="#cb8-35" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> req<span class="op">.</span>Msg<span class="op">.</span>KnownVersion <span class="op">==</span> <span class="dv">0</span> <span class="op">||</span> req<span class="op">.</span>Msg<span class="op">.</span>KnownVersion <span class="op">&gt;</span> cur<span class="op">:</span></span>
+<span id="cb8-36"><a href="#cb8-36" aria-hidden="true" tabindex="-1"></a>        snap <span class="op">:=</span> ts<span class="op">.</span>buildMap<span class="op">(</span>ts<span class="op">.</span>nodes<span class="op">[</span>dev<span class="op">.</span>ID<span class="op">])</span></span>
+<span id="cb8-37"><a href="#cb8-37" aria-hidden="true" tabindex="-1"></a>        ts<span class="op">.</span>mu<span class="op">.</span>RUnlock<span class="op">()</span></span>
+<span id="cb8-38"><a href="#cb8-38" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> err <span class="op">:=</span> stream<span class="op">.</span>Send<span class="op">(&amp;</span>coordinatorv1<span class="op">.</span>MapUpdate<span class="op">{</span></span>
+<span id="cb8-39"><a href="#cb8-39" aria-hidden="true" tabindex="-1"></a>            Version<span class="op">:</span> cur<span class="op">,</span> Body<span class="op">:</span> <span class="op">&amp;</span>coordinatorv1<span class="op">.</span>MapUpdate_Snapshot<span class="op">{</span>Snapshot<span class="op">:</span> snap<span class="op">},</span></span>
+<span id="cb8-40"><a href="#cb8-40" aria-hidden="true" tabindex="-1"></a>        <span class="op">});</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb8-41"><a href="#cb8-41" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> err <span class="co">// E-STREAM-SEND</span></span>
+<span id="cb8-42"><a href="#cb8-42" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb8-43"><a href="#cb8-43" aria-hidden="true" tabindex="-1"></a>    <span class="cf">default</span><span class="op">:</span> <span class="co">// 0 &lt; known_version &lt;= cur : replay catch-up deltas if the ring still has them</span></span>
+<span id="cb8-44"><a href="#cb8-44" aria-hidden="true" tabindex="-1"></a>        deltas<span class="op">,</span> complete <span class="op">:=</span> ts<span class="op">.</span>versionedDeltas<span class="op">.</span>since<span class="op">(</span>req<span class="op">.</span>Msg<span class="op">.</span>KnownVersion<span class="op">)</span></span>
+<span id="cb8-45"><a href="#cb8-45" aria-hidden="true" tabindex="-1"></a>        snap <span class="op">:=</span> <span class="op">(*</span>coordinatorv1<span class="op">.</span>NetworkMap<span class="op">)(</span><span class="ot">nil</span><span class="op">)</span></span>
+<span id="cb8-46"><a href="#cb8-46" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">!</span>complete <span class="op">{</span></span>
+<span id="cb8-47"><a href="#cb8-47" aria-hidden="true" tabindex="-1"></a>            snap <span class="op">=</span> ts<span class="op">.</span>buildMap<span class="op">(</span>ts<span class="op">.</span>nodes<span class="op">[</span>dev<span class="op">.</span>ID<span class="op">])</span> <span class="co">// ring evicted the gap → fall back to snapshot</span></span>
+<span id="cb8-48"><a href="#cb8-48" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb8-49"><a href="#cb8-49" aria-hidden="true" tabindex="-1"></a>        ts<span class="op">.</span>mu<span class="op">.</span>RUnlock<span class="op">()</span></span>
+<span id="cb8-50"><a href="#cb8-50" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> snap <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb8-51"><a href="#cb8-51" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> err <span class="op">:=</span> stream<span class="op">.</span>Send<span class="op">(</span>snapshotUpdate<span class="op">(</span>cur<span class="op">,</span> snap<span class="op">));</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span> <span class="cf">return</span> err <span class="op">}</span></span>
+<span id="cb8-52"><a href="#cb8-52" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb8-53"><a href="#cb8-53" aria-hidden="true" tabindex="-1"></a>            <span class="cf">for</span> _<span class="op">,</span> d <span class="op">:=</span> <span class="kw">range</span> deltas <span class="op">{</span></span>
+<span id="cb8-54"><a href="#cb8-54" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> err <span class="op">:=</span> stream<span class="op">.</span>Send<span class="op">(</span>d<span class="op">);</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span> <span class="cf">return</span> err <span class="op">}</span></span>
+<span id="cb8-55"><a href="#cb8-55" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb8-56"><a href="#cb8-56" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb8-57"><a href="#cb8-57" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-58"><a href="#cb8-58" aria-hidden="true" tabindex="-1"></a>    sub<span class="op">.</span>setLastVersion<span class="op">(</span>cur<span class="op">)</span></span>
+<span id="cb8-59"><a href="#cb8-59" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-60"><a href="#cb8-60" aria-hidden="true" tabindex="-1"></a>    <span class="co">// (2) live delta loop — events via sub.ch, keepalive on a ticker (C5)</span></span>
+<span id="cb8-61"><a href="#cb8-61" aria-hidden="true" tabindex="-1"></a>    ka <span class="op">:=</span> time<span class="op">.</span>NewTicker<span class="op">(</span>KEEPALIVE_INTERVAL<span class="op">)</span> <span class="co">// 20 s [02_CP §6.3]</span></span>
+<span id="cb8-62"><a href="#cb8-62" aria-hidden="true" tabindex="-1"></a>    <span class="cf">defer</span> ka<span class="op">.</span>Stop<span class="op">()</span></span>
+<span id="cb8-63"><a href="#cb8-63" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">{</span></span>
+<span id="cb8-64"><a href="#cb8-64" aria-hidden="true" tabindex="-1"></a>        <span class="cf">select</span> <span class="op">{</span></span>
+<span id="cb8-65"><a href="#cb8-65" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> <span class="op">&lt;-</span>sctx<span class="op">.</span>Done<span class="op">():</span></span>
+<span id="cb8-66"><a href="#cb8-66" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> sctx<span class="op">.</span>Err<span class="op">()</span>                                  <span class="co">// client disconnect OR forced-close</span></span>
+<span id="cb8-67"><a href="#cb8-67" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> up<span class="op">,</span> ok <span class="op">:=</span> <span class="op">&lt;-</span>sub<span class="op">.</span>ch<span class="op">:</span></span>
+<span id="cb8-68"><a href="#cb8-68" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">!</span>ok <span class="op">{</span></span>
+<span id="cb8-69"><a href="#cb8-69" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> connect<span class="op">.</span>NewError<span class="op">(</span>connect<span class="op">.</span>CodeAborted<span class="op">,</span> errBackpressure<span class="op">)</span> <span class="co">// E-BACKPRESSURE</span></span>
+<span id="cb8-70"><a href="#cb8-70" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb8-71"><a href="#cb8-71" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> err <span class="op">:=</span> stream<span class="op">.</span>Send<span class="op">(</span>up<span class="op">);</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span> <span class="cf">return</span> err <span class="op">}</span></span>
+<span id="cb8-72"><a href="#cb8-72" aria-hidden="true" tabindex="-1"></a>            sub<span class="op">.</span>setLastVersion<span class="op">(</span>up<span class="op">.</span>Version<span class="op">)</span></span>
+<span id="cb8-73"><a href="#cb8-73" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> <span class="op">&lt;-</span>ka<span class="op">.</span>C<span class="op">:</span></span>
+<span id="cb8-74"><a href="#cb8-74" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> err <span class="op">:=</span> stream<span class="op">.</span>Send<span class="op">(</span>keepAlive<span class="op">());</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span> <span class="cf">return</span> err <span class="op">}</span>     <span class="co">// proves liveness</span></span>
+<span id="cb8-75"><a href="#cb8-75" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb8-76"><a href="#cb8-76" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-77"><a href="#cb8-77" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><strong>Resume semantics (the <code>known_version</code> contract,
+C5):</strong></p>
+<ul>
+<li><code>known_version == 0</code> ⇒ full snapshot (first
+connect).</li>
+<li><code>known_version &gt; current</code> ⇒ the client claims a
+version the server never issued (a stale/forked client, or a coordinator
+that lost+rebuilt state) ⇒ full snapshot (safe re-baseline).</li>
+<li><code>0 &lt; known_version &lt;= current</code> ⇒ replay the
+<code>deltaRing</code> entries <code>(known_version, current]</code>; if
+the ring evicted any entry in that span (gap), fall back to a full
+snapshot. This bounds reconnect cost while never serving an incomplete
+view.</li>
+</ul>
+<h3 id="33-stream-lifecycle-state-machine">3.3 Stream lifecycle state
+machine</h3>
+<pre class="mermaid"><code>stateDiagram-v2
+  [*] --&gt; Authenticating
+  Authenticating --&gt; Rejected: mTLS invalid / revoked / impersonation
+  Authenticating --&gt; Snapshotting: authDevice ok
+  Snapshotting --&gt; Streaming: snapshot/catch-up sent
+  Streaming --&gt; Streaming: MapDelta sent / KeepAlive sent
+  Streaming --&gt; Draining: ctx cancelled (client FIN)
+  Streaming --&gt; ForcedClose: revoke event OR back-pressure overflow
+  ForcedClose --&gt; Draining
+  Draining --&gt; [*]: subRegistry.remove + presence maybe-OFFLINE
+  Rejected --&gt; [*]</code></pre>
+<hr />
+<h2 id="4-event-consumption--the-reaction-table-event--recompute">4.
+Event consumption &amp; the reaction table (event → recompute)</h2>
+<p>The coordinator is a durable consumer-group member on the §5 [02_CP]
+Redis Streams. The consumer loop is <strong>XAutoClaim-stalled-first,
+then XReadGroup-new</strong> [research-go_cp §5].</p>
+<h3 id="41-consumer-loop-go">4.1 Consumer loop (Go)</h3>
+<div class="sourceCode" id="cb10"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/coordinator/consume.go</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>c <span class="op">*</span>Coordinator<span class="op">)</span> consume<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">)</span> <span class="dt">error</span> <span class="op">{</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    streams <span class="op">:=</span> <span class="op">[]</span><span class="dt">string</span><span class="op">{</span><span class="st">&quot;events:devices&quot;</span><span class="op">,</span> <span class="st">&quot;events:routes&quot;</span><span class="op">,</span> <span class="st">&quot;events:policy&quot;</span><span class="op">,</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;events:presence&quot;</span><span class="op">,</span> <span class="st">&quot;events:gateway&quot;</span><span class="op">}</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">{</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> ctx<span class="op">.</span>Err<span class="op">()</span> <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span> <span class="cf">return</span> ctx<span class="op">.</span>Err<span class="op">()</span> <span class="op">}</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>        <span class="co">// 1. reclaim stalled PEL entries from crashed peers (no-work-loss §11.4.147)</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> _<span class="op">,</span> s <span class="op">:=</span> <span class="kw">range</span> streams <span class="op">{</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>            claimed<span class="op">,</span> _<span class="op">,</span> _ <span class="op">:=</span> c<span class="op">.</span>bus<span class="op">.</span>AutoClaim<span class="op">(</span>ctx<span class="op">,</span> s<span class="op">,</span> <span class="st">&quot;coordinator&quot;</span><span class="op">,</span> c<span class="op">.</span>hostID<span class="op">,</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>                EVENT_CLAIM_MIN_IDLE <span class="co">/*30s*/</span><span class="op">,</span> <span class="dv">64</span><span class="op">)</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>            <span class="cf">for</span> _<span class="op">,</span> env <span class="op">:=</span> <span class="kw">range</span> claimed <span class="op">{</span> c<span class="op">.</span>handleEnvelope<span class="op">(</span>ctx<span class="op">,</span> s<span class="op">,</span> env<span class="op">)</span> <span class="op">}</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>        <span class="co">// 2. read new entries (blocking)</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>        batch<span class="op">,</span> err <span class="op">:=</span> c<span class="op">.</span>bus<span class="op">.</span>ReadGroup<span class="op">(</span>ctx<span class="op">,</span> <span class="st">&quot;coordinator&quot;</span><span class="op">,</span> c<span class="op">.</span>hostID<span class="op">,</span> streams<span class="op">,</span> <span class="dv">64</span><span class="op">,</span> <span class="dv">5</span><span class="op">*</span>time<span class="op">.</span>Second<span class="op">)</span></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span> <span class="cf">continue</span> <span class="op">}</span> <span class="co">// transient; loop reattempts (§11.4.6 no silent give-up)</span></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> _<span class="op">,</span> env <span class="op">:=</span> <span class="kw">range</span> batch <span class="op">{</span> c<span class="op">.</span>handleEnvelope<span class="op">(</span>ctx<span class="op">,</span> env<span class="op">.</span>Stream<span class="op">,</span> env<span class="op">)</span> <span class="op">}</span></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>c <span class="op">*</span>Coordinator<span class="op">)</span> handleEnvelope<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> stream <span class="dt">string</span><span class="op">,</span> env events<span class="op">.</span>Envelope<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>    t0 <span class="op">:=</span> c<span class="op">.</span>clock<span class="op">()</span></span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a>    <span class="cf">defer</span> <span class="kw">func</span><span class="op">()</span> <span class="op">{</span></span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> r <span class="op">:=</span> <span class="bu">recover</span><span class="op">();</span> r <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span> c<span class="op">.</span>metrics<span class="op">.</span>applyPanics<span class="op">.</span>Inc<span class="op">();</span> <span class="co">/* env stays in PEL → reclaimed */</span> <span class="cf">return</span> <span class="op">}</span></span>
+<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a>    <span class="op">}()</span></span>
+<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a>    changed<span class="op">,</span> err <span class="op">:=</span> c<span class="op">.</span>apply<span class="op">(</span>env<span class="op">)</span>              <span class="co">// mutate graph, return affected node set (§4.3)</span></span>
+<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb10-27"><a href="#cb10-27" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> env<span class="op">.</span>DeliveryCount <span class="op">&gt;=</span> EVENT_RETRY_CAP <span class="co">/*5*/</span> <span class="op">{</span></span>
+<span id="cb10-28"><a href="#cb10-28" aria-hidden="true" tabindex="-1"></a>            c<span class="op">.</span>bus<span class="op">.</span>DeadLetter<span class="op">(</span>ctx<span class="op">,</span> stream<span class="op">,</span> env<span class="op">)</span>  <span class="co">// route to events:&lt;s&gt;:dlq + ACK (§5.4 [02_CP])</span></span>
+<span id="cb10-29"><a href="#cb10-29" aria-hidden="true" tabindex="-1"></a>            c<span class="op">.</span>metrics<span class="op">.</span>dlqTotal<span class="op">.</span>Inc<span class="op">()</span></span>
+<span id="cb10-30"><a href="#cb10-30" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb10-31"><a href="#cb10-31" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="co">// leave un-ACKed → XAutoClaim retries (at-least-once)</span></span>
+<span id="cb10-32"><a href="#cb10-32" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-33"><a href="#cb10-33" aria-hidden="true" tabindex="-1"></a>    c<span class="op">.</span>fanout<span class="op">(</span>env<span class="op">.</span>TenantID<span class="op">,</span> changed<span class="op">)</span>           <span class="co">// enqueue MapDelta to minimal set (§5)</span></span>
+<span id="cb10-34"><a href="#cb10-34" aria-hidden="true" tabindex="-1"></a>    c<span class="op">.</span>bus<span class="op">.</span>Ack<span class="op">(</span>ctx<span class="op">,</span> stream<span class="op">,</span> <span class="st">&quot;coordinator&quot;</span><span class="op">,</span> env<span class="op">.</span>ID<span class="op">)</span></span>
+<span id="cb10-35"><a href="#cb10-35" aria-hidden="true" tabindex="-1"></a>    c<span class="op">.</span>metrics<span class="op">.</span>reconcile<span class="op">.</span>Observe<span class="op">(</span>c<span class="op">.</span>clock<span class="op">().</span>Sub<span class="op">(</span>t0<span class="op">).</span>Seconds<span class="op">())</span> <span class="co">// the &lt; 1 s SLO timer (§7)</span></span>
+<span id="cb10-36"><a href="#cb10-36" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><strong>Idempotency (load-bearing):</strong> every reaction
+recomputes the affected nodes&#39; maps from <em>current</em> graph state,
+so a replayed/duplicate event is harmless [02_CP §5.4].
+<code>apply</code> MUST be a pure graph-state transition — never an
+increment that double-applies on redelivery.</p>
+<h3 id="42-reaction-table-event--graph-mutation--recompute-scope">4.2
+Reaction table (event → graph mutation → recompute scope)</h3>
+<p>Concrete and exhaustive for the MVP event taxonomy [02_CP §5.3].
+&quot;Recompute scope&quot; is the set of nodes whose map MIGHT change — the
+fan-out then diffs each and sends only real deltas (§2.2).</p>
+<table>
+<thead>
+<tr>
+<th>Event <code>type</code></th>
+<th>Payload</th>
+<th>Graph mutation</th>
+<th>Recompute scope (minimal affected set)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>device.enrolled</code></td>
+<td><code>{device_id,kind,overlay_ip,wg_pubkey}</code></td>
+<td>add <code>node</code>; if connector, add
+<code>connectorAdv</code></td>
+<td>nodes whose <code>VisibleTo</code> includes the new device (per
+active policy) — usually a small set</td>
+</tr>
+<tr>
+<td><code>device.online</code></td>
+<td><code>{device_id}</code></td>
+<td>set <code>Presence=Online</code>, refresh <code>LastSeen</code></td>
+<td>nodes that have this device as a peer (relay availability may change
+<code>endpoint</code>)</td>
+</tr>
+<tr>
+<td><code>device.offline</code></td>
+<td><code>{device_id}</code></td>
+<td>set <code>Presence=Offline</code></td>
+<td>same peer set as <code>device.online</code></td>
+</tr>
+<tr>
+<td><code>device.revoked</code></td>
+<td><code>{device_id}</code></td>
+<td>set <code>node.Revoked=true</code>, drop from
+<code>nodes</code>/<code>connectors</code></td>
+<td>every node whose last map listed it ⇒ <code>remove_peer_ids</code>
+delta (C4) + force-close that device&#39;s own streams (§4.5)</td>
+</tr>
+<tr>
+<td><code>connector.attached</code></td>
+<td><code>{device_id,site}</code></td>
+<td>set <code>node.siteID</code>, register
+<code>connectorAdv</code></td>
+<td>nodes whose policy grants the connector&#39;s CIDRs</td>
+</tr>
+<tr>
+<td><code>connector.prefixes.changed</code></td>
+<td><code>{connector_id,cidrs[]}</code></td>
+<td>replace <code>connectorAdv.prefixes</code></td>
+<td>nodes whose policy <code>dst</code> resolves to this connector
+ONLY</td>
+</tr>
+<tr>
+<td><code>route.conflict.detected</code></td>
+<td><code>{cidr,connector_ids[]}</code></td>
+<td>annotate (no map change)</td>
+<td>none — surfaced to Console via <code>events:gateway</code>→WS (§7.3
+[02_CP]); coordinator does not push</td>
+</tr>
+<tr>
+<td><code>policy.compiled</code></td>
+<td><code>{version}</code></td>
+<td>load new <code>CompiledPolicy</code>, replace
+<code>ts.policy</code>, <code>version:=v</code></td>
+<td>tenant-wide: diff old vs new
+<code>VisibleTo</code>/<code>AllowedIPs</code>/<code>Via6</code> ⇒ only
+nodes whose projection actually differs get a delta (§4.3)</td>
+</tr>
+<tr>
+<td><code>gateway.failover</code></td>
+<td><code>{from,to}</code></td>
+<td>replace <code>ts.gateway</code></td>
+<td>every node in the tenant (gateway endpoint is in every map) —
+<code>transport</code>/gateway fields in delta</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><code>policy.updated</code> (vs <code>policy.compiled</code>) is
+consumed by the <code>policy</code> module to trigger compile, NOT by
+the coordinator [02_CP §5.3]; the coordinator reacts only to
+<code>policy.compiled</code> (the compiled artifact is ready). Listing
+it here would be a fabricated reaction — omitted by design.</p>
+</blockquote>
+<h3 id="43-apply--policycompiled-is-the-only-tenant-wide-recompute">4.3
+apply() — policy.compiled is the only tenant-wide recompute</h3>
+<div class="sourceCode" id="cb11"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co">// the heaviest reaction; all others touch O(small) nodes. Diff old vs new projection so a</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="co">// tenant-wide recompile still produces a MINIMAL affected set (§5) [02_CP §6.4].</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>c <span class="op">*</span>Coordinator<span class="op">)</span> applyPolicyCompiled<span class="op">(</span>env events<span class="op">.</span>Envelope<span class="op">)</span> <span class="op">(</span>changed <span class="kw">map</span><span class="op">[</span>DeviceID<span class="op">]</span><span class="kw">struct</span><span class="op">{},</span> err <span class="dt">error</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    v <span class="op">:=</span> env<span class="op">.</span>Payload<span class="op">[</span><span class="st">&quot;version&quot;</span><span class="op">].(</span><span class="dt">int64</span><span class="op">)</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    fresh<span class="op">,</span> err <span class="op">:=</span> c<span class="op">.</span>policy<span class="op">.</span>CompiledAt<span class="op">(</span>env<span class="op">.</span>TenantID<span class="op">,</span> v<span class="op">)</span> <span class="co">// read-only [02_CP §1.3]</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span> <span class="cf">return</span> <span class="ot">nil</span><span class="op">,</span> err <span class="op">}</span>                  <span class="co">// → retry/DLQ (§4.1)</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>    ts <span class="op">:=</span> c<span class="op">.</span>tenant<span class="op">(</span>env<span class="op">.</span>TenantID<span class="op">)</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>    ts<span class="op">.</span>mu<span class="op">.</span>Lock<span class="op">()</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">defer</span> ts<span class="op">.</span>mu<span class="op">.</span>Unlock<span class="op">()</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> v <span class="op">&lt;=</span> <span class="dt">int64</span><span class="op">(</span>ts<span class="op">.</span>version<span class="op">)</span> <span class="op">{</span> <span class="cf">return</span> <span class="ot">nil</span><span class="op">,</span> <span class="ot">nil</span> <span class="op">}</span>      <span class="co">// stale/replayed compile — idempotent no-op</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>    old <span class="op">:=</span> ts<span class="op">.</span>policy</span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>    ts<span class="op">.</span>policy <span class="op">=</span> fresh</span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>    ts<span class="op">.</span>version <span class="op">=</span> <span class="dt">uint64</span><span class="op">(</span>v<span class="op">)</span></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>    changed <span class="op">=</span> projectionDiff<span class="op">(</span>old<span class="op">,</span> fresh<span class="op">)</span>               <span class="co">// nodes whose VisibleTo/AllowedIPs/Via6 differ</span></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>    ts<span class="op">.</span>versionedDeltas<span class="op">.</span>recordBoundary<span class="op">(</span><span class="dt">uint64</span><span class="op">(</span>v<span class="op">))</span>       <span class="co">// ring boundary for known_version resume</span></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> changed<span class="op">,</span> <span class="ot">nil</span></span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="44-presence-model-redis-fed-ephemeral-c2">4.4 Presence model
+(Redis-fed, ephemeral C2)</h3>
+<p>Presence is the union of two signals: (a) <strong>an open
+<code>WatchNetworkMap</code> stream</strong> (authoritative online), and
+(b) <strong>a heartbeat</strong>
+(<code>ReportStatus</code>/<code>events:presence</code>) with a TTL. A
+node is <code>Online</code> if it has ≥1 open stream OR a non-expired
+heartbeat; <code>Offline</code> once both lapse. A background
+<strong>presence reaper</strong> scans heartbeat TTLs every
+<code>PRESENCE_REAP_INTERVAL</code> and emits
+<code>device.offline</code> for expired-and-streamless nodes. Losing
+Redis loses presence but <strong>no durable state</strong> (C2) — on
+Redis recovery, open streams re-assert online; the graph itself was
+never in Redis.</p>
+<h3 id="45-revoke-fast-path--1-s-the-security-critical-reaction">4.5
+Revoke fast-path (&lt; 1 s, the security-critical reaction)</h3>
+<p><code>device.revoked</code> is the one reaction with a dual action:
+(1) the standard fan-out (<code>remove_peer_ids</code> delta to every
+node that saw the device — C4); (2)
+<code>subs.forDevice(t, revoked)</code> → <code>cancel()</code> each,
+<strong>force-closing the revoked device&#39;s own streams</strong> so it
+stops receiving maps immediately. The edge separately removes the kernel
+WG peer [02_CP §9.3]. Revocation latency target == convergence SLO (§7).
+This is <code>authDevice</code>-redundant defense in depth (the stream
+handler also checks <code>dev.Revoked</code> at open time, §3.2).</p>
+<hr />
+<h2 id="5-fan-out-minimal-affected-set--mapdelta">5. Fan-out: minimal
+affected set → MapDelta</h2>
+<div class="sourceCode" id="cb12"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/coordinator/fanout.go</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>c <span class="op">*</span>Coordinator<span class="op">)</span> fanout<span class="op">(</span>t TenantID<span class="op">,</span> changed <span class="kw">map</span><span class="op">[</span>DeviceID<span class="op">]</span><span class="kw">struct</span><span class="op">{})</span> <span class="op">{</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">len</span><span class="op">(</span>changed<span class="op">)</span> <span class="op">==</span> <span class="dv">0</span> <span class="op">{</span> <span class="cf">return</span> <span class="op">}</span>                    <span class="co">// nothing affected → zero sends (§2.2)</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    ts <span class="op">:=</span> c<span class="op">.</span>tenant<span class="op">(</span>t<span class="op">)</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> did <span class="op">:=</span> <span class="kw">range</span> changed <span class="op">{</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> _<span class="op">,</span> sub <span class="op">:=</span> <span class="kw">range</span> c<span class="op">.</span>subs<span class="op">.</span>forDevice<span class="op">(</span>t<span class="op">,</span> did<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>            ts<span class="op">.</span>mu<span class="op">.</span>RLock<span class="op">()</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>            newMap <span class="op">:=</span> ts<span class="op">.</span>buildMap<span class="op">(</span>ts<span class="op">.</span>nodes<span class="op">[</span>did<span class="op">])</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>            ver <span class="op">:=</span> ts<span class="op">.</span>version</span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>            ts<span class="op">.</span>mu<span class="op">.</span>RUnlock<span class="op">()</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>            delta <span class="op">:=</span> diffAgainstLastSent<span class="op">(</span>sub<span class="op">,</span> newMap<span class="op">)</span>  <span class="co">// nil if this stream&#39;s view is unchanged</span></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> delta <span class="op">==</span> <span class="ot">nil</span> <span class="op">{</span> <span class="cf">continue</span> <span class="op">}</span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>            up <span class="op">:=</span> <span class="op">&amp;</span>coordinatorv1<span class="op">.</span>MapUpdate<span class="op">{</span>Version<span class="op">:</span> ver<span class="op">,</span></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>                Body<span class="op">:</span> <span class="op">&amp;</span>coordinatorv1<span class="op">.</span>MapUpdate_Delta<span class="op">{</span>Delta<span class="op">:</span> delta<span class="op">}}</span></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>            <span class="cf">select</span> <span class="op">{</span></span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>            <span class="cf">case</span> sub<span class="op">.</span>ch <span class="op">&lt;-</span> up<span class="op">:</span>                          <span class="co">// enqueued (non-blocking)</span></span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>            <span class="cf">default</span><span class="op">:</span>                                     <span class="co">// queue FULL → back-pressure (§6.4)</span></span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a>                c<span class="op">.</span>metrics<span class="op">.</span>backpressureDrops<span class="op">.</span>Inc<span class="op">()</span></span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a>                sub<span class="op">.</span>cancel<span class="op">()</span>                             <span class="co">// drop slow consumer → reconnect-with-snapshot</span></span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a>    ts<span class="op">.</span>recordDeltaForResume<span class="op">(</span>t<span class="op">)</span>                          <span class="co">// append to deltaRing for known_version (§3.2)</span></span>
+<span id="cb12-24"><a href="#cb12-24" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><strong>Back-pressure (the 24 h-soak memory SLO, §7):</strong> each
+stream&#39;s <code>sub.ch</code> is bounded (<code>SEND_QUEUE_CAP</code>,
+§6.4). A consumer too slow to drain its queue is
+<strong>dropped</strong> (<code>cancel()</code>), not buffered
+unboundedly — it reconnects and gets a fresh snapshot. This converts
+&quot;slow consumer&quot; from a memory leak into a bounded reconnect
+(back-pressure, not growth) [02_CP §6.4].</p>
+<hr />
+<h2 id="6-concurrency-model-ordering-and-bounds">6. Concurrency model,
+ordering, and bounds</h2>
+<h3 id="61-lock-hierarchy-deadlock-free-by-construction">6.1 Lock
+hierarchy (deadlock-free by construction)</h3>
+<ol type="1">
+<li><code>Coordinator.mu</code> (RWMutex) — guards the
+<code>tenants</code> map only; held briefly to fetch a
+<code>*tenantState</code>.</li>
+<li><code>tenantState.mu</code> (RWMutex) — guards one tenant&#39;s graph +
+version + policy + deltaRing.</li>
+<li><code>subRegistry.mu</code> (RWMutex) — guards the open-stream
+index.</li>
+<li><code>subscription.mu</code> — guards <code>lastVersion</code>.</li>
+</ol>
+<p><strong>Ordering rule:</strong> never acquire a higher-numbered lock
+then a lower one. The event applier holds <code>tenantState.mu</code>
+(write) but enqueues to <code>sub.ch</code> <strong>without</strong>
+holding it (the channel send is non-blocking, §5). The stream handler
+holds only <code>tenantState.mu.RLock</code> for snapshot reads. No path
+holds two <code>tenantState</code> locks (tenants are independent). This
+is the §11.4 concurrency discipline made mechanical.</p>
+<h3 id="62-event-ordering-guarantee">6.2 Event ordering guarantee</h3>
+<p>Within one tenant, events are applied in <strong>Redis-Stream-ID
+order per stream</strong> (XReadGroup returns ordered IDs). Cross-stream
+ordering (e.g. <code>events:devices</code> vs
+<code>events:policy</code>) is NOT totally ordered — but reactions are
+idempotent and recompute from current state, so a
+<code>policy.compiled</code> that lands before its
+<code>device.enrolled</code> simply produces a smaller delta now and the
+correct one when the device event applies (eventual convergence, bounded
+by the SLO). <strong>UNVERIFIED (§11.4.6):</strong> strict cross-stream
+causal ordering is NOT guaranteed by Redis Streams and is not required
+for correctness here; if a future invariant needs it, a single merged
+stream or a vector clock is the Phase-2 mechanism — not asserted as
+present.</p>
+<h3 id="63-version-monotonicity">6.3 Version monotonicity</h3>
+<p><code>tenantState.version</code> is bumped only under
+<code>tenantState.mu.Lock</code>, and only forward. For
+<code>policy.compiled</code> the version IS the policy version (§4.3);
+for non-policy mutations (<code>device.online</code>,
+<code>prefixes.changed</code>) the version is incremented by 1 so every
+wire <code>MapUpdate</code> carries a strictly-increasing
+<code>version</code> an agent can use for <code>known_version</code>
+resume. <strong>UNVERIFIED:</strong> whether non-policy mutations should
+share the policy-version namespace or use a separate monotonic counter
+is a doc-03 wire-contract decision; this spec uses a single monotonic
+<code>tenantState.version</code> (incremented for any accepted mutation)
+as the simplest correct choice and flags the alternative.</p>
+<h3 id="64-tunable-bounds-named-constants--calibrated-on-the-projects-own-load-1146">6.4
+Tunable bounds (named constants — calibrated on the project&#39;s own load,
+§11.4.6)</h3>
+<table>
+<thead>
+<tr>
+<th>Constant</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>KEEPALIVE_INTERVAL</code></td>
+<td>20 s</td>
+<td>keepalive ticker on each stream [02_CP §6.3]</td>
+</tr>
+<tr>
+<td><code>SEND_QUEUE_CAP</code></td>
+<td>256</td>
+<td>per-stream bounded delta queue; overflow ⇒ drop+reconnect (§5)</td>
+</tr>
+<tr>
+<td><code>DELTA_RING_CAP</code></td>
+<td>1024</td>
+<td>per-tenant recent-delta ring for <code>known_version</code> resume
+(§3.2)</td>
+</tr>
+<tr>
+<td><code>EVENT_CLAIM_MIN_IDLE</code></td>
+<td>30 s</td>
+<td>XAutoClaim reclaim threshold [research-go_cp §5]</td>
+</tr>
+<tr>
+<td><code>EVENT_RETRY_CAP</code></td>
+<td>5</td>
+<td>per-event delivery-count ceiling before DLQ [02_CP §5.4]</td>
+</tr>
+<tr>
+<td><code>PRESENCE_REAP_INTERVAL</code></td>
+<td>10 s</td>
+<td>heartbeat-TTL reaper cadence (§4.4)</td>
+</tr>
+<tr>
+<td><code>HEARTBEAT_TTL</code></td>
+<td>45 s</td>
+<td>online-via-heartbeat expiry (§4.4)</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>Defaults are starting points; the SLO suite (§7) re-calibrates them
+on captured load — hardcoding from literature without measuring is the
+§11.4.6 anti-pattern this note forbids.</p>
+</blockquote>
+<hr />
+<h2 id="7-the--1-s-convergence-slo--metrics">7. The &lt; 1 s convergence
+SLO &amp; metrics</h2>
+<h3 id="71-the-reconciliation-path-the-slo-measures">7.1 The
+reconciliation path the SLO measures</h3>
+<pre class="mermaid"><code>sequenceDiagram
+  autonumber
+  participant Pol as policy
+  participant Bus as Redis Streams
+  participant Coord as coordinator
+  participant Edge as Rust edge
+  Pol-&gt;&gt;Bus: XADD events:policy {policy.compiled, v}
+  Note over Coord: t0 = event receive (handleEnvelope)
+  Bus--&gt;&gt;Coord: XReadGroup delivers
+  Coord-&gt;&gt;Coord: apply → projectionDiff → minimal changed set
+  loop each affected open stream
+    Coord-&gt;&gt;Edge: stream.Send(MapDelta)
+  end
+  Note over Coord: t1 = stream.Send returns ; observe(t1-t0)
+  Edge--&gt;&gt;Edge: reconcile WG peers + verdict map (doc 01)
+  Note over Pol,Edge: SLO: p99(t1-t0) &lt; 1 s, ZERO restarts (C5)</code></pre>
+<h3 id="72-metrics-prometheus-owned-by-telemetry-fed-by-coordinator-02_cp-102">7.2
+Metrics (Prometheus, owned by <code>telemetry</code>, fed by
+coordinator) [02_CP §10.2]</h3>
+<div class="sourceCode" id="cb14"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>helix_reconcile_seconds      histogram <span class="co">// event-receive → stream.Send; p99 &lt; 1 s is the gate</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>helix_open_streams           gauge      <span class="co">// global aggregate — NO tenant label (C3 cardinality)</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>helix_fanout_affected_nodes  histogram <span class="co">// size of the minimal affected set per event (should be small)</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>helix_backpressure_drops_total counter <span class="co">// slow-consumer drops (§5)</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>helix_events_dlq_total       counter   <span class="co">// poison events routed to DLQ (§4.1)</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>helix_presence_online        gauge      <span class="co">// global aggregate — NO tenant label (C3 cardinality)</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>helix_graph_nodes            gauge      <span class="co">// global aggregate — NO tenant label (C3 cardinality)</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>process_resident_memory_bytes gauge    <span class="co">// 24 h-soak slope ≈ 0 (no leak)</span></span></code></pre></div>
+<blockquote>
+<p><strong>Reconciled (§11.4.35, 2026-06-26):</strong> the
+<code>/metrics</code> gauges are <strong>global aggregates with no
+<code>{tenant}</code> label</strong> — a <code>tenant_id</code> label is
+forbidden on <code>/metrics</code> (unbounded cardinality + leaks tenant
+population) per [<code>svc-telemetry.md</code> §3.1]&#39;s C3 guard.
+Per-tenant breakdowns are NOT exposed on <code>/metrics</code>; they
+live behind the authenticated <code>/v1/stats</code> API
+[<code>svc-telemetry.md</code> §5.2], never the public scrape
+endpoint.</p>
+</blockquote>
+<h3 id="73-slo-acceptance-numbers-02_cp-102-04_p1-10">7.3 SLO acceptance
+numbers [02_CP §10.2, 04_P1 §10]</h3>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Target</th>
+<th>Measurement</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>event → delta-on-wire</td>
+<td><strong>p99 &lt; 1 s</strong></td>
+<td><code>helix_reconcile_seconds</code> p99</td>
+</tr>
+<tr>
+<td>device revoke → stream force-closed</td>
+<td><strong>&lt; 1 s</strong></td>
+<td>revoke-event → <code>sub.cancel()</code> timer (§4.5)</td>
+</tr>
+<tr>
+<td>coordinator memory @ 10k streams</td>
+<td>bounded, slope≈0 over 24 h</td>
+<td><code>process_resident_memory_bytes</code></td>
+</tr>
+<tr>
+<td>minimal-affected-set size (small change)</td>
+<td>≪ tenant size</td>
+<td><code>helix_fanout_affected_nodes</code></td>
+</tr>
+<tr>
+<td>catch-up reconnect (within ring)</td>
+<td>no full snapshot</td>
+<td>ring-hit ratio metric</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="8-error-taxonomy--edge-cases">8. Error taxonomy &amp; edge
+cases</h2>
+<h3 id="81-error-taxonomy-connect-codes--internal">8.1 Error taxonomy
+(Connect codes + internal)</h3>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Connect code</th>
+<th>Cause</th>
+<th>Handling</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>E-AUTH</td>
+<td><code>Unauthenticated</code></td>
+<td>mTLS cert invalid/expired</td>
+<td>reject stream; agent re-enrolls/renews cert (§9 [02_CP])</td>
+</tr>
+<tr>
+<td>E-REVOKED</td>
+<td><code>PermissionDenied</code></td>
+<td>device revoked</td>
+<td>reject at open; force-close if mid-stream (§4.5)</td>
+</tr>
+<tr>
+<td>E-IMPERSONATE</td>
+<td><code>PermissionDenied</code></td>
+<td><code>WatchRequest.device_id</code> ≠ cert identity</td>
+<td>reject (anti-spoof)</td>
+</tr>
+<tr>
+<td>E-NOTENANT</td>
+<td><code>FailedPrecondition</code></td>
+<td>tenant graph not hydrated</td>
+<td>reject; client retries after boot</td>
+</tr>
+<tr>
+<td>E-BACKPRESSURE</td>
+<td><code>Aborted</code></td>
+<td>send queue overflow (slow consumer)</td>
+<td>close stream → client reconnect-with-snapshot (§5)</td>
+</tr>
+<tr>
+<td>E-STREAM-SEND</td>
+<td>(propagated)</td>
+<td>transport write failed (client gone)</td>
+<td><code>subs.remove</code> + presence maybe-offline</td>
+</tr>
+<tr>
+<td>E-APPLY-RETRY</td>
+<td>n/a (internal)</td>
+<td>transient graph-apply error</td>
+<td>leave un-ACKed → XAutoClaim retry (§4.1)</td>
+</tr>
+<tr>
+<td>E-APPLY-POISON</td>
+<td>n/a (internal)</td>
+<td>delivery-count ≥ cap</td>
+<td>DLQ + alert; never spin (§4.1)</td>
+</tr>
+</tbody>
+</table>
+<p>A streaming response is always HTTP 200 even on error in Connect/gRPC
+— errors live in the trailer [research-go_cp §2]; the handler returns a
+<code>*connect.Error</code> and the client reads the trailer status, NOT
+the HTTP code.</p>
+<h3 id="82-edge-cases-each-is-a-concrete-test-point-9">8.2 Edge cases
+(each is a concrete test point, §9)</h3>
+<ol type="1">
+<li><strong>Reconnect storm:</strong> 10k agents reconnect
+simultaneously (gateway flap). Each sends a snapshot; bounded by
+<code>SEND_QUEUE_CAP</code> per stream + per-tenant
+<code>tenantState.mu.RLock</code> snapshot reads. No global lock is held
+during Send.</li>
+<li><strong>Revoke-while-streaming:</strong> revoke lands while the
+device&#39;s <code>WatchNetworkMap</code> is open ⇒ §4.5 force-close within
+the SLO; the device&#39;s last map is purged from every peer.</li>
+<li><strong>Stale <code>known_version</code> (&gt; current):</strong>
+client claims a future version (forked/rolled-back coordinator) ⇒ safe
+full snapshot (§3.2).</li>
+<li><strong>Ring gap on resume:</strong> <code>known_version</code>
+older than <code>DELTA_RING_CAP</code> retained ⇒ full snapshot, not a
+partial-and-wrong delta.</li>
+<li><strong>Duplicate/replayed event (at-least-once):</strong>
+idempotent <code>apply</code> recomputes from current state ⇒
+<code>diffPeers</code> returns <code>nil</code> ⇒ zero spurious sends
+(§4.1).</li>
+<li><strong>Policy compile out-of-order
+(<code>v &lt;= current</code>):</strong> no-op (§4.3) — never regresses
+the graph.</li>
+<li><strong>Empty/default-deny tenant:</strong> node with no
+<code>VisibleTo</code> entries ⇒ snapshot has zero peers (C4), never
+fail-open.</li>
+<li><strong>Connector advertising overlapping CIDR
+(<code>route.conflict.detected</code>):</strong> coordinator does NOT
+push a delta; the conflict surfaces to Console; 4via6 site
+disambiguation resolves it (D4) [02_CP §7.3].</li>
+<li><strong>Multi-stream device (reconnect overlap):</strong> fan-out
+hits all subs; presence offline only on the last close (§3.1/§4.4).</li>
+<li><strong>Coordinator restart mid-stream:</strong> agents&#39; streams
+break; on reconnect they resume by <code>known_version</code> against
+the rebuilt-from-Postgres graph (version namespace = policy version, so
+the version is meaningful across restarts, §1.4).</li>
+</ol>
+<hr />
+<h2 id="9-test-strategy-anti-bluff-114169-comprehensive-test-type-coverage">9.
+Test strategy (anti-bluff, §11.4.169 comprehensive test-type
+coverage)</h2>
+<p>Per §11.4.169 (mandatory comprehensive test-type coverage) every
+coordinator behaviour maps to ≥1 concrete test of the appropriate type,
+each producing captured evidence per §11.4.5/§11.4.69 — no metadata-only
+PASS. Tests compose with §11.4.27 (no fakes beyond unit), §11.4.85
+(stress + chaos), §11.4.50 (determinism), §11.4.107 (liveness — here the
+&quot;frame&quot; is the delta-on-wire). Integration infra (Postgres + Redis) is
+booted on-demand via <code>vasic-digital/containers</code> (§11.4.76),
+never ad-hoc <code>docker run</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Test type (§11.4.169)</th>
+<th>Concrete coordinator test point</th>
+<th>Captured evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Unit</strong></td>
+<td><code>buildMap</code>/<code>diffPeers</code> determinism: same
+<code>(graph,policy)</code> ⇒ byte-identical proto
+(<code>proto.Equal</code>), N=10 (§11.4.50).</td>
+<td>golden proto fixtures + diff hashes</td>
+</tr>
+<tr>
+<td><strong>Unit</strong></td>
+<td><code>projectionDiff</code> minimality: a 1-rule change touches only
+the granted nodes — assert <code>len(changed)</code> exact.</td>
+<td>per-case affected-set assertions</td>
+</tr>
+<tr>
+<td><strong>Unit</strong></td>
+<td><code>known_version</code> resume: ring-hit ⇒ deltas; ring-gap ⇒
+snapshot; future-version ⇒ snapshot.</td>
+<td>decision-table fixtures</td>
+</tr>
+<tr>
+<td><strong>Integration</strong></td>
+<td>enroll → advertise → policy.compiled → <code>WatchNetworkMap</code>:
+assert exact delta stream content + version monotonicity, real
+PG+Redis.</td>
+<td>captured <code>MapUpdate</code> transcript</td>
+</tr>
+<tr>
+<td><strong>Integration</strong></td>
+<td>RLS floor: coordinator hydration as <code>helix_app</code> (FORCE
+RLS) cannot read tenant B (C8).</td>
+<td>cross-tenant denial log</td>
+</tr>
+<tr>
+<td><strong>E2E / full-automation</strong></td>
+<td>full self-host slice: deny-unauthorized peer never appears in any
+node&#39;s snapshot (C4).</td>
+<td>recorded peer-set per node</td>
+</tr>
+<tr>
+<td><strong>Performance</strong></td>
+<td><code>helix_reconcile_seconds</code> p99 &lt; 1 s @ 10k streams, 1
+policy flip.</td>
+<td>histogram capture (§7.3)</td>
+</tr>
+<tr>
+<td><strong>Soak (stress)</strong></td>
+<td>24 h: N agents hold streams, policies flap; assert
+<code>process_resident_memory_bytes</code> slope ≈ 0 + SLO held
+(§11.4.85).</td>
+<td>24 h memory + p99 time-series</td>
+</tr>
+<tr>
+<td><strong>Stress</strong></td>
+<td>reconnect storm (10k simultaneous) — no deadlock, bounded queues
+(§8.2-1).</td>
+<td>latency distribution + drop count</td>
+</tr>
+<tr>
+<td><strong>Chaos</strong></td>
+<td>kill a coordinator consumer mid-apply ⇒ PEL reclaim via XAutoClaim,
+zero lost events (§11.4.147).</td>
+<td>before/after event-ID ledger</td>
+</tr>
+<tr>
+<td><strong>Chaos</strong></td>
+<td>drop Redis mid-stream ⇒ presence degrades, graph intact, recovers on
+reconnect (C2, §4.4).</td>
+<td>recovery trace</td>
+</tr>
+<tr>
+<td><strong>Security</strong></td>
+<td>revoke-while-streaming forces close &lt; 1 s; impersonation
+(<code>device_id</code>≠cert) rejected (§4.5/§8.1).</td>
+<td>revoke-to-close timer + reject log</td>
+</tr>
+<tr>
+<td><strong>Meta-test (§1.1)</strong></td>
+<td>mutate <code>diffPeers</code> to always-emit-full-map ⇒
+<code>helix_fanout_affected_nodes</code> minimality test FAILs; restore
+⇒ passes.</td>
+<td>paired RED/GREEN</td>
+</tr>
+<tr>
+<td><strong>Meta-test (§1.1)</strong></td>
+<td>mutate <code>buildMap</code> to skip the <code>VisibleTo</code>
+filter ⇒ C4 deny-unauthorized E2E FAILs (need-to-know guard).</td>
+<td>paired RED/GREEN</td>
+</tr>
+</tbody>
+</table>
+<p>The §1.1 paired mutations are the anti-bluff floor: an analyzer (the
+test) that passes its own golden-bad fixture is itself a bluff
+(§11.4.107(10)) — each coordinator gate ships a mutation that MUST flip
+it RED.</p>
+<hr />
+<h2 id="10-phase-2-forward-seams-additive-not-a-rewrite-02_cp-14-04_p1-12">10.
+Phase-2 forward seams (additive, not a rewrite) [02_CP §14, 04_P1
+§12]</h2>
+<p>The coordinator&#39;s seams extend without reshaping: (a)
+<code>events.Bus</code> swaps Redis Streams → NATS JetStream for
+multi-region fan-out (the consumer loop is bus-agnostic, §4.1) [02_CP
+§1.3-D3]; (b) <code>relayEndpoint</code> gains direct-P2P NAT-traversal
+candidates so <code>Peer.endpoint</code> stops always relaying through
+the gateway [02_CP §6.2]; (c) coordinators become <strong>stateless and
+horizontally scalable</strong> — the graph is rebuilt from Postgres +
+events on boot (R2 makes this true today), so K8s replicas need no
+sticky state [02_CP §11.3]; (d) the <code>version</code> namespace +
+<code>deltaRing</code> already support cross-restart resume, which
+generalises to cross-instance resume under a shared bus. Phase 1 drew
+the seams (R1–R4, the
+<code>Bus</code>/<code>Compiler</code>/<code>Registry</code>/<code>PKI</code>
+interfaces) so Phase 2 is additive.</p>
+<hr />
+<h3 id="sources">Sources</h3>
+<p>[02_CP] <code>docs/research/mvp/final/02-control-plane.md</code> —
+pass-1 control-plane spec (coordinator §6, proto §4, events §5, policy
+§7, SLO §10, invariants §0.1). · [04_P1]
+<code>docs/research/mvp/04_VPN_CLD/HelixVPN-Phase1-MVP.md</code>
+(coordinator, WatchNetworkMap, convergence, SLOs). · [04_ARCH]
+<code>docs/research/mvp/04_VPN_CLD/HelixVPN-Architecture-Refined.md</code>
+§1–§7 (control/data separation, push-don&#39;t-poll, need-to-know,
+ULA/48+4via6, no-logging). · [research-go_cp]
+<code>v09-research/research-go_cp.md</code> (Connect-RPC
+server-streaming + trailer-error semantics §2, RLS
+<code>SET LOCAL</code> §4, Redis Streams XAutoClaim/DLQ §5 — latest
+versions, accessed 2026-06-25). · [SYNTHESIS]
+<code>v09-research/_SYNTHESIS.md</code> §§1–9 (stack floor, D3/D4
+decisions, ecosystem + constitution bindings).</p>
+</body>
+</html>

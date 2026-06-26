@@ -1,0 +1,1340 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Post-Quantum Handshake (PQ-derived PSK, hybrid never PQ-only)</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Post-Quantum Handshake (PQ-derived PSK, hybrid never
+PQ-only)</h1>
+</header>
+<h1 id="post-quantum-handshake-pq-derived-psk-hybrid-never-pq-only">Post-Quantum
+Handshake (PQ-derived PSK, hybrid never PQ-only)</h1>
+<p><strong>Revision:</strong> 2 <strong>Last modified:</strong>
+2026-06-26T12:00:00Z</p>
+<blockquote>
+<p>Master technical specification — Volume 5 (Security &amp; Privacy),
+nano-detail spec. Deepens invariant <strong>S10</strong> and §9 of
+[04-sec] (<code>04-security-privacy-pki.md</code>): the
+<strong>post-quantum handshake</strong>. This document owns the
+<em>byte-level and operational contract</em> of HelixVPN&#39;s
+harvest-now-decrypt-later (HNDL) defence — the PQ KEM exchange, the
+HKDF→WireGuard-PSK derivation, the <strong>hybrid-never-PQ-only</strong>
+rule, the capability negotiation, the rekey lifecycle, the KEM decision
+(ML-KEM-768 vs Rosenpass vs Classic-McEliece-hybrid), the wire framing,
+the rollout phasing, and the anti-bluff validation. This is a
+<strong>SPEC</strong> — it describes the implementation; it does not
+build the product.</p>
+<p>The PQ exchange does <strong>not</strong> modify the WireGuard
+protocol: it fills WireGuard&#39;s <em>already-present, optional 32-byte
+preshared-key (PSK) slot</em> — the single injection point. The PSK
+mechanics, key schedule, and the <code>PeerConfig.psk</code> field live
+in the data plane (<code>helix-wg</code>); this document references them
+rather than redefining them.</p>
+<p>Source evidence cited inline by id: [04-sec §9]
+(<code>04-security-privacy-pki.md</code> §9 + S10 + threat T8), [wg-core
+§4.4] (<code>v02-data-plane/wireguard-core.md</code> PQ-PSK seam),
+[wg-core §2.2/§4.2] (the <code>PeerConfig.psk</code> field +
+key-schedule mix-in), [research-pq]
+(<code>v09-research/research-pki_pq_nat.md</code> §2 post-quantum
+WireGuard), [research-wg §6]
+(<code>v09-research/research-wireguard.md</code> §6 the PSK injection
+point), [research-mullvad] (the PQ-PSK-over-WG prior art). Access date
+for all external facts: <strong>2026-06-25</strong>. Unproven claims are
+marked <code>UNVERIFIED:</code> per §11.4.6 — never fabricated.</p>
+</blockquote>
+<hr />
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#0-position-ownership-and-the-one-sentence-contract">0.
+Position, ownership, and the one-sentence contract</a></li>
+<li><a href="#1-the-threat-harvest-now-decrypt-later-hndl">1. The
+threat: harvest-now-decrypt-later (HNDL)</a></li>
+<li><a href="#2-the-mechanism-wireguards-psk-slot-is-the-only-injection-point">2.
+The mechanism: WireGuard&#39;s PSK slot is the only injection point</a></li>
+<li><a href="#3-the-hybrid-model--classical-x25519--pq-kem-never-pq-only-s10">3.
+The hybrid model — classical X25519 ⊕ PQ KEM, never PQ-only
+(S10)</a></li>
+<li><a href="#4-the-hybrid-handshake-mermaid--step-by-step">4. The
+hybrid handshake (Mermaid + step-by-step)</a></li>
+<li><a href="#5-kem-choice--decision-with-recommendation">5. KEM choice
+— decision with recommendation</a></li>
+<li><a href="#6-key-sizes-performance-and-the-steady-state-zero-cost-claim">6.
+Key sizes, performance, and the steady-state-zero-cost claim</a></li>
+<li><a href="#7-negotiation-capability-flags-and-fallback">7.
+Negotiation, capability flags, and fallback</a></li>
+<li><a href="#8-rekey--psk-rotation-lifecycle">8. Rekey &amp; PSK
+rotation lifecycle</a></li>
+<li><a href="#9-wire-framing-of-the-pq-exchange-on-the-mtls-control-channel">9.
+Wire framing of the PQ exchange (on the mTLS control channel)</a></li>
+<li><a href="#10-pluggable-kem-contract-rust">10. Pluggable KEM contract
+(Rust)</a></li>
+<li><a href="#11-rollout-phasing-phase-2-and-standardized-vs-experimental-honesty">11.
+Rollout phasing (Phase 2+) and standardized-vs-experimental
+honesty</a></li>
+<li><a href="#12-threat-model-placement--residual-risk">12. Threat-model
+placement &amp; residual risk</a></li>
+<li><a href="#13-anti-bluff-validation-how-pq-is-proven-not-asserted">13.
+Anti-bluff validation (how PQ is proven, not asserted)</a></li>
+<li><a href="#14-phase--task--subtask-plan-pq-workstream">14. Phase →
+task → subtask plan (PQ workstream)</a></li>
+<li><a href="#sources-verified">Sources verified</a></li>
+</ul>
+<hr />
+<h2 id="0-position-ownership-and-the-one-sentence-contract">0. Position,
+ownership, and the one-sentence contract</h2>
+<p><strong>One-sentence contract.</strong> HelixVPN derives a 32-byte
+symmetric pre-shared key from a post-quantum KEM exchange and mixes it
+into WireGuard&#39;s existing optional-PSK slot, so a session is secure
+unless an attacker breaks <strong>both</strong> the classical X25519
+ECDH <strong>and</strong> the PQ KEM — closing the HNDL threat without
+changing the WireGuard protocol [04-sec §9, wg-core §4.4, research-pq
+§2.1].</p>
+<p><strong>What this document owns:</strong></p>
+<ul>
+<li>the PQ KEM exchange protocol that runs <em>over the authenticated
+control channel</em>;</li>
+<li>the HKDF derivation
+<code>shared_secret → 32-byte WireGuard PSK</code>;</li>
+<li>the hybrid combiner (classical + PQ, S10) and the never-PQ-only
+rule;</li>
+<li>the capability negotiation + classical-WG fallback;</li>
+<li>the per-rekey PSK rotation lifecycle;</li>
+<li>the KEM decision (ML-KEM-768 default; Rosenpass /
+Classic-McEliece-hybrid options);</li>
+<li>the <code>PqKem</code> pluggable Rust contract and the wire
+framing.</li>
+</ul>
+<p><strong>What this document does NOT own (referenced, not
+redefined):</strong></p>
+<ul>
+<li>the WireGuard Noise IK handshake, the PSK key-schedule mix-in, and
+the <code>PeerConfig.psk: Option&lt;Psk&gt;</code> field — those are
+[wg-core §4.2/§4.4/§2.2]; this doc only <em>fills</em> the field;</li>
+<li>the control channel mTLS + device-cert lifecycle the PQ exchange
+rides on — [04-sec §4];</li>
+<li>where the PQ code physically lives in <code>helix-core</code> crates
++ FFI — Volume 5 client-core (the <code>helix-pki</code> crate&#39;s
+<code>pq</code> module); this doc defines the <em>protocol</em>, not the
+file tree.</li>
+</ul>
+<pre class="mermaid"><code>flowchart LR
+  subgraph Plane3[&quot;PQ plane (this document)&quot;]
+    KEM[&quot;PQ KEM exchange&lt;br/&gt;ML-KEM-768 (FIPS 203)&quot;]
+    HKDF[&quot;HKDF-SHA256&lt;br/&gt;derive 32-byte PSK&quot;]
+  end
+  subgraph Plane2[&quot;Data plane (wg-core, referenced)&quot;]
+    PSK[&quot;WireGuard PSK slot&lt;br/&gt;PeerConfig.psk: Option&amp;lt;[u8;32]&amp;gt;&quot;]
+    NOISE[&quot;Noise IKpsk2 handshake&lt;br/&gt;(X25519 + ChaCha20-Poly1305)&quot;]
+  end
+  subgraph Plane1[&quot;Control plane (04-sec §4, referenced)&quot;]
+    MTLS[&quot;mTLS control channel&lt;br/&gt;≤24h device cert (S4)&quot;]
+  end
+  MTLS --carries--&gt; KEM
+  KEM --shared_secret--&gt; HKDF
+  HKDF --32 bytes--&gt; PSK
+  PSK --mixed into--&gt; NOISE</code></pre>
+<hr />
+<h2 id="1-the-threat-harvest-now-decrypt-later-hndl">1. The threat:
+harvest-now-decrypt-later (HNDL)</h2>
+<p>WireGuard&#39;s handshake is <strong>Noise_IK</strong> over
+<strong>Curve25519</strong> (X25519) ECDH [research-wg §1, §2]. X25519
+is classically secure but <strong>not</strong> post-quantum secure: a
+sufficiently large quantum computer running Shor&#39;s algorithm recovers
+the ECDH private key from observed public values, decrypting any session
+whose key agreement used it.</p>
+<p>The operative danger is <strong>not</strong> &quot;quantum computers exist
+today&quot; — they do not at the scale required (§12 residual risk). The
+danger is <strong>harvest-now-decrypt-later</strong>: a passive
+adversary (a censor, an ISP, a nation-state recorder) <strong>records
+ciphertext today</strong> and <strong>decrypts it years later</strong>
+once a cryptographically-relevant quantum computer matures [research-pq
+§2.1, 04-sec §9]. For a privacy VPN this is the worst class of threat
+because:</p>
+<ol type="1">
+<li>The victim cannot detect the recording — it is passive.</li>
+<li>The damage is retroactive — every session recorded before the
+mitigation shipped is exposed; you cannot re-secure traffic an adversary
+already holds.</li>
+<li>The window is long — HNDL captures accumulate for as long as the
+adversary chooses, and the decryption deadline is the adversary&#39;s, not
+the victim&#39;s.</li>
+</ol>
+<p>This is exactly the threat invariant <strong>S10</strong> binds and
+threat <strong>T8</strong> enumerates in [04-sec §0.1, §10]: <em>passive
+recorder + future quantum</em>, mitigated by the hybrid PQ PSK, residual
+risk = &quot;PQ KEM novelty → hybrid hedge; classical still protects.&quot;</p>
+<p><strong>Honest boundary (§11.4.6).</strong> PQ protection here
+defends <em>future</em> decryption of <em>today&#39;s</em> recorded traffic.
+It is <strong>not</strong> a claim that classical WireGuard is broken
+now — X25519 + ChaCha20-Poly1305 is sound against every classical
+adversary [research-wg §2]. The PQ layer is a forward hedge,
+deliberately conservative.</p>
+<hr />
+<h2 id="2-the-mechanism-wireguards-psk-slot-is-the-only-injection-point">2.
+The mechanism: WireGuard&#39;s PSK slot is the only injection point</h2>
+<p>WireGuard already supports an <strong>optional 32-byte symmetric
+pre-shared key</strong>. The protocol page is explicit: <em>&quot;When
+pre-shared key mode is not in use, the pre-shared key value used below
+is assumed to be an all-zero string of 32 bytes&quot;</em> [research-wg §6] —
+i.e. the PSK slot <strong>always exists</strong>; it is simply all-zero
+when unused. In the Noise_IKpsk2 variant the PSK is mixed into the
+chaining key during response generation:
+<code>temp = HMAC(responder.chaining_key, preshared_key)</code>
+[research-wg §6].</p>
+<blockquote>
+<p><strong>Reconciled (§11.4.35, 2026-06-26):</strong> this key-schedule
+formula is cited to <code>[research-wg §6]</code> only; the prior
+dual-citation to <code>wireguard-core.md §4.2</code> is dropped because
+wg-core §4.2 marks its key-schedule transcription
+<strong>UNVERIFIED</strong> — the authoritative source for the PSK
+mix-in is the WireGuard protocol research §6.</p>
+</blockquote>
+<p>The PSK enters the <strong>symmetric</strong> key schedule
+(BLAKE2s/HMAC chaining), <em>downstream of</em> the X25519 ECDH. The
+cryptographic consequence is the whole reason this works:</p>
+<blockquote>
+<p>Because the PSK is mixed into the symmetric chaining key, the tunnel
+stays confidential <strong>even if the X25519 ECDH is later
+broken</strong> — an attacker who recovers the ECDH secret still faces
+an unknown 32-byte symmetric secret folded into the key schedule.
+[research-wg §6]</p>
+</blockquote>
+<p>So the injection point is <strong>exactly one field</strong> and the
+WireGuard protocol surface needs <strong>zero change</strong> — only the
+PSK field is filled with a value derived from a PQ KEM, instead of being
+left all-zero or a static manual key [research-pq §2.1, research-wg
+§6].</p>
+<p>In HelixVPN&#39;s data plane this is the single seam
+<code>helix-wg</code> exposes:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// referenced from v02-data-plane/wireguard-core.md §2.2 — NOT redefined here.</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">type</span> Psk <span class="op">=</span> [<span class="dt">u8</span><span class="op">;</span> <span class="dv">32</span>]<span class="op">;</span>                 <span class="co">// optional pre-shared key (post-quantum seam, §4.4)</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> PeerConfig <span class="op">{</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ... allowed_ips, endpoint, persistent_keepalive, public_key ...</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> psk<span class="op">:</span> <span class="dt">Option</span><span class="op">&lt;</span>Psk<span class="op">&gt;,</span>                <span class="co">// §4.4 — THIS is where the PQ-derived PSK lands</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>and the underlying boringtun <code>Tunn::new</code> takes the same
+slot directly [research-wg §10]:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// boringtun (referenced) — the PSK slot at the implementation floor.</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">fn</span> new(</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    static_private<span class="op">:</span> StaticSecret<span class="op">,</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    peer_static_public<span class="op">:</span> PublicKey<span class="op">,</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    preshared_key<span class="op">:</span> <span class="dt">Option</span><span class="op">&lt;</span>[<span class="dt">u8</span><span class="op">;</span> <span class="dv">32</span>]<span class="op">&gt;,</span>     <span class="co">// ← the PQ-derived PSK installs here</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    persistent_keepalive<span class="op">:</span> <span class="dt">Option</span><span class="op">&lt;</span><span class="dt">u16</span><span class="op">&gt;,</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    index<span class="op">:</span> <span class="dt">u32</span><span class="op">,</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    rate_limiter<span class="op">:</span> <span class="dt">Option</span><span class="op">&lt;</span>Arc<span class="op">&lt;</span>RateLimiter<span class="op">&gt;&gt;,</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>) <span class="op">-&gt;</span> <span class="dt">Self</span></span></code></pre></div>
+<p>The UAPI configures it as the <code>preshared_key</code> config key
+(hex; all-zero to remove) [research-wg §6]. HelixVPN&#39;s only data-plane
+work is to <em>populate</em> <code>psk</code> from the PQ exchange;
+everything below <code>PeerConfig.psk</code> is unmodified, well-audited
+WireGuard.</p>
+<hr />
+<h2 id="3-the-hybrid-model--classical-x25519--pq-kem-never-pq-only-s10">3.
+The hybrid model — classical X25519 ⊕ PQ KEM, never PQ-only (S10)</h2>
+<p><strong>Invariant S10: PQ is hybrid, never PQ-only.</strong> The
+session derives security from <em>both</em> a classical ECDH
+<strong>and</strong> a PQ KEM, combined so an attacker must break both
+[04-sec §0.1 S10, research-pq §2.1].</p>
+<p>The two halves and why each is load-bearing:</p>
+<table>
+<thead>
+<tr>
+<th>Half</th>
+<th>Primitive</th>
+<th>Protects against</th>
+<th>Failure mode it covers</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Classical</td>
+<td>X25519 ECDH (WireGuard&#39;s native handshake)</td>
+<td>every <em>classical</em> adversary today</td>
+<td>a flaw discovered in the (younger, less battle-tested) PQ KEM</td>
+</tr>
+<tr>
+<td>Post-quantum</td>
+<td>ML-KEM-768 KEM (FIPS 203), default</td>
+<td>a <em>future quantum</em> HNDL adversary</td>
+<td>quantum break of X25519 ECDH</td>
+</tr>
+</tbody>
+</table>
+<p>The combiner is <strong>defence-in-depth</strong>: the X25519
+handshake runs exactly as WireGuard always runs it (the classical half
+is <em>intrinsic</em> — it is the Noise IK handshake itself), and the PQ
+KEM&#39;s shared secret is folded into the <strong>same</strong> session via
+the PSK slot. An attacker must break <strong>both</strong> the classical
+ECDH <strong>and</strong> the PQ KEM to recover the session keys [04-sec
+§9.1, research-pq §2.1].</p>
+<p><strong>Why never PQ-only (the conservative choice,
+§11.4.6).</strong> PQ KEMs are <em>younger</em> than X25519 and have had
+less cryptanalytic exposure. If the project shipped a PQ-only handshake
+and the chosen PQ KEM later proved flawed, <em>every</em> session would
+be exposed. With the hybrid:</p>
+<ul>
+<li>if the PQ KEM has a flaw → classical WireGuard still protects you
+against today&#39;s attackers;</li>
+<li>if quantum breaks classical X25519 → the PQ PSK still protects you
+against HNDL.</li>
+</ul>
+<p>This is the standing industry recommendation — <em>&quot;hybrid, not
+PQ-only … production deployments combine a classical KEM and a PQ KEM so
+the result is no weaker than either&quot;</em> [research-pq §2.1] — and
+matches Mullvad&#39;s production posture (Classic McEliece + ML-KEM, hybrid
+by default) [research-pq §2.2, research-mullvad].</p>
+<blockquote>
+<p><strong>Combiner construction (the symmetric fold is the
+combiner).</strong> HelixVPN does <em>not</em> build a bespoke KEM
+combiner construction. The classical half is the X25519 ECDH already
+inside the Noise IK handshake; the PQ half is the KEM shared secret
+installed as the WireGuard PSK. The WireGuard key schedule itself is the
+combiner: the final session keys depend on the X25519 chaining
+<strong>and</strong> the PSK mix-in
+<code>temp = HMAC(chaining_key, psk)</code> [research-wg §6]. Breaking
+one input does not yield the session keys. <code>UNVERIFIED:</code> the
+formal IND-CCA composition argument for &quot;Noise IKpsk2 with a KEM-derived
+PSK is a sound hybrid&quot; — this rests on the WireGuard whitepaper&#39;s
+Noise_IKpsk2 security argument, which a human must read directly
+[research-wg §&quot;Honest gaps&quot;, wg-paper UNREACHABLE]; flagged, not
+claimed.</p>
+</blockquote>
+<hr />
+<h2 id="4-the-hybrid-handshake-mermaid--step-by-step">4. The hybrid
+handshake (Mermaid + step-by-step)</h2>
+<p>The PQ KEM exchange rides the <strong>authenticated mTLS control
+channel</strong> (S4) — there is <strong>no new public listener</strong>
+and no unauthenticated PQ endpoint to attack [04-sec §9.3, research-pq
+§1.2]. Both ends already hold a valid ≤24 h device cert (S4); the PQ
+exchange is one more RPC over that channel, before/alongside the
+WireGuard data handshake.</p>
+<pre class="mermaid"><code>sequenceDiagram
+    autonumber
+    participant C as Client (helix-core)
+    participant GW as Gateway edge
+    Note over C,GW: Precondition — both ends authenticated by ≤24h device cert (S4),&lt;br/&gt;mTLS control channel ALREADY open. No new public listener (S4).
+
+    rect rgb(235,245,255)
+    Note over C,GW: PHASE A — PQ KEM exchange (over mTLS control channel)
+    C-&gt;&gt;C: (ek, dk) = ML-KEM-768.keypair()       %% encapsulation + decapsulation key
+    C-&gt;&gt;GW: PqInit{ kem_id=ML_KEM_768, ek, session_id }
+    GW-&gt;&gt;GW: (ct, ss_gw) = Encaps(ek)             %% ciphertext + gateway&#39;s shared secret
+    GW-&gt;&gt;C: PqResp{ kem_id=ML_KEM_768, ct, session_id }
+    C-&gt;&gt;C: ss_c = Decaps(dk, ct)                  %% ss_c == ss_gw (KEM correctness)
+    end
+
+    Note over C,GW: both independently derive the SAME 32-byte PSK
+    C-&gt;&gt;C: psk = HKDF-SHA256(ss_c, salt=session_id, info=&quot;helix-pq-psk-v1&quot;)[0..32]
+    GW-&gt;&gt;GW: psk = HKDF-SHA256(ss_gw, salt=session_id, info=&quot;helix-pq-psk-v1&quot;)[0..32]
+
+    rect rgb(235,255,235)
+    Note over C,GW: PHASE B — WireGuard Noise IKpsk2 handshake WITH that PSK mixed in
+    C-&gt;&gt;GW: WG Handshake Initiation (msg 1, 148 B) — X25519 ephemeral
+    GW-&gt;&gt;C: WG Handshake Response (msg 2, 92 B) — PSK folded: temp = HMAC(ck, psk)
+    Note over C,GW: session keys now depend on BOTH X25519 ECDH AND the PQ-derived PSK (S10)
+    end
+
+    Note over C,GW: rotate PSK on each WG rekey (~120s); PQ exchange only at setup/rekey — zero per-packet cost</code></pre>
+<h3 id="41-step-by-step-the-contract">4.1 Step-by-step (the
+contract)</h3>
+<ol type="1">
+<li><p><strong>Both ends authenticate first.</strong> The mTLS control
+channel is already open with valid ≤24 h device certs (S4) [04-sec §4].
+PQ negotiation is gated on this — an unauthenticated party never reaches
+the PQ exchange.</p></li>
+<li><p><strong>Capability check (§7).</strong> Both ends advertise
+<code>pq_capable=true</code> + the supported <code>kem_id</code> set. If
+either end lacks PQ support, the session falls back to classical
+WireGuard (still secure today) and skips Phase A entirely [04-sec §9.3,
+research-pq §2.2 mobile-experimental].</p></li>
+<li><p><strong>PQ KEM exchange (Phase A).</strong> The client generates
+an ML-KEM-768 keypair <code>(ek, dk)</code>, sends the
+<strong>encapsulation key</strong> <code>ek</code> to the gateway. The
+gateway runs <code>Encaps(ek) → (ct, ss_gw)</code>, returns the
+<strong>ciphertext</strong> <code>ct</code>. The client runs
+<code>Decaps(dk, ct) → ss_c</code>. By KEM correctness,
+<code>ss_c == ss_gw</code> [research-pq §2.4]. The client&#39;s
+<em>decapsulation</em> key <code>dk</code> never leaves the
+device.</p></li>
+<li><p><strong>PSK derivation.</strong> Both ends independently compute
+<code>psk = HKDF-SHA256(shared_secret, salt=session_id, info=b&quot;helix-pq-psk-v1&quot;)</code>
+truncated to 32 bytes [04-sec §9.3 code, RFC 5869]. The
+<code>session_id</code> salt domain-separates each session so the same
+KEM material never yields the same PSK twice.</p></li>
+<li><p><strong>WireGuard handshake with the PSK (Phase B).</strong> The
+standard Noise IKpsk2 handshake runs; the 32-byte PSK is mixed into the
+chaining key <code>temp = HMAC(ck, psk)</code> during response
+generation [research-wg §6]. The resulting session keys depend on
+<strong>both</strong> the X25519 ECDH <strong>and</strong> the
+PQ-derived PSK (S10).</p></li>
+<li><p><strong>Rotation.</strong> On every WireGuard rekey
+(<code>REKEY_AFTER_TIME</code> ≈ 120 s [research-wg §9]) the PQ exchange
+re-runs and a fresh PSK is installed (§8). The PSK is <em>ephemeral</em>
+— never persisted (§4.5 of [04-sec], the PQ plane &quot;per-session, never
+persisted&quot;).</p></li>
+</ol>
+<h3 id="42-what-the-adversary-sees">4.2 What the adversary sees</h3>
+<p>A passive recorder on the data path sees only <strong>opaque
+WireGuard datagrams</strong> carried by the obfuscation transport (doc
+01) — the PQ exchange happened on the <em>encrypted, authenticated mTLS
+control channel</em>, so the recorder cannot even observe the KEM
+ciphertext, let alone the PSK [04-sec §9.3]. Even granting the adversary
+the KEM ciphertext, recovering the session requires breaking ML-KEM-768
+<strong>and</strong> X25519 (S10).</p>
+<hr />
+<h2 id="5-kem-choice--decision-with-recommendation">5. KEM choice —
+decision with recommendation</h2>
+<p>Per §11.4.66 (decision discipline) the KEM is surfaced as a
+<strong>decision with options</strong>, never a silent pick. The
+<code>PqKem</code> trait (§10) makes the choice pluggable so the
+decision is reversible.</p>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>KEM(s)</th>
+<th>Pro</th>
+<th>Con</th>
+<th>Recommendation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Primary</strong></td>
+<td><strong>ML-KEM-768 (FIPS 203, standardized Kyber)</strong></td>
+<td>NIST-standardized (FIPS 203, published 2024-08-13); good size/speed
+balance; broad library support (<code>ml-kem</code> Rust crate,
+BoringSSL); NSA CNSA 2.0 mandates ML-KEM for NSS key-encapsulation</td>
+<td>younger than X25519; lattice assumption is newer cryptanalysis</td>
+<td><strong>DEFAULT.</strong> Pluggable in <code>helix-core</code>&#39;s
+<code>pq</code> module [04-sec §9.2, research-pq §2.4].</td>
+</tr>
+<tr>
+<td><strong>Conservative hybrid</strong></td>
+<td><strong>ML-KEM-768 + Classic McEliece</strong></td>
+<td>Mullvad&#39;s production posture combines McEliece + ML-KEM for exactly
+this hedge; code-based (McEliece) is a <em>very different</em> hardness
+assumption from lattice (ML-KEM) — a break of one does not imply a break
+of the other</td>
+<td>Classic McEliece public/encapsulation keys are
+<strong>large</strong> (hundreds of KB) → larger control-channel
+exchange</td>
+<td><strong>Phase-2 opt-in</strong> for high-assurance tenants; runs
+only at setup/rekey so the size cost is amortised, not per-packet
+[04-sec §9.2, research-pq §2.2].</td>
+</tr>
+<tr>
+<td><strong>External protocol</strong></td>
+<td><strong>Rosenpass</strong> (audited PQ key-exchange daemon feeding
+WG a PSK)</td>
+<td>independent symbolic analysis (ProVerif); clean separation of
+concerns; reference design Mullvad embeds in its agent (since v0.25.4)
+auto-rotating PSKs</td>
+<td>extra daemon + integration surface; tagged release (v0.2.2,
+2024-06-05) still uses <strong>Kyber-512 + Classic McEliece</strong>,
+<em>not</em> yet ML-KEM in the tagged build; full cryptographic proof
+&quot;in progress&quot;, not complete</td>
+<td><strong>Evaluate during the Phase-2 PQ spike</strong> — prefer
+Rosenpass if an <em>audited external protocol</em> beats an in-house KEM
+exchange; verify upstream ML-KEM status before relying on it [04-sec
+§9.2, research-pq §2.3].</td>
+</tr>
+</tbody>
+</table>
+<h3 id="51-decision-rationale">5.1 Decision rationale</h3>
+<ul>
+<li><p><strong>ML-KEM-768 as the default</strong> because it is the
+<em>standardized</em> primitive (FIPS 203), has the cleanest Rust
+library story (<code>ml-kem</code> crate), and gives the best size/speed
+for a per-rekey exchange. NSA CNSA 2.0 requiring ML-KEM for
+national-security systems means the ecosystem and tooling will converge
+on it [research-pq §2.4].</p></li>
+<li><p><strong>Why not 1024.</strong> Mullvad uses
+ML-KEM-<strong>1024</strong> in its current production tunnels
+[research-wg §6 cross-ref]. HelixVPN&#39;s MVP/Phase-2 default is
+<strong>768</strong> for the size/speed balance, with the parameter set
+being a <code>kem_id</code> field (§9) so a tenant can negotiate 1024 if
+it wants the larger margin. <code>UNVERIFIED:</code> whether 768 vs 1024
+is the right default for HelixVPN&#39;s threat model at GA — this is a
+Phase-2 spike decision; 768 is the documented starting recommendation,
+not a final pin (§11.4.6).</p></li>
+<li><p><strong>Rosenpass vs in-house.</strong> The genuine question the
+Phase-2 spike answers: is it better to embed an <em>audited
+external</em> PQ protocol (Rosenpass, the path Mullvad took) or to drive
+ML-KEM directly via the <code>PqKem</code> trait? Rosenpass brings
+independent analysis and a maintained reference, at the cost of an extra
+daemon and a tagged release that is <strong>not yet on ML-KEM</strong>.
+The decision is deferred to the spike with captured evidence, not
+pre-judged here [04-sec §9.2, research-pq §2.3].</p></li>
+</ul>
+<blockquote>
+<p><strong>Honest gap (§11.4.6 / §11.4.99).</strong> Rosenpass&#39;s
+verification status is a <strong>symbolic analysis (ProVerif), NOT a
+full cryptographic proof</strong> — the proof is &quot;in progress&quot; per its
+README [research-pq §2.3]. The tagged Rosenpass release (v0.2.2,
+2024-06-05) still uses Kyber-512, not ML-KEM. Both facts MUST be
+re-verified against upstream at implementation time per §11.4.99
+(latest-source) before relying on Rosenpass-specific ML-KEM
+behaviour.</p>
+</blockquote>
+<hr />
+<h2 id="6-key-sizes-performance-and-the-steady-state-zero-cost-claim">6.
+Key sizes, performance, and the steady-state-zero-cost claim</h2>
+<p>The defining performance property: <strong>the PQ exchange runs at
+session setup and rekey only — never per packet</strong> — so
+steady-state overhead is <strong>zero</strong> [04-sec §9.3, research-pq
+§2.4].</p>
+<h3 id="61-approximate-keyciphertext-sizes-orientation-verify-at-impl">6.1
+Approximate key/ciphertext sizes (orientation, verify at impl)</h3>
+<table>
+<thead>
+<tr>
+<th>KEM</th>
+<th>Encapsulation key</th>
+<th>Ciphertext</th>
+<th>Shared secret</th>
+<th>Note</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ML-KEM-768</td>
+<td><code>UNVERIFIED:</code> ≈ 1184 B</td>
+<td><code>UNVERIFIED:</code> ≈ 1088 B</td>
+<td>32 B</td>
+<td>FIPS 203 Module-Lattice KEM; verify exact sizes against the
+<code>ml-kem</code> crate / FIPS 203 at impl time</td>
+</tr>
+<tr>
+<td>ML-KEM-1024</td>
+<td><code>UNVERIFIED:</code> ≈ 1568 B</td>
+<td><code>UNVERIFIED:</code> ≈ 1568 B</td>
+<td>32 B</td>
+<td>larger margin; negotiable via <code>kem_id</code></td>
+</tr>
+<tr>
+<td>Classic McEliece</td>
+<td><strong>hundreds of KB</strong> (large public key)</td>
+<td>small</td>
+<td>32 B</td>
+<td>the size cost is at <em>setup/rekey only</em>, amortised
+[research-pq §2.2]</td>
+</tr>
+<tr>
+<td>Rosenpass (Kyber-512 + McEliece)</td>
+<td>dominated by McEliece public key</td>
+<td>—</td>
+<td>32 B → WG PSK</td>
+<td>external daemon; refreshes PSK every 2 min [research-pq §2.3]</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong><code>UNVERIFIED:</code> byte sizes.</strong> The exact
+ML-KEM-768/1024 key and ciphertext byte sizes are standardized in FIPS
+203 but are <strong>not</strong> re-confirmed from a fetched primary
+source in this writing context (the figures above are orientation only)
+— they MUST be pinned against the chosen <code>ml-kem</code> crate
+version and FIPS 203 at implementation time per §11.4.6/§11.4.99.</p>
+</blockquote>
+<h3 id="62-cost-model">6.2 Cost model</h3>
+<ul>
+<li><p><strong>Per-packet cost: zero.</strong> The PQ exchange does not
+touch the data path. Once the PSK is installed, every transport-data
+packet is plain ChaCha20-Poly1305 with the PSK-influenced session key —
+identical cost to classical WireGuard [04-sec §9.3].</p></li>
+<li><p><strong>Per-rekey cost: KB-scale exchange + one
+Encaps/Decaps.</strong> ML-KEM Encaps/Decaps are fast (microsecond-class
+on commodity hardware) and the exchange is KB-scale; with
+<code>REKEY_AFTER_TIME ≈ 120 s</code> [research-wg §9] this is one small
+exchange every ~2 minutes per peer.</p></li>
+<li><p><strong>Handshake-time budget.</strong> The PQ-PSK exchange adds
+roughly <strong>~1–2 s at handshake</strong>, with <strong>steady-state
+unchanged</strong> [wg-core §&quot;perf table&quot; / research-mullvad §4].
+HelixVPN&#39;s handshake budget already allots for this (handshake &lt; 1 s
+plain, &lt; 2 s MASQUE) [wg-core §15].</p></li>
+<li><p><strong>Classic McEliece caveat.</strong> McEliece&#39;s
+hundreds-of-KB public key makes its <em>setup/rekey</em> exchange
+materially larger; this is why it is the Phase-2 high-assurance opt-in,
+not the default, and why it runs only at setup/rekey where the size is
+amortised [research-pq §2.2].</p></li>
+</ul>
+<hr />
+<h2 id="7-negotiation-capability-flags-and-fallback">7. Negotiation,
+capability flags, and fallback</h2>
+<p>PQ is <strong>capability-negotiated</strong> with a graceful
+classical fallback — a peer that does not support PQ falls back to
+classical WireGuard, which is still secure today [04-sec §9.3,
+research-pq §2.2].</p>
+<h3 id="71-the-toggle-and-the-default">7.1 The toggle and the
+default</h3>
+<ul>
+<li><p>A <strong>&quot;Quantum-resistant&quot; toggle</strong> is exposed to the
+user, <strong>on by default for new tunnels where both ends support
+it</strong> [04-sec §9.3]. This mirrors Mullvad&#39;s posture:
+quantum-resistant tunnels became the <strong>default on desktop as of
+2025-01-09</strong> [research-pq §2.2].</p></li>
+<li><p><strong>Mobile honesty (§11.4.6).</strong> Mullvad shipped PQ for
+iOS, but its embedded Rosenpass-server PSK auto-rotation path is still
+marked <strong>experimental and not yet supported on mobile</strong> in
+the agent [research-pq §2.2]. HelixVPN treats mobile PQ as Phase-2 with
+the same honesty: the toggle exists, the on-by-default policy is
+platform-gated, and a platform where the PQ path is not yet proven ships
+PQ as opt-in, not silent default — never a faked &quot;PQ on&quot; that is
+actually classical (§11.4.6 no-guessing).</p></li>
+</ul>
+<h3 id="72-negotiation-outcomes-closed-set">7.2 Negotiation outcomes
+(closed set)</h3>
+<table>
+<thead>
+<tr>
+<th>Client PQ</th>
+<th>Gateway PQ</th>
+<th>Outcome</th>
+<th>PSK</th>
+<th>Security posture</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>supports + toggle on</td>
+<td>supports</td>
+<td><strong>PQ hybrid</strong></td>
+<td>PQ-derived (this doc)</td>
+<td>X25519 ⊕ PQ KEM (S10)</td>
+</tr>
+<tr>
+<td>supports + toggle off</td>
+<td>supports</td>
+<td>classical WG</td>
+<td>all-zero (none)</td>
+<td>X25519 only — secure today, no HNDL hedge</td>
+</tr>
+<tr>
+<td>supports</td>
+<td>does not support</td>
+<td>classical WG (fallback)</td>
+<td>all-zero</td>
+<td>X25519 only — graceful degrade, never a faked PQ PASS</td>
+</tr>
+<tr>
+<td>does not support</td>
+<td>supports</td>
+<td>classical WG (fallback)</td>
+<td>all-zero</td>
+<td>X25519 only</td>
+</tr>
+</tbody>
+</table>
+<p>The negotiation result is <strong>observable</strong>: the runtime
+signature for &quot;PQ is actually on&quot; is <em>the WireGuard PSK is non-zero
+AND an ML-KEM exchange was observed</em> (§13). A toggle that reads &quot;on&quot;
+while the PSK is all-zero is a §11.4 PASS-bluff and a §13 test catches
+it.</p>
+<h3 id="73-kem_id-negotiation">7.3 <code>kem_id</code> negotiation</h3>
+<p>Both ends advertise their supported <code>kem_id</code> set
+(ML-KEM-768, optionally ML-KEM-1024, optionally McEliece-hybrid,
+optionally Rosenpass). They select the <strong>strongest mutually
+supported</strong> KEM. An unknown <code>kem_id</code> is rejected
+(closed-set, §9) — never silently downgraded to a weaker one without
+recording the negotiation outcome [§11.4.6].</p>
+<hr />
+<h2 id="8-rekey--psk-rotation-lifecycle">8. Rekey &amp; PSK rotation
+lifecycle</h2>
+<p>The PQ-derived PSK is <strong>ephemeral and rotated on every
+WireGuard rekey</strong> — it is never persisted [04-sec §4.5 &quot;PQ PSK
+rotated on every WG rekey interval; ephemeral, never persisted&quot;].</p>
+<pre class="mermaid"><code>stateDiagram-v2
+    [*] --&gt; Negotiating: tunnel setup, both ends PQ-capable (§7)
+    Negotiating --&gt; PqExchange: capability + kem_id agreed
+    Negotiating --&gt; ClassicalOnly: either end not PQ-capable (fallback §7.2)
+    PqExchange --&gt; PskInstalled: HKDF(shared_secret) → 32B PSK → PeerConfig.psk
+    PskInstalled --&gt; Active: WG Noise IKpsk2 completes (PSK folded in)
+    Active --&gt; Rekeying: now ≥ session_start + REKEY_AFTER_TIME (≈120s)
+    Rekeying --&gt; PqExchange: re-run PQ KEM, derive FRESH PSK (new session_id salt)
+    Active --&gt; Torn: tunnel down / peer removed
+    ClassicalOnly --&gt; Torn: tunnel down
+    Torn --&gt; [*]: PSK zeroized on drop (Zeroizing); never written to disk
+    note right of Rekeying
+      WG drives rekey on its own timers (REKEY_AFTER_TIME≈120s,
+      REKEY_AFTER_MESSAGES=2^60) [research-wg §9].
+      Each rekey gets a FRESH PQ exchange + fresh session_id salt,
+      so a recorded PSK from a prior epoch is useless next epoch.
+    end note</code></pre>
+<h3 id="81-rotation-contract">8.1 Rotation contract</h3>
+<ul>
+<li><p><strong>Trigger.</strong> WireGuard&#39;s own rekey timers drive
+rotation: <code>REKEY_AFTER_TIME ≈ 120 s</code> or
+<code>REKEY_AFTER_MESSAGES = 2^60</code> [research-wg §9]. The PQ layer
+does <em>not</em> invent its own rotation cadence — it reuses
+WireGuard&#39;s, so the timings are never guessed (§11.4.6).</p></li>
+<li><p><strong>Fresh material each epoch.</strong> Every rekey runs a
+<strong>new</strong> PQ KEM exchange with a <strong>new</strong>
+<code>session_id</code> salt, yielding a fresh PSK. A PSK recorded
+during epoch <em>N</em> (even if somehow extracted) is useless in epoch
+<em>N+1</em> — forward secrecy at the PSK layer.</p></li>
+<li><p><strong>Ephemerality (S11-class hygiene).</strong> The PSK lives
+only in memory, wrapped in <code>Zeroizing</code> so it is wiped on
+drop; it is <strong>never</strong> written to disk, never logged, never
+serialized across the FFI boundary as raw bytes [04-sec §3.3
+key-handling discipline, §4.5]. WireGuard&#39;s own session zeroization
+(<code>REJECT_AFTER_TIME × 3</code>) wipes the derived session keys
+[research-wg §9].</p></li>
+<li><p><strong>Rosenpass cadence cross-ref.</strong> If Rosenpass is
+chosen (§5), it refreshes the PSK <strong>every 2 minutes</strong> on
+its own [research-pq §2.3] — which aligns with WireGuard&#39;s ~120 s rekey,
+so the two cadences compose naturally. <code>UNVERIFIED:</code> exact
+interaction of Rosenpass&#39;s 2-min refresh with WireGuard&#39;s rekey timing
+under HelixVPN&#39;s specific wiring — a Phase-2 integration
+detail.</p></li>
+</ul>
+<hr />
+<h2 id="9-wire-framing-of-the-pq-exchange-on-the-mtls-control-channel">9.
+Wire framing of the PQ exchange (on the mTLS control channel)</h2>
+<p>The PQ exchange is <strong>two messages</strong> over the
+authenticated mTLS control channel — <code>PqInit</code> (client →
+gateway, carries the encapsulation key) and <code>PqResp</code> (gateway
+→ client, carries the KEM ciphertext). It is an extension of the
+<code>Coordinator</code> RPC surface [04-sec §3.2 extends doc 03], so it
+inherits mTLS authentication and needs no new listener.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode protobuf"><code class="sourceCode protobuf"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-proto/coordinator.proto  (PQ additions — extends the Coordinator service)</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="co">// All PQ RPCs ride the SAME mTLS control channel as Enroll/WatchNetworkMap (S4). No new listener.</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> KemId {</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  KEM_UNSPECIFIED   <span class="op">=</span> <span class="dv">0</span>;   <span class="co">// reject (closed-set; never silently downgrade)</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  KEM_ML_KEM_768    <span class="op">=</span> <span class="dv">1</span>;   <span class="co">// DEFAULT (FIPS 203)</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  KEM_ML_KEM_1024   <span class="op">=</span> <span class="dv">2</span>;   <span class="co">// larger margin, negotiable</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  KEM_MCELIECE_HYB  <span class="op">=</span> <span class="dv">3</span>;   <span class="co">// Phase-2 ML-KEM-768 + Classic McEliece (high-assurance opt-in)</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  KEM_ROSENPASS     <span class="op">=</span> <span class="dv">4</span>;   <span class="co">// Phase-2 external Rosenpass protocol (evaluated in the spike)</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="kw">message</span> PqCapabilities {                 <span class="co">// exchanged during negotiation (§7)</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>  <span class="dt">bool</span>            pq_capable    <span class="op">=</span> <span class="dv">1</span>;     <span class="co">// false ⇒ classical fallback, never a faked PQ PASS</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>  <span class="kw">repeated</span> KemId  supported     <span class="op">=</span> <span class="dv">2</span>;     <span class="co">// strongest mutually-supported wins</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>  <span class="dt">bool</span>            toggle_on     <span class="op">=</span> <span class="dv">3</span>;     <span class="co">// user &quot;Quantum-resistant&quot; toggle state (§7.1)</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a><span class="kw">message</span> PqInit {                          <span class="co">// client → gateway (PHASE A step 1)</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>  KemId   kem_id      <span class="op">=</span> <span class="dv">1</span>;               <span class="co">// selected per §7.3; KEM_UNSPECIFIED ⇒ PermissionDenied</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>  <span class="dt">bytes</span>   encap_key   <span class="op">=</span> <span class="dv">2</span>;               <span class="co">// ML-KEM-768 encapsulation key (ek); size per §6.1</span></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>  <span class="dt">bytes</span>   session_id  <span class="op">=</span> <span class="dv">3</span>;               <span class="co">// 16-byte random; the HKDF salt (domain-separates epochs)</span></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a><span class="kw">message</span> PqResp {                          <span class="co">// gateway → client (PHASE A step 2)</span></span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>  KemId   kem_id      <span class="op">=</span> <span class="dv">1</span>;               <span class="co">// MUST echo PqInit.kem_id; mismatch ⇒ abort</span></span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>  <span class="dt">bytes</span>   ciphertext  <span class="op">=</span> <span class="dv">2</span>;               <span class="co">// ML-KEM ciphertext (ct); client Decaps(dk, ct) → ss</span></span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>  <span class="dt">bytes</span>   session_id  <span class="op">=</span> <span class="dv">3</span>;               <span class="co">// MUST echo PqInit.session_id</span></span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a><span class="co">// </span><span class="al">NOTE</span><span class="co">: the decapsulation key (dk) and the derived 32-byte PSK NEVER appear on the wire (S2-class).</span></span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a><span class="co">// Only ek (public) and ct (public) cross the channel; ss and psk are computed independently each side.</span></span></code></pre></div>
+<h3 id="91-framing-invariants">9.1 Framing invariants</h3>
+<ol type="1">
+<li><p><strong>Public material only on the wire.</strong> Only
+<code>ek</code> (encapsulation key, public) and <code>ct</code>
+(ciphertext, public) cross the channel. The decapsulation key
+<code>dk</code> and the derived <code>psk</code> are computed
+independently on each side and never transmitted (S2-class key
+hygiene).</p></li>
+<li><p><strong>session_id binds the epoch.</strong> The 16-byte random
+<code>session_id</code> is the HKDF salt; echoing it in
+<code>PqResp</code> binds request↔︎response and domain-separates each
+rekey epoch.</p></li>
+<li><p><strong>Closed <code>kem_id</code> set.</strong>
+<code>KEM_UNSPECIFIED</code> (0) is rejected; an unknown
+<code>kem_id</code> aborts the exchange — never a silent downgrade to a
+weaker KEM (§11.4.6).</p></li>
+<li><p><strong><code>UNVERIFIED:</code> exact PQ-PSK message
+sequence.</strong> The precise KEM-exchange framing is a HelixVPN design
+choice — Mullvad&#39;s equivalent is <em>deliberately high-level in public
+docs</em> and is &quot;a Mullvad-specific protocol on top of WireGuard … NOT
+part of the WireGuard protocol itself&quot; [research-wg §6, research-pq
+§2.2]. The two-message <code>PqInit</code>/<code>PqResp</code> shape
+above is HelixVPN&#39;s spec design, not a copy of a published wire format;
+it MUST be reviewed against the chosen KEM library&#39;s API and (if
+Rosenpass) Rosenpass&#39;s own protocol at impl time.</p></li>
+</ol>
+<hr />
+<h2 id="10-pluggable-kem-contract-rust">10. Pluggable KEM contract
+(Rust)</h2>
+<p>The KEM is behind a trait so the §5 decision is reversible and the
+§13 self-validation can swap a golden-good / golden-bad implementation
+[04-sec §9.3].</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-core/crates/helix-pki/src/pq.rs  (pluggable KEM contract — SPEC, not full impl)</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="co">/// A post-quantum KEM. The default impl is ML-KEM-768 (FIPS 203). Pluggable so the §5 decision</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co">/// (ML-KEM vs McEliece-hybrid vs Rosenpass) is a swap, not a rewrite, and so the analyzer</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="co">/// self-validation (§13) can inject a golden-good and a golden-bad KEM.</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">trait</span> PqKem <span class="op">{</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> kem_id(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> KemId<span class="op">;</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Generate an (encapsulation key, decapsulation key) pair. dk NEVER leaves the device.</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> keypair(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> (EncapKey<span class="op">,</span> DecapKey)<span class="op">;</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Gateway side: encapsulate to the client&#39;s ek, producing (ciphertext, shared_secret).</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> encapsulate(<span class="op">&amp;</span><span class="kw">self</span><span class="op">,</span> ek<span class="op">:</span> <span class="op">&amp;</span>EncapKey) <span class="op">-&gt;</span> (Ciphertext<span class="op">,</span> SharedSecret)<span class="op">;</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Client side: decapsulate the ciphertext with dk, recovering the SAME shared_secret.</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> decapsulate(<span class="op">&amp;</span><span class="kw">self</span><span class="op">,</span> dk<span class="op">:</span> <span class="op">&amp;</span>DecapKey<span class="op">,</span> ct<span class="op">:</span> <span class="op">&amp;</span>Ciphertext) <span class="op">-&gt;</span> SharedSecret<span class="op">;</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a><span class="co">/// PSK = HKDF-SHA256(shared_secret, salt=session_id, info=b&quot;helix-pq-psk-v1&quot;) -&gt; 32 bytes,</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a><span class="co">/// installed into the WireGuard Noise IKpsk2 preshared-key slot (PeerConfig.psk, wg-core §2.2/§4.4).</span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a><span class="co">/// Rotated every WG rekey (§8). The returned WgPsk is Zeroizing — wiped on drop, never persisted.</span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">fn</span> derive_wg_psk(ss<span class="op">:</span> <span class="op">&amp;</span>SharedSecret<span class="op">,</span> session_id<span class="op">:</span> <span class="op">&amp;</span>[<span class="dt">u8</span>]) <span class="op">-&gt;</span> WgPsk <span class="op">{</span></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>    <span class="co">// HKDF-Extract(salt=session_id, ikm=ss) -&gt; prk; HKDF-Expand(prk, &quot;helix-pq-psk-v1&quot;, 32) -&gt; psk</span></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>    <span class="co">// (RFC 5869). The 32-byte output is exactly the WireGuard PSK width.</span></span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>    <span class="co">/* HKDF-SHA256 */</span> <span class="pp">unimplemented!</span>(<span class="st">&quot;contract — impl batched per §11.4.9&quot;</span>)</span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a><span class="co">/// The hybrid combiner is NOT a bespoke construction: the classical X25519 half is intrinsic to</span></span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a><span class="co">/// the Noise IK handshake; this PSK is the PQ half folded into the SAME session key schedule</span></span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a><span class="co">/// (wg-core §4.2 `temp = HMAC(ck, psk)`). Breaking one input alone does not yield the session keys (S10).</span></span></code></pre></div>
+<h3 id="101-boundary-discipline">10.1 Boundary discipline</h3>
+<ul>
+<li><p><code>EncapKey</code> and <code>Ciphertext</code> are public,
+serialized onto the wire (§9). <code>DecapKey</code> and
+<code>SharedSecret</code> and <code>WgPsk</code> are secret:
+<code>Zeroizing</code>-wrapped, never serialized, never logged, never
+crossing the FFI boundary as raw bytes [04-sec §3.3].</p></li>
+<li><p>The trait is the seam for the §13 self-validation: a
+<strong>golden-bad</strong> <code>PqKem</code> whose
+<code>decapsulate</code> returns a value ≠ the gateway&#39;s
+<code>encapsulate</code> shared secret MUST make the handshake
+<strong>fail</strong> (PSK mismatch ⇒ WG handshake fails) — proving the
+test catches a broken KEM, not just agreeing with a working one
+(§11.4.107(10)).</p></li>
+</ul>
+<hr />
+<h2 id="11-rollout-phasing-phase-2-and-standardized-vs-experimental-honesty">11.
+Rollout phasing (Phase 2+) and standardized-vs-experimental honesty</h2>
+<p>PQ is <strong>Phase 2+</strong>, not MVP — the MVP ships classical
+WireGuard (secure today) and reserves the PSK seam so PQ is purely
+additive [04-sec §9, §12 Phase-2 plan, wg-core §4.4 &quot;additive, Phase
+2&quot;].</p>
+<table>
+<thead>
+<tr>
+<th>Phase</th>
+<th>Scope</th>
+<th>Status honesty (§11.4.6)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>MVP (Phase 1)</strong></td>
+<td>Classical WireGuard only; PSK slot present but all-zero;
+<code>PqCapabilities</code> reserved in the proto</td>
+<td><strong>STANDARDIZED + shipping</strong> — X25519 Noise IK is
+mature, well-audited [research-wg §2]</td>
+</tr>
+<tr>
+<td><strong>Phase 2</strong></td>
+<td><code>PqKem</code> ML-KEM-768 over mTLS; HKDF→WG PSK; capability
+negotiate; rotate on rekey; &quot;Quantum-resistant&quot; toggle on-by-default
+where both ends support; spike: ML-KEM vs Rosenpass vs
+McEliece-hybrid</td>
+<td>ML-KEM-768 is <strong>STANDARDIZED</strong> (FIPS 203, 2024-08-13);
+the <em>HelixVPN wire framing</em> (§9) is <strong>design work</strong>,
+not a standard; Rosenpass is <strong>EXPERIMENTAL</strong>
+(symbolic-only analysis) [research-pq §2.3]</td>
+</tr>
+<tr>
+<td><strong>Phase 2 (high-assurance opt-in)</strong></td>
+<td>ML-KEM-768 + Classic McEliece hybrid for tenants wanting the
+code-based hedge</td>
+<td>McEliece is a NIST-approved primitive; the <em>combination</em>
+matches Mullvad production [research-pq §2.2]</td>
+</tr>
+<tr>
+<td><strong>Phase 3</strong></td>
+<td>Reproducible builds + cosign-signed images + SBOM + third-party
+audit of the PQ core (so users can verify the PQ claim) [04-sec §12.3
+Phase 3]</td>
+<td>the PQ claim is only as trustworthy as the auditable build</td>
+</tr>
+</tbody>
+</table>
+<h3 id="111-standardized-vs-experimental--the-honest-split">11.1
+Standardized vs experimental — the honest split</h3>
+<ul>
+<li><p><strong>Standardized (relyable now):</strong> ML-KEM (FIPS 203,
+published 2024-08-13); the WireGuard PSK mechanism (the PSK slot is part
+of the WireGuard protocol) [research-pq §2.4, research-wg §6].</p></li>
+<li><p><strong>Design work (HelixVPN-specific, must be
+reviewed):</strong> the §9 <code>PqInit</code>/<code>PqResp</code> wire
+framing; the capability-negotiation flow (§7); the HKDF info-string
+<code>&quot;helix-pq-psk-v1&quot;</code> and the PSK derivation parameters. These
+are HelixVPN&#39;s protocol design, not a published standard.</p></li>
+<li><p><strong>Experimental (do not over-claim):</strong> Rosenpass —
+symbolic analysis (ProVerif) only, full cryptographic proof &quot;in
+progress&quot;, tagged release still on Kyber-512 [research-pq §2.3]; mobile
+PQ auto-rotation (Mullvad marks it experimental-not-yet-supported on
+mobile) [research-pq §2.2]. Any HelixVPN doc/UI that claims these as
+production-grade is a §11.4.99 stale/over-claim violation — re-verify
+against latest upstream before relying on them.</p></li>
+</ul>
+<hr />
+<h2 id="12-threat-model-placement--residual-risk">12. Threat-model
+placement &amp; residual risk</h2>
+<p>PQ closes threat <strong>T8</strong> in [04-sec §10]:</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Threat (STRIDE)</th>
+<th>Vector</th>
+<th>Mitigation (this doc)</th>
+<th>Residual risk (§11.4.6)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>T8</td>
+<td><strong>Information disclosure —
+harvest-now-decrypt-later</strong></td>
+<td>Passive recorder + future quantum computer</td>
+<td>Hybrid PQ PSK (S10, §3–§9): X25519 ⊕ ML-KEM-768, PSK rotated per
+rekey</td>
+<td>PQ KEM novelty → the <em>hybrid hedge</em> covers it (classical
+still protects if the PQ KEM is flawed); a break of <em>both</em> X25519
+<em>and</em> ML-KEM is required to recover a session</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Residual risks stated honestly:</strong></p>
+<ol type="1">
+<li><p><strong>PQ KEM novelty.</strong> ML-KEM is younger than X25519; a
+future cryptanalytic break is possible. The hybrid design (§3) is
+<em>exactly</em> the hedge: a PQ-KEM break leaves classical WireGuard
+intact for today&#39;s adversaries.</p></li>
+<li><p><strong>HelixVPN wire-framing risk.</strong> The §9
+<code>PqInit</code>/<code>PqResp</code> framing is design work, not a
+standard — a protocol flaw in <em>the framing</em> (not the KEM) is
+possible and is why §13 + a third-party audit (Phase 3) are required
+before over-claiming.</p></li>
+<li><p><strong>Mobile/Rosenpass maturity.</strong> Where the PQ path is
+experimental (mobile, Rosenpass), PQ is opt-in, not silent default —
+never a faked &quot;PQ on.&quot;</p></li>
+<li><p><strong>Formal-composition gap.</strong> The IND-CCA composition
+argument for Noise IKpsk2 + KEM-derived PSK rests on the WireGuard
+whitepaper&#39;s security argument, which was <strong>UNREACHABLE</strong>
+via the fetch tool and must be read directly by a human [research-wg
+§&quot;Honest gaps&quot;]. Flagged, not claimed.</p></li>
+<li><p><strong>Not a claim classical WG is broken now.</strong> PQ is a
+<em>forward</em> hedge; X25519 + ChaCha20-Poly1305 is sound against
+every classical adversary today [research-wg §2].</p></li>
+</ol>
+<hr />
+<h2 id="13-anti-bluff-validation-how-pq-is-proven-not-asserted">13.
+Anti-bluff validation (how PQ is proven, not asserted)</h2>
+<p>Per S10&#39;s verification row [04-sec §13] and §11.4.107/§11.4.69, &quot;PQ
+is on&quot; is proven by <strong>captured evidence</strong>, never by a
+toggle reading &quot;on.&quot;</p>
+<table>
+<thead>
+<tr>
+<th>Invariant</th>
+<th>Captured-evidence proof (§11.4.5/§11.4.69/§11.4.107)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>PQ hybrid active</strong></td>
+<td>Handshake with PQ on ⇒ the WireGuard <strong>PSK is
+non-zero</strong> AND an <strong>ML-KEM exchange is observed</strong> on
+the mTLS channel (captured <code>PqInit</code>/<code>PqResp</code> +
+non-zero <code>PeerConfig.psk</code>). A toggle &quot;on&quot; with an all-zero
+PSK is a §11.4 PASS-bluff and FAILs.</td>
+</tr>
+<tr>
+<td><strong>Classical fallback works</strong></td>
+<td>PQ off (or peer not PQ-capable) ⇒ classical WireGuard <strong>still
+connects</strong> (captured handshake), proving the fallback path is
+real and never a faked PQ PASS [04-sec §13].</td>
+</tr>
+<tr>
+<td><strong>Hybrid, not PQ-only</strong></td>
+<td>With PQ on, the X25519 handshake is <em>still present</em> (captured
+msg-1/msg-2) AND the PSK is non-zero — both halves observed, proving the
+session depends on both (S10).</td>
+</tr>
+<tr>
+<td><strong>Rotation</strong></td>
+<td>Across a forced rekey, the captured PSK at epoch <em>N+1</em> ≠
+epoch <em>N</em> (fresh PQ exchange), proving rotation is real, not a
+static reused PSK.</td>
+</tr>
+<tr>
+<td><strong>KEM correctness</strong></td>
+<td><code>Decaps(dk, ct) == Encaps(ek).shared_secret</code> over N runs
+(§11.4.50 deterministic-consistency).</td>
+</tr>
+<tr>
+<td><strong>Self-validated analyzer</strong></td>
+<td>A <strong>golden-bad</strong> <code>PqKem</code> whose
+<code>decapsulate</code> returns the wrong shared secret MUST make the
+WG handshake FAIL (PSK mismatch) — proving the PQ test catches a broken
+KEM, not merely agreeing with a working one (§11.4.107(10), paired §1.1
+mutation).</td>
+</tr>
+</tbody>
+</table>
+<p>The PQ validation runs as <code>helix_qa</code> +
+<code>challenges</code> suites (§11.4.27) — a Challenge that scores PASS
+on a non-functional PQ control is the same class of defect as a
+unit-test PASS-bluff [04-sec §13]. PQ is <em>not</em> in the
+highest-risk-first set (kill-switch + revocation are, per §11.4.132)
+because it is Phase-2 additive, but its self-validation gate (golden-bad
+KEM ⇒ handshake fails) is mandatory before any &quot;PQ on&quot; claim ships.</p>
+<hr />
+<h2 id="14-phase--task--subtask-plan-pq-workstream">14. Phase → task →
+subtask plan (PQ workstream)</h2>
+<p>Each leaf becomes a §11.4.93 workable item. Anti-bluff: every closure
+carries captured evidence (§11.4.5/§11.4.69/§11.4.107) and a paired §1.1
+mutation. Mirrors [04-sec §12 Phase-2 2.S1].</p>
+<h3 id="phase-1-mvp--reserve-the-seam-ship-classical">Phase 1 (MVP) —
+reserve the seam, ship classical</h3>
+<ul>
+<li><strong>PQ-1.a</strong> —
+<code>PeerConfig.psk: Option&lt;Psk&gt;</code> present in
+<code>helix-wg</code>; all-zero in MVP (the seam exists, unfilled)
+[wg-core §2.2/§4.4].</li>
+<li><strong>PQ-1.b</strong> —
+<code>PqCapabilities</code>/<code>PqInit</code>/<code>PqResp</code>/<code>KemId</code>
+reserved in <code>coordinator.proto</code> so the wire format need not
+change later (§9; additive per §11.4.6 no-silent-reshape).</li>
+</ul>
+<h3 id="phase-2--pq-handshake">Phase 2 — PQ handshake</h3>
+<ul>
+<li><strong>PQ-2.a</strong> — <code>PqKem</code> trait +
+<strong>ML-KEM-768</strong> impl (<code>ml-kem</code> crate, pinned +
+re-verified per §11.4.99);
+<code>keypair</code>/<code>encapsulate</code>/<code>decapsulate</code>
+(§10).</li>
+<li><strong>PQ-2.b</strong> — <code>derive_wg_psk</code> HKDF-SHA256
+(salt=session_id, info=<code>&quot;helix-pq-psk-v1&quot;</code>) → 32 B,
+<code>Zeroizing</code> (§4, §8).</li>
+<li><strong>PQ-2.c</strong> — <code>PqInit</code>/<code>PqResp</code>
+exchange over the mTLS control channel; no new listener (§9).</li>
+<li><strong>PQ-2.d</strong> — capability negotiation + classical
+fallback; &quot;Quantum-resistant&quot; toggle on-by-default where both support
+(§7); mobile gated as opt-in (§7.1 honesty).</li>
+<li><strong>PQ-2.e</strong> — rotate PSK on every WG rekey; ephemeral,
+never persisted (§8).</li>
+<li><strong>PQ-2.f</strong> — <strong>spike</strong>: ML-KEM-768 vs
+Rosenpass vs McEliece-hybrid decision (§5), captured evidence,
+deep-research per §11.4.150 before the structural pick.</li>
+<li><strong>PQ-2.g</strong> — anti-bluff suite: non-zero-PSK +
+observed-ML-KEM-exchange evidence; golden-bad KEM ⇒ handshake FAILs
+(§13); rotation evidence; N-iter KEM-correctness (§11.4.50).</li>
+</ul>
+<h3 id="phase-2-high-assurance-opt-in">Phase 2 (high-assurance
+opt-in)</h3>
+<ul>
+<li><strong>PQ-2.h</strong> — ML-KEM-768 + Classic McEliece hybrid
+<code>PqKem</code> impl for high-assurance tenants (§5); size-amortised
+at setup/rekey only (§6).</li>
+</ul>
+<h3 id="phase-3--auditable-trust">Phase 3 — auditable trust</h3>
+<ul>
+<li><strong>PQ-3.a</strong> — reproducible builds + cosign-signed images
++ SBOM so users verify the PQ binary matches source [04-sec §12.3].</li>
+<li><strong>PQ-3.b</strong> — third-party cryptographic audit of the PQ
+core (KEM integration, HKDF derivation, wire framing, hybrid
+composition) [04-sec §12.3 3.S2].</li>
+</ul>
+<hr />
+<h2 id="sources-verified">Sources verified</h2>
+<ul>
+<li><code>final/04-security-privacy-pki.md</code>
+(<code>[04-sec]</code>) — §0.1 invariant <strong>S10</strong> (PQ
+hybrid, never PQ-only) + <strong>S11</strong> (PQ plane, ephemeral,
+never persisted); §9 (post-quantum handshake: PQ-derived PSK §9.1,
+hybrid handshake Mermaid §9.1, KEM choice table §9.2, where-it-runs +
+capability-negotiate + on-by-default + steady-state-zero-cost §9.3,
+<code>PqKem</code>/<code>derive_wg_psk</code> §9.3); §10 threat
+<strong>T8</strong> (HNDL) + residual risk; §13 PQ verification row; §12
+Phase-2 task 2.S1 + Phase-3 reproducible builds/audit; §4.1 PQ plane key
+hierarchy; §4.5 PSK rotated on rekey, ephemeral. — local spec.</li>
+<li><code>v02-data-plane/wireguard-core.md</code>
+(<code>[wg-core]</code>) — §2.2
+(<code>PeerConfig.psk: Option&lt;Psk&gt;</code>,
+<code>Psk = [u8;32]</code>), §4.2 (key-schedule PSK mix-in
+<code>temp = HMAC(ck, psk)</code>), §4.4 (post-quantum PSK seam,
+additive Phase 2, no transport change, install negotiated shared secret
+as WG PSK), §15 (handshake budget), perf table (PQ-PSK ~1–2 s at
+handshake, steady-state unchanged). — local spec.</li>
+<li><code>v09-research/research-pki_pq_nat.md</code>
+(<code>[research-pq]</code>) — §2.1 (PSK-injection approach,
+hybrid-not-PQ-only), §2.2 (Mullvad production: Classic McEliece +
+ML-KEM, default-on-desktop 2025-01-09, mobile experimental,
+<code>wgephemeralpeer</code> reference, Kyber→ML-KEM migration), §2.3
+(Rosenpass: Rust, PSK refresh every 2 min, Classic McEliece + Kyber-512,
+ProVerif symbolic analysis not full proof, v0.2.2 2024-06-05 still
+Kyber-512), §2.4 (FIPS 203 ML-KEM published 2024-08-13, NSA CNSA 2.0,
+target hybrid X25519 + ML-KEM-768, PSK feed not a WG fork). — cited
+research, access date 2026-06-25.</li>
+<li><code>v09-research/research-wireguard.md</code>
+(<code>[research-wg]</code>) — §1/§2 (Noise IK, X25519, fixed crypto
+set), §6 (the PSK = post-quantum injection point: optional 32-byte PSK,
+all-zero when unused,
+<code>temp = HMAC(responder.chaining_key, preshared_key)</code>, enters
+symmetric schedule so secure even if X25519 broken; Mullvad
+ML-KEM-1024/McEliece-over-WG prior art; <code>PeerConfig.psk</code>
+surface; UAPI <code>preshared_key</code>; <code>UNVERIFIED:</code> exact
+PQ-PSK message sequence), §9 (rekey timers
+<code>REKEY_AFTER_TIME=120s</code>,
+<code>REKEY_AFTER_MESSAGES=2^60</code>, session zeroization), §10
+(boringtun <code>Tunn::new</code>
+<code>preshared_key: Option&lt;[u8;32]&gt;</code>), §&quot;Honest gaps&quot;
+(whitepaper PDF UNREACHABLE). — cited research, access date
+2026-06-25.</li>
+<li><code>[research-mullvad]</code> (via research-wg §6 / wg-core perf
+table cross-ref) — PQ-PSK-over-WG prior art; PQ-PSK ~1–2 s at handshake,
+steady-state unchanged.</li>
+</ul>
+<p><em>Constitution bindings applied: §11.4.44 (revision header),
+§11.4.6 (no-guessing — every unproven size/framing/composition claim
+marked <code>UNVERIFIED:</code>; KEM choice + 768-vs-1024 + Rosenpass
+surfaced as decisions, never silent picks; rekey cadence reused from
+WireGuard, never invented), §11.4.66 (decision discipline — §5 KEM table
+with options + recommendation), §11.4.99 (latest-source —
+Rosenpass/ML-KEM status flagged for re-verification at impl),
+§11.4.107(10) (self-validated analyzer — golden-bad KEM ⇒ handshake
+fails), §11.4.50 (deterministic KEM-correctness over N runs), §11.4.150
+(deep-research before the structural KEM pick), §11.4.93 (phases →
+workable items), §11.4.65/§11.4.153 (HTML+PDF[+DOCX] exports follow in
+refinement). Honest boundary (§11.4.6): the hybrid-composition formal
+proof rests on the WireGuard whitepaper, UNREACHABLE here — a human must
+verify it before relying on §3&#39;s IND-CCA argument.</em></p>
+</body>
+</html>

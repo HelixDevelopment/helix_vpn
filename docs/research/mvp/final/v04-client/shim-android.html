@@ -1,0 +1,1746 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Android shim (VpnService + JNI)</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Android shim (VpnService + JNI)</h1>
+</header>
+<h1 id="android-shim-vpnservice--jni">Android shim (VpnService +
+JNI)</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-06-25T00:00:00Z</p>
+<blockquote>
+<p>Volume 4 (Clients) nano-detail specification — deepens the
+<strong>Android <code>TunnelPlatform</code> shim</strong> sketched in
+the pass-1 client overview [03 §5.2] into an implementation-ready design
+of the single platform-specific component that lets HelixVPN&#39;s shared
+Rust <code>helix-core</code> drive a system VPN on Android. SPEC ONLY:
+it describes <strong>what to build</strong> (Kotlin/Rust signatures, the
+channel contract, the <code>VpnService</code> lifecycle state machine,
+the JNI/UniFFI bridge, the <code>tun</code> fd handoff,
+<code>protect()</code> loop-avoidance, the foreground service, memory
+budget, error taxonomy, edge cases, and §11.4.169 test points) — it does
+<strong>not</strong> write the shipping product.</p>
+<p><strong>Boundary.</strong> This shim is the <em>only</em>
+Android-specific code in the client stack [03 §0, §4]. It
+<strong>consumes</strong>: the FFI surface + <code>TunnelStatus</code>
+enum owned by the core (<code>helix-core/src/status.rs</code> [01-ORCH
+§4.1]; the Dart-facing FFI [03 §3]), and the <code>TunnelPlatform</code>
+channel contract [03 §4]. It <strong>owns</strong>: the Kotlin
+<code>VpnService</code> + foreground service, the
+<code>VpnService.Builder → ParcelFileDescriptor</code> tun-fd handoff,
+the JNI/UniFFI bridge that hands that fd to <code>helix-core</code> and
+registers the <code>protect()</code> upcall, and the
+<code>MethodChannel</code>/<code>EventChannel</code> marshalling. It
+does <strong>not</strong> own WG crypto, the transport ladder, the
+orchestrator loops, or the kill-switch/DNS state machine — those are
+core [01-ORCH], identical on every platform.</p>
+<p><strong>Evidence base, cited inline by id.</strong>
+<code>[03 §N]</code> = <code>final/03-client-core-and-ui.md</code>
+(pass-1 client overview); <code>[01-ORCH §N]</code> =
+<code>final/v02-data-plane/orchestrator-and-state.md</code> (the
+<code>TunnelStatus</code> / orchestrator the shim drives);
+<code>[01-TT §N]</code> =
+<code>final/v02-data-plane/transport-trait.md</code>;
+<code>[04_ARCH §N]</code> =
+<code>04_VPN_CLD/HelixVPN-Architecture-Refined.md</code>;
+<code>[04_UI §N]</code> =
+<code>04_VPN_CLD/HelixVPN-helix-ui-Flutter.md</code>;
+<code>[research-ios_android]</code> =
+<code>v09-research/research-ios_android.md</code> (Apple DTS + Android
+<code>VpnService</code> primary-source research, all accessed
+2026-06-25); <code>[10-QA §N]</code> =
+<code>final/10-testing-acceptance-and-qa.md</code>;
+<code>[06-WBS §0.4]</code> = <code>final/06-phase0-spike-wbs.md</code>
+(the §11.4.169 code map); <code>[SYN §N]</code> = cross-document
+synthesis. Anything not grounded in that base is tagged
+<code>UNVERIFIED</code> per constitution §11.4.6 — never fabricated.</p>
+</blockquote>
+<hr />
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#0-position-ownership-and-invariants">0. Position,
+ownership, and invariants</a></li>
+<li><a href="#1-component--process-map">1. Component &amp; process
+map</a></li>
+<li><a href="#2-the-tunnelplatform-contract--android-impl-surface">2.
+The <code>TunnelPlatform</code> contract — Android impl surface</a></li>
+<li><a href="#3-the-jni--uniffi-bridge-to-helix-core">3. The JNI /
+UniFFI bridge to <code>helix-core</code></a></li>
+<li><a href="#4-vpnservice-lifecycle-state-machine">4.
+<code>VpnService</code> lifecycle state machine</a></li>
+<li><a href="#5-vpnservicebuilder--tun-fd-handoff">5.
+<code>VpnService.Builder</code> → <code>tun</code> fd handoff</a></li>
+<li><a href="#6-protect--the-loopback-avoidance-contract">6.
+<code>protect()</code> — the loopback-avoidance contract</a></li>
+<li><a href="#7-foreground-service--surviving-background-kill">7.
+Foreground service — surviving background-kill</a></li>
+<li><a href="#8-status--event-flow-the-two-channels">8. Status &amp;
+event flow (the two channels)</a></li>
+<li><a href="#9-permission-always-on-and-boot">9. Permission, always-on,
+and boot</a></li>
+<li><a href="#10-split-tunnel-dns-routes-mtu">10. Split-tunnel, DNS,
+routes, MTU</a></li>
+<li><a href="#11-memory--performance-budget">11. Memory &amp;
+performance budget</a></li>
+<li><a href="#12-error-taxonomy--edge-cases">12. Error taxonomy &amp;
+edge cases</a></li>
+<li><a href="#13-threading--cancel-model">13. Threading &amp; cancel
+model</a></li>
+<li><a href="#14-manifest--build-requirements">14. Manifest &amp; build
+requirements</a></li>
+<li><a href="#15-test-points-1114169">15. Test points
+(§11.4.169)</a></li>
+<li><a href="#16-open-decisions--cross-doc-seams">16. Open decisions
+&amp; cross-doc seams</a></li>
+<li><a href="#sources-verified">Sources verified</a></li>
+</ul>
+<hr />
+<h2 id="0-position-ownership-and-invariants">0. Position, ownership, and
+invariants</h2>
+<p>The Android shim does <strong>only three things</strong> [03 §4]: (a)
+configure the OS tunnel (<code>VpnService.Builder</code>), (b) hand
+<code>helix-core</code> a packet <code>fd</code> + the
+<code>protect()</code> upcall, and (c) report lifecycle. Everything
+above it — <code>ConnectButton</code>, <code>ExitPicker</code>,
+settings, the <code>TunnelStatus</code>-driven UI — is shared Dart [03
+§5, 04_UI §6]. The shim is the <em>only untyped seam</em> (native ⇄
+Dart) and is therefore covered by an on-device smoke test, never a
+mock-claiming-PASS (§11.4.27) [03 §4.1 O5].</p>
+<h3 id="01-inherited-invariants-the-shim-must-keep">0.1 Inherited
+invariants (the shim MUST keep)</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Invariant</th>
+<th>Source</th>
+<th>Android-specific consequence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CI1</td>
+<td>The shim does <strong>not</strong> own logic/status; it owns the OS
+tunnel lifecycle.</td>
+<td>[03 §0.1]</td>
+<td>The Kotlin <code>VpnService</code> creates the <code>tun</code> +
+foreground service; <code>helix-core</code> (the same <code>.so</code>
+as every platform) owns WG + transport + status.</td>
+</tr>
+<tr>
+<td>O2</td>
+<td>The shim hands the core a packet <code>fd</code>/pump; it
+<strong>never</strong> does crypto/obfuscation.</td>
+<td>[03 §4.1]</td>
+<td><code>coreAttachTun(fd)</code>; no WG/QUIC code in Kotlin.</td>
+</tr>
+<tr>
+<td>CI2</td>
+<td>The UI is a pure function of the core&#39;s status stream; never paint
+&quot;connected&quot; on intent.</td>
+<td>[03 §0.1]</td>
+<td><code>PlatformTunnelEvent.up</code> ≠
+<code>TunnelStatus::Connected</code>; <code>Connected</code> is emitted
+by the core <em>only</em> after the WG handshake reply [01-ORCH §5.4],
+never by the shim.</td>
+</tr>
+<tr>
+<td>O1</td>
+<td><code>startTunnel</code> is idempotent + permission-aware: a denied
+VPN consent emits <code>permissionDenied</code> (not <code>error</code>)
+and leaves <strong>no</strong> half-open <code>tun</code>.</td>
+<td>[03 §4.1]</td>
+<td>§4, §9.1; cleanup on every exit path (§11.4.14).</td>
+</tr>
+<tr>
+<td>O3</td>
+<td><code>events()</code> reports <code>revoked</code> when the OS kills
+the tunnel out-of-band.</td>
+<td>[03 §4.1]</td>
+<td><code>VpnService.onRevoke()</code> → <code>revoked</code> (§4.4);
+never claim &quot;connected&quot;.</td>
+</tr>
+<tr>
+<td>O4</td>
+<td><code>stopTunnel</code> restores a quiescent OS state on
+<strong>every</strong> exit path.</td>
+<td>[03 §4.1]</td>
+<td><code>coreDetachTun()</code> → close fd →
+<code>stopForeground</code> → remove notification (§4.5, §11.4.14).</td>
+</tr>
+<tr>
+<td>I1</td>
+<td>The transport never sees plaintext; the shim never inspects
+payload.</td>
+<td>[01-TT I1]</td>
+<td>The shim moves an opaque <code>fd</code> integer; it reads/writes
+<strong>no</strong> packet bytes (those flow inside the core).</td>
+</tr>
+</tbody>
+</table>
+<h3 id="02-what-this-document-does-not-own">0.2 What this document does
+NOT own</h3>
+<ul>
+<li>The <code>TunnelStatus</code> enum + its <code>Down.reason</code>
+vocabulary — frozen in <code>helix-core/src/status.rs</code> [01-ORCH
+§4.1, §4.4]; the shim is a transparent carrier of those events to
+Dart.</li>
+<li>The <code>TransportConfig</code> ladder, WG <code>Tunn</code> state
+machine, kill-switch/DNS state machine — core [01-ORCH §7, §8];
+identical on every platform.</li>
+<li>The Dart-side <code>TunnelPlatform</code> <em>caller</em> / Riverpod
+wiring [03 §8]; this doc owns the Android <em>implementation</em> the
+Dart contract dispatches to.</li>
+</ul>
+<hr />
+<h2 id="1-component--process-map">1. Component &amp; process map</h2>
+<p>HelixVPN runs the Flutter engine, the Rust <code>helix-core</code>
+<code>.so</code>, <strong>and</strong> the <code>VpnService</code> in
+<strong>one Android process</strong> (the app&#39;s default process). This
+is a load-bearing decision (§16 D-ANDROID-1): a single process lets
+<code>flutter_rust_bridge</code> (frb) stream <code>TunnelStatus</code>
+and serve <code>setShields</code>/<code>setExit</code>
+<strong>directly</strong> from Dart to the in-process core [03 §3.2,
+§3.3], while the same in-process core holds the <code>tun</code> fd the
+<code>VpnService</code> produced — no cross-process IPC for status.</p>
+<pre class="mermaid"><code>flowchart TB
+    subgraph proc[&quot;one Android process (app default process)&quot;]
+        direction TB
+        subgraph dart[&quot;Flutter engine (Dart, AOT)&quot;]
+            UI[&quot;UI · Riverpod · ConnectController [03 §8]&quot;]
+            FFI[&quot;helix_core_ffi (frb)&lt;br/&gt;start/stop/status_stream/setShields/attach handoff [03 §3]&quot;]
+            TP[&quot;AndroidTunnelPlatform (Dart)&lt;br/&gt;MethodChannel + EventChannel client [03 §4]&quot;]
+        end
+        subgraph kotlin[&quot;Kotlin platform layer&quot;]
+            PLUGIN[&quot;HelixTunnelPlugin&lt;br/&gt;MethodChannel &#39;helixvpn/tunnel&#39;&lt;br/&gt;EventChannel &#39;helixvpn/tunnel/events&#39;&quot;]
+            SVC[&quot;HelixVpnService : VpnService&lt;br/&gt;+ foreground service (§7)&quot;]
+            BR[&quot;HelixNative (JNI/UniFFI bridge §3)&quot;]
+        end
+        CORE[&quot;helix-core (Rust .so)&lt;br/&gt;WG · transport ladder · orchestrator · status [01-ORCH]&quot;]
+    end
+    OS[&quot;Android OS&lt;br/&gt;VpnService framework · tun driver · netd&quot;]
+
+    UI --&gt; FFI --&gt; CORE
+    UI --&gt; TP --&gt; PLUGIN --&gt; SVC
+    SVC --&gt;|&quot;Builder.establish()&quot;| OS
+    OS --&gt;|&quot;ParcelFileDescriptor (tun fd)&quot;| SVC
+    SVC --&gt;|&quot;coreAttachTun(fd) / coreSetProtect&quot;| BR --&gt; CORE
+    CORE -.-&gt;|&quot;TunnelStatus (frb StreamSink)&quot;| FFI
+    PLUGIN -.-&gt;|&quot;PlatformTunnelEvent (EventChannel)&quot;| TP
+    CORE -.-&gt;|&quot;protect(fd) upcall (§6)&quot;| BR -.-&gt; SVC -.-&gt; OS</code></pre>
+<p>Two event paths leave the core (§8):
+<strong><code>TunnelStatus</code></strong> (core → frb → Dart,
+in-process, the truth about protection state), and
+<strong><code>PlatformTunnelEvent</code></strong> (Kotlin → EventChannel
+→ Dart, the OS-tunnel lifecycle: <code>up</code>/<code>down</code>/
+<code>permissionDenied</code>/<code>revoked</code>/<code>error</code>).
+They are distinct and MUST NOT be conflated (CI2).</p>
+<hr />
+<h2 id="2-the-tunnelplatform-contract--android-impl-surface">2. The
+<code>TunnelPlatform</code> contract — Android impl surface</h2>
+<p>The frozen Dart contract [03 §4] is one <code>MethodChannel</code>
+(<code>helixvpn/tunnel</code>) + one <code>EventChannel</code>
+(<code>helixvpn/tunnel/events</code>). The Android side implements the
+method handler and the event sink.</p>
+<h3 id="21-dart-tunnelplatform-consumed--frozen-03-4">2.1 Dart
+<code>TunnelPlatform</code> (consumed — frozen [03 §4])</h3>
+<div class="sourceCode" id="cb2"><pre class="sourceCode dart"><code class="sourceCode dart"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix_core_ffi/lib/tunnel_platform.dart  (frozen contract — restated, not redefined)</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">abstract</span> <span class="kw">class</span> TunnelPlatform <span class="op">{</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Future</span><span class="op">&lt;</span><span class="dt">void</span><span class="op">&gt;</span> startTunnel(TunnelConfig cfg);     <span class="co">// OS permission + create TUN + link core + pump</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Future</span><span class="op">&lt;</span><span class="dt">void</span><span class="op">&gt;</span> stopTunnel();                       <span class="co">// detach core, destroy TUN, release hold</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Stream</span><span class="op">&lt;</span>PlatformTunnelEvent<span class="op">&gt;</span> events();            <span class="co">// lifecycle only — up/down/permissionDenied/revoked/error</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> TunnelConfig <span class="op">{</span>                               <span class="co">// [03 §4]</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">final</span> <span class="dt">String</span> overlayIp;                          <span class="co">// e.g. 100.64.0.7  (overlay /32, IPAM-assigned)</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">final</span> <span class="dt">List</span><span class="op">&lt;</span><span class="dt">String</span><span class="op">&gt;</span> routes;                       <span class="co">// AllowedIPs into the tunnel (e.g. &quot;10.10.0.0/24&quot; | &quot;0.0.0.0/0&quot;)</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">final</span> <span class="dt">List</span><span class="op">&lt;</span><span class="dt">String</span><span class="op">&gt;</span> dnsServers;                   <span class="co">// tunnel DNS (anti-leak)</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">final</span> <span class="dt">List</span><span class="op">&lt;</span><span class="dt">String</span><span class="op">&gt;</span> splitExcludeApps;             <span class="co">// Android per-app bypass (package names)</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">final</span> <span class="dt">int</span> mtu;                                   <span class="co">// 1280 MASQUE default, 1420 plain WG [03 §4, 01-TT §4.8]</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">final</span> <span class="dt">String</span> sessionOrMapToken;                  <span class="co">// handed straight to helix_core start (logic, not OS)</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>  <span class="co">// ... ctor as in [03 §4]</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> PlatformTunnelEventKind <span class="op">{</span> up<span class="op">,</span> down<span class="op">,</span> permissionDenied<span class="op">,</span> revoked<span class="op">,</span> error <span class="op">}</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> PlatformTunnelEvent <span class="op">{</span> <span class="at">final</span> PlatformTunnelEventKind kind; <span class="at">final</span> <span class="dt">String</span><span class="op">?</span> detail; <span class="co">/* §11.4.6 honest reason */</span> <span class="op">}</span></span></code></pre></div>
+<h3 id="22-the-android-methodchannel-verb-map">2.2 The Android
+<code>MethodChannel</code> verb map</h3>
+<table>
+<thead>
+<tr>
+<th>Dart call</th>
+<th>MethodChannel method</th>
+<th>Kotlin handler</th>
+<th>Returns</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>startTunnel(cfg)</code></td>
+<td><code>&quot;startTunnel&quot;</code> (args = <code>cfg</code> map)</td>
+<td><code>Plugin.onMethodCall</code> → <code>prepare</code> check →
+start <code>HelixVpnService</code> (§4.2)</td>
+<td><code>Future&lt;void&gt;</code> (completes when the service is
+<em>started</em>, NOT when <code>Connected</code>)</td>
+</tr>
+<tr>
+<td><code>stopTunnel()</code></td>
+<td><code>&quot;stopTunnel&quot;</code></td>
+<td>broadcast/<code>stopService</code> → <code>Service.onDestroy</code>
+(§4.5)</td>
+<td><code>Future&lt;void&gt;</code></td>
+</tr>
+<tr>
+<td><code>events()</code></td>
+<td>EventChannel <code>onListen</code></td>
+<td><code>Plugin</code> registers an <code>EventSink</code>; the service
+posts <code>PlatformTunnelEvent</code>s to it (§8.2)</td>
+<td><code>Stream&lt;PlatformTunnelEvent&gt;</code></td>
+</tr>
+</tbody>
+</table>
+<p><code>startTunnel</code>&#39;s <code>Future</code> resolving means &quot;the
+OS VPN bring-up was <em>requested</em> and consent is granted&quot; —
+<strong>not</strong> that the tunnel is up. Up-ness arrives later as a
+<code>PlatformTunnelEvent.up</code> (carrier/tun ready) and,
+authoritatively, as a core <code>TunnelStatus::Connected</code> (WG
+handshake done) (CI2, §8).</p>
+<h3 id="23-arg-marshalling-the-one-untyped-seam-made-honest">2.3 Arg
+marshalling (the one untyped seam, made honest)</h3>
+<p><code>TunnelConfig</code> crosses Dart→Kotlin as a
+<code>Map&lt;String, Any?&gt;</code> over the
+<code>MethodChannel</code>. The Kotlin side parses it into a typed
+<code>TunnelConfig</code> data class; a missing/invalid field is a
+<strong>hard</strong> parse error →
+<code>PlatformTunnelEvent.error</code> with an honest
+<code>detail</code> (§11.4.6 — never a silent default), never a
+half-open tunnel (O1). A round-trip fixture test (§15 <code>UT</code>)
+asserts every field survives the <code>Map</code> encoding
+byte-for-byte.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode kotlin"><code class="sourceCode kotlin"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// HelixTunnelConfig.kt</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="kw">class</span> HelixTunnelConfig<span class="op">(</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">val</span> <span class="va">overlayIp</span><span class="op">:</span> <span class="dt">String</span><span class="op">,</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">val</span> <span class="va">routes</span><span class="op">:</span> <span class="dt">List</span>&lt;<span class="va">CidrRoute</span>&gt;<span class="op">,</span>        <span class="co">// parsed &quot;a.b.c.d/n&quot; → (InetAddress, prefix)</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">val</span> <span class="va">dnsServers</span><span class="op">:</span> <span class="dt">List</span>&lt;<span class="va">String</span>&gt;<span class="op">,</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">val</span> <span class="va">splitExcludeApps</span><span class="op">:</span> <span class="dt">List</span>&lt;<span class="va">String</span>&gt;<span class="op">,</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">val</span> <span class="va">mtu</span><span class="op">:</span> <span class="dt">Int</span><span class="op">,</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  <span class="kw">val</span> <span class="va">sessionOrMapToken</span><span class="op">:</span> <span class="dt">String</span><span class="op">,</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>  <span class="kw">companion</span> <span class="kw">object</span> <span class="op">{</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fun</span> <span class="fu">from</span><span class="op">(</span><span class="va">args</span><span class="op">:</span> <span class="dt">Map</span>&lt;<span class="va">String</span><span class="op">,</span> <span class="va">Any</span>?&gt;<span class="op">):</span> <span class="dt">HelixTunnelConfig</span> <span class="op">=</span> <span class="co">/* typed parse; throw on missing/invalid */</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="kw">class</span> CidrRoute<span class="op">(</span><span class="kw">val</span> <span class="va">address</span><span class="op">:</span> <span class="dt">String</span><span class="op">,</span> <span class="kw">val</span> <span class="va">prefix</span><span class="op">:</span> <span class="dt">Int</span><span class="op">)</span></span></code></pre></div>
+<hr />
+<h2 id="3-the-jni--uniffi-bridge-to-helix-core">3. The JNI / UniFFI
+bridge to <code>helix-core</code></h2>
+<p>The shared Rust core is loaded as a native <code>.so</code> via JNI
+[03 §5 matrix, SYN §5, research-ios_android §3]. The <strong>binding
+generator</strong> is <strong>UniFFI</strong> for the typed Kotlin
+surface (decision D-CLIENT-3 [03 §14] — UniFFI gives typed
+Swift/Kotlin), with a <strong>raw JNI export</strong> reserved for the
+hot <code>protect()</code> upcall path where a per-socket UniFFI
+round-trip is undesirable (§6.3). frb generates the <em>Dart</em>
+surface [03 §3.2]; UniFFI generates the <em>native-shim</em> surface —
+two generators, one Rust source of truth [03 §3].</p>
+<h3 id="31-the-exported-rust-ffi-surface-used-by-the-android-shim">3.1
+The exported Rust FFI surface used by the Android shim</h3>
+<p>This is the subset of the frozen FFI surface [03 §3.1] the Kotlin
+shim drives, plus the <strong>one Android-specific addition</strong> the
+contract needs (<code>set_protect_callback</code>, §6).
+<code>TunnelStatus</code> is the 5-variant core enum [01-ORCH §4.1] —
+kept consistent below (§3.3).</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-ffi/src/api.rs  — UniFFI + frb generate from this (restated subset; full surface in [03 §3.1])</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co">// All bodies live in helix-core; this crate is the EXPORTED surface only [03 §0].</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> ClientConfig <span class="op">{</span>                 <span class="co">// [03 §3.1]</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> map_path_or_session<span class="op">:</span> <span class="dt">String</span><span class="op">,</span>      <span class="co">// = TunnelConfig.sessionOrMapToken</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> transport<span class="op">:</span> <span class="dt">String</span><span class="op">,</span>                <span class="co">// &quot;auto&quot; | &quot;plain&quot; | &quot;masque&quot; | ...</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> mode<span class="op">:</span> CoreMode<span class="op">,</span>                   <span class="co">// Client (Android Access app) | Connector</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="pp">uniffi::</span>Enum<span class="at">)]</span> <span class="kw">pub</span> <span class="kw">enum</span> CoreMode <span class="op">{</span> Client<span class="op">,</span> Connector <span class="op">}</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">fn</span> start(cfg<span class="op">:</span> ClientConfig) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">,</span> HelixError<span class="op">&gt;;</span>   <span class="co">// logic bring-up (orchestrator start, [01-ORCH §2.1])</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">fn</span> stop() <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">,</span> HelixError<span class="op">&gt;;</span>                     <span class="co">// graceful teardown</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="co">/// Shim handoff: the core NEVER opens the TUN; the VpnService produces the fd and</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="co">/// hands it here. The core takes OWNERSHIP of the fd (closes it on detach) — see §5.3.</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">fn</span> attach_tun(fd<span class="op">:</span> <span class="dt">i32</span>) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">,</span> HelixError<span class="op">&gt;;</span>        <span class="co">// [03 §3.1]</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">fn</span> detach_tun() <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">,</span> HelixError<span class="op">&gt;;</span>               <span class="co">// [03 §3.1]</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a><span class="co">/// Live status stream — maps to the orchestrator broadcast channel [01-ORCH §4].</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a><span class="co">/// frb delivers this directly to Dart (in-process, §1); UniFFI exposes it to Kotlin</span></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a><span class="co">/// too (the shim only needs it to drive PlatformTunnelEvent.up — §8.3).</span></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">fn</span> status_stream(sink<span class="op">:</span> StreamSink<span class="op">&lt;</span>TunnelStatus<span class="op">&gt;</span>)<span class="op">;</span>        <span class="co">// [03 §3.1]</span></span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a><span class="co">/// ANDROID-SPECIFIC ADDITION (§6). The core invokes this callback to protect every</span></span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a><span class="co">/// outbound transport socket against the VPN routing loop BEFORE it connects.</span></span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a><span class="co">/// Registered once at attach time. No-op / returns Ok on non-Android targets.</span></span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">fn</span> set_protect_callback(cb<span class="op">:</span> <span class="dt">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> ProtectCallback<span class="op">&gt;</span>)<span class="op">;</span>   <span class="co">// NEW — Android contract extension</span></span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">trait</span> ProtectCallback<span class="op">:</span> <span class="bu">Send</span> <span class="op">+</span> <span class="bu">Sync</span> <span class="op">{</span></span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Bind socket `fd` to the underlying physical network; true = protected.</span></span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> protect(<span class="op">&amp;</span><span class="kw">self</span><span class="op">,</span> fd<span class="op">:</span> <span class="dt">i32</span>) <span class="op">-&gt;</span> <span class="dt">bool</span><span class="op">;</span></span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="pp">uniffi::</span><span class="bu">Error</span><span class="op">,</span> <span class="bu">Debug</span><span class="at">)]</span> <span class="kw">pub</span> <span class="kw">enum</span> HelixError <span class="op">{</span> Tun(<span class="dt">String</span>)<span class="op">,</span> KillSwitch(<span class="dt">String</span>)<span class="op">,</span> Dns(<span class="dt">String</span>)<span class="op">,</span> Internal(<span class="dt">String</span>) <span class="op">}</span></span></code></pre></div>
+<h3 id="32-the-uniffi-generated-kotlin-surface-primary-path">3.2 The
+UniFFI-generated Kotlin surface (primary path)</h3>
+<div class="sourceCode" id="cb5"><pre class="sourceCode kotlin"><code class="sourceCode kotlin"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">// generated by UniFFI from helix-ffi (do not hand-edit); HelixNative wraps it for ergonomics.</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="kw">object</span> HelixNative <span class="op">{</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  init <span class="op">{</span> System<span class="op">.</span>loadLibrary<span class="op">(</span><span class="st">&quot;helix_core&quot;</span><span class="op">)</span> <span class="op">}</span>     <span class="co">// load the .so once per process</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">fun</span> <span class="fu">start</span><span class="op">(</span><span class="va">cfg</span><span class="op">:</span> <span class="dt">ClientConfig</span><span class="op">)</span>                  <span class="co">// throws HelixException</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">fun</span> <span class="fu">stop</span><span class="op">()</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">fun</span> <span class="fu">attachTun</span><span class="op">(</span><span class="va">fd</span><span class="op">:</span> <span class="dt">Int</span><span class="op">)</span>                        <span class="co">// hand the VpnService tun fd to the core (§5)</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  <span class="kw">fun</span> <span class="fu">detachTun</span><span class="op">()</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  <span class="kw">fun</span> <span class="fu">setProtectCallback</span><span class="op">(</span><span class="va">cb</span><span class="op">:</span> <span class="dt">ProtectCallback</span><span class="op">)</span>   <span class="co">// §6</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>  <span class="kw">fun</span> <span class="fu">subscribeStatus</span><span class="op">(</span><span class="va">sink</span><span class="op">:</span> <span class="dt">TunnelStatusSink</span><span class="op">)</span>   <span class="co">// Kotlin-side status subscription (shim uses for .up only, §8.3)</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> <span class="fu">ProtectCallback</span> <span class="op">{</span> <span class="kw">fun</span> <span class="fu">protect</span><span class="op">(</span><span class="va">fd</span><span class="op">:</span> <span class="dt">Int</span><span class="op">):</span> <span class="dt">Boolean</span> }     <span class="co">// implemented by HelixVpnService.protect (§6.2)</span></span></code></pre></div>
+<h3 id="33-tunnelstatus--consistency-with-the-core-frozen">3.3
+<code>TunnelStatus</code> — consistency with the core (frozen)</h3>
+<p>The shim is a <strong>transparent carrier</strong> of the core&#39;s
+<code>TunnelStatus</code>; it never defines its own. The canonical enum
+is <code>helix-core/src/status.rs</code> [01-ORCH §4.1]:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-core/src/status.rs  (frozen, mirrored across the FFI [01-ORCH §4.1]) — restated for the binding</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="bu">Clone</span><span class="op">,</span> <span class="bu">Debug</span><span class="op">,</span> <span class="bu">PartialEq</span><span class="op">,</span> <span class="bu">Eq</span><span class="at">)]</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">enum</span> TunnelStatus <span class="op">{</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    Connecting<span class="op">,</span>                                   <span class="co">// dialling a rung (carrier handshake in flight)</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    Handshaking<span class="op">,</span>                                  <span class="co">// carrier up; WG Noise IK handshake in flight</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    Connected <span class="op">{</span> transport<span class="op">:</span> <span class="dt">String</span><span class="op">,</span> rtt_ms<span class="op">:</span> <span class="dt">u32</span> <span class="op">},</span> <span class="co">// e.g. (&quot;masque-h3&quot;, 23) — WG established</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    Reconnecting<span class="op">,</span>                                 <span class="co">// a working tunnel dropped; re-dialling (ladder/backoff)</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    Down <span class="op">{</span> reason<span class="op">:</span> <span class="dt">String</span> <span class="op">},</span>                      <span class="co">// terminal for this attempt; stable-prefix reason [01-ORCH §4.4]</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<blockquote>
+<p><strong>Consistency note (§11.4.6).</strong> The pass-1 client
+overview presents an <em>extended</em> Dart mirror that adds
+<code>Disconnected</code>, a <code>path</code> field on
+<code>Connected</code>, and a <code>Danger{kind}</code> variant for the
+UI palette [03 §3.1 status-enum note]. Those are
+<strong>FFI-presentation extensions</strong> layered on top of this
+5-variant core enum; this shim spec anchors on the <strong>core
+5-variant <code>TunnelStatus</code></strong> [01-ORCH §4.1] as the
+source of truth, exactly as the orchestrator emits it. The shim forwards
+whatever variant the core emits, unmodified — if/when the extended
+variants are ratified into the core enum, the shim needs <strong>no
+change</strong> (it is a transparent carrier). The Android shim emits
+its own <strong>separate</strong> <code>PlatformTunnelEvent</code> for
+OS-tunnel lifecycle (§8.2); it never synthesises a
+<code>TunnelStatus</code>.</p>
+</blockquote>
+<h3 id="34-raw-jni-fallback-the-hot-protect-path">3.4 Raw-JNI fallback
+(the hot <code>protect()</code> path)</h3>
+<p>For the per-socket <code>protect()</code> upcall (§6) the core may,
+instead of a UniFFI callback object, call a
+<code>#[no_mangle] extern &quot;system&quot;</code> JNI function or — as a perf
+option — the native <code>protectFromVpn</code> symbol (§6.3). The
+raw-JNI export shape:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-ffi/src/jni_android.rs  (cfg(target_os=&quot;android&quot;)) — fallback / hot-path only</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>no_mangle<span class="at">]</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">extern</span> <span class="st">&quot;system&quot;</span> <span class="kw">fn</span> Java_dev_helixvpn_core_HelixNative_coreAttachTun(</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    env<span class="op">:</span> JNIEnv<span class="op">,</span> _class<span class="op">:</span> JClass<span class="op">,</span> fd<span class="op">:</span> jint) <span class="op">-&gt;</span> jint <span class="op">{</span> <span class="co">/* attach_tun(fd) → 0 | errcode */</span> <span class="op">}</span></span></code></pre></div>
+<p>UniFFI is the <strong>primary</strong> typed surface; the raw JNI
+export exists only where the hot path or a UniFFI gap
+(<code>UNVERIFIED</code>: UniFFI callback-interface overhead per upcall
+— measure in BENCH, §15) justifies it.</p>
+<hr />
+<h2 id="4-vpnservice-lifecycle-state-machine">4. <code>VpnService</code>
+lifecycle state machine</h2>
+<h3 id="41-states-kotlin-side-distinct-from-tunnelstatus">4.1 States
+(Kotlin-side, distinct from <code>TunnelStatus</code>)</h3>
+<p>The <code>VpnService</code> has its <strong>own</strong> lifecycle —
+the OS-tunnel layer — that the shim projects to
+<code>PlatformTunnelEvent</code>. It is <em>not</em>
+<code>TunnelStatus</code>: the tun can be <code>Up</code> (fd
+established, core attached) while <code>TunnelStatus</code> is still
+<code>Handshaking</code> (WG not yet established). The UI trusts
+<code>TunnelStatus</code> for protection state (CI2); the shim&#39;s
+lifecycle drives only the foreground service + the up/down/revoked
+events.</p>
+<pre class="mermaid"><code>stateDiagram-v2
+    [*] --&gt; Idle
+    Idle --&gt; Preparing : startTunnel() — VpnService.prepare()
+    Preparing --&gt; Denied : user declined consent
+    Preparing --&gt; Starting : consent granted (or already granted)
+    Denied --&gt; Idle : emit permissionDenied (O1, no half-open tun)
+
+    Starting --&gt; Establishing : startForegroundService + onStartCommand
+    Establishing --&gt; TunUp : Builder.establish() Ok → fd → coreAttachTun(fd)
+    Establishing --&gt; ErrorState : establish() == null OR core attach failed
+    ErrorState --&gt; Idle : emit error(detail) + cleanup (O4)
+
+    TunUp --&gt; TunUp : core emits TunnelStatus (Connecting→Handshaking→Connected) — carrier truth
+    TunUp --&gt; Revoked : VpnService.onRevoke() (OS/another VPN killed us)
+    TunUp --&gt; Stopping : stopTunnel() (user)
+    Revoked --&gt; Idle : coreStop + emit revoked (O3) + cleanup
+    Stopping --&gt; Idle : coreDetachTun + coreStop + close fd + stopForeground + emit down (O4)
+
+    TunUp --&gt; Restarting : process death → START_STICKY redeliver (null intent, §9.3)
+    Restarting --&gt; Establishing : restore from persisted intent OR stop cleanly</code></pre>
+<h3 id="42-starttunnel--onstartcommand-the-bring-up">4.2
+<code>startTunnel</code> → <code>onStartCommand</code> (the
+bring-up)</h3>
+<div class="sourceCode" id="cb9"><pre class="sourceCode kotlin"><code class="sourceCode kotlin"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co">// HelixVpnService.kt</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> HelixVpnService <span class="op">:</span> <span class="dt">VpnService</span><span class="op">(),</span> <span class="dt">HelixNative</span>.<span class="dt">ProtectCallback</span> <span class="op">{</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">override</span> <span class="kw">fun</span> <span class="fu">onStartCommand</span><span class="op">(</span><span class="va">intent</span><span class="op">:</span> <span class="dt">Intent</span><span class="op">?,</span> <span class="va">flags</span><span class="op">:</span> <span class="dt">Int</span><span class="op">,</span> <span class="va">startId</span><span class="op">:</span> <span class="dt">Int</span><span class="op">):</span> <span class="dt">Int</span> <span class="op">{</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">// null intent ⇒ START_STICKY redelivery after process death (§9.3) — restore or stop.</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">val</span> <span class="va">cfg</span> <span class="op">=</span> HelixTunnelConfig<span class="op">.</span>from<span class="op">(</span>intent<span class="op">?.</span>bundleExtras<span class="op">()</span> <span class="op">?:</span> <span class="kw">return</span> restoreOrStop<span class="op">())</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 1. Foreground FIRST (must call startForeground within the OS window, §7) — survive bg-kill.</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>    startForeground<span class="op">(</span>NOTIF_ID<span class="op">,</span> buildPersistentNotification<span class="op">())</span>          <span class="co">// §7</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 2. Build + establish the TUN (§5). Null ⇒ another VPN active / invalid config (§12 E3).</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">val</span> <span class="va">pfd</span><span class="op">:</span> ParcelFileDescriptor <span class="op">=</span> buildTun<span class="op">(</span>cfg<span class="op">)</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>        <span class="op">?:</span> <span class="kw">return</span> failAndStop<span class="op">(</span><span class="st">&quot;establish() returned null&quot;</span><span class="op">)</span>            <span class="co">// ErrorState</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 3. Register protect upcall BEFORE the core opens any transport socket (§6).</span></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>    HelixNative<span class="op">.</span>setProtectCallback<span class="op">(</span><span class="kw">this</span><span class="op">)</span></span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 4. Hand the fd to the core; take ownership via detachFd (§5.3). Then start the core logic.</span></span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>    <span class="kw">val</span> <span class="va">fd</span> <span class="op">=</span> pfd<span class="op">.</span>detachFd<span class="op">()</span>                                           <span class="co">// native now owns close()</span></span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a>    HelixNative<span class="op">.</span>start<span class="op">(</span>cfg<span class="op">.</span>toClientConfig<span class="op">())</span>                          <span class="co">// orchestrator start [01-ORCH §2.1]</span></span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a>    HelixNative<span class="op">.</span>attachTun<span class="op">(</span>fd<span class="op">)</span>                                         <span class="co">// core pumps fd ⇄ WG ⇄ transport</span></span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a>    emitEvent<span class="op">(</span>PlatformTunnelEventKind<span class="op">.</span>up<span class="op">,</span> <span class="kw">null</span><span class="op">)</span>                       <span class="co">// OS-tunnel up (NOT &quot;connected&quot;, CI2)</span></span>
+<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a>    <span class="kw">return</span> START_STICKY                                              <span class="co">// §9.3 (with redelivery handling)</span></span>
+<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb9-26"><a href="#cb9-26" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Ordering is load-bearing: <strong>foreground first</strong> (or the
+OS may kill a just-started background service before
+<code>establish()</code>), <strong>establish before attach</strong> (the
+core needs a live fd), <strong>protect-callback before
+<code>start</code></strong> (the core may open a transport socket the
+instant it starts — it must be protectable, §6).</p>
+<h3 id="43-handshaking--connected-is-the-cores-call-not-the-shims">4.3
+<code>Handshaking → Connected</code> is the core&#39;s call, not the
+shim&#39;s</h3>
+<p>The shim emits <code>PlatformTunnelEvent.up</code> once the
+<em>carrier</em> (fd + core attach) is ready. The user-visible
+&quot;Connected&quot; (green) is driven by the core&#39;s
+<code>TunnelStatus::Connected</code> over frb [01-ORCH §5.4, §3 §3.2] —
+emitted only after the <strong>WG handshake reply</strong> lands, never
+on tun-up. This split is the exact mechanism that prevents &quot;UI says
+connected while the tunnel is actually down&quot; (CI2) [03 §3.3].</p>
+<h3 id="44-onrevoke-o3">4.4 <code>onRevoke</code> (O3)</h3>
+<div class="sourceCode" id="cb10"><pre class="sourceCode kotlin"><code class="sourceCode kotlin"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">override</span> <span class="kw">fun</span> <span class="fu">onRevoke</span><span class="op">()</span> <span class="op">{</span>                 <span class="co">// OS or another VPN app took over, or user revoked consent</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  HelixNative<span class="op">.</span>detachTun<span class="op">();</span> HelixNative<span class="op">.</span>stop<span class="op">()</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  emitEvent<span class="op">(</span>PlatformTunnelEventKind<span class="op">.</span>revoked<span class="op">,</span> <span class="st">&quot;os_revoked&quot;</span><span class="op">)</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  stopForeground<span class="op">(</span>STOP_FOREGROUND_REMOVE<span class="op">);</span> stopSelf<span class="op">()</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><code>onRevoke</code> is the out-of-band kill path (O3). It also
+covers the control-plane revocation reflected as
+<code>device.revoked</code> (doc 02) when that propagates to a tunnel
+teardown — though a <em>cryptographic</em> WG revoke surfaces first as
+the core&#39;s <code>Down{reason:&quot;auth-failed&quot;}</code> over
+<code>TunnelStatus</code> [01-ORCH §5.4]; <code>onRevoke</code> is the
+<em>OS-level</em> VPN-permission revoke. Both end in a cleaned-up
+quiescent state (O4).</p>
+<h3 id="45-stoptunnel--ondestroy-o4">4.5 <code>stopTunnel</code> /
+<code>onDestroy</code> (O4)</h3>
+<div class="sourceCode" id="cb11"><pre class="sourceCode kotlin"><code class="sourceCode kotlin"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">override</span> <span class="kw">fun</span> <span class="fu">onDestroy</span><span class="op">()</span> <span class="op">{</span>                <span class="co">// user stop OR system teardown</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  HelixNative<span class="op">.</span>detachTun<span class="op">()</span>                 <span class="co">// core closes the owned fd (§5.3)</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  HelixNative<span class="op">.</span>stop<span class="op">()</span>                      <span class="co">// orchestrator graceful stop [01-ORCH §2.4]</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  stopForeground<span class="op">(</span>STOP_FOREGROUND_REMOVE<span class="op">)</span>  <span class="co">// remove the persistent notification (§7)</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>  emitEvent<span class="op">(</span>PlatformTunnelEventKind<span class="op">.</span>down<span class="op">,</span> <span class="kw">null</span><span class="op">)</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">super</span><span class="op">.</span>onDestroy<span class="op">()</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Every exit path (<code>stopTunnel</code>, <code>onRevoke</code>,
+<code>onDestroy</code>, <code>ErrorState</code>, process-death) MUST
+leave: <strong>no orphan fd</strong> (core closed it), <strong>no
+foreground notification</strong>, <strong>no leaked routes/DNS</strong>
+(those were tun-scoped and die with the tun). A post-stop sanity
+assertion (§15 <code>SEC</code>/<code>SC</code>) FAILs the test if any
+orphan survives (§11.4.14).</p>
+<hr />
+<h2 id="5-vpnservicebuilder--tun-fd-handoff">5.
+<code>VpnService.Builder</code> → <code>tun</code> fd handoff</h2>
+<h3 id="51-building-the-interface">5.1 Building the interface</h3>
+<p><code>VpnService.Builder</code> configures a Layer-3 interface: at
+least one address + routes/MTU before <code>establish()</code>, which
+returns a <code>ParcelFileDescriptor</code> for the TUN
+[research-ios_android §3, 04_UI §6 row]. The app reads/writes
+<strong>raw IP packets</strong> on that fd — there is no per-socket
+model [research-ios_android §3].</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode kotlin"><code class="sourceCode kotlin"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">private</span> <span class="kw">fun</span> <span class="fu">buildTun</span><span class="op">(</span><span class="va">cfg</span><span class="op">:</span> <span class="dt">HelixTunnelConfig</span><span class="op">):</span> <span class="dt">ParcelFileDescriptor</span><span class="op">?</span> <span class="op">{</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">val</span> <span class="va">b</span> <span class="op">=</span> Builder<span class="op">()</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>setSession<span class="op">(</span><span class="st">&quot;HelixVPN&quot;</span><span class="op">)</span>                                  <span class="co">// label in the system VPN UI</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>addAddress<span class="op">(</span>cfg<span class="op">.</span>overlayIp<span class="op">,</span> <span class="dv">32</span><span class="op">)</span>                           <span class="co">// overlay /32 (IPAM-assigned)</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>setMtu<span class="op">(</span>cfg<span class="op">.</span>mtu<span class="op">)</span>                                         <span class="co">// 1280 MASQUE / 1420 plain [01-TT §4.8]</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>setBlocking<span class="op">(</span><span class="kw">false</span><span class="op">)</span>                                      <span class="co">// non-blocking fd (core pumps async)</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>  cfg<span class="op">.</span>routes<span class="op">.</span>forEach <span class="op">{</span> b<span class="op">.</span>addRoute<span class="op">(</span>it<span class="op">.</span>address<span class="op">,</span> it<span class="op">.</span>prefix<span class="op">)</span> <span class="op">}</span>   <span class="co">// AllowedIPs (e.g. 0.0.0.0/0 full-tunnel)</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>  cfg<span class="op">.</span>dnsServers<span class="op">.</span>forEach <span class="op">{</span> b<span class="op">.</span>addDnsServer<span class="op">(</span>it<span class="op">)</span> <span class="op">}</span>              <span class="co">// tunnel DNS (anti-leak, §10.2)</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>  applySplitTunnel<span class="op">(</span>b<span class="op">,</span> cfg<span class="op">.</span>splitExcludeApps<span class="op">)</span>                  <span class="co">// §10.1 (per-app bypass)</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Allow the app&#39;s OWN sockets to bypass the tun so the transport can reach the gateway:</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>  <span class="co">// handled by protect() per-socket (§6), NOT by a bypass route — keeps the kill-switch tight.</span></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>  <span class="kw">return</span> b<span class="op">.</span>establish<span class="op">()</span>                                       <span class="co">// null ⇒ no VpnService permission / invalid</span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="52-the-fd-is-layer-3-ip-owned-by-the-core">5.2 The fd is Layer-3
+IP, owned by the core</h3>
+<p>Once attached, <code>helix-core</code> does
+<code>read(2)</code>/<code>write(2)</code> of IP packets directly on the
+fd inside its loop A/B [01-ORCH §3.1, §3.2] — exactly the
+tun2socks-style native consumption pattern [research-ios_android §3].
+The Kotlin side never touches packet bytes (I1, O2).</p>
+<h3 id="53-fd-ownership-detachfd-recommended-vs-getfd">5.3 fd ownership:
+<code>detachFd()</code> (recommended) vs <code>getFd()</code></h3>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Ownership</th>
+<th>Who closes</th>
+<th>Trade-off</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong><code>detachFd()</code></strong> (recommended)</td>
+<td>transfers the raw int fd to native; the
+<code>ParcelFileDescriptor</code> is invalidated</td>
+<td>the <strong>core</strong> closes it in
+<code>detach_tun()</code></td>
+<td>clean single-owner lifecycle; the core controls fd close exactly
+when it stops pumping [research-ios_android §3]</td>
+</tr>
+<tr>
+<td><code>getFd()</code></td>
+<td>Kotlin keeps the <code>ParcelFileDescriptor</code> alive</td>
+<td>Kotlin must keep <code>pfd</code> referenced and
+<code>close()</code> it on stop</td>
+<td>risks a double-close or a leak if the service dies before Kotlin
+closes; needs careful lifecycle bookkeeping</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Decision (D-ANDROID-2, §16):</strong> use
+<code>detachFd()</code> → the core owns and closes the fd via
+<code>detach_tun()</code>. The Kotlin side keeps <strong>no</strong>
+<code>ParcelFileDescriptor</code> reference after
+<code>detachFd()</code> (it is invalidated). Edge: if the core process
+dies, the fd is reclaimed at process death — acceptable, no
+cross-process leak.</p>
+<pre class="mermaid"><code>sequenceDiagram
+    autonumber
+    participant UI as Flutter UI (Dart)
+    participant TP as AndroidTunnelPlatform
+    participant SVC as HelixVpnService
+    participant OS as Android VpnService FW
+    participant BR as HelixNative (JNI/UniFFI)
+    participant CORE as helix-core (Rust)
+
+    UI-&gt;&gt;TP: startTunnel(cfg)
+    TP-&gt;&gt;SVC: MethodChannel &quot;startTunnel&quot;
+    SVC-&gt;&gt;OS: VpnService.prepare()
+    alt consent needed
+        OS--&gt;&gt;UI: consent dialog
+        UI--&gt;&gt;SVC: granted / denied
+    end
+    Note over SVC: denied ⇒ emit permissionDenied, stop (O1)
+    SVC-&gt;&gt;SVC: startForeground(notif) (§7)
+    SVC-&gt;&gt;OS: Builder.addAddress/addRoute/addDnsServer/setMtu.establish()
+    OS--&gt;&gt;SVC: ParcelFileDescriptor (tun fd)
+    SVC-&gt;&gt;BR: setProtectCallback(this) (§6)
+    SVC-&gt;&gt;BR: fd = pfd.detachFd(); start(cfg); attachTun(fd)
+    BR-&gt;&gt;CORE: orchestrator start + attach_tun(fd)
+    CORE--&gt;&gt;BR: protect(socketFd) upcall (per transport socket §6)
+    BR--&gt;&gt;OS: VpnService.protect(socketFd)
+    SVC--&gt;&gt;TP: PlatformTunnelEvent.up (EventChannel)
+    Note over CORE: pumps tun ⇄ WG ⇄ transport [01-ORCH §3]
+    CORE--&gt;&gt;UI: TunnelStatus Connecting→Handshaking→Connected (frb, in-process)
+    UI-&gt;&gt;TP: stopTunnel()
+    TP-&gt;&gt;SVC: MethodChannel &quot;stopTunnel&quot;
+    SVC-&gt;&gt;BR: detachTun(); stop()
+    BR-&gt;&gt;CORE: detach_tun() (closes fd) + stop()
+    SVC--&gt;&gt;TP: PlatformTunnelEvent.down</code></pre>
+<hr />
+<h2 id="6-protect--the-loopback-avoidance-contract">6.
+<code>protect()</code> — the loopback-avoidance contract</h2>
+<h3 id="61-why-it-is-mandatory">6.1 Why it is mandatory</h3>
+<p><code>VpnService.protect(socket)</code> binds a socket to the
+<strong>underlying physical network</strong>, so the tunnel&#39;s own
+outbound transport packets (to the gateway) do <strong>not</strong> get
+routed back into the tun — which would infinite-loop. It MUST be called
+<strong>before</strong> the socket connects/sends, for
+<strong>every</strong> outbound transport socket the core opens
+[research-ios_android §3]. Without it the tunnel cannot carry its own
+carrier traffic. This is the single Android-specific obligation that
+forces a <strong>core → shim upcall</strong> (the core opens the socket
+inside <code>helix-transport::dial()</code> [01-TT §6], so only the core
+knows the fd; only the shim can <code>protect()</code> it).</p>
+<h3 id="62-the-upcall-primary-path-vpnserviceprotect">6.2 The upcall
+(primary path: <code>VpnService.protect</code>)</h3>
+<p>The core invokes the registered <code>ProtectCallback</code>
+synchronously, before <code>connect()</code>, for each transport
+socket:</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode kotlin"><code class="sourceCode kotlin"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co">// HelixVpnService implements HelixNative.ProtectCallback</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="kw">override</span> <span class="kw">fun</span> <span class="fu">protect</span><span class="op">(</span><span class="va">fd</span><span class="op">:</span> <span class="dt">Int</span><span class="op">):</span> <span class="dt">Boolean</span> <span class="op">=</span> protect<span class="op">(</span>fd<span class="op">)</span>   <span class="co">// VpnService.protect(int) — true on success</span></span></code></pre></div>
+<div class="sourceCode" id="cb15"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co">// inside helix-transport dial(), cfg(target_os=&quot;android&quot;): protect every socket before connect</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> sock <span class="op">=</span> <span class="pp">socket2::Socket::</span>new(domain<span class="op">,</span> ty<span class="op">,</span> proto)<span class="op">?;</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="op">!</span>PROTECT<span class="op">.</span>get()<span class="op">.</span>map_or(<span class="cn">false</span><span class="op">,</span> <span class="op">|</span>cb<span class="op">|</span> cb<span class="op">.</span>protect(sock<span class="op">.</span>as_raw_fd())) <span class="op">{</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="cn">Err</span>(<span class="pp">TransportError::</span>Io(<span class="pp">io::</span><span class="bu">Error</span><span class="pp">::</span>other(<span class="st">&quot;protect() failed&quot;</span>)))<span class="op">;</span>  <span class="co">// never connect an unprotected socket</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>sock<span class="op">.</span>connect(<span class="op">&amp;</span>peer<span class="op">.</span>into())<span class="op">?;</span>   <span class="co">// [01-TT §6.1]</span></span></code></pre></div>
+<p>A failed <code>protect()</code> is a <strong>hard</strong> dial error
+(<code>TransportError::Io</code> → ladder/backoff [01-TT §7, 01-ORCH
+§7]) — the core MUST NOT connect an unprotected socket (it would leak
+onto the underlay and loop). This is verified by the §15
+<code>SEC</code> test (a captured pcap shows transport packets egress
+the physical iface, not the tun).</p>
+<h3 id="63-hot-path-option-native-protectfromvpn-perf">6.3 Hot-path
+option: native <code>protectFromVpn</code> (perf)</h3>
+<p><code>VpnService.protect()</code> ultimately calls the C function
+<code>protectFromVpn</code> (<code>NetdClient.h</code>); a native core
+can bind that symbol and protect sockets entirely in native space,
+avoiding a JNI/UniFFI upcall on the hot connect path
+[research-ios_android §3]. <strong>Decision (D-ANDROID-3, §16):</strong>
+use the <code>ProtectCallback</code> upcall as the <strong>safe
+default</strong> (protect is not on the per-packet hot path — it fires
+once per <em>socket</em> / per dial, which is rare); adopt native
+<code>protectFromVpn</code> only if BENCH (§15) shows the upcall cost
+matters. <code>UNVERIFIED</code>: <code>protectFromVpn</code>&#39;s symbol
+stability across Android versions / OEM images — it is
+<strong>not</strong> a public NDK symbol; binding it is a documented
+community pattern, not a guaranteed-stable ABI [research-ios_android
+§3]. Treat as an optimization behind a measured gate, never the default
+(§11.4.6).</p>
+<h3 id="64-re-protect-on-roam">6.4 Re-protect on roam</h3>
+<p>When the device&#39;s primary network changes (Wi-Fi→cellular), the
+previously-<code>protect</code>ed socket&#39;s underlying network may vanish
+→ the carrier dies → the core re-dials [01-ORCH §7.5] → a
+<strong>new</strong> transport socket is opened → <code>protect()</code>
+is invoked again on the <strong>new</strong> network. The shim feeds the
+roam signal to the core via a
+<code>ConnectivityManager.NetworkCallback</code> →
+<code>RoamDetected{new_local}</code> [01-ORCH §7.5, §9]; the core&#39;s
+<code>&lt; 3 s</code> roam recovery [01-ORCH §7.1] then re-establishes a
+freshly protected socket. No special shim logic beyond delivering the
+roam event and answering the protect upcall.</p>
+<hr />
+<h2 id="7-foreground-service--surviving-background-kill">7. Foreground
+service — surviving background-kill</h2>
+<p>A VPN tunnel must keep running when the app is backgrounded; Android
+only keeps a service alive in the background if it is a
+<strong>foreground service</strong> with a persistent notification
+[research-ios_android §3 implies via <code>VpnService</code> foreground
+practice; 03 §5.2 <code>startForeground</code>].</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode kotlin"><code class="sourceCode kotlin"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="kw">private</span> <span class="kw">fun</span> <span class="fu">buildPersistentNotification</span><span class="op">():</span> <span class="dt">Notification</span> <span class="op">{</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Notification channel created once at app start (API 26+).</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">return</span> NotificationCompat<span class="op">.</span>Builder<span class="op">(</span><span class="kw">this</span><span class="op">,</span> CHANNEL_ID<span class="op">)</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>setSmallIcon<span class="op">(</span>R<span class="op">.</span>drawable<span class="op">.</span>ic_helix_shield<span class="op">)</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>setContentTitle<span class="op">(</span><span class="st">&quot;HelixVPN&quot;</span><span class="op">)</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>setContentText<span class="op">(</span><span class="st">&quot;Protected&quot;</span><span class="op">)</span>              <span class="co">// updated from TunnelStatus over a status subscription (§8.3)</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>setOngoing<span class="op">(</span><span class="kw">true</span><span class="op">)</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>setCategory<span class="op">(</span>NotificationCompat<span class="op">.</span>CATEGORY_SERVICE<span class="op">)</span></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>build<span class="op">()</span></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a><span class="co">// onStartCommand: startForeground(NOTIF_ID, buildPersistentNotification() [, foregroundServiceType])</span></span></code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Concern</th>
+<th>Requirement</th>
+<th>Note</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Foreground window</td>
+<td><code>startForeground()</code> MUST be called promptly inside
+<code>onStartCommand</code> (before <code>establish()</code> in
+§4.2)</td>
+<td>else the OS may kill the just-started service</td>
+</tr>
+<tr>
+<td>Notification channel</td>
+<td>created once (API 26+) before first
+<code>startForeground</code></td>
+<td><code>POST_NOTIFICATIONS</code> runtime permission on API 33+</td>
+</tr>
+<tr>
+<td>Foreground service type</td>
+<td>a <code>foregroundServiceType</code> MUST be declared (manifest) +
+passed on API 34+</td>
+<td><code>UNVERIFIED</code>: the exact constant for a VPN foreground
+service on API 34+ — verify against the latest Android docs (§11.4.99)
+before coding; declare the matching <code>FOREGROUND_SERVICE_*</code>
+permission. Do not hardcode a guessed type.</td>
+</tr>
+<tr>
+<td>Restart</td>
+<td><code>START_STICKY</code> so the OS recreates the service after a
+low-memory kill (§9.3)</td>
+<td>with null-intent redelivery handling</td>
+</tr>
+<tr>
+<td>Notification text</td>
+<td>reflects <code>TunnelStatus</code>
+(Connecting/Connected/Reconnecting)</td>
+<td>the shim keeps a lightweight Kotlin-side status subscription only to
+update this text (§8.3)</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Android memory posture (contrast iOS).</strong> Android
+<code>VpnService</code> runs as a normal foreground service — there is
+<strong>no</strong> iOS-NE-style hard ~15/50 MiB jetsam cap; the
+standard Android per-app memory / <code>lowmemorykiller</code> applies,
+which is far more generous, and a foreground service is high-priority
+[research-ios_android §3]. The severe memory constraint is
+<strong>iOS-only</strong>; on Android the foreground-service priority is
+the survival mechanism, not a tight RSS budget (§11). The shim still
+bounds buffer pools in the core (size receive buffers to MTU+headroom
+[research-ios_android §3, §4]) because the <strong>same lean Rust
+core</strong> ships on both.</p>
+</blockquote>
+<hr />
+<h2 id="8-status--event-flow-the-two-channels">8. Status &amp; event
+flow (the two channels)</h2>
+<h3 id="81-the-two-distinct-streams">8.1 The two distinct streams</h3>
+<table>
+<thead>
+<tr>
+<th>Stream</th>
+<th>Producer → consumer</th>
+<th>Transport</th>
+<th>Carries</th>
+<th>Truth about</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong><code>TunnelStatus</code></strong></td>
+<td><code>helix-core</code> → Dart</td>
+<td>frb <code>StreamSink</code>, in-process [03 §3.2]</td>
+<td><code>Connecting</code>/<code>Handshaking</code>/<code>Connected{transport,rtt}</code>/<code>Reconnecting</code>/<code>Down{reason}</code>
+[01-ORCH §4.1]</td>
+<td><strong>protection state</strong> (WG/tunnel) — the UI paints from
+this (CI2)</td>
+</tr>
+<tr>
+<td><strong><code>PlatformTunnelEvent</code></strong></td>
+<td>Kotlin shim → Dart</td>
+<td><code>EventChannel</code> <code>helixvpn/tunnel/events</code> [03
+§4]</td>
+<td><code>up</code>/<code>down</code>/<code>permissionDenied</code>/<code>revoked</code>/<code>error</code></td>
+<td><strong>OS-tunnel lifecycle</strong> (consent, fd, foreground
+service)</td>
+</tr>
+</tbody>
+</table>
+<pre class="mermaid"><code>flowchart LR
+    CORE[&quot;helix-core (Rust)&quot;] -- &quot;TunnelStatus (frb StreamSink, in-process)&quot; --&gt; DARTFFI[&quot;helix_core_ffi&quot;]
+    DARTFFI --&gt; RIV[&quot;Riverpod tunnelStatusProvider [03 §8.2]&quot;] --&gt; UICONN[&quot;ConnectButton / StatusChip&quot;]
+    SVC[&quot;HelixVpnService&quot;] -- &quot;PlatformTunnelEvent (EventChannel)&quot; --&gt; DARTTP[&quot;AndroidTunnelPlatform&quot;]
+    DARTTP --&gt; CTRL[&quot;ConnectController [03 §8.2]&quot;]
+    CORE -. &quot;TunnelStatus (UniFFI, Kotlin-side)&quot; .-&gt; SVC
+    SVC -. &quot;update notification text only (§8.3)&quot; .-&gt; NOTIF[&quot;foreground notification&quot;]</code></pre>
+<h3 id="82-platformtunnelevent-emission-rules">8.2
+<code>PlatformTunnelEvent</code> emission rules</h3>
+<p>The shim emits exactly one event per OS-tunnel transition (§4):
+<code>up</code> on <code>establish()</code>+attach success;
+<code>down</code> on graceful stop; <code>permissionDenied</code> on
+declined consent; <code>revoked</code> on <code>onRevoke</code>;
+<code>error{detail}</code> on <code>establish()==null</code> / attach
+failure / config-parse failure. <code>detail</code> is an
+<strong>honest</strong> string (§11.4.6 — never &quot;likely&quot;/&quot;maybe&quot;).
+Events post to the registered <code>EventSink</code> on the platform
+thread; if no listener is attached yet, the latest lifecycle event is
+buffered (<code>UNVERIFIED</code>: buffer depth = 1 latest, sufficient
+because the UI re-reads latest on listen — calibrate in §15
+<code>UT</code>).</p>
+<h3 id="83-why-the-shim-also-subscribes-to-tunnelstatus-notification-text">8.3
+Why the shim also subscribes to <code>TunnelStatus</code> (notification
+text)</h3>
+<p>The shim keeps a <strong>lightweight</strong> Kotlin-side
+<code>TunnelStatus</code> subscription
+(<code>HelixNative.subscribeStatus</code>) for <strong>one</strong>
+purpose: updating the persistent notification text
+(<code>Connecting…</code>/<code>Protected · masque-h3 · 23 ms</code>/<code>Reconnecting…</code>).
+This is presentation only; the shim never <em>re-derives</em> protection
+state nor feeds it back to the UI (the UI already has the authoritative
+frb stream, CI2). A <code>RecvError::Lagged</code> on this subscription
+is treated as &quot;re-read latest&quot;, never an error [01-ORCH §4.6].</p>
+<hr />
+<h2 id="9-permission-always-on-and-boot">9. Permission, always-on, and
+boot</h2>
+<h3 id="91-permission-flow-vpnserviceprepare">9.1 Permission flow
+(<code>VpnService.prepare</code>)</h3>
+<p><code>VpnService.prepare(context)</code> returns an
+<code>Intent</code> if the user has not yet consented to this app acting
+as a VPN (must be launched via <code>startActivityForResult</code>), or
+<code>null</code> if already consented. Declined consent →
+<code>PlatformTunnelEvent.permissionDenied</code>, <strong>no</strong>
+service start, no half-open tun (O1).</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode kotlin"><code class="sourceCode kotlin"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fun</span> <span class="fu">startTunnel</span><span class="op">(</span><span class="va">cfg</span><span class="op">):</span> <span class="dt">Future</span> <span class="op">{</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">val</span> <span class="va">prep</span> <span class="op">=</span> VpnService<span class="op">.</span>prepare<span class="op">(</span>context<span class="op">)</span>          <span class="co">// null = already granted</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(</span>prep <span class="op">!=</span> <span class="kw">null</span><span class="op">)</span> <span class="op">{</span> launchConsent<span class="op">(</span>prep<span class="op">)</span> <span class="co">/* on result: granted→continue | denied→permissionDenied */</span> <span class="op">}</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">else</span> startService<span class="op">(</span>cfg<span class="op">)</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="92-always-on-vpn--lockdown-the-android-kill-switch">9.2
+Always-on VPN &amp; lockdown (the Android kill-switch)</h3>
+<p>Android&#39;s system <strong>Always-on VPN</strong> + <strong>Block
+connections without VPN (lockdown)</strong> setting <em>is</em> the
+OS-level kill-switch on Android [04_ARCH §5.6 &quot;kill-switch+DNS driven by
+core state machine&quot;; the OS lockdown is the platform mechanism]. When
+lockdown is on, the OS starts <code>HelixVpnService</code> via an
+OS-issued intent (no UI) and drops all non-VPN traffic. The shim MUST
+therefore:</p>
+<ul>
+<li>handle a service start with <strong>no</strong> UI in the foreground
+(start foreground + build the tun from a <strong>persisted</strong>
+last-good <code>TunnelConfig</code>, §9.3);</li>
+<li>never assume the Flutter UI is alive when
+<code>onStartCommand</code> fires.</li>
+</ul>
+<p>The core&#39;s own fail-closed kill-switch posture [01-ORCH §8] composes
+with the OS lockdown: the core drops on
+<code>Reconnecting</code>/<code>Down</code> regardless, and Android
+lockdown additionally blocks at the OS routing layer. The two are
+complementary, not redundant.</p>
+<h3 id="93-process-death--start_sticky">9.3 Process death &amp;
+<code>START_STICKY</code></h3>
+<p>If the OS kills the service under memory pressure,
+<code>START_STICKY</code> recreates it and re-delivers
+<code>onStartCommand</code> with a <strong>null</strong> intent. The
+shim must then:</p>
+<pre class="mermaid"><code>stateDiagram-v2
+    [*] --&gt; Recreated : OS restart (START_STICKY)
+    Recreated --&gt; HasPersistedCfg : read last-good TunnelConfig (encrypted prefs)
+    Recreated --&gt; NoCfg : nothing persisted
+    HasPersistedCfg --&gt; Establishing : rebuild tun + reattach core (§4.2)
+    NoCfg --&gt; Stopped : stopSelf() cleanly (no half-open tun, O4)</code></pre>
+<p>The last-good <code>TunnelConfig</code> is persisted (the
+<code>sessionOrMapToken</code> is a secret → stored in
+EncryptedSharedPreferences / Keystore-backed store, never plaintext,
+§11.4.10) so always-on/lockdown and post-kill restarts can re-establish
+without the UI. <code>UNVERIFIED</code>: whether to auto-reconnect on
+every redelivery vs only under lockdown — surface as D-ANDROID-4 (§16);
+default = reconnect only if the user&#39;s last intent was &quot;connected&quot;
+(mirrors [03 §8.4] intent honesty).</p>
+<hr />
+<h2 id="10-split-tunnel-dns-routes-mtu">10. Split-tunnel, DNS, routes,
+MTU</h2>
+<h3 id="101-per-app-split-tunnel">10.1 Per-app split tunnel</h3>
+<p><code>VpnService.Builder</code> supports <strong>either</strong>
+<code>addDisallowedApplication(pkg)</code> (exclude-list: everything
+tunnels except these) <strong>or</strong>
+<code>addAllowedApplication(pkg)</code> (include-list: only these
+tunnel) — the two modes are <strong>mutually exclusive</strong> (you
+cannot mix them on one Builder).</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode kotlin"><code class="sourceCode kotlin"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="kw">private</span> <span class="kw">fun</span> <span class="fu">applySplitTunnel</span><span class="op">(</span><span class="va">b</span><span class="op">:</span> <span class="dt">Builder</span><span class="op">,</span> <span class="va">exclude</span><span class="op">:</span> <span class="dt">List</span>&lt;<span class="va">String</span>&gt;<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">// HelixVPN MVP uses the exclude model (cfg.splitExcludeApps) [03 §4 TunnelConfig.splitExcludeApps].</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>  exclude<span class="op">.</span>forEach <span class="op">{</span> pkg <span class="op">-&gt;</span> runCatching <span class="op">{</span> b<span class="op">.</span>addDisallowedApplication<span class="op">(</span>pkg<span class="op">)</span> <span class="op">}</span> <span class="op">}</span>  <span class="co">// ignore unknown pkg (honest skip)</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>A package that is not installed throws
+<code>NameNotFoundException</code>; the shim skips it with an honest
+log, never aborts the whole tunnel (§11.4.6 — but the skip is
+<em>recorded</em>, not silent). Include-mode
+(<code>addAllowedApplication</code>) is a Phase-2 config knob
+(D-ANDROID-5, §16).</p>
+<h3 id="102-dns-leak-protection">10.2 DNS leak protection</h3>
+<p>Tunnel DNS is set via <code>addDnsServer(it)</code> for each
+<code>cfg.dnsServers</code>. Because all routes (including
+<code>0.0.0.0/0</code> in full-tunnel mode) go into the tun and no
+bypass route is added, off-tunnel <code>:53</code> cannot egress — this
+is the Android realisation of the core&#39;s &quot;force tunnel DNS; block
+plaintext :53 off-tunnel&quot; guarantee [04_ARCH §5.6, 01-ORCH §8.3].
+Split-tunnel excluded apps deliberately bypass (per user config); that
+is an explicit user choice, surfaced honestly in the UI, not a leak.</p>
+<h3 id="103-routes--mtu">10.3 Routes &amp; MTU</h3>
+<ul>
+<li>Routes = <code>cfg.routes</code> (AllowedIPs):
+<code>0.0.0.0/0</code> (+ <code>::/0</code> for v6) for full-tunnel
+privacy-exit mode; specific overlay CIDRs (e.g.
+<code>10.10.0.0/24</code>) for joined-network-only mode [SYN §1].</li>
+<li>MTU = <code>cfg.mtu</code>: 1280 over MASQUE, 1420 plain WG [01-TT
+§4.8] — the value the core computed from <code>effective_mtu()</code> of
+the active transport and pushed into the <code>TunnelConfig</code>
+[01-ORCH §6.6]. The shim does not invent the MTU.</li>
+</ul>
+<hr />
+<h2 id="11-memory--performance-budget">11. Memory &amp; performance
+budget</h2>
+<table>
+<thead>
+<tr>
+<th>Budget</th>
+<th>Android target</th>
+<th>Basis</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Core steady-state RSS</td>
+<td>low-tens MB; <strong>no hard jetsam cap</strong> like iOS NE</td>
+<td>Android <code>VpnService</code> is a normal foreground service;
+<code>lowmemorykiller</code> is generous [research-ios_android §3]</td>
+</tr>
+<tr>
+<td>Buffer pools</td>
+<td>bounded; receive buffer sized to MTU+headroom</td>
+<td>same lean Rust core as iOS; bound pools to avoid spike-kills
+[research-ios_android §3, §4]</td>
+</tr>
+<tr>
+<td>Foreground priority</td>
+<td>high (foreground service) protects against bg-kill</td>
+<td>§7</td>
+</tr>
+<tr>
+<td>App install size</td>
+<td>shares the <code>--split-per-abi</code> lean Rust staticlib</td>
+<td>[03 §10]</td>
+</tr>
+<tr>
+<td>Packet path</td>
+<td>core does <code>read</code>/<code>write</code> on the fd in its own
+tokio threads</td>
+<td>no Kotlin on the per-packet path (§5.2)</td>
+</tr>
+<tr>
+<td><code>protect()</code> cost</td>
+<td>once per transport socket (rare), not per packet</td>
+<td>§6.3 (native <code>protectFromVpn</code> only if BENCH demands)</td>
+</tr>
+</tbody>
+</table>
+<p>The binding memory constraint of the program is <strong>iOS
+NE</strong>, not Android [research-ios_android §3, §4; CI4 03 §0.1]. On
+Android the shim&#39;s job is survival (foreground service) and correctness
+(protect, fd lifecycle), not a tight RSS ceiling. The Android
+<code>MEM</code> test (§15) is a <strong>regression guard</strong>
+(<code>dumpsys meminfo</code>, no leak over a soak), not a make-or-break
+gate (the make-or-break G3 is iOS-only [03 §5.1]).</p>
+<hr />
+<h2 id="12-error-taxonomy--edge-cases">12. Error taxonomy &amp; edge
+cases</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Condition</th>
+<th>Required behaviour</th>
+<th>Event / state</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>E1</td>
+<td>VPN consent declined</td>
+<td>no service start; no half-open tun (O1)</td>
+<td><code>permissionDenied</code> → Idle</td>
+<td>§9.1</td>
+</tr>
+<tr>
+<td>E2</td>
+<td>Config map missing/invalid field</td>
+<td>hard parse error; no tun</td>
+<td><code>error{detail}</code> → Idle</td>
+<td>§2.3</td>
+</tr>
+<tr>
+<td>E3</td>
+<td><code>establish()</code> returns null (another VPN active / invalid
+Builder)</td>
+<td>cleanup; no orphan fd</td>
+<td><code>error{&quot;establish_null&quot;}</code> → Idle</td>
+<td>§5.1, [research-ios_android §3]</td>
+</tr>
+<tr>
+<td>E4</td>
+<td><code>protect()</code> fails on a transport socket</td>
+<td>core does NOT connect; ladder/backoff</td>
+<td>core <code>TransportError::Io</code> →
+<code>Reconnecting</code></td>
+<td>§6.2</td>
+</tr>
+<tr>
+<td>E5</td>
+<td><code>onRevoke</code> (OS / another VPN / user revoke)</td>
+<td>coreStop; quiescent restore (O3,O4)</td>
+<td><code>revoked</code> → Idle</td>
+<td>§4.4</td>
+</tr>
+<tr>
+<td>E6</td>
+<td>Roam (Wi-Fi→cellular) while connected</td>
+<td>feed <code>RoamDetected</code>; core re-dials + re-protects;
+<code>&lt; 3 s</code> recovery</td>
+<td>core <code>Reconnecting</code>→<code>Connected</code></td>
+<td>§6.4, [01-ORCH §7.5]</td>
+</tr>
+<tr>
+<td>E7</td>
+<td>Process death (lowmemorykiller) while connected</td>
+<td><code>START_STICKY</code> redeliver; restore from persisted cfg OR
+stop cleanly</td>
+<td>Restarting → Establishing/Stopped</td>
+<td>§9.3</td>
+</tr>
+<tr>
+<td>E8</td>
+<td>Always-on/lockdown start with no UI</td>
+<td>start foreground + build tun from persisted cfg without the Flutter
+engine</td>
+<td>Establishing (headless)</td>
+<td>§9.2</td>
+</tr>
+<tr>
+<td>E9</td>
+<td>WG cryptographic revoke (device.revoked)</td>
+<td>core emits <code>Down{auth-failed}</code> over
+<code>TunnelStatus</code>; kill-switch stays closed</td>
+<td><code>TunnelStatus::Down</code> + shim <code>down</code></td>
+<td>[01-ORCH §5.4, §8.5]</td>
+</tr>
+<tr>
+<td>E10</td>
+<td><code>stopTunnel</code> while mid-handshake</td>
+<td>detach+stop cleanly; close fd; no orphan</td>
+<td><code>down</code> → Idle</td>
+<td>§4.5</td>
+</tr>
+<tr>
+<td>E11</td>
+<td>Unknown split-exclude package</td>
+<td>skip with honest record; tunnel proceeds</td>
+<td>(logged)</td>
+<td>§10.1</td>
+</tr>
+<tr>
+<td>E12</td>
+<td>Notification permission denied (API 33+)</td>
+<td>foreground still required; surface the limitation honestly; tunnel
+proceeds if OS allows</td>
+<td>(logged)</td>
+<td>§7 (<code>UNVERIFIED</code>: per-OEM behaviour)</td>
+</tr>
+</tbody>
+</table>
+<p>Error-classification rule (§11.4.6): the shim never labels a failure
+&quot;transient/flaky&quot;; <code>error.detail</code> is a concrete observed
+cause or an explicit
+<code>UNKNOWN:</code>/<code>PENDING_FORENSICS:</code> marker with a
+tracked follow-up.</p>
+<hr />
+<h2 id="13-threading--cancel-model">13. Threading &amp; cancel
+model</h2>
+<ul>
+<li><code>onStartCommand</code> runs on the <strong>main
+thread</strong>; <code>establish()</code> is cheap; the per-packet pump
+runs inside the <strong>core&#39;s own tokio threads</strong> after
+<code>attach_tun</code> (the shim never blocks the main thread with
+packet I/O) [01-ORCH §3].</li>
+<li>The frb <code>TunnelStatus</code> stream is delivered off the
+platform thread by frb [03 §3.2]; the Kotlin-side notification
+subscription (§8.3) hops to the main thread only to update the
+notification.</li>
+<li><code>protect()</code> upcalls are synchronous and brief (one
+<code>protect(int)</code> syscall); they occur on whatever core thread
+opened the socket — the <code>ProtectCallback</code> impl MUST be
+thread-safe and reentrancy-free (it only calls
+<code>VpnService.protect</code>, which is thread-safe).</li>
+<li>Cancellation:
+<code>stopTunnel</code>/<code>onDestroy</code>/<code>onRevoke</code>
+call <code>detach_tun()</code>+<code>stop()</code>, which cancel the
+core&#39;s <code>CancellationToken</code> and join its loops within
+<code>shutdown_grace</code> (2 s default) [01-ORCH §2.4]; the fd is
+closed by the core on detach (§5.3). No core thread outlives the
+service.</li>
+</ul>
+<hr />
+<h2 id="14-manifest--build-requirements">14. Manifest &amp; build
+requirements</h2>
+<div class="sourceCode" id="cb21"><pre class="sourceCode xml"><code class="sourceCode xml"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co">&lt;!-- AndroidManifest.xml (essentials) --&gt;</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>&lt;<span class="kw">uses-permission</span> <span class="ot">android:name=</span><span class="st">&quot;android.permission.FOREGROUND_SERVICE&quot;</span>/&gt;</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="co">&lt;!-- API 34+: declare the matching FOREGROUND_SERVICE_&lt;type&gt; permission (UNVERIFIED exact type, §7) --&gt;</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>&lt;<span class="kw">uses-permission</span> <span class="ot">android:name=</span><span class="st">&quot;android.permission.POST_NOTIFICATIONS&quot;</span>/&gt;   <span class="co">&lt;!-- API 33+ --&gt;</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>&lt;<span class="kw">service</span></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>    <span class="ot">android:name=</span><span class="st">&quot;.HelixVpnService&quot;</span></span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>    <span class="ot">android:permission=</span><span class="st">&quot;android.permission.BIND_VPN_SERVICE&quot;</span></span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>    <span class="ot">android:exported=</span><span class="st">&quot;false&quot;</span>&gt;</span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">&lt;!-- android:foregroundServiceType=&quot;...&quot; on API 34+ (UNVERIFIED exact value, §7) --&gt;</span></span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>    &lt;<span class="kw">intent-filter</span>&gt;&lt;<span class="kw">action</span> <span class="ot">android:name=</span><span class="st">&quot;android.net.VpnService&quot;</span>/&gt;&lt;/<span class="kw">intent-filter</span>&gt;</span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a>&lt;/<span class="kw">service</span>&gt;</span></code></pre></div>
+<ul>
+<li>The <code>.so</code> is the shared lean Rust <code>helix-core</code>
+staticlib→cdylib for Android ABIs (<code>arm64-v8a</code>,
+<code>armeabi-v7a</code>, <code>x86_64</code>),
+<code>--split-per-abi</code> to keep install size lean [03 §10]; same
+<code>opt-level=&quot;z&quot;/&quot;s&quot;</code> + LTO + <code>panic=abort</code> + strip
+profile as iOS for code-size/footprint parity [research-ios_android
+§2].</li>
+<li>UniFFI Kotlin bindings + frb Dart bindings are <strong>generated and
+drift-checked</strong> in the local <code>melos</code> build (no active
+CI per §11.4.156 [SYN §9]); a binding drift vs the Rust
+<code>helix-ffi</code> source is a build-blocking finding [03 §11].</li>
+</ul>
+<hr />
+<h2 id="15-test-points-114169">15. Test points (§11.4.169)</h2>
+<p>§11.4.169 (a LIVE constitution anchor) mandates that every workable
+item declare its required test types from the closed vocabulary [06-WBS
+§0.4, 10-QA §2]; the only permitted absence of a warranted type is an
+honest §11.4.3 SKIP-with-reason, never a silent gap. The shim is the
+<strong>only untyped seam</strong>, so its evidence bar is the on-device
+smoke (O5). Four-layer enforcement per §11.4.4(b) applies to every
+closure.</p>
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>Type</th>
+<th>Android-shim test point</th>
+<th>Evidence (§11.4.5/.69/.107)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>UT</code></td>
+<td>unit</td>
+<td><code>HelixTunnelConfig.from(map)</code> round-trip (every field
+survives, §2.3); <code>PlatformTunnelEvent</code> mapping; split-tunnel
+mode-exclusivity guard; <code>detail</code> honesty (no forbidden
+vocab)</td>
+<td><code>gradle test</code> / Robolectric logs</td>
+</tr>
+<tr>
+<td><code>INT</code></td>
+<td>integration (real system, infra via containers submodule
+§11.4.76)</td>
+<td>the Kotlin shim + real <code>helix-core</code> <code>.so</code> on
+an emulator: <code>startTunnel</code> → <code>establish()</code> →
+<code>attachTun</code> → core reaches a real edge booted on-demand</td>
+<td>logcat + netns/edge round-trip</td>
+</tr>
+<tr>
+<td><code>E2E</code></td>
+<td>end-to-end</td>
+<td>on-device: real Access flavor → connect → <code>curl</code>/app
+traffic reaches an authorized LAN host through the tun; plain-UDP
+<strong>blocked</strong> path escalates to MASQUE [01-ORCH §7]</td>
+<td>window-scoped MP4 (§11.4.159) + capture</td>
+</tr>
+<tr>
+<td><code>FA</code></td>
+<td>full-automation (§11.4.25/.52/.98, deterministic §11.4.50)</td>
+<td>scripted (uiautomator/adb) connect→status→disconnect, <strong>N=3
+identical</strong> <code>PlatformTunnelEvent</code> +
+<code>TunnelStatus</code> traces, zero human-in-loop</td>
+<td>3× identical trace artifacts</td>
+</tr>
+<tr>
+<td><code>SEC</code></td>
+<td>security (§11.4.10 + security submodule)</td>
+<td>(a) pcap proves transport sockets egress the
+<strong>physical</strong> iface (protect works, §6) not the tun; (b) no
+off-tunnel <code>:53</code> leak (§10.2); (c)
+<code>sessionOrMapToken</code> never in logs / plaintext prefs (§9.3,
+§11.4.10)</td>
+<td>pcap + secret-leak grep-empty</td>
+</tr>
+<tr>
+<td><code>STRESS</code></td>
+<td>stress (§11.4.85)</td>
+<td>sustained connect/disconnect churn (≥100 cycles); fd-leak census
+(<code>/proc/&lt;pid&gt;/fd</code> count stable); bounded RSS</td>
+<td>fd-count + RSS CSV</td>
+</tr>
+<tr>
+<td><code>CHAOS</code></td>
+<td>chaos (§11.4.85)</td>
+<td>iface flap (toggle Wi-Fi/cellular) mid-transfer →
+<code>&lt; 3 s</code> recovery (§6.4, E6); process-kill
+(<code>am kill</code>) → <code>START_STICKY</code> restore (E7);
+<code>onRevoke</code> mid-transfer (E5)</td>
+<td>recovery trace + logcat</td>
+</tr>
+<tr>
+<td><code>CONC</code></td>
+<td>concurrency / atomicity</td>
+<td>concurrent <code>startTunnel</code>/<code>stopTunnel</code> calls
+(idempotency, O1); <code>protect()</code> upcalls from multiple core
+threads thread-safe</td>
+<td>harness log</td>
+</tr>
+<tr>
+<td><code>RACE</code></td>
+<td>race / deadlock</td>
+<td>no deadlock between <code>onDestroy</code> (detach) and an in-flight
+<code>protect()</code> upcall; fd close-vs-use ordering</td>
+<td>stress harness + tsan-style assertions</td>
+</tr>
+<tr>
+<td><code>MEM</code></td>
+<td>memory</td>
+<td>regression guard: <code>dumpsys meminfo</code> RSS stable over a
+soak; no fd/handle leak; <strong>not</strong> a make-or-break (iOS owns
+G3)</td>
+<td><code>dumpsys meminfo</code> series</td>
+</tr>
+<tr>
+<td><code>BENCH</code>/<code>PERF</code></td>
+<td>benchmarking / performance</td>
+<td>through-tunnel throughput on device; <code>protect()</code> upcall
+cost (decides D-ANDROID-3 §6.3); attach→Connected latency</td>
+<td>throughput/latency CSV</td>
+</tr>
+<tr>
+<td><code>UI</code>/<code>UX</code></td>
+<td>UI / UX</td>
+<td>the shared Flutter
+<code>ConnectButton</code>/<code>StatusChip</code> driven by real
+<code>TunnelStatus</code> on device; consent-dialog flow</td>
+<td>golden + flow MP4</td>
+</tr>
+<tr>
+<td><code>REC</code></td>
+<td>recorded-evidence</td>
+<td>window-scoped MP4 (§11.4.154/.155) of the real connect journey,
+<code>StatusChip</code> reading e.g. <code>masque-h3 · 23 ms</code>
+confirmed by vision/OCR (§11.4.163)</td>
+<td><code>helixvpn---android-connect---&lt;run-id&gt;.mp4</code></td>
+</tr>
+<tr>
+<td><code>CHAL</code>/<code>HQA</code></td>
+<td>Challenge / HelixQA (§11.4.27)</td>
+<td>a <code>challenges</code>/<code>helix_qa</code> bank entry scoring
+PASS only on the captured on-device evidence above</td>
+<td>bank <code>result.json</code></td>
+</tr>
+<tr>
+<td><code>DDOS</code> / <code>SCALE</code></td>
+<td>—</td>
+<td><code>NOT_APPLICABLE: single-node-selfhost</code> (§11.4.3
+topology-SKIP) — re-arm Phase 2</td>
+<td>tracked SKIP-with-reason</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Anti-bluff (§11.4.107/.158).</strong> A green Kotlin unit
+test is not proof the user is protected. The authoritative evidence is
+the <strong>on-device</strong>
+<code>E2E</code>+<code>SEC</code>+<code>REC</code> bundle: a
+window-scoped MP4 of the real connect journey on a real device, the pcap
+proving <code>protect()</code> keeps the carrier off the tun, and the
+<code>curl</code>-reaches-LAN capture — never a mock-claiming-PASS (O5,
+§11.4.27).</p>
+</blockquote>
+<hr />
+<h2 id="16-open-decisions--cross-doc-seams">16. Open decisions &amp;
+cross-doc seams</h2>
+<p>Per §11.4.6/§11.4.66 — surfaced with a recommendation, never silently
+resolved.</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Decision</th>
+<th>Option A</th>
+<th>Option B</th>
+<th>Recommendation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>D-ANDROID-1</strong></td>
+<td>Process model</td>
+<td>single process (core <code>.so</code> + <code>VpnService</code> +
+Flutter share one process)</td>
+<td><code>:vpn</code> separate service process</td>
+<td><strong>A</strong> — single process lets frb stream
+<code>TunnelStatus</code> and serve
+<code>setShields</code>/<code>setExit</code> directly Dart↔︎core
+in-process (§1, §8.1); <code>:vpn</code> would force IPC
+(Messenger/AIDL) for status, contradicting the direct-frb model [03
+§3.3].</td>
+</tr>
+<tr>
+<td><strong>D-ANDROID-2</strong></td>
+<td><code>tun</code> fd ownership</td>
+<td><code>detachFd()</code> → core owns + closes (§5.3)</td>
+<td><code>getFd()</code> → Kotlin owns</td>
+<td><strong>A</strong> — clean single-owner lifecycle; core closes
+exactly on <code>detach_tun()</code> [research-ios_android §3].</td>
+</tr>
+<tr>
+<td><strong>D-ANDROID-3</strong></td>
+<td><code>protect()</code> mechanism</td>
+<td><code>VpnService.protect</code> upcall (typed, safe)</td>
+<td>native <code>protectFromVpn</code> (perf)</td>
+<td><strong>A</strong> default; <strong>B</strong> only if BENCH shows
+the upcall matters — <code>protectFromVpn</code> symbol stability is
+<code>UNVERIFIED</code> (§6.3).</td>
+</tr>
+<tr>
+<td><strong>D-ANDROID-4</strong></td>
+<td>Auto-reconnect on <code>START_STICKY</code> redelivery</td>
+<td>always reconnect</td>
+<td>reconnect only if last intent = connected (or lockdown)</td>
+<td><strong>B</strong> — mirror [03 §8.4] intent honesty; avoid surprise
+re-connect (§9.3).</td>
+</tr>
+<tr>
+<td><strong>D-ANDROID-5</strong></td>
+<td>Split-tunnel model</td>
+<td>exclude-list (<code>addDisallowedApplication</code>, MVP)</td>
+<td>include-list (<code>addAllowedApplication</code>, Phase 2)</td>
+<td><strong>A for MVP</strong> (<code>cfg.splitExcludeApps</code>); B as
+a Phase-2 knob (§10.1, mutually exclusive modes).</td>
+</tr>
+<tr>
+<td><strong>D-ANDROID-6</strong></td>
+<td>API-34+ foreground-service type</td>
+<td>(must be resolved before coding)</td>
+<td>—</td>
+<td><strong>Verify the exact <code>FOREGROUND_SERVICE_*</code> type +
+permission for a VPN foreground service against the latest Android docs
+(§11.4.99) — <code>UNVERIFIED</code> here; do not hardcode a
+guess</strong> (§7, §14).</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Cross-doc seams this shim fixes / consumes:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Seam</th>
+<th>Direction</th>
+<th>Counterpart</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>TunnelStatus</code> (5-variant)</td>
+<td>consumed, transparently forwarded</td>
+<td><code>helix-core/src/status.rs</code> [01-ORCH §4.1]</td>
+</tr>
+<tr>
+<td>FFI surface
+(<code>start/stop/attach_tun/detach_tun/status_stream</code>) + the
+<strong>new</strong> <code>set_protect_callback</code></td>
+<td>consumed + the protect addition proposed here</td>
+<td>[03 §3.1]; the protect-callback is the Android-specific extension
+(§3.1, §6)</td>
+</tr>
+<tr>
+<td><code>TunnelPlatform</code> channel contract
+(<code>startTunnel/stopTunnel/events</code>, <code>TunnelConfig</code>,
+<code>PlatformTunnelEvent</code>)</td>
+<td>implemented</td>
+<td>[03 §4]</td>
+</tr>
+<tr>
+<td><code>RoamDetected{new_local}</code></td>
+<td>produced by the shim&#39;s <code>ConnectivityManager</code>
+callback</td>
+<td>consumed by the orchestrator [01-ORCH §7.5, §9]</td>
+</tr>
+<tr>
+<td><code>device.revoked</code> → OS-tunnel teardown</td>
+<td>the OS-level <code>onRevoke</code> complements the core&#39;s
+<code>Down{auth-failed}</code></td>
+<td>doc 02 control plane + [01-ORCH §5.4]</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="sources-verified">Sources verified</h2>
+<ul>
+<li><code>final/03-client-core-and-ui.md</code> <code>[03]</code> — §0.1
+(client invariants CI1–CI6), §3 (FFI surface, <code>ClientConfig</code>,
+<code>attach_tun</code>/<code>detach_tun</code>, the Dart
+<code>TunnelStatus</code> mirror + status-enum note), §4 (the
+<code>TunnelPlatform</code> contract, <code>TunnelConfig</code>,
+<code>PlatformTunnelEvent</code>, obligations O1–O5), §5.2 (the Android
+<code>VpnService</code>+JNI Kotlin sketch this doc deepens), §8
+(Riverpod wiring), §10 (budgets), §11 (build/CI), §14 (D-CLIENT-3
+binding generator).</li>
+<li><code>final/v02-data-plane/orchestrator-and-state.md</code>
+<code>[01-ORCH]</code> — §4.1 (the frozen 5-variant
+<code>TunnelStatus</code>), §4.4 (<code>Down.reason</code> vocabulary),
+§4.6 (receiver contract / <code>Lagged</code>), §5.4
+(<code>Connected</code> only after WG handshake;
+<code>auth-failed</code>), §7.5 (<code>RoamDetected</code>,
+<code>&lt; 3 s</code> roam), §8 (kill-switch/DNS state machine), §2.4
+(shutdown).</li>
+<li><code>final/v02-data-plane/transport-trait.md</code>
+<code>[01-TT]</code> — §4.8 (<code>effective_mtu</code> per carrier →
+MTU 1280/1420), §6 (<code>dial</code> opens the socket the shim must
+<code>protect</code>), §7 (error taxonomy → ladder).</li>
+<li><code>v09-research/research-ios_android.md</code>
+<code>[research-ios_android]</code> (all sources accessed 2026-06-25) —
+§3 (Android <code>VpnService.Builder</code>
+<code>addAddress</code>/<code>addRoute</code>/<code>addDnsServer</code>/<code>setMtu</code>/<code>establish()</code>→<code>ParcelFileDescriptor</code>;
+Layer-3 fd I/O; <code>detachFd()</code> vs <code>getFd()</code>
+ownership; <code>protect()</code> mandatory before connect; native
+<code>protectFromVpn</code>/<code>NetdClient</code>; Android has no
+iOS-NE-style jetsam cap), §4 (cross-platform synthesis; bound buffers to
+MTU+headroom; iOS is the binding constraint), §2 (size-first Rust
+profile shared with Android).</li>
+<li><code>04_VPN_CLD/HelixVPN-Architecture-Refined.md</code>
+<code>[04_ARCH]</code> — §5.3 shim matrix (Android =
+<code>VpnService</code>+JNI, Kotlin, <code>ParcelFileDescriptor</code>
+fd ⇄ core), §5.6 (kill-switch/DNS driven by core state machine; tunnel
+DNS forces, blocks off-tunnel :53).</li>
+<li><code>04_VPN_CLD/HelixVPN-helix-ui-Flutter.md</code>
+<code>[04_UI]</code> — §6 shim row (Android core via JNI; foreground
+service), build/CI matrix.</li>
+<li><code>final/06-phase0-spike-wbs.md</code> <code>[06-WBS §0.4]</code>
++ <code>final/10-testing-acceptance-and-qa.md</code>
+<code>[10-QA §2]</code> — the §11.4.169 closed test-type code map.</li>
+<li><code>v09-research/_SYNTHESIS.md</code> <code>[SYN]</code> — §5
+(client shim architecture), §9 (constitution bindings: §11.4.156 no-CI,
+§11.4.151/.155 prefixes, §11.4.10).</li>
+</ul>
+<p><em>Constitution: §11.4.6 (no-guessing — every
+<code>UNVERIFIED</code> marked, none fabricated), §11.4.66 (decisions =
+options + recommendation), §11.4.10 (secret token handling), §11.4.14
+(cleanup on every exit path), §11.4.99 (verify API-34 foreground type
+against latest docs), §11.4.107/.158/.159 (captured on-device
+window-scoped evidence), §11.4.169 (per-item test-type coverage),
+§11.4.156 (no active CI).</em></p>
+<p><em>End of Volume 4 nano-detail specification — Android shim
+(VpnService + JNI). Pairs with [03 §5.2] (the overview this deepens),
+[01-ORCH §4] (<code>TunnelStatus</code>), and the sibling per-platform
+shim specs (apple/windows/linux/harmonyos/aurora). Surfaced decisions
+D-ANDROID-1…6 — presented, none silently resolved (§11.4.66).</em></p>
+</body>
+</html>

@@ -1,0 +1,1838 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>FFI surface (Dart ⇄ Rust)</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">FFI surface (Dart ⇄ Rust)</h1>
+</header>
+<h1 id="ffi-surface-dart--rust">FFI surface (Dart ⇄ Rust)</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-06-25T00:00:00Z</p>
+<blockquote>
+<p>Master technical specification — Volume 4 (Clients), nano-detail
+deep-dive. This document <strong>deepens</strong> the <em>FFI surface —
+Dart ⇄ <code>helix-core</code></em> section of the pass-1 client
+overview [04_CLIENT §3] into an implementation-ready specification of
+the <strong><code>helix-ffi</code> exported surface</strong>: the two
+binding generators (<code>flutter_rust_bridge</code> v2 primary, UniFFI
+native-shim fallback), the exact Rust/Dart/Swift/Kotlin/C signatures of
+<code>start</code>/<code>stop</code>/<code>status_stream</code>/<code>exits</code>/
+<code>set_exit</code>/<code>set_shields</code>/<code>advertise</code>/<code>attach_tun</code>,
+the mirrored <code>TunnelStatus</code> enum and its projection from the
+orchestrator&#39;s canonical enum, <code>StreamSink</code> event delivery,
+the tokio threading model, error propagation, the codegen + drift-gate
+pipeline, memory budgets, edge cases, and test points tied to the
+§11.4.169 closed test-type vocabulary.</p>
+<p><strong>SPEC-ONLY.</strong> It describes <em>what to build</em> —
+signatures, state machines, memory ceilings, error taxonomy, edge cases,
+test points — not the shipping product.</p>
+<p><strong>Boundary with sibling docs.</strong> This document
+<strong>owns</strong> only the <em>exported</em> FFI surface of
+<code>helix-core</code>. It <strong>consumes</strong>: the
+orchestrator&#39;s canonical <code>TunnelStatus</code> broadcast enum and
+<code>Orchestrator::{start,stop,subscribe,apply_map, set_pin}</code> API
+[02_ORCH §2.1, §4.1]; the
+<code>Transport</code>/<code>TransportKind</code> labels [02_TRANS §2,
+§3.3]; the <code>TunnelPlatform</code> MethodChannel/EventChannel shim
+contract [04_CLIENT §4]; the per-platform tunnel mechanisms
+(NEPacketTunnelProvider, VpnService) [04_CLIENT §5,
+research-ios_android]. The orchestrator <em>internals</em> (three loops,
+kill-switch coupling, reconciler) are doc 02&#39;s; this doc owns only how
+that core is <em>exposed across the language boundary</em>.</p>
+<p><strong>Evidence base.</strong> Citations inline by id:
+<code>[04_CLIENT §N]</code> =
+<code>final/03-client-core-and-ui.md</code>; <code>[04_ARCH §5]</code> =
+<code>04_VPN_CLD/HelixVPN-Architecture-Refined.md</code> §5;
+<code>[04_UI]</code> =
+<code>04_VPN_CLD/HelixVPN-helix-ui-Flutter.md</code>;
+<code>[02_ORCH §N]</code> =
+<code>final/v02-data-plane/orchestrator-and-state.md</code>;
+<code>[02_TRANS §N]</code> =
+<code>final/v02-data-plane/transport-trait.md</code>;
+<code>[research-flutter_ffi]</code> /
+<code>[research-ios_android]</code> = the cited research digests;
+<code>[10_QA §N]</code> =
+<code>final/10-testing-acceptance-and-qa.md</code> (§11.4.169 taxonomy).
+Any claim not grounded in the evidence base is tagged
+<code>UNVERIFIED</code> per constitution §11.4.6 — never fabricated.</p>
+</blockquote>
+<hr />
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#0-position-ownership-and-the-load-bearing-seam">0.
+Position, ownership, and the load-bearing seam</a></li>
+<li><a href="#1-two-generators-two-consumption-modes">1. Two generators,
+two consumption modes</a></li>
+<li><a href="#2-the-rust-source-of-truth-helix-ffisrcapirs">2. The Rust
+source of truth (<code>helix-ffi/src/api.rs</code>)</a></li>
+<li><a href="#3-the-tunnelstatus-enum--mirror--projection">3. The
+<code>TunnelStatus</code> enum — mirror + projection</a></li>
+<li><a href="#4-streamsink-event-delivery--the-threading-model">4.
+<code>StreamSink</code> event delivery &amp; the threading
+model</a></li>
+<li><a href="#5-the-dart-facing-surface-helix_coredart">5. The
+Dart-facing surface (<code>helix_core.dart</code>)</a></li>
+<li><a href="#6-uniffi-native-shim-surface-swift--kotlin--c">6. UniFFI
+native-shim surface (Swift / Kotlin / C)</a></li>
+<li><a href="#7-the-tunnelplatform--ffi-division-of-labor">7. The
+<code>TunnelPlatform</code> ⇄ FFI division of labor</a></li>
+<li><a href="#8-error-propagation-across-the-boundary">8. Error
+propagation across the boundary</a></li>
+<li><a href="#9-lifecycle-idempotence-and-attach_tun-fd-ownership">9.
+Lifecycle, idempotence, and <code>attach_tun</code> fd
+ownership</a></li>
+<li><a href="#10-codegen--drift-gate-pipeline">10. Codegen + drift-gate
+pipeline</a></li>
+<li><a href="#11-memory--performance-budgets">11. Memory &amp;
+performance budgets</a></li>
+<li><a href="#12-edge-cases--failure-modes">12. Edge cases &amp; failure
+modes</a></li>
+<li><a href="#13-test-points--1114169-closed-vocabulary">13. Test points
+— §11.4.169 closed vocabulary</a></li>
+<li><a href="#14-surfaced-decisions--cross-doc-contracts">14. Surfaced
+decisions &amp; cross-doc contracts</a></li>
+<li><a href="#sources-verified">Sources verified</a></li>
+</ul>
+<hr />
+<h2 id="0-position-ownership-and-the-load-bearing-seam">0. Position,
+ownership, and the load-bearing seam</h2>
+<p><code>helix-ffi</code> is the <strong>single hand-authored Rust
+crate</strong> that both binding generators read; it is the only place
+the core&#39;s surface crosses a language boundary [04_CLIENT §3.1]. It is
+decoupled and project-agnostic (<code>vasic-digital/helix_core</code>
+workspace, snake_case flat submodule per §11.4.28/.29/.74): it depends
+<em>up</em> on <code>helix-core</code> (orchestrator, status enum) and
+exposes <em>down</em> a stable Dart/Swift/ Kotlin/C surface, but
+contains no project-specific UI glue.</p>
+<h3 id="01-what-this-document-owns">0.1 What this document owns</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Owned artifact</th>
+<th>Where</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>F1</td>
+<td>The exact Rust API of <code>helix-ffi</code>
+(<code>start</code>/<code>stop</code>/<code>status_stream</code>/<code>exits</code>/<code>set_exit</code>/<code>set_shields</code>/<code>advertise</code>/<code>apply_map</code>/<code>attach_tun</code>/<code>detach_tun</code>)
++ the mirrored DTO types (<code>ClientConfig</code>,
+<code>CoreMode</code>, <code>Shields</code>, <code>ExitOption</code>,
+<code>AdvertiseResult</code>, <code>MapApplied</code>,
+<code>CoreError</code>)</td>
+<td>§2</td>
+</tr>
+<tr>
+<td>F2</td>
+<td>The Dart-facing <code>TunnelStatus</code> (7-variant) and its
+<strong>deterministic projection</strong> from the orchestrator&#39;s
+canonical 5-variant <code>core::TunnelStatus</code></td>
+<td>§3</td>
+</tr>
+<tr>
+<td>F3</td>
+<td>The <code>StreamSink&lt;TunnelStatus&gt;</code> delivery mechanism +
+the tokio runtime / forwarding-task threading model + the pause/resume
+re-emit rule</td>
+<td>§4</td>
+</tr>
+<tr>
+<td>F4</td>
+<td>The idiomatic Dart wrapper (<code>helix_core.dart</code>) and the
+UniFFI Swift/Kotlin/C surface</td>
+<td>§5, §6</td>
+</tr>
+<tr>
+<td>F5</td>
+<td>Error propagation (frb exception ⇄ UniFFI typed error ⇄ C error
+code)</td>
+<td>§8</td>
+</tr>
+<tr>
+<td>F6</td>
+<td>The codegen + drift-gate (a generated-Dart/Rust mismatch is a
+build-blocking finding)</td>
+<td>§10</td>
+</tr>
+</tbody>
+</table>
+<h3 id="02-what-this-document-does-not-own">0.2 What this document does
+NOT own</h3>
+<ul>
+<li>The orchestrator loops / kill-switch / DNS / reconciler — doc 02
+[02_ORCH §3–§9]; this doc consumes
+<code>Orchestrator::subscribe()</code> and the broadcast enum.</li>
+<li>The <code>Transport</code> trait and its impls — doc 02 [02_TRANS];
+this doc surfaces only the <code>kind()</code> label string inside
+<code>Connected.transport</code>.</li>
+<li>The OS tunnel lifecycle (TUN creation, permission, packet pump) —
+the <code>TunnelPlatform</code> shim [04_CLIENT §4–§5]; this doc owns
+only the <code>attach_tun</code>/<code>detach_tun</code> handoff and the
+in-process-vs-native-shim consumption split (§7).</li>
+<li>The Riverpod data layer / widgets — [04_CLIENT §7–§8]; this doc
+stops at the <code>Stream&lt;TunnelStatus&gt;</code> the providers
+watch.</li>
+</ul>
+<h3 id="03-the-load-bearing-invariant-ci1--ci2-restated-at-the-ffi-layer">0.3
+The load-bearing invariant (CI1 + CI2, restated at the FFI layer)</h3>
+<blockquote>
+<p><strong><code>helix-ffi</code> owns <em>logic and status</em>; it
+does NOT own the OS tunnel lifecycle.</strong> Lifecycle commands flow
+<strong>UI → shim → core</strong> (the OS owns the tunnel process);
+status events flow <strong>core → FFI → UI</strong> (the core owns truth
+about protection state).
+<code>set_shields</code>/<code>set_exit</code>/<code>exits</code> are
+pure logic and go straight UI → FFI without touching the OS tunnel. The
+UI <em>only</em> ever believes the core&#39;s status stream, never its own
+intent. [04_CLIENT §0.1 CI1/CI2, §3.3]</p>
+</blockquote>
+<p>This is the seam that mechanically prevents the classic &quot;UI says
+connected while the OS tunnel is actually down&quot; bug — the FFI never
+<em>reports</em> a state the orchestrator did not <em>emit</em> (§3,
+§4.5).</p>
+<hr />
+<h2 id="1-two-generators-two-consumption-modes">1. Two generators, two
+consumption modes</h2>
+<p>Two binding generators read <strong>one</strong> Rust surface — the
+canonical Mullvad/WARP pattern [04_CLIENT §3, 04_ARCH §5.1,
+research-flutter_ffi §7]:</p>
+<ul>
+<li><strong><code>flutter_rust_bridge</code> (frb) v2</strong> —
+<strong>2.12.0</strong> (Flutter Favorite; <code>StreamSink</code>
+support; arbitrary/async Rust types; new SSE codec)
+[research-flutter_ffi §1]. The <strong>primary</strong> generator: emits
+the Dart⇄Rust glue (<code>frb_generated.dart</code> + a Rust wrapper)
+for the UI process.</li>
+<li><strong>UniFFI (Mozilla)</strong> — first-party <strong>Kotlin /
+Swift</strong> output [research-flutter_ffi §2]. The <strong>native-shim
+fallback</strong>: emits the typed Swift/Kotlin bindings a platform
+tunnel <em>extension</em> (NEPacketTunnelProvider, VpnService, HarmonyOS
+ArkTS→NAPI) uses when it links the core <strong>directly</strong> rather
+than through Dart. <code>uniffi-dart</code> is NOT production-ready and
+is NOT used for the Dart surface (frb owns Dart) [research-flutter_ffi
+§2].</li>
+<li><strong>cbindgen C header</strong> — the <strong>raw-C
+fallback</strong> where UniFFI&#39;s language support is thin (HarmonyOS
+NAPI shim, Aurora Qt/C++ backend) [04_CLIENT §5.5/§5.6,
+D-CLIENT-3].</li>
+</ul>
+<p>These map onto <strong>two distinct consumption modes</strong>, and
+<em>which mode a platform uses decides where each
+<code>TunnelStatus</code> originates</em>:</p>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>Where the core runs</th>
+<th>Generator</th>
+<th>Status path</th>
+<th>Platforms</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>(A) In-process frb</strong></td>
+<td>the <strong>Dart/UI process</strong> (same process as Flutter)</td>
+<td>frb v2</td>
+<td><code>core → StreamSink → frb port → Dart isolate</code></td>
+<td>Linux desktop (core in-process); Windows app side talks to the
+privileged service over a pipe but the Dart-facing surface is still
+frb</td>
+</tr>
+<tr>
+<td><strong>(B) Native-shim UniFFI/C</strong></td>
+<td>a <strong>separate OS tunnel extension process</strong></td>
+<td>UniFFI (Swift/Kotlin) / cbindgen (C)</td>
+<td><code>core → shim → EventChannel → Dart</code> (the
+<code>TunnelPlatform</code> event stream, §7)</td>
+<td>iOS/macOS NE, Android VpnService, HarmonyOS, Aurora</td>
+</tr>
+</tbody>
+</table>
+<pre class="mermaid"><code>flowchart TB
+    subgraph RS[&quot;helix-ffi (one Rust surface, §2)&quot;]
+        API[&quot;api.rs&lt;br/&gt;start/stop/status_stream/exits/...&lt;br/&gt;TunnelStatus / Shields / ExitOption&quot;]
+    end
+    API --&gt;|&quot;frb codegen&quot;| FRB[&quot;frb_generated.dart&lt;br/&gt;(+ Rust wrapper)&quot;]
+    API --&gt;|&quot;UniFFI codegen&quot;| UNI[&quot;HelixCore.swift / HelixCore.kt&lt;br/&gt;(typed bindings)&quot;]
+    API --&gt;|&quot;cbindgen&quot;| CB[&quot;helix_core.h&lt;br/&gt;(C ABI)&quot;]
+
+    subgraph MA[&quot;MODE A — in-process (Linux desktop / UI process)&quot;]
+        FRB --&gt; DART_A[&quot;Dart isolate&lt;br/&gt;Stream&amp;lt;TunnelStatus&amp;gt;&quot;]
+    end
+    subgraph MB[&quot;MODE B — native-shim (iOS NE / Android / OHOS / Aurora)&quot;]
+        UNI --&gt; SWIFT[&quot;PacketTunnelProvider (Swift)&quot;]
+        CB --&gt; NAPI[&quot;ArkTS NAPI / Qt C++&quot;]
+        SWIFT --&gt;|&quot;EventChannel&lt;br/&gt;(TunnelPlatform §7)&quot;| DART_B[&quot;Dart isolate&quot;]
+        NAPI  --&gt;|&quot;EventChannel&quot;| DART_B
+    end</code></pre>
+<blockquote>
+<p><strong>Honest boundary (§11.4.6).</strong> In Mode B the
+<strong>core never runs in the Dart isolate</strong> — it runs inside
+the OS extension process (the memory-constrained one, §11). The frb
+runtime + tokio threads of Mode A are therefore <strong>NOT</strong>
+part of the iOS NE footprint; the NE links the UniFFI/cbindgen staticlib
+only [research-ios_android §1 &quot;applies to the process as a whole&quot;]. This
+is why the iOS memory ceiling (§11) is a <em>native-shim</em>
+constraint, not an frb constraint.</p>
+</blockquote>
+<hr />
+<h2 id="2-the-rust-source-of-truth-helix-ffisrcapirs">2. The Rust source
+of truth (<code>helix-ffi/src/api.rs</code>)</h2>
+<p>This is the <strong>only</strong> hand-authored FFI source; both
+generators read it. It promotes the pass-1 sketch [04_CLIENT §3.1] to
+the production surface; the lean Phase-0 subset
+(<code>start</code>/<code>stop</code>/<code>status_stream</code>) is the
+G5 gate [04_CLIENT §13 T0.1].</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-ffi/src/api.rs</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co">// frb + UniFFI generate Dart / Swift / Kotlin / C bindings from THIS file.</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co">// The transport/WG/orchestrator internals are doc 02&#39;s; this is purely the EXPORTED surface.</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">flutter_rust_bridge::</span>frb<span class="op">;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">flutter_rust_bridge::</span>StreamSink<span class="op">;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="co">// ───────────────────────── construction inputs ─────────────────────────</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> ClientConfig <span class="op">{</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Phase 0: filesystem path to a static map.json. Phase 1+: an opaque control-plane</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// session token (handed straight to the orchestrator; the FFI never parses it).</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> map_path_or_session<span class="op">:</span> <span class="dt">String</span><span class="op">,</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Ladder seed: &quot;auto&quot; | &quot;plain&quot; | &quot;masque&quot; | &quot;shadowsocks&quot; | &quot;uot&quot; | &quot;lwo&quot;.</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// &quot;auto&quot; =&gt; the coordinator-pushed TransportPolicy.order decides [02_TRANS §6.2].</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> transport<span class="op">:</span> <span class="dt">String</span><span class="op">,</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> mode<span class="op">:</span> CoreMode<span class="op">,</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>frb<span class="at">(</span>mirror<span class="at">(</span>CoreMode<span class="at">))]</span>      <span class="co">// re-export helix_core::CoreMode&#39;s Dart mirror</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">enum</span> CoreMode <span class="op">{</span> Client<span class="op">,</span> Connector <span class="op">}</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="co">// ───────────────────── lifecycle (LOGIC only — NOT the OS tunnel, CI1) ─────────────────────</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a><span class="co">/// Construct + start the orchestrator (doc 02 Orchestrator::start). Idempotent guard:</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a><span class="co">/// a second start while already running returns Err(CoreError::AlreadyStarted) (§9.2).</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> start(cfg<span class="op">:</span> ClientConfig) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">,</span> CoreError<span class="op">&gt;;</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a><span class="co">/// Graceful stop (doc 02 Orchestrator::stop). Idempotent: stop-when-stopped =&gt; Ok(()).</span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> stop() <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">,</span> CoreError<span class="op">&gt;;</span></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a><span class="co">// ───────────────────── the live status stream (§3, §4) ─────────────────────</span></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a><span class="co">/// Register a sink; the FFI forwarding task projects core::TunnelStatus → ffi::TunnelStatus</span></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a><span class="co">/// (§3.3) and pushes each onto `sink`. Returns once the sink is registered; events arrive</span></span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a><span class="co">/// asynchronously. The CURRENT status is re-emitted immediately on (re)registration (§4.5).</span></span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">fn</span> status_stream(sink<span class="op">:</span> StreamSink<span class="op">&lt;</span>TunnelStatus<span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">,</span> CoreError<span class="op">&gt;;</span></span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a><span class="co">// ───────────────────── exits / routing (Phase 1+) ─────────────────────</span></span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> exits() <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span><span class="dt">Vec</span><span class="op">&lt;</span>ExitOption<span class="op">&gt;,</span> CoreError<span class="op">&gt;;</span></span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> set_exit(id<span class="op">:</span> <span class="dt">String</span><span class="op">,</span> multi_hop_chain<span class="op">:</span> <span class="dt">Option</span><span class="op">&lt;</span><span class="dt">Vec</span><span class="op">&lt;</span><span class="dt">String</span><span class="op">&gt;&gt;</span>) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">,</span> CoreError<span class="op">&gt;;</span></span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a><span class="co">// ───────────────────── privacy shields ─────────────────────</span></span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> set_shields(s<span class="op">:</span> Shields) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">,</span> CoreError<span class="op">&gt;;</span></span>
+<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a><span class="co">// ───────────────────── connector mode only ─────────────────────</span></span>
+<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> advertise(cidrs<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span><span class="dt">String</span><span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>AdvertiseResult<span class="op">,</span> CoreError<span class="op">&gt;;</span></span>
+<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-45"><a href="#cb2-45" aria-hidden="true" tabindex="-1"></a><span class="co">// ───────── desired-state push (Phase 1 bridges WatchNetworkMap; Phase 0 file-watch) ─────────</span></span>
+<span id="cb2-46"><a href="#cb2-46" aria-hidden="true" tabindex="-1"></a><span class="co">/// Push a fresh RouteMap into the running orchestrator (doc 02 Orchestrator::apply_map).</span></span>
+<span id="cb2-47"><a href="#cb2-47" aria-hidden="true" tabindex="-1"></a><span class="co">/// Malformed JSON =&gt; Err(CoreError::Config); the last-applied map stays live (fail-static).</span></span>
+<span id="cb2-48"><a href="#cb2-48" aria-hidden="true" tabindex="-1"></a><span class="co">/// `MapApplied` reports the diff (peers added/removed/changed) for the Connector/Console UI.</span></span>
+<span id="cb2-49"><a href="#cb2-49" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> apply_map(map_json<span class="op">:</span> <span class="dt">String</span>) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>MapApplied<span class="op">,</span> CoreError<span class="op">&gt;;</span></span>
+<span id="cb2-50"><a href="#cb2-50" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-51"><a href="#cb2-51" aria-hidden="true" tabindex="-1"></a><span class="co">// ───────────────────── shim handoff (called by the platform shim, NOT the UI) ─────────────────────</span></span>
+<span id="cb2-52"><a href="#cb2-52" aria-hidden="true" tabindex="-1"></a><span class="co">/// The core never opens the TUN; the shim hands it a packet fd. Ownership of `fd` transfers</span></span>
+<span id="cb2-53"><a href="#cb2-53" aria-hidden="true" tabindex="-1"></a><span class="co">/// to the core on Ok (the core close()s it on detach/stop) — §9.3. Synchronous (no await):</span></span>
+<span id="cb2-54"><a href="#cb2-54" aria-hidden="true" tabindex="-1"></a><span class="co">/// it only stores the fd + wakes loop A/B.</span></span>
+<span id="cb2-55"><a href="#cb2-55" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">fn</span> attach_tun(fd<span class="op">:</span> <span class="dt">i32</span>) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">,</span> CoreError<span class="op">&gt;;</span></span>
+<span id="cb2-56"><a href="#cb2-56" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">fn</span> detach_tun() <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">,</span> CoreError<span class="op">&gt;;</span></span>
+<span id="cb2-57"><a href="#cb2-57" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-58"><a href="#cb2-58" aria-hidden="true" tabindex="-1"></a><span class="co">// ───────────────────── DTOs (mirrored byte-for-byte into Dart/Swift/Kotlin) ─────────────────────</span></span>
+<span id="cb2-59"><a href="#cb2-59" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> Shields <span class="op">{</span></span>
+<span id="cb2-60"><a href="#cb2-60" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> kill_switch<span class="op">:</span> <span class="dt">bool</span><span class="op">,</span></span>
+<span id="cb2-61"><a href="#cb2-61" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> dns_protection<span class="op">:</span> <span class="dt">bool</span><span class="op">,</span></span>
+<span id="cb2-62"><a href="#cb2-62" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> daita<span class="op">:</span> <span class="dt">bool</span><span class="op">,</span></span>
+<span id="cb2-63"><a href="#cb2-63" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> post_quantum<span class="op">:</span> <span class="dt">bool</span><span class="op">,</span></span>
+<span id="cb2-64"><a href="#cb2-64" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> split_tunnel<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span><span class="dt">String</span><span class="op">&gt;,</span> <span class="co">// per-route bypass CIDRs; per-APP split is shim-layer</span></span>
+<span id="cb2-65"><a href="#cb2-65" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-66"><a href="#cb2-66" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-67"><a href="#cb2-67" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> ExitOption <span class="op">{</span></span>
+<span id="cb2-68"><a href="#cb2-68" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> id<span class="op">:</span> <span class="dt">String</span><span class="op">,</span></span>
+<span id="cb2-69"><a href="#cb2-69" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> kind<span class="op">:</span> <span class="dt">String</span><span class="op">,</span>              <span class="co">// &quot;privacy_exit&quot; | &quot;network&quot;</span></span>
+<span id="cb2-70"><a href="#cb2-70" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> label<span class="op">:</span> <span class="dt">String</span><span class="op">,</span></span>
+<span id="cb2-71"><a href="#cb2-71" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> country<span class="op">:</span> <span class="dt">Option</span><span class="op">&lt;</span><span class="dt">String</span><span class="op">&gt;,</span></span>
+<span id="cb2-72"><a href="#cb2-72" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> rtt_ms<span class="op">:</span> <span class="dt">Option</span><span class="op">&lt;</span><span class="dt">u32</span><span class="op">&gt;,</span></span>
+<span id="cb2-73"><a href="#cb2-73" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> jurisdiction<span class="op">:</span> <span class="dt">Option</span><span class="op">&lt;</span><span class="dt">String</span><span class="op">&gt;,</span> <span class="co">// multi-hop labels</span></span>
+<span id="cb2-74"><a href="#cb2-74" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-75"><a href="#cb2-75" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-76"><a href="#cb2-76" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> AdvertiseResult <span class="op">{</span></span>
+<span id="cb2-77"><a href="#cb2-77" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> accepted<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span><span class="dt">String</span><span class="op">&gt;,</span></span>
+<span id="cb2-78"><a href="#cb2-78" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> conflicts<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span><span class="dt">String</span><span class="op">&gt;,</span>    <span class="co">// overlapping-CIDR conflicts surfaced to the Connector UI</span></span>
+<span id="cb2-79"><a href="#cb2-79" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<blockquote>
+<p><strong><code>#[frb(mirror(T))]</code> semantics.</strong>
+<code>CoreMode</code>/<code>TunnelStatus</code> are defined in
+<code>helix-core</code> (so the orchestrator and the FFI share one
+definition — no parallel hand-written enum).
+<code>#[frb(mirror(T))]</code> tells frb to generate the Dart mirror for
+a type owned by another crate [research-flutter_ffi §1, frb V2 &quot;mirror&quot;
+facility]. DTOs defined <em>in</em> <code>helix-ffi</code>
+(<code>ClientConfig</code>, <code>Shields</code>,
+<code>ExitOption</code>, <code>AdvertiseResult</code>,
+<code>CoreError</code>) need no <code>mirror</code> — frb auto-mirrors
+them. This is the corrected, precise form of the [04_CLIENT §3.1] sketch
+(which annotated own types with bare <code>#[frb(mirror)]</code>).</p>
+</blockquote>
+<blockquote>
+<p><strong><code>Result&lt;T, CoreError&gt;</code> vs
+<code>anyhow::Result</code>.</strong> The [04_CLIENT §3.1] sketch used
+<code>anyhow::Result&lt;()&gt;</code>; the production surface uses a
+<strong>typed <code>CoreError</code> enum</strong> (§8) so UniFFI (which
+needs a concrete error type, not <code>anyhow::Error</code>) and frb
+both surface a <em>classified</em> failure to the UI — a typed error
+drives an honest, specific UI message instead of an opaque string
+(§11.4.6). <code>anyhow</code> may remain <em>internal</em> to the
+orchestrator; the FFI boundary converts to <code>CoreError</code>.</p>
+</blockquote>
+<hr />
+<h2 id="3-the-tunnelstatus-enum--mirror--projection">3. The
+<code>TunnelStatus</code> enum — mirror + projection</h2>
+<h3 id="31-the-canonical-core-owned-enum--consumed-not-redefined">3.1
+The canonical (core-owned) enum — consumed, not redefined</h3>
+<p>The orchestrator owns the <strong>canonical 5-variant</strong> enum
+and broadcasts it on a <code>tokio::sync::broadcast</code> channel
+[02_ORCH §4.1]:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-core/src/status.rs  (OWNED by doc 02 — this doc CONSUMES it)</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">enum</span> TunnelStatus <span class="op">{</span>                              <span class="co">// core::TunnelStatus</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    Connecting<span class="op">,</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    Handshaking<span class="op">,</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    Connected <span class="op">{</span> transport<span class="op">:</span> <span class="dt">String</span><span class="op">,</span> rtt_ms<span class="op">:</span> <span class="dt">u32</span> <span class="op">},</span>    <span class="co">// transport = Transport::kind() [02_TRANS §3.3]</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    Reconnecting<span class="op">,</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    Down <span class="op">{</span> reason<span class="op">:</span> <span class="dt">String</span> <span class="op">},</span>                          <span class="co">// stable-prefix vocabulary [02_ORCH §4.4]</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="32-the-dart-facing-ffi-owned-enum--the-7-variant-surface">3.2
+The Dart-facing (FFI-owned) enum — the 7-variant surface</h3>
+<p>The FFI exposes the <strong>extended 7-variant</strong> enum the UI&#39;s
+color/announce logic switches on [04_CLIENT §3.1, §7.1]. It is the
+Dart-facing canonical and is what the <code>StreamSink</code>
+carries:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-ffi re-exports + extends — the Dart-facing surface</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">enum</span> TunnelStatus <span class="op">{</span>                              <span class="co">// ffi::TunnelStatus</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    Disconnected<span class="op">,</span>                                    <span class="co">// clean idle — DISTINCT from Down</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    Connecting<span class="op">,</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    Handshaking<span class="op">,</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    Connected <span class="op">{</span> transport<span class="op">:</span> <span class="dt">String</span><span class="op">,</span> path<span class="op">:</span> <span class="dt">String</span><span class="op">,</span> rtt_ms<span class="op">:</span> <span class="dt">u32</span> <span class="op">},</span> <span class="co">// path = &quot;direct&quot; | &quot;relay&quot;</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    Reconnecting<span class="op">,</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    Down <span class="op">{</span> reason<span class="op">:</span> <span class="dt">String</span> <span class="op">},</span>                         <span class="co">// unexpected drop (reason ∉ danger-class)</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    Danger <span class="op">{</span> kind<span class="op">:</span> <span class="dt">String</span> <span class="op">},</span>                         <span class="co">// &quot;leak&quot; | &quot;killswitch_tripped&quot; — red palette</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>The three FFI extensions over the core enum [04_CLIENT §3.1
+status-enum note]:</p>
+<ol type="1">
+<li><strong><code>Disconnected</code></strong> — clean user-idle (never
+started / cleanly stopped), distinct from <code>Down</code> (an
+<em>unexpected</em> drop). Drives the neutral-grey
+<code>stateDisconnected</code> token [04_CLIENT §7.1].</li>
+<li><strong><code>path</code></strong> on <code>Connected</code> —
+<code>&quot;direct&quot;</code> (P2P/NAT-traversal) vs <code>&quot;relay&quot;</code>
+(DERP-style), surfaced by the <code>StatusChip</code> [04_CLIENT
+§7.2].</li>
+<li><strong><code>Danger { kind }</code></strong> — leak /
+kill-switch-tripped, drives the red <code>stateDanger</code> palette and
+<strong>overrides any user intent</strong> [04_CLIENT §8.4].</li>
+</ol>
+<h3 id="33-the-projection--statusprojector-the-only-place-the-extension-happens">3.3
+The projection — <code>StatusProjector</code> (the only place the
+extension happens)</h3>
+<p>The helix-ffi forwarding task (§4) runs a <strong>pure deterministic
+projector</strong> from <code>core::TunnelStatus</code> (+ two side
+snapshots the core exposes) to <code>ffi::TunnelStatus</code>. This is
+the single, testable seam where the extension is computed — never ad-hoc
+in the UI:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-ffi/src/project.rs</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> ProjCtx <span class="op">{</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> last_stop_was_user<span class="op">:</span> <span class="dt">bool</span><span class="op">,</span>   <span class="co">// distinguishes clean idle from drop (from Orchestrator)</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> active_path<span class="op">:</span> <span class="dt">Option</span><span class="op">&lt;</span><span class="dt">String</span><span class="op">&gt;,</span><span class="co">// &quot;direct&quot;|&quot;relay&quot; from the active route/transport (§14 C3)</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> shields_tripped<span class="op">:</span> <span class="dt">Option</span><span class="op">&lt;</span><span class="dt">String</span><span class="op">&gt;,</span> <span class="co">// Some(&quot;leak&quot;)|Some(&quot;killswitch_tripped&quot;) | None</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">fn</span> project(s<span class="op">:</span> <span class="op">&amp;</span><span class="pp">core::</span>TunnelStatus<span class="op">,</span> cx<span class="op">:</span> <span class="op">&amp;</span>ProjCtx) <span class="op">-&gt;</span> <span class="pp">ffi::</span>TunnelStatus <span class="op">{</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">use</span> <span class="pp">core::</span>TunnelStatus <span class="kw">as</span> C<span class="op">;</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Danger overrides everything (§8.4): a live leak / tripped kill-switch always paints red.</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="kw">let</span> <span class="cn">Some</span>(kind) <span class="op">=</span> <span class="op">&amp;</span>cx<span class="op">.</span>shields_tripped <span class="op">{</span> <span class="cf">return</span> <span class="pp">ffi::TunnelStatus::</span>Danger <span class="op">{</span> kind<span class="op">:</span> kind<span class="op">.</span>clone() <span class="op">};</span> <span class="op">}</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">match</span> s <span class="op">{</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>        <span class="pp">C::</span>Connecting   <span class="op">=&gt;</span> <span class="pp">ffi::TunnelStatus::</span>Connecting<span class="op">,</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>        <span class="pp">C::</span>Handshaking  <span class="op">=&gt;</span> <span class="pp">ffi::TunnelStatus::</span>Handshaking<span class="op">,</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>        <span class="pp">C::</span>Connected <span class="op">{</span> transport<span class="op">,</span> rtt_ms <span class="op">}</span> <span class="op">=&gt;</span> <span class="pp">ffi::TunnelStatus::</span>Connected <span class="op">{</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>            transport<span class="op">:</span> transport<span class="op">.</span>clone()<span class="op">,</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>            path<span class="op">:</span> cx<span class="op">.</span>active_path<span class="op">.</span>clone()<span class="op">.</span>unwrap_or_else(<span class="op">||</span> <span class="st">&quot;direct&quot;</span><span class="op">.</span>into())<span class="op">,</span> <span class="co">// §14 C3 default</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>            rtt_ms<span class="op">:</span> <span class="op">*</span>rtt_ms<span class="op">,</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>        <span class="op">},</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>        <span class="pp">C::</span>Reconnecting <span class="op">=&gt;</span> <span class="pp">ffi::TunnelStatus::</span>Reconnecting<span class="op">,</span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>        <span class="co">// The clean-idle vs drop split: orchestrator emits Down{reason:&quot;stopped&quot;} on a USER</span></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>        <span class="co">// stop [02_ORCH §2.4 step 6] → Disconnected; every other Down is an unexpected drop.</span></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>        <span class="pp">C::</span>Down <span class="op">{</span> reason <span class="op">}</span> <span class="op">=&gt;</span> <span class="cf">match</span> classify(reason) <span class="op">{</span></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>            <span class="pp">DownClass::</span>UserStop  <span class="op">=&gt;</span> <span class="pp">ffi::TunnelStatus::</span>Disconnected<span class="op">,</span></span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>            <span class="pp">DownClass::</span>Danger(k) <span class="op">=&gt;</span> <span class="pp">ffi::TunnelStatus::</span>Danger <span class="op">{</span> kind<span class="op">:</span> k <span class="op">},</span></span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>            <span class="pp">DownClass::</span><span class="bu">Drop</span>      <span class="op">=&gt;</span> <span class="pp">ffi::TunnelStatus::</span>Down <span class="op">{</span> reason<span class="op">:</span> reason<span class="op">.</span>clone() <span class="op">},</span></span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>        <span class="op">},</span></span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a><span class="co">/// Classify on the orchestrator&#39;s STABLE reason prefix [02_ORCH §4.4] — no prose parsing (§11.4.6).</span></span>
+<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> classify(reason<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span>) <span class="op">-&gt;</span> DownClass <span class="op">{</span></span>
+<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a>    <span class="cf">match</span> reason <span class="op">{</span></span>
+<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;stopped&quot;</span>                                   <span class="op">=&gt;</span> <span class="pp">DownClass::</span>UserStop<span class="op">,</span></span>
+<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;auth-failed&quot;</span>                               <span class="op">=&gt;</span> <span class="pp">DownClass::</span>Danger(<span class="st">&quot;killswitch_tripped&quot;</span><span class="op">.</span>into())<span class="op">,</span></span>
+<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a>        _ <span class="co">/* ladder-exhausted | host-fatal | ... */</span> <span class="op">=&gt;</span> <span class="pp">DownClass::</span><span class="bu">Drop</span><span class="op">,</span></span>
+<span id="cb5-37"><a href="#cb5-37" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-38"><a href="#cb5-38" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<pre class="mermaid"><code>flowchart LR
+    subgraph CORE[&quot;core::TunnelStatus (5-variant, doc 02)&quot;]
+        cC[&quot;Connecting&quot;]; cH[&quot;Handshaking&quot;]; cN[&quot;Connected{transport,rtt}&quot;]
+        cR[&quot;Reconnecting&quot;]; cD[&quot;Down{reason}&quot;]
+    end
+    subgraph CTX[&quot;ProjCtx (core-exposed snapshots)&quot;]
+        cx1[&quot;shields_tripped&quot;]; cx2[&quot;active_path&quot;]; cx3[&quot;last_stop_was_user&quot;]
+    end
+    subgraph FFI[&quot;ffi::TunnelStatus (7-variant, Dart-facing)&quot;]
+        fX[&quot;Disconnected&quot;]; fC[&quot;Connecting&quot;]; fH[&quot;Handshaking&quot;]
+        fN[&quot;Connected{transport,path,rtt}&quot;]; fR[&quot;Reconnecting&quot;]
+        fD[&quot;Down{reason}&quot;]; fG[&quot;Danger{kind}&quot;]
+    end
+    cC --&gt; fC
+    cH --&gt; fH
+    cN --&gt; fN
+    cR --&gt; fR
+    cD --&gt;|&quot;reason=stopped&quot;| fX
+    cD --&gt;|&quot;reason=auth-failed&quot;| fG
+    cD --&gt;|&quot;reason=ladder-exhausted/host-fatal/...&quot;| fD
+    cx1 -. &quot;overrides ALL → Danger&quot; .-&gt; fG
+    cx2 -. &quot;supplies path&quot; .-&gt; fN</code></pre>
+<h3 id="34-the-dart-facing-state-diagram-what-the-ui-switches-on">3.4
+The Dart-facing state diagram (what the UI switches on)</h3>
+<pre class="mermaid"><code>stateDiagram-v2
+    [*] --&gt; Disconnected
+    Disconnected --&gt; Connecting : start() (via shim)
+    Connecting   --&gt; Handshaking : carrier up
+    Connecting   --&gt; Reconnecting : dial err (budget left)
+    Connecting   --&gt; Down : ladder-exhausted / host-fatal
+    Handshaking  --&gt; Connected : WG handshake complete
+    Handshaking  --&gt; Reconnecting : handshake timeout (budget left)
+    Handshaking  --&gt; Danger : auth-failed (revoked) — kill-switch closed
+    Connected    --&gt; Connected : rtt drift / path change (re-emit, §4.4)
+    Connected    --&gt; Reconnecting : drop (PeerTimeout / TransportError)
+    Connected    --&gt; Danger : leak / killswitch_tripped (overrides intent)
+    Connected    --&gt; Disconnected : user stop
+    Reconnecting --&gt; Connected : re-dial ok
+    Reconnecting --&gt; Down : ladder-exhausted + backoff cap
+    Reconnecting --&gt; Disconnected : user stop
+    Down         --&gt; Connecting : start() again
+    Danger       --&gt; Connecting : start() / re-enroll
+    Danger       --&gt; Disconnected : user stop</code></pre>
+<h3 id="35-what-the-stream-must-not-carry-i5-at-the-ffi-layer">3.5 What
+the stream MUST NOT carry (I5 at the FFI layer)</h3>
+<p>The FFI re-emits exactly what the orchestrator broadcasts: ephemeral
+state, never durable per-connection records [02_ORCH §4.5].
+<code>Connected.transport</code> is a <em>kind</em> label;
+<code>path</code> is <code>&quot;direct&quot;|&quot;relay&quot;</code>; <code>rtt_ms</code>
+is an aggregate EWMA. No SSID, no gateway IP, no per-packet data ever
+crosses the <code>StreamSink</code> (§11.4.10, [02_ORCH §4.5]). The
+projector is pure and holds no buffer beyond the single cached latest
+value (§4.5).</p>
+<hr />
+<h2 id="4-streamsink-event-delivery--the-threading-model">4.
+<code>StreamSink</code> event delivery &amp; the threading model</h2>
+<h3 id="41-why-streamsink">4.1 Why <code>StreamSink</code></h3>
+<p>frb v2 <strong>explicitly supports <code>StreamSink</code></strong>:
+a Rust fn takes a <code>StreamSink&lt;T&gt;</code> argument and Dart
+receives a <code>Stream&lt;T&gt;</code> it can <code>listen()</code> —
+the canonical way to push continuous events from a long-lived Rust task
+to Dart (frb issue #347, solved by <code>StreamSink</code>)
+[research-flutter_ffi §1]. This <code>Stream&lt;TunnelStatus&gt;</code>
+is exactly what the Riverpod <code>StreamProvider</code> watches
+[04_CLIENT §8.2, research-flutter_ffi §6].</p>
+<h3 id="42-the-tokio-runtime-mode-a-in-process">4.2 The tokio runtime
+(Mode A, in-process)</h3>
+<p><code>helix-ffi</code> owns <strong>one</strong>
+<code>tokio::runtime::Runtime</code>, created lazily on the first
+<code>start()</code> and reused for the process lifetime (re-created
+only if fully torn down):</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-ffi/src/runtime.rs</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="kw">static</span> RT<span class="op">:</span> OnceCell<span class="op">&lt;</span><span class="pp">tokio::runtime::</span>Runtime<span class="op">&gt;</span> <span class="op">=</span> <span class="pp">OnceCell::</span>new()<span class="op">;</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="kw">static</span> ORCH<span class="op">:</span> <span class="pp">tokio::sync::</span>Mutex<span class="op">&lt;</span><span class="dt">Option</span><span class="op">&lt;</span><span class="pp">helix_core::</span>Orchestrator<span class="op">&gt;&gt;</span> <span class="op">=</span> <span class="co">/* ... */</span><span class="op">;</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> rt() <span class="op">-&gt;</span> <span class="op">&amp;</span><span class="ot">&#39;static</span> <span class="pp">tokio::runtime::</span>Runtime <span class="op">{</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    RT<span class="op">.</span>get_or_init(<span class="op">||</span> <span class="pp">tokio::runtime::Builder::</span>new_multi_thread()</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span>worker_threads(<span class="dv">2</span>)              <span class="co">// small: the orchestrator&#39;s loops are I/O-bound (§11)</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span>thread_name(<span class="st">&quot;helix-core&quot;</span>)</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span>enable_all()</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span>build()</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span>expect(<span class="st">&quot;tokio runtime&quot;</span>))</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li><strong>frb already drives Rust on its own worker thread(s)</strong>
+off the Dart isolate [research-flutter_ffi §1]; the FFI additionally
+owns a tokio runtime so the orchestrator&#39;s three async loops +
+reconciler + re-dial driver run on dedicated worker threads [02_ORCH
+§2.2]. <code>async fn</code> FFI calls
+(<code>start</code>/<code>stop</code>/<code>exits</code>/...) are
+<code>rt().spawn</code>-ed and their result awaited by frb, so the Dart
+<code>await</code> never blocks the UI isolate.</li>
+<li><strong>Bridge-version pinning (mandatory).</strong> The
+<code>flutter_rust_bridge</code> crate version MUST equal the
+<code>flutter_rust_bridge</code> Dart-dep version, else the generated
+glue mismatches [research-flutter_ffi §1 caveat]. Enforced by the drift
+gate (§10).</li>
+</ul>
+<h3 id="43-the-forwarding-task">4.3 The forwarding task</h3>
+<p><code>status_stream(sink)</code> registers the sink with a long-lived
+forwarding task that drains the orchestrator broadcast receiver and
+pushes projected events:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">fn</span> status_stream(sink<span class="op">:</span> StreamSink<span class="op">&lt;</span>TunnelStatus<span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">,</span> CoreError<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> orch <span class="op">=</span> ORCH<span class="op">.</span>blocking_lock()<span class="op">;</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> rx <span class="op">=</span> orch<span class="op">.</span>as_ref()<span class="op">.</span>ok_or(<span class="pp">CoreError::</span>NotStarted)<span class="op">?.</span>subscribe()<span class="op">;</span> <span class="co">// broadcast::Receiver</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> projector_ctx <span class="op">=</span> ctx_handle()<span class="op">;</span>      <span class="co">// shared ProjCtx (updated by the orchestrator)</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    sink<span class="op">.</span>add(project(<span class="op">&amp;</span>last_status()<span class="op">,</span> <span class="op">&amp;</span>projector_ctx<span class="op">.</span>snapshot()))<span class="op">.</span>ok()<span class="op">;</span>    <span class="co">// §4.5 re-emit latest</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    rt()<span class="op">.</span>spawn(<span class="kw">async</span> <span class="kw">move</span> <span class="op">{</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">loop</span> <span class="op">{</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>            <span class="cf">match</span> rx<span class="op">.</span>recv()<span class="op">.</span><span class="kw">await</span> <span class="op">{</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>                <span class="cn">Ok</span>(core_s) <span class="op">=&gt;</span> <span class="op">{</span> <span class="kw">let</span> _ <span class="op">=</span> sink<span class="op">.</span>add(project(<span class="op">&amp;</span>core_s<span class="op">,</span> <span class="op">&amp;</span>projector_ctx<span class="op">.</span>snapshot()))<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>                <span class="cn">Err</span>(<span class="pp">broadcast::error::RecvError::</span>Lagged(_)) <span class="op">=&gt;</span> <span class="cf">continue</span><span class="op">,</span>  <span class="co">// skip-to-latest (§4.6)</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>                <span class="cn">Err</span>(<span class="pp">broadcast::error::RecvError::</span>Closed)    <span class="op">=&gt;</span> <span class="op">{</span> sink<span class="op">.</span>close_sink()<span class="op">;</span> <span class="cf">break</span><span class="op">;</span> <span class="op">}</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>    <span class="cn">Ok</span>(())</span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<pre class="mermaid"><code>sequenceDiagram
+    participant UI as Dart UI isolate
+    participant FRB as frb port (SendPort)
+    participant FWD as helix-ffi forwarding task (tokio worker)
+    participant ORCH as Orchestrator broadcast&lt;core::TunnelStatus&gt;
+    UI-&gt;&gt;FWD: status_stream(sink)   %% frb call → tokio
+    FWD--&gt;&gt;UI: sink.add(project(latest))  %% immediate re-emit of current truth (§4.5)
+    loop steady state
+        ORCH--&gt;&gt;FWD: core::TunnelStatus (state change)
+        FWD-&gt;&gt;FWD: project(core_s, ProjCtx)  %% §3.3 pure
+        FWD--&gt;&gt;FRB: sink.add(ffi::TunnelStatus)
+        FRB--&gt;&gt;UI: Stream emits → Riverpod fold → ConnectButton
+    end
+    Note over FWD: Lagged → skip-to-latest ; Closed → close sink</code></pre>
+<h3 id="44-emit-discipline-coalesce-inherited-from-the-orchestrator">4.4
+Emit discipline (coalesce, inherited from the orchestrator)</h3>
+<p>The orchestrator already coalesces: one emit per
+<code>OrchState</code> transition; <code>Connected</code> is re-emitted
+only when <code>rtt_ms</code> drifts &gt; <code>rtt_emit_delta_ms</code>
+(default 5 ms) [02_ORCH §4.3]. The FFI projector adds
+<strong>one</strong> extra coalescing rule: if <code>project()</code>
+yields a value <em>byte-identical</em> to the last forwarded
+<code>ffi::TunnelStatus</code>, the forward is suppressed (so a
+core-side re-emit that does not change the projected value — e.g. an rtt
+drift below the UI&#39;s threshold — does not wake the UI). A
+<code>path</code> change <em>does</em> re-emit <code>Connected</code>
+(the <code>StatusChip</code> updates).</p>
+<h3 id="45-pause--resume--the-current-truth-guarantee">4.5 Pause /
+resume + the &quot;current truth&quot; guarantee</h3>
+<p>Riverpod 3.0 <strong>pauses</strong> a <code>StreamProvider</code>&#39;s
+subscription when no widget listens, and
+<code>StreamProvider.autoDispose</code> tears the underlying stream down
+when unwatched [research-flutter_ffi §6]. Two FFI obligations
+follow:</p>
+<ol type="1">
+<li><strong>The forwarding task NEVER stops on Dart pause.</strong> It
+holds the broadcast receiver independent of Dart listen-state, because
+the <em>kill-switch / protection truth</em> must not be lost while the
+UI is backgrounded. A paused Dart subscription only stops
+<em>delivery</em> to the isolate; the orchestrator keeps running (Mode
+A) or the extension keeps running (Mode B).</li>
+<li><strong>On (re)subscribe, the FFI re-emits the cached latest status
+immediately</strong> (§4.3 first <code>sink.add</code>), so a resumed
+<code>StreamProvider</code> renders <em>current</em> truth, never a
+stale gap or an empty <code>AsyncLoading</code> that misrepresents
+protection state (§11.4.6, [04_CLIENT §8.4]). <code>helix-ffi</code>
+keeps exactly <strong>one</strong> cached <code>ffi::TunnelStatus</code>
+(the last forwarded value) — not a history (I5, §3.5).</li>
+</ol>
+<blockquote>
+<p><strong>Recommendation (D-FFI-1, §14).</strong> Use
+<strong><code>@riverpod</code> /
+<code>StreamProvider.autoDispose</code></strong> for the tunnel-status
+provider so a paused subscription is cheap, BUT rely on the §4.5(2)
+re-emit for correctness on resume — do NOT make the kill-switch UI
+depend on a non-autoDispose &quot;always alive&quot; provider, which &quot;is almost
+never destroyed&quot; [research-flutter_ffi §6].</p>
+</blockquote>
+<h3 id="46-lagged-is-not-an-error">4.6 <code>Lagged</code> is NOT an
+error</h3>
+<p><code>tokio::broadcast</code> is a bounded ring (cap 64) [02_ORCH
+§4.2]: a slow receiver that falls behind gets
+<code>RecvError::Lagged(n)</code> and is fast-forwarded. For a
+<em>status</em> stream the receiver only ever needs the
+<strong>latest</strong> state, so the forwarding task treats
+<code>Lagged</code> as &quot;continue → next <code>recv()</code> yields the
+newest&quot; and never surfaces it to Dart as an error (§4.3). This mirrors
+the orchestrator&#39;s documented receiver contract [02_ORCH §4.6].</p>
+<hr />
+<h2 id="5-the-dart-facing-surface-helix_coredart">5. The Dart-facing
+surface (<code>helix_core.dart</code>)</h2>
+<p>frb mirrors every type, so the Dart <code>TunnelStatus</code> is the
+<strong>generated</strong> mirror of <code>ffi::TunnelStatus</code>
+(never a hand-written parallel). The thin wrapper adds ergonomics only
+[04_CLIENT §3.2]:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode dart"><code class="sourceCode dart"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix_core_ffi/lib/helix_core.dart — idiomatic wrapper over frb_generated.dart</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="kw">abstract</span> <span class="kw">class</span> HelixCore <span class="op">{</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Future</span><span class="op">&lt;</span><span class="dt">void</span><span class="op">&gt;</span> start(<span class="op">{</span>required <span class="dt">String</span> transport<span class="op">,</span> <span class="dt">String</span><span class="op">?</span> mapPathOrSession<span class="op">,</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>                      CoreMode mode <span class="op">=</span> CoreMode<span class="op">.</span>client<span class="op">}</span>);</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Future</span><span class="op">&lt;</span><span class="dt">void</span><span class="op">&gt;</span> stop();</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>  <span class="co">/// frb StreamSink → Dart broadcast Stream. NO polling (CI2). The first event is the</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>  <span class="co">/// current status (§4.5); subsequent events are coalesced state changes (§4.4).</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Stream</span><span class="op">&lt;</span>TunnelStatus<span class="op">&gt;</span> statusStream();</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Future</span><span class="op">&lt;</span><span class="dt">List</span><span class="op">&lt;</span>ExitOption<span class="op">&gt;&gt;</span> exits();</span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Future</span><span class="op">&lt;</span><span class="dt">void</span><span class="op">&gt;</span> setExit(<span class="dt">String</span> id<span class="op">,</span> <span class="op">{</span><span class="dt">List</span><span class="op">&lt;</span><span class="dt">String</span><span class="op">&gt;?</span> multiHopChain<span class="op">}</span>);</span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Future</span><span class="op">&lt;</span><span class="dt">void</span><span class="op">&gt;</span> setShields(Shields s);</span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>  <span class="co">// connector mode:</span></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Future</span><span class="op">&lt;</span>AdvertiseResult<span class="op">&gt;</span> advertise(<span class="dt">List</span><span class="op">&lt;</span><span class="dt">String</span><span class="op">&gt;</span> cidrs);</span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a>  <span class="co">// shim handoff (called by the platform shim, NOT the UI):</span></span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Future</span><span class="op">&lt;</span><span class="dt">void</span><span class="op">&gt;</span> attachTun(<span class="dt">int</span> fd);</span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Future</span><span class="op">&lt;</span><span class="dt">void</span><span class="op">&gt;</span> detachTun();</span>
+<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-23"><a href="#cb11-23" aria-hidden="true" tabindex="-1"></a><span class="co">/// Console (no Capability.tunnel) gets this null impl — never links the Rust staticlib (CI3).</span></span>
+<span id="cb11-24"><a href="#cb11-24" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> NoCore <span class="kw">implements</span> HelixCore <span class="op">{</span></span>
+<span id="cb11-25"><a href="#cb11-25" aria-hidden="true" tabindex="-1"></a>  <span class="kw">@override</span> <span class="dt">Stream</span><span class="op">&lt;</span>TunnelStatus<span class="op">&gt;</span> statusStream() <span class="op">=&gt;</span> <span class="at">const</span> <span class="dt">Stream</span><span class="op">.</span>empty();</span>
+<span id="cb11-26"><a href="#cb11-26" aria-hidden="true" tabindex="-1"></a>  <span class="co">// every method throws StateError(&#39;Console has no tunnel core&#39;) — compile-gated out anyway.</span></span>
+<span id="cb11-27"><a href="#cb11-27" aria-hidden="true" tabindex="-1"></a>  <span class="co">// ...</span></span>
+<span id="cb11-28"><a href="#cb11-28" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode dart"><code class="sourceCode dart"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co">// the entire happy path a client app drives (the Phase-0 G5 demo, [04_CLIENT §13 T0.1]):</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="at">await</span> core<span class="op">.</span>start(transport<span class="op">:</span> <span class="st">&#39;auto&#39;</span><span class="op">,</span> mapPathOrSession<span class="op">:</span> session<span class="op">.</span>token);</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>core<span class="op">.</span>statusStream()<span class="op">.</span>listen((s) <span class="op">=&gt;</span> <span class="co">/* Riverpod fold → ConnectButton, [04_CLIENT §8] */</span>);</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="co">// ...later:</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="at">await</span> core<span class="op">.</span>stop();</span></code></pre></div>
+<h3 id="51-dart-side-error-surface">5.1 Dart-side error surface</h3>
+<p>Every <code>Future</code>-returning method may throw a
+<code>CoreException</code> (the Dart mirror of <code>CoreError</code>,
+§8). The wrapper does NOT swallow it — the controller surfaces it as an
+honest UI message (§8.3). <code>statusStream()</code> never throws on
+<code>Lagged</code> (§4.6); it closes only when the core is torn down
+(<code>RecvError::Closed</code>).</p>
+<hr />
+<h2 id="6-uniffi-native-shim-surface-swift--kotlin--c">6. UniFFI
+native-shim surface (Swift / Kotlin / C)</h2>
+<p>In Mode B the core runs inside the OS tunnel extension; UniFFI
+generates the typed binding the extension calls. The <strong>same
+<code>api.rs</code></strong> produces it; the surface is the same verbs,
+named in each language&#39;s idiom. The status flows out via the platform
+<code>EventChannel</code> (§7), not via frb.</p>
+<h3 id="61-swift-ios--macos-nepackettunnelprovider">6.1 Swift (iOS /
+macOS NEPacketTunnelProvider)</h3>
+<div class="sourceCode" id="cb13"><pre class="sourceCode swift"><code class="sourceCode swift"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co">// generated by UniFFI from helix-ffi (HelixCore.swift) — used inside the NE extension</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="im">HelixCore</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="kw">final</span> <span class="kw">class</span> PacketTunnelProvider<span class="op">:</span> <span class="dt">NEPacketTunnelProvider</span> <span class="op">{</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">override</span> <span class="kw">func</span> <span class="fu">startTunnel</span><span class="op">(</span><span class="va">options</span><span class="op">:</span> [<span class="dt">String</span><span class="op">:</span><span class="dt">NSObject</span>]?<span class="op">,</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>                            <span class="va">completionHandler</span><span class="op">:</span> @<span class="dt">escaping</span> (<span class="va">Error</span>?<span class="op">)</span> -&gt; <span class="fu">Void</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="va">cfg</span> <span class="op">=</span> decodeTunnelConfig<span class="op">(</span>options<span class="op">)</span>                   <span class="co">// overlay IP, routes, DNS, session</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="va">settings</span> <span class="op">=</span> makeNetworkSettings<span class="op">(</span>cfg<span class="op">)</span>                 <span class="co">// NEPacketTunnelNetworkSettings</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>    setTunnelNetworkSettings<span class="op">(</span>settings<span class="op">)</span> <span class="op">{</span> <span class="op">[</span><span class="kw">weak</span> <span class="kw">self</span><span class="op">]</span> err <span class="cf">in</span></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>      <span class="cf">guard</span> err <span class="op">==</span> <span class="kw">nil</span><span class="op">,</span> <span class="kw">let</span> <span class="va">self</span> <span class="cf">else</span> <span class="op">{</span> <span class="kw">return</span> completionHandler<span class="op">(</span>err<span class="op">)</span> <span class="op">}</span></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>      <span class="cf">do</span> <span class="op">{</span></span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>        <span class="cf">try</span> helixCoreStart<span class="op">(</span>cfg<span class="op">:</span> ClientConfig<span class="op">(</span>mapPathOrSession<span class="op">:</span> cfg<span class="op">.</span>sessionToken<span class="op">,</span></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>                                             transport<span class="op">:</span> <span class="st">&quot;auto&quot;</span><span class="op">,</span> mode<span class="op">:</span> <span class="op">.</span>client<span class="op">))</span>   <span class="co">// typed throw</span></span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> <span class="va">fd</span> <span class="op">=</span> <span class="kw">self</span><span class="op">.</span>packetFlowFd<span class="op">()</span>                        <span class="co">// the NE packet fd (Mode B handoff)</span></span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>        <span class="cf">try</span> helixAttachTun<span class="op">(</span>fd<span class="op">:</span> fd<span class="op">)</span>                          <span class="co">// §9.3 ownership transfer</span></span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>        <span class="kw">self</span><span class="op">.</span>relayStatus<span class="op">()</span>                                  <span class="co">// subscribe → EventChannel (§7)</span></span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>        completionHandler<span class="op">(</span><span class="kw">nil</span><span class="op">)</span></span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>      <span class="op">}</span> <span class="cf">catch</span> <span class="kw">let</span> <span class="va">e</span> <span class="kw">as</span> CoreError <span class="op">{</span> completionHandler<span class="op">(</span>coreErrorToNSError<span class="op">(</span>e<span class="op">))</span> <span class="op">}</span>     <span class="co">// §8.2</span></span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a>        <span class="cf">catch</span> <span class="op">{</span> completionHandler<span class="op">(</span>error<span class="op">)</span> <span class="op">}</span></span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a>  <span class="kw">override</span> <span class="kw">func</span> <span class="fu">stopTunnel</span><span class="op">(</span><span class="va">with</span> <span class="va">r</span><span class="op">:</span> <span class="dt">NEProviderStopReason</span><span class="op">,</span> <span class="va">completionHandler</span><span class="op">:</span> @<span class="dt">escaping</span> (<span class="op">)</span> -&gt; <span class="fu">Void</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a>    <span class="cf">try</span><span class="op">?</span> helixDetachTun<span class="op">();</span> <span class="cf">try</span><span class="op">?</span> helixCoreStop<span class="op">();</span> completionHandler<span class="op">()</span>             <span class="co">// O4 quiescent</span></span>
+<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<blockquote>
+<p><code>helixCoreStart</code>/<code>helixAttachTun</code>/<code>helixCoreStop</code>
+are UniFFI-generated Swift throwing functions; <code>CoreError</code> is
+a UniFFI error enum (§8.2). The Swift side reads/writes the packet fd
+handed to the core (Layer-3 IP packets) [research-ios_android §1,
+§3].</p>
+</blockquote>
+<h3 id="62-kotlin-android-vpnservice--jni">6.2 Kotlin (Android
+VpnService + JNI)</h3>
+<div class="sourceCode" id="cb14"><pre class="sourceCode kotlin"><code class="sourceCode kotlin"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co">// generated by UniFFI from helix-ffi (HelixCore.kt) — used inside the foreground VpnService</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> HelixVpnService <span class="op">:</span> <span class="dt">VpnService</span><span class="op">()</span> <span class="op">{</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">override</span> <span class="kw">fun</span> <span class="fu">onStartCommand</span><span class="op">(</span><span class="va">intent</span><span class="op">:</span> <span class="dt">Intent</span><span class="op">?,</span> <span class="va">flags</span><span class="op">:</span> <span class="dt">Int</span><span class="op">,</span> <span class="va">startId</span><span class="op">:</span> <span class="dt">Int</span><span class="op">):</span> <span class="dt">Int</span> <span class="op">{</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">val</span> <span class="va">cfg</span> <span class="op">=</span> TunnelConfig<span class="op">.</span>from<span class="op">(</span>intent<span class="op">)</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">val</span> <span class="va">builder</span> <span class="op">=</span> Builder<span class="op">().</span>addAddress<span class="op">(</span>cfg<span class="op">.</span>overlayIp<span class="op">,</span> <span class="dv">32</span><span class="op">).</span>setMtu<span class="op">(</span>cfg<span class="op">.</span>mtu<span class="op">)</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>    cfg<span class="op">.</span>routes<span class="op">.</span>forEach <span class="op">{</span> builder<span class="op">.</span>addRoute<span class="op">(</span>it<span class="op">.</span>addr<span class="op">,</span> it<span class="op">.</span>prefix<span class="op">)</span> <span class="op">}</span>          <span class="co">// AllowedIPs</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>    cfg<span class="op">.</span>dnsServers<span class="op">.</span>forEach <span class="op">{</span> builder<span class="op">.</span>addDnsServer<span class="op">(</span>it<span class="op">)</span> <span class="op">}</span>                  <span class="co">// tunnel DNS</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>    cfg<span class="op">.</span>splitExcludeApps<span class="op">.</span>forEach <span class="op">{</span> builder<span class="op">.</span>addDisallowedApplication<span class="op">(</span>it<span class="op">)</span> <span class="op">}</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">val</span> <span class="va">pfd</span><span class="op">:</span> ParcelFileDescriptor <span class="op">=</span> builder<span class="op">.</span>establish<span class="op">()!!</span>               <span class="co">// OS creates TUN</span></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>    startForeground<span class="op">(</span>NOTIF_ID<span class="op">,</span> persistentNotification<span class="op">())</span>                 <span class="co">// required for bg tunnel</span></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>    HelixCore<span class="op">.</span>start<span class="op">(</span>ClientConfig<span class="op">(</span>cfg<span class="op">.</span>sessionToken<span class="op">,</span> <span class="st">&quot;auto&quot;</span><span class="op">,</span> CoreMode<span class="op">.</span>CLIENT<span class="op">))</span></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>    HelixCore<span class="op">.</span>attachTun<span class="op">(</span>pfd<span class="op">.</span>detachFd<span class="op">())</span>  <span class="co">// detachFd transfers ownership → core close()s (§9.3)</span></span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>    relayStatus<span class="op">()</span>                        <span class="co">// subscribe → EventChannel (§7)</span></span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">return</span> START_STICKY</span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>  <span class="kw">override</span> <span class="kw">fun</span> <span class="fu">onRevoke</span><span class="op">()</span>  <span class="op">{</span> HelixCore<span class="op">.</span>detachTun<span class="op">();</span> HelixCore<span class="op">.</span>stop<span class="op">();</span> emitEvent<span class="op">(</span>REVOKED<span class="op">)</span> <span class="op">}</span> <span class="co">// O3</span></span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a>  <span class="kw">override</span> <span class="kw">fun</span> <span class="fu">onDestroy</span><span class="op">()</span> <span class="op">{</span> HelixCore<span class="op">.</span>detachTun<span class="op">();</span> HelixCore<span class="op">.</span>stop<span class="op">();</span> stopForeground<span class="op">(</span><span class="kw">true</span><span class="op">)</span> <span class="op">}</span> <span class="co">// O4</span></span>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<blockquote>
+<p><code>detachFd()</code> transfers fd ownership to native (the core
+now owns <code>close(2)</code>); <code>getFd()</code> would keep
+ownership in Java [research-ios_android §3]. The choice is load-bearing
+for §9.3 (double-close avoidance). HarmonyOS/Aurora use the cbindgen C
+ABI (§6.3) instead of UniFFI Kotlin/Swift.</p>
+</blockquote>
+<h3 id="63-c-abi-harmonyos-napi--aurora-qt--cbindgen-fallback">6.3 C ABI
+(HarmonyOS NAPI / Aurora Qt) — cbindgen fallback</h3>
+<div class="sourceCode" id="cb15"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix_core.h — generated by cbindgen (the raw-C fallback, D-CLIENT-3)</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="kw">typedef</span> <span class="kw">enum</span> HxCoreErr <span class="op">{</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  HX_OK <span class="op">=</span> <span class="dv">0</span><span class="op">,</span> HX_ERR_NOT_STARTED <span class="op">=</span> <span class="dv">1</span><span class="op">,</span> HX_ERR_ALREADY_STARTED <span class="op">=</span> <span class="dv">2</span><span class="op">,</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  HX_ERR_AUTH <span class="op">=</span> <span class="dv">3</span><span class="op">,</span> HX_ERR_CONFIG <span class="op">=</span> <span class="dv">4</span><span class="op">,</span> HX_ERR_HOST_FATAL <span class="op">=</span> <span class="dv">5</span><span class="op">,</span> HX_ERR_INTERNAL <span class="op">=</span> <span class="dv">6</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> HxCoreErr<span class="op">;</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>HxCoreErr  hx_core_start<span class="op">(</span><span class="dt">const</span> <span class="dt">char</span><span class="op">*</span> session<span class="op">,</span> <span class="dt">const</span> <span class="dt">char</span><span class="op">*</span> transport<span class="op">,</span> <span class="dt">int</span> mode<span class="op">);</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>HxCoreErr  hx_core_stop<span class="op">(</span><span class="dt">void</span><span class="op">);</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>HxCoreErr  hx_attach_tun<span class="op">(</span><span class="dt">int</span> fd<span class="op">);</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>HxCoreErr  hx_detach_tun<span class="op">(</span><span class="dt">void</span><span class="op">);</span></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a><span class="co">/// Status callback: the C consumer registers a fn-ptr; the core invokes it on each</span></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a><span class="co">/// projected status. `json` is a UTF-8 ffi::TunnelStatus JSON (the C ABI has no enum-payload</span></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a><span class="co">/// type), freed by the core after the call returns. (UNVERIFIED: exact JSON schema fixed in</span></span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a><span class="co">/// the cbindgen contract test, §13 UNIT.)</span></span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a><span class="kw">typedef</span> <span class="dt">void</span> <span class="op">(*</span>hx_status_cb<span class="op">)(</span><span class="dt">const</span> <span class="dt">char</span><span class="op">*</span> json<span class="op">,</span> <span class="dt">void</span><span class="op">*</span> user<span class="op">);</span></span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>HxCoreErr  hx_status_subscribe<span class="op">(</span>hx_status_cb cb<span class="op">,</span> <span class="dt">void</span><span class="op">*</span> user<span class="op">);</span></span></code></pre></div>
+<blockquote>
+<p>The C surface carries <code>TunnelStatus</code> as JSON because the C
+ABI cannot express a tagged-union-with-payload; the Swift/Kotlin UniFFI
+paths carry the real enum. The JSON schema is frozen by the cbindgen
+contract test (§13) and is the same projected
+<code>ffi::TunnelStatus</code> (§3.2).</p>
+</blockquote>
+<hr />
+<h2 id="7-the-tunnelplatform--ffi-division-of-labor">7. The
+<code>TunnelPlatform</code> ⇄ FFI division of labor</h2>
+<p>The seam that prevents the classic bug [04_CLIENT §3.3, §4].
+<strong>Lifecycle</strong> commands flow UI → shim → core;
+<strong>status</strong> flows core → FFI → UI. In Mode B the status
+takes the <code>EventChannel</code> (the
+<code>TunnelPlatform.events()</code> stream) because the core is in the
+extension process, not the Dart isolate.</p>
+<pre class="mermaid"><code>sequenceDiagram
+    participant UI as Flutter UI (Dart)
+    participant FFI as helix_core_ffi (frb, logic-only calls)
+    participant SHIM as TunnelPlatform shim (native)
+    participant CORE as helix-core (Rust, in extension/in-process)
+    participant OS as OS tunnel (NE / VpnService / tun)
+
+    UI-&gt;&gt;SHIM: startTunnel(TunnelConfig)            %% MethodChannel
+    SHIM-&gt;&gt;OS: request permission + create TUN (overlay IP, routes, DNS)
+    OS--&gt;&gt;SHIM: tun fd / packetFlow
+    SHIM-&gt;&gt;CORE: helix_core_start(cfg) + attach_tun(fd)   %% UniFFI/JNI/C
+    SHIM--&gt;&gt;UI: PlatformTunnelEvent.up                    %% EventChannel
+    Note over CORE: pumps tun ↔ WG ↔ transport (doc 02)
+    CORE--&gt;&gt;SHIM: core::TunnelStatus (subscribe)
+    SHIM--&gt;&gt;UI: PlatformTunnelEvent + status relay (EventChannel)  %% Mode B status path
+    UI-&gt;&gt;FFI: core.setShields(...) / setExit(...)        %% LOGIC-only, no OS tunnel (CI1)
+    UI-&gt;&gt;SHIM: stopTunnel()
+    SHIM-&gt;&gt;CORE: detach_tun() + helix_core_stop()
+    OS--&gt;&gt;SHIM: tunnel torn down
+    SHIM--&gt;&gt;UI: PlatformTunnelEvent.down</code></pre>
+<h3 id="71-where-each-tunnelstatus-originates-the-mode-split">7.1 Where
+each TunnelStatus originates (the mode split)</h3>
+<table>
+<thead>
+<tr>
+<th>Call</th>
+<th>Mode A (in-process frb)</th>
+<th>Mode B (native shim)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>start</code>/<code>stop</code></td>
+<td>the shim calls the FFI <code>start</code>/<code>stop</code> (Linux:
+core in-process)</td>
+<td>the shim calls the <strong>UniFFI/C</strong>
+<code>helix_core_start</code>/<code>stop</code> inside the
+extension</td>
+</tr>
+<tr>
+<td><code>attach_tun(fd)</code></td>
+<td>Linux tun fd → FFI <code>attach_tun</code></td>
+<td>NE <code>packetFlow</code> fd / <code>pfd.detachFd()</code> →
+UniFFI/JNI <code>attach_tun</code></td>
+</tr>
+<tr>
+<td><code>status_stream</code></td>
+<td>frb <code>StreamSink</code> → Dart isolate
+<strong>directly</strong></td>
+<td>core subscribe → shim → <strong>EventChannel</strong> → Dart</td>
+</tr>
+<tr>
+<td><code>set_shields</code>/<code>set_exit</code>/<code>exits</code></td>
+<td>frb call, in-process</td>
+<td><strong>frb call to the UI-process FFI</strong> if a logic-only core
+handle exists there, else marshalled to the extension over the platform
+channel (D-FFI-2, §14)</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Honest boundary (§11.4.6 / §14 C2).</strong> In Mode B the
+<em>logic-only</em> verbs
+(<code>set_shields</code>/<code>set_exit</code>/<code>exits</code>)
+target the core <strong>in the extension</strong>, while the UI runs in
+the app process. The pass-1 sketch [04_CLIENT §3.3] drew these as
+&quot;straight UI → FFI&quot;; on iOS/Android that requires either (a) a second
+in-app-process core handle for pure-logic queries, or (b) marshalling
+the verb over the <code>TunnelPlatform</code> MethodChannel to the
+extension. This is surfaced as <strong>D-FFI-2</strong> — not silently
+assumed.</p>
+</blockquote>
+<hr />
+<h2 id="8-error-propagation-across-the-boundary">8. Error propagation
+across the boundary</h2>
+<h3 id="81-the-typed-coreerror-enum">8.1 The typed
+<code>CoreError</code> enum</h3>
+<div class="sourceCode" id="cb17"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-ffi/src/error.rs</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="pp">thiserror::</span><span class="bu">Error</span><span class="op">,</span> <span class="bu">Debug</span><span class="at">)]</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">enum</span> CoreError <span class="op">{</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>error<span class="at">(</span><span class="st">&quot;core not started&quot;</span><span class="at">)]</span>            NotStarted<span class="op">,</span>        <span class="co">// status_stream/stop before start</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>error<span class="at">(</span><span class="st">&quot;core already started&quot;</span><span class="at">)]</span>        AlreadyStarted<span class="op">,</span>    <span class="co">// double start (§9.2)</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>error<span class="at">(</span><span class="st">&quot;invalid config: {0}&quot;</span><span class="at">)]</span>         Config(<span class="dt">String</span>)<span class="op">,</span>    <span class="co">// bad transport string / map path</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>error<span class="at">(</span><span class="st">&quot;auth failed (revoked)&quot;</span><span class="at">)]</span>       Auth<span class="op">,</span>              <span class="co">// maps from Down{auth-failed}</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>error<span class="at">(</span><span class="st">&quot;host fatal: {0}&quot;</span><span class="at">)]</span>             HostFatal(<span class="dt">String</span>)<span class="op">,</span> <span class="co">// TUN open / firewall-apply failed</span></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>error<span class="at">(</span><span class="st">&quot;tun fd invalid&quot;</span><span class="at">)]</span>              BadFd<span class="op">,</span>             <span class="co">// attach_tun(fd) not a usable fd</span></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>error<span class="at">(</span><span class="st">&quot;internal: {0}&quot;</span><span class="at">)]</span>               Internal(<span class="dt">String</span>)<span class="op">,</span>  <span class="co">// last resort; never a secret (§11.4.10)</span></span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><code>CoreError</code> is the <strong>only</strong> error type the
+FFI surface returns; the orchestrator&#39;s internal
+<code>anyhow</code>/<code>OrchestratorError</code>/<code>TransportError</code>
+are converted at the boundary (<code>From</code> impls). Reasons are
+classified on the orchestrator&#39;s stable prefixes [02_ORCH §4.4], never
+parsed from prose (§11.4.6). No variant ever carries a
+<code>SecretBytes</code> value (§11.4.10, [02_TRANS §3.2]).</p>
+<h3 id="82-per-generator-mapping">8.2 Per-generator mapping</h3>
+<table>
+<thead>
+<tr>
+<th>Generator</th>
+<th><code>Err(CoreError)</code> becomes</th>
+<th>UI sees</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>frb (Dart)</strong></td>
+<td>a thrown <code>CoreException</code> (frb maps
+<code>Result::Err</code> of a custom error enum to a Dart exception of
+the mirrored type)</td>
+<td><code>try { await core.start() } on CoreException catch (e) { … }</code></td>
+</tr>
+<tr>
+<td><strong>UniFFI (Swift)</strong></td>
+<td>a Swift <code>throws</code> of the <code>CoreError</code> error
+enum</td>
+<td><code>do { try helixCoreStart() } catch let e as CoreError { … }</code></td>
+</tr>
+<tr>
+<td><strong>UniFFI (Kotlin)</strong></td>
+<td>a Kotlin <code>CoreException</code> subclass per variant</td>
+<td><code>try { HelixCore.start() } catch (e: CoreException.Auth) { … }</code></td>
+</tr>
+<tr>
+<td><strong>cbindgen (C)</strong></td>
+<td>an <code>HxCoreErr</code> integer code (§6.3)</td>
+<td><code>if (hx_core_start(...) != HX_OK) …</code></td>
+</tr>
+</tbody>
+</table>
+<pre class="mermaid"><code>flowchart LR
+    INT[&quot;orchestrator internals&lt;br/&gt;anyhow / OrchestratorError / TransportError&quot;]
+      --&gt;|&quot;From impls (boundary)&quot;| CE[&quot;CoreError (typed, §8.1)&quot;]
+    CE --&gt;|frb| DEX[&quot;Dart CoreException (thrown)&quot;]
+    CE --&gt;|UniFFI Swift| SW[&quot;Swift throws CoreError&quot;]
+    CE --&gt;|UniFFI Kotlin| KT[&quot;Kotlin CoreException.*&quot;]
+    CE --&gt;|cbindgen| HX[&quot;HxCoreErr int code&quot;]
+    DEX --&gt; UI[&quot;honest UI message (§8.3)&quot;]
+    SW --&gt; UI
+    KT --&gt; UI
+    HX --&gt; UI</code></pre>
+<h3 id="83-errors-vs-status-two-distinct-channels">8.3 Errors vs status
+(two distinct channels)</h3>
+<p>A <strong>synchronous failure</strong> of a verb (<code>start</code>
+could not open the TUN) is a thrown <code>CoreError</code>; a
+<strong>runtime transition</strong> (the tunnel later drops) is a
+<code>TunnelStatus</code> event. The UI must handle both: an
+<code>await core.start()</code> that throws <code>HostFatal</code> shows
+a start-failure message; a later <code>Down</code>/<code>Danger</code>
+event on the stream repaints the <code>ConnectButton</code>. A verb MUST
+NOT silently swallow an error and rely on the status stream to reflect
+it (that would be a §11.4.1 FAIL-bluff at the boundary) — the throw and
+the event are complementary, not redundant.</p>
+<hr />
+<h2 id="9-lifecycle-idempotence-and-attach_tun-fd-ownership">9.
+Lifecycle, idempotence, and <code>attach_tun</code> fd ownership</h2>
+<h3 id="91-verb-lifecycle-contract">9.1 Verb lifecycle contract</h3>
+<table>
+<thead>
+<tr>
+<th>Verb</th>
+<th>Pre-state</th>
+<th>Post-state</th>
+<th>Idempotence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>start</code></td>
+<td>core stopped</td>
+<td>orchestrator running, emits <code>Connecting</code></td>
+<td>double <code>start</code> → <code>Err(AlreadyStarted)</code>
+(§9.2)</td>
+</tr>
+<tr>
+<td><code>stop</code></td>
+<td>running</td>
+<td>torn down, emits <code>Disconnected</code>
+(<code>Down{stopped}</code> → projected)</td>
+<td><code>stop</code> when stopped → <code>Ok(())</code> (no-op)</td>
+</tr>
+<tr>
+<td><code>status_stream</code></td>
+<td>any</td>
+<td>sink registered; <strong>immediate</strong> latest re-emit
+(§4.5)</td>
+<td>many concurrent sinks allowed (broadcast fan-out)</td>
+</tr>
+<tr>
+<td><code>attach_tun(fd)</code></td>
+<td>started, no fd</td>
+<td>core pumps <code>fd</code></td>
+<td>second <code>attach_tun</code> without <code>detach</code> →
+<code>Err(BadFd)</code>-class guard (§9.3)</td>
+</tr>
+<tr>
+<td><code>detach_tun</code></td>
+<td>fd attached</td>
+<td>fd closed, pump idle</td>
+<td><code>detach</code> when none attached → <code>Ok(())</code></td>
+</tr>
+<tr>
+<td><code>set_shields</code>/<code>set_exit</code>/<code>exits</code>/<code>advertise</code></td>
+<td>started</td>
+<td>applied</td>
+<td>naturally idempotent (declarative)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="92-double-start--start-while-connected-guard">9.2 Double-start /
+start-while-connected guard</h3>
+<p><code>start</code> acquires the <code>ORCH</code> mutex and refuses
+if <code>Some(_)</code> is already present
+(<code>Err(AlreadyStarted)</code>) — the UI&#39;s
+<code>ConnectController</code> must not call <code>start</code> while a
+tunnel exists (it calls <code>toggle</code>, [04_CLIENT §8.2]). This
+guards the §11.4.84-class hazard of two orchestrators racing one TUN
+fd.</p>
+<h3 id="93-attach_tun-fd-ownership-the-double-close-hazard">9.3
+<code>attach_tun</code> fd ownership (the double-close hazard)</h3>
+<p><code>attach_tun(fd)</code> <strong>takes ownership</strong> of the
+fd on <code>Ok</code>: the core <code>close(2)</code>s it on
+<code>detach_tun</code>/<code>stop</code>. The shim MUST therefore hand
+a fd it has <strong>relinquished</strong>:</p>
+<ul>
+<li><strong>Android:</strong> use
+<code>ParcelFileDescriptor.detachFd()</code> (transfers ownership) — NOT
+<code>getFd()</code> (keeps ownership; the core close()ing it then
+double-closes when the PFD is GC&#39;d) [research-ios_android §3]. The
+Kotlin shim (§6.2) uses <code>detachFd()</code>.</li>
+<li><strong>iOS NE:</strong> the NE owns <code>packetFlow</code>; the
+core does not <code>close</code> it — instead the iOS path uses the
+read/write-callback pump (<code>helix_core_set_tun_writer</code> +
+<code>packetFlow.readPackets</code>) rather than a raw fd, so
+<code>attach_tun</code> on iOS registers the callback pair, not an owned
+fd [04_CLIENT §5.1]. (UNVERIFIED whether a raw fd is even exposed by
+<code>NEPacketTunnelFlow</code>; the callback-pump form is the
+documented path — §13 records this as the iOS handoff.)</li>
+<li><strong>Linux:</strong> the in-process core owns the tun fd directly
+(no cross-process transfer).</li>
+</ul>
+<p>A failed <code>attach_tun</code> MUST leave <strong>no</strong>
+half-open TUN (§11.4.14 cleanup): on <code>Err</code>, the shim closes
+the fd it created and emits <code>PlatformTunnelEvent.error</code> with
+an honest reason [04_CLIENT §4.1 O1].</p>
+<h3 id="94-out-of-band-revoke--os-kill">9.4 Out-of-band revoke / OS
+kill</h3>
+<p>When the OS or admin kills the tunnel out-of-band
+(<code>onRevoke</code>, <code>device.revoked</code> from the control
+plane), the shim calls <code>detach_tun</code> + <code>stop</code> and
+emits <code>revoked</code>; the FFI projects the resulting
+<code>Down</code>/<code>auth-failed</code> to
+<code>Danger{killswitch_tripped}</code> (§3.3) so the UI repaints red —
+never &quot;still connected&quot; [04_CLIENT §4.1 O3, CI2].</p>
+<hr />
+<h2 id="10-codegen--drift-gate-pipeline">10. Codegen + drift-gate
+pipeline</h2>
+<p>The no-drift guarantee [04_CLIENT §11, 04_ARCH §4.2]: the generated
+Dart/Swift/Kotlin can <strong>never</strong> silently diverge from the
+Rust surface. A drift is a build-blocking finding.</p>
+<pre class="mermaid"><code>flowchart LR
+    SRC[&quot;helix-ffi/src/api.rs&lt;br/&gt;(hand-authored, §2)&quot;] --&gt; FRB[&quot;flutter_rust_bridge_codegen generate&quot;]
+    SRC --&gt; UNI[&quot;uniffi-bindgen (swift, kotlin)&quot;]
+    SRC --&gt; CB[&quot;cbindgen&quot;]
+    FRB --&gt; GD[&quot;frb_generated.dart (committed)&quot;]
+    UNI --&gt; GS[&quot;HelixCore.swift / .kt (committed)&quot;]
+    CB  --&gt; GH[&quot;helix_core.h (committed)&quot;]
+    GD --&gt; DRIFT{&quot;drift gate&lt;br/&gt;(local pre-build, §11.4.156 no remote CI)&quot;}
+    GS --&gt; DRIFT
+    GH --&gt; DRIFT
+    DRIFT --&gt;|&quot;regenerate == committed?&quot;| PASS[&quot;PASS&quot;]
+    DRIFT --&gt;|&quot;differs OR frb crate ver ≠ Dart dep ver&quot;| FAIL[&quot;FAIL: build-blocking&quot;]</code></pre>
+<ul>
+<li><strong>Trigger:</strong> any edit to <code>api.rs</code> (or a
+mirrored core type) re-runs all three generators; the regenerated output
+MUST byte-match the committed artifacts
+(<code>git diff --exit-code</code>).</li>
+<li><strong>Version pin check:</strong> the gate asserts the
+<code>flutter_rust_bridge</code> crate version equals the
+<code>flutter_rust_bridge</code> Dart-dep version [research-flutter_ffi
+§1 caveat].</li>
+<li><strong>Enum-parity check:</strong> the §13 <code>UNIT</code>
+FFI-contract test asserts the Dart/Swift/Kotlin
+<code>TunnelStatus</code>/<code>Shields</code>/<code>ExitOption</code>
+mirrors match the Rust types byte-for-byte (the projected 7-variant
+surface) [04_CLIENT §12 FFI-contract row].</li>
+<li>Run <strong>locally</strong> (<code>melos run drift-check</code>) —
+there is no active server-side CI (§11.4.156).</li>
+</ul>
+<hr />
+<h2 id="11-memory--performance-budgets">11. Memory &amp; performance
+budgets</h2>
+<table>
+<thead>
+<tr>
+<th>Budget</th>
+<th>Target</th>
+<th>Basis / source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>iOS NE process RSS (Mode B)</strong></td>
+<td>steady-state <strong>well under the device ceiling</strong> — design
+to ~<strong>12–15 MB</strong> working set, NOT to the 50 MiB figure</td>
+<td>iOS NE limit is <strong>50 MiB</strong> on iOS 15–18 (was 15 MiB on
+iOS 11–14), <strong>undocumented, MUST NOT be hardcoded</strong>, and
+<strong>observed 15 MB jetsam kills on some iOS 17 devices</strong>
+(PENDING_FORENSICS) [research-ios_android §1]</td>
+</tr>
+<tr>
+<td>iOS NE spike control</td>
+<td>bound packet-buffer pools; single fixed-size receive buffer to
+MTU+headroom; no per-flow state growth</td>
+<td>spikes (upload-heavy bursts), not steady state, are the jetsam
+killer [research-ios_android §1]</td>
+</tr>
+<tr>
+<td>frb runtime cost (Mode A)</td>
+<td>tokio runtime = <strong>2 worker threads</strong>; broadcast cap 64;
+one cached latest status</td>
+<td>the loops are I/O-bound [02_ORCH §13]; the runtime does
+<strong>not</strong> run in the iOS NE (§1)</td>
+</tr>
+<tr>
+<td>FFI projection cost</td>
+<td><code>project()</code> is pure, allocation-light (clones small
+strings); callable at status-change frequency (rare)</td>
+<td>§3.3</td>
+</tr>
+<tr>
+<td><code>status_stream</code> fan-out</td>
+<td>many sinks via broadcast; lagged receiver fast-forwards, never
+blocks the core</td>
+<td>§4.6, [02_ORCH §4.2]</td>
+</tr>
+<tr>
+<td><code>attach_tun</code> latency</td>
+<td>synchronous, sub-ms (stores fd + wakes loops; no await)</td>
+<td>§2, §9.3</td>
+</tr>
+<tr>
+<td>Mobile install size contribution</td>
+<td>lean Rust staticlib: <code>opt-level=z/s</code> + fat LTO +
+<code>codegen-units=1</code> + <code>panic=abort</code> +
+<code>strip</code>; optional <code>build-std</code> +
+<code>panic_immediate_abort</code> + <code>optimize_for_size</code></td>
+<td>[research-ios_android §2], [04_CLIENT §10]</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>The iOS NE ceiling is the architecture (CI4).</strong> It is
+the single strongest reason the core is Rust not Go — a GC runtime risks
+the working set [04_CLIENT §0.1 CI4, §10, 04_ARCH §5.6]. Because Mode B
+links only the UniFFI/cbindgen staticlib (not frb + tokio + Dart), the
+FFI generator choice does <strong>not</strong> inflate the NE footprint;
+the <code>MEM</code> test (§13) measures the <em>extension</em> process,
+plain-UDP <strong>and</strong> MASQUE separately (G3)
+[research-ios_android §1, 04_CLIENT §5.1].</p>
+</blockquote>
+<hr />
+<h2 id="12-edge-cases--failure-modes">12. Edge cases &amp; failure
+modes</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Edge case</th>
+<th>Required behaviour</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>E1</td>
+<td><code>status_stream</code> called before <code>start</code></td>
+<td><code>Err(NotStarted)</code> — never a silent empty stream that the
+UI reads as &quot;Disconnected-but-fine&quot; (§8.3)</td>
+</tr>
+<tr>
+<td>E2</td>
+<td>Broadcast <code>Lagged</code> under a wedged UI</td>
+<td>forwarding task skips to latest; never surfaced to Dart as an error
+(§4.6)</td>
+</tr>
+<tr>
+<td>E3</td>
+<td>Dart <code>StreamProvider</code> paused (backgrounded), then
+resumed</td>
+<td>forwarding task keeps running; on resume the cached latest status is
+re-emitted (§4.5) — no stale gap</td>
+</tr>
+<tr>
+<td>E4</td>
+<td>Dart isolate hot-restart (dev) / app process restart</td>
+<td>frb port invalidated; <code>sink.add</code> errors → forwarding task
+drops that sink; a fresh <code>status_stream</code> re-registers +
+re-emits latest</td>
+</tr>
+<tr>
+<td>E5</td>
+<td>Native extension crash (Mode B)</td>
+<td>shim emits <code>error</code>/<code>down</code> on the EventChannel;
+FFI/UI shows <code>Down</code> (not &quot;connected&quot;); the OS may restart the
+extension (<code>START_STICKY</code> Android) → fresh
+<code>start</code></td>
+</tr>
+<tr>
+<td>E6</td>
+<td>Double <code>start</code></td>
+<td><code>Err(AlreadyStarted)</code> (§9.2)</td>
+</tr>
+<tr>
+<td>E7</td>
+<td><code>attach_tun</code> with an invalid/closed fd</td>
+<td><code>Err(BadFd)</code>; shim closes its TUN, emits
+<code>error</code> (no half-open TUN, §11.4.14)</td>
+</tr>
+<tr>
+<td>E8</td>
+<td><code>detach_tun</code> then core keeps a stale fd</td>
+<td>forbidden — <code>detach_tun</code> <code>close(2)</code>s and
+clears the fd; loops idle until a fresh <code>attach_tun</code>
+(§9.3)</td>
+</tr>
+<tr>
+<td>E9</td>
+<td>fd double-close (shim <code>getFd</code> + core
+<code>close</code>)</td>
+<td>prevented by mandating <code>detachFd()</code> ownership transfer
+(§9.3) [research-ios_android §3]</td>
+</tr>
+<tr>
+<td>E10</td>
+<td><code>Connected.path</code> unknown at emit time</td>
+<td>projector defaults <code>path = &quot;direct&quot;</code> and re-emits
+<code>Connected</code> when the real path resolves (§3.3, §14 C3)</td>
+</tr>
+<tr>
+<td>E11</td>
+<td><code>Danger</code> (leak) while user intent = connected</td>
+<td><code>Danger</code> <strong>overrides</strong> intent; UI paints red
+immediately (§3.3, [04_CLIENT §8.4]) — never green-on-intent</td>
+</tr>
+<tr>
+<td>E12</td>
+<td><code>CoreError::Internal</code> carries a secret</td>
+<td>forbidden (§11.4.10): the boundary <code>From</code> impls scrub;
+the <code>SEC</code> test plants a secret and greps logs/messages empty
+(§13)</td>
+</tr>
+<tr>
+<td>E13</td>
+<td>Console flavor (no <code>Capability.tunnel</code>) calls a tunnel
+verb</td>
+<td>compile-gated out; runtime fallback is <code>NoCore</code> throwing
+<code>StateError</code> (§5, CI3) — never links the staticlib</td>
+</tr>
+<tr>
+<td>E14</td>
+<td>frb crate ver ≠ Dart dep ver</td>
+<td>drift gate FAILs the build (§10) [research-flutter_ffi §1]</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="13-test-points--114169-closed-vocabulary">13. Test points —
+§11.4.169 closed vocabulary</h2>
+<p>Every FFI workable item declares its required test types from the
+§11.4.169 closed set [10_QA §2]; the ONLY permitted absence of a
+warranted type is an honest §11.4.3 SKIP-with-reason. Four-layer
+enforcement per §11.4.4(b). Every PASS ships captured evidence per
+§11.4.5/.69/.107 — never a config-only or grep-only PASS.</p>
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>Type</th>
+<th>Concrete FFI test point</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>UNIT</code></td>
+<td>unit</td>
+<td><code>project()</code> truth table for <strong>all
+7×(5+ctx)</strong> input combos; <code>classify()</code> on every stable
+<code>Down.reason</code> prefix; <code>CoreError</code>
+<code>From</code> mappings; <strong>FFI-contract</strong>: regenerated
+Dart/Swift/Kotlin
+<code>TunnelStatus</code>/<code>Shields</code>/<code>ExitOption</code>
+mirrors match Rust byte-for-byte; cbindgen JSON schema frozen. Mocks
+allowed <strong>only here</strong> (§11.4.27).</td>
+<td><code>cargo test</code> + <code>dart test</code> output;
+generated-mirror diff</td>
+</tr>
+<tr>
+<td><code>INT</code></td>
+<td>integration (real System, no mocks)</td>
+<td><code>start</code>→<code>status_stream</code> against a <strong>real
+orchestrator</strong> (in-process Mode A) yields the ordered
+<code>Connecting→Handshaking→Connected</code> trace;
+<code>attach_tun(fd)</code> with a real netns tun fd pumps packets</td>
+<td>netns capture; ordered status-trace log</td>
+</tr>
+<tr>
+<td><code>E2E</code></td>
+<td>end-to-end</td>
+<td>the Phase-0 <strong>G5</strong> demo: Flutter-Linux window, one
+connect/disconnect toggle, <code>StatusChip</code> driven <em>only</em>
+by the Rust stream [04_CLIENT §13 T0.1]</td>
+<td>window-scoped MP4 (§11.4.159) of the connect journey</td>
+</tr>
+<tr>
+<td><code>FA</code></td>
+<td>full-automation</td>
+<td><code>make qa</code> drives <code>start→status→stop</code>
+<strong>N=3 identical</strong> runs producing the same ordered status
+trace (deterministic §11.4.50/.98)</td>
+<td>3× identical status-trace artifacts</td>
+</tr>
+<tr>
+<td><code>SEC</code></td>
+<td>security</td>
+<td>(a) plant a session token / secret in <code>ClientConfig</code>,
+prove it appears in <strong>no</strong>
+log/<code>CoreError</code>/stream (§11.4.10); (b) the stream carries
+<strong>no</strong> SSID/gateway-IP/per-packet data (I5, §3.5)</td>
+<td>grep-empty proof; stream-content audit</td>
+</tr>
+<tr>
+<td><code>STRESS</code></td>
+<td>stress</td>
+<td>≥100 rapid <code>set_shields</code>/<code>set_exit</code> calls +
+≥10 concurrent <code>status_stream</code> sinks; no leak, bounded
+broadcast</td>
+<td>call-throughput CSV</td>
+</tr>
+<tr>
+<td><code>CHAOS</code></td>
+<td>chaos</td>
+<td>mid-<code>start</code> SIGKILL of the extension (Mode B) → shim
+emits down → fresh start recovers; isolate hot-restart (E4) →
+re-subscribe re-emits latest</td>
+<td>recovery trace</td>
+</tr>
+<tr>
+<td><code>CONC</code></td>
+<td>concurrency / atomicity</td>
+<td>concurrent <code>status_stream</code> (many sinks) +
+<code>set_shields</code> while a re-dial swaps <code>active_tx</code>
+[02_ORCH §7.3]; zero dropped/duplicated terminal status</td>
+<td>concurrency harness log</td>
+</tr>
+<tr>
+<td><code>RACE</code></td>
+<td>race / deadlock</td>
+<td><code>cargo test --features loom</code> on the <code>ORCH</code>
+mutex + <code>ProjCtx</code> snapshot + forwarding-task shutdown; no
+deadlock between <code>stop</code> and an in-flight
+<code>recv</code></td>
+<td>loom report</td>
+</tr>
+<tr>
+<td><code>MEM</code></td>
+<td>memory</td>
+<td>iOS NE <strong>extension</strong> RSS for plain-UDP
+<strong>and</strong> MASQUE separately, ≥30% headroom under the device
+ceiling, 30-min soak (G3 make-or-break); no per-event heap growth in the
+forwarding task</td>
+<td>Instruments / <code>/proc</code> RSS sample [research-ios_android
+§1]</td>
+</tr>
+<tr>
+<td><code>BENCH</code>/<code>PERF</code></td>
+<td>benchmarking / performance</td>
+<td><code>project()</code> cost; <code>status_stream</code> end-to-end
+latency (core emit → Dart receive); <code>attach_tun</code> latency</td>
+<td>latency histogram CSV</td>
+</tr>
+<tr>
+<td><code>UI</code>/<code>UX</code></td>
+<td>UI / UX</td>
+<td><code>ConnectButton</code> renders correctly across
+<strong>every</strong> <code>ffi::TunnelStatus</code> (incl.
+<code>Danger</code>); golden frames light+dark</td>
+<td>golden PNGs [04_CLIENT §12]</td>
+</tr>
+<tr>
+<td><code>REC</code></td>
+<td>recorded-evidence</td>
+<td>window-scoped MP4 (§11.4.154/.155) of the G5 connect journey,
+vision-validated <code>StatusChip</code> reads
+<code>masque-h3 · direct · 23ms</code> (OCR) (§11.4.163)</td>
+<td><code>panoptic</code>→<code>vision_engine</code> verdict</td>
+</tr>
+<tr>
+<td><code>CHAL</code>/<code>HQA</code></td>
+<td>Challenge / HelixQA</td>
+<td>a bank entry scores PASS only on the captured G5 status-trace +
+device recording, never config</td>
+<td>Challenge / HelixQA <code>result.json</code></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Anti-bluff rule (§11.4.5/.69/.107).</strong> A green
+<code>project()</code> unit test is <strong>not</strong> proof the user
+is protected. The authoritative evidence is the
+<code>E2E</code>/<code>REC</code> G5 device recording: the
+<code>StatusChip</code> reading the live transport·path·rtt confirmed by
+OCR/vision, plus the iOS NE <code>MEM</code> Instruments RSS report.
+Fake the orchestrator with the <strong>same generated model
+types</strong> so unit tests exercise real contracts, but the
+user-visible claim is earned only by the device recording [04_CLIENT
+§12].</p>
+</blockquote>
+<hr />
+<h2 id="14-surfaced-decisions--cross-doc-contracts">14. Surfaced
+decisions &amp; cross-doc contracts</h2>
+<p>Per §11.4.6/§11.4.66 — options + recommendation, never silently
+resolved.</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Decision / contract</th>
+<th>Options</th>
+<th>Recommendation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>D-FFI-1</strong></td>
+<td>Riverpod provider disposal for the status stream</td>
+<td><code>@riverpod</code>/<code>autoDispose</code> (paused when
+unwatched) <strong>vs</strong> always-alive
+<code>StreamProvider</code></td>
+<td><strong>autoDispose</strong> — cheap when backgrounded; correctness
+on resume comes from the §4.5(2) cached-latest re-emit, not from keeping
+the provider alive [research-flutter_ffi §6]</td>
+</tr>
+<tr>
+<td><strong>D-FFI-2</strong></td>
+<td>Mode-B logic-only verbs
+(<code>set_shields</code>/<code>set_exit</code>/<code>exits</code>)
+target the in-extension core</td>
+<td>(a) second in-app-process core handle for pure-logic queries
+<strong>vs</strong> (b) marshal over the <code>TunnelPlatform</code>
+MethodChannel to the extension</td>
+<td><strong>Gate on the platform</strong>: (b) for iOS/Android (single
+source of truth = the extension&#39;s core); (a) only if a pure read needs
+sub-ms latency. Surfaced, not assumed (§7.1)</td>
+</tr>
+<tr>
+<td><strong>D-FFI-3</strong></td>
+<td>Native-shim error type</td>
+<td>UniFFI typed <code>CoreError</code> enum <strong>vs</strong> flat
+string error</td>
+<td><strong>typed <code>CoreError</code></strong> (§8.1) — drives
+honest, specific UI messages; cbindgen falls back to
+<code>HxCoreErr</code> int codes (§6.3)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Cross-document contracts this document fixes</strong>
+(consumed by the named docs):</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Contract</th>
+<th>Fixed value</th>
+<th>Consumed by</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>C1</td>
+<td>The Dart-facing <strong><code>ffi::TunnelStatus</code></strong>
+(7-variant) + the <code>project()</code> mapping from
+<code>core::TunnelStatus</code></td>
+<td>§3.2, §3.3</td>
+<td>doc 02 (must emit the 5-variant on its stable prefixes); all
+apps</td>
+</tr>
+<tr>
+<td>C2</td>
+<td>The <strong>two consumption modes</strong> (in-process frb vs
+native-shim UniFFI/C) and where each status originates</td>
+<td>§1, §7.1</td>
+<td>every per-platform shim [04_CLIENT §5]</td>
+</tr>
+<tr>
+<td>C3</td>
+<td><strong><code>Connected.path</code></strong> requirement — the core
+MUST surface `&quot;direct&quot;</td>
+<td>&quot;relay&quot;<code>(added to</code>core::TunnelStatus.Connected<code>**or** queryable via the active route), else the projector defaults</code>&quot;direct&quot;<code>and re-emits (§3.3, E10). **UNVERIFIED** in the current orchestrator enum [02_ORCH §4.1] (which carries only</code>transport<code>+</code>rtt_ms`)
+— recorded as a follow-up cross-doc item per §11.4.6</td>
+<td>§3.3</td>
+</tr>
+<tr>
+<td>C4</td>
+<td>The typed <strong><code>CoreError</code></strong> boundary enum (frb
+exception ⇄ UniFFI error ⇄ <code>HxCoreErr</code>)</td>
+<td>§8</td>
+<td>all apps, all shims</td>
+</tr>
+<tr>
+<td>C5</td>
+<td><strong><code>attach_tun</code> fd ownership transfer</strong> (core
+close()s on detach/stop; shim hands a relinquished fd: Android
+<code>detachFd</code>, iOS callback-pump, Linux in-process)</td>
+<td>§9.3</td>
+<td>every per-platform shim [04_CLIENT §5], doc 02
+(<code>helix-tun</code>)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="sources-verified">Sources verified</h2>
+<ul>
+<li><code>final/03-client-core-and-ui.md</code> <code>[04_CLIENT]</code>
+— §0.1 (CI1–CI6 invariants), §3 (FFI surface, the <code>api.rs</code>
+sketch, the Dart wrapper, the FFI⇄shim seam), §4
+(<code>TunnelPlatform</code> contract), §5 (per-platform shims, iOS NE,
+Android VpnService), §7 (tokens / <code>TunnelStatus</code>→palette), §8
+(Riverpod, offline/intent honesty), §10–§12 (budgets, build/codegen,
+testing). Accessed 2026-06-25.</li>
+<li><code>04_VPN_CLD/HelixVPN-Architecture-Refined.md</code>
+<code>[04_ARCH §5]</code> — §5.1 (two binding generators, Rust core +
+Flutter UI), §5.6 (iOS NE memory = Rust-not-Go), §5.7 (Web has no shim).
+Accessed 2026-06-25.</li>
+<li><code>04_VPN_CLD/HelixVPN-helix-ui-Flutter.md</code>
+<code>[04_UI]</code> — §4 (Riverpod stream model), §5 (FFI surface), §6
+(shim matrix). Accessed 2026-06-25.</li>
+<li><code>final/v02-data-plane/orchestrator-and-state.md</code>
+<code>[02_ORCH]</code> — §2.1 (Orchestrator API +
+<code>subscribe</code>), §4.1 (canonical 5-variant
+<code>TunnelStatus</code>), §4.2 (broadcast cap/Lagged), §4.3 (emit
+coalescing), §4.4 (stable <code>Down.reason</code> prefixes), §4.5
+(no-durable-record), §4.6 (receiver contract), §5.1 (OrchState), §7.3
+(atomic transport swap). Accessed 2026-06-25.</li>
+<li><code>final/v02-data-plane/transport-trait.md</code>
+<code>[02_TRANS]</code> — §2 (<code>Transport</code> trait), §3.2
+(<code>SecretBytes</code> redaction/zeroize), §3.3
+(<code>TransportKind</code> labels = <code>Connected.transport</code>),
+§5.2 (carrier↔︎WG↔︎status projection). Accessed 2026-06-25.</li>
+<li><code>v09-research/research-flutter_ffi.md</code>
+<code>[research-flutter_ffi]</code> — §1 (frb 2.12.0,
+<code>StreamSink</code>, async fn, mirror, version-pin caveat), §2
+(UniFFI first-party Kotlin/Swift; uniffi-dart not production-ready), §3
+(per-platform staticlib/cdylib packaging), §6 (Riverpod 3.0
+<code>StreamProvider</code> pause-when-unlistened,
+<code>autoDispose</code>, <code>overrideWithValue</code>), §7 (synthesis
+recommendations). Accessed 2026-06-25.</li>
+<li><code>v09-research/research-ios_android.md</code>
+<code>[research-ios_android]</code> — §1 (iOS NE memory limit 50 MiB iOS
+15–18 / 15 MiB iOS 11–14, undocumented, MUST-NOT-hardcode, observed 15
+MB iOS 17 kills, whole-process scope, spike-driven jetsam, ~12–15 MB
+design budget), §2 (Rust staticlib size-opt flags), §3 (Android
+<code>VpnService.Builder</code>→<code>establish()</code>→<code>ParcelFileDescriptor</code>,
+<code>detachFd()</code> ownership transfer to JNI,
+<code>protect()</code>). Accessed 2026-06-25.</li>
+<li><code>final/10-testing-acceptance-and-qa.md</code>
+<code>[10_QA]</code> — §2 (the canonical §11.4.169 closed test-type
+taxonomy + abbreviations). Accessed 2026-06-25.</li>
+</ul>
+<p><em>Constitution: §11.4.44 (revision header), §11.4.6/§11.4.66
+(decisions = options + recommendation; UNVERIFIED never fabricated),
+§11.4.5/§11.4.69/§11.4.107/§11.4.159 (captured/window-scoped evidence),
+§11.4.10 (secrets never cross the boundary), §11.4.14 (no half-open TUN
+on attach failure), §11.4.28/§11.4.74 (decoupled reusable
+<code>helix-ffi</code>), §11.4.156 (no active CI — local drift gate),
+§11.4.169 (per-item test-type coverage).</em></p>
+<p><em>End of nano-detail specification — FFI surface (Dart ⇄ Rust),
+Volume 4 (Clients). Deepens [04_CLIENT §3]; consumes the orchestrator
+status contract [02_ORCH §4] and the <code>TunnelPlatform</code> shim
+contract [04_CLIENT §4]. Surfaced decisions: D-FFI-1 (provider
+disposal), D-FFI-2 (Mode-B logic-verb routing), D-FFI-3 (native error
+type); cross-doc contract C3 (<code>Connected.path</code>) flagged
+UNVERIFIED against the current orchestrator enum — all presented, none
+silently resolved (§11.4.66).</em></p>
+</body>
+</html>

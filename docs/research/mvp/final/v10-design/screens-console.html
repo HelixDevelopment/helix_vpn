@@ -1,0 +1,1393 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Screens — Helix Console (admin web/desktop app)</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Screens — Helix Console (admin web/desktop app)</h1>
+</header>
+<h1 id="screens--helix-console-admin-webdesktop-app">Screens — Helix
+Console (admin web/desktop app)</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-06-25T12:00:00Z</p>
+<blockquote>
+<p>Master technical specification — Volume 10 (Design System),
+nano-detail deep-dive. This document <strong>owns</strong> the complete
+screen inventory and per-screen UX specification of <strong>Helix
+Console</strong> — the HelixVPN administration app (Flutter,
+<code>flavor: HelixFlavor.console</code>, capability
+<code>{Capability.admin}</code>, <strong>no
+<code>helix_core_ffi</code></strong>, the <strong>only</strong> flavor
+that builds to Web) [<code>03-client-core-and-ui.md</code> §6, CI3]. It
+defines, screen by screen: purpose, desktop-first responsive layout, the
+<code>helix_design</code> components used, every state (loading / empty
+/ error / partial / live), navigation, interactions, accessibility, and
+the <strong>light + dark</strong> rendering — each backed by an ASCII
+wireframe.</p>
+<p><strong>SPEC-ONLY.</strong> It describes <em>what each screen is and
+how it behaves</em> — not the shipping <code>console</code> build.
+Original HelixVPN UX design work; the control-plane data each screen
+surfaces is owned by the cited control-plane docs.</p>
+<p><strong>Boundary with sibling docs.</strong> <strong>Owns:</strong>
+the Console screen set + per-screen layout/state/interaction/a11y.
+<strong>Consumes:</strong> the colour roles + connection / feedback
+semantics + per-app <strong>violet</strong> accent
+[<code>color-system.md</code> §2/§6]; the token tiers +
+spacing/radius/breakpoint scales [<code>design-tokens.md</code> §6]; the
+signature components (<code>AdaptiveScaffold</code>,
+<code>NetworkTile</code>, <code>PolicyEditor</code>, …)
+[<code>component-library.md</code>, sibling, this wave]; the OpenDesign
+engine that emits the tokens [<code>opendesign-foundation.md</code>];
+the <strong>Connector</strong> counterpart screens
+[<code>screens-connector.md</code>, sibling]; the
+<strong>Client</strong> screens [<code>screens-client.md</code>,
+sibling]. The <strong>data</strong> every screen renders is owned by the
+control-plane: [<code>02-control-plane.md</code>] + the V3 service docs
+[<code>v03-control-plane/svc-registry.md</code>],
+[<code>…/svc-policy.md</code>], [<code>…/svc-coordinator.md</code>],
+[<code>…/svc-telemetry.md</code>], [<code>…/svc-ipam.md</code>],
+[<code>…/svc-identity.md</code>].</p>
+<p><strong>Evidence base.</strong> <code>[CP §N]</code> =
+<code>final/02-control-plane.md</code>; <code>[CLIENT §N]</code> =
+<code>final/03-client-core-and-ui.md</code>;
+<code>[REG §N]</code>/<code>[POL §N]</code>/<code>[COORD §N]</code>/<code>[TEL §N]</code>/
+<code>[IPAM §N]</code> = the matching
+<code>final/v03-control-plane/svc-*.md</code>; <code>[COLOR §N]</code> =
+<code>final/v10-design/color-system.md</code>; <code>[DT §N]</code> =
+<code>final/v10-design/design-tokens.md</code>. Claims not grounded in
+the evidence base or in this document&#39;s own original design choices are
+tagged <code>UNVERIFIED</code> per constitution §11.4.6 — never
+fabricated. Layout/state/interaction designs are <strong>original
+HelixVPN UX work</strong>.</p>
+</blockquote>
+<hr />
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#0-what-the-console-is--and-the-design-principles-that-shape-every-screen">0.
+What the Console is — and the design principles that shape every
+screen</a></li>
+<li><a href="#1-the-console-shell-adaptivescaffold-responsive-law-command-palette">1.
+The Console shell (AdaptiveScaffold, responsive law, command
+palette)</a></li>
+<li><a href="#2-screen-inventory--navigation-map">2. Screen inventory +
+navigation map</a></li>
+<li><a href="#3-sign-in-oidc--tenant-select">3. Sign-in (OIDC + tenant
+select)</a></li>
+<li><a href="#4-dashboard--overview">4. Dashboard / overview</a></li>
+<li><a href="#5-devices-list--detail--approve--revoke">5. Devices (list
+· detail · approve / revoke)</a></li>
+<li><a href="#6-users--sso-oidc-config-roles">6. Users &amp; SSO (OIDC
+config, roles)</a></li>
+<li><a href="#7-policy-editor-acl-rules-compile--preview-fail-closed">7.
+Policy editor (ACL rules, compile / preview, fail-closed)</a></li>
+<li><a href="#8-topology-the-coordinator-graph">8. Topology (the
+coordinator graph)</a></li>
+<li><a href="#9-audit-log-control-action-audit--no-traffic-logs">9.
+Audit log (control-action audit — no traffic logs)</a></li>
+<li><a href="#10-ipam--prefixes">10. IPAM / prefixes</a></li>
+<li><a href="#11-telemetry--health-counters-convergence--event-lag-slos">11.
+Telemetry / health (counters, convergence &amp; event-lag SLOs)</a></li>
+<li><a href="#12-billing--subscription">12. Billing /
+subscription</a></li>
+<li><a href="#13-settings">13. Settings</a></li>
+<li><a href="#14-cross-screen-states-a11y--lightdark-contract">14.
+Cross-screen states, a11y &amp; light/dark contract</a></li>
+<li><a href="#15-surfaced-decisions--cross-doc-contracts">15. Surfaced
+decisions &amp; cross-doc contracts</a></li>
+<li><a href="#sources-verified">Sources verified</a></li>
+</ul>
+<hr />
+<h2 id="0-what-the-console-is--and-the-design-principles-that-shape-every-screen">0.
+What the Console is — and the design principles that shape every
+screen</h2>
+<p>Helix Console is the <strong>admin brain&#39;s front end</strong>: it is
+where a tenant administrator manages <em>who may reach what</em>. It is
+the UI over the Go control plane&#39;s REST + WebSocket/SSE surface [CP §8]
+— it <strong>never</strong> opens a tunnel, never links the Rust core
+(<code>Capability.admin</code>, no <code>helix_core_ffi</code>, CI3
+[CLIENT §6]) — so it is the one flavor that builds to
+<strong>Web</strong> and also ships as a desktop app (macOS / Windows /
+Linux from the same tree).</p>
+<p>Five principles govern every Console screen:</p>
+<ol type="1">
+<li><strong>Density without clutter — desktop-first.</strong> The
+Console is a power tool used on <code>lg</code> (1024) and
+<code>xl</code> (1440) viewports [DT §6.6]; it presents heavy tables, a
+graph, and a code-like policy editor. It uses the <strong>expanded
+<code>AdaptiveScaffold</code></strong> (extended
+<code>NavigationRail</code> + multi-pane) [CLIENT §7.3] and degrades
+gracefully to a phone layout, but the home turf is the wide screen.</li>
+<li><strong>Authority accent = violet, safety colours
+unchanged.</strong> The Console&#39;s brand-overridable accent is
+<code>violet.*</code> [COLOR §6] — it reads as an admin/authority
+surface, distinct from the Client&#39;s indigo and the Connector&#39;s teal. The
+<strong>connection-state and feedback semantics never change</strong>
+(D-COLOR-1): a device shown &quot;online/protected&quot; is the same green
+everywhere.</li>
+<li><strong>Live, not polled.</strong> Device lists, the topology graph,
+and the audit feed fold <code>GET /v1/stream</code> WS/SSE events
+(<code>device.online</code>, <code>route.changed</code>,
+<code>policy.compiled</code>, <code>device.revoked</code>) into state
+and update <strong>without a manual refresh</strong> [CLIENT §8.3, CP
+§8]. A small live-connection indicator tells the admin the stream is
+healthy.</li>
+<li><strong>Fail-closed, preview-before-apply.</strong> The
+highest-stakes screen (Policy editor) compiles <strong>dry-run
+first</strong> and shows an effect-diff before anything activates [POL
+§4/§5]; destructive control actions (revoke, deactivate) require
+explicit confirmation per §11.4.66.</li>
+<li><strong>Privacy by construction is visible.</strong> The Console
+<strong>cannot</strong> show traffic / connection / flow logs because
+they do not exist (C3 [CP §0.1]). The Audit screen states this plainly —
+it shows <em>control actions</em>, never user traffic.</li>
+</ol>
+<blockquote>
+<p><strong>Honest boundary (§11.4.6).</strong> This document specifies
+layout, state, and interaction. It does <strong>not</strong> re-specify
+the REST/WS payloads (owned by [CP §8] + the V3 service docs) nor the
+token hex/contrast (owned by [COLOR]/[DT]). Where a concrete
+control-plane field name is cited it is grounded in those docs; a value
+not so grounded is marked <code>UNVERIFIED</code>.</p>
+</blockquote>
+<hr />
+<h2 id="1-the-console-shell-adaptivescaffold-responsive-law-command-palette">1.
+The Console shell (AdaptiveScaffold, responsive law, command
+palette)</h2>
+<p>Every screen renders <strong>inside</strong> the Console shell. The
+shell is <code>AdaptiveScaffold</code> [CLIENT §7.2] branching on
+<strong>width, never <code>Platform.isX</code></strong> [CLIENT
+§7.3]:</p>
+<table>
+<thead>
+<tr>
+<th>Breakpoint [DT §6.6]</th>
+<th>Width</th>
+<th>Shell layout</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>compact</code></td>
+<td>&lt; 600</td>
+<td><code>BottomNavigationBar</code> (5 primary destinations) + single
+pane; overflow destinations in a &quot;More&quot; sheet</td>
+</tr>
+<tr>
+<td><code>medium</code></td>
+<td>600–1024</td>
+<td><code>NavigationRail</code> (icons + labels) + master/detail
+two-pane</td>
+</tr>
+<tr>
+<td><code>expanded</code></td>
+<td>&gt; 1024</td>
+<td><strong>Extended <code>NavigationRail</code></strong> (icon + text,
+pinned) + multi-pane (list │ detail │ live-events rail) — the Console
+home turf</td>
+</tr>
+</tbody>
+</table>
+<pre><code>┌──────────────────────────────────────────────────────────────────────────┐
+│ Helix Console      [acme-corp ▾]            ⌘K  ◐ theme   ◉ live   ⦿ admin │  ← top app bar (surface.default, violet brand mark)
+├───────────────┬──────────────────────────────────────────┬───────────────┤
+│ ▣ Dashboard   │                                          │  LIVE EVENTS  │
+│ ▤ Devices     │            (primary content pane)         │  ───────────  │
+│ ⦿ Users &amp; SSO │                                          │ 12:04 dev on  │
+│ ⛨ Policy      │                                          │ 12:03 policy  │
+│ ◈ Topology    │                                          │      v8 act.  │
+│ ▦ IPAM        │                                          │ 12:01 dev off │
+│ ☰ Audit       │                                          │ …             │
+│ ▲ Telemetry   │                                          │ (folds /v1/   │
+│ ▮ Billing     │                                          │  stream WS)   │
+│ ⚙ Settings    │                                          │               │
+│ ───────────── │                                          │               │
+│ ◉ stream OK   │                                          │               │
+└───────────────┴──────────────────────────────────────────┴───────────────┘
+   extended rail            content (master│detail)           live-events rail</code></pre>
+<ul>
+<li><strong>Top app bar</strong> carries: the Console brand mark
+(violet), the <strong>tenant switcher</strong>
+<code>[acme-corp ▾]</code> (an admin with rights to &gt;1 tenant; one
+tenant ⇒ static label), the <strong>⌘K command palette</strong> trigger,
+a <strong>theme toggle</strong> (◐ system/light/dark), the
+<strong>live-stream indicator</strong> (◉ green = stream healthy / amber
+= reconnecting / red = stream down — reuses the connection-state palette
+[COLOR §3]), and the signed-in admin avatar + role chip.</li>
+<li><strong>Command palette (⌘K / Ctrl-K)</strong> [CLIENT §7.3] — fuzzy
+jump to any screen, device, user, policy version, or action (&quot;revoke
+device …&quot;, &quot;activate policy v7&quot;). Keyboard-first; every action it lists
+is also reachable by mouse.</li>
+<li><strong>Live-events rail</strong> (expanded only) folds the WS/SSE
+stream; on <code>medium</code>/ <code>compact</code> it collapses into a
+bell/notification sheet.</li>
+<li>The <strong>stream-health chip</strong> at the rail foot is the
+§11.4.6-honest signal that &quot;live&quot; is real: amber when the WS reconnects,
+red + a banner when it is down (the lists then show a &quot;may be stale —
+reconnecting&quot; notice rather than lying).</li>
+</ul>
+<hr />
+<h2 id="2-screen-inventory--navigation-map">2. Screen inventory +
+navigation map</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Screen</th>
+<th>Route</th>
+<th>Primary data source</th>
+<th>Min role [CP §8.1]</th>
+<th>Key components</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>S0</td>
+<td>Sign-in / tenant select</td>
+<td><code>/signin</code></td>
+<td>identity (OIDC) [<code>svc-identity.md</code>]</td>
+<td>(unauth)</td>
+<td>brand splash, OIDC button, tenant chooser</td>
+</tr>
+<tr>
+<td>S1</td>
+<td>Dashboard / overview</td>
+<td><code>/</code></td>
+<td>aggregate of registry + telemetry + policy</td>
+<td>member+</td>
+<td>stat cards, SLO sparkline, live-event digest</td>
+</tr>
+<tr>
+<td>S2</td>
+<td>Devices — list</td>
+<td><code>/devices</code></td>
+<td><code>GET /v1/devices</code> [REG §3]</td>
+<td>member+</td>
+<td>data table, presence dot, filter bar</td>
+</tr>
+<tr>
+<td>S2d</td>
+<td>Device — detail</td>
+<td><code>/devices/:id</code></td>
+<td>device + certs + presence [REG §2/§5]</td>
+<td>member+</td>
+<td>detail header, cert panel, revoke action</td>
+</tr>
+<tr>
+<td>S3</td>
+<td>Users &amp; SSO</td>
+<td><code>/users</code></td>
+<td>identity / OIDC config [<code>svc-identity.md</code>]</td>
+<td>admin</td>
+<td>roster table, role editor, OIDC config form</td>
+</tr>
+<tr>
+<td>S4</td>
+<td>Policy editor</td>
+<td><code>/policy</code></td>
+<td><code>policies.spec</code> + compiler [POL §2/§4]</td>
+<td>operator+</td>
+<td><code>PolicyEditor</code>, effect-diff, version history</td>
+</tr>
+<tr>
+<td>S5</td>
+<td>Topology</td>
+<td><code>/topology</code></td>
+<td>coordinator graph [COORD §1]</td>
+<td>member+</td>
+<td>graph canvas, node/edge inspector</td>
+</tr>
+<tr>
+<td>S6</td>
+<td>IPAM / prefixes</td>
+<td><code>/ipam</code></td>
+<td>overlay pool + advertised_prefixes [IPAM §1, REG §6]</td>
+<td>operator+</td>
+<td>pool card, prefix table, conflict list</td>
+</tr>
+<tr>
+<td>S7</td>
+<td>Audit</td>
+<td><code>/audit</code></td>
+<td><code>audit_events</code> [TEL §4]</td>
+<td>admin (read)</td>
+<td>audit feed, action filter, no-traffic banner</td>
+</tr>
+<tr>
+<td>S8</td>
+<td>Telemetry / health</td>
+<td><code>/health</code></td>
+<td>Prometheus series [TEL §3]</td>
+<td>operator+</td>
+<td>SLO gauges, convergence histogram, alert list</td>
+</tr>
+<tr>
+<td>S9</td>
+<td>Billing / subscription</td>
+<td><code>/billing</code></td>
+<td>billing provider <code>UNVERIFIED</code></td>
+<td>admin</td>
+<td>plan card, seat usage, invoices</td>
+</tr>
+<tr>
+<td>S10</td>
+<td>Settings</td>
+<td><code>/settings</code></td>
+<td>tenant config + per-user prefs</td>
+<td>varies</td>
+<td>tenant settings, theme, session, danger zone</td>
+</tr>
+</tbody>
+</table>
+<pre class="mermaid"><code>flowchart TD
+    S0[&quot;S0 Sign-in / tenant select&quot;] --&gt;|authenticated| S1[&quot;S1 Dashboard&quot;]
+    S1 --&gt; S2[&quot;S2 Devices (list)&quot;]
+    S1 --&gt; S4[&quot;S4 Policy editor&quot;]
+    S1 --&gt; S5[&quot;S5 Topology&quot;]
+    S1 --&gt; S8[&quot;S8 Telemetry / health&quot;]
+    S2 --&gt; S2d[&quot;S2d Device detail&quot;]
+    S2d --&gt;|revoke| S2
+    S1 --&gt; S3[&quot;S3 Users &amp; SSO&quot;]
+    S1 --&gt; S6[&quot;S6 IPAM / prefixes&quot;]
+    S1 --&gt; S7[&quot;S7 Audit&quot;]
+    S1 --&gt; S9[&quot;S9 Billing&quot;]
+    S1 --&gt; S10[&quot;S10 Settings&quot;]
+    S4 -. &quot;compile error → device/host refs&quot; .-&gt; S2
+    S4 -. &quot;host CIDR not advertised → fix&quot; .-&gt; S6
+    S5 -. &quot;click connector node&quot; .-&gt; S6
+    S5 -. &quot;click device node&quot; .-&gt; S2d
+    S7 -. &quot;policy.activate row → version&quot; .-&gt; S4
+    CMD[&quot;⌘K command palette&quot;] -. &quot;jump to any screen / entity / action&quot; .-&gt; S1 &amp; S2 &amp; S4 &amp; S5 &amp; S7</code></pre>
+<p>The map is a hub-and-spoke from the Dashboard, with
+<strong>cross-links that follow the data</strong>: a policy compile
+error that names an un-advertised host CIDR links to IPAM (S6); a
+topology connector node links to its IPAM prefixes; an audit
+<code>policy.activate</code> row links to that policy version in the
+editor.</p>
+<hr />
+<h2 id="3-sign-in-oidc--tenant-select">3. Sign-in (OIDC + tenant
+select)</h2>
+<p><strong>Purpose.</strong> Authenticate a tenant admin (OIDC session)
+and, when the identity maps to more than one tenant, choose which to
+administer. Managed (OIDC) is the Console&#39;s identity mode [CP §9.1] —
+the anonymous device-token path is a <em>Client</em> enrollment concern,
+not a Console sign-in.</p>
+<p><strong>Layout (desktop-first, centred card).</strong></p>
+<pre><code>┌──────────────────────────────────────────────────────────────────────────┐
+│                                                                            │
+│                      ◆  Helix Console                                       │  ← violet brand mark
+│                      Administer your private network                       │
+│                                                                            │
+│              ┌────────────────────────────────────────────┐                │
+│              │  Continue with your identity provider       │                │
+│              │  ┌──────────────────────────────────────┐  │                │
+│              │  │   ⦿  Sign in with SSO  (OIDC)          │  │  ← action.primary (violet)
+│              │  └──────────────────────────────────────┘  │                │
+│              │                                            │                │
+│              │  Self-hosted? Enter your control-plane URL │                │
+│              │  ┌──────────────────────────────────────┐  │                │
+│              │  │ https://cp.acme.example                │  │  ← input
+│              │  └──────────────────────────────────────┘  │                │
+│              └────────────────────────────────────────────┘                │
+│                                                                            │
+│      No traffic is ever logged. Helix stores identity &amp; policy only.       │  ← privacy note (C3)
+└──────────────────────────────────────────────────────────────────────────┘</code></pre>
+<p><strong>Tenant select (post-auth, multi-tenant
+identity).</strong></p>
+<pre><code>┌──────────────────────────────┐
+│  Choose a tenant             │
+│  ┌────────────────────────┐  │
+│  │ ◈ acme-corp     142 dev │  │ ← selectable rows; presence count from registry
+│  │ ◈ acme-eu        38 dev │  │
+│  │ ◈ lab            6 dev   │  │
+│  └────────────────────────┘  │
+└──────────────────────────────┘</code></pre>
+<p><strong>States.</strong> <em>Loading</em> — brand splash +
+indeterminate progress while the OIDC redirect resolves. <em>Empty</em>
+— identity maps to <strong>zero</strong> tenants ⇒ a clear &quot;your account
+is not an admin on any tenant; contact your operator&quot; message (not a
+spinner that hangs). <em>Error</em> — OIDC failure shows the honest
+provider reason (<code>feedback.error</code>, [COLOR §2.4]) with a
+retry, never a generic &quot;something went wrong&quot;; an unreachable
+control-plane URL is a distinct, actionable error.</p>
+<p><strong>Interactions / a11y.</strong> SSO button is the default focus
++ Enter-activates; the control-plane-URL field validates as a URL on
+blur. Full keyboard nav; the brand mark has an <code>alt</code>.
+<strong>Light/dark:</strong> the card is <code>surface.raised</code>,
+the SSO button <code>action.primary</code> (violet <code>#6D28D9</code>
+light / <code>#A78BFA</code> dark, both AA-proven [COLOR §6]); the
+privacy note is <code>text.secondary</code>.</p>
+<hr />
+<h2 id="4-dashboard--overview">4. Dashboard / overview</h2>
+<p><strong>Purpose.</strong> The at-a-glance health of the tenant&#39;s
+network: how many devices are online, whether the active policy is
+healthy, whether the control plane is meeting its &lt; 1 s convergence
+SLO [CP §10.2], and a digest of recent control activity. It is a
+<strong>read</strong> screen (member+) that links into every deeper
+screen.</p>
+<p><strong>Layout (expanded, three-zone).</strong></p>
+<pre><code>┌──────────────────────────────────────────────────────────────────────────┐
+│  Dashboard — acme-corp                                   updated live ◉    │
+├──────────────────────────────────────────────────────────────────────────┤
+│  ┌───────────┐ ┌───────────┐ ┌───────────┐ ┌───────────┐                  │
+│  │ DEVICES   │ │ CONNECTORS│ │ ACTIVE    │ │ CONVERGE  │   ← stat cards     │
+│  │ 142       │ │ 7         │ │ POLICY    │ │ p99       │     (elevation.card)│
+│  │ 118 online│ │ 6 online  │ │ v8 ✓      │ │ 0.42 s ✓  │                   │
+│  │ ▲ green   │ │ ▲ green   │ │ green     │ │ green     │                   │
+│  └───────────┘ └───────────┘ └───────────┘ └───────────┘                  │
+│  ┌──────────────────────────────────┐  ┌──────────────────────────────┐   │
+│  │ CONVERGENCE (event→delta, p99)    │  │ RECENT CONTROL ACTIONS        │   │
+│  │  1s┤                              │  │ 12:04 alice revoked dev-31    │   │
+│  │    │      ╭╮      ╭─╮            │  │ 12:03 system activated pol v8 │   │
+│  │ .5s┤ ╭──╮╱  ╲╭───╯  ╲──         │  │ 12:01 bob enrolled connector  │   │
+│  │    │╱            (sparkline)     │  │ 11:58 carol changed prefixes  │   │
+│  │  0 └──────────────────────────  │  │ → see full Audit              │   │
+│  └──────────────────────────────────┘  └──────────────────────────────┘   │
+│  ┌──────────────────────────────────────────────────────────────────────┐ │
+│  │ ⚠ 2 advisory route conflicts (overlapping CIDRs) — review in IPAM      │ │ ← advisory banner (warning)
+│  └──────────────────────────────────────────────────────────────────────┘ │
+└──────────────────────────────────────────────────────────────────────────┘</code></pre>
+<p><strong>Components.</strong> Four <strong>stat cards</strong>
+(<code>elevation.semantic.card</code> [DT §6.3]) each with a value, a
+sub-count, and a state-coloured indicator dot; a <strong>convergence
+sparkline</strong> sourced from <code>helix_reconcile_seconds</code> p99
+[TEL §3.2, COORD §7.3]; a <strong>recent-actions digest</strong> (last N
+<code>audit_events</code> [TEL §4]); an <strong>advisory banner</strong>
+summarising open <code>route.conflict.detected</code> items [REG §6.3]
+(advisory, never blocking — links to IPAM S6).</p>
+<p><strong>States.</strong> <em>Loading</em> — skeleton cards (shimmer
+placeholders, never a blank screen). <em>Empty</em> — a
+freshly-bootstrapped tenant with 0 devices shows an onboarding card:
+&quot;Enroll your first connector&quot; → mint an enroll token (links to
+Devices/enroll). <em>Error</em> — if an aggregate query fails, that one
+card shows an inline error + retry while the rest render (no
+all-or-nothing). <em>Live</em> — counts and digest update from
+<code>/v1/stream</code> without refresh; the &quot;updated live ◉&quot; chip goes
+amber if the stream drops.</p>
+<p><strong>SLO colour logic (honest, §11.4.6).</strong> The convergence
+card is green only when p99 &lt; the SLO target (1 s [CP §10.2]); amber
+within 1–2×; red above — and the card states the <em>measured</em>
+number, never &quot;healthy&quot; without the figure.</p>
+<p><strong>A11y / light-dark.</strong> Stat values are
+<code>text.primary</code> (AAA both themes); the indicator dots carry a
+text/icon label too (never colour-only, CI5 [CLIENT §0.1]). Cards are
+<code>surface.raised</code>; the warning banner is
+<code>feedback.warning</code> (<code>amber.700</code> light /
+<code>amber.400</code> dark [COLOR §2.4]).</p>
+<hr />
+<h2 id="5-devices-list--detail--approve--revoke">5. Devices (list ·
+detail · approve / revoke)</h2>
+<h3 id="51-devices--list-s2">5.1 Devices — list (S2)</h3>
+<p><strong>Purpose.</strong> The roster of every device (clients
+<strong>and</strong> connectors — one <code>devices</code> table,
+<code>kind</code> discriminates [CP §2.2, REG §2]). Filter, sort,
+search, and drill in. Live presence from Redis TTL keys via the stream
+[REG §5.3, TEL §5].</p>
+<p><strong>Layout (data table + filter bar).</strong></p>
+<pre><code>┌──────────────────────────────────────────────────────────────────────────┐
+│ Devices (142)        [ search name / overlay-ip ]   [+ Enroll device ▾]    │
+│ Filter: ◉ all  ○ clients  ○ connectors    Status: ○ online ○ offline ○ all │
+├───┬──────────────┬─────────┬────────────────────┬──────────┬──────────────┤
+│ ● │ NAME         │ KIND    │ OVERLAY IP         │ OS       │ LAST SEEN     │
+├───┼──────────────┼─────────┼────────────────────┼──────────┼──────────────┤
+│ ● │ alice-mbp    │ client  │ fd7a:helix:1::2    │ macos    │ online        │ ← green presence dot
+│ ● │ warehouse-gw │ connect.│ fd7a:helix:1::5    │ linux    │ online        │
+│ ○ │ bob-pixel    │ client  │ fd7a:helix:1::9    │ android  │ 3 h ago       │ ← grey (offline)
+│ ⊘ │ old-laptop   │ client  │ fd7a:helix:1::4    │ windows  │ revoked       │ ← red (revoked)
+│ … │              │         │                    │          │               │
+├───┴──────────────┴─────────┴────────────────────┴──────────┴──────────────┤
+│  118 online · 23 offline · 1 revoked            ‹ 1 2 3 … ›  rows: 25 ▾     │
+└──────────────────────────────────────────────────────────────────────────┘</code></pre>
+<p><strong>Interactions.</strong> Click a row → device detail (S2d). The
+<code>[+ Enroll device ▾]</code> split-button mints a single-use enroll
+token [CP §9.2] and shows it as text + QR (operator hands it to the
+device); the QR/token is <strong>never</strong> logged (§11.4.10).
+Column sort; multi-facet filter; debounced search over name + overlay
+IP. Presence dot uses the connection-state palette: green online / grey
+offline / red revoked — <strong>always paired with the text
+status</strong> (CI5).</p>
+<p><strong>States.</strong> <em>Loading</em> — table skeleton rows.
+<em>Empty</em> — &quot;No devices yet — enroll your first connector or
+client&quot; with the enroll CTA. <em>Error</em> — a banner (&quot;couldn&#39;t load
+devices — retry&quot;) above the last-known rows (stale, marked).
+<em>Live</em> —
+<code>device.online</code>/<code>.offline</code>/<code>.revoked</code>/<code>.enrolled</code>
+events mutate rows in place; a newly enrolled device animates in
+(<code>motion.stateXfade</code> [DT §6.4]).</p>
+<h3 id="52-device--detail-s2d">5.2 Device — detail (S2d)</h3>
+<p><strong>Purpose.</strong> Everything known about one device (identity
+only, never traffic): identity, overlay IP, presence, current
+transport/RTT (presence/health only, C3), certificate state, group
+memberships, and the <strong>revoke</strong> action. For a connector it
+also surfaces its advertised prefixes (links to IPAM).</p>
+<pre><code>┌──────────────────────────────────────────────────────────────────────────┐
+│ ‹ Devices   alice-mbp                              ● online   [ Revoke ⊘ ] │
+├──────────────────────────────────────────────────────────────────────────┤
+│ Identity                          │ Certificate                           │
+│  Kind      client                 │  Serial    9f2c…                      │
+│  Owner     alice@acme  (user)     │  Not after 2026-06-26 12:00Z (23 h)   │
+│  OS        macos                  │  Status    valid  ✓                   │
+│  Overlay   fd7a:helix:1::2        │  Auto-renews over control channel     │
+│  Enrolled  2026-06-20             │                                       │
+│  WG pubkey 32B  Yg8…==  (public)  │  [ Force re-issue ]                    │
+├───────────────────────────────────┴───────────────────────────────────────┤
+│ Presence / health (no traffic data — C3)                                   │
+│  Last seen   online (live)     Transport  masque-h3     RTT  23 ms         │
+│  Groups      group:admins                                                  │
+├──────────────────────────────────────────────────────────────────────────┤
+│ ⓘ HelixVPN stores identity &amp; policy only. There is no connection,          │
+│   destination, or bandwidth record for this device, by construction.       │
+└──────────────────────────────────────────────────────────────────────────┘</code></pre>
+<p><strong>Revoke flow (§11.4.66 confirm).</strong>
+<code>[ Revoke ⊘ ]</code> opens a confirmation dialog (&quot;Revoke
+alice-mbp? Its tunnel is force-closed and its peer is removed from every
+map within ~1 s [CP §9.3]. This cannot be undone — re-enrollment is
+required.&quot;). On confirm: <code>POST /v1/devices/:id/revoke</code>
+(admin-only [CP §8.1]); the row flips to revoked, an audit
+<code>device.revoke</code> row is written, and the topology graph drops
+the node live. Revoke is <strong>admin-only</strong>; operator/member
+see it disabled with a tooltip stating the required role.</p>
+<p><strong>States.</strong> <em>Loading</em> — header skeleton + panels
+shimmer. <em>Error</em> — per-panel inline error (cert panel can fail
+independently of identity). <em>Revoked device</em> — the whole header
+tints with the danger/revoked treatment and the revoke button becomes a
+disabled &quot;Revoked&quot; label; re-enroll guidance is shown.</p>
+<p><strong>A11y / light-dark.</strong> The connector &quot;advertised
+prefixes&quot; sub-panel (for connectors) links to IPAM. Panels are
+<code>surface.raised</code>; &quot;valid ✓&quot; is <code>feedback.success</code>,
+an expiring-soon cert (&lt; 1 h) is <code>feedback.warning</code>. The
+privacy note is <code>text.secondary</code>, present on
+<strong>every</strong> device surface so the no-logging guarantee is
+never out of sight.</p>
+<hr />
+<h2 id="6-users--sso-oidc-config-roles">6. Users &amp; SSO (OIDC config,
+roles)</h2>
+<p><strong>Purpose.</strong> Manage the human roster and how they
+authenticate. Two halves: <strong>Users &amp; roles</strong> (the
+<code>users</code> table — <code>admin</code> &gt; <code>operator</code>
+&gt; <code>member</code> [CP §2.2/§8.1]) and <strong>SSO
+configuration</strong> (the OIDC IdP the tenant trusts —
+Keycloak/Authentik [CP §9.1]). Admin-only.</p>
+<pre><code>┌──────────────────────────────────────────────────────────────────────────┐
+│ Users &amp; SSO                                          [+ Invite user ]      │
+├───────────────────────────── Users ───────────────────────────────────────┤
+│ NAME / EMAIL          IDENTITY      ROLE          DEVICES   STATUS          │
+│ alice@acme            OIDC          admin   ▾     3         active          │
+│ bob@acme              OIDC          operator ▾    2         active          │
+│ carol@ext             OIDC          member  ▾     1         active          │
+│ (device-token user)   anonymous     member        1         no PII (C6)     │ ← anon user row
+├──────────────────────────── SSO (OIDC) ────────────────────────────────────┤
+│  Provider     Keycloak                              Status  ● connected     │
+│  Issuer URL   https://id.acme.example/realms/acme                          │
+│  Client ID    helix-console                                                │
+│  Client secret  ••••••••  [ rotate ]                (never displayed/logged)│
+│  Group claim  groups   → maps IdP groups to Helix groups                   │
+│  [ Test connection ]                          [ Save ]                      │
+└──────────────────────────────────────────────────────────────────────────┘</code></pre>
+<p><strong>Interactions.</strong> Inline <strong>role editor</strong>
+per user (a dropdown that writes the new <code>role</code>; an admin
+cannot demote the last remaining admin — guarded with an explanatory
+disable). <strong>Invite</strong> mints an OIDC-bound invitation or, in
+privacy mode, points to the anonymous device-token path. <strong>SSO
+config</strong> edits the issuer / client-id / claim mapping; the
+<strong>client secret is masked, never rendered or logged</strong>
+(§11.4.10) and only ever rotated. <code>[ Test connection ]</code>
+performs a live OIDC discovery probe and reports the honest result.</p>
+<p><strong>States.</strong> <em>Loading</em> — roster skeleton.
+<em>Empty</em> — a single bootstrap admin + &quot;no SSO configured yet —
+using local/bootstrap auth&quot; guidance. <em>Error</em> — a failed SSO test
+shows the precise discovery/JWKS error (<code>feedback.error</code>),
+never a vague failure. The <strong>anonymous user row</strong> is
+rendered with a &quot;no PII&quot; badge to make the privacy posture (C6) visible,
+not hidden.</p>
+<p><strong>A11y / light-dark.</strong> Role dropdowns are
+keyboard-operable; the secret field has an <code>aria-label</code> and a
+copy-suppressed value. Status dots (&quot;connected&quot;) pair with text. Light:
+<code>surface.default</code>/<code>surface.raised</code>; the
+rotate/secret controls use <code>feedback.warning</code> emphasis to
+signal sensitivity.</p>
+<hr />
+<h2 id="7-policy-editor-acl-rules-compile--preview-fail-closed">7.
+Policy editor (ACL rules, compile / preview, fail-closed)</h2>
+<p><strong>Purpose.</strong> The Console&#39;s highest-stakes screen —
+author the declarative ACL document (<code>policies.spec</code> jsonb
+[CP §7.1, POL §2]), <strong>dry-run compile</strong> it, inspect the
+<strong>effect-diff</strong> vs the active version, and
+<strong>activate</strong> (with instant rollback). This is where &quot;1 user
+→ N networks&quot; becomes compiled per-node visibility (default-deny,
+fail-closed [POL §0.1]).</p>
+<p><strong>Layout (three-pane: editor │ effect-diff │ version
+history).</strong></p>
+<pre><code>┌──────────────────────────────────────────────────────────────────────────┐
+│ Policy editor          active: v8        editing: v9 (draft)   ⊘ not saved │
+├──────────────────────────┬────────────────────────────┬───────────────────┤
+│ SPEC (declarative ACL)   │ EFFECT PREVIEW (dry-run)    │ VERSIONS          │
+│ ┌──────────────────────┐ │  Compile: ✓ ok (0.04 s)     │  v9 draft  ●      │
+│ │ groups:              │ │  ───────────────────────    │  v8 active ✓      │
+│ │   group:admins: […]  │ │  + admins → office-lan:*     │  v7        ↺      │
+│ │ hosts:               │ │  + admins → warehouse-cams   │  v6        ↺      │
+│ │   warehouse-cams:    │ │  − contractors → office-lan  │  v5        ↺      │
+│ │     10.10.0.0/24     │ │  (removed from prior draft)  │  …                │
+│ │ acls:                │ │  ───────────────────────    │  [ diff v8↔v9 ]   │
+│ │  - action: accept    │ │  Visible-peer changes:       │                   │
+│ │    src: [group:admins│ │   alice-mbp  +2  −0          │                   │
+│ │    dst: [&quot;*:*&quot;]      │ │   carol-lap  +0  −1          │                   │
+│ │  - action: accept    │ │  ───────────────────────    │                   │
+│ │    src:[group:contr.]│ │  ⚠ advisory: warehouse-cams │                   │
+│ │    dst:[&quot;warehouse-  │ │     overlaps office-lan CIDR │                   │
+│ │      cams:554,80&quot;]   │ │     → resolved by 4via6      │                   │
+│ │ exitNodes:[group:adm]│ │                              │                   │
+│ └──────────────────────┘ │  [ Validate ]  [ Activate v9 ]                  │
+├──────────────────────────┴────────────────────────────┴───────────────────┤
+│ ✗ ERROR (fail-closed): host &quot;cam-net&quot; dst CIDR not covered by any          │ ← blocking error state
+│   advertised prefix → fix in IPAM, or correct the host.   [ go to IPAM ]   │
+└──────────────────────────────────────────────────────────────────────────┘</code></pre>
+<p><strong>Components.</strong> <code>PolicyEditor</code> [CLIENT §7.2]
+— a structured text/JSONC editor with syntax highlighting of the ACL
+grammar [POL §2.3]; the <strong>effect-diff</strong> pane shows the
+dry-run <code>CompiledPolicy</code> delta vs the active version
+(added/removed edges, per-device visible-peer +/− counts [POL §4.3]); a
+<strong>version history</strong> rail listing every
+<code>policies.version</code> with the active one marked and each prior
+one <strong>one-click re-activatable</strong> (instant rollback [POL §6,
+CP §7.4]).</p>
+<p><strong>Fail-closed behaviour (the load-bearing UX).</strong>
+Activation is <strong>disabled</strong> until a clean dry-run [POL §5].
+Blocking errors (unknown group/host; a <code>dst</code> CIDR not covered
+by any <code>advertised_prefixes</code>; a rule granting a
+<em>revoked</em> device; an <code>exitNodes</code> entry resolving to a
+connector) render in the bottom error bar with the
+<strong>exact</strong> offending token and an actionable link (e.g. &quot;→
+go to IPAM&quot;) — never a generic &quot;invalid&quot;. Advisory findings
+(overlapping-CIDR <code>route.conflict</code>) appear as warnings in the
+preview and <strong>do not block</strong> activation [POL §5.1, REG
+§6.3].</p>
+<p><strong>Activation flow.</strong> <code>[ Activate v9 ]</code> →
+confirm dialog summarising the effect-diff (&quot;activate v9: 2 devices gain
+access, 1 loses access; convergence ~&lt;1 s, no restart [CP §10.1]&quot;).
+On confirm → <code>POST /v1/policies/{v}/activate</code>; the active
+marker moves to v9, an audit <code>policy.activate</code> row is
+written, and the topology + device maps reconcile live. A bad activation
+is rolled back by re-activating an older version from the rail (instant,
+no recompile [POL §6.3]).</p>
+<p><strong>States.</strong> <em>Loading</em> — editor + panes skeleton;
+the active version loads first. <em>Empty</em> — a brand-new tenant
+shows a <strong>starter template</strong> (default-deny + a commented
+example) rather than a blank document. <em>Compiling</em> — the preview
+shows a &quot;compiling…&quot; state with the elapsed timer; a clean result flips
+to the diff. <em>Error</em> — blocking compile errors (red bar, activate
+disabled); the editor highlights the offending line. <em>Dirty</em> — an
+unsaved draft shows &quot;⊘ not saved&quot; and warns on navigate-away.</p>
+<p><strong>A11y / light-dark.</strong> The editor is fully
+keyboard-navigable with a screen-reader description of compile status
+(announced, not colour-only). Added edges are
+<code>feedback.success</code> green, removed are
+<code>feedback.error</code> red, advisory is
+<code>feedback.warning</code> amber — each with a
+<code>+</code>/<code>−</code>/<code>⚠</code> glyph so the diff is
+legible without colour (CI5). Light: editor on
+<code>surface.sunken</code> (code well), panes on
+<code>surface.raised</code>; dark mirrors with the same roles.</p>
+<hr />
+<h2 id="8-topology-the-coordinator-graph">8. Topology (the coordinator
+graph)</h2>
+<p><strong>Purpose.</strong> Visualise the tenant&#39;s overlay as the
+<strong>coordinator&#39;s in-memory topology graph</strong> [COORD §1] —
+devices, connectors, advertised prefixes, group membership, and
+<em>who-can-reach-whom</em> edges as compiled by the active policy
+(need-to-know, C4). It is the spatial companion to the tabular
+Devices/Policy views and updates live.</p>
+<p><strong>Layout (graph canvas + inspector).</strong></p>
+<pre><code>┌──────────────────────────────────────────────────────────────────────────┐
+│ Topology — acme-corp        [ layout: force ▾ ] [ filter: group ▾ ] ◉ live │
+├────────────────────────────────────────────────────┬───────────────────────┤
+│                                                    │  INSPECTOR            │
+│        (alice-mbp)───────┐                          │  ───────────         │
+│            │             ▼                          │  Node  warehouse-gw  │
+│            │        ╔══════════╗   advertises        │  Kind  connector     │
+│            ▼        ║ GATEWAY  ║◄──────(warehouse-gw)│  Site  warehouse     │
+│      (bob-pixel)    ╚══════════╝       10.10.0.0/24  │  Prefixes            │
+│            ▲             ▲                          │   10.10.0.0/24 ✓     │
+│            │             │                          │  Reachable by        │
+│        (carol-lap)──────┘                           │   group:admins       │
+│                                                    │  Presence  ● online  │
+│   ● online  ○ offline  ⊘ revoked   ── reach edge    │  [ open in IPAM ]    │
+└────────────────────────────────────────────────────┴───────────────────────┘</code></pre>
+<p><strong>Components.</strong> A graph canvas (<code>UNVERIFIED</code>:
+the concrete graph-render library is pinned by the component spec —
+stated here as a force/hierarchical layout choice, not a fixed lib).
+<strong>Nodes</strong> = devices/connectors/gateway, coloured by
+presence (connection-state palette, green/grey/red, <strong>with a glyph
++ label</strong>, never colour-only). <strong>Edges</strong> = reach
+relationships from the compiled policy (<code>visible[d]</code> [POL
+§4.1]). An <strong>inspector</strong> pane shows the selected node&#39;s
+identity, prefixes, who-can-reach-it, presence, and deep-links
+(connector → IPAM, device → device detail).</p>
+<p><strong>Interactions.</strong> Click a node → inspector +
+cross-links; pan/zoom; filter by group or kind; layout toggle. Live:
+<code>device.online/offline/revoked</code>,
+<code>connector.prefixes.changed</code>, and
+<code>policy.compiled</code> events animate the graph (node colour
+change, edge add/remove) without refresh [COORD §4.2].</p>
+<p><strong>States.</strong> <em>Loading</em> — graph skeleton
+(placeholder node ring) while the snapshot hydrates. <em>Empty</em> — a
+1-node graph (just the gateway) with &quot;enroll a connector or client to
+grow your network&quot;. <em>Error</em> — if the snapshot fails, an inline
+retry over the last-known graph (marked stale). <em>Large-graph</em> —
+beyond a node threshold the view clusters by group/site and offers
+search-to-focus (so the canvas stays legible — no overlap, §11.4.162;
+nodes are spaced and labels never overlay each other).</p>
+<p><strong>A11y / light-dark.</strong> A <strong>table fallback</strong>
+of the same graph data is available (the graph is reinforcement, not the
+only way to read topology — keyboard/SR users get the tabular Devices +
+a reach matrix). Canvas background is <code>background.canvas</code>;
+edges use <code>border.strong</code>; the danger/revoked node uses the
+red state colour at z-top so it is never occluded [COLOR §3.2/§5].</p>
+<hr />
+<h2 id="9-audit-log-control-action-audit--no-traffic-logs">9. Audit log
+(control-action audit — no traffic logs)</h2>
+<p><strong>Purpose.</strong> The tamper-evident record of
+<strong>control actions</strong> — device enroll/revoke, policy
+create/activate, prefix changes, user/role changes, cert issue/revoke
+(<code>audit_events</code>, closed <code>AuditAction</code> vocabulary
+[TEL §4.2]). The screen&#39;s defining feature is what it
+<strong>cannot</strong> show: there is <strong>no</strong> connection,
+destination, flow, or bandwidth record — by construction (C3 [CP
+§0.1/§2.4]).</p>
+<pre><code>┌──────────────────────────────────────────────────────────────────────────┐
+│ Audit                       [ action ▾ ] [ actor ▾ ] [ 2026-06-25 range ] │
+│ ⓘ This is a CONTROL-action log. HelixVPN keeps NO traffic, connection,    │ ← the no-traffic banner
+│   destination, or bandwidth records — that data does not exist (C3).      │
+├──────────────┬──────────┬────────────────────┬────────────────────────────┤
+│ TIME (UTC)   │ ACTOR    │ ACTION             │ TARGET / META               │
+├──────────────┼──────────┼────────────────────┼────────────────────────────┤
+│ 12:04:31     │ alice    │ device.revoke      │ dev-31 (old-laptop)         │
+│ 12:03:10     │ system   │ policy.activate    │ v8  → see Policy editor      │
+│ 12:01:55     │ bob      │ device.enroll      │ connector warehouse-gw      │
+│ 11:58:02     │ carol    │ prefixes.change    │ +10.20.0.0/24 on conn-B     │
+│ 11:40:18     │ alice    │ user.role.change   │ carol member→operator       │
+│ …            │          │                    │                             │
+├──────────────┴──────────┴────────────────────┴────────────────────────────┤
+│              ‹ newer   older ›    export: CSV ▾  (control actions only)    │
+└──────────────────────────────────────────────────────────────────────────┘</code></pre>
+<p><strong>Components.</strong> A reverse-chronological feed (indexed
+<code>audit_events (tenant_id, ts DESC)</code> [CP §2.2]);
+<strong>filters</strong> by closed <code>action</code> vocabulary +
+actor + time range; deep-links from a row&#39;s target to the relevant
+screen (a <code>policy.activate</code> row → that version in S4; a
+<code>device.revoke</code> row → S2d). Export is <strong>CSV of control
+actions only</strong> — the export pipe shares the no-traffic
+guarantee.</p>
+<p><strong>The privacy banner is load-bearing.</strong> It is always
+visible at the top of S7 and restated near the export control: the
+Console is <em>incapable</em> of producing a traffic log because the
+schema holds none (the §2.4 schema-lint is the runtime proof [CP §2.4]).
+This turns &quot;we don&#39;t log&quot; from a promise into a visible product
+property.</p>
+<p><strong>States.</strong> <em>Loading</em> — feed skeleton.
+<em>Empty</em> — &quot;no control actions in this range&quot; (a legitimate empty,
+not an error). <em>Error</em> — banner + retry over last-known rows.
+<em>Read authz</em> — audit <strong>read</strong> is admin-gated [TEL
+§4.5]; operator/member see a &quot;audit is admin-only&quot; state, not a partial
+leak.</p>
+<p><strong>A11y / light-dark.</strong> The feed is a semantic table;
+rows are keyboard-navigable; the privacy banner uses
+<code>feedback.info</code> (blue) so it reads as informational, not
+alarming. Light/dark via standard surface/text roles.</p>
+<hr />
+<h2 id="10-ipam--prefixes">10. IPAM / prefixes</h2>
+<p><strong>Purpose.</strong> The address plane: the tenant&#39;s overlay
+<strong>ULA /48</strong> pool [IPAM §1, CP §3] and the
+<strong>advertised prefixes</strong> each connector exposes [REG §6],
+including the <strong>overlapping-CIDR conflict</strong> surface and the
+<code>4via6</code> site-disambiguation that resolves it (D4).
+Operator+.</p>
+<pre><code>┌──────────────────────────────────────────────────────────────────────────┐
+│ IPAM / prefixes — acme-corp                                                │
+├───────────────────────── Overlay pool ─────────────────────────────────────┤
+│  ULA /48     fd7a:helix:a1b2::/48        allocated hosts  144              │
+│  Gateway     fd7a:helix:a1b2::1          next host        ::92             │
+│  ⓘ /48 capacity is astronomically large; hosts are never recycled (IPAM).  │
+├──────────────────── Advertised prefixes (by connector) ────────────────────┤
+│  CONNECTOR        SITE-ID   CIDR            ENABLED   STATUS                │
+│  warehouse-gw     site-1    10.10.0.0/24    ✓         ok                    │
+│  office-gw        site-2    192.168.50.0/24 ✓         ok                    │
+│  branch-gw        site-3    192.168.50.0/24 ✓         ⚠ overlaps office-gw  │ ← conflict row
+├──────────────────────────── Conflicts ─────────────────────────────────────┤
+│  ⚠ 192.168.50.0/24 advertised by office-gw (site-2) AND branch-gw (site-3) │
+│    Advisory — not blocking. Resolved by 4via6 site disambiguation:         │
+│    office  → fd7a:helix:a1b2:0002::/96   branch → …:0003::/96               │
+│    [ accept 4via6 mapping ]   [ choose authoritative connector ]            │
+└──────────────────────────────────────────────────────────────────────────┘</code></pre>
+<p><strong>Components.</strong> An <strong>overlay-pool card</strong>
+(ULA prefix, gateway address, next host, allocated count [IPAM §1.2]);
+an <strong>advertised-prefix table</strong> grouped by connector with
+site-id, CIDR, enable toggle, and per-row status; a <strong>conflicts
+panel</strong> listing overlapping-CIDR
+<code>route.conflict.detected</code> items [REG §6.2] with the
+<strong>4via6 resolution</strong> spelled out (the per-site
+<code>/96</code> mapping the control plane ships in the network map
+[IPAM §4.3]) and the two operator choices (accept 4via6 / designate
+authoritative).</p>
+<p><strong>Interactions.</strong> Toggle a prefix <code>enabled</code>;
+edit a connector&#39;s CIDRs (writes the same path as the connector-side
+advertise, [REG §6.1] — links to the Connector app for the source).
+Resolve a conflict via the offered choices (§11.4.66 — never
+auto-resolved silently). Cross-link: the Policy editor&#39;s &quot;host CIDR not
+advertised&quot; error lands here (S4 ↔︎ S6).</p>
+<p><strong>States.</strong> <em>Loading</em> — pool/table skeleton.
+<em>Empty</em> — &quot;no connectors advertising prefixes yet&quot;. <em>Conflict
+present</em> — the conflict panel is highlighted
+(<code>feedback.warning</code>) and a count badges the nav item; it is
+<strong>advisory</strong> (never blocks policy activation [POL §5.1]).
+<em>Error</em> — per-section inline retry.</p>
+<p><strong>A11y / light-dark.</strong> Conflict rows carry a ⚠ glyph +
+text (not colour-only); the 4via6 mapping is shown as monospace
+addresses (<code>font.primitive.family.mono</code> [DT §4]). Light/dark
+via surface/text/feedback roles; the conflict highlight is amber in both
+themes.</p>
+<hr />
+<h2 id="11-telemetry--health-counters-convergence--event-lag-slos">11.
+Telemetry / health (counters, convergence &amp; event-lag SLOs)</h2>
+<p><strong>Purpose.</strong> The operator&#39;s window into whether the
+control plane is <strong>meeting its measured SLOs</strong> [TEL §3, CP
+§10.2]: convergence p99 (event → delta-on-wire &lt; 1 s), revoke latency
+(&lt; 1 s), event lag, stream pending depth, and runtime health — all
+from Prometheus series the telemetry service emits [TEL §3.2/§3.3]. This
+is the anti-bluff &quot;is it actually fast?&quot; screen.</p>
+<pre><code>┌──────────────────────────────────────────────────────────────────────────┐
+│ Telemetry / health — acme-corp                          window: 1h ▾       │
+├───────────────┬───────────────┬───────────────┬────────────────────────────┤
+│ CONVERGENCE   │ REVOKE        │ EVENT LAG     │ STREAM DEPTH               │
+│ p99 0.42 s    │ p99 0.31 s    │ 0.08 s        │ events:policy   0          │
+│ target &lt;1s ✓  │ target &lt;1s ✓  │ healthy ✓     │ events:routes   2          │
+│ ▲ green       │ ▲ green       │ ▲ green       │ events:presence 0          │
+├───────────────┴───────────────┴───────────────┴────────────────────────────┤
+│  helix_reconcile_seconds (event → delta) — last 1h                          │
+│  1s┤ - - - - - - - - - - - - - - - - - - - - - - - (SLO line) - - - - - -   │
+│    │                  ╭╮                                                    │
+│ .5s┤   ╭──╮ ╭───╮ ╭──╯╰──╮  ╭───╮       (p99 histogram band)               │
+│    │ ──╯  ╰─╯   ╰─╯      ╰──╯   ╰────                                       │
+│  0 └─────────────────────────────────────────────────────────────────────  │
+├──────────────────────────────────────────────────────────────────────────┤
+│  ALERTS                                                                     │
+│   ● none firing      (SLO breach → alert rules live in deploy/, TEL §3.4)   │
+│  RUNTIME                                                                    │
+│   open streams 124   coordinator RSS 412 MB (24h slope ≈ 0)  DLQ 0          │
+└──────────────────────────────────────────────────────────────────────────┘</code></pre>
+<p><strong>Components.</strong> Four <strong>SLO gauges</strong>
+(convergence p99, revoke p99, event lag, stream depth) each
+green/amber/red against its target [TEL §3.4]; a <strong>convergence
+histogram</strong> with the SLO line drawn at 1 s so a breach is
+visually obvious; an <strong>alerts</strong> list (the <em>series</em>
+are emitted here, the <em>alert rules</em> live in <code>deploy/</code>
+[TEL §3.4] — the screen states this honestly); a
+<strong>runtime</strong> strip (open stream count, coordinator RSS with
+the 24 h ≈0 slope soak signal [CP §10.2], DLQ depth
+<code>helix_events_dlq_total</code> [CP §5.4]).</p>
+<p><strong>Honest-SLO logic (§11.4.6).</strong> Every gauge shows the
+<em>measured</em> number and its target; &quot;✓&quot; appears only when measured
+&lt; target. A breach turns the gauge red and surfaces in the alerts
+list — the screen never shows &quot;healthy&quot; without the figure that
+justifies it. This is the visible face of the anti-bluff &lt; 1 s
+promise.</p>
+<p><strong>States.</strong> <em>Loading</em> — gauge/chart skeleton.
+<em>Empty</em> — a just-bootstrapped tenant with no traffic yet shows
+&quot;no data in window — generate activity or widen the window&quot;.
+<em>Error</em> — if the metrics scrape fails, the screen says so (it
+does <strong>not</strong> paint green on absence of data — absence ≠
+healthy). <em>Breach</em> — red gauge + alert row + a link to the
+offending series.</p>
+<p><strong>A11y / light-dark.</strong> Gauges pair colour with a value +
+✓/⚠/✗ glyph; the SLO line is labelled. Charts have an accessible
+data-table fallback. Light/dark via standard roles; the SLO line uses
+<code>feedback.info</code>, breaches <code>feedback.error</code>.</p>
+<hr />
+<h2 id="12-billing--subscription">12. Billing / subscription</h2>
+<p><strong>Purpose.</strong> Manage the tenant&#39;s plan, seat/device usage
+against plan limits, and invoices. This is a <strong>commercial</strong>
+surface layered over the self-hostable core — its data source (the
+billing provider) is not specified by the control-plane docs.</p>
+<pre><code>┌──────────────────────────────────────────────────────────────────────────┐
+│ Billing — acme-corp                                                        │
+├──────────────────────── Plan ─────────────────────┬───────── Usage ────────┤
+│  Plan      Team                                   │  Devices  142 / 250    │
+│  Renews    2026-07-20                              │  Seats    18 / 25      │
+│  Status    ● active                                │  Connectors 7 / 10     │
+│  [ Change plan ]   [ Manage payment method ]       │  ▓▓▓▓▓▓░░░░ 57%        │
+├──────────────────────── Invoices ──────────────────────────────────────────┤
+│  DATE        AMOUNT     STATUS      INVOICE                                 │
+│  2026-06-20  $240.00    paid        [ download PDF ]                        │
+│  2026-05-20  $240.00    paid        [ download PDF ]                        │
+│  …                                                                          │
+└──────────────────────────────────────────────────────────────────────────┘</code></pre>
+<p><strong>Components.</strong> A <strong>plan card</strong> (tier,
+renewal, status, change/payment actions); a <strong>usage panel</strong>
+(devices/seats/connectors against plan limits with a progress bar); an
+<strong>invoice table</strong> (date/amount/status/download).
+Approaching a limit shows a <code>feedback.warning</code> nudge;
+over-limit a <code>feedback.error</code> block on new enrollment.</p>
+<blockquote>
+<p><strong>D-CON-BILL-1 <code>UNVERIFIED</code>.</strong> The billing
+provider + its API are <strong>not</strong> specified by the
+control-plane docs [CP] — this screen&#39;s data source is a Phase-2
+commercial decision (§11.4.66). The layout/states here are the
+<em>intended</em> shape; the provider binding is <code>UNVERIFIED</code>
+until that decision lands. The self-hostable MVP may ship the Console
+with Billing <strong>hidden</strong> behind a capability flag (no
+commercial backend) — also <code>UNVERIFIED</code>.</p>
+</blockquote>
+<p><strong>States.</strong> <em>Loading</em> — skeleton. <em>Empty /
+self-hosted</em> — when no billing backend is configured, the screen
+shows &quot;self-hosted — no subscription&quot; rather than a broken integration.
+<em>Error</em> — provider errors shown honestly with retry.</p>
+<p><strong>A11y / light-dark.</strong> Usage bars carry a numeric label;
+status dots pair with text. Standard surface/text/feedback roles, light
++ dark.</p>
+<hr />
+<h2 id="13-settings">13. Settings</h2>
+<p><strong>Purpose.</strong> Tenant-level configuration + per-admin
+preferences + the danger zone. Sectioned, with role-gated controls.</p>
+<pre><code>┌──────────────────────────────────────────────────────────────────────────┐
+│ Settings                                                                   │
+├──────────────────────────────────────────────────────────────────────────┤
+│ ▸ Tenant       name, control-plane URL, default policy template            │
+│ ▸ Appearance   theme  ◐ system ○ light ○ dark        (per-admin)           │
+│ ▸ Session      signed-in devices, sign-out-everywhere, session TTL          │
+│ ▸ Transport    default escalation ladder order (plain-udp→lwo→masque-h3)    │
+│ ▸ Notifications which control events page the live rail / send alerts        │
+│ ▸ Danger zone  rotate tenant CA · delete tenant   (admin-only, confirmed)   │
+└──────────────────────────────────────────────────────────────────────────┘</code></pre>
+<p><strong>Components.</strong> Collapsible sections.
+<strong>Appearance</strong> is the per-admin theme toggle
+(system/light/dark — both themes first-class [CLIENT §7.1]).
+<strong>Transport</strong> edits the default
+<code>TransportPolicy.order</code> ladder the control plane ships to
+agents [CP §4 <code>TransportPolicy</code>]. <strong>Danger
+zone</strong> holds irreversible, admin-only, double-confirmed actions
+(rotate the tenant CA key [CP §9.3] — the one true secret; delete
+tenant) each gated per §11.4.66 with a typed-confirmation dialog.</p>
+<p><strong>States.</strong> <em>Loading</em> — section skeletons.
+<em>Error</em> — per-section inline. <em>Role- gated</em> —
+operator/member see read-only or hidden danger-zone controls with the
+required-role tooltip.</p>
+<p><strong>A11y / light-dark.</strong> Every toggle is keyboard-operable
+and labelled; the theme toggle previews live. Danger-zone actions use
+<code>feedback.error</code> emphasis and require typing the tenant name
+to confirm. Standard roles, light + dark.</p>
+<hr />
+<h2 id="14-cross-screen-states-a11y--lightdark-contract">14.
+Cross-screen states, a11y &amp; light/dark contract</h2>
+<p>These hold for <strong>every</strong> Console screen (so each section
+above states only its specifics):</p>
+<table>
+<thead>
+<tr>
+<th>Concern</th>
+<th>Contract</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Loading</strong></td>
+<td>skeleton placeholders (shimmer), never a bare spinner on a blank
+screen; the most-important data loads first</td>
+<td>original UX</td>
+</tr>
+<tr>
+<td><strong>Empty</strong></td>
+<td>a purposeful empty state with the next action (enroll, configure,
+invite) — never an ambiguous blank</td>
+<td>original UX</td>
+</tr>
+<tr>
+<td><strong>Error</strong></td>
+<td>the <strong>honest</strong> cause (provider/JWKS/scrape error), an
+inline retry, and last-known data marked stale — never a generic
+&quot;something went wrong&quot;</td>
+<td>§11.4.6</td>
+</tr>
+<tr>
+<td><strong>Stale/live</strong></td>
+<td>the live-stream chip goes amber on WS drop and lists show &quot;may be
+stale — reconnecting&quot;; the UI never paints fresh data it cannot prove is
+fresh</td>
+<td>CI2 [CLIENT §0.1]</td>
+</tr>
+<tr>
+<td><strong>Confirm</strong></td>
+<td>every destructive control action (revoke, deactivate, rotate CA,
+delete) is double-confirmed via the interactive mechanism</td>
+<td>§11.4.66</td>
+</tr>
+<tr>
+<td><strong>Colour ≠ only signal</strong></td>
+<td>every state dot/badge pairs colour with a glyph + text label</td>
+<td>CI5 [CLIENT §0.1], [COLOR §0]</td>
+</tr>
+<tr>
+<td><strong>No overlap / no label-overlay</strong></td>
+<td>spacing tokens keep ≥ <code>space.scale.2</code> (8 px) between
+coloured regions; overlays use <code>overlay.scrim</code>, never a
+translucent brand wash; danger sits at z-top</td>
+<td>§11.4.162, [COLOR §5]</td>
+</tr>
+<tr>
+<td><strong>Light + dark</strong></td>
+<td>every screen renders in both, all surface/text/feedback roles
+AA-proven both themes; the violet accent is the only per-app
+difference</td>
+<td>§11.4.162, [COLOR §2/§4/§6]</td>
+</tr>
+<tr>
+<td><strong>Keyboard / SR</strong></td>
+<td>full keyboard nav (the Console is desktop-first); ⌘K command
+palette; data-heavy visuals (graph, charts) have table fallbacks</td>
+<td>CI5, [CLIENT §7.3]</td>
+</tr>
+<tr>
+<td><strong>No traffic data</strong></td>
+<td>no Console screen can show connection/flow/bandwidth records; the
+Audit screen states this is by construction</td>
+<td>C3 [CP §0.1/§2.4]</td>
+</tr>
+</tbody>
+</table>
+<p><strong>The violet light/dark accent (the Console&#39;s only brand
+difference).</strong></p>
+<table>
+<thead>
+<tr>
+<th>Role</th>
+<th>Light</th>
+<th>Dark</th>
+<th>Proof [COLOR §6]</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>action.primary</code> / accent</td>
+<td><code>violet.700 #6D28D9</code></td>
+<td><code>violet.400 #A78BFA</code></td>
+<td>white-on-<code>violet.600</code> <strong>5.70</strong>; text
+<strong>7.10</strong> light / <strong>6.47</strong> dark — AA both</td>
+</tr>
+</tbody>
+</table>
+<p>Everything else — surfaces, text, borders,
+<strong>connection-state</strong>, <strong>feedback</strong> — is the
+identical shared semantic set used by Client and Connector (D-COLOR-1);
+the Console never recolours a safety signal.</p>
+<hr />
+<h2 id="15-surfaced-decisions--cross-doc-contracts">15. Surfaced
+decisions &amp; cross-doc contracts</h2>
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>Decision / contract</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>D-CON-1</strong></td>
+<td>Console is desktop-first (<code>lg</code>/<code>xl</code> home turf)
+but renders the full responsive ladder down to <code>compact</code>; the
+graph + policy editor + heavy tables deferred-load so they never bloat a
+small layout.</td>
+<td>decided</td>
+</tr>
+<tr>
+<td><strong>D-CON-2</strong></td>
+<td>Live data via <code>GET /v1/stream</code> WS/SSE folded into
+Riverpod; a visible stream-health chip + &quot;may be stale&quot; honesty when it
+drops.</td>
+<td>decided [CLIENT §8.3]</td>
+</tr>
+<tr>
+<td><strong>D-CON-3</strong></td>
+<td>The Audit screen makes the no-traffic-log guarantee a <em>visible
+product property</em> (banner + control-actions-only export), backed by
+the §2.4 schema-lint runtime proof.</td>
+<td>decided [CP §2.4]</td>
+</tr>
+<tr>
+<td><strong>D-CON-4</strong></td>
+<td>Policy activation is fail-closed: disabled until a clean dry-run;
+blocking errors name the exact token + an actionable link; advisory CIDR
+conflicts never block.</td>
+<td>decided [POL §5]</td>
+</tr>
+<tr>
+<td><strong>C-CON-A</strong> (consumes)</td>
+<td>All control-plane data + payloads owned by [CP §8] + the V3
+<code>svc-*.md</code> docs; this doc owns only layout/state/interaction
+over them.</td>
+<td>contract</td>
+</tr>
+<tr>
+<td><strong>C-CON-B</strong> (consumes)</td>
+<td>Colour roles + violet accent owned by [COLOR]; token
+scales/breakpoints by [DT]; signature components by
+[<code>component-library.md</code>].</td>
+<td>contract</td>
+</tr>
+<tr>
+<td><strong>C-CON-C</strong> (provides)</td>
+<td>This screen set + per-screen states are the spec the
+visual-regression + golden suite asserts against (light+dark, every
+breakpoint, §11.4.162).</td>
+<td>contract</td>
+</tr>
+<tr>
+<td><strong>U-CON-1</strong> <code>UNVERIFIED</code></td>
+<td>Billing provider + API (S12) — a Phase-2 commercial decision
+(§11.4.66); the MVP may ship Billing hidden behind a capability
+flag.</td>
+<td>open</td>
+</tr>
+<tr>
+<td><strong>U-CON-2</strong> <code>UNVERIFIED</code></td>
+<td>The concrete topology graph-render library (S8) is pinned by the
+<code>component-library.md</code> spec; layout choice
+(force/hierarchical) stated here, library <code>UNVERIFIED</code>.</td>
+<td>open</td>
+</tr>
+<tr>
+<td><strong>U-CON-3</strong> <code>UNVERIFIED</code></td>
+<td>The exact <code>GET /v1/stream</code> event field set the live
+rail/dashboard digest renders is owned by [CP §8]; the digest&#39;s column
+choice is stated here, the wire shape <code>UNVERIFIED</code> against a
+frozen WS contract test.</td>
+<td>open</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="sources-verified">Sources verified</h2>
+<ul>
+<li><strong>Console flavor (admin, no <code>core_ffi</code>, Web-only
+build), capability model, <code>AdaptiveScaffold</code>, responsive law,
+⌘K palette, live-WS folding, theme-per-role, signature components
+(<code>PolicyEditor</code>/<code>NetworkTile</code>/…), a11y (colour ≠
+only signal)</strong> — <code>final/03-client-core-and-ui.md</code> §6
+(flavors/capabilities), §7 (design system + responsive + a11y), §8.3
+(Console live data), §0.1 (CI2/CI3/CI5) (read 2026-06-25).</li>
+<li><strong>Control-plane data every screen surfaces</strong> —
+<code>final/02-control-plane.md</code>: §2.2
+(devices/users/policies/audit DDL), §3 (IPAM ULA /48 + 4via6, D4), §4
+(<code>Coordinator</code> proto + <code>TransportPolicy</code>), §7
+(policy model/compiler, fail-closed, activate/rollback), §8 (REST +
+WS/SSE + RBAC), §9 (identity/enrollment/PKI/revoke &lt; 1 s), §10.2
+(measured SLOs), §0.1 C3 (no-logging by construction) + §2.4
+(schema-lint) (read 2026-06-25).</li>
+<li><strong>Per-service screen data</strong> —
+<code>final/v03-control-plane/</code>: <code>svc-registry.md</code>
+§2/§5/§6 (device model, presence, prefix conflict detection);
+<code>svc-policy.md</code> §2/§4/§5/§6 (ACL spec, compile, validation,
+activation/rollback, effect data); <code>svc-coordinator.md</code> §1/§4
+(topology graph + event reactions); <code>svc-telemetry.md</code>
+§3/§4/§5 (Prometheus series, audit sink + closed
+<code>AuditAction</code> vocab, presence); <code>svc-ipam.md</code>
+§1/§4 (ULA address plan, 4via6 derivation); <code>svc-identity.md</code>
+(OIDC/anonymous identity modes) (read 2026-06-25).</li>
+<li><strong>Colour roles, the Console violet accent + its AA contrast
+proofs, the no-overlap / no-label-overlay colour rule, light+dark
+mandate</strong> — <code>final/v10-design/color-system.md</code> §2
+(semantic roles), §3 (connection-state palette), §4 (contrast proofs),
+§5 (no-overlap rule), §6 (per-app accent: Console = violet) (sibling,
+this wave).</li>
+<li><strong>Token tiers, spacing/radius/elevation/motion/z/breakpoint
+scales (the responsive breakpoints + the surfaces/shadows the layouts
+use)</strong> — <code>final/v10-design/design-tokens.md</code> §6
+(scales), §1 (tiers) (sibling, this wave).</li>
+<li><strong>OpenDesign engine that emits the tokens</strong> —
+<code>final/v10-design/opendesign-foundation.md</code> (sibling, this
+wave; §11.4.162).</li>
+<li><strong>Signature-component contracts
+(<code>AdaptiveScaffold</code>, <code>PolicyEditor</code>,
+<code>NetworkTile</code>, graph canvas) + the Connector/Client
+counterpart screens</strong> —
+<code>final/v10-design/component-library.md</code>,
+<code>…/screens-connector.md</code>, <code>…/screens-client.md</code>
+(siblings; component-library + client-screens land in this same
+Volume-10 wave — cross-referenced, not duplicated).</li>
+<li>Items marked <code>UNVERIFIED</code> (U-CON-1 billing provider,
+U-CON-2 graph-render library, U-CON-3 frozen WS field set) are pending
+their named decision/contract test per §11.4.6 — <strong>not</strong>
+asserted as fact.</li>
+<li><strong>Layout, per-screen state machines, interaction flows,
+wireframes</strong> — <strong>NO external source needed — original
+HelixVPN UX design work</strong> (the screen compositions are owned by
+this document; they render the cited control-plane data through the
+cited design-system tokens/components).</li>
+</ul>
+</body>
+</html>

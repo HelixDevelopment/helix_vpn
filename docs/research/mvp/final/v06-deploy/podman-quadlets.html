@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Podman Quadlets (rootless — the canonical substrate)</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Podman Quadlets (rootless — the canonical
+substrate)</h1>
+</header>
+<h1 id="podman-quadlets-rootless--the-canonical-substrate">Podman
+Quadlets (rootless — the canonical substrate)</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-06-25T12:00:00Z</p>
+<blockquote>
+<p>Master technical specification — Volume 6 (Deployment, Tooling &amp;
+Operations), nano-detail document. <strong>[RES]</strong>
+research-backed. Scope: the <strong>canonical rootless Podman quadlet
+deployment</strong> of HelixVPN —
+<code>.pod</code>/<code>.container</code>/<code>.network</code>/<code>.volume</code>
+systemd-generator units, rootless-MANDATORY (§11.4.161 — NO sudo, NO
+rootful Docker), the <code>NET_ADMIN</code>/<code>NET_RAW</code>
+capability set for the data- plane edge, <code>:443/udp</code> MASQUE
+ingress, the one-pod model, read-only rootfs + seccomp confinement, and
+the <code>vasic-digital/containers</code> submodule as the sole
+orchestration layer (§11.4.76). This deepens [05-overview §7.1] with the
+FACT-grade quadlet semantics from [research-podman_k8s]. It is a SPEC:
+unit files are illustrative of the contract, not the shipping deployment
+(2–3 refinement passes follow).</p>
+<p>Evidence cited inline by id: <strong>[05_OV §N]</strong> =
+<code>05-repo-layout-tooling-and-helix-ecosystem.md</code>; <strong>[RPK
+§N]</strong> = <code>v09-research/research-podman_k8s.md</code>
+(verified against latest Podman docs 2026-06-25 per §11.4.99);
+<strong>[API §N]</strong> = <code>v03-control-plane/svc-api.md</code>
+(the env/readyz contract). Unproven facts are marked
+<strong>UNVERIFIED</strong> per §11.4.6 — never fabricated.</p>
+</blockquote>
+<hr />
+<h2 id="0-what-this-document-owns-and-does-not">0. What this document
+owns (and does not)</h2>
+<p>This document owns the <strong>rootless quadlet substrate</strong>:
+the search-path/lifecycle rules, the pod + per-container unit files
+(edge, control, postgres, redis), the capability/security posture, the
+<code>:443/udp</code> rootless-bind requirement, the network/volume
+quadlets, the on-demand-infra invariant, and the rootless-networking
+caveats that bite a VPN edge.</p>
+<p>It does <strong>not</strong> own: the
+<code>helixvpnctl deploy quadlet</code> render command (that is <a href="helixvpnctl.md"><code>helixvpnctl.md</code></a>); the equivalent
+Compose stack (<a href="docker-compose.md"><code>docker-compose.md</code></a>); the K8s
+manifests (<a href="kubernetes.md"><code>kubernetes.md</code></a>); the
+env-contract / <code>readyz</code> semantics (canonical in [API §4.7]);
+the edge data-plane internals (Volume 2). Quadlets are
+<strong>canonical</strong> (§11.4.76/.161); Compose and K8s are
+<em>equivalents</em> generated from the same OCI images [05_OV §7].</p>
+<hr />
+<h2 id="1-why-rootless-quadlets-are-canonical-114161">1. Why rootless
+quadlets are canonical (§11.4.161)</h2>
+<p>Podman in <strong>rootless mode</strong> is the MANDATORY container
+runtime for ALL HelixVPN containerized workloads (§11.4.161): Docker in
+rootful mode, <code>sudo</code>, or any escalation to root for container
+management is <strong>FORBIDDEN</strong> unless the target platform has
+no rootless option AND that constraint is documented per §11.4.112. The
+<code>vasic-digital/containers</code> submodule is the
+<strong>sole</strong> orchestration layer (§11.4.76) — no ad-hoc
+<code>docker</code>/<code>podman</code> commands outside its
+<code>pkg/boot</code>/<code>pkg/compose</code>/ <code>pkg/health</code>
+primitives [05_OV §7.1]. Rootless quadlets fit the primary buyer
+(homelab / single VPS, spine §2): no Docker daemon, no root,
+<code>helixvpnctl init</code> one-shot,
+<code>systemctl --user start</code> lifecycle.</p>
+<pre class="mermaid"><code>flowchart LR
+  IMG[&quot;OCI images: helixd, helix-edge, postgres:16, redis:7&quot;]
+  IMG --&gt; Q[&quot;Podman quadlets (CANONICAL §11.4.76/.161 — rootless)&quot;]
+  IMG -.equivalence.-&gt; C[&quot;Docker Compose (docker-compose.md)&quot;]
+  IMG -.equivalence.-&gt; K[&quot;Kubernetes (kubernetes.md)&quot;]
+  Q --&gt; H[&quot;homelab / single VPS — systemctl --user, no daemon, no root&quot;]</code></pre>
+<hr />
+<h2 id="2-quadlet-fundamentals-podman-5x-fact-grade">2. Quadlet
+fundamentals (Podman 5.x, FACT-grade)</h2>
+<p>Quadlet is a <strong>core part of Podman</strong> (not a separate
+project); Podman 5.x added
+<code>podman quadlet list|print|install|rm</code> and the
+<code>.pod</code>/<code>.build</code>/<code>.image</code>/<code>.artifact</code>
+unit types beyond the original
+<code>.container</code>/<code>.network</code>/<code>.volume</code>/<code>.kube</code>.
+Quadlet <code>.unit</code> files are read by a systemd generator that
+emits real <code>.service</code> units at boot /
+<code>daemon-reload</code> [RPK §1].</p>
+<h3 id="21-rootless--file-location-not-user-the-hard-constraint">2.1
+Rootless = file location, NOT <code>User=</code> (the hard
+constraint)</h3>
+<blockquote>
+<p><strong>FACT [RPK §1].</strong> &quot;Quadlet units do not support running
+as a non-root user by defining the User, Group, or DynamicUser systemd
+options.&quot; Rootless is selected purely by <strong>where the file
+lives</strong>. The rootless search paths (verbatim upstream):</p>
+<ul>
+<li><code>$XDG_RUNTIME_DIR/containers/systemd/</code></li>
+<li><code>$XDG_CONFIG_HOME/containers/systemd/</code> (i.e.
+<code>~/.config/containers/systemd/</code>)</li>
+<li><code>/etc/containers/systemd/users/${UID}</code> and
+<code>/etc/containers/systemd/users/</code></li>
+<li><code>/usr/share/containers/systemd/users/${UID}</code> and
+<code>/usr/share/containers/systemd/users/</code></li>
+</ul>
+</blockquote>
+<p>To run rootless with boot-time start (no interactive login),
+<code>loginctl enable-linger &lt;user&gt;</code> is
+<strong>required</strong> [RPK §1]. HelixVPN places its units in
+<code>~/.config/containers/systemd/</code> and enables linger for the
+gateway service user.</p>
+<blockquote>
+<p><strong>Reconciliation with the overview (§11.4.35).</strong> [05_OV
+§7.1] sketched the units under <code>/etc/containers/systemd/</code> —
+that is the <strong>rootful</strong> system path. Because §11.4.161
+mandates <strong>rootless</strong>, the canonical HelixVPN path is the
+rootless <code>~/.config/containers/systemd/</code> (or
+<code>/etc/containers/systemd/users/${UID}</code> for a system-managed
+service user). This is a visible correction, recorded so the two docs do
+not silently disagree; the unit <em>contents</em> are unchanged.</p>
+</blockquote>
+<h3 id="22-lifecycle">2.2 Lifecycle</h3>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># place units in ~/.config/containers/systemd/, then:</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="ex">systemctl</span> <span class="at">--user</span> daemon-reload</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="ex">systemctl</span> <span class="at">--user</span> start helixvpn-pod.service     <span class="co"># the .pod generates *-pod.service</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="ex">loginctl</span> enable-linger <span class="st">&quot;</span><span class="va">$USER</span><span class="st">&quot;</span>                  <span class="co"># boot-start without interactive login (FACT [RPK §1])</span></span></code></pre></div>
+<p>The generator guarantees the <code>*-pod.service</code> starts
+<strong>before</strong> any member <code>Pod=helixvpn.pod</code>
+container [RPK §1]; quadlet auto-wires the ordering — no hand-written
+<code>After=</code>/<code>Requires=</code> between pod and members.</p>
+<hr />
+<h2 id="3-the-one-pod-model-edge--control--postgres--redis">3. The
+one-pod model (edge + control + postgres + redis)</h2>
+<p>Containers in a pod <strong>share the network namespace</strong>, so
+ports are published at the <strong>pod</strong>, not the member
+container, and members reach each other on <code>127.0.0.1</code> [RPK
+§1]. HelixVPN groups the four services into one pod for single-node
+self-host [05_OV §7.1, 04_P1 §9.2].</p>
+<pre class="mermaid"><code>flowchart TD
+  subgraph POD[&quot;helixvpn.pod  (shared netns; 127.0.0.1 between members)&quot;]
+    EDGE[&quot;helix-edge\nNET_ADMIN+NET_RAW · :443/udp · :51820/udp\nread-only rootfs · seccomp&quot;]
+    HELIXD[&quot;helixd\ncontrol plane · DROP ALL caps\nDATABASE_URL=...@127.0.0.1 · :8443&quot;]
+    PG[&quot;postgres:16\nDROP ALL · ReadOnly · Volume=helix-pgdata&quot;]
+    RD[&quot;redis:7\nDROP ALL · ReadOnly · ephemeral presence&quot;]
+  end
+  CLIENT[&quot;agents · :443/udp MASQUE / :51820/udp plain-WG&quot;] --&gt; EDGE
+  EDGE --&gt;|127.0.0.1| HELIXD
+  HELIXD --&gt;|127.0.0.1:5432| PG
+  HELIXD --&gt;|127.0.0.1:6379| RD</code></pre>
+<h3 id="31-helixvpnpod">3.1 <code>helixvpn.pod</code></h3>
+<div class="sourceCode" id="cb4"><pre class="sourceCode ini"><code class="sourceCode ini"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># ~/.config/containers/systemd/helixvpn.pod</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">[Pod]</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="dt">PodName</span><span class="ot">=</span><span class="st">helixvpn</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="dt">PublishPort</span><span class="ot">=</span><span class="st">443:443/udp        # MASQUE/QUIC ingress (Volume 2 transport ladder)</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="dt">PublishPort</span><span class="ot">=</span><span class="st">51820:51820/udp    # plain-WG ingress (auto-ladder base)</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="kw">[Install]</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="dt">WantedBy</span><span class="ot">=</span><span class="st">default.target</span></span></code></pre></div>
+<h3 id="32-helix-edgecontainer--the-data-plane-the-only-privileged-ish-member">3.2
+<code>helix-edge.container</code> — the data plane (the ONLY
+privileged-ish member)</h3>
+<div class="sourceCode" id="cb5"><pre class="sourceCode ini"><code class="sourceCode ini"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># ~/.config/containers/systemd/helix-edge.container — DATA PLANE</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="kw">[Unit]</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="dt">Description</span><span class="ot">=</span><span class="st">HelixVPN data-plane edge</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="kw">[Container]</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="dt">Image</span><span class="ot">=</span><span class="st">ghcr.io/helixdevelopment/helix-edge:helix_vpn-1.0   # §11.4.151 prefixed tag</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="dt">Pod</span><span class="ot">=</span><span class="st">helixvpn.pod</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="dt">DropCapability</span><span class="ot">=</span><span class="st">ALL</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="dt">AddCapability</span><span class="ot">=</span><span class="st">NET_ADMIN NET_RAW        # NET_RAW required for WG/tunnels (FACT [RPK §2]) — NOT just NET_ADMIN</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="dt">AddDevice</span><span class="ot">=</span><span class="st">/dev/net/tun:/dev/net/tun    # for userspace WG (boringtun) fallback path (FACT [RPK §2])</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="dt">ReadOnly</span><span class="ot">=</span><span class="st">true                          # read-only rootfs</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="dt">ReadOnlyTmpfs</span><span class="ot">=</span><span class="st">true                     # rw tmpfs on /dev /dev/shm /run /tmp /var/tmp (default true when ReadOnly)</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="dt">SeccompProfile</span><span class="ot">=</span><span class="st">/etc/containers/seccomp/helix-edge.json</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="dt">Notify</span><span class="ot">=</span><span class="st">true                            # sd_notify readiness passthrough</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="co"># no SSH, no shell in this image</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a><span class="kw">[Service]</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a><span class="dt">Restart</span><span class="ot">=</span><span class="st">always</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a><span class="kw">[Install]</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a><span class="dt">WantedBy</span><span class="ot">=</span><span class="st">default.target</span></span></code></pre></div>
+<blockquote>
+<p><strong>FACT [RPK §2] — <code>NET_ADMIN</code> alone is
+insufficient.</strong> WireGuard/tunnels need
+<strong><code>NET_RAW</code> too</strong> (&quot;which Docker enables by
+default but Podman does not&quot; for rootless), the <strong>host WG kernel
+module loaded outside the container</strong> (a container cannot
+<code>modprobe</code> rootlessly; kernels ≥ 5.6 ship it built-in), and
+<code>/dev/net/tun</code> for the userspace path. The unit above adds
+all three; the kernel module is a host prerequisite documented in the
+operator guide.</p>
+</blockquote>
+<h3 id="33-helixdcontainer--the-control-plane-drops-all-caps">3.3
+<code>helixd.container</code> — the control plane (drops all caps)</h3>
+<div class="sourceCode" id="cb6"><pre class="sourceCode ini"><code class="sourceCode ini"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># ~/.config/containers/systemd/helixd.container — CONTROL PLANE</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="kw">[Container]</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="dt">Image</span><span class="ot">=</span><span class="st">ghcr.io/helixdevelopment/helixd:helix_vpn-1.0</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="dt">Pod</span><span class="ot">=</span><span class="st">helixvpn.pod</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="dt">DropCapability</span><span class="ot">=</span><span class="st">ALL                     # control plane needs no extra caps</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="dt">ReadOnly</span><span class="ot">=</span><span class="kw">true</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="dt">ReadOnlyTmpfs</span><span class="ot">=</span><span class="kw">true</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="dt">NoNewPrivileges</span><span class="ot">=</span><span class="kw">true</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="dt">Environment</span><span class="ot">=</span><span class="st">DATABASE_URL=postgres://helix_app@127.0.0.1/helix   # non-superuser → RLS enforced [API §6.5]</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="dt">Environment</span><span class="ot">=</span><span class="st">REDIS_URL=redis://127.0.0.1:6379</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="dt">Secret</span><span class="ot">=</span><span class="st">helix_db_pw,type=env,target=PGPASSWORD                   # podman secret, NEVER in unit text (§11.4.10)</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="dt">HealthCmd</span><span class="ot">=</span><span class="st">/helixd healthz                                       # → GET /readyz semantics [API §4.7]</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="kw">[Service]</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="dt">Restart</span><span class="ot">=</span><span class="st">always</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a><span class="kw">[Install]</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a><span class="dt">WantedBy</span><span class="ot">=</span><span class="st">default.target</span></span></code></pre></div>
+<p>The <code>helix_app</code> (non-superuser) <code>DATABASE_URL</code>
+is load-bearing: it makes Postgres Row-Level Security the floor even if
+RBAC is mis-wired (C8 [API §6.5]). The DB password is a <strong>podman
+secret</strong> injected as an env target, never written into the unit
+text (§11.4.10).</p>
+<h3 id="34-helix-pgcontainer--helix-rediscontainer">3.4
+<code>helix-pg.container</code> +
+<code>helix-redis.container</code></h3>
+<div class="sourceCode" id="cb7"><pre class="sourceCode ini"><code class="sourceCode ini"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># ~/.config/containers/systemd/helix-pg.container</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="kw">[Container]</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="dt">Image</span><span class="ot">=</span><span class="st">docker.io/library/postgres:16</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="dt">Pod</span><span class="ot">=</span><span class="st">helixvpn.pod</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="dt">DropCapability</span><span class="ot">=</span><span class="st">ALL</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="dt">Volume</span><span class="ot">=</span><span class="st">helix-pgdata.volume:/var/lib/postgresql/data:Z          # SELinux relabel; data persists</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="dt">Environment</span><span class="ot">=</span><span class="st">POSTGRES_USER=helix_owner POSTGRES_DB=helix        # owner role; helixd uses helix_app (§3.3)</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="dt">Secret</span><span class="ot">=</span><span class="st">helix_db_pw,type=env,target=POSTGRES_PASSWORD</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="kw">[Install]</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="dt">WantedBy</span><span class="ot">=</span><span class="st">default.target</span></span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode ini"><code class="sourceCode ini"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># ~/.config/containers/systemd/helix-redis.container</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="kw">[Container]</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="dt">Image</span><span class="ot">=</span><span class="st">docker.io/library/redis:7</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="dt">Pod</span><span class="ot">=</span><span class="st">helixvpn.pod</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="dt">DropCapability</span><span class="ot">=</span><span class="st">ALL</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="dt">ReadOnly</span><span class="ot">=</span><span class="kw">true</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="dt">ReadOnlyTmpfs</span><span class="ot">=</span><span class="kw">true</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="co"># presence/events are EPHEMERAL (C2: losing Redis loses presence, not identity) — no durable volume</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="kw">[Install]</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="dt">WantedBy</span><span class="ot">=</span><span class="st">default.target</span></span></code></pre></div>
+<p>Postgres is <strong>not</strong> read-only-rootfs in practice (it
+writes its socket/lock state); it uses <code>DropCapability=ALL</code> +
+a named volume for <code>PGDATA</code>. Redis is read-only-rootfs
+because its state is ephemeral (presence TTL keys), so no durable volume
+is mounted [API §4.2 — <code>Online</code> from Redis].</p>
+<h3 id="35-helixnetwork--helix-pgdatavolume">3.5
+<code>helix.network</code> + <code>helix-pgdata.volume</code></h3>
+<div class="sourceCode" id="cb9"><pre class="sourceCode ini"><code class="sourceCode ini"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># ~/.config/containers/systemd/helix.network   (optional explicit network; the pod also supplies one)</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="kw">[Network]</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="dt">NetworkName</span><span class="ot">=</span><span class="st">helixvpn</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="co"># pasta is the Podman 5.x rootless default backend (NAT-free, faster — FACT [RPK §3])</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="co"># ~/.config/containers/systemd/helix-pgdata.volume</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="kw">[Volume]</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="dt">VolumeName</span><span class="ot">=</span><span class="st">helix-pgdata</span></span></code></pre></div>
+<p>A pod already supplies a shared network namespace, so an explicit
+<code>.network</code> is optional for the single-pod model; it is
+included for operators who want a named bridge. The volume quadlet
+creates the named <code>helix-pgdata</code> referenced by
+<code>helix-pg.container</code> (§3.4) with an auto-generated dependency
+[RPK §1].</p>
+<hr />
+<h2 id="4-rootless-networking-caveats-the-load-bearing-section-for-a-vpn">4.
+Rootless networking caveats (the load-bearing section for a VPN)</h2>
+<p>These are the FACT-grade caveats that bite a rootless VPN edge [RPK
+§3] — each is documented in the operator guide so a fresh
+<code>init</code> does not hit &quot;connected but nothing loads&quot;:</p>
+<table>
+<thead>
+<tr>
+<th>Caveat</th>
+<th>FACT</th>
+<th>HelixVPN handling</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong><code>:443</code> rootless bind</strong></td>
+<td>Rootless cannot bind ports &lt; 1024 by default
+(<code>net.ipv4.ip_unprivileged_port_start=1024</code>) [RPK §3].</td>
+<td>Lower the sysctl:
+<code>net.ipv4.ip_unprivileged_port_start=443</code>, persisted in
+<code>/etc/sysctl.d/99-helixvpn-ports.conf</code>. <code>init</code>
+prints this as a host prerequisite.</td>
+</tr>
+<tr>
+<td><strong>pasta backend</strong></td>
+<td>Podman 5.x rootless default backend is <strong>pasta</strong>
+(NAT-free, faster than slirp4netns); RHEL ≥ 9.5 defaults to it [RPK
+§3].</td>
+<td>Verify via <code>podman info</code> →
+<code>host.networkBackend</code>. <strong>UNVERIFIED
+regression:</strong> a pasta throughput regression is reported in Podman
+5.8 [RPK §3, podman#28219] — the operator guide says <em>benchmark your
+build</em>, never assume.</td>
+</tr>
+<tr>
+<td><strong>No auto firewall/NAT</strong></td>
+<td>&quot;Modifying the firewall requires root … rootless Podman does not
+install iptables rules&quot; [RPK §3].</td>
+<td>A VPN edge that NATs client egress provides host-side forwarding OR
+runs the masquerade <strong>inside</strong> the edge&#39;s own netns with
+<code>NET_ADMIN</code>; documented as a host prerequisite.</td>
+</tr>
+<tr>
+<td><strong>MTU pitfall</strong></td>
+<td>Tunnels frequently break on MTU (&quot;connected but nothing loads&quot;) [RPK
+§3].</td>
+<td>The edge sets the WG/quic MTU (Volume 2
+<code>routing-and-addressing.md</code>); the operator guide lists the
+MTU knob.</td>
+</tr>
+<tr>
+<td><strong>Outbound interface pin</strong></td>
+<td>slirp4netns offers <code>--outbound-addr</code> to pin the egress
+interface [RPK §3].</td>
+<td>When the gateway must egress a specific uplink, the operator pins
+it; <strong>UNVERIFIED</strong> whether pasta exposes an equivalent on
+the target build.</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb10"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># host prerequisite printed by `helixvpnctl init` (rootless :443):</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">&#39;net.ipv4.ip_unprivileged_port_start=443&#39;</span> <span class="kw">|</span> <span class="fu">sudo</span> tee /etc/sysctl.d/99-helixvpn-ports.conf</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> sysctl <span class="at">--system</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="co"># (sudo here is a HOST sysctl change, not container management — §11.4.161 forbids rootful CONTAINER ops, not host config)</span></span></code></pre></div>
+<blockquote>
+<p><strong>§11.4.161 boundary (§11.4.6 honesty).</strong> Lowering the
+host sysctl and loading the WG kernel module are <strong>host
+configuration</strong> the operator does once, NOT rootful container
+management. §11.4.161 forbids rootful/<code>sudo</code> <em>container
+runtime</em> operations; it does not forbid the operator from
+configuring their own host kernel. The distinction is documented so the
+rootless mandate is not misread as &quot;the host needs no privileged
+setup&quot;.</p>
+</blockquote>
+<hr />
+<h2 id="5-the-on-demand-infra-invariant-11476">5. The on-demand-infra
+invariant (§11.4.76)</h2>
+<p>Operators (and tests) are <strong>never</strong> required to
+<code>podman machine</code> / <code>systemctl start</code> infra by hand
+for integration tests — the test entry point boots infra on demand via
+the <code>containers</code> submodule [05_OV §6.3, §11.4.76(3)]:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-go/internal/store/integration_test.go  (illustrative — FACT-grade pattern [05_OV §6.3])</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="op">(</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;digital.vasic.containers/pkg/boot&quot;</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;digital.vasic.containers/pkg/health&quot;</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestWatchNetworkMapDeltaStream<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>    ctx <span class="op">:=</span> context<span class="op">.</span>Background<span class="op">()</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>    infra <span class="op">:=</span> boot<span class="op">.</span>Compose<span class="op">(</span>ctx<span class="op">,</span> boot<span class="op">.</span>Spec<span class="op">{</span>                 <span class="co">// rootless Podman (§11.4.161)</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>        Services<span class="op">:</span> <span class="op">[]</span>boot<span class="op">.</span>Service<span class="op">{</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>            <span class="op">{</span>Name<span class="op">:</span> <span class="st">&quot;pg&quot;</span><span class="op">,</span>    Image<span class="op">:</span> <span class="st">&quot;docker.io/library/postgres:16&quot;</span><span class="op">,</span> Port<span class="op">:</span> <span class="dv">5432</span><span class="op">},</span></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>            <span class="op">{</span>Name<span class="op">:</span> <span class="st">&quot;redis&quot;</span><span class="op">,</span> Image<span class="op">:</span> <span class="st">&quot;docker.io/library/redis:7&quot;</span><span class="op">,</span>     Port<span class="op">:</span> <span class="dv">6379</span><span class="op">},</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>        <span class="op">},</span></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>    <span class="op">})</span></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>    t<span class="op">.</span>Cleanup<span class="op">(</span><span class="kw">func</span><span class="op">()</span> <span class="op">{</span> infra<span class="op">.</span>Down<span class="op">(</span>ctx<span class="op">)</span> <span class="op">})</span>                 <span class="co">// §11.4.14 quiescent teardown</span></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>    health<span class="op">.</span>WaitReady<span class="op">(</span>ctx<span class="op">,</span> infra<span class="op">,</span> <span class="dv">30</span><span class="op">*</span>time<span class="op">.</span>Second<span class="op">)</span>          <span class="co">// real readiness probe, NOT a sleep</span></span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ... drive enroll → advertise → policy → assert MapDelta</span></span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>This is anti-bluff-critical (§11.4.76(5)): an integration test
+claiming to exercise the streamed <code>WatchNetworkMap</code> MUST
+actually boot Postgres+Redis via the submodule — a short-circuit fake
+that skips boot is a §11.4 violation. The production quadlets and the
+test infra both go through the <code>containers</code> submodule; no
+ad-hoc <code>podman run</code> exists in the codebase.</p>
+<hr />
+<h2 id="6-helixvpnctl-deploy-quadlet-render-the-source-of-these-units">6.
+<code>helixvpnctl deploy quadlet</code> render (the source of these
+units)</h2>
+<p><code>helixvpnctl deploy quadlet --out ~/.config/containers/systemd/</code>
+renders the §3 units from one in-code spec via the
+<code>containers</code> submodule&#39;s <code>pkg/compose</code> primitives
+(§11.4.81 cross-platform- parity: one source, per-substrate render)
+[05_OV §6.3, helixvpnctl §10]. The render is
+<strong>parameterized</strong> by the <code>init</code> inputs (domain →
+<code>masque_sni</code>, data-dir → volume host path, image tags → the
+<code>helix_vpn-&lt;version&gt;</code> release prefix [§11.4.151]). The
+three substrates (quadlet / compose / kube) derive from the
+<strong>same</strong> spec, so a change to the pod shape lands in all
+three, not three hand-maintained files.</p>
+<hr />
+<h2 id="7-security-posture-summary">7. Security posture summary</h2>
+<table>
+<thead>
+<tr>
+<th>Control</th>
+<th>Mechanism</th>
+<th>FACT source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Least privilege</td>
+<td><code>DropCapability=ALL</code> on every member;
+<code>AddCapability=NET_ADMIN NET_RAW</code> ONLY on the edge</td>
+<td>[RPK §1/§2]</td>
+</tr>
+<tr>
+<td>Read-only rootfs</td>
+<td><code>ReadOnly=true</code> + <code>ReadOnlyTmpfs=true</code> (rw
+tmpfs on /dev /run /tmp) on edge/control/redis</td>
+<td>[RPK §1]</td>
+</tr>
+<tr>
+<td>Seccomp</td>
+<td><code>SeccompProfile=/etc/containers/seccomp/helix-edge.json</code>
+(custom, tighter than default)</td>
+<td>[RPK §1]</td>
+</tr>
+<tr>
+<td>No privilege escalation</td>
+<td><code>NoNewPrivileges=true</code> on control</td>
+<td>[RPK §1]</td>
+</tr>
+<tr>
+<td>Secrets</td>
+<td>podman <code>Secret=</code> injected as env target; never in unit
+text</td>
+<td>§11.4.10</td>
+</tr>
+<tr>
+<td>Rootless</td>
+<td>file-location-selected; no <code>User=</code>, no daemon, no sudo
+for container ops</td>
+<td>§11.4.161, [RPK §1]</td>
+</tr>
+<tr>
+<td>No shell/SSH in images</td>
+<td>edge/control images carry no shell — reduces attack surface</td>
+<td>[05_OV §7.1]</td>
+</tr>
+<tr>
+<td>SELinux relabel</td>
+<td><code>:Z</code> on the pgdata volume mount</td>
+<td>[RPK §1]</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="8-test-points-114169-comprehensive-test-type-coverage">8. Test
+points (§11.4.169 comprehensive test-type coverage)</h2>
+<p>Every PASS cites captured evidence (§11.4.5/.69/.107); infra is the
+<code>containers</code> submodule (§11.4.76), rootless Podman
+(§11.4.161), never ad-hoc <code>podman run</code>.</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test type (§11.4.169)</th>
+<th>Target</th>
+<th>Concrete assertion + evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Q1</td>
+<td>unit</td>
+<td>render determinism</td>
+<td><code>deploy quadlet</code> twice → byte-identical units; image tag
+carries <code>helix_vpn-</code> prefix</td>
+</tr>
+<tr>
+<td>Q2</td>
+<td>integration</td>
+<td>rootless one-pod boot</td>
+<td>place units in <code>~/.config/containers/systemd/</code>,
+<code>systemctl --user start helixvpn-pod</code>, all 4 members UP;
+<code>status</code> GREEN</td>
+</tr>
+<tr>
+<td>Q3</td>
+<td>integration</td>
+<td><code>:443/udp</code> reachable rootless</td>
+<td>with the sysctl set, an agent completes MASQUE handshake to
+<code>:443/udp</code>; captured</td>
+</tr>
+<tr>
+<td>Q4</td>
+<td>security</td>
+<td>capability set (§3.2)</td>
+<td><code>podman inspect</code> shows edge has ONLY NET_ADMIN+NET_RAW;
+control/pg/redis have none; mutation adding a cap → FAIL</td>
+</tr>
+<tr>
+<td>Q5</td>
+<td>security</td>
+<td>read-only rootfs</td>
+<td>a write to the edge rootfs is denied (EROFS); rw tmpfs on /run
+works</td>
+</tr>
+<tr>
+<td>Q6</td>
+<td>security</td>
+<td>secret not in unit text</td>
+<td>grep the rendered units → no <code>PGPASSWORD</code> value; only
+<code>Secret=</code> references</td>
+</tr>
+<tr>
+<td>Q7</td>
+<td>integration</td>
+<td>on-demand-infra invariant (§5)</td>
+<td><code>go test</code> boots infra via <code>boot.Compose</code>;
+mutation removing <code>boot.Compose</code> → test FAILs (proves it was
+not a fake)</td>
+</tr>
+<tr>
+<td>Q8</td>
+<td>chaos</td>
+<td>member restart</td>
+<td>kill <code>helix-pg</code>, assert <code>Restart=always</code>
+recovers + control reconnects; presence (redis) loss degrades gracefully
+(C2)</td>
+</tr>
+<tr>
+<td>Q9</td>
+<td>e2e</td>
+<td>three-substrate parity</td>
+<td>quadlet + compose + kube boot the same image;
+<code>helixvpnctl status</code> GREEN on each (recorded per
+§11.4.159)</td>
+</tr>
+<tr>
+<td>Q10</td>
+<td>meta-test (§1.1)</td>
+<td>gates paired</td>
+<td>add a cap / inline a secret / skip read-only → each makes its gate
+FAIL</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="9-decision-callouts-options--recommendation--11466101">9.
+Decision callouts (options + recommendation — §11.4.66/.101)</h2>
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>Decision</th>
+<th>Options</th>
+<th>Recommendation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>D-SUBSTRATE-DEFAULT</strong></td>
+<td><code>init</code> default substrate</td>
+<td>quadlet / compose / k8s</td>
+<td><strong>quadlet</strong> (§11.4.76/.161 canonical) — flag
+overrides</td>
+</tr>
+<tr>
+<td><strong>D-ROOTLESS-443</strong></td>
+<td>rootless <code>:443</code> bind</td>
+<td>(a) lower <code>ip_unprivileged_port_start</code>; (b) root-side
+proxy/authbind</td>
+<td><strong>(a)</strong> the clean path for <code>:443/udp</code> [RPK
+§3]; documented host prerequisite</td>
+</tr>
+<tr>
+<td><strong>D-WG-PATH</strong></td>
+<td>edge WG path</td>
+<td>(a) kernel WG (NET_ADMIN+NET_RAW + host module); (b) userspace
+boringtun (+ /dev/net/tun)</td>
+<td><strong>(a)</strong> primary, <strong>(b)</strong> fallback where
+the host module is unavailable (Volume 2)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="sources-verified">Sources verified</h2>
+<ul>
+<li><code>v09-research/research-podman_k8s.md</code> §1 (quadlet
+fundamentals, rootless search paths, <code>User=</code> hard constraint,
+<code>[Container]</code>/<code>[Pod]</code> directives, example
+skeleton), §2 (NET_ADMIN insufficient — also NET_RAW + host WG module +
+/dev/net/tun), §3 (rootless networking caveats: pasta default
+<ul>
+<li>5.8 regression, no auto firewall/NAT, MTU, rootless
+<code>:443</code> sysctl), §7 (FACT-grade carry-into- spec list) —
+verified against latest Podman docs 2026-06-25 per §11.4.99 —
+<code>[RPK]</code>.</li>
+</ul></li>
+<li><code>05-repo-layout-tooling-and-helix-ecosystem.md</code> §7.1
+(canonical quadlets, the pod/edge/control/pg unit sketches), §6.3
+(containers submodule on-demand-infra + deploy render), §7.4 (substrate
+recommendation) — <code>[05_OV]</code>.</li>
+<li><code>v03-control-plane/svc-api.md</code> §4.7 (<code>/readyz</code>
+semantics for HealthCmd), §6.5 (helix_app non-superuser → RLS), §4.2
+(Redis presence ephemeral, C2) — <code>[API]</code>.</li>
+<li>Constitution anchors: §11.4.161 (rootless container runtime mandate
+— Podman rootless, no sudo/ rootful), §11.4.76 (containers submodule
+sole orchestration + on-demand-infra invariant), §11.4.10 (secrets as
+podman Secret, never in unit text), §11.4.81 (one-source three-substrate
+render), §11.4.112 (honest documented gap if a platform has no rootless
+option), §11.4.35 (visible reconciliation — rootless path vs the
+overview&#39;s /etc path), §11.4.6 (no-guessing — UNVERIFIED
+pasta-regression/outbound-pin marks), §11.4.169 (test-type coverage),
+§1.1 (paired meta-test mutations).</li>
+</ul>
+</body>
+</html>

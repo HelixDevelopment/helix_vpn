@@ -1,0 +1,1314 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Data Plane — WireGuard core, pluggable transports, obfuscation, routing</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Data Plane — WireGuard core, pluggable transports,
+obfuscation, routing</h1>
+</header>
+<h1 id="data-plane--wireguard-core-pluggable-transports-obfuscation-routing">Data
+Plane — WireGuard core, pluggable transports, obfuscation, routing</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-06-25T00:00:00Z</p>
+<blockquote>
+<p>Master technical specification — document 01 of the HelixVPN set.
+Scope: the <strong>Rust data plane</strong> shared byte-for-byte by
+client, connector, and gateway edge. This is a SPEC (describe the
+implementation; do not build the product). Source evidence cited inline
+by id, e.g. [04_ARCH §3], [04_P0 §4.2], [11_MST], [SYNTHESIS].</p>
+</blockquote>
+<hr />
+<h2 id="0-position-in-the-system--what-this-document-owns">0. Position
+in the system &amp; what this document owns</h2>
+<p>HelixVPN is a self-hostable overlay network with a privacy-VPN front
+end: three roles — <strong>Connector</strong> (network-side
+outbound-only agent advertising CIDRs) ⇄ <strong>Gateway</strong>
+(public VPS: control + data plane) ⇄ <strong>Client</strong>
+(Mullvad-style end-user app) [04_ARCH §1.1, 05_YBO, SYNTHESIS §1]. This
+document specifies <strong>only the data plane</strong> — the code that
+moves already-encrypted bytes — which is the same Rust workspace on all
+three roles [04_ARCH §3.2, §5.5]. It does <strong>not</strong> specify
+the Go control plane (doc 02), the <code>WatchNetworkMap</code> protobuf
+(doc 03), client UI (doc 05), or platform tunnel shims beyond the TUN
+handoff contract (doc 06).</p>
+<p><strong>The single most important architectural constraint</strong>
+that governs every line below [04_ARCH §0, §2.2]: <em>WireGuard is the
+cryptographic core everywhere; obfuscation/transport is a swappable
+layer <strong>under</strong> WireGuard, never a fork of WG crypto.</em>
+Mullvad&#39;s &quot;QUIC mode&quot; is not a separate protocol — it is WireGuard
+tunnelled over MASQUE/HTTP-3 [04_ARCH §0, research synthesis D1].
+HelixVPN keeps WG as the L3 crypto and treats QUIC/Shadowsocks/
+UDP-over-TCP/LWO as interchangeable L2 carriers of opaque WG
+datagrams.</p>
+<h3 id="01-non-negotiable-data-plane-invariants">0.1 Non-negotiable
+data-plane invariants</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Invariant</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>I1</td>
+<td>The transport layer <strong>never sees plaintext</strong>; it
+carries only already-encrypted WG datagrams.</td>
+<td>[04_P0 §4.2]</td>
+</tr>
+<tr>
+<td>I2</td>
+<td>The transport carries <strong>unreliable datagrams</strong>, never
+an ordered byte stream — preserving WG&#39;s own loss semantics, avoiding
+head-of-line blocking.</td>
+<td>[04_P0 §4.2 design note]</td>
+</tr>
+<tr>
+<td>I3</td>
+<td>Control plane is <strong>never in the packet path</strong>; if
+control is down, existing tunnels keep forwarding (fail-static).</td>
+<td>[04_ARCH §2.1]</td>
+</tr>
+<tr>
+<td>I4</td>
+<td><strong>One transport crate, three consumers</strong> (client,
+connector, edge): the code that obfuscates on the client is the same
+code that de-obfuscates on the edge.</td>
+<td>[04_ARCH §3.2, §5.5]</td>
+</tr>
+<tr>
+<td>I5</td>
+<td><strong>No-logging by construction</strong> in the data plane: only
+aggregate counters, never per-connection/per-packet durable state.</td>
+<td>[04_ARCH §2.7, §7]</td>
+</tr>
+<tr>
+<td>I6</td>
+<td>Default-<strong>deny</strong>: no peer reaches anything without an
+explicit compiled policy rule expressed as <code>AllowedIPs</code> + an
+edge verdict map.</td>
+<td>[04_ARCH §3.4, §7]</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="1-layering-model">1. Layering model</h2>
+<pre><code>   ┌──────────────────────────────────────────────────────────────┐
+   │ L4  Application traffic (user packets / advertised LAN hosts)  │
+   ├──────────────────────────────────────────────────────────────┤
+   │ L3  WireGuard  (Noise IK, Curve25519, ChaCha20-Poly1305)       │  ← CRYPTO CORE (fixed)
+   ├──────────────────────────────────────────────────────────────┤
+   │ L2.5 (optional) DAITA shaping: pad + cover traffic (maybenot)  │  ← above WG, below transport
+   ├──────────────────────────────────────────────────────────────┤
+   │ L2  Pluggable Transport (exactly one active per tunnel):       │
+   │      plain-udp · masque-h3 (CONNECT-UDP) · connect-ip ·        │
+   │      shadowsocks · udp-over-tcp · lwo · [hysteria2?]           │  ← the `Transport` trait
+   ├──────────────────────────────────────────────────────────────┤
+   │ L1  IP to the gateway&#39;s public endpoint (:443/udp, :443/tcp…)  │
+   └──────────────────────────────────────────────────────────────┘</code></pre>
+<p>WireGuard owns confidentiality, integrity, and roaming. The transport
+layer <strong>only changes how encrypted WG datagrams look on the
+wire</strong> so DPI cannot fingerprint or block them [04_ARCH §3.1].
+DAITA is orthogonal to <em>which</em> transport runs (works with
+plain-udp or masque alike) [04_P2 §2.2] and is specified at §9.</p>
+<hr />
+<h2 id="2-crate-layout-the-data-plane-workspace">2. Crate layout (the
+data-plane workspace)</h2>
+<p>The Phase-0 interfaces are designed to <strong>survive into Phase
+1</strong> [04_P0 §4]. The workspace is a decoupled, reusable Rust
+component per constitution §11.4.28/.74 (its own
+<code>vasic-digital</code> repo, snake_case, flat submodule) [SYNTHESIS
+§9].</p>
+<pre><code>helix-core/                         # Cargo workspace; repo: vasic-digital/helix_core
+├── Cargo.toml                      # [workspace]
+├── crates/
+│   ├── helix-transport/            # the pluggable L2 carrier — shared client+edge+connector
+│   │   ├── src/lib.rs              #   Transport trait + TransportConfig + dial() + registry
+│   │   ├── src/plain_udp.rs        #   §3.2
+│   │   ├── src/masque.rs           #   §3.3  (quinn + h3 + CONNECT-UDP/HTTP-Datagram)
+│   │   ├── src/connect_ip.rs       #   §3.4  (RFC 9484, advanced — no inner WG)
+│   │   ├── src/shadowsocks.rs      #   §3.5
+│   │   ├── src/udp_over_tcp.rs     #   §3.6
+│   │   ├── src/lwo.rs              #   §3.7
+│   │   ├── src/hysteria2.rs        #   §3.8  (option, decision D1)
+│   │   └── src/error.rs            #   TransportError taxonomy
+│   ├── helix-wg/                   # §4  boringtun wrapper: handshake, encrypt/decrypt, timers
+│   ├── helix-tun/                  # OS TUN abstraction (Linux native; shims inject the fd)
+│   ├── helix-daita/                # §9  maybenot shaping stage
+│   ├── helix-route/                # §6–§8  overlay addressing, 4via6, ACL→verdict-map compiler
+│   ├── helix-core/                 # §5  orchestrator: ties tun ⇄ wg ⇄ daita ⇄ transport; status
+│   └── helix-ffi/                  # flutter_rust_bridge surface (doc 05)
+└── bin/
+    ├── helix-client.rs             # Linux CLI client
+    ├── helix-connector.rs          # Linux CLI connector (advertise/route mode)
+    └── helix-edge.rs               # gateway data-plane edge (MASQUE termination) — see D5</code></pre>
+<p>The same <code>helix-edge</code> binary on the gateway is the third
+consumer of <code>helix-transport</code> [04_ARCH §11, SYNTHESIS §6].
+Decision D5 (Rust vs Go edge) is settled by the Phase-0 G4 benchmark
+(§11); this spec assumes the <strong>Rust</strong> edge for the
+single-implementation guarantee and notes the Go fallback at §11.</p>
+<hr />
+<h2 id="3-the-transport-trait--the-single-most-important-interface">3.
+The Transport trait — the single most important interface</h2>
+<p>Everything obfuscation-related hides behind one trait.
+<code>plain_udp</code>, <code>masque</code>, … implement it; the client,
+connector, and edge all consume it. <strong>One trait, three consumers,
+N transports</strong> [04_P0 §4.2].</p>
+<h3 id="31-trait-config-error-and-the-dial-ladder">3.1 Trait, config,
+error, and the <code>dial()</code> ladder</h3>
+<div class="sourceCode" id="cb3"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-transport/src/lib.rs</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">async_trait::</span>async_trait<span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">bytes::</span>Bytes<span class="op">;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::net::</span>SocketAddr<span class="op">;</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="co">/// A bidirectional carrier for ALREADY-ENCRYPTED WireGuard datagrams.</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="co">/// The transport NEVER sees plaintext (I1); it carries unreliable datagrams,</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="co">/// never an ordered stream (I2). Implementations are cancel-safe.</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>async_trait<span class="at">]</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">trait</span> Transport<span class="op">:</span> <span class="bu">Send</span> <span class="op">+</span> <span class="bu">Sync</span> <span class="op">{</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Send exactly one WG datagram toward the peer endpoint.</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">async</span> <span class="kw">fn</span> send(<span class="op">&amp;</span><span class="kw">self</span><span class="op">,</span> datagram<span class="op">:</span> Bytes) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">,</span> TransportError<span class="op">&gt;;</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Receive the next WG datagram from the peer (cancel-safe; usable in `select!`).</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">async</span> <span class="kw">fn</span> recv(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>Bytes<span class="op">,</span> TransportError<span class="op">&gt;;</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Stable label for logs/metrics: &quot;plain-udp&quot;, &quot;masque-h3&quot;, &quot;shadowsocks&quot;, …</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> kind(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="op">&amp;</span><span class="ot">&#39;static</span> <span class="dt">str</span><span class="op">;</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// MTU the upper layer (WG) may use over this transport, AFTER per-transport overhead (§10).</span></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> effective_mtu(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">u16</span><span class="op">;</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Snapshot of liveness (RTT EWMA, last-recv age) the orchestrator uses for ladder decisions.</span></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> health(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> TransportHealth<span class="op">;</span></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Graceful close (flush QUIC, FIN the TCP carrier). Idempotent.</span></span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>    <span class="kw">async</span> <span class="kw">fn</span> close(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">,</span> TransportError<span class="op">&gt;;</span></span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="bu">Clone</span><span class="op">,</span> <span class="bu">Debug</span><span class="at">)]</span></span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> TransportHealth <span class="op">{</span></span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> rtt_ewma_ms<span class="op">:</span> <span class="dt">Option</span><span class="op">&lt;</span><span class="dt">u32</span><span class="op">&gt;,</span></span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> last_recv_age_ms<span class="op">:</span> <span class="dt">u64</span><span class="op">,</span></span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> send_errors<span class="op">:</span> <span class="dt">u32</span><span class="op">,</span></span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a><span class="co">/// One variant per L2 carrier. The escalation ladder constructs the next</span></span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a><span class="co">/// variant on repeated handshake failure (§5.3). All variants resolve their</span></span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a><span class="co">/// concrete endpoint + secrets from the NetworkMap pushed by the coordinator (doc 03).</span></span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="bu">Clone</span><span class="op">,</span> <span class="bu">Debug</span><span class="at">)]</span></span>
+<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">enum</span> TransportConfig <span class="op">{</span></span>
+<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a>    PlainUdp     <span class="op">{</span> peer<span class="op">:</span> SocketAddr<span class="op">,</span> bind<span class="op">:</span> SocketAddr <span class="op">},</span></span>
+<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a>    MasqueH3     <span class="op">{</span> url<span class="op">:</span> <span class="dt">String</span><span class="op">,</span> sni<span class="op">:</span> <span class="dt">String</span><span class="op">,</span> bind<span class="op">:</span> SocketAddr<span class="op">,</span> congestion<span class="op">:</span> Congestion <span class="op">},</span></span>
+<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a>    ConnectIp    <span class="op">{</span> url<span class="op">:</span> <span class="dt">String</span><span class="op">,</span> sni<span class="op">:</span> <span class="dt">String</span><span class="op">,</span> bind<span class="op">:</span> SocketAddr <span class="op">},</span> <span class="co">// RFC 9484, advanced (§3.4)</span></span>
+<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a>    Shadowsocks  <span class="op">{</span> peer<span class="op">:</span> SocketAddr<span class="op">,</span> method<span class="op">:</span> SsMethod<span class="op">,</span> psk<span class="op">:</span> SecretBytes <span class="op">},</span></span>
+<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a>    UdpOverTcp   <span class="op">{</span> peer<span class="op">:</span> SocketAddr<span class="op">,</span> tls_sni<span class="op">:</span> <span class="dt">Option</span><span class="op">&lt;</span><span class="dt">String</span><span class="op">&gt;</span> <span class="op">},</span></span>
+<span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a>    Lwo          <span class="op">{</span> peer<span class="op">:</span> SocketAddr<span class="op">,</span> bind<span class="op">:</span> SocketAddr<span class="op">,</span> session_key<span class="op">:</span> SecretBytes <span class="op">},</span></span>
+<span id="cb3-48"><a href="#cb3-48" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>cfg<span class="at">(</span>feature <span class="op">=</span> <span class="st">&quot;hysteria2&quot;</span><span class="at">)]</span></span>
+<span id="cb3-49"><a href="#cb3-49" aria-hidden="true" tabindex="-1"></a>    Hysteria2    <span class="op">{</span> url<span class="op">:</span> <span class="dt">String</span><span class="op">,</span> sni<span class="op">:</span> <span class="dt">String</span><span class="op">,</span> salamander_pw<span class="op">:</span> SecretBytes <span class="op">},</span> <span class="co">// decision D1 (§3.8)</span></span>
+<span id="cb3-50"><a href="#cb3-50" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb3-51"><a href="#cb3-51" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-52"><a href="#cb3-52" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="bu">Clone</span><span class="op">,</span> <span class="bu">Copy</span><span class="op">,</span> <span class="bu">Debug</span><span class="at">)]</span> <span class="kw">pub</span> <span class="kw">enum</span> Congestion <span class="op">{</span> Cubic<span class="op">,</span> Bbr <span class="op">}</span></span>
+<span id="cb3-53"><a href="#cb3-53" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="bu">Clone</span><span class="op">,</span> <span class="bu">Copy</span><span class="op">,</span> <span class="bu">Debug</span><span class="at">)]</span> <span class="kw">pub</span> <span class="kw">enum</span> SsMethod  <span class="op">{</span> Chacha20Poly1305<span class="op">,</span> Aes256Gcm <span class="op">}</span></span>
+<span id="cb3-54"><a href="#cb3-54" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-55"><a href="#cb3-55" aria-hidden="true" tabindex="-1"></a><span class="co">/// Build a live transport from config. Returns within a bounded dial timeout;</span></span>
+<span id="cb3-56"><a href="#cb3-56" aria-hidden="true" tabindex="-1"></a><span class="co">/// on `DialTimeout`/`HandshakeFailed` the orchestrator escalates to the next rung (§5.3).</span></span>
+<span id="cb3-57"><a href="#cb3-57" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> dial(cfg<span class="op">:</span> TransportConfig) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span><span class="dt">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> Transport<span class="op">&gt;,</span> TransportError<span class="op">&gt;</span> <span class="op">{</span> <span class="co">/* … */</span> <span class="op">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-transport/src/error.rs</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="pp">thiserror::</span><span class="bu">Error</span><span class="op">,</span> <span class="bu">Debug</span><span class="at">)]</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">enum</span> TransportError <span class="op">{</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>error<span class="at">(</span><span class="st">&quot;dial timed out&quot;</span><span class="at">)]</span>            DialTimeout<span class="op">,</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>error<span class="at">(</span><span class="st">&quot;handshake failed: {0}&quot;</span><span class="at">)]</span>     HandshakeFailed(<span class="dt">String</span>)<span class="op">,</span>  <span class="co">// → triggers ladder escalation</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>error<span class="at">(</span><span class="st">&quot;peer endpoint blocked&quot;</span><span class="at">)]</span>     EndpointBlocked<span class="op">,</span>          <span class="co">// DPI/firewall verdict</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>error<span class="at">(</span><span class="st">&quot;transport closed&quot;</span><span class="at">)]</span>          Closed<span class="op">,</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>error<span class="at">(</span><span class="st">&quot;oversize datagram {0} &gt; mtu&quot;</span><span class="at">)]</span> Oversize(<span class="dt">usize</span>)<span class="op">,</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>error<span class="at">(</span><span class="st">&quot;io: {0}&quot;</span><span class="at">)]</span>                   Io(<span class="at">#[</span>from<span class="at">]</span> <span class="pp">std::io::</span><span class="bu">Error</span>)<span class="op">,</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>error<span class="at">(</span><span class="st">&quot;quic: {0}&quot;</span><span class="at">)]</span>                 Quic(<span class="dt">String</span>)<span class="op">,</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><strong>Design rationale (I2):</strong> because WG datagrams are
+independent and loss-tolerant, the transport carries unreliable
+datagrams. For MASQUE this means <strong>QUIC DATAGRAM frames (RFC
+9221)</strong> carried as <strong>HTTP Datagrams (RFC 9297)</strong>,
+<em>not</em> a QUIC stream — preserving WG&#39;s loss semantics and avoiding
+head-of-line blocking [04_P0 §4.2, §5.1]. This is the half of S3 that
+earns Phase 0.</p>
+<h3 id="32-plain-udp--the-baseline-phase-0--always-available">3.2
+<code>plain-udp</code> — the baseline (Phase 0 / always available)</h3>
+<p>The default, lowest-latency, lowest-CPU path on unrestricted networks
+[04_ARCH §3.2]. It also sets the throughput baseline every other
+transport is measured against (≥80% of bare link is the G1 gate) [04_P0
+§0, §8].</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-transport/src/plain_udp.rs</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> PlainUdp <span class="op">{</span> sock<span class="op">:</span> <span class="pp">tokio::net::</span>UdpSocket<span class="op">,</span> peer<span class="op">:</span> SocketAddr<span class="op">,</span> health<span class="op">:</span> HealthCell <span class="op">}</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>async_trait<span class="at">]</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> Transport <span class="cf">for</span> PlainUdp <span class="op">{</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">async</span> <span class="kw">fn</span> send(<span class="op">&amp;</span><span class="kw">self</span><span class="op">,</span> dg<span class="op">:</span> Bytes) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">,</span> TransportError<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>        <span class="kw">self</span><span class="op">.</span>sock<span class="op">.</span>send_to(<span class="op">&amp;</span>dg<span class="op">,</span> <span class="kw">self</span><span class="op">.</span>peer)<span class="op">.</span><span class="kw">await</span><span class="op">?;</span> <span class="cn">Ok</span>(())</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">async</span> <span class="kw">fn</span> recv(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>Bytes<span class="op">,</span> TransportError<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> <span class="kw">mut</span> buf <span class="op">=</span> <span class="pp">vec!</span>[<span class="dv">0u8</span><span class="op">;</span> <span class="dv">1500</span>]<span class="op">;</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> n <span class="op">=</span> <span class="kw">self</span><span class="op">.</span>sock<span class="op">.</span>recv(<span class="op">&amp;</span><span class="kw">mut</span> buf)<span class="op">.</span><span class="kw">await</span><span class="op">?;</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>        <span class="kw">self</span><span class="op">.</span>health<span class="op">.</span>mark_recv()<span class="op">;</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>        buf<span class="op">.</span>truncate(n)<span class="op">;</span> <span class="cn">Ok</span>(<span class="pp">Bytes::</span>from(buf))</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> kind(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="op">&amp;</span><span class="ot">&#39;static</span> <span class="dt">str</span> <span class="op">{</span> <span class="st">&quot;plain-udp&quot;</span> <span class="op">}</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> effective_mtu(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">u16</span> <span class="op">{</span> <span class="dv">1420</span> <span class="op">}</span>      <span class="co">// standard WG-over-IPv4 (§10)</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> health(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> TransportHealth <span class="op">{</span> <span class="kw">self</span><span class="op">.</span>health<span class="op">.</span>snapshot() <span class="op">}</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>    <span class="kw">async</span> <span class="kw">fn</span> close(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">,</span> TransportError<span class="op">&gt;</span> <span class="op">{</span> <span class="cn">Ok</span>(()) <span class="op">}</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="33-masque-h3--connect-udp-over-http3-the-headline-obfuscation">3.3
+<code>masque-h3</code> — CONNECT-UDP over HTTP/3 (the headline
+obfuscation)</h3>
+<p>The &quot;QUIC mode&quot; — Mullvad&#39;s actual mechanism, WG-over-MASQUE [04_ARCH
+§0, §3.3]. The client wraps each WG datagram in an HTTP/3
+<strong>CONNECT-UDP</strong> flow (RFC 9298) to the gateway&#39;s
+<code>:443/udp</code> HTTP/3 listener; to a passive observer the flow is
+indistinguishable from a browser doing HTTP/3 [04_ARCH §3.3, 04_P0
+§5].</p>
+<pre><code>client WG datagram (Bytes)
+  └▶ HTTP Datagram  (RFC 9297, context-id = 0 for the proxied UDP payload)
+       └▶ QUIC DATAGRAM frame (RFC 9221, unreliable — matches WG semantics, I2)
+            └▶ QUIC / HTTP-3 connection to https://gateway:443  (looks like web)
+                 └▶ EDGE: extract HTTP Datagram → WG datagram → kernel WG fast path</code></pre>
+<p>RFC stack: <strong>RFC 9298</strong> (CONNECT-UDP / Proxying UDP in
+HTTP), <strong>RFC 9297</strong> (HTTP Datagrams &amp; Capsule
+Protocol), <strong>RFC 9221</strong> (unreliable QUIC datagrams) [04_P0
+§5.1, research-masque]. The CONNECT-UDP request establishes the proxied
+UDP &quot;flow&quot; once at <code>dial()</code>; thereafter WG datagrams ride as
+HTTP Datagrams with <strong>no per-packet HTTP round trip</strong>
+[04_P0 §5.1].</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-transport/src/masque.rs  (the parts that matter)</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> MasqueTransport <span class="op">{</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    conn<span class="op">:</span> <span class="pp">quinn::</span>Connection<span class="op">,</span>          <span class="co">// established QUIC/H3 connection to gw:443</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    flow_ctx<span class="op">:</span> <span class="dt">u64</span><span class="op">,</span>                    <span class="co">// CONNECT-UDP context-id (0) established at dial()</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    health<span class="op">:</span> HealthCell<span class="op">,</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>async_trait<span class="at">]</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> Transport <span class="cf">for</span> MasqueTransport <span class="op">{</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">async</span> <span class="kw">fn</span> send(<span class="op">&amp;</span><span class="kw">self</span><span class="op">,</span> wg<span class="op">:</span> Bytes) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">,</span> TransportError<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> http_dg <span class="op">=</span> encode_http_datagram(<span class="kw">self</span><span class="op">.</span>flow_ctx<span class="op">,</span> <span class="op">&amp;</span>wg)<span class="op">;</span> <span class="co">// RFC 9297 framing</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>        <span class="kw">self</span><span class="op">.</span>conn<span class="op">.</span>send_datagram(http_dg)<span class="op">.</span>map_err(<span class="op">|</span>e<span class="op">|</span> <span class="pp">TransportError::</span>Quic(e<span class="op">.</span>to_string()))<span class="op">?;</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>        <span class="cn">Ok</span>(())                                                  <span class="co">// RFC 9221 QUIC datagram</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">async</span> <span class="kw">fn</span> recv(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>Bytes<span class="op">,</span> TransportError<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> dg <span class="op">=</span> <span class="kw">self</span><span class="op">.</span>conn<span class="op">.</span>read_datagram()<span class="op">.</span><span class="kw">await</span><span class="op">.</span>map_err(<span class="op">|</span>e<span class="op">|</span> <span class="pp">TransportError::</span>Quic(e<span class="op">.</span>to_string()))<span class="op">?;</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>        <span class="kw">self</span><span class="op">.</span>health<span class="op">.</span>mark_recv()<span class="op">;</span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>        <span class="cn">Ok</span>(decode_http_datagram(dg)<span class="op">?</span>)                           <span class="co">// strip framing → WG bytes</span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> kind(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="op">&amp;</span><span class="ot">&#39;static</span> <span class="dt">str</span> <span class="op">{</span> <span class="st">&quot;masque-h3&quot;</span> <span class="op">}</span></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> effective_mtu(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">u16</span> <span class="op">{</span> <span class="dv">1280</span> <span class="op">}</span>   <span class="co">// QUIC overhead eats headroom — measure &amp; tune (§10)</span></span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> health(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> TransportHealth <span class="op">{</span> <span class="kw">self</span><span class="op">.</span>health<span class="op">.</span>snapshot() <span class="op">}</span></span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>    <span class="kw">async</span> <span class="kw">fn</span> close(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">,</span> TransportError<span class="op">&gt;</span> <span class="op">{</span> <span class="kw">self</span><span class="op">.</span>conn<span class="op">.</span>close(<span class="dv">0u32</span><span class="op">.</span>into()<span class="op">,</span> <span class="st">b&quot;bye&quot;</span>)<span class="op">;</span> <span class="cn">Ok</span>(()) <span class="op">}</span></span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><strong>Building blocks &amp; maturity caveat</strong> [04_P0 §5.2]:
+<code>quinn</code> (mature QUIC, exposes
+<code>send_datagram</code>/<code>read_datagram</code>); <code>h3</code>
+(HTTP/3 on quinn, less battle-tested than Go&#39;s stack); <strong>MASQUE
+CONNECT-UDP handling is thin-to-absent as a turnkey Rust crate</strong>
+— expect to implement CONNECT-UDP request + HTTP-Datagram framing by
+hand on top of <code>h3</code> + <code>quinn</code> datagrams. This
+relative immaturity vs Go&#39;s <code>masque-go</code> is itself the input
+to decision D5 (edge language, §11).</p>
+<p><strong>Masquerade</strong> [04_ARCH §3.3, 04_P0 §5.4]: the edge
+<code>:443</code> listener serves a believable decoy site to anything
+that is <em>not</em> a valid CONNECT-UDP flow (probes/scanners) — native
+edge behavior replacing the original doc&#39;s Nginx-camouflage. Verify the
+flow classifies as HTTP/3 with no WG signature via <code>tshark</code>
+(the G2 wire-fingerprint check) [04_P0 §8].</p>
+<p><strong>Loss resilience</strong> is the reason mobile got this
+feature: under <code>netem loss 5%</code>, masque/QUIC must sustain
+higher goodput than the UDP-over-TCP strawman [04_P0 §5.3]. Congestion
+control is selectable (<code>Cubic</code> default; <code>Bbr</code> for
+lossy mobile — the Hysteria &quot;Brutal&quot; lineage tuning knob is a useful
+reference for <code>quinn</code> window ratios) [04_ARCH §14].</p>
+<h3 id="34-connect-ip--ip-over-http3-rfc-9484-advanced">3.4
+<code>connect-ip</code> — IP-over-HTTP/3 (RFC 9484, advanced)</h3>
+<p>An alternative datapath that proxies <strong>IP packets</strong> (not
+inner WG) directly over HTTP/3 via <strong>CONNECT-IP</strong> [04_ARCH
+§3.2, research-masque]. Use when a native IP-over-H3 path is desired
+without the inner WG layer (e.g. the gateway acts as a true IP router
+for the flow). <strong>Spec stance:</strong> ship behind a feature flag
+in Phase 2+; the default and recommended path remains
+inner-WG-over-<code>masque-h3</code> (§3.3) so the crypto core (WG) and
+the no-logging/ACL model are unchanged. CONNECT-IP loses I1&#39;s &quot;transport
+never sees plaintext&quot; property at the gateway (the gateway terminates
+IP), so it is <strong>not</strong> offered to privacy clients by default
+— only for explicit site-to-site routing where the gateway is already a
+trusted router. Recommendation: implement after <code>masque-h3</code>
+is proven; do not block the MVP on it.</p>
+<h3 id="35-shadowsocks--wg-in-shadowsocks-china-grade-dpi">3.5
+<code>shadowsocks</code> — WG-in-Shadowsocks (China-grade DPI)</h3>
+<p>WG datagrams wrapped in a Shadowsocks AEAD stream — the canonical
+&quot;looks like random/TLS-ish TCP&quot; evasion where even QUIC is throttled
+[04_ARCH §3.2, 04_P2 §1.1].</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-transport/src/shadowsocks.rs  (sketch)</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> ShadowsocksTransport <span class="op">{</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    stream<span class="op">:</span> <span class="pp">shadowsocks_crypto::</span>AeadStream<span class="op">,</span>   <span class="co">// chacha20-poly1305 / aes-256-gcm</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">// session keys derived from a pre-shared transport password, SEPARATE from WG keys</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="co">// send: frame WG datagram with 2-byte length prefix → AEAD encrypt → TCP</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="co">// recv: AEAD decrypt → deframe → WG datagram</span></span></code></pre></div>
+<p>Reuse <code>shadowsocks-rust</code> crypto primitives rather than
+re-implementing AEAD framing [04_P2 §1.1]. Because it rides TCP it
+carries the head-of-line-blocking caveat; the ladder prefers it only
+when UDP/QUIC are blocked. <code>effective_mtu()</code> reports a
+conservative value to leave room for the 2-byte length prefix + AEAD tag
+(§10).</p>
+<h3 id="36-udp-over-tcp--last-resort-when-all-udp-is-blocked">3.6
+<code>udp-over-tcp</code> — last resort when all UDP is blocked</h3>
+<p>WG datagrams length-prefixed over a single TCP connection (matches
+Mullvad&#39;s <code>udp2tcp</code>) [04_ARCH §3.2, 04_P2 §1.2]. Accept the
+head-of-line-blocking penalty; it exists purely to keep a tunnel
+<em>possible</em> on the most hostile networks. Optional TLS wrap
+(<code>tls_sni</code>) to look like HTTPS. Lowest rung of the
+ladder.</p>
+<h3 id="37-lwo--lightweight-wg-obfuscation-cheap-evasion">3.7
+<code>lwo</code> — lightweight WG obfuscation (cheap evasion)</h3>
+<p>Per-session keyed obfuscation of the WG header bytes that DPI
+signatures key on (message-type / reserved fields) plus randomized
+padding — near-zero-cost evasion of <em>naive</em> WG fingerprinting
+without QUIC overhead [04_ARCH §3.2, 04_P2 §1.3]. Phase 1 ships a basic
+XOR/padding scheme; Phase 2 hardens it to a proper per-session keyed
+scheme. Mullvad&#39;s &quot;LWO&quot; is the design reference. It is the
+<strong>first</strong> escalation rung above plain-udp because it is the
+cheapest non-default option.</p>
+<h3 id="38-hysteria2--decision-d1-option-not-default">3.8
+<code>hysteria2</code> — decision D1 (option, not default)</h3>
+<blockquote>
+<p><strong>DECISION D1 — primary obfuscating transport. SURFACED, not
+silently resolved</strong> [SYNTHESIS §3 D1, 04_ARCH §0, 11_MST].</p>
+<ul>
+<li><strong>Camp A (recommended, CLD/04_ARCH):</strong>
+<code>masque-h3</code> is the primary obfuscating transport. It is
+<em>true Mullvad parity</em> (Mullvad&#39;s QUIC mode IS WG-over-MASQUE) and
+a <strong>single Rust implementation</strong> shared client↔︎edge (I4).
+WG stays the crypto core unchanged.</li>
+<li><strong>Camp B (plurality of the 10-LLM analyses):</strong>
+<strong>Hysteria2 + Salamander</strong> (QUIC + obfs, turnkey,
+BBR/Brutal congestion) as the primary obfuscating transport with WG as
+fallback — <em>ships faster</em> because Hysteria2 is a mature, turnkey
+QUIC-obfs stack.</li>
+</ul>
+<p><strong>Recommendation:</strong> adopt <strong>Camp A
+(<code>masque-h3</code>) as the primary</strong> for MVP, because (1) it
+preserves the &quot;WG crypto core, pluggable transport&quot; invariant (a
+Hysteria2-primary design makes Hysteria2 <em>the</em> protocol, not a
+carrier under WG, weakening I1/I4); (2) it is the only path that is
+literal Mullvad parity; (3) it keeps one Rust transport crate.
+<strong>Provide <code>hysteria2</code> as an additional
+<code>Transport</code> impl behind a Cargo feature</strong> so the
+turnkey QUIC-obfs path is available as a ladder rung and as a Phase-0
+unblock if <code>masque-h3</code>-in-Rust proves painful (the documented
+G2 fallback: &quot;prototype MASQUE first in Go to unblock G2, then port&quot;
+[04_P0 §13]). Asymmetric-per-leg (decision D6, §11) can additionally
+place Hysteria2 on the user↔︎gateway leg only [11_MST].</p>
+</blockquote>
+<div class="sourceCode" id="cb9"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-transport/src/hysteria2.rs  — feature = &quot;hysteria2&quot;</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>cfg<span class="at">(</span>feature <span class="op">=</span> <span class="st">&quot;hysteria2&quot;</span><span class="at">)]</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> Hysteria2Transport <span class="op">{</span> conn<span class="op">:</span> <span class="pp">quinn::</span>Connection<span class="op">,</span> <span class="co">/* salamander obfs state */</span> health<span class="op">:</span> HealthCell <span class="op">}</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Carries WG datagrams over Hysteria2&#39;s QUIC datagram channel + Salamander packet obfuscation.</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="co">// Reuses the SAME quinn dependency as masque-h3; the obfs differs, the WG-datagram contract is identical (I2).</span></span></code></pre></div>
+<hr />
+<h2 id="4-helix-wg--the-boringtun-wrapper-the-wg-crypto-core-handle">4.
+<code>helix-wg</code> — the boringtun wrapper (the WG crypto core
+handle)</h2>
+<p>boringtun is the right choice: pure-Rust userspace WireGuard, no
+kernel module, runs identically on Linux/Android/iOS — exactly the iOS
+path (no kernel WG on iOS regardless) [04_P0 §4.4]. On Linux the kernel
+WG fast path is used where available, <code>boringtun</code> userspace
+as fallback (decision: ship both, default to kernel) [04_ARCH §13]. The
+wrapper owns WG&#39;s <code>Tunn</code> state machine, pumps its timer, and
+routes its four output verdicts.</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-wg/src/lib.rs  (sketch)</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> WgPeer <span class="op">{</span> tunn<span class="op">:</span> <span class="pp">boringtun::noise::</span>Tunn<span class="op">,</span> <span class="co">/* keys, endpoint, allowed_ips */</span> <span class="op">}</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">enum</span> WgVerdict<span class="op">&lt;</span><span class="ot">&#39;a</span><span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    WriteToTransport(<span class="op">&amp;</span><span class="ot">&#39;a</span> [<span class="dt">u8</span>])<span class="op">,</span>  <span class="co">// encrypted datagram → hand to the Transport (§3)</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    WriteToTun(<span class="op">&amp;</span><span class="ot">&#39;a</span> [<span class="dt">u8</span>])<span class="op">,</span>        <span class="co">// decrypted IP packet → hand to the TUN</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>    Nothing<span class="op">,</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>    <span class="cn">Err</span>(WgError)<span class="op">,</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> WgPeer <span class="op">{</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Inbound: bytes arrived from the transport → maybe plaintext for the TUN,</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// or a handshake reply to send back out the transport.</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">fn</span> handle_transport_in(<span class="op">&amp;</span><span class="kw">mut</span> <span class="kw">self</span><span class="op">,</span> datagram<span class="op">:</span> <span class="op">&amp;</span>[<span class="dt">u8</span>]<span class="op">,</span> scratch<span class="op">:</span> <span class="op">&amp;</span><span class="kw">mut</span> [<span class="dt">u8</span>]) <span class="op">-&gt;</span> WgVerdict <span class="op">{</span> <span class="co">/* … */</span> <span class="op">}</span></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Outbound: a plaintext IP packet from the TUN → encrypted datagram for transport.</span></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">fn</span> handle_tun_out(<span class="op">&amp;</span><span class="kw">mut</span> <span class="kw">self</span><span class="op">,</span> ip_pkt<span class="op">:</span> <span class="op">&amp;</span>[<span class="dt">u8</span>]<span class="op">,</span> scratch<span class="op">:</span> <span class="op">&amp;</span><span class="kw">mut</span> [<span class="dt">u8</span>]) <span class="op">-&gt;</span> WgVerdict <span class="op">{</span> <span class="co">/* … */</span> <span class="op">}</span></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Call ~every 100–250 ms: emits keepalives / rekeys.</span></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">fn</span> tick(<span class="op">&amp;</span><span class="kw">mut</span> <span class="kw">self</span><span class="op">,</span> scratch<span class="op">:</span> <span class="op">&amp;</span><span class="kw">mut</span> [<span class="dt">u8</span>]) <span class="op">-&gt;</span> WgVerdict <span class="op">{</span> <span class="co">/* … */</span> <span class="op">}</span></span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Crypto parameters are fixed by WireGuard and never altered [04_ARCH
+§2.2, SYNTHESIS §2]: Noise IK handshake, Curve25519 ECDH,
+ChaCha20-Poly1305 AEAD, BLAKE2s. Device private keys are generated
+on-device and <strong>never leave the device</strong> (doc 02
+enrollment) [04_ARCH §7, SYNTHESIS §7]. Post-quantum is an additive
+<strong>PSK</strong> layer (ML-KEM/FIPS-203, hybrid-never-PQ-only) in
+Phase 2 — it slots into <code>Tunn</code>&#39;s preshared-key field with no
+transport change [04_P2, SYNTHESIS §4]; specified in the security doc,
+noted here only as a non-breaking WG-layer seam.</p>
+<hr />
+<h2 id="5-orchestrator-status-stream-and-auto-transport-selection">5.
+Orchestrator, status stream, and auto transport selection</h2>
+<h3 id="51-the-three-loops--the-connector-posture">5.1 The three loops +
+the connector posture</h3>
+<p>The orchestrator (<code>crates/helix-core</code>) runs three loops
+[04_P0 §4.5]: <code>tun → wg → (daita) → transport</code>,
+<code>transport → wg → tun</code>, and <code>timer tick</code>. The
+<strong>connector</strong> is the <em>same core</em> with a different
+routing posture: instead of capturing the device&#39;s default route it (a)
+advertises its served CIDRs (e.g. <code>10.10.0.0/24</code>) in its map,
+and (b) NATs/forwards decapsulated packets into the LAN interface and
+back. One binary, a <code>--mode={client|connector}</code> flag [04_P0
+§4.5].</p>
+<pre><code>client:    [app traffic] → TUN → WG encrypt → [DAITA] → Transport ──▶ gateway
+connector: gateway ──▶ Transport → WG decrypt → forward into served CIDR (and reverse)</code></pre>
+<h3 id="52-the-status-enum-the-real-time-ux-seam">5.2 The status enum
+(the real-time UX seam)</h3>
+<p>The orchestrator exposes an event stream via
+<strong><code>tokio::sync::broadcast</code></strong> — the same enum the
+FFI surfaces to Flutter (doc 05) and what proves the real-time status UX
+[04_P0 §4.5, §9].</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-core/src/status.rs  (mirrored across the FFI boundary, doc 05)</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="bu">Clone</span><span class="op">,</span> <span class="bu">Debug</span><span class="at">)]</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">enum</span> TunnelStatus <span class="op">{</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    Connecting<span class="op">,</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    Handshaking<span class="op">,</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    Connected <span class="op">{</span> transport<span class="op">:</span> <span class="dt">String</span><span class="op">,</span> rtt_ms<span class="op">:</span> <span class="dt">u32</span> <span class="op">},</span>  <span class="co">// e.g. &quot;masque-h3&quot;, 23</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>    Reconnecting<span class="op">,</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>    Down <span class="op">{</span> reason<span class="op">:</span> <span class="dt">String</span> <span class="op">},</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> Orchestrator <span class="op">{</span></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>    status_tx<span class="op">:</span> <span class="pp">tokio::sync::broadcast::</span>Sender<span class="op">&lt;</span>TunnelStatus<span class="op">&gt;,</span>  <span class="co">// fan-out to FFI + metrics + ladder</span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>    <span class="co">// … wg peers, active transport, daita stage, reconciler handle …</span></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> Orchestrator <span class="op">{</span></span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">fn</span> subscribe(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="pp">tokio::sync::broadcast::</span>Receiver<span class="op">&lt;</span>TunnelStatus<span class="op">&gt;</span> <span class="op">{</span> <span class="kw">self</span><span class="op">.</span>status_tx<span class="op">.</span>subscribe() <span class="op">}</span></span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="53-auto-transport-selection--the-escalation-ladder">5.3 Auto
+transport selection — the escalation ladder</h3>
+<p>Selection is <strong>automatic with manual override</strong> —
+Mullvad&#39;s exact UX [04_ARCH §3.2]. The client walks
+<code>TransportPolicy.order</code> on repeated handshake failure; each
+rung has a failure budget (N handshakes / T seconds) before escalating
+[04_P2 §1.4].</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-core/src/ladder.rs  (sketch)</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> TransportPolicy <span class="op">{</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> order<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span>TransportKind<span class="op">&gt;,</span>   <span class="co">// pushed by coordinator; e.g. regional prior (§5.4)</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> pin<span class="op">:</span> <span class="dt">Option</span><span class="op">&lt;</span>TransportKind<span class="op">&gt;,</span>  <span class="co">// user manual override — skip the ladder entirely</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> budget<span class="op">:</span> FailureBudget<span class="op">,</span>       <span class="co">// { max_handshakes: u8, window: Duration }  per rung</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a><span class="co">// Default order (unrestricted network):</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a><span class="co">//   [ plain-udp ]</span></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a><span class="co">// Restricted prior (e.g. censored region, pushed by coordinator):</span></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a><span class="co">//   [ plain-udp, lwo, masque-h3, shadowsocks, udp-over-tcp ]</span></span></code></pre></div>
+<p>Selection algorithm [04_ARCH §3.2, 04_P2 §1.4]:</p>
+<ol type="1">
+<li>Start at <code>pin</code> if set (manual override), else
+<code>order[0]</code>.</li>
+<li><code>dial()</code> the rung; on <code>Connected</code> within
+budget → done; emit <code>Connected{transport,rtt}</code>.</li>
+<li>On
+<code>DialTimeout</code>/<code>HandshakeFailed</code>/<code>EndpointBlocked</code>
+exceeding the rung&#39;s failure budget → escalate to the next rung; emit
+<code>Reconnecting</code>.</li>
+<li>On success, <strong>remember the working transport
+per-network</strong> (SSID / gateway fingerprint) so reconnects on the
+same hostile network skip straight to what worked — the difference
+between &quot;VPN that sometimes connects&quot; and &quot;VPN that just works&quot; [04_P2
+§1.4].</li>
+<li>The coordinator may push a <strong>regional prior</strong> (e.g.
+clients from CN-resolved IPs start at <code>shadowsocks</code>) via
+<code>TransportPolicy.order</code>, so users in censored regions do not
+pay the escalation latency every time [04_P2 §1.4].</li>
+<li>Telemetry records <strong>only</strong> &quot;transport X succeeded after
+N escalations in region R&quot; (aggregate, no per-user data, I5) → feeds the
+Censorship-Evasion Success dashboard [04_ARCH §9, 04_P2 §1.4].</li>
+</ol>
+<h3 id="54-sequence-diagram--the-transport-escalation-ladder">5.4
+Sequence diagram — the transport escalation ladder</h3>
+<pre class="mermaid"><code>sequenceDiagram
+    autonumber
+    participant App as Client app (Flutter)
+    participant Orch as Orchestrator (helix-core)
+    participant Lad as Ladder (TransportPolicy)
+    participant Tx as Transport (dial)
+    participant Edge as Gateway edge (:443)
+
+    App-&gt;&gt;Orch: start(transport = auto)
+    Orch-&gt;&gt;Lad: select(order = [plain-udp, lwo, masque-h3, shadowsocks, udp-over-tcp])
+    Orch--&gt;&gt;App: status = Connecting
+
+    Note over Lad,Edge: Rung 1 — plain-udp (default fast path)
+    Lad-&gt;&gt;Tx: dial(PlainUdp)
+    Tx-&gt;&gt;Edge: WG handshake over UDP :51820
+    Edge--xTx: dropped (DPI blocks WG/UDP) → HandshakeFailed
+    Tx--&gt;&gt;Lad: Err(HandshakeFailed) ; budget exceeded
+
+    Note over Lad,Edge: Rung 2 — lwo (cheap header obfs)
+    Orch--&gt;&gt;App: status = Reconnecting
+    Lad-&gt;&gt;Tx: dial(Lwo)
+    Tx-&gt;&gt;Edge: WG handshake over mangled UDP
+    Edge--xTx: dropped (signature still caught) → HandshakeFailed
+    Tx--&gt;&gt;Lad: Err(HandshakeFailed) ; budget exceeded
+
+    Note over Lad,Edge: Rung 3 — masque-h3 (CONNECT-UDP / HTTP-3 on :443)
+    Lad-&gt;&gt;Tx: dial(MasqueH3)
+    Tx-&gt;&gt;Edge: QUIC/H3 CONNECT-UDP (RFC 9298) on :443/udp
+    Edge--&gt;&gt;Tx: 200 (flow established) ; looks like HTTP/3
+    Tx-&gt;&gt;Edge: WG datagrams as HTTP Datagrams (RFC 9297/9221)
+    Edge--&gt;&gt;Tx: WG handshake reply
+    Tx--&gt;&gt;Lad: Ok(Connected, rtt = 23 ms)
+    Lad-&gt;&gt;Lad: remember per-network: this SSID → start at masque-h3 next time
+    Orch--&gt;&gt;App: status = Connected { transport: &quot;masque-h3&quot;, rtt_ms: 23 }
+
+    Note over Orch,Edge: if masque-h3 also fails → escalate to shadowsocks → udp-over-tcp</code></pre>
+<hr />
+<h2 id="6-overlay-addressing--multi-network-routing">6. Overlay
+addressing &amp; multi-network routing</h2>
+<p>This is the part the original ops runbook never addressed [04_ARCH
+§3.4]. A single user reaches <strong>N joined private networks</strong>,
+which may have <strong>colliding RFC1918 ranges</strong> (two connectors
+each serving <code>192.168.1.0/24</code>) — that collision MUST be
+solved at v1 [SYNTHESIS §3 D4].</p>
+<h3 id="61-overlay-addressing--ula-48--4via6-decision-d4-recommended">6.1
+Overlay addressing — ULA /48 + 4via6 (decision D4, recommended)</h3>
+<blockquote>
+<p><strong>DECISION D4 — IP-subnet collision across N joined networks.
+SURFACED</strong> [SYNTHESIS §3 D4, 04_ARCH §3.4].</p>
+<ul>
+<li><strong>Camp A (recommended, 04_ARCH):</strong> <strong>IPv6 ULA /48
+per tenant</strong> (<code>fd7a:helix:&lt;tenant&gt;::/48</code>)
+<ul>
+<li>Tailscale-style <strong>4via6</strong> mapping of advertised IPv4
+LANs, so overlapping <code>192.168.1.0/24</code>s across different
+connectors never collide.</li>
+</ul></li>
+<li><strong>Camp B (GMI/KMI):</strong> <strong>CGNAT
+<code>100.64.0.0/10</code>, 1:1 per network</strong> — assign each
+joined network a distinct slice of the CGNAT space and 1:1-NAT into
+it.</li>
+</ul>
+<p><strong>Recommendation:</strong> adopt <strong>Camp A (ULA /48 +
+4via6)</strong>. It scales to far more networks than a hand-partitioned
+CGNAT space, is the proven Tailscale model, and is IPv6-native (the
+future default). Surface 4via6 as the engine but <strong>hide it behind
+Console UX</strong> — 4via6 mapping is powerful but confusing to end
+users (a named open risk) [04_ARCH §13]. CGNAT 1:1 remains a documented
+fallback for IPv4-only edge environments.</p>
+</blockquote>
+<ul>
+<li>Every node (client, connector, advertised host) gets a
+<strong>stable overlay address</strong> in the tenant&#39;s ULA /48 [04_ARCH
+§3.4].</li>
+<li>An advertised IPv4 LAN <code>10.10.0.0/24</code> behind connector A
+is mapped to a deterministic IPv6 prefix via 4via6:
+<code>fd7a:helix:&lt;tenant&gt;:&lt;siteID&gt;:&lt;4via6-encoded-v4&gt;</code>.
+The <code>siteID</code> disambiguates two connectors that both serve
+<code>192.168.1.0/24</code>: each gets a distinct overlay prefix, and
+the gateway NATs into the correct connector [04_ARCH §3.4
+overlapping-CIDR handling].</li>
+</ul>
+<h3 id="62-prefix-advertisement--routing-map">6.2 Prefix advertisement
+&amp; routing map</h3>
+<p>Connectors advertise their served CIDRs to the control plane; the
+control plane compiles a <strong>routing map</strong> (which connector
+is next hop for which overlay prefix) and pushes it to the gateway edge
+and to authorized clients via <code>WatchNetworkMap</code> (doc 03)
+[04_ARCH §3.4]. The data plane consumes the map into
+<code>helix-route</code>:</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-route/src/map.rs  (the desired-state the reconciler converges to; doc 03 streams it)</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> RouteMap <span class="op">{</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> self_overlay<span class="op">:</span> IpAddr<span class="op">,</span>                  <span class="co">// this node&#39;s overlay IP</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> peers<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span>PeerRoute<span class="op">&gt;,</span>                 <span class="co">// already policy-filtered (need-to-know, I6)</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> dns<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span>IpAddr<span class="op">&gt;,</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> PeerRoute <span class="op">{</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> wg_pubkey<span class="op">:</span> [<span class="dt">u8</span><span class="op">;</span> <span class="dv">32</span>]<span class="op">,</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> endpoint_candidates<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span>SocketAddr<span class="op">&gt;,</span>  <span class="co">// for §8 NAT traversal</span></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> allowed_ips<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span>IpNet<span class="op">&gt;,</span>               <span class="co">// overlay prefixes this peer is the next hop for</span></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> via_connector<span class="op">:</span> <span class="dt">Option</span><span class="op">&lt;</span>SiteId<span class="op">&gt;,</span>         <span class="co">// 4via6 site disambiguation</span></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Phase-0 fakes the stream with a static <code>map.json</code> of the
+<em>exact shape</em> Phase 1&#39;s <code>WatchNetworkMap</code> streams, so
+the reconciler is real even though the source is static [04_P0 §10].</p>
+<h3 id="63-reconciliation-push-dont-poll">6.3 Reconciliation (push,
+don&#39;t poll)</h3>
+<p>Agents are <strong>declarative reconcilers</strong>: they diff
+desired-vs-actual <code>RouteMap</code> and converge — bring peers
+up/down, switch transport, update routes — <strong>without
+restarting</strong> [04_ARCH §4.4, 04_P0 §10]. Convergence target: a
+route/policy change reflected on all affected edges in <strong>&lt; 1
+second</strong> [04_ARCH §4.4]. The reconciler never polls; it reacts to
+map deltas pushed on the open stream (file-watch stands in during Phase
+0).</p>
+<hr />
+<h2 id="7-policy--acl--allowedips--nftablesebpf-verdict-map">7. Policy /
+ACL → AllowedIPs + nftables/eBPF verdict map</h2>
+<p>Default-<strong>deny</strong> (I6). A declarative allow-list
+(Tailscale-ACL-flavored,
+<code>group:contractors → net:warehouse-cameras:554/tcp</code>) is
+compiled by the control plane and expressed at the data plane as
+<strong>per-peer <code>AllowedIPs</code> plus an nftables/eBPF verdict
+map</strong> on the edge [04_ARCH §3.4, §7, SYNTHESIS §4].</p>
+<p>Two enforcement layers — <strong>both</strong> required (defense in
+depth):</p>
+<ol type="1">
+<li><strong>WireGuard <code>AllowedIPs</code></strong> (cryptographic
+routing): each peer&#39;s <code>AllowedIPs</code> is the set of overlay
+prefixes that peer is allowed to send/receive — WG itself drops a packet
+whose source does not match the peer&#39;s allowed set. This is the coarse,
+crypto-enforced layer.</li>
+<li><strong>Edge verdict map</strong> (port/proto-granular): an
+<strong>nftables verdict map</strong> (Phase 1) or <strong>eBPF</strong>
+program (Phase 2, scale) on the gateway evaluates the compiled policy
+rule (<code>src_group → dst_selector : ports : action</code>) per flow.
+Default-deny; fail-<strong>closed</strong> (if the compiled policy is
+absent/stale, drop) [04_ARCH §7, SYNTHESIS §4].</li>
+</ol>
+<div class="sourceCode" id="cb16"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-route/src/policy.rs  (compiled verdict the edge installs)</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> CompiledPolicy <span class="op">{</span> <span class="kw">pub</span> version<span class="op">:</span> <span class="dt">u64</span><span class="op">,</span> <span class="kw">pub</span> rules<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span>VerdictRule<span class="op">&gt;</span> <span class="op">}</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> VerdictRule <span class="op">{</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> src<span class="op">:</span> IpNet<span class="op">,</span> <span class="kw">pub</span> dst<span class="op">:</span> IpNet<span class="op">,</span> <span class="kw">pub</span> proto<span class="op">:</span> L4Proto<span class="op">,</span> <span class="kw">pub</span> ports<span class="op">:</span> PortRange<span class="op">,</span> <span class="kw">pub</span> action<span class="op">:</span> Verdict<span class="op">,</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">enum</span> Verdict <span class="op">{</span> Allow<span class="op">,</span> <span class="bu">Drop</span> <span class="op">}</span>   <span class="co">// default Drop (I6)</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">enum</span> L4Proto <span class="op">{</span> <span class="bu">Any</span><span class="op">,</span> Tcp<span class="op">,</span> Udp<span class="op">,</span> Icmp <span class="op">}</span></span></code></pre></div>
+<pre class="nft"><code># edge-installed nftables verdict map (Phase 1 representation; eBPF equivalent in Phase 2)
+table inet helix {
+    map policy_v {
+        type ipv6_addr . ipv6_addr . inet_proto . inet_service : verdict
+        elements = {
+            fd7a:helix:1::a . fd7a:helix:1:warehouse::20 . tcp . 554 : accept
+        }
+    }
+    chain forward {
+        type filter hook forward priority 0; policy drop;   # DEFAULT-DENY (I6)
+        ip6 saddr . ip6 daddr . meta l4proto . th dport vmap @policy_v
+    }
+}</code></pre>
+<p>Properties [04_ARCH §3.4, §7]: <strong>split-horizon</strong> —
+connectors cannot reach each other unless policy says so; clients cannot
+reach networks they are not granted; microsegmentation is the default.
+Revocation: <code>device.revoked</code> (doc 02) → the verdict map drops
+the peer in <strong>&lt; 1 second</strong> with no restart [04_ARCH
+§4.4, SYNTHESIS §7]. <strong>Peers are delivered to each agent already
+policy-filtered</strong> (need-to-know) so the client never even learns
+of networks it cannot reach (I6) [SYNTHESIS §7].</p>
+<hr />
+<h2 id="8-direct-peer-to-peer--nat-traversal-phase-2--additive">8.
+Direct peer-to-peer &amp; NAT traversal (Phase 2 — additive)</h2>
+<p>Phase 1 relays <strong>all</strong> peer traffic through the gateway
+(simple, matches the proven slice). Phase 2 makes the gateway a
+<strong>coordinator + relay-of-last-resort</strong>, with traffic going
+<strong>directly</strong> between client and connector wherever NAT
+allows — lower latency, far less gateway bandwidth [04_P2 §3]. This is
+purely additive: it fills <code>PeerRoute.endpoint_candidates</code>
+(the field §6.2 reserves) and changes which endpoint WG latches onto —
+no transport or trait change.</p>
+<ol type="1">
+<li><strong>Endpoint discovery (STUN-like)</strong> [04_P2 §3.1]: each
+node learns local candidates (all interface addresses) +
+server-reflexive candidates (probe the gateway&#39;s STUN-like endpoint,
+which echoes the observed <code>src ip:port</code>, revealing the NAT
+mapping). Candidates are reported to the coordinator and distributed to
+authorized peers as <code>endpoint_candidates</code>.</li>
+<li><strong>Hole punching</strong> [04_P2 §3.2]: both peers
+simultaneously send WG handshake probes to all of the peer&#39;s candidates;
+for full-cone / restricted-cone / port-restricted NATs a path opens, and
+<strong>WireGuard&#39;s roaming latches onto whatever source address a valid
+handshake arrives from</strong> — no extra machinery.
+Symmetric-NAT-on-both-ends → hole punching fails → fall back to
+relay.</li>
+<li><strong>Signaling = the existing stream</strong> [04_P2 §3.3]:
+<code>WatchNetworkMap</code> <em>is</em> the signaling channel (the
+coordinator pushes each peer the other&#39;s candidate list as a delta) — no
+separate signal service (HelixVPN folds NetBird-style signaling into the
+coordinator).</li>
+<li><strong>Relay fallback (DERP-style)</strong> [SYNTHESIS §4]: when
+both ends are behind symmetric NAT, traffic relays through a
+<code>helix-relay</code> (gateway) — relay-of-last-resort, not the
+default.</li>
+</ol>
+<hr />
+<h2 id="9-daita--traffic-shaping-stage-phase-2-data-plane-placement-only">9.
+DAITA — traffic-shaping stage (Phase 2, data-plane placement only)</h2>
+<p>DAITA defeats size/timing/frequency fingerprinting even of
+fully-encrypted flows. <strong>Do not roll your own</strong> — adopt
+<strong>maybenot</strong> (the framework behind Mullvad&#39;s DAITA): a
+state-machine engine for padding + cover-traffic &quot;machines&quot; [04_P2 §2,
+SYNTHESIS §4]. The data-plane spec owns only its
+<strong>placement</strong> and the per-packet hook; the privacy design
+(machines, off-by-default policy, website-fingerprinting validation
+harness) lives in the security doc.</p>
+<p>Placement (L2.5): a stage <strong>above WireGuard, below the
+transport</strong> — it operates on the stream of WG datagrams
+(padding/injecting cover) before they hit the obfuscating transport,
+orthogonal to <em>which</em> transport runs [04_P2 §2.2].</p>
+<pre><code>TUN → WG encrypt → [DAITA: pad + inject cover] → Transport → wire</code></pre>
+<div class="sourceCode" id="cb19"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-daita/src/lib.rs  (sketch)</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> Daita <span class="op">{</span> framework<span class="op">:</span> <span class="pp">maybenot::</span>Framework <span class="co">/* machines are CONFIG from NetworkMap, not code */</span> <span class="op">}</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> Daita <span class="op">{</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Per outgoing WG datagram: may pad it and/or schedule cover packets.</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">fn</span> on_packet(<span class="op">&amp;</span><span class="kw">mut</span> <span class="kw">self</span><span class="op">,</span> dg<span class="op">:</span> <span class="op">&amp;</span><span class="kw">mut</span> Bytes<span class="op">,</span> now<span class="op">:</span> Instant) <span class="op">-&gt;</span> <span class="dt">Vec</span><span class="op">&lt;</span>ScheduledAction<span class="op">&gt;</span> <span class="op">{</span> <span class="co">/* … */</span> <span class="op">}</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Timer-driven: emit scheduled cover/padding packets.</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">fn</span> tick(<span class="op">&amp;</span><span class="kw">mut</span> <span class="kw">self</span><span class="op">,</span> now<span class="op">:</span> Instant) <span class="op">-&gt;</span> <span class="dt">Vec</span><span class="op">&lt;</span>Bytes<span class="op">&gt;</span> <span class="op">{</span> <span class="co">/* … */</span> <span class="op">}</span></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Machines are distributed as <strong>data</strong> via a
+<code>daita</code> field on the <code>NetworkMap</code>, so defenses
+tune server-side without a client rebuild [04_P2 §2.3]. Off by default,
+opt-in (&quot;maximum privacy&quot; with an honest bandwidth/latency cost note)
+[04_P2 §2.3].</p>
+<hr />
+<h2 id="10-mtu--overhead-budget">10. MTU &amp; overhead budget</h2>
+<p>The transport changes how many bytes of WG payload fit per L1 packet;
+each impl reports its <code>effective_mtu()</code> and the orchestrator
+sets the inner WG MTU accordingly [04_P0 §4.2, §5.2].</p>
+<table>
+<thead>
+<tr>
+<th>Transport</th>
+<th><code>effective_mtu()</code></th>
+<th>Rationale</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>plain-udp</code></td>
+<td><strong>1420</strong></td>
+<td>standard WG-over-IPv4 (1500 − 20 IP − 8 UDP − 32 WG hdr/tag ≈
+1420)</td>
+<td>[04_P0 §4.3]</td>
+</tr>
+<tr>
+<td><code>masque-h3</code></td>
+<td><strong>1280</strong> (measure &amp; tune)</td>
+<td>QUIC + HTTP-Datagram + UDP-proxy overhead eats headroom; 1280 is
+IPv6 min-MTU floor</td>
+<td>[04_P0 §5.2]</td>
+</tr>
+<tr>
+<td><code>connect-ip</code></td>
+<td>~1300</td>
+<td>IP-over-H3, no inner-WG header but QUIC overhead</td>
+<td>derived</td>
+</tr>
+<tr>
+<td><code>shadowsocks</code></td>
+<td>~1380</td>
+<td>TCP MSS − 2-byte length prefix − AEAD tag</td>
+<td>derived [04_P2 §1.1]</td>
+</tr>
+<tr>
+<td><code>udp-over-tcp</code></td>
+<td>~1380</td>
+<td>TCP MSS − length prefix</td>
+<td>derived [04_P2 §1.2]</td>
+</tr>
+<tr>
+<td><code>lwo</code></td>
+<td>~1400</td>
+<td>plain-udp minus padding bytes</td>
+<td>derived [04_P2 §1.3]</td>
+</tr>
+</tbody>
+</table>
+<p>Rules: (1) the inner WG MTU =
+<code>min(active transport.effective_mtu(), path-MTU-discovered)</code>;
+(2) when DAITA pads, padding is added <em>after</em> WG encrypt and
+counts against the transport budget, not the inner MTU; (3)
+<code>Oversize</code> is a hard error
+(<code>TransportError::Oversize</code>) — the orchestrator must fragment
+at L3 (rare) or lower the inner MTU rather than silently truncate. The
+MASQUE MTU penalty is <strong>quantified in Phase 0</strong> (record
+MTU/throughput/CPU vs plain-udp) so the ladder&#39;s cost model is real
+[04_P0 §5.3].</p>
+<hr />
+<h2 id="11-multi-hop-nested-wireguard--edge-language--topology-decisions">11.
+Multi-hop (nested WireGuard) + edge-language &amp; topology
+decisions</h2>
+<h3 id="111-multi-hop--nested-wg-with-per-hop-keys">11.1 Multi-hop —
+nested WG with per-hop keys</h3>
+<p>Generalize the original &quot;chain two VPSes&quot; [04_ARCH §3.5]. A client
+may route
+<code>Client → Gateway-Entry → Gateway-Exit → {internet | connector}</code>.
+<strong>Entry sees the client but not the destination; exit sees the
+destination but not the client</strong> — the Mullvad multi-hop
+property. Implemented as <strong>nested WireGuard with per-hop
+keys</strong>: the client holds a WG session to Entry <em>and</em> a WG
+session to Exit; the Exit session&#39;s datagrams are themselves the payload
+of the Entry session. Orchestrated by the control plane and pushed as a
+multi-hop <code>RouteMap</code> (<code>PeerRoute</code> chain) [04_ARCH
+§3.5]. The transport layer is unchanged — each hop is an ordinary
+<code>Transport</code> carrying that hop&#39;s WG datagrams (the outer hop
+may be <code>masque-h3</code>, the inner <code>plain-udp</code>).</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-core: a hop chain is just an ordered Vec of WgPeer + Transport pairs</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> HopChain <span class="op">{</span> <span class="kw">pub</span> hops<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span>Hop<span class="op">&gt;</span> <span class="op">}</span>            <span class="co">// [Entry, Exit] for 2-hop</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> Hop <span class="op">{</span> <span class="kw">pub</span> wg<span class="op">:</span> WgPeer<span class="op">,</span> <span class="kw">pub</span> transport<span class="op">:</span> <span class="dt">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> Transport<span class="op">&gt;</span> <span class="op">}</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="co">// outbound: encrypt for Exit (innermost) → encrypt for Entry (outermost) → Entry transport.send()</span></span></code></pre></div>
+<h3 id="112-decision-d5--gateway-edge-language-masque-termination">11.2
+Decision D5 — gateway edge language (MASQUE termination)</h3>
+<blockquote>
+<p><strong>DECISION D5 — gateway edge language. SETTLED BY PHASE-0 G4
+BENCHMARK</strong> [SYNTHESIS §3 D5, 04_P0 §7].</p>
+<ul>
+<li><strong>Camp A (recommended, 04_P0):</strong> <strong>Rust</strong>
+(<code>quinn</code> + <code>h3</code> + hand-rolled CONNECT-UDP) — the
+edge shares <code>helix-transport</code> <strong>byte-for-byte</strong>
+with clients (I4); no GC on the hot path.</li>
+<li><strong>Camp B:</strong> <strong>Go</strong> (<code>quic-go</code> +
+<code>masque-go</code>, turnkey CONNECT-UDP/IP) — matches the Go/Gin
+control plane, more mature MASQUE tooling; cost = dual MASQUE
+implementations to keep in sync.</li>
+</ul>
+<p><strong>Recommendation / decision rule</strong> [04_P0 §7.3]: choose
+<strong>Rust</strong> if it gets within ~10–15% on
+throughput/CPU-per-Gbps and the hand-rolled CONNECT-UDP is not a
+quagmire (the single-implementation win). Choose <strong>Go</strong> if
+MASQUE-in-Rust proves painful or Go wins decisively on cost-to-serve,
+and accept dual implementations mitigated by <strong>shared test vectors
++ a conformance suite across both edges</strong>. The call is recorded
+in the Phase-0 decision log with benchmark numbers (throughput @
+1/10/100 clients, CPU/Gbps, p99 latency incl. GC tail, handshake
+churn/sec, memory under churn) [04_P0 §7.2, §8]. <strong>This spec
+assumes Rust</strong> and notes the Go path as the
+conformance-suite-mitigated fallback.</p>
+</blockquote>
+<h3 id="113-decision-d6--transport-topology-per-leg">11.3 Decision D6 —
+transport topology (per-leg)</h3>
+<blockquote>
+<p><strong>DECISION D6 — transport topology. SURFACED</strong>
+[SYNTHESIS §3 D6, 11_MST].</p>
+<ul>
+<li><strong>Default (04_ARCH):</strong> a single protocol family
+end-to-end (WG everywhere, the obfuscating transport chosen per the
+ladder).</li>
+<li><strong>Camp B (11_MST, distinctive):</strong> <strong>asymmetric
+per-leg</strong> — Hysteria2/QUIC on the <em>user↔︎gateway</em> leg
+(where obfuscation matters most), plain WireGuard on the
+<em>gateway↔︎networks</em> leg (where the connector dials out of a
+cooperative network).</li>
+</ul>
+<p><strong>Recommendation:</strong> the <code>Transport</code> trait
+already makes per-leg topology free — each leg is an independent
+<code>Transport</code> selection. Adopt <strong>best-fit-per-leg as a
+policy, not a new mechanism</strong>: the coordinator pushes a
+<code>TransportPolicy.order</code> per leg, so the user↔︎gateway leg can
+start at <code>masque-h3</code>/<code>hysteria2</code> while the
+gateway↔︎connector leg stays <code>plain-udp</code> on cooperative
+networks. No code change beyond per-leg <code>TransportPolicy</code> —
+surface it as the default Phase-2 behavior.</p>
+</blockquote>
+<hr />
+<h2 id="12-file-by-file-build-checklist-data-plane">12. File-by-file
+build checklist (data plane)</h2>
+<p>Phase-tagged; each item maps to a workable item in the §11.4.93/.95
+SQLite tracker [SYNTHESIS §9].</p>
+<table>
+<thead>
+<tr>
+<th>Crate / file</th>
+<th>Owns</th>
+<th>Phase</th>
+<th>Phase-0 gate</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>helix-transport/src/lib.rs</code></td>
+<td><code>Transport</code> trait, <code>TransportConfig</code>,
+<code>dial()</code>, registry</td>
+<td>0</td>
+<td>S0</td>
+</tr>
+<tr>
+<td><code>helix-transport/src/plain_udp.rs</code></td>
+<td>baseline UDP carrier</td>
+<td>0</td>
+<td>G1 / S1</td>
+</tr>
+<tr>
+<td><code>helix-transport/src/masque.rs</code></td>
+<td>CONNECT-UDP / HTTP-3 / QUIC datagrams</td>
+<td>0</td>
+<td>G2 / S3</td>
+</tr>
+<tr>
+<td><code>helix-transport/src/error.rs</code></td>
+<td><code>TransportError</code> taxonomy</td>
+<td>0</td>
+<td>S0</td>
+</tr>
+<tr>
+<td><code>helix-wg/src/lib.rs</code></td>
+<td>boringtun <code>Tunn</code> wrapper, <code>WgVerdict</code></td>
+<td>0</td>
+<td>G1 / S1</td>
+</tr>
+<tr>
+<td><code>helix-tun/src/lib.rs</code></td>
+<td>Linux TUN; fd-injection for shims</td>
+<td>0</td>
+<td>S1</td>
+</tr>
+<tr>
+<td><code>helix-core/src/orchestrator.rs</code></td>
+<td>three loops, client/connector posture</td>
+<td>0</td>
+<td>S2</td>
+</tr>
+<tr>
+<td><code>helix-core/src/status.rs</code></td>
+<td><code>TunnelStatus</code> broadcast enum</td>
+<td>0</td>
+<td>G5 / S5</td>
+</tr>
+<tr>
+<td><code>helix-core/src/ladder.rs</code></td>
+<td><code>TransportPolicy</code>, auto-selection</td>
+<td>1</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>helix-route/src/map.rs</code></td>
+<td><code>RouteMap</code> reconciler (push, no restart)</td>
+<td>0→1</td>
+<td>G6 / S8</td>
+</tr>
+<tr>
+<td><code>helix-route/src/policy.rs</code></td>
+<td>ACL→<code>AllowedIPs</code>+verdict-map compiler</td>
+<td>1</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>helix-transport/src/shadowsocks.rs</code></td>
+<td>SS-wrap carrier</td>
+<td>2</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>helix-transport/src/udp_over_tcp.rs</code></td>
+<td>UoT last-resort</td>
+<td>2</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>helix-transport/src/lwo.rs</code></td>
+<td>lightweight obfs (basic P1, hardened P2)</td>
+<td>1→2</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>helix-transport/src/connect_ip.rs</code></td>
+<td>RFC 9484 IP-over-H3 (feature-gated)</td>
+<td>2</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>helix-transport/src/hysteria2.rs</code></td>
+<td>Hysteria2+Salamander carrier (feature-gated, D1)</td>
+<td>1→2</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>helix-daita/src/lib.rs</code></td>
+<td>maybenot shaping stage</td>
+<td>2</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>helix-core/src/hop_chain.rs</code></td>
+<td>nested-WG multi-hop</td>
+<td>2</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>bin/helix-edge.rs</code></td>
+<td>gateway MASQUE termination (D5)</td>
+<td>0</td>
+<td>G4 / S4</td>
+</tr>
+</tbody>
+</table>
+<h3 id="121-anti-bluff-acceptance-evidence-constitution-114569107-synthesis-9">12.1
+Anti-bluff acceptance evidence (constitution §11.4.5/.69/.107, SYNTHESIS
+§9)</h3>
+<p>Every data-plane claim ships captured evidence, not config-only
+PASS:</p>
+<ul>
+<li><strong>G1 plain-UDP slice</strong> — <code>iperf3</code>
+through-tunnel ≥ 80% bare link + <code>ping</code> to LAN host succeeds;
+CSV from <code>bench.sh</code> [04_P0 §0, §8].</li>
+<li><strong>G2 MASQUE through DPI block</strong> — slice works with
+plain WG <strong>blocked</strong> (<code>nft</code> rule),
+<code>tshark</code> capture classifies the flow as HTTP/3 with
+<strong>no WG signature</strong>, goodput @ 5% <code>netem</code> loss
+beats the UoT strawman [04_P0 §5.3, §8].</li>
+<li><strong>G6 reconcile</strong> — edit the static map → peer
+reachable, <strong>no restart</strong> of unrelated state [04_P0
+§10].</li>
+<li>Per-transport: <code>effective_mtu()</code> measured (not assumed);
+ladder escalation captured as an ordered <code>TunnelStatus</code> event
+trace; verdict-map default-deny proven by a denied-flow capture.</li>
+</ul>
+<hr />
+<h2 id="13-what-is-explicitly-out-of-scope-for-this-document">13. What
+is explicitly out of scope for this document</h2>
+<p>Control-plane services, the <code>WatchNetworkMap</code>
+protobuf/Connect contract, Postgres data model &amp; RLS,
+enrollment/PKI, event bus (doc 02/03); client UI, design system, FFI
+Dart bindings (doc 05); platform tunnel shims beyond the TUN-fd handoff
+contract — iOS NEPacketTunnelProvider memory ceiling (G3, the
+make-or-break gate), Android VpnService/JNI, Windows wireguard-nt,
+HarmonyOS Network Kit, Aurora Qt/tun (doc 06); deployment quadlets,
+observability, HA (doc 07/08). The post-quantum PSK, DAITA privacy
+policy, and kill-switch/DNS-leak state machine are <em>referenced</em>
+here for their data-plane seams and <em>specified</em> in the security
+doc.</p>
+<hr />
+<p><em>End of data-plane specification (document 01). Pair with doc 03
+(<code>WatchNetworkMap</code> wire contract — the live source of the
+static <code>map.json</code> seam at §6.2) and doc 06 (platform tunnel
+shims — the TUN-fd handoff at §5.1). Surviving interfaces from Phase 0
+(the <code>Transport</code> trait §3.1, <code>helix-wg</code> §4, the
+<code>TunnelStatus</code> enum §5.2, the <code>RouteMap</code> §6.2) are
+frozen contracts; their implementations may evolve [04_P0 §14].</em></p>
+</body>
+</html>

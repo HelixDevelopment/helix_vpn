@@ -1,0 +1,1423 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>HarmonyOS NEXT shim (Network Kit VPN)</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">HarmonyOS NEXT shim (Network Kit VPN)</h1>
+</header>
+<h1 id="harmonyos-next-shim-network-kit-vpn">HarmonyOS NEXT shim
+(Network Kit VPN)</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-06-25T00:00:00Z</p>
+<blockquote>
+<p>Master technical specification — Volume 4 (Clients), document
+<code>v04-client/shim-harmonyos.md</code> of the HelixVPN set. It
+<strong>deepens</strong> the HarmonyOS NEXT row of pass-1 doc
+<code>03</code> §5.5 (the Network Kit VPN <em>ability</em> shim) to
+nano-detail, implementation-ready granularity. It is SPEC-ONLY: it
+describes the exact shim to build — process topology, ArkTS ↔︎ NAPI ↔︎
+Rust signatures, the <code>TunnelPlatform</code> contract impl, state
+machines, lifecycle, memory budgets, error handling, edge cases, and
+per-test-type coverage — but does not build it.</p>
+<p><strong>Boundary with sibling docs.</strong> This document
+<strong>owns</strong> the HarmonyOS NEXT tunnel shim only. It
+<strong>consumes</strong> (and must stay byte-consistent with): the
+<code>Transport</code> trait + <code>helix-wg</code> data plane
+(<code>v02-data-plane/transport-trait.md</code>), the orchestrator +
+frozen <code>TunnelStatus</code> broadcast enum
+(<code>v02-data-plane/orchestrator-and-state.md</code> §4.1), and the
+FFI surface + <code>TunnelPlatform</code> contract owned by doc
+<code>03</code> §3–§4. The Rust <em>internals</em> of
+<code>helix-core</code> are doc <code>01</code>/<code>02</code>&#39;s; this
+doc owns only the HarmonyOS-specific binding + ability.</p>
+<p><strong>Evidence base.</strong> Citations inline by id:
+<code>[04_ARCH §N]</code> =
+<code>04_VPN_CLD/HelixVPN-Architecture-Refined.md</code>;
+<code>[04_UI]</code> =
+<code>04_VPN_CLD/HelixVPN-helix-ui-Flutter.md</code>;
+<code>[03_CLIENT]</code> = pass-1 doc
+<code>final/03-client-core-and-ui.md</code>;
+<code>[01-DP]</code>/<code>[01-ORCH]</code> =
+<code>final/v02-data-plane/*</code>; <code>[research-flutter_ffi]</code>
+= the cited FFI/port research; <code>[research-ios_android]</code> = the
+sibling NE/VpnService shim research. Unproven platform facts are marked
+<strong>UNVERIFIED</strong> per §11.4.6 (no-guessing); they are Phase-3
+verification gates, never assumed parity with Android/iOS.</p>
+</blockquote>
+<hr />
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#0-position-status-and-the-phase-3-risk">0. Position,
+status, and the Phase-3 risk</a></li>
+<li><a href="#1-process-topology--split-process-is-the-architecture">1.
+Process topology — split-process is the architecture</a></li>
+<li><a href="#2-the-contract-this-shim-satisfies-tunnelplatform">2. The
+contract this shim satisfies (<code>TunnelPlatform</code>)</a></li>
+<li><a href="#3-the-stable-c-abi-helix-core-exported-surface">3. The
+stable C ABI (<code>helix-core</code> exported surface)</a></li>
+<li><a href="#4-the-napi-bridge-layer-c--rust-so">4. The NAPI bridge
+layer (C++ ↔︎ Rust <code>.so</code>)</a></li>
+<li><a href="#5-the-arkts-vpnextensionability-the-shim-core">5. The
+ArkTS <code>VpnExtensionAbility</code> (the shim core)</a></li>
+<li><a href="#6-the-uiability-side--methodchannelEventchannel-plumbing">6. The
+UIAbility side — MethodChannel/EventChannel plumbing</a></li>
+<li><a href="#7-the-status-relay-preserving-ci2-across-the-process-boundary">7.
+The status relay (preserving CI2 across the process boundary)</a></li>
+<li><a href="#8-lifecycle-state-machines">8. Lifecycle state
+machines</a></li>
+<li><a href="#9-tunnelstatus-consistency-mapping">9.
+<code>TunnelStatus</code> consistency mapping</a></li>
+<li><a href="#10-memory--resource-budgets">10. Memory &amp; resource
+budgets</a></li>
+<li><a href="#11-error-handling--edge-cases">11. Error handling &amp;
+edge cases</a></li>
+<li><a href="#12-build-signing-packaging">12. Build, signing,
+packaging</a></li>
+<li><a href="#13-test-points--114169-comprehensive-test-type-coverage">13. Test
+points — §11.4.169 comprehensive test-type coverage</a></li>
+<li><a href="#14-open-decisions-surfaced-by-this-document">14. Open
+decisions surfaced by this document</a></li>
+<li><a href="#sources-verified">Sources verified</a></li>
+</ul>
+<hr />
+<h2 id="0-position-status-and-the-phase-3-risk">0. Position, status, and
+the Phase-3 risk</h2>
+<p>HarmonyOS NEXT dropped Android/ART compatibility entirely — native
+ArkTS / ArkUI / DevEco only, so an Android APK or KMP artifact will not
+run on it [04_ARCH §5.2/§5.6]. The single-codebase path is the
+<strong>OpenHarmony SIG Flutter fork</strong>
+(<code>gitee.com/openharmony-sig/flutter_flutter</code>,
+<code>ohos</code> device channel → builds a <code>.hap</code>), engine
+recompiled for OHOS, tracking a <strong>lagging Flutter
+baseline</strong> (commonly cited Flutter OHOS ~3.22.x atop HarmonyOS
+SDK 5.0.0(12) / OpenHarmony API 10–12 — <strong>UNVERIFIED</strong>, pin
+at Phase-3 entry) [research-flutter_ffi §5].</p>
+<p><strong>The payoff/risk split</strong> [04_UI §6.1, 03_CLIENT §5.5]:
+<em>the UI ports for free, the shim does not.</em> Every Dart pixel
+(<code>ConnectButton</code>, <code>ExitPicker</code>, settings, account,
+policy) compiles unchanged; the irreducible per-platform work is this
+shim — an ArkTS <code>VpnExtensionAbility</code> driving the Network Kit
+VPN API, a NAPI bridge to the Rust <code>.so</code>, and a status relay.
+This is flagged the <strong>biggest single platform risk in the
+program</strong> (doc <code>03</code> §13 Phase 3, [04_UI §6.1]) for
+three reasons: (a) the SIG fork lags mainline and its plugin/embedder
+surface may lack a needed API (honest SKIP-with-reason per §11.4.3 is
+the fallback, never a faked PASS); (b) HarmonyOS&#39;s VPN extension API +
+its memory/lifecycle limits are <strong>UNVERIFIED</strong> against our
+data-plane needs; (c) the toolchain (DevEco, signing) is a separate,
+China-hosted CI lane.</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Value</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Flutter fork</td>
+<td><code>openharmony-sig/flutter_flutter</code>, <code>ohos</code>
+channel</td>
+<td>[research-flutter_ffi §5]</td>
+</tr>
+<tr>
+<td>Artifact</td>
+<td><code>.hap</code> (signed in DevEco Studio)</td>
+<td>[research-flutter_ffi §5], [04_ARCH §5.2]</td>
+</tr>
+<tr>
+<td>Rust core packaging</td>
+<td><code>cdylib</code> → <code>libhelix_core.so</code> (OHOS is
+Linux-kernel-based)</td>
+<td>[research-flutter_ffi §3/§5]</td>
+</tr>
+<tr>
+<td>Native bridge</td>
+<td><strong>N-API (Node-API)</strong> C++ module ↔︎ stable C ABI of the
+<code>.so</code></td>
+<td>[03_CLIENT §5.5], [research-flutter_ffi §5]</td>
+</tr>
+<tr>
+<td>VPN mechanism</td>
+<td>Network Kit <strong><code>VpnExtensionAbility</code></strong> +
+<code>VpnConnection</code> (ArkTS)</td>
+<td>[research-flutter_ffi §5] (API names
+<strong>UNVERIFIED</strong>)</td>
+</tr>
+<tr>
+<td>Phase</td>
+<td><strong>Phase 3</strong> (second-tier target)</td>
+<td>doc <code>03</code> §13</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="1-process-topology--split-process-is-the-architecture">1.
+Process topology — split-process is the architecture</h2>
+<p>The load-bearing fact that shapes every signature below: on HarmonyOS
+NEXT the VPN runs in a <strong><code>VpnExtensionAbility</code></strong>
+— a separate ability, <strong>almost certainly a separate OS
+process</strong> from the <code>UIAbility</code> that hosts the Flutter
+engine (<strong>UNVERIFIED</strong> whether OHOS may co-locate them;
+design for separate-process and the co-located case degrades
+gracefully). This mirrors iOS&#39;s <code>NEPacketTunnelProvider</code>
+(separate extension process) and is <strong>unlike</strong> Android&#39;s
+in-process <code>VpnService</code> [research-ios_android]. Consequence:
+the data-plane core (the Rust <code>.so</code> + orchestrator, the
+status authority per O-I10) lives in the <strong>ability
+process</strong>, so its frb <code>StreamSink&lt;TunnelStatus&gt;</code>
+<strong>cannot</strong> reach the Dart isolate in the UI process
+directly. Status must be <strong>relayed</strong> across the process
+boundary (§7), then re-emitted on the Dart status stream so the UI
+contract (CI2: <em>the UI is a pure function of the status stream</em>)
+is preserved physically as well as logically.</p>
+<pre class="mermaid"><code>flowchart TB
+    subgraph UIP[&quot;UIAbility process (Flutter UI)&quot;]
+        DART[&quot;Flutter/Dart&lt;br/&gt;helix-ui · Riverpod&quot;]
+        FFI[&quot;helix_core_ffi (frb)&lt;br/&gt;status Stream re-emitter (§7)&quot;]
+        TP[&quot;TunnelPlatform impl (Dart)&lt;br/&gt;MethodChannel + EventChannel&quot;]
+        UAB[&quot;UIAbility ArkTS glue&lt;br/&gt;method-channel host + relay sink&quot;]
+        DART --&gt; FFI
+        DART --&gt; TP --&gt; UAB
+    end
+    subgraph ABP[&quot;VpnExtensionAbility process (tunnel)&quot;]
+        ARK[&quot;ArkTS VpnExtensionAbility&lt;br/&gt;(§5) — owns VpnConnection&quot;]
+        NAPI[&quot;libhelix_napi.so&lt;br/&gt;(C++ N-API bridge, §4)&quot;]
+        CORE[&quot;libhelix_core.so (Rust)&lt;br/&gt;orchestrator · helix-wg · transport&quot;]
+        ARK --&gt; NAPI --&gt; CORE
+    end
+    subgraph OS[&quot;HarmonyOS Network Kit&quot;]
+        VC[&quot;VpnConnection&lt;br/&gt;(tun fd · routes · DNS)&quot;]
+        TUN[&quot;/dev/tun (overlay)&quot;]
+    end
+    UAB &lt;== &quot;cross-ability IPC (§7, UNVERIFIED transport)&quot; ==&gt; ARK
+    ARK --&gt;|&quot;create / protect / destroy&quot;| VC --&gt; TUN
+    CORE -. &quot;attach_tun(fd)&quot; .-&gt; TUN
+    classDef rust fill:#d6552233,stroke:#d65522
+    class CORE,NAPI rust</code></pre>
+<p>The seam (identical in spirit to doc <code>03</code> §3.3):
+<strong>lifecycle commands flow UI → shim → core</strong>
+(<code>startTunnel</code>/<code>stopTunnel</code> cross the IPC into the
+ability), while <strong>status flows core → relay → UI</strong> (the
+core owns truth; the relay carries it back).
+<code>setShields</code>/<code>setExit</code>/<code>exits</code> are
+pure-logic FFI calls <strong>but</strong> because the orchestrator lives
+in the ability process, on HarmonyOS they are <em>also</em> marshalled
+across the IPC as ability commands (§5.4), unlike Android where they hit
+the in-process core directly.</p>
+<hr />
+<h2 id="2-the-contract-this-shim-satisfies-tunnelplatform">2. The
+contract this shim satisfies (<code>TunnelPlatform</code>)</h2>
+<p>The HarmonyOS shim implements <strong>exactly</strong> the Dart
+<code>TunnelPlatform</code> contract from doc <code>03</code> §4 — one
+<code>MethodChannel(&quot;helixvpn/tunnel&quot;)</code> + one
+<code>EventChannel(&quot;helixvpn/tunnel/events&quot;)</code>. No HarmonyOS type
+leaks above the channel; everything above is shared Dart.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode dart"><code class="sourceCode dart"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// packages/helix_core_ffi/lib/tunnel_platform_ohos.dart</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co">// The OHOS realization of the abstract TunnelPlatform (doc 03 §4).</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> OhosTunnelPlatform <span class="kw">implements</span> TunnelPlatform <span class="op">{</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">static</span> <span class="at">const</span> _m <span class="op">=</span> MethodChannel(<span class="st">&#39;helixvpn/tunnel&#39;</span>);</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">static</span> <span class="at">const</span> _e <span class="op">=</span> EventChannel(<span class="st">&#39;helixvpn/tunnel/events&#39;</span>);</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">@override</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Future</span><span class="op">&lt;</span><span class="dt">void</span><span class="op">&gt;</span> startTunnel(TunnelConfig cfg) <span class="at">async</span> <span class="op">{</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    <span class="co">// cfg fields are doc 03 §4: overlayIp, routes, dnsServers, splitExcludeApps,</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">// mtu, sessionOrMapToken. Marshalled to a map the ArkTS host decodes (§6).</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">await</span> _m<span class="op">.</span>invokeMethod(<span class="st">&#39;startTunnel&#39;</span><span class="op">,</span> cfg<span class="op">.</span>toMap());</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>  <span class="kw">@override</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Future</span><span class="op">&lt;</span><span class="dt">void</span><span class="op">&gt;</span> stopTunnel() <span class="op">=&gt;</span> _m<span class="op">.</span>invokeMethod(<span class="st">&#39;stopTunnel&#39;</span>);</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>  <span class="kw">@override</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Stream</span><span class="op">&lt;</span>PlatformTunnelEvent<span class="op">&gt;</span> events() <span class="op">=&gt;</span> _e</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>      <span class="op">.</span>receiveBroadcastStream()</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>      <span class="op">.</span>map(PlatformTunnelEvent<span class="op">.</span>fromMap); <span class="co">// up|down|permissionDenied|revoked|error</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><code>PlatformTunnelEventKind</code> is the doc <code>03</code> §4
+closed set — <code>up</code>, <code>down</code>,
+<code>permissionDenied</code>, <code>revoked</code>, <code>error</code>.
+The <code>EventChannel</code> carries <strong>only</strong> lifecycle
+(not <code>TunnelStatus</code>, not packet data);
+<code>TunnelStatus</code> arrives on the separate frb status stream fed
+by the §7 relay.</p>
+<hr />
+<h2 id="3-the-stable-c-abi-helix-core-exported-surface">3. The stable C
+ABI (<code>helix-core</code> exported surface)</h2>
+<p>All native shims (iOS cbindgen, Android JNI thunk, HarmonyOS NAPI)
+bind to one <strong>stable C ABI</strong> exported from the
+<code>helix-ffi</code> crate via <code>cbindgen</code>
+(<code>crate-type = [&quot;staticlib&quot;, &quot;cdylib&quot;]</code>; HarmonyOS consumes
+the <code>cdylib</code> <code>libhelix_core.so</code>). This is the C
+projection of the frb/UniFFI surface in doc <code>03</code> §3.1 and is
+consistent with the iOS <code>helix_core_*</code> symbols seen in
+<code>[03_CLIENT §5.1]</code>. The HarmonyOS shim uses the
+<strong>fd-pump model</strong> (like Android&#39;s
+<code>ParcelFileDescriptor</code>, unlike iOS&#39;s <code>packetFlow</code>
+callback) because <code>VpnConnection.create</code> returns a tun
+<strong>file descriptor</strong> — so the core pumps the fd itself
+in-process (in the ability process).</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">/* helix_core.h — generated by cbindgen from crates/helix-ffi. Stable C ABI.</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co"> * Thread-safety: all functions are safe to call from the ability&#39;s main ArkTS</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co"> * worker thread; the core spawns its own tokio runtime threads internally.</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co"> * Every int return: 0 = OK, &lt;0 = HelixErr (see §3.1). */</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;stdint.h&gt;</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;stddef.h&gt;</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="co">/* ---- handle lifecycle ---- */</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="co">/* mode: 0 = Client, 1 = Connector (doc 03 CoreMode). session_or_map = NUL-term</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="co"> * session token (Phase 1+) or map file path (Phase 0). Returns a handle id &gt;0,</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="co"> * or &lt;0 HelixErr. Idempotent guard: a second start without stop returns</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="co"> * HELIX_ERR_ALREADY_STARTED. */</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="dt">int64_t</span> helix_core_start<span class="op">(</span><span class="dt">const</span> <span class="dt">char</span><span class="op">*</span> session_or_map<span class="op">,</span> <span class="dt">int32_t</span> mode<span class="op">);</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a><span class="co">/* Graceful stop of handle h: cancels loops, FINs transport, reverts</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a><span class="co"> * kill-switch+DNS, emits Down{reason=&quot;stopped&quot;} on the status callback, frees h.</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a><span class="co"> * Idempotent: stopping an unknown/stopped handle returns 0. */</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a><span class="dt">int32_t</span> helix_core_stop<span class="op">(</span><span class="dt">int64_t</span> h<span class="op">);</span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a><span class="co">/* ---- TUN handoff (CI1: the core never opens the TUN; the ability does) ---- */</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a><span class="co">/* Hand the core an OS tun fd from VpnConnection.create. The core dup()s it and</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a><span class="co"> * owns the dup; caller may close its copy. Starts the in-process pump. */</span></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a><span class="dt">int32_t</span> helix_core_attach_tun<span class="op">(</span><span class="dt">int64_t</span> h<span class="op">,</span> <span class="dt">int32_t</span> tun_fd<span class="op">,</span> <span class="dt">uint32_t</span> mtu<span class="op">);</span></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a><span class="dt">int32_t</span> helix_core_detach_tun<span class="op">(</span><span class="dt">int64_t</span> h<span class="op">);</span></span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a><span class="co">/* ---- status callback (the relay source, §7) ---- */</span></span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a><span class="co">/* cb receives a UTF-8 JSON encoding of TunnelStatus (§9) on every transition.</span></span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a><span class="co"> * ctx is opaque, passed through. Called from a core thread — the C++ bridge MUST</span></span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a><span class="co"> * forward via a NAPI threadsafe-function, never touch the ArkTS VM directly. */</span></span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a><span class="kw">typedef</span> <span class="dt">void</span> <span class="op">(*</span>helix_status_cb<span class="op">)(</span><span class="dt">const</span> <span class="dt">char</span><span class="op">*</span> status_json<span class="op">,</span> <span class="dt">void</span><span class="op">*</span> ctx<span class="op">);</span></span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a><span class="dt">int32_t</span> helix_core_set_status_cb<span class="op">(</span><span class="dt">int64_t</span> h<span class="op">,</span> helix_status_cb cb<span class="op">,</span> <span class="dt">void</span><span class="op">*</span> ctx<span class="op">);</span></span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a><span class="co">/* ---- logic-only ops (doc 03 §3.1) — marshalled JSON in/out ---- */</span></span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a><span class="co">/* exits(): caller frees the returned malloc&#39;d JSON via helix_string_free. */</span></span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a><span class="dt">char</span><span class="op">*</span>   helix_core_exits<span class="op">(</span><span class="dt">int64_t</span> h<span class="op">);</span>                       <span class="co">/* JSON Vec&lt;ExitOption&gt; */</span></span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a><span class="dt">int32_t</span> helix_core_set_exit<span class="op">(</span><span class="dt">int64_t</span> h<span class="op">,</span> <span class="dt">const</span> <span class="dt">char</span><span class="op">*</span> exit_json<span class="op">);</span>   <span class="co">/* {id, multiHopChain?} */</span></span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a><span class="dt">int32_t</span> helix_core_set_shields<span class="op">(</span><span class="dt">int64_t</span> h<span class="op">,</span> <span class="dt">const</span> <span class="dt">char</span><span class="op">*</span> shields_json<span class="op">);</span> <span class="co">/* Shields (doc 03 §3.1) */</span></span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a><span class="dt">char</span><span class="op">*</span>   helix_core_advertise<span class="op">(</span><span class="dt">int64_t</span> h<span class="op">,</span> <span class="dt">const</span> <span class="dt">char</span><span class="op">*</span> cidrs_json<span class="op">);</span> <span class="co">/* connector mode; JSON AdvertiseResult */</span></span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span>    helix_string_free<span class="op">(</span><span class="dt">char</span><span class="op">*</span> s<span class="op">);</span></span>
+<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a><span class="co">/* ---- diagnostics ---- */</span></span>
+<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a><span class="dt">const</span> <span class="dt">char</span><span class="op">*</span> helix_core_version<span class="op">(</span><span class="dt">void</span><span class="op">);</span>   <span class="co">/* static, do not free */</span></span>
+<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a><span class="dt">const</span> <span class="dt">char</span><span class="op">*</span> helix_last_error<span class="op">(</span><span class="dt">void</span><span class="op">);</span>     <span class="co">/* thread-local last HelixErr detail; static lifetime per call */</span></span></code></pre></div>
+<h3 id="31-helixerr-closed-set-negative-c-returns">3.1
+<code>HelixErr</code> closed set (negative C returns)</h3>
+<p>Mirrors the orchestrator&#39;s <code>Down.reason</code> vocabulary
+[01-ORCH §4.4] plus shim-startup errors, so a numeric code maps to a
+stable string (§11.4.6).</p>
+<table>
+<thead>
+<tr>
+<th>C const</th>
+<th>int</th>
+<th>Meaning</th>
+<th>Relayed <code>Down.reason</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>HELIX_ERR_ALREADY_STARTED</code></td>
+<td>-1</td>
+<td>start on a live handle</td>
+<td>(no Down)</td>
+</tr>
+<tr>
+<td><code>HELIX_ERR_BAD_CONFIG</code></td>
+<td>-2</td>
+<td>unparseable session/map/json</td>
+<td><code>host-fatal</code></td>
+</tr>
+<tr>
+<td><code>HELIX_ERR_TUN_ATTACH</code></td>
+<td>-3</td>
+<td><code>attach_tun</code> dup/ioctl failed</td>
+<td><code>host-fatal</code></td>
+</tr>
+<tr>
+<td><code>HELIX_ERR_AUTH</code></td>
+<td>-4</td>
+<td>WG handshake rejected</td>
+<td><code>auth-failed</code></td>
+</tr>
+<tr>
+<td><code>HELIX_ERR_NO_ROUTE</code></td>
+<td>-5</td>
+<td>RouteMap has no peer</td>
+<td><code>no-route</code></td>
+</tr>
+<tr>
+<td><code>HELIX_ERR_LADDER_EXHAUSTED</code></td>
+<td>-6</td>
+<td>every transport rung failed</td>
+<td><code>ladder-exhausted</code></td>
+</tr>
+<tr>
+<td><code>HELIX_ERR_PINNED_FAILED</code></td>
+<td>-7</td>
+<td>pinned transport failed</td>
+<td><code>pinned-transport-failed</code></td>
+</tr>
+<tr>
+<td><code>HELIX_ERR_INTERNAL</code></td>
+<td>-99</td>
+<td>unexpected; detail in <code>helix_last_error()</code></td>
+<td><code>host-fatal</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="4-the-napi-bridge-layer-c--rust-so">4. The NAPI bridge layer
+(C++ ↔︎ Rust <code>.so</code>)</h2>
+<p>DevEco&#39;s native module template produces a CMake <code>.so</code>
+that registers N-API functions. <code>libhelix_napi.so</code> is that
+module — a thin, <strong>stateless-per-call</strong> C++ translator
+between ArkTS values and the §3 C ABI. It owns one global: the NAPI
+<strong>threadsafe-function (TSFN)</strong> used to ferry status JSON
+from a core thread into the ArkTS event loop (§7). No business logic
+lives here.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// entry/src/main/cpp/helix_napi.cpp  — HarmonyOS NAPI module for the ability.</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&quot;napi/native_api.h&quot;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&quot;helix_core.h&quot;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;cstring&gt;</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> napi_threadsafe_function <span class="va">g_status_tsfn</span> <span class="op">=</span> <span class="kw">nullptr</span><span class="op">;</span>  <span class="co">// set by registerStatus()</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="co">// ---- napi_value Start(env, [sessionOrMap: string, mode: number]): bigint(handle) ----</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> napi_value Start<span class="op">(</span>napi_env env<span class="op">,</span> napi_callback_info info<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>  <span class="dt">size_t</span> argc <span class="op">=</span> <span class="dv">2</span><span class="op">;</span> napi_value args<span class="op">[</span><span class="dv">2</span><span class="op">];</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>  napi_get_cb_info<span class="op">(</span>env<span class="op">,</span> info<span class="op">,</span> <span class="op">&amp;</span>argc<span class="op">,</span> args<span class="op">,</span> <span class="kw">nullptr</span><span class="op">,</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>  <span class="dt">char</span> sess<span class="op">[</span><span class="dv">2048</span><span class="op">];</span> <span class="dt">size_t</span> n <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>  napi_get_value_string_utf8<span class="op">(</span>env<span class="op">,</span> args<span class="op">[</span><span class="dv">0</span><span class="op">],</span> sess<span class="op">,</span> <span class="kw">sizeof</span><span class="op">(</span>sess<span class="op">),</span> <span class="op">&amp;</span>n<span class="op">);</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>  <span class="dt">int32_t</span> mode <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> napi_get_value_int32<span class="op">(</span>env<span class="op">,</span> args<span class="op">[</span><span class="dv">1</span><span class="op">],</span> <span class="op">&amp;</span>mode<span class="op">);</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>  <span class="dt">int64_t</span> h <span class="op">=</span> helix_core_start<span class="op">(</span>sess<span class="op">,</span> mode<span class="op">);</span>                 <span class="co">// §3 C ABI</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>  napi_value out<span class="op">;</span> napi_create_bigint_int64<span class="op">(</span>env<span class="op">,</span> h<span class="op">,</span> <span class="op">&amp;</span>out<span class="op">);</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> out<span class="op">;</span>                                                <span class="co">// &lt;0 =&gt; ArkTS checks HelixErr</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a><span class="co">// ---- AttachTun(env, [handle: bigint, fd: number, mtu: number]): number ----</span></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> napi_value AttachTun<span class="op">(</span>napi_env env<span class="op">,</span> napi_callback_info info<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>  <span class="dt">size_t</span> argc <span class="op">=</span> <span class="dv">3</span><span class="op">;</span> napi_value a<span class="op">[</span><span class="dv">3</span><span class="op">];</span></span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>  napi_get_cb_info<span class="op">(</span>env<span class="op">,</span> info<span class="op">,</span> <span class="op">&amp;</span>argc<span class="op">,</span> a<span class="op">,</span> <span class="kw">nullptr</span><span class="op">,</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>  <span class="dt">int64_t</span> h<span class="op">;</span> <span class="dt">bool</span> lossless<span class="op">;</span> napi_get_value_bigint_int64<span class="op">(</span>env<span class="op">,</span> a<span class="op">[</span><span class="dv">0</span><span class="op">],</span> <span class="op">&amp;</span>h<span class="op">,</span> <span class="op">&amp;</span>lossless<span class="op">);</span></span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>  <span class="dt">int32_t</span> fd<span class="op">,</span> mtu<span class="op">;</span> napi_get_value_int32<span class="op">(</span>env<span class="op">,</span> a<span class="op">[</span><span class="dv">1</span><span class="op">],</span> <span class="op">&amp;</span>fd<span class="op">);</span> napi_get_value_int32<span class="op">(</span>env<span class="op">,</span> a<span class="op">[</span><span class="dv">2</span><span class="op">],</span> <span class="op">&amp;</span>mtu<span class="op">);</span></span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>  <span class="dt">int32_t</span> rc <span class="op">=</span> helix_core_attach_tun<span class="op">(</span>h<span class="op">,</span> fd<span class="op">,</span> <span class="op">(</span><span class="dt">uint32_t</span><span class="op">)</span>mtu<span class="op">);</span></span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>  napi_value out<span class="op">;</span> napi_create_int32<span class="op">(</span>env<span class="op">,</span> rc<span class="op">,</span> <span class="op">&amp;</span>out<span class="op">);</span> <span class="cf">return</span> out<span class="op">;</span></span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a><span class="co">// ---- the C status callback runs on a CORE thread → bounce to TSFN (never touch VM here)</span></span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="dt">void</span> status_trampoline<span class="op">(</span><span class="at">const</span> <span class="dt">char</span><span class="op">*</span> json<span class="op">,</span> <span class="dt">void</span><span class="op">*</span> <span class="co">/*ctx*/</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(!</span><span class="va">g_status_tsfn</span><span class="op">)</span> <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a>  <span class="dt">char</span><span class="op">*</span> dup <span class="op">=</span> strdup<span class="op">(</span>json<span class="op">);</span>                                  <span class="co">// freed in js_status_cb</span></span>
+<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a>  napi_call_threadsafe_function<span class="op">(</span><span class="va">g_status_tsfn</span><span class="op">,</span> dup<span class="op">,</span> napi_tsfn_nonblocking<span class="op">);</span></span>
+<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a><span class="co">// js_status_cb (omitted) runs on the ArkTS loop: builds a JS string, invokes the</span></span>
+<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a><span class="co">// ArkTS callback, then free(dup). Registered via RegisterStatus(handle, jsCb).</span></span>
+<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a>EXTERN_C_START</span>
+<span id="cb4-40"><a href="#cb4-40" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> napi_value Init<span class="op">(</span>napi_env env<span class="op">,</span> napi_value exports<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a>  napi_property_descriptor desc<span class="op">[]</span> <span class="op">=</span> <span class="op">{</span></span>
+<span id="cb4-42"><a href="#cb4-42" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span><span class="st">&quot;start&quot;</span><span class="op">,</span> <span class="kw">nullptr</span><span class="op">,</span> Start<span class="op">,</span> <span class="kw">nullptr</span><span class="op">,</span> <span class="kw">nullptr</span><span class="op">,</span> <span class="kw">nullptr</span><span class="op">,</span> napi_default<span class="op">,</span> <span class="kw">nullptr</span><span class="op">},</span></span>
+<span id="cb4-43"><a href="#cb4-43" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span><span class="st">&quot;stop&quot;</span><span class="op">,</span> <span class="kw">nullptr</span><span class="op">,</span> Stop<span class="op">,</span> <span class="kw">nullptr</span><span class="op">,</span> <span class="kw">nullptr</span><span class="op">,</span> <span class="kw">nullptr</span><span class="op">,</span> napi_default<span class="op">,</span> <span class="kw">nullptr</span><span class="op">},</span></span>
+<span id="cb4-44"><a href="#cb4-44" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span><span class="st">&quot;attachTun&quot;</span><span class="op">,</span> <span class="kw">nullptr</span><span class="op">,</span> AttachTun<span class="op">,</span> <span class="kw">nullptr</span><span class="op">,</span> <span class="kw">nullptr</span><span class="op">,</span> <span class="kw">nullptr</span><span class="op">,</span> napi_default<span class="op">,</span> <span class="kw">nullptr</span><span class="op">},</span></span>
+<span id="cb4-45"><a href="#cb4-45" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span><span class="st">&quot;detachTun&quot;</span><span class="op">,</span> <span class="kw">nullptr</span><span class="op">,</span> DetachTun<span class="op">,</span> <span class="kw">nullptr</span><span class="op">,</span> <span class="kw">nullptr</span><span class="op">,</span> <span class="kw">nullptr</span><span class="op">,</span> napi_default<span class="op">,</span> <span class="kw">nullptr</span><span class="op">},</span></span>
+<span id="cb4-46"><a href="#cb4-46" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span><span class="st">&quot;registerStatus&quot;</span><span class="op">,</span> <span class="kw">nullptr</span><span class="op">,</span> RegisterStatus<span class="op">,</span> <span class="kw">nullptr</span><span class="op">,</span> <span class="kw">nullptr</span><span class="op">,</span> <span class="kw">nullptr</span><span class="op">,</span> napi_default<span class="op">,</span> <span class="kw">nullptr</span><span class="op">},</span></span>
+<span id="cb4-47"><a href="#cb4-47" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span><span class="st">&quot;setShields&quot;</span><span class="op">,</span> <span class="kw">nullptr</span><span class="op">,</span> SetShields<span class="op">,</span> <span class="kw">nullptr</span><span class="op">,</span> <span class="kw">nullptr</span><span class="op">,</span> <span class="kw">nullptr</span><span class="op">,</span> napi_default<span class="op">,</span> <span class="kw">nullptr</span><span class="op">},</span></span>
+<span id="cb4-48"><a href="#cb4-48" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span><span class="st">&quot;setExit&quot;</span><span class="op">,</span> <span class="kw">nullptr</span><span class="op">,</span> SetExit<span class="op">,</span> <span class="kw">nullptr</span><span class="op">,</span> <span class="kw">nullptr</span><span class="op">,</span> <span class="kw">nullptr</span><span class="op">,</span> napi_default<span class="op">,</span> <span class="kw">nullptr</span><span class="op">},</span></span>
+<span id="cb4-49"><a href="#cb4-49" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span><span class="st">&quot;exits&quot;</span><span class="op">,</span> <span class="kw">nullptr</span><span class="op">,</span> Exits<span class="op">,</span> <span class="kw">nullptr</span><span class="op">,</span> <span class="kw">nullptr</span><span class="op">,</span> <span class="kw">nullptr</span><span class="op">,</span> napi_default<span class="op">,</span> <span class="kw">nullptr</span><span class="op">},</span></span>
+<span id="cb4-50"><a href="#cb4-50" aria-hidden="true" tabindex="-1"></a>  <span class="op">};</span></span>
+<span id="cb4-51"><a href="#cb4-51" aria-hidden="true" tabindex="-1"></a>  napi_define_properties<span class="op">(</span>env<span class="op">,</span> exports<span class="op">,</span> <span class="kw">sizeof</span><span class="op">(</span>desc<span class="op">)/</span><span class="kw">sizeof</span><span class="op">(</span>desc<span class="op">[</span><span class="dv">0</span><span class="op">]),</span> desc<span class="op">);</span></span>
+<span id="cb4-52"><a href="#cb4-52" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> exports<span class="op">;</span></span>
+<span id="cb4-53"><a href="#cb4-53" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb4-54"><a href="#cb4-54" aria-hidden="true" tabindex="-1"></a>EXTERN_C_END</span>
+<span id="cb4-55"><a href="#cb4-55" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> napi_module helixMod <span class="op">=</span> <span class="op">{</span> <span class="op">.</span>nm_version <span class="op">=</span> <span class="dv">1</span><span class="op">,</span> <span class="op">.</span>nm_flags <span class="op">=</span> <span class="dv">0</span><span class="op">,</span> <span class="op">.</span>nm_filename <span class="op">=</span> <span class="kw">nullptr</span><span class="op">,</span></span>
+<span id="cb4-56"><a href="#cb4-56" aria-hidden="true" tabindex="-1"></a>  <span class="op">.</span>nm_register_func <span class="op">=</span> Init<span class="op">,</span> <span class="op">.</span>nm_modname <span class="op">=</span> <span class="st">&quot;helix_napi&quot;</span><span class="op">,</span> <span class="op">.</span>nm_priv <span class="op">=</span> <span class="kw">nullptr</span><span class="op">,</span> <span class="op">{</span><span class="dv">0</span><span class="op">}</span> <span class="op">};</span></span>
+<span id="cb4-57"><a href="#cb4-57" aria-hidden="true" tabindex="-1"></a><span class="at">extern</span> <span class="st">&quot;C&quot;</span> <span class="ex">__attribute__((constructor))</span> <span class="dt">void</span> RegisterHelix<span class="op">(</span><span class="dt">void</span><span class="op">)</span> <span class="op">{</span> napi_module_register<span class="op">(&amp;</span>helixMod<span class="op">);</span> <span class="op">}</span></span></code></pre></div>
+<blockquote>
+<p><strong>N-API rationale</strong> [03_CLIENT §5.5,
+research-flutter_ffi §2/§5]: rather than <code>uniffi-dart</code>
+(community, &quot;should not be trusted&quot;) or a HarmonyOS-native UniFFI path,
+the shim binds the <strong>stable cbindgen C ABI</strong> through a
+hand-written ~200-LOC N-API module. This keeps <strong>one</strong> Rust
+surface (frb for Dart, cbindgen C for all native shims) and avoids a
+fourth binding generator. The exact ArkTS↔︎C++ N-API import path
+(<code>import helix from &#39;libhelix_napi.so&#39;</code>) and the
+<code>oh-package.json5</code> native-module declaration are DevEco
+conventions — <strong>UNVERIFIED</strong> version specifics, pin at
+Phase-3 entry.</p>
+</blockquote>
+<hr />
+<h2 id="5-the-arkts-vpnextensionability-the-shim-core">5. The ArkTS
+<code>VpnExtensionAbility</code> (the shim core)</h2>
+<p>The ability is the HarmonyOS analogue of iOS
+<code>PacketTunnelProvider</code> / Android <code>VpnService</code>. It
+(a) requests VPN permission + creates the <code>VpnConnection</code>,
+(b) hands the tun fd to the core via NAPI, (c) registers the status
+relay, (d) reports lifecycle on the EventChannel. <strong>API names
+below are the OpenHarmony Network Kit VPN surface
+(<code>@ohos.net.vpnExtension</code>) as cited by [research-flutter_ffi
+§5] — exact method signatures are UNVERIFIED and MUST be pinned against
+DevEco SDK docs at Phase-3 entry (§11.4.99 latest-source).</strong></p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">// entry/src/main/ets/serviceability/HelixVpnAbility.ets</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> VpnExtensionAbility <span class="im">from</span> <span class="st">&#39;@ohos.app.ability.VpnExtensionAbility&#39;</span><span class="op">;</span>   <span class="co">// UNVERIFIED path</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> vpnExt <span class="im">from</span> <span class="st">&#39;@ohos.net.vpnExtension&#39;</span><span class="op">;</span>                              <span class="co">// UNVERIFIED path</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> helix <span class="im">from</span> <span class="st">&#39;libhelix_napi.so&#39;</span><span class="op">;</span>                                    <span class="co">// §4 N-API module</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> <span class="im">type</span> Want <span class="im">from</span> <span class="st">&#39;@ohos.app.ability.Want&#39;</span><span class="op">;</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> HelixTunnelCfg {            <span class="co">// decoded from the MethodChannel map (doc 03 §4)</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  overlayIp<span class="op">:</span> <span class="dt">string</span><span class="op">;</span> routes<span class="op">:</span> <span class="dt">string</span>[]<span class="op">;</span> dnsServers<span class="op">:</span> <span class="dt">string</span>[]<span class="op">;</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  splitExcludeApps<span class="op">:</span> <span class="dt">string</span>[]<span class="op">;</span> mtu<span class="op">:</span> <span class="dt">number</span><span class="op">;</span> sessionOrMapToken<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="im">default</span> <span class="kw">class</span> HelixVpnAbility <span class="kw">extends</span> VpnExtensionAbility {</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>  <span class="kw">private</span> conn<span class="op">:</span> vpnExt<span class="op">.</span><span class="at">VpnConnection</span> <span class="op">|</span> <span class="dt">null</span> <span class="op">=</span> <span class="kw">null</span><span class="op">;</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>  <span class="kw">private</span> handle<span class="op">:</span> <span class="dt">bigint</span> <span class="op">=</span> <span class="dv">0</span>n<span class="op">;</span>        <span class="co">// helix_core handle (§3); 0n = stopped</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Phase A — permission + tun creation + core start. Invoked by the cross-ability</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>  <span class="co">// start command (§7). cfg arrives marshalled from Dart (§6).</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>  <span class="kw">async</span> <span class="fu">onStart</span>(want<span class="op">:</span> Want<span class="op">,</span> cfg<span class="op">:</span> HelixTunnelCfg)<span class="op">:</span> <span class="bu">Promise</span><span class="op">&lt;</span><span class="dt">void</span><span class="op">&gt;</span> {</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>    <span class="kw">this</span><span class="op">.</span><span class="at">conn</span> <span class="op">=</span> vpnExt<span class="op">.</span><span class="fu">createVpnConnection</span>(<span class="kw">this</span><span class="op">.</span><span class="at">context</span>)<span class="op">;</span>                <span class="co">// UNVERIFIED</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> cfgBuilder<span class="op">:</span> vpnExt<span class="op">.</span><span class="at">VpnConfig</span> <span class="op">=</span> {</span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>      addresses<span class="op">:</span> [{ address<span class="op">:</span> { address<span class="op">:</span> cfg<span class="op">.</span><span class="at">overlayIp</span><span class="op">,</span> family<span class="op">:</span> <span class="dv">1</span> }<span class="op">,</span> prefixLength<span class="op">:</span> <span class="dv">32</span> }]<span class="op">,</span></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>      routes<span class="op">:</span> cfg<span class="op">.</span><span class="at">routes</span><span class="op">.</span><span class="fu">map</span>(r <span class="kw">=&gt;</span> <span class="fu">parseRoute</span>(r))<span class="op">,</span>     <span class="co">// AllowedIPs → OS routes</span></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>      dnsAddresses<span class="op">:</span> cfg<span class="op">.</span><span class="at">dnsServers</span><span class="op">,</span>                   <span class="co">// tunnel DNS (anti-leak)</span></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>      mtu<span class="op">:</span> cfg<span class="op">.</span><span class="at">mtu</span><span class="op">,</span>                                   <span class="co">// 1280 MASQUE / 1420 plain WG</span></span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>      <span class="co">// splitExcludeApps → trustedApplications/blockedApplications (UNVERIFIED field name)</span></span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>      blockedApplications<span class="op">:</span> cfg<span class="op">.</span><span class="at">splitExcludeApps</span><span class="op">,</span></span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>    }<span class="op">;</span></span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> tunFd<span class="op">:</span> <span class="dt">number</span><span class="op">;</span></span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>    <span class="cf">try</span> {</span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>      tunFd <span class="op">=</span> <span class="cf">await</span> <span class="kw">this</span><span class="op">.</span><span class="at">conn</span><span class="op">.</span><span class="fu">create</span>(cfgBuilder)<span class="op">;</span>     <span class="co">// returns tun fd — UNVERIFIED return shape</span></span>
+<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a>    } <span class="cf">catch</span> (e) {</span>
+<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a>      <span class="kw">this</span><span class="op">.</span><span class="fu">emitLifecycle</span>(<span class="fu">isPermDenied</span>(e) <span class="op">?</span> <span class="st">&#39;permissionDenied&#39;</span> <span class="op">:</span> <span class="st">&#39;error&#39;</span><span class="op">,</span> <span class="vs">`</span><span class="sc">${</span>e<span class="sc">}</span><span class="vs">`</span>)<span class="op">;</span></span>
+<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a>    <span class="kw">this</span><span class="op">.</span><span class="at">handle</span> <span class="op">=</span> helix<span class="op">.</span><span class="fu">start</span>(cfg<span class="op">.</span><span class="at">sessionOrMapToken</span><span class="op">,</span> <span class="dv">0</span> <span class="co">/*Client*/</span>)<span class="op">;</span>      <span class="co">// §4</span></span>
+<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="kw">this</span><span class="op">.</span><span class="at">handle</span> <span class="op">&lt;=</span> <span class="dv">0</span>n) { <span class="kw">this</span><span class="op">.</span><span class="fu">emitLifecycle</span>(<span class="st">&#39;error&#39;</span><span class="op">,</span> <span class="vs">`core_start </span><span class="sc">${</span><span class="kw">this</span><span class="op">.</span><span class="at">handle</span><span class="sc">}</span><span class="vs">`</span>)<span class="op">;</span> <span class="cf">return</span><span class="op">;</span> }</span>
+<span id="cb5-37"><a href="#cb5-37" aria-hidden="true" tabindex="-1"></a>    helix<span class="op">.</span><span class="fu">registerStatus</span>(<span class="kw">this</span><span class="op">.</span><span class="at">handle</span><span class="op">,</span> (json<span class="op">:</span> <span class="dt">string</span>) <span class="kw">=&gt;</span> <span class="kw">this</span><span class="op">.</span><span class="fu">relayStatus</span>(json))<span class="op">;</span> <span class="co">// §7</span></span>
+<span id="cb5-38"><a href="#cb5-38" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> rc <span class="op">=</span> helix<span class="op">.</span><span class="fu">attachTun</span>(<span class="kw">this</span><span class="op">.</span><span class="at">handle</span><span class="op">,</span> tunFd<span class="op">,</span> cfg<span class="op">.</span><span class="at">mtu</span>)<span class="op">;</span>            <span class="co">// §4 fd-pump</span></span>
+<span id="cb5-39"><a href="#cb5-39" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (rc <span class="op">!==</span> <span class="dv">0</span>) { <span class="kw">this</span><span class="op">.</span><span class="fu">emitLifecycle</span>(<span class="st">&#39;error&#39;</span><span class="op">,</span> <span class="vs">`attach_tun </span><span class="sc">${</span>rc<span class="sc">}</span><span class="vs">`</span>)<span class="op">;</span> <span class="cf">await</span> <span class="kw">this</span><span class="op">.</span><span class="fu">onStop</span>()<span class="op">;</span> <span class="cf">return</span><span class="op">;</span> }</span>
+<span id="cb5-40"><a href="#cb5-40" aria-hidden="true" tabindex="-1"></a>    <span class="kw">this</span><span class="op">.</span><span class="fu">emitLifecycle</span>(<span class="st">&#39;up&#39;</span><span class="op">,</span> <span class="st">&#39;tun-attached&#39;</span>)<span class="op">;</span>                           <span class="co">// EventChannel up</span></span>
+<span id="cb5-41"><a href="#cb5-41" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb5-42"><a href="#cb5-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-43"><a href="#cb5-43" aria-hidden="true" tabindex="-1"></a>  <span class="kw">async</span> <span class="fu">onStop</span>()<span class="op">:</span> <span class="bu">Promise</span><span class="op">&lt;</span><span class="dt">void</span><span class="op">&gt;</span> {</span>
+<span id="cb5-44"><a href="#cb5-44" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="kw">this</span><span class="op">.</span><span class="at">handle</span> <span class="op">&gt;</span> <span class="dv">0</span>n) { helix<span class="op">.</span><span class="fu">detachTun</span>(<span class="kw">this</span><span class="op">.</span><span class="at">handle</span>)<span class="op">;</span> helix<span class="op">.</span><span class="fu">stop</span>(<span class="kw">this</span><span class="op">.</span><span class="at">handle</span>)<span class="op">;</span> <span class="kw">this</span><span class="op">.</span><span class="at">handle</span> <span class="op">=</span> <span class="dv">0</span>n<span class="op">;</span> }</span>
+<span id="cb5-45"><a href="#cb5-45" aria-hidden="true" tabindex="-1"></a>    <span class="cf">try</span> { <span class="cf">await</span> <span class="kw">this</span><span class="op">.</span><span class="at">conn</span><span class="op">?.</span><span class="fu">destroy</span>()<span class="op">;</span> } <span class="cf">catch</span> (_) { <span class="co">/* best-effort */</span> }  <span class="co">// UNVERIFIED</span></span>
+<span id="cb5-46"><a href="#cb5-46" aria-hidden="true" tabindex="-1"></a>    <span class="kw">this</span><span class="op">.</span><span class="at">conn</span> <span class="op">=</span> <span class="kw">null</span><span class="op">;</span></span>
+<span id="cb5-47"><a href="#cb5-47" aria-hidden="true" tabindex="-1"></a>    <span class="kw">this</span><span class="op">.</span><span class="fu">emitLifecycle</span>(<span class="st">&#39;down&#39;</span><span class="op">,</span> <span class="st">&#39;stopped&#39;</span>)<span class="op">;</span></span>
+<span id="cb5-48"><a href="#cb5-48" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb5-49"><a href="#cb5-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-50"><a href="#cb5-50" aria-hidden="true" tabindex="-1"></a>  <span class="co">// OS-initiated revoke (another VPN took over / user revoked permission):</span></span>
+<span id="cb5-51"><a href="#cb5-51" aria-hidden="true" tabindex="-1"></a>  <span class="fu">onConnectionRevoked</span>()<span class="op">:</span> <span class="dt">void</span> { <span class="kw">this</span><span class="op">.</span><span class="fu">emitLifecycle</span>(<span class="st">&#39;revoked&#39;</span><span class="op">,</span> <span class="st">&#39;os-revoked&#39;</span>)<span class="op">;</span> <span class="dt">void</span> <span class="kw">this</span><span class="op">.</span><span class="fu">onStop</span>()<span class="op">;</span> }</span>
+<span id="cb5-52"><a href="#cb5-52" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-53"><a href="#cb5-53" aria-hidden="true" tabindex="-1"></a>  <span class="co">// logic-only commands marshalled in from the UI process (§5.4):</span></span>
+<span id="cb5-54"><a href="#cb5-54" aria-hidden="true" tabindex="-1"></a>  <span class="fu">setShields</span>(json<span class="op">:</span> <span class="dt">string</span>)<span class="op">:</span> <span class="dt">number</span> { <span class="cf">return</span> <span class="kw">this</span><span class="op">.</span><span class="at">handle</span> <span class="op">&gt;</span> <span class="dv">0</span>n <span class="op">?</span> helix<span class="op">.</span><span class="fu">setShields</span>(<span class="kw">this</span><span class="op">.</span><span class="at">handle</span><span class="op">,</span> json) <span class="op">:</span> <span class="op">-</span><span class="dv">2</span><span class="op">;</span> }</span>
+<span id="cb5-55"><a href="#cb5-55" aria-hidden="true" tabindex="-1"></a>  <span class="fu">setExit</span>(json<span class="op">:</span> <span class="dt">string</span>)<span class="op">:</span> <span class="dt">number</span>    { <span class="cf">return</span> <span class="kw">this</span><span class="op">.</span><span class="at">handle</span> <span class="op">&gt;</span> <span class="dv">0</span>n <span class="op">?</span> helix<span class="op">.</span><span class="fu">setExit</span>(<span class="kw">this</span><span class="op">.</span><span class="at">handle</span><span class="op">,</span> json) <span class="op">:</span> <span class="op">-</span><span class="dv">2</span><span class="op">;</span> }</span>
+<span id="cb5-56"><a href="#cb5-56" aria-hidden="true" tabindex="-1"></a>  <span class="fu">exits</span>()<span class="op">:</span> <span class="dt">string</span>                  { <span class="cf">return</span> <span class="kw">this</span><span class="op">.</span><span class="at">handle</span> <span class="op">&gt;</span> <span class="dv">0</span>n <span class="op">?</span> helix<span class="op">.</span><span class="fu">exits</span>(<span class="kw">this</span><span class="op">.</span><span class="at">handle</span>) <span class="op">:</span> <span class="st">&#39;[]&#39;</span><span class="op">;</span> }</span>
+<span id="cb5-57"><a href="#cb5-57" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-58"><a href="#cb5-58" aria-hidden="true" tabindex="-1"></a>  <span class="kw">private</span> <span class="fu">relayStatus</span>(statusJson<span class="op">:</span> <span class="dt">string</span>)<span class="op">:</span> <span class="dt">void</span> { <span class="co">/* §7 — push to UI process */</span> }</span>
+<span id="cb5-59"><a href="#cb5-59" aria-hidden="true" tabindex="-1"></a>  <span class="kw">private</span> <span class="fu">emitLifecycle</span>(kind<span class="op">:</span> <span class="dt">string</span><span class="op">,</span> detail<span class="op">:</span> <span class="dt">string</span>)<span class="op">:</span> <span class="dt">void</span> { <span class="co">/* §7 — push to EventChannel */</span> }</span>
+<span id="cb5-60"><a href="#cb5-60" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="54-why-logic-ops-cross-the-ipc-on-harmonyos">5.4 Why logic ops
+cross the IPC on HarmonyOS</h3>
+<p>On Android the orchestrator is in-process, so
+<code>core.setShields(...)</code> is a direct frb call (doc
+<code>03</code> §3.3). On HarmonyOS the orchestrator lives in the
+<strong>ability</strong> process, so
+<code>setShields</code>/<code>setExit</code>/<code>exits</code>/<code>advertise</code>
+MUST be marshalled across the cross-ability IPC (§7) into
+<code>HelixVpnAbility</code>, which forwards to NAPI. The Dart
+<code>HelixCore</code> wrapper (doc <code>03</code> §3.2) is unchanged;
+only its OHOS <em>implementation</em> routes through the platform
+channel instead of frb-in-process. This is the one place the HarmonyOS
+FFI wiring deviates from the doc <code>03</code> §3.3 &quot;logic goes
+straight UI→FFI&quot; rule — documented here so the deviation is explicit,
+not silent (§11.4.6).</p>
+<hr />
+<h2 id="6-the-uiability-side--methodchanneleventchannel-plumbing">6. The
+UIAbility side — MethodChannel/EventChannel plumbing</h2>
+<p>The Flutter engine is hosted in a <code>UIAbility</code>. The SIG
+fork&#39;s <code>FlutterAbility</code>/<code>FlutterEngine</code> exposes
+the standard <code>MethodChannel</code>/<code>EventChannel</code> host
+APIs in ArkTS (the OHOS equivalent of Android&#39;s
+<code>MethodChannel</code> registrar — <strong>UNVERIFIED</strong> exact
+class names, pin at Phase-3). The UIAbility glue registers the two
+channels and bridges them to the ability via the §7 IPC.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">// entry/src/main/ets/entryability/EntryAbility.ets (UIAbility, hosts Flutter)</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { MethodChannel<span class="op">,</span> EventChannel } <span class="im">from</span> <span class="st">&#39;@ohos/flutter_ohos&#39;</span><span class="op">;</span>        <span class="co">// UNVERIFIED package</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { HelixVpnClient } <span class="im">from</span> <span class="st">&#39;../relay/HelixVpnClient&#39;</span><span class="op">;</span>                <span class="co">// §7 IPC client</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="kw">function</span> <span class="fu">registerHelixChannels</span>(messenger<span class="op">:</span> BinaryMessenger)<span class="op">:</span> <span class="dt">void</span> {</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> client <span class="op">=</span> <span class="kw">new</span> <span class="fu">HelixVpnClient</span>()<span class="op">;</span>                                   <span class="co">// talks to the ability</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> m <span class="op">=</span> <span class="kw">new</span> <span class="fu">MethodChannel</span>(messenger<span class="op">,</span> <span class="st">&#39;helixvpn/tunnel&#39;</span>)<span class="op">;</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  m<span class="op">.</span><span class="fu">setMethodCallHandler</span>({</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    onMethodCall<span class="op">:</span> <span class="kw">async</span> (call<span class="op">,</span> result) <span class="kw">=&gt;</span> {</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>      <span class="cf">switch</span> (call<span class="op">.</span><span class="at">method</span>) {</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> <span class="st">&#39;startTunnel&#39;</span><span class="op">:</span> <span class="cf">await</span> client<span class="op">.</span><span class="fu">start</span>(call<span class="op">.</span><span class="at">args</span> <span class="im">as</span> <span class="bu">Record</span><span class="op">&lt;</span><span class="dt">string</span><span class="op">,</span> <span class="bu">Object</span><span class="op">&gt;</span>)<span class="op">;</span> result<span class="op">.</span><span class="fu">success</span>(<span class="kw">null</span>)<span class="op">;</span> <span class="cf">break</span><span class="op">;</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> <span class="st">&#39;stopTunnel&#39;</span><span class="op">:</span>  <span class="cf">await</span> client<span class="op">.</span><span class="fu">stop</span>()<span class="op">;</span>  result<span class="op">.</span><span class="fu">success</span>(<span class="kw">null</span>)<span class="op">;</span> <span class="cf">break</span><span class="op">;</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> <span class="st">&#39;setShields&#39;</span><span class="op">:</span>  result<span class="op">.</span><span class="fu">success</span>(<span class="cf">await</span> client<span class="op">.</span><span class="fu">setShields</span>(call<span class="op">.</span><span class="at">args</span> <span class="im">as</span> <span class="dt">string</span>))<span class="op">;</span> <span class="cf">break</span><span class="op">;</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> <span class="st">&#39;setExit&#39;</span><span class="op">:</span>     result<span class="op">.</span><span class="fu">success</span>(<span class="cf">await</span> client<span class="op">.</span><span class="fu">setExit</span>(call<span class="op">.</span><span class="at">args</span> <span class="im">as</span> <span class="dt">string</span>))<span class="op">;</span> <span class="cf">break</span><span class="op">;</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> <span class="st">&#39;exits&#39;</span><span class="op">:</span>       result<span class="op">.</span><span class="fu">success</span>(<span class="cf">await</span> client<span class="op">.</span><span class="fu">exits</span>())<span class="op">;</span> <span class="cf">break</span><span class="op">;</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>        <span class="cf">default</span><span class="op">:</span> result<span class="op">.</span><span class="fu">notImplemented</span>()<span class="op">;</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>      }</span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>    }<span class="op">,</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>  })<span class="op">;</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> e <span class="op">=</span> <span class="kw">new</span> <span class="fu">EventChannel</span>(messenger<span class="op">,</span> <span class="st">&#39;helixvpn/tunnel/events&#39;</span>)<span class="op">;</span></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>  e<span class="op">.</span><span class="fu">setStreamHandler</span>({</span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>    onListen<span class="op">:</span> (_args<span class="op">,</span> sink) <span class="kw">=&gt;</span> client<span class="op">.</span><span class="fu">bindLifecycleSink</span>(sink)<span class="op">,</span>           <span class="co">// up|down|permissionDenied|revoked|error</span></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>    onCancel<span class="op">:</span> (_args) <span class="kw">=&gt;</span> client<span class="op">.</span><span class="fu">unbindLifecycleSink</span>()<span class="op">,</span></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>  })<span class="op">;</span></span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>The <code>TunnelConfig.toMap()</code> (Dart) ⇄
+<code>HelixTunnelCfg</code> (ArkTS) marshalling keys are the doc
+<code>03</code> §4 field names verbatim (<code>overlayIp</code>,
+<code>routes</code>, <code>dnsServers</code>,
+<code>splitExcludeApps</code>, <code>mtu</code>,
+<code>sessionOrMapToken</code>) — a contract test (§13) asserts the
+round-trip is lossless.</p>
+<hr />
+<h2 id="7-the-status-relay-preserving-ci2-across-the-process-boundary">7.
+The status relay (preserving CI2 across the process boundary)</h2>
+<p>The core&#39;s <code>TunnelStatus</code> originates in the ability
+process; the UI must see it on the frb status stream (CI2). The relay is
+the bridge. Two physical transports are candidates — pick one at Phase-3
+entry; <strong>the choice is UNVERIFIED</strong> and is open decision
+<strong>D-OHOS-1</strong> (§14):</p>
+<table>
+<thead>
+<tr>
+<th>Candidate IPC</th>
+<th>Pros</th>
+<th>Cons</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>@ohos.rpc</code> (IRemoteObject, ability connect)</td>
+<td>typed, request/response + callback</td>
+<td>most boilerplate; lifecycle binding</td>
+</tr>
+<tr>
+<td><code>@ohos.commonEventManager</code> (publish/subscribe)</td>
+<td>simplest fan-out for status events</td>
+<td>best-effort delivery; ordering not guaranteed</td>
+</tr>
+<tr>
+<td><code>@ohos.distributedKVStore</code> / shared storage watch</td>
+<td>survives ability restart</td>
+<td>latency; not event-shaped</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Recommended (UNVERIFIED): <code>@ohos.rpc</code></strong> —
+the ability exposes an <code>IRemoteObject</code>; the UIAbility&#39;s
+<code>HelixVpnClient</code> connects to it, sends
+<code>start/stop/setShields/...</code> requests, and registers a
+<strong>callback object</strong> the ability invokes on every status
+transition and lifecycle event. RPC ordering + delivery guarantees are
+what the single-state-authority contract (O-I10) needs.</p>
+<pre class="mermaid"><code>sequenceDiagram
+    participant UI as Flutter (Dart)
+    participant FFIr as frb status re-emitter
+    participant TP as OhosTunnelPlatform (Dart)
+    participant UAB as UIAbility (HelixVpnClient, RPC client)
+    participant AB as HelixVpnAbility (RPC stub)
+    participant NAPI as libhelix_napi.so
+    participant CORE as libhelix_core.so
+
+    UI-&gt;&gt;TP: startTunnel(cfg)
+    TP-&gt;&gt;UAB: MethodChannel startTunnel(map)
+    UAB-&gt;&gt;AB: RPC start(cfg) + register statusCallback
+    AB-&gt;&gt;AB: VpnConnection.create → tun fd
+    AB-&gt;&gt;NAPI: start(session) + registerStatus + attachTun(fd)
+    NAPI-&gt;&gt;CORE: helix_core_start / attach_tun
+    AB--&gt;&gt;UAB: RPC lifecycle &#39;up&#39;
+    UAB--&gt;&gt;TP: EventChannel up  → PlatformTunnelEvent.up
+    Note over CORE: orchestrator transitions (Connecting→Handshaking→Connected)
+    CORE--&gt;&gt;NAPI: helix_status_cb(json)   %% core thread
+    NAPI--&gt;&gt;AB: TSFN → ArkTS statusJson    %% ability loop
+    AB--&gt;&gt;UAB: RPC statusCallback(json)
+    UAB--&gt;&gt;FFIr: inject(json)
+    FFIr--&gt;&gt;UI: statusStream() → ConnectButton/StatusChip</code></pre>
+<p>The frb status re-emitter (<code>FFIr</code>) is a thin Dart sink:
+the OHOS build feeds the relayed JSON into the same
+<code>Stream&lt;TunnelStatus&gt;</code> the rest of the app watches, so
+<strong>no UI code is platform-aware</strong> (CI2 holds). On
+single-process platforms the frb <code>StreamSink</code> feeds this
+stream directly; on HarmonyOS the relay feeds it — the <em>shape</em> is
+identical.</p>
+<hr />
+<h2 id="8-lifecycle-state-machines">8. Lifecycle state machines</h2>
+<h3 id="81-ability-lifecycle-shim-owned">8.1 Ability lifecycle
+(shim-owned)</h3>
+<pre class="mermaid"><code>stateDiagram-v2
+    [*] --&gt; Idle
+    Idle --&gt; Permissioning : start(cfg)
+    Permissioning --&gt; Idle : permission denied → emit permissionDenied
+    Permissioning --&gt; Creating : permission granted
+    Creating --&gt; Idle : VpnConnection.create fails → emit error
+    Creating --&gt; Attaching : tun fd obtained → emit up
+    Attaching --&gt; Idle : core_start/attach_tun fails → emit error → teardown
+    Attaching --&gt; Running : attach_tun == 0
+    Running --&gt; Stopping : stop() / onConnectionRevoked → emit revoked
+    Running --&gt; Stopping : core emits Down (auth/ladder/host fatal)
+    Stopping --&gt; Idle : detach+stop+destroy done → emit down</code></pre>
+<p>The ability state machine is <strong>lifecycle only</strong>; it
+never invents a <code>TunnelStatus</code>. Protection-state truth
+(Connecting/Handshaking/Connected/...) is the orchestrator&#39;s (O-I10),
+surfaced via the §7 relay, never synthesized by the ability. This is the
+seam that prevents &quot;UI says connected while the tunnel is down&quot; (doc
+<code>03</code> §3.3).</p>
+<h3 id="82-kill-switch-ordering-across-the-process-boundary">8.2
+Kill-switch ordering across the process boundary</h3>
+<p>Per O-I11 (kill-switch fails closed), the firewall side-effects are
+the orchestrator&#39;s and execute <strong>in the ability process before the
+status emit</strong>: on any transition into
+<code>Reconnecting</code>/<code>Down</code>, the core closes the
+firewall, <em>then</em> relays the status. The relay carries
+already-applied truth, so a UI reacting to <code>Connected</code> can
+trust the tunnel is open and a UI reacting to
+<code>Danger</code>/<code>Down</code> knows the firewall is already
+closed. The ability process crashing leaves the OS
+<code>VpnConnection</code> torn down by the OS (fail-closed by
+construction — no <code>VpnConnection</code>, no route); the UIAbility
+observes the RPC death and surfaces
+<code>PlatformTunnelEvent.down</code> (§11).</p>
+<hr />
+<h2 id="9-tunnelstatus-consistency-mapping">9. <code>TunnelStatus</code>
+consistency mapping</h2>
+<p>The frozen orchestrator broadcast enum is the 5-variant contract
+[01-ORCH §4.1]:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co">// crates/helix-core — the SINGLE state authority (O-I10). FROZEN.</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">enum</span> TunnelStatus <span class="op">{</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    Connecting<span class="op">,</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    Handshaking<span class="op">,</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    Connected <span class="op">{</span> transport<span class="op">:</span> <span class="dt">String</span><span class="op">,</span> rtt_ms<span class="op">:</span> <span class="dt">u32</span> <span class="op">},</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    Reconnecting<span class="op">,</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>    Down <span class="op">{</span> reason<span class="op">:</span> <span class="dt">String</span> <span class="op">},</span>   <span class="co">// reason vocab: §3.1 / [01-ORCH §4.4]</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>The <strong>FFI-facing</strong> enum (doc <code>03</code> §3.1)
+mirrors-and-extends it with three client-only additions —
+<code>Disconnected</code> (clean idle, distinct from <code>Down</code>),
+<code>path</code> on <code>Connected</code>
+(<code>&quot;direct&quot;|&quot;relay&quot;</code>), and <code>Danger{kind}</code> (leak /
+kill-switch tripped). The HarmonyOS relay carries the
+<strong>FFI-facing</strong> JSON, so the OHOS build&#39;s
+<code>Stream&lt;TunnelStatus&gt;</code> is byte-identical to every other
+platform&#39;s. The mapping (orchestrator → FFI projection) the relay
+applies:</p>
+<table>
+<thead>
+<tr>
+<th>Orchestrator <code>OrchState</code>/<code>TunnelStatus</code></th>
+<th>Relayed FFI <code>TunnelStatus</code> JSON</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Idle</code> (internal)</td>
+<td><code>{&quot;t&quot;:&quot;Disconnected&quot;}</code></td>
+<td>clean idle; never <code>Down</code></td>
+</tr>
+<tr>
+<td><code>Connecting</code></td>
+<td><code>{&quot;t&quot;:&quot;Connecting&quot;}</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>Handshaking</code></td>
+<td><code>{&quot;t&quot;:&quot;Handshaking&quot;}</code></td>
+<td>carrier up, WG handshake in flight</td>
+</tr>
+<tr>
+<td><code>Connected{transport,rtt_ms}</code></td>
+<td><code>{&quot;t&quot;:&quot;Connected&quot;,&quot;transport&quot;:..,&quot;path&quot;:..,&quot;rtt_ms&quot;:..}</code></td>
+<td><code>path</code> from doc <code>01</code> direct/relay</td>
+</tr>
+<tr>
+<td><code>Reconnecting{..}</code></td>
+<td><code>{&quot;t&quot;:&quot;Reconnecting&quot;}</code></td>
+<td>emitted once per drop [01-ORCH §4.3]</td>
+</tr>
+<tr>
+<td><code>ShuttingDown</code> (internal)</td>
+<td><code>{&quot;t&quot;:&quot;Down&quot;,&quot;reason&quot;:&quot;stopped&quot;}</code></td>
+<td>maps to Down [01-ORCH §4.4]</td>
+</tr>
+<tr>
+<td><code>Down{reason}</code></td>
+<td><code>{&quot;t&quot;:&quot;Down&quot;,&quot;reason&quot;:..}</code></td>
+<td>reason ∈ §3.1 vocab</td>
+</tr>
+<tr>
+<td>(leak / kill-switch tripped)</td>
+<td><code>{&quot;t&quot;:&quot;Danger&quot;,&quot;kind&quot;:&quot;leak&quot;|&quot;killswitch_tripped&quot;}</code></td>
+<td>drives red palette (doc <code>03</code> §7)</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Consistency gate (§13 unit/contract test):</strong> the ArkTS
+relay&#39;s JSON tag set and the Dart <code>TunnelStatus</code> frb mirror
+MUST match the orchestrator enum + the three documented extensions
+exactly. A drift (extra/missing tag, renamed field) FAILs the contract
+test — the same byte-for-byte assertion doc <code>03</code> §3.1
+mandates for the frb mirror, here applied to the relay JSON codec.</p>
+</blockquote>
+<hr />
+<h2 id="10-memory--resource-budgets">10. Memory &amp; resource
+budgets</h2>
+<p>The iOS Network Extension working-set ceiling (historically ~15 MB)
+is the program&#39;s hardest constraint and the reason the core is Rust
+(CI4) [04_ARCH §5.6, research-ios_android]. <strong>HarmonyOS&#39;s
+<code>VpnExtensionAbility</code> process memory ceiling is
+UNVERIFIED</strong> — it is a Phase-3 G-gate measurement, not an
+assumption. Design targets (mirroring the iOS discipline so the OHOS
+build inherits the lean profile for free):</p>
+<table>
+<thead>
+<tr>
+<th>Budget</th>
+<th>Target</th>
+<th>Verification (Phase 3)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Ability-process steady-state RSS</td>
+<td>≤ ~16 MB design target (<strong>actual ceiling
+UNVERIFIED</strong>)</td>
+<td>1 GB sustained transfer on a real HarmonyOS device, sample
+ability-process RSS via DevEco profiler</td>
+</tr>
+<tr>
+<td>Rust <code>.so</code> build profile</td>
+<td><code>opt-level=z</code> + thin-LTO + <code>panic=abort</code> +
+strip, <code>aarch64</code> OHOS target</td>
+<td>matches the iOS G3 recipe [research-ios_android]</td>
+</tr>
+<tr>
+<td>MASQUE vs plain-UDP RSS</td>
+<td>both pass separately (QUIC buffers cost more)</td>
+<td>run each transport in isolation, ≥30 % headroom over the device
+ceiling across a 30-min soak</td>
+</tr>
+<tr>
+<td>NAPI bridge overhead</td>
+<td>~constant; no per-packet allocation (fd-pump, not callback)</td>
+<td>TSFN used only for status (≪1 msg/s), never packets</td>
+</tr>
+<tr>
+<td><code>.hap</code> size</td>
+<td>within the doc <code>03</code> §10 client size budget</td>
+<td>DevEco artifact inspection</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Fallback ladder if the ability ceiling is breached</strong>
+(each a real product decision, never hand-waved — mirrors the iOS §5.1
+fallbacks): (1) shrink buffers / cap QUIC flow-control windows in the
+OHOS build; (2) move MASQUE off-device for HarmonyOS (plain WG + on-path
+obfuscation only — partial feature loss); (3) split so only the lean WG
+datapath is in the ability and QUIC negotiation lives in the UI process
+via the RPC channel. The chosen rung is <strong>D-OHOS-2</strong>
+(§14).</p>
+<hr />
+<h2 id="11-error-handling--edge-cases">11. Error handling &amp; edge
+cases</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Edge case</th>
+<th>Detection</th>
+<th>Handling</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>E1</td>
+<td>VPN permission denied</td>
+<td><code>VpnConnection.create</code> throws perm error</td>
+<td><code>PlatformTunnelEvent.permissionDenied</code>; no core start; UI
+prompts re-grant</td>
+</tr>
+<tr>
+<td>E2</td>
+<td>Another VPN active / OS revokes</td>
+<td><code>onConnectionRevoked</code></td>
+<td>emit <code>revoked</code>, teardown, kill-switch already closed
+(O-I11)</td>
+</tr>
+<tr>
+<td>E3</td>
+<td><code>attach_tun</code> fails (bad fd)</td>
+<td><code>helix_core_attach_tun</code> returns
+<code>HELIX_ERR_TUN_ATTACH</code></td>
+<td>emit <code>error</code>, run <code>onStop</code>, surface
+<code>Down{host-fatal}</code></td>
+</tr>
+<tr>
+<td>E4</td>
+<td>Ability process crash</td>
+<td>UIAbility RPC death callback</td>
+<td><code>PlatformTunnelEvent.down</code>; OS auto-tears
+<code>VpnConnection</code> (fail-closed); UI offers reconnect</td>
+</tr>
+<tr>
+<td>E5</td>
+<td>UI process killed, tunnel alive</td>
+<td>OS keeps the ability running</td>
+<td>on UI relaunch, <code>HelixVpnClient</code> re-binds RPC +
+re-subscribes status; relay replays last <code>TunnelStatus</code>
+(latest-wins, not history)</td>
+</tr>
+<tr>
+<td>E6</td>
+<td>Status callback after stop</td>
+<td>core stopped but a late <code>helix_status_cb</code> fires</td>
+<td>TSFN guarded by handle generation; stale-handle status dropped (no
+UI flicker)</td>
+</tr>
+<tr>
+<td>E7</td>
+<td>WG auth rejected</td>
+<td>core returns <code>Down{auth-failed}</code></td>
+<td>relay → <code>Danger</code>? No — <code>Down{auth-failed}</code>; UI
+shows re-enroll path; kill-switch stays closed</td>
+</tr>
+<tr>
+<td>E8</td>
+<td>DNS leak / kill-switch trip</td>
+<td>core emits <code>Danger{kind}</code></td>
+<td>relay → red palette; firewall already closed before emit (§8.2)</td>
+</tr>
+<tr>
+<td>E9</td>
+<td>SIG-fork lacks a channel API</td>
+<td>build/integration time</td>
+<td>honest <strong>SKIP-with-reason</strong> per §11.4.3 + tracked
+migration item; never a faked PASS</td>
+</tr>
+<tr>
+<td>E10</td>
+<td>MTU mismatch (1280 MASQUE vs 1420 plain)</td>
+<td>negotiated <code>mtu</code> in <code>TunnelConfig</code></td>
+<td>passed to both <code>VpnConfig.mtu</code> and
+<code>attach_tun(mtu)</code>; mismatch is a contract-test failure
+(§13)</td>
+</tr>
+<tr>
+<td>E11</td>
+<td>Split-tunnel app list unsupported</td>
+<td><code>blockedApplications</code> field absent in SIG SDK</td>
+<td>SKIP-with-reason; degrade to full-tunnel + surface to user (no
+silent drop, §11.4.6)</td>
+</tr>
+<tr>
+<td>E12</td>
+<td>TSFN backpressure</td>
+<td>status burst</td>
+<td><code>napi_tsfn_nonblocking</code> drops oldest on full queue;
+status is latest-wins so a dropped intermediate is harmless (final state
+always delivered)</td>
+</tr>
+</tbody>
+</table>
+<p>All <code>helix_last_error()</code> strings are logged
+<strong>without</strong> the session token / map contents (§11.4.10
+credentials never logged).</p>
+<hr />
+<h2 id="12-build-signing-packaging">12. Build, signing, packaging</h2>
+<table>
+<thead>
+<tr>
+<th>Step</th>
+<th>Tool / artifact</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Rust core</td>
+<td><code>cargo build --target aarch64-unknown-linux-ohos</code> (OHOS
+target via <code>ohos-rs</code>/NDK — <strong>UNVERIFIED</strong> target
+triple, pin Phase-3) → <code>libhelix_core.so</code></td>
+<td><code>cdylib</code>; lean profile (§10)</td>
+</tr>
+<tr>
+<td>C ABI header</td>
+<td><code>cbindgen</code> → <code>helix_core.h</code></td>
+<td>shared with iOS/Android shims (§3)</td>
+</tr>
+<tr>
+<td>NAPI module</td>
+<td>DevEco CMake native module → <code>libhelix_napi.so</code> (§4)</td>
+<td>links <code>libhelix_core.so</code></td>
+</tr>
+<tr>
+<td>Flutter engine</td>
+<td><code>openharmony-sig/flutter_flutter</code>, <code>ohos</code>
+channel</td>
+<td>pinned baseline (§0)</td>
+</tr>
+<tr>
+<td>App assembly</td>
+<td><code>flutter build hap</code> (SIG fork) → DevEco project</td>
+<td>embeds both <code>.so</code>s under the ability module</td>
+</tr>
+<tr>
+<td>Signing</td>
+<td>DevEco Studio (HarmonyOS app cert/profile)</td>
+<td>separate CI lane; cert material per §11.4.10 (gitignored, never
+logged)</td>
+</tr>
+<tr>
+<td><code>module.json5</code></td>
+<td>declares <code>VpnExtensionAbility</code> +
+<code>ohos.permission.VPN</code>-class permission
+(<strong>UNVERIFIED</strong> exact permission id)</td>
+<td>pin Phase-3</td>
+</tr>
+</tbody>
+</table>
+<p>The OHOS target triple, the VPN permission identifier, and the
+<code>oh-package.json5</code> native-module declaration are
+<strong>UNVERIFIED</strong> DevEco/SDK specifics — each is a Phase-3
+latest-source verification (§11.4.99), not a memorized constant.</p>
+<hr />
+<h2 id="13-test-points--114169-comprehensive-test-type-coverage">13.
+Test points — §11.4.169 comprehensive test-type coverage</h2>
+<p>Per the LIVE constitution anchor §11.4.169 (mandatory comprehensive
+test-type coverage) composed with §11.4.27 (100 % test-type coverage)
+and §11.4.3 (topology-aware SKIP-with-reason where the SIG embedder
+genuinely lacks an API — never a faked PASS), every shim surface carries
+the applicable test types with <strong>real captured evidence</strong>
+(§11.4.5/§11.4.69) — no metadata-only PASS.</p>
+<table>
+<thead>
+<tr>
+<th>Test type</th>
+<th>What it exercises here</th>
+<th>Evidence / anti-bluff</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Unit</strong></td>
+<td>NAPI value marshalling (string/bigint/int round-trips, §4);
+<code>TunnelConfig.toMap</code> ⇄ <code>HelixTunnelCfg</code>;
+HelixErr→<code>Down.reason</code> map (§3.1); relay JSON codec ↔︎ frb
+<code>TunnelStatus</code> mirror (§9). Riverpod fakes via
+<code>StreamProvider.overrideWithValue</code> [research-flutter_ffi
+§6].</td>
+<td>golden-good/golden-bad fixtures (§11.4.107(10)); a renamed enum tag
+FAILs the §9 consistency gate.</td>
+</tr>
+<tr>
+<td><strong>Contract / consistency</strong></td>
+<td>the §9 byte-for-byte <code>TunnelStatus</code> assertion across
+orchestrator enum ↔︎ relay JSON ↔︎ Dart mirror; the doc <code>03</code> §4
+<code>TunnelPlatform</code> channel signature.</td>
+<td>drift = FAIL (mirrors doc <code>03</code> §3.1 frb-mirror
+test).</td>
+</tr>
+<tr>
+<td><strong>Integration</strong></td>
+<td>ArkTS ability ↔︎ NAPI ↔︎ real <code>libhelix_core.so</code> against a
+real local gateway: <code>start → attach_tun → Connected</code> over
+plain-UDP <strong>and</strong> MASQUE;
+<code>setShields/setExit/exits</code> across the RPC (§5.4). No mocks
+beyond unit (§11.4.27).</td>
+<td>captured status timeline + sink-side evidence (§11.4.69
+<code>network_connectivity</code>).</td>
+</tr>
+<tr>
+<td><strong>E2E (full-automation)</strong></td>
+<td>real device: launch HAP → grant VPN permission → connect → real
+traffic flows through the overlay → toggle kill-switch → leak check →
+stop; fully self-driving (§11.4.98). UI non-introspectable parts via the
+§11.4.117 pixel/OCR oracle.</td>
+<td>window-scoped MP4 + vision verdict (§11.4.159);
+<code>docs/qa/&lt;run-id&gt;/</code>.</td>
+</tr>
+<tr>
+<td><strong>Security</strong></td>
+<td>DNS-leak + kill-switch-fails-closed across process crash (E4/E8);
+session token never in logs (§11.4.10); permission-revoke teardown
+(E2).</td>
+<td>leak-probe captures; log audit.</td>
+</tr>
+<tr>
+<td><strong>Stress</strong></td>
+<td>1 GB+ sustained transfer; 30-min soak; TSFN status burst (E12);
+rapid start/stop cycles (handle generation guard, E6).</td>
+<td>per-iteration latency + RSS series (§11.4.85).</td>
+</tr>
+<tr>
+<td><strong>Chaos</strong></td>
+<td>kill the ability process mid-transfer (E4); revoke VPN mid-stream
+(E2); kill UI process, keep tunnel, relaunch + re-bind (E5);
+corrupt/short tun fd (E3).</td>
+<td>categorised recovery traces; fail-closed asserted.</td>
+</tr>
+<tr>
+<td><strong>Performance / benchmarking</strong></td>
+<td>ability-process RSS vs the §10 budget (MASQUE vs plain separately);
+throughput vs Android baseline; NAPI per-call overhead (status
+only).</td>
+<td>DevEco profiler RSS series; the §10 G-gate.</td>
+</tr>
+<tr>
+<td><strong>Scaling</strong></td>
+<td>many routes / large RouteMap reconcile in the ability without RSS
+blowup.</td>
+<td>RSS vs route-count curve.</td>
+</tr>
+<tr>
+<td><strong>UI / UX</strong></td>
+<td>the shared Dart screens render identically on OHOS (the UI ports for
+free); <code>ConnectButton</code> is a pure function of the relayed
+status stream (CI2); state announced not just colored (CI5).</td>
+<td>visual-regression + a11y assertions [04_UI §9].</td>
+</tr>
+<tr>
+<td><strong>Challenges / HelixQA</strong></td>
+<td>a HelixQA bank entry drives the E2E journey + scores PASS only on
+positive captured evidence (§11.4.27).</td>
+<td>unforgeable on-device evidence.</td>
+</tr>
+</tbody>
+</table>
+<p>Paired §1.1 meta-test mutations protect each gate (e.g. strip the §9
+consistency assertion → contract test must FAIL; force the relay to emit
+<code>Connected</code> while the core is <code>Down</code> → E2E
+leak/kill-switch test must FAIL). Where the SIG fork genuinely lacks an
+API (E9/E11), the test is an honest <strong>SKIP-with-reason</strong>
+(§11.4.3) plus a tracked migration item — never a green that masks a
+missing capability.</p>
+<hr />
+<h2 id="14-open-decisions-surfaced-by-this-document">14. Open decisions
+surfaced by this document</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Decision</th>
+<th>Options</th>
+<th>Default (pending verification)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>D-OHOS-1</strong></td>
+<td>cross-ability status/command IPC transport (§7)</td>
+<td><code>@ohos.rpc</code> · <code>commonEventManager</code> · shared
+KV-store</td>
+<td><code>@ohos.rpc</code> (ordering + delivery for O-I10) —
+<strong>UNVERIFIED</strong></td>
+</tr>
+<tr>
+<td><strong>D-OHOS-2</strong></td>
+<td>memory-ceiling fallback rung if the ability RSS budget is breached
+(§10)</td>
+<td>shrink buffers · MASQUE-off-device · split WG/QUIC</td>
+<td>rung 1 (shrink buffers) first; escalate on G-gate failure</td>
+</tr>
+<tr>
+<td><strong>D-OHOS-3</strong></td>
+<td>OHOS Rust target triple + NDK toolchain (§12)</td>
+<td><code>*-linux-ohos</code> via <code>ohos-rs</code> / Huawei NDK</td>
+<td>pin at Phase-3 entry — <strong>UNVERIFIED</strong></td>
+</tr>
+<tr>
+<td><strong>D-OHOS-4</strong></td>
+<td>split-tunnel field mapping (<code>splitExcludeApps</code> →
+<code>blockedApplications</code>/<code>trustedApplications</code>,
+§5/§11)</td>
+<td>SDK-version dependent</td>
+<td>verify against DevEco SDK; SKIP+degrade if absent (E11)</td>
+</tr>
+<tr>
+<td><strong>D-OHOS-5</strong></td>
+<td>whether <code>VpnExtensionAbility</code> is guaranteed a separate
+process (§1)</td>
+<td>separate / co-located</td>
+<td>design for separate; co-located degrades gracefully —
+<strong>UNVERIFIED</strong></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="sources-verified">Sources verified</h2>
+<ul>
+<li><code>04_VPN_CLD/HelixVPN-Architecture-Refined.md</code> §5
+(Flutter-for-8-platforms, HarmonyOS SIG fork, per-platform shims, NE
+memory ceiling) — accessed 2026-06-25.</li>
+<li><code>04_VPN_CLD/HelixVPN-helix-ui-Flutter.md</code> §6/§6.1
+(TunnelPlatform contract, &quot;UI ports for free / shim does not&quot;, Phase-3
+risk) — accessed 2026-06-25.</li>
+<li><code>final/03-client-core-and-ui.md</code> §3 (FFI surface, frb
+<code>TunnelStatus</code> mirror + extensions), §4
+(TunnelPlatform/TunnelConfig/PlatformTunnelEventKind), §5.1 (iOS C-ABI
+<code>helix_core_*</code> pattern), §5.5 (HarmonyOS row) — accessed
+2026-06-25.</li>
+<li><code>final/v02-data-plane/orchestrator-and-state.md</code> §4.1
+(frozen 5-variant <code>TunnelStatus</code>), §4.3 (emit cadence), §4.4
+(<code>Down.reason</code> vocab), O-I10/O-I11 — accessed
+2026-06-25.</li>
+<li><code>research-flutter_ffi.md</code> §2 (UniFFI-Dart not
+production-ready → NAPI/C-ABI path), §3 (cdylib packaging), §5
+(OpenHarmony SIG <code>flutter_flutter</code>, <code>ohos</code>
+channel→HAP, Flutter OHOS baseline, ArkTS
+<code>vpnExtension</code>/<code>VpnExtensionAbility</code> bridged via
+NAPI — version specifics flagged UNVERIFIED), §6 (Riverpod
+StreamProvider) — accessed 2026-06-25.</li>
+<li><code>research-ios_android.md</code> (NE memory ceiling discipline
+reused as the OHOS design target; VpnService in-process vs NE
+separate-process contrast) — accessed 2026-06-25.</li>
+</ul>
+<blockquote>
+<p><strong>UNVERIFIED markers</strong> in this document (§0, §1, §4, §5,
+§10, §12, §14) are the Phase-3 latest-source verification gates
+(§11.4.99) against the DevEco SDK + OpenHarmony Network Kit docs; none
+is assumed true. Per §11.4.6 they are explicitly flagged rather than
+guessed, and per §11.4.3 a SIG-fork capability gap resolves to an honest
+SKIP-with-reason, never a fabricated PASS.</p>
+</blockquote>
+</body>
+</html>

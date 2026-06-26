@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Disaster recovery (RTO/RPO, backup &amp; region-failover runbook)</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Disaster recovery (RTO/RPO, backup &amp;
+region-failover runbook)</h1>
+</header>
+<h1 id="disaster-recovery-rtorpo-backup--region-failover-runbook">Disaster
+recovery (RTO/RPO, backup &amp; region-failover runbook)</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-06-25T12:00:00Z</p>
+<blockquote>
+<p>Master technical specification — Volume 6 (Deployment, Tooling &amp;
+Operations), nano-detail document <code>disaster-recovery.md</code>.
+<strong>This document CLOSES source-coverage ledger gap G1</strong>
+(<code>99-source-coverage-ledger.md</code> — <code>[03_ZAI]</code>&#39;s
+named DR posture: RTO/RPO budget, KMS-encrypted backups, Terraform
+region-failover runbook, &quot;disaster recovery as a first-class operational
+section&quot; — was scattered, never consolidated). Scope: the
+<strong>RTO/RPO budget</strong> (stated as <strong>TARGETS</strong>,
+§11.4.6), exactly <strong>what is backed up and what deliberately is
+not</strong> (Postgres = truth, backed up; Redis/NATS = ephemeral, NOT
+backed up — and why that is <em>safe</em> under the no-logging promise),
+backup cadence + restore runbook, the step-by-step region-failover
+runbook, the §9.2 absolute-data-safety discipline, and concrete
+backup/restore + verification commands. This is a SPEC (describe the
+procedure; do not run the product). Evidence cited inline:
+<code>[05 §N]</code>, <code>[svc-coordinator §N]</code>,
+<code>[svc-events §N]</code>, <code>[svc-telemetry §N]</code>,
+<code>[ha-and-multiregion §N]</code>, <code>[kubernetes §N]</code>,
+<code>[03_ZAI]</code> (the DR source), <code>[ledger G1]</code>.
+Unproven facts are marked <code>UNVERIFIED</code> per §11.4.6.</p>
+</blockquote>
+<hr />
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#0-dr-thesis--back-up-truth-regenerate-the-rest">0. DR
+thesis — back up truth, regenerate the rest</a></li>
+<li><a href="#1-rto--rpo-budget-targets-not-guarantees">1. RTO / RPO
+budget (TARGETS, not guarantees)</a></li>
+<li><a href="#2-what-is-backed-up--and-what-deliberately-is-not">2. What
+is backed up — and what deliberately is NOT</a></li>
+<li><a href="#3-backup-cadence--mechanism-postgres--secrets">3. Backup
+cadence &amp; mechanism (Postgres + secrets)</a></li>
+<li><a href="#4-the-92-absolute-data-safety-discipline-applied-to-dr">4.
+The §9.2 absolute-data-safety discipline applied to DR</a></li>
+<li><a href="#5-restore-runbook-single-store-recovery">5. Restore
+runbook (single-store recovery)</a></li>
+<li><a href="#6-region-failover-runbook-whole-region-loss">6.
+Region-failover runbook (whole-region loss)</a></li>
+<li><a href="#7-restore-verification-the-anti-bluff-gate">7. Restore
+verification (the anti-bluff gate)</a></li>
+<li><a href="#8-dr-drills--captured-evidence">8. DR drills &amp;
+captured evidence</a></li>
+<li><a href="#9-unverified-register">9. UNVERIFIED register</a></li>
+<li><a href="#sources-verified">Sources verified</a></li>
+</ul>
+<hr />
+<h2 id="0-dr-thesis--back-up-truth-regenerate-the-rest">0. DR thesis —
+back up truth, regenerate the rest</h2>
+<p>HelixVPN&#39;s DR design is shaped by the same architectural decision
+that makes HA cheap (<code>[ha-and-multiregion §0]</code>): the system
+has <strong>exactly one durable source of truth — Postgres (C2)</strong>
+— and <em>everything else is a regenerable projection of it</em>. From
+<code>[svc-events §7.4]</code>:</p>
+<blockquote>
+<p>&quot;the bus is a fast-path accelerator over Postgres truth, never a
+second source of truth.&quot;</p>
+</blockquote>
+<p>So DR reduces to a sharp, auditable statement:</p>
+<ol type="1">
+<li><strong>Back up Postgres</strong> (truth) + <strong>the
+secrets</strong> needed to bring a stack up. That is the entire durable
+surface.</li>
+<li><strong>Do NOT back up Redis/NATS</strong> — they are ephemeral by
+construction; restoring them would restore <em>stale</em> presence/event
+state, and (critically) the no-logging promise means there is nothing in
+them worth persisting. The coordinator graph is rebuilt from Postgres on
+boot <code>[svc-coordinator §1.4]</code>; the outbox re-relays in-flight
+events <code>[svc-events §7.4]</code>.</li>
+<li><strong>Regenerate the deploy substrate</strong>
+(quadlets/compose/k8s) from the in-code spec via
+<code>helixvpnctl deploy</code> <code>[05 §6.3(B)]</code> — the
+manifests are a §11.4.77 build derivative, re-emitted, not
+restored.</li>
+</ol>
+<p>The DR posture is therefore: <em>one thing to back up (Postgres), one
+thing to protect (the secrets), everything else regenerated.</em> This
+is both simpler and <strong>safer</strong> than a &quot;back up everything&quot;
+posture — there is no risk of restoring a stale connection log because
+there is no connection log.</p>
+<hr />
+<h2 id="1-rto--rpo-budget-targets-not-guarantees">1. RTO / RPO budget
+(TARGETS, not guarantees)</h2>
+<p>Per §11.4.6 these are stated explicitly as <strong>TARGETS</strong>
+the design aims at, to be <em>measured</em> in DR drills (§8) — never
+asserted as achieved. They consolidate <code>[03_ZAI]</code>&#39;s &quot;RTO &lt;
+15 min&quot; framing that <code>[ledger G1]</code> found scattered.</p>
+<table>
+<thead>
+<tr>
+<th>Scenario</th>
+<th>RTO target (time to service)</th>
+<th>RPO target (data loss window)</th>
+<th>Basis</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>helixd</code> replica loss</td>
+<td>seconds (reconnect)</td>
+<td>0</td>
+<td>stateless reconnect <code>[svc-coordinator §3.2]</code>; no data
+lost</td>
+</tr>
+<tr>
+<td>Postgres primary failover (HA standby)</td>
+<td>&lt; 60 s (promotion)</td>
+<td><strong>0</strong> for sync-committed</td>
+<td>sync standby <code>remote_write</code>
+<code>[ha-and-multiregion §3]</code></td>
+</tr>
+<tr>
+<td>Redis/NATS loss</td>
+<td>seconds–minutes (recovery)</td>
+<td>0 durable (ephemeral)</td>
+<td>rehydrate from PG + outbox re-relay
+<code>[svc-events §7.4]</code></td>
+</tr>
+<tr>
+<td><strong>Postgres total loss → restore from backup</strong></td>
+<td><strong>&lt; 15 min</strong> (<code>[03_ZAI]</code> target)</td>
+<td><strong>≤ backup-cadence</strong> (see §3)</td>
+<td>restore latest backup + WAL replay</td>
+</tr>
+<tr>
+<td><strong>Whole-region loss → failover to standby region</strong></td>
+<td><strong>&lt; 15 min</strong></td>
+<td><strong>0</strong> (sync) or <strong>≤ async-lag</strong></td>
+<td>promote cross-region standby <code>[ha-and-multiregion §1]</code> +
+repoint geoDNS <code>[ha-and-multiregion §5]</code></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>RPO precision (the honest number, §11.4.6).</strong> RPO is
+<strong>0</strong> for any transaction that committed against a
+<strong>synchronous</strong> standby
+(<code>[ha-and-multiregion §3]</code>). RPO for a <em>backup-only</em>
+restore is bounded by <strong>the most recent recoverable point</strong>
+= last base backup + last shipped WAL segment (with continuous WAL
+archiving, RPO ≈ the WAL archive interval, typically seconds–minutes;
+see §3). The 15-min figure is RTO (<em>time to restore</em>), distinct
+from RPO (<em>data lost</em>) — conflating them is the bluff this note
+forbids. The data-plane impact during all of the above is <strong>none
+for live tunnels</strong> (C1 fail-static,
+<code>[ha-and-multiregion §3]</code>): DR pauses <em>control</em>
+operations, never drops <em>forwarding</em>.</p>
+</blockquote>
+<hr />
+<h2 id="2-what-is-backed-up--and-what-deliberately-is-not">2. What is
+backed up — and what deliberately is NOT</h2>
+<table>
+<thead>
+<tr>
+<th>Asset</th>
+<th>Backed up?</th>
+<th>Mechanism</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Postgres</strong> (tenants, devices, connectors, prefixes,
+policies, certs metadata, <code>audit_events</code>,
+<code>event_outbox</code>)</td>
+<td><strong>YES</strong></td>
+<td>base backup + continuous WAL archive (§3)</td>
+<td>the only durable truth (C2); losing it loses the system</td>
+</tr>
+<tr>
+<td><strong>CA private key / PKI root</strong> (doc 04)</td>
+<td><strong>YES</strong> (separately, stricter)</td>
+<td>KMS-encrypted, offline/HSM-class storage</td>
+<td>catastrophic if lost (every device cert chains to it); catastrophic
+if leaked (§4)</td>
+</tr>
+<tr>
+<td><strong>Stack secrets</strong> (DB password, etc.)</td>
+<td><strong>YES</strong> (referenced)</td>
+<td>external secret store (ESO/Sealed-Secrets,
+<code>[kubernetes §2]</code>)</td>
+<td>needed to bring a stack up; §11.4.10 never plaintext-in-git</td>
+</tr>
+<tr>
+<td><strong>Redis stream contents</strong></td>
+<td><strong>NO</strong></td>
+<td>—</td>
+<td>ephemeral (C2); restoring = stale events; outbox re-relays in-flight
+<code>[svc-events §7.4]</code></td>
+</tr>
+<tr>
+<td><strong>Redis presence keys</strong></td>
+<td><strong>NO</strong></td>
+<td>—</td>
+<td>ephemeral by design — this IS the no-logging mechanism
+<code>[svc-telemetry §5]</code>; persisting them would <em>create</em> a
+connection log</td>
+</tr>
+<tr>
+<td><strong>NATS JetStream state</strong> (Phase 2)</td>
+<td><strong>NO</strong> (replicated, not backed up)</td>
+<td>cluster replication <code>[ha-and-multiregion §4]</code></td>
+<td>same ephemeral logic; HA via replication, not backup</td>
+</tr>
+<tr>
+<td><strong>Coordinator in-mem graph</strong></td>
+<td><strong>NO</strong></td>
+<td>rebuilt on boot <code>[svc-coordinator §1.4]</code></td>
+<td>a projection of PG; not durable</td>
+</tr>
+<tr>
+<td><strong>Deploy manifests</strong> (quadlet/compose/k8s)</td>
+<td><strong>NO</strong> (regenerated)</td>
+<td><code>helixvpnctl deploy</code> <code>[05 §6.3B]</code></td>
+<td>§11.4.77 build derivative — re-emitted from in-code spec</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>The privacy-positive DR property (the thing that makes &quot;don&#39;t
+back up Redis&quot; <em>safe</em>, not reckless).</strong> Redis holds
+presence (who-is-online-now) and in-flight events. Presence is
+deliberately non-durable — &quot;online/offline state lives only in Redis
+with a TTL, so the durable store never accumulates a connection log&quot;
+<code>[svc-telemetry §0/§5]</code>. <strong>Backing Redis up would
+manufacture exactly the durable connection log the no-logging promise
+(C3) forbids.</strong> So the DR design&#39;s refusal to back up Redis is
+not a gap — it is the no-logging invariant extended into the backup
+layer. A DR plan that snapshotted Redis would be a §11.4 / C3
+<em>violation</em>, not a safety improvement.</p>
+</blockquote>
+<pre class="mermaid"><code>flowchart LR
+  subgraph backup[BACKED UP — durable truth]
+    PG[(Postgres + WAL)]
+    CA[CA / PKI root — KMS]
+    SEC[stack secrets — external store]
+  end
+  subgraph noback[NOT BACKED UP — ephemeral / regenerable]
+    RD[(Redis: presence + events)]
+    GR[coordinator graph in RAM]
+    MAN[deploy manifests]
+  end
+  PG -. rebuild .-&gt; GR
+  PG -. outbox re-relay .-&gt; RD
+  MAN -. regenerate via helixvpnctl deploy .-&gt; MAN
+  note[backing up Redis would CREATE a connection log — forbidden C3]</code></pre>
+<hr />
+<h2 id="3-backup-cadence--mechanism-postgres--secrets">3. Backup cadence
+&amp; mechanism (Postgres + secrets)</h2>
+<p><strong>Postgres = base backup + continuous WAL archiving</strong>
+(point-in-time recovery, PITR). This is the mechanism that makes RPO ≈
+WAL-archive-interval rather than ≈ backup-interval.</p>
+<table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Cadence (target)</th>
+<th>Mechanism</th>
+<th>Retention</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Base backup</td>
+<td>every 24 h</td>
+<td><code>pg_basebackup</code> / CNPG scheduled backup → object
+store</td>
+<td>30 days (UNVERIFIED — operator policy)</td>
+</tr>
+<tr>
+<td>WAL archive</td>
+<td>continuous (seconds)</td>
+<td><code>archive_command</code> → object store (S3/GCS)</td>
+<td>until next base backup + grace</td>
+</tr>
+<tr>
+<td>Logical dump (belt-and-suspenders)</td>
+<td>every 24 h</td>
+<td><code>pg_dump --format=custom</code> (portable, cross-version)</td>
+<td>7 days</td>
+</tr>
+<tr>
+<td>CA / PKI root</td>
+<td>on rotation only</td>
+<td>KMS-encrypted export to offline storage</td>
+<td>indefinite (the root)</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># deploy/scripts/dr/pg-backup.sh  (illustrative — KMS-encrypted, §11.4.10/§9.2)</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="bu">set</span> <span class="at">-euo</span> pipefail</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="va">TS</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$(</span><span class="fu">date</span> <span class="at">-u</span> +%Y%m%dT%H%M%SZ<span class="va">)</span><span class="st">&quot;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="va">DEST</span><span class="op">=</span><span class="st">&quot;s3://helix-dr-backups/pg/</span><span class="va">${TS}</span><span class="st">&quot;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="co"># 1) consistent base backup (CNPG does this via its Backup CR; raw form shown for portability)</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="ex">pg_basebackup</span> <span class="at">-h</span> helix-pg-rw <span class="at">-U</span> helix_owner <span class="at">-D</span> <span class="at">-</span> <span class="at">-Ft</span> <span class="at">-X</span> fetch <span class="at">-z</span> <span class="dt">\</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="kw">|</span> <span class="ex">aws</span> s3 cp <span class="at">-</span> <span class="st">&quot;</span><span class="va">${DEST}</span><span class="st">/base.tar.gz&quot;</span> <span class="at">--sse</span> aws:kms <span class="at">--sse-kms-key-id</span> <span class="st">&quot;</span><span class="va">${HELIX_KMS_KEY}</span><span class="st">&quot;</span>   <span class="co"># [03_ZAI] KMS-encrypted</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="co"># 2) portable logical dump (cross-version restore safety net)</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="ex">pg_dump</span> <span class="at">-h</span> helix-pg-rw <span class="at">-U</span> helix_owner <span class="at">-d</span> helix <span class="at">--format</span><span class="op">=</span>custom <span class="dt">\</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  <span class="kw">|</span> <span class="ex">aws</span> s3 cp <span class="at">-</span> <span class="st">&quot;</span><span class="va">${DEST}</span><span class="st">/helix.dump&quot;</span> <span class="at">--sse</span> aws:kms <span class="at">--sse-kms-key-id</span> <span class="st">&quot;</span><span class="va">${HELIX_KMS_KEY}</span><span class="st">&quot;</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="co"># 3) record the recoverable point for the §7 verification gate</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">&quot;{</span><span class="dt">\&quot;</span><span class="st">ts</span><span class="dt">\&quot;</span><span class="st">:</span><span class="dt">\&quot;</span><span class="va">${TS}</span><span class="dt">\&quot;</span><span class="st">,</span><span class="dt">\&quot;</span><span class="st">lsn</span><span class="dt">\&quot;</span><span class="st">:</span><span class="dt">\&quot;</span><span class="va">$(</span><span class="ex">psql</span> <span class="at">-h</span> helix-pg-rw <span class="at">-U</span> helix_owner <span class="at">-tAc</span> <span class="st">&#39;SELECT pg_current_wal_lsn()&#39;</span><span class="va">)</span><span class="dt">\&quot;</span><span class="st">}&quot;</span> <span class="dt">\</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>  <span class="kw">|</span> <span class="ex">aws</span> s3 cp <span class="at">-</span> <span class="st">&quot;</span><span class="va">${DEST}</span><span class="st">/MANIFEST.json&quot;</span></span></code></pre></div>
+<p>WAL archiving is configured on the cluster (CNPG
+<code>barmanObjectStore</code>, or raw
+<code>archive_command</code>):</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># CNPG continuous WAL archive (the RPO≈seconds mechanism)</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">spec</span><span class="kw">:</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">backup</span><span class="kw">:</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">barmanObjectStore</span><span class="kw">:</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">destinationPath</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;s3://helix-dr-backups/pg&quot;</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">encryption</span><span class="kw">:</span><span class="at"> aws:kms</span><span class="co">                      # [03_ZAI] KMS-encrypted backups</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">wal</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">compression</span><span class="kw">:</span><span class="at"> gzip </span><span class="kw">}</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">data</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">compression</span><span class="kw">:</span><span class="at"> gzip </span><span class="kw">}</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">retentionPolicy</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;30d&quot;</span></span></code></pre></div>
+<blockquote>
+<p><strong>Secrets cadence.</strong> Stack secrets are referenced from
+an external store (<code>[kubernetes §2]</code>); the store&#39;s own backup
+is the operator&#39;s responsibility. The CA root is the one secret whose
+loss is <em>unrecoverable</em> (every device cert chains to it) — it is
+exported KMS-encrypted on rotation only and stored offline/HSM-class
+(doc 04). Its handling is the highest-stakes part of DR and is governed
+by §9.2 (§4) + §11.4.10.</p>
+</blockquote>
+<hr />
+<h2 id="4-the-92-absolute-data-safety-discipline-applied-to-dr">4. The
+§9.2 absolute-data-safety discipline applied to DR</h2>
+<p>Every DR operation is a destructive-or-high-stakes operation; §9.2
+(absolute data safety, zero risk) applies in full:</p>
+<ol type="1">
+<li><strong>Backup-first, always.</strong> Before <em>any</em> restore
+overwrites a live store, take a fresh backup of the current (even if
+corrupt) state — a corrupt-but-present DB may still be more recoverable
+than a botched restore. Hardlinked/cheap snapshot first (§9.2 step
+1).</li>
+<li><strong>Record metadata.</strong> Capture the pre-restore HEAD/LSN,
+the target recovery point, the expected post-restore row counts / schema
+version, and the recoverable-point <code>MANIFEST.json</code> (§3).</li>
+<li><strong>Define expected post-op state.</strong> The §7 verification
+gate&#39;s expected values, written down <em>before</em> the restore
+runs.</li>
+<li><strong>Run the restore</strong> — never with <code>--force</code>
+that skips integrity checks; never auto-retry a failed restore onto the
+same volume.</li>
+<li><strong>Post-op gate (§7).</strong> Schema present, RLS intact,
+<code>schemalint</code> green against the restored DB (no-logging
+runtime signature §11.4.108), row-count sanity, a live
+<code>WatchNetworkMap</code> snapshot matches expectation. If ANY check
+fails → do NOT promote the restored DB; investigate.</li>
+<li><strong>CA-key handling is operator-gated (§11.4.101/.122).</strong>
+Restoring or rotating the CA root is irreversible +
+catastrophic-blast-radius → it is NEVER autonomous; it goes through the
+operator with the exact commands surfaced (§11.4.66), never decided by
+the agent.</li>
+<li><strong>Audit trail.</strong> Every DR action recorded under
+<code>docs/qa/&lt;run-id&gt;/</code> (§11.4.83) + a
+<code>docs/changelogs/</code> DR-event section.</li>
+</ol>
+<blockquote>
+<p><strong>No-force-push analogue for DR (§11.4.113 spirit).</strong>
+Just as history-rewrite is never autonomous, a <em>destructive restore
+over a live primary</em> is never autonomous — it is the §11.4.101
+block-only-when (irreversible + high-blast-radius) case, surfaced to the
+operator. The agent prepares the restore (fetches the backup, validates
+the manifest, stages the commands) but the &quot;overwrite the live primary&quot;
+step is operator-confirmed.</p>
+</blockquote>
+<hr />
+<h2 id="5-restore-runbook-single-store-recovery">5. Restore runbook
+(single-store recovery)</h2>
+<p>The common case: Postgres is lost/corrupt, the region is intact.
+Restore from backup + WAL.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># deploy/scripts/dr/pg-restore.sh  (illustrative — §9.2 disciplined)</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="bu">set</span> <span class="at">-euo</span> pipefail</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="va">SRC</span><span class="op">=</span><span class="st">&quot;s3://helix-dr-backups/pg/</span><span class="va">${RESTORE_TS</span><span class="op">:?</span>set RESTORE_TS<span class="va">}</span><span class="st">&quot;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="va">TARGET_PITR</span><span class="op">=</span><span class="st">&quot;</span><span class="va">${TARGET_PITR</span><span class="op">:-</span>latest<span class="va">}</span><span class="st">&quot;</span>   <span class="co"># PITR target time, or &#39;latest&#39; for end-of-WAL</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="co"># §9.2 STEP 1 — backup-first: snapshot whatever is currently there (even if corrupt)</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="ex">deploy/scripts/dr/pg-backup.sh</span> <span class="kw">||</span> <span class="bu">echo</span> <span class="st">&quot;WARN: pre-restore backup of current state failed — record + decide (§9.2)&quot;</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="co"># §9.2 STEP 2/3 — record metadata + expected state (written to the run dir)</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> <span class="st">&quot;qa-results/dr/</span><span class="va">${RESTORE_TS}</span><span class="st">&quot;</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="ex">aws</span> s3 cp <span class="st">&quot;</span><span class="va">${SRC}</span><span class="st">/MANIFEST.json&quot;</span> <span class="st">&quot;qa-results/dr/</span><span class="va">${RESTORE_TS}</span><span class="st">/recoverable-point.json&quot;</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="co"># §9.2 STEP 4 — restore to a FRESH volume (never overwrite the live primary in place; operator-gated promote)</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="co">#   CNPG: create a Cluster with bootstrap.recovery pointing at the barman store + recoveryTarget.</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="co">#   raw form:</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a><span class="ex">aws</span> s3 cp <span class="st">&quot;</span><span class="va">${SRC}</span><span class="st">/base.tar.gz&quot;</span> <span class="at">-</span> <span class="kw">|</span> <span class="fu">tar</span> <span class="at">-xzf</span> <span class="at">-</span> <span class="at">-C</span> <span class="st">&quot;</span><span class="va">${RESTORE_DATA_DIR</span><span class="op">:?</span><span class="va">}</span><span class="st">&quot;</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> <span class="op">&gt;</span> <span class="st">&quot;</span><span class="va">${RESTORE_DATA_DIR}</span><span class="st">/recovery.signal&quot;</span> <span class="op">&lt;&lt;&#39;EOF&#39;</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a><span class="op">EOF</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a><span class="co"># recovery.conf / postgresql.auto.conf: restore_command from the WAL archive + recovery_target_time</span></span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># CNPG recovery cluster (the recommended form — restores to a NEW Cluster, not in-place)</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">apiVersion</span><span class="kw">:</span><span class="at"> postgresql.cnpg.io/v1</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="fu">kind</span><span class="kw">:</span><span class="at"> Cluster</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="fu">metadata</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> helix-pg-restored</span><span class="kw">,</span><span class="at"> </span><span class="fu">namespace</span><span class="kw">:</span><span class="at"> helixvpn </span><span class="kw">}</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="fu">spec</span><span class="kw">:</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">instances</span><span class="kw">:</span><span class="at"> </span><span class="dv">3</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">bootstrap</span><span class="kw">:</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">recovery</span><span class="kw">:</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">source</span><span class="kw">:</span><span class="at"> helix-pg-backup</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">recoveryTarget</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">targetTime</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;2026-06-25T11:59:00Z&quot;</span><span class="at"> </span><span class="kw">}</span><span class="co">   # PITR; omit for end-of-WAL</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">externalClusters</span><span class="kw">:</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> helix-pg-backup</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">barmanObjectStore</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">destinationPath</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;s3://helix-dr-backups/pg&quot;</span><span class="kw">,</span><span class="at"> </span><span class="fu">encryption</span><span class="kw">:</span><span class="at"> aws:kms </span><span class="kw">}</span></span></code></pre></div>
+<p>After the restored cluster is healthy and
+<strong>§7-verified</strong>, the operator repoints
+<code>helix-pg-rw</code> (the <code>DATABASE_URL</code> host,
+<code>[kubernetes §2]</code>) to it. The coordinators then rehydrate
+from the restored truth on their next boot/reconnect
+<code>[svc-coordinator §1.4]</code> — Redis is untouched (it rebuilds
+itself), so no Redis restore is needed (§2). Live tunnels never dropped
+(C1).</p>
+<hr />
+<h2 id="6-region-failover-runbook-whole-region-loss">6. Region-failover
+runbook (whole-region loss)</h2>
+<p>The catastrophic case: region A (primary) is gone. Promote region B&#39;s
+cross-region standby and re-home clients. This consolidates
+<code>[03_ZAI]</code>&#39;s &quot;Terraform-driven region-failover&quot;
+<code>[ledger G1]</code> with the HA topology
+<code>[ha-and-multiregion §1]</code>.</p>
+<pre class="mermaid"><code>sequenceDiagram
+  autonumber
+  participant Op as operator (gated steps)
+  participant PGB as PG standby (region B)
+  participant HB as helixd (region B)
+  participant DNS as geoDNS / anycast
+  participant CL as clients
+  Note over Op: region A confirmed lost (not a transient partition — §7 fencing check)
+  Op-&gt;&gt;PGB: PROMOTE standby B → primary (operator-gated §4/§11.4.101)
+  Op-&gt;&gt;HB: repoint DATABASE_URL → region-B primary; helixd replicas reconnect
+  HB-&gt;&gt;HB: rehydrate graph from PG (stateless boot §1.4); outbox re-relays in-flight
+  Op-&gt;&gt;DNS: drop region-A gateway IPs; serve region-B edges [ha-and-multiregion §5]
+  DNS-&gt;&gt;CL: clients resolve to region-B gateway; re-handshake tunnels
+  Note over CL,HB: control plane live in B within RTO&lt;15min; tunnels re-home via transport ladder</code></pre>
+<p>Step-by-step:</p>
+<ol type="1">
+<li><strong>Confirm region loss, not a partition.</strong> A transient
+partition must NOT trigger a promote (split-brain risk,
+<code>[ha-and-multiregion §7]</code>). The fencing/consensus check (§7)
+gates this — and per §4, the promote itself is operator-confirmed
+(irreversible + high-blast-radius).</li>
+<li><strong>Promote the cross-region standby</strong> (region B) to
+primary. RPO = 0 if it was synchronous, ≤ async-lag otherwise
+<code>[ha-and-multiregion §3, §1]</code>.</li>
+<li><strong>Repoint <code>DATABASE_URL</code></strong> to region B&#39;s
+primary; <code>helixd</code> replicas in B reconnect and rehydrate from
+the (now-promoted) truth <code>[svc-coordinator §1.4]</code>; the outbox
+drains any staged events <code>[svc-events §7.4]</code>.</li>
+<li><strong>Re-home gateway selection</strong> — drop region A&#39;s edge
+IPs from geoDNS / withdraw its anycast route
+<code>[ha-and-multiregion §5]</code>; clients resolve to region B and
+re-handshake (the re-handshake budget is the data-plane ladder&#39;s, NOT
+the &lt; 1 s control SLO — <code>[ha-and-multiregion §6]</code>).</li>
+<li><strong>Re-establish HA in the surviving region</strong> — bring up
+new standbys in region B (and a new region C if available) so the
+post-failover topology is not single-point-of-failure.</li>
+<li><strong>Verify (§7)</strong> at every step; record evidence
+(§8).</li>
+</ol>
+<blockquote>
+<p><strong>Terraform&#39;s role (<code>[03_ZAI]</code>).</strong> The
+region&#39;s infra (gateway VPS, edges, PG nodes) is Terraform-provisioned
+<code>[05 §2 deploy/terraform]</code>; a region-failover may include
+<code>terraform apply</code> against the surviving/standby region to
+scale it up. The <em>infra</em> re-provision is Terraform; the
+<em>data</em> promote is the PG operator; the <em>traffic</em> re-home
+is geoDNS/anycast. Three distinct mechanisms, sequenced above.</p>
+</blockquote>
+<hr />
+<h2 id="7-restore-verification-the-anti-bluff-gate">7. Restore
+verification (the anti-bluff gate)</h2>
+<p>A restore is <strong>not done when <code>pg_restore</code> exits
+0</strong> — it is done when the restored truth is proven correct and
+serving (§11.4.108 runtime signature, §11.4.123 rock-solid proof). The
+gate, run before any promote:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># deploy/scripts/dr/verify-restore.sh  (illustrative — the §9.2 step-5 post-op gate)</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="bu">set</span> <span class="at">-euo</span> pipefail</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="va">PG</span><span class="op">=</span><span class="st">&quot;</span><span class="va">${RESTORED_PG_URL</span><span class="op">:?</span><span class="va">}</span><span class="st">&quot;</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="co"># 1) schema + migration version present</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="ex">psql</span> <span class="st">&quot;</span><span class="va">$PG</span><span class="st">&quot;</span> <span class="at">-tAc</span> <span class="st">&quot;SELECT max(version) FROM schema_migrations;&quot;</span>      <span class="co"># matches expected (§9.2 step 3)</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="co"># 2) RLS intact (C8) — helix_app cannot cross tenants</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="ex">psql</span> <span class="st">&quot;</span><span class="va">$PG</span><span class="st">&quot;</span> <span class="at">-tAc</span> <span class="st">&quot;SELECT relrowsecurity AND relforcerowsecurity FROM pg_class WHERE relname=&#39;devices&#39;;&quot;</span>  <span class="co"># expect t</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="co"># 3) no-logging runtime signature (§11.4.108) — schemalint green against the RESTORED db</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> run ./tools/schemalint <span class="at">--dsn</span> <span class="st">&quot;</span><span class="va">$PG</span><span class="st">&quot;</span>                              <span class="co"># exit 0 = C3 intact [svc-telemetry §7]</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a><span class="co"># 4) row-count sanity vs the recoverable-point manifest (no silent truncation)</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a><span class="ex">psql</span> <span class="st">&quot;</span><span class="va">$PG</span><span class="st">&quot;</span> <span class="at">-tAc</span> <span class="st">&quot;SELECT count(*) FROM tenants;&quot;</span>                    <span class="co"># ≥ expected</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a><span class="ex">psql</span> <span class="st">&quot;</span><span class="va">$PG</span><span class="st">&quot;</span> <span class="at">-tAc</span> <span class="st">&quot;SELECT count(*) FROM devices WHERE revoked_at IS NULL;&quot;</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a><span class="co"># 5) live proof: point a throwaway helixd at the restored db, open a WatchNetworkMap, assert a</span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a><span class="co">#    sane snapshot (the device sees its authorized peers — C4) — booted via containers (§11.4.76)</span></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a><span class="ex">deploy/scripts/dr/smoke-watch.sh</span> <span class="at">--dsn</span> <span class="st">&quot;</span><span class="va">$PG</span><span class="st">&quot;</span> <span class="at">--expect-peers-for</span> <span class="st">&quot;</span><span class="va">$KNOWN_DEVICE</span><span class="st">&quot;</span></span></code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Check</th>
+<th>Proves</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>migration version</td>
+<td>restored to the expected schema, no partial restore</td>
+</tr>
+<tr>
+<td>RLS forced</td>
+<td>C8 multi-tenant isolation survived the restore</td>
+</tr>
+<tr>
+<td><code>schemalint</code> green vs restored DB</td>
+<td>no-logging C3 intact (a restore can&#39;t smuggle a traffic table)</td>
+</tr>
+<tr>
+<td>row-count vs manifest</td>
+<td>no silent data loss/truncation</td>
+</tr>
+<tr>
+<td>live <code>WatchNetworkMap</code> snapshot</td>
+<td>the restored truth actually <em>serves</em> a correct network map
+(the user-visible proof)</td>
+</tr>
+</tbody>
+</table>
+<p>A restore that passes (1)–(4) but fails (5) is NOT recovered — the
+durable bytes are back but the system doesn&#39;t work; only the live
+snapshot proves end-to-end recovery (§11.4.108 RUNTIME → USER-VISIBLE
+layers).</p>
+<hr />
+<h2 id="8-dr-drills--captured-evidence">8. DR drills &amp; captured
+evidence</h2>
+<p>DR is unproven until <em>rehearsed</em> (§11.4.85 chaos / §11.4.123
+rock-solid proof). The drills:</p>
+<table>
+<thead>
+<tr>
+<th>Drill</th>
+<th>Procedure</th>
+<th>Captured evidence (§11.4.5/§11.4.69)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>PG restore drill</strong></td>
+<td>restore a base backup + WAL to a fresh cluster; run §7 gate; measure
+RTO</td>
+<td>restore transcript + §7 gate output + measured RTO vs the 15-min
+target</td>
+</tr>
+<tr>
+<td><strong>PITR drill</strong></td>
+<td>restore to a target time <em>before</em> a known mutation; assert
+that mutation is absent</td>
+<td>before/after row diff at the PITR boundary</td>
+</tr>
+<tr>
+<td><strong>Region-failover drill</strong></td>
+<td>tabletop → live: promote standby, repoint, re-home geoDNS; measure
+end-to-end RTO</td>
+<td>the §6 sequence with timestamps; client re-handshake recording</td>
+</tr>
+<tr>
+<td><strong>&quot;Redis is NOT restored&quot; assertion</strong></td>
+<td>kill Redis, restore PG only, confirm presence/events rebuild without
+any Redis backup</td>
+<td>rebuild trace <code>[svc-events §7.4]</code> — proves the §2
+design</td>
+</tr>
+<tr>
+<td><strong>No-logging-survives-restore</strong></td>
+<td>restore PG, run <code>schemalint</code> against it</td>
+<td>green lint = C3 intact; paired mutation planting a traffic table in
+the backup → restore gate FAILs</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>The drill IS the spec&#39;s proof.</strong> The RTO/RPO numbers
+in §1 are TARGETS (§11.4.6) until a drill <em>measures</em> them; a DR
+plan with no rehearsed restore is a §11.4 bluff (untested recovery is no
+recovery). Drills are scheduled (e.g. quarterly) and their evidence
+committed under <code>docs/qa/&lt;run-id&gt;/dr/</code>. The first
+drill&#39;s measured RTO replaces the target as the <em>stated
+capability</em> — never the design estimate (§11.4.6).</p>
+</blockquote>
+<hr />
+<h2 id="9-unverified-register">9. UNVERIFIED register</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>UNVERIFIED item</th>
+<th>Why / status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>U1</td>
+<td>The 15-min RTO target (§1)</td>
+<td><code>[03_ZAI]</code>&#39;s figure; a TARGET until a §8 drill measures
+it — never asserted as achieved</td>
+</tr>
+<tr>
+<td>U2</td>
+<td>Backup retention windows (30d base / 7d dump) (§3)</td>
+<td>operator policy, illustrative defaults</td>
+</tr>
+<tr>
+<td>U3</td>
+<td>KMS provider + key management exact shape (§3/§4)</td>
+<td><code>[03_ZAI]</code> says KMS-encrypted; the specific KMS
+(AWS/GCP/HSM) is operator-chosen</td>
+</tr>
+<tr>
+<td>U4</td>
+<td>CA-root recovery mechanism (§2/§4)</td>
+<td>doc 04 owns PKI; DR only states it is the unrecoverable-if-lost
+secret, KMS-encrypted, operator-gated</td>
+</tr>
+<tr>
+<td>U5</td>
+<td>Cross-region async standby lag → backup-restore RPO (§1)</td>
+<td>depends on link/topology; sync standby gives RPO=0, async ≤ measured
+lag</td>
+</tr>
+<tr>
+<td>U6</td>
+<td>Terraform region-failover automation depth (§6)</td>
+<td><code>[03_ZAI]</code>/<code>[05]</code> reference Terraform for
+infra; the exact <code>apply</code> automation is fleet-specific</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="sources-verified">Sources verified</h2>
+<ul>
+<li><code>99-source-coverage-ledger.md</code> <strong>G1</strong> (the
+gap this document closes) + <code>[03_ZAI]</code> (KMS-encrypted
+automated backups, Terraform-driven region-failover, RTO &lt; 15 min,
+GitOps — the DR source whose scattered pieces are consolidated here) —
+<code>[ledger G1]</code>.</li>
+<li><code>05-repo-layout-tooling-and-helix-ecosystem.md</code> §2
+(<code>deploy/terraform</code>, <code>deploy/grafana</code>), §6.3(B)
+(deploy regeneration via
+<code>containers</code>/<code>helixvpnctl deploy</code>), §7
+(substrates) — <code>[05]</code>.</li>
+<li><code>v03-control-plane/svc-coordinator.md</code> §1.4 (boot
+rehydration from Postgres — why DR needs only PG), §3.2 (stateless
+reconnect) — <code>[svc-coordinator]</code>.</li>
+<li><code>v03-control-plane/svc-events.md</code> §5.2 (outbox), §7.4
+(cold-boot rehydration / Redis-loss recoverability — the basis for
+&quot;don&#39;t back up Redis&quot;) — <code>[svc-events]</code>.</li>
+<li><code>v03-control-plane/svc-telemetry.md</code> §0/§5 (ephemeral
+Redis presence operationalizes no-logging — why backing it up would
+CREATE a connection log), §7 (<code>schemalint</code> no-logging runtime
+signature used in the §7 restore gate) —
+<code>[svc-telemetry]</code>.</li>
+<li><code>v06-deploy/ha-and-multiregion.md</code> §1 (multi-region
+topology), §3 (Postgres HA / sync standby / RPO=0), §4 (NATS replicated
+not backed up), §5 (gateway re-home), §6 (failover convergence
+semantics), §7 (split-brain fencing — gating the §6 promote) —
+<code>[ha-and-multiregion]</code> (sibling).</li>
+<li><code>v06-deploy/kubernetes.md</code> §2 (<code>helix_app</code> DSN
++ external secret store), §3 (CloudNativePG / Patroni HA + backup CRs) —
+<code>[kubernetes]</code> (sibling).</li>
+</ul>
+<p><em>Constitution bindings applied: §11.4.44 (revision header),
+§11.4.6 (no-guessing — RTO/RPO stated as TARGETS, RTO-vs-RPO distinction
+made explicit, UNVERIFIED register §9), §9.2 (absolute data-safety DR
+discipline — §4 backup-first/verify/operator-gate), §11.4.10/.30
+(KMS-encrypted, never-plaintext secrets), §11.4.101/.122 (CA-root +
+destructive-restore operator-gated, never autonomous), §11.4.108/.123
+(restore verification = runtime signature + rock-solid proof, §7),
+§11.4.85 (DR drills = chaos rehearsal, §8), §11.4.83 (evidence under
+docs/qa/<run-id>). Closes ledger gap G1.</em></p>
+</body>
+</html>

@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>RESEARCH pki_pq_nat</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">RESEARCH pki_pq_nat</h1>
+</header>
+<h1 id="research-pki_pq_nat">RESEARCH pki_pq_nat</h1>
+<p>Scope: Device enrollment + PKI, post-quantum WireGuard handshake,
+WireGuard NAT traversal / DERP relay / Tailscale coordination + 4via6,
+for a Mullvad-parity self-hosted VPN spec. All facts cited; access date
+2026-06-25.</p>
+<hr />
+<h2 id="1-device-enrollment--pki">1. Device enrollment + PKI</h2>
+<h3 id="11-wireguards-native-identity-model-baseline">1.1 WireGuard&#39;s
+native identity model (baseline)</h3>
+<ul>
+<li>WireGuard uses <strong>one Curve25519 keypair per device</strong>;
+the <strong>public key IS the device identity</strong>. Access is
+granted by adding a peer&#39;s public key to the server/peer config.
+[Contabo, VyOS]</li>
+<li><strong>Revocation is structurally trivial</strong>: remove the
+public key from the peer set and the device is instantly cut off — no
+CRL/OCSP needed. A unique keypair per device makes revocation a
+single-line config change; keygen takes seconds. [Contabo blog]</li>
+<li>WireGuard has <strong>no built-in PKI/cert lifecycle</strong>: no
+CA, no cert expiry, no CRL/OCSP, no enrollment protocol. If you need
+cert lifecycle control, granular revocation, and compliance mapping,
+that layer must be built <em>around</em> WireGuard (the OpenVPN TLS/PKI
+model has it natively; WireGuard does not). [Contabo blog]</li>
+<li>Practical enrollment paths in the wild: QR-code provisioning and MDM
+push for mobile/edge fleets. [Contabo blog]</li>
+</ul>
+<h3 id="12-recommended-pki-architecture-layer-spiffespire-style-short-lived-mtls-over-wg">1.2
+Recommended PKI architecture: layer SPIFFE/SPIRE-style short-lived mTLS
+over WG</h3>
+<p>The Mullvad-parity pattern is a <strong>coordination/control
+plane</strong> that issues short-lived device credentials and pushes WG
+public keys to peers. SPIFFE/SPIRE is the canonical 2025 reference for
+this two-identity split:</p>
+<ul>
+<li><strong>Two device identities</strong> (the key design pattern):
+<ol type="1">
+<li>a <strong>long-lived device attestation cert</strong> (&quot;I am a
+genuine enrolled device&quot;, optionally TPM/Secure-Enclave-bound), and</li>
+<li>a <strong>short-lived SVID</strong> (&quot;I am authorised to access this
+service right now&quot;). [axelspire SPIFFE device-fleet article]</li>
+</ol></li>
+<li><strong>Short-lived X.509-SVID / JWT-SVID</strong>: default TTL
+<strong>1 hour</strong>, configurable down to minutes,
+<strong>automatically rotated by the agent before expiry</strong>. 2025
+best-practice guidance: keep SVID TTL <strong>≤ 60 min for hot
+paths</strong>. [SPIRE docs; debugg.ai; spletzer.com]</li>
+<li>Identity is a <strong>structured URI bound to attestable properties
+at issuance</strong> (not IP, not hostname) — SPIRE attests the
+workload/device at runtime and delivers per-workload short-lived
+keys+certs over the Workload API for mTLS. [spiffe.io use-cases; SPIRE
+docs]</li>
+<li><strong>Revocation propagation</strong>: with short TTLs, revocation
+is largely &quot;stop renewing&quot; — the credential self-expires within the TTL
+window (minutes), avoiding CRL/OCSP distribution latency. This is the
+dominant 2025 model: identity becomes &quot;a verifiable, short-lived
+property&quot; rather than a static secret. [debugg.ai; petronellatech]</li>
+</ul>
+<h3 id="13-design-implication-for-the-spec-per-device-wg-keypair-on-device">1.3
+Design implication for the spec (per-device WG keypair on device)</h3>
+<ul>
+<li><strong>Generate the WG private key ON the device</strong>; never
+transmit it. The control plane only ever receives the <strong>public
+key</strong> during enrollment, binds it to the short-lived device
+cert/SVID, and distributes it to authorized peers.</li>
+<li><strong>Tenant CA</strong> issues the device attestation cert; the
+coordination server mints/rotates the short-lived mTLS cert the device
+uses to call the control API. Revocation = (a) stop renewing the
+short-lived cert (self-expiry) AND (b) remove the WG public key from the
+peer set (instant dataplane cutoff) — belt-and-suspenders.</li>
+</ul>
+<hr />
+<h2 id="2-post-quantum-wireguard-handshake">2. Post-quantum WireGuard
+handshake</h2>
+<h3 id="21-the-psk-injection-approach-mullvad--rosenpass-pattern">2.1
+The PSK-injection approach (Mullvad / Rosenpass pattern)</h3>
+<ul>
+<li>Vanilla WireGuard&#39;s handshake (Noise IK, Curve25519) is <strong>not
+PQ-secure</strong> and is vulnerable to
+<strong>harvest-now-decrypt-later (HNDL)</strong>.</li>
+<li>The deployed mitigation everyone uses is WireGuard&#39;s
+<strong>pre-shared key (PSK)</strong> feature: a separate PQ
+key-exchange derives a PSK that is mixed into the WG handshake.
+WireGuard&#39;s own crypto is unchanged, so it is &quot;cryptographically no less
+secure than WireGuard on its own&quot; plus PQ protection. [Rosenpass
+README]</li>
+<li><strong>Hybrid, not PQ-only</strong>: production deployments combine
+a classical KEM and a PQ KEM so the result is no weaker than either.
+This is the standing recommendation (hybrid until PQ primitives are
+battle-tested). [Mullvad blog; pq-wireguard analysis]</li>
+</ul>
+<h3 id="22-mullvad--production-status-parity-target">2.2 Mullvad —
+production status (parity target)</h3>
+<ul>
+<li>Mullvad exchanges a <strong>PQ-secure PSK for WireGuard</strong>;
+algorithms currently used: <strong>Classic McEliece + ML-KEM</strong>.
+[Mullvad blog]</li>
+<li><strong>Quantum-resistant tunnels are the DEFAULT on desktop as of
+2025-01-09.</strong> [Mullvad blog &quot;now the default on desktop&quot;]</li>
+<li><strong>Mobile</strong>: post-quantum launched for iOS/iPhone
+(TechRadar). The embedded Rosenpass-server PSK auto-rotation path is
+still marked <strong>experimental and not yet supported on
+mobile</strong> in the agent. [Mullvad; TechRadar]</li>
+<li>Mullvad <strong>embeds a Rosenpass server in its agent (since agent
+v0.25.4)</strong>, auto-rotating PSKs on all peer-to-peer connections.
+[search synthesis]</li>
+<li>Open-source reference implementation:
+<strong><code>mullvad/wgephemeralpeer</code></strong> — PQ-secure
+WireGuard PSK exchange for vanilla WireGuard + custom integrations (use
+this as the build template). [github.com/mullvad/wgephemeralpeer]</li>
+<li>Mullvad migrated Kyber→<strong>ML-KEM</strong> (CEO: &quot;As Kyber now
+has been updated (ML-KEM) we are planning to migrate to this&quot;). [Mullvad
+/ synthesis]</li>
+</ul>
+<h3 id="23-rosenpass--current-facts">2.3 Rosenpass — current facts</h3>
+<ul>
+<li>Formally-/symbolically-analysed PQ add-on for WireGuard,
+<strong>written in Rust</strong>; performs a PQ key exchange and hands
+the result to WireGuard via the <strong>PSK feature, refreshing the
+symmetric key every 2 minutes</strong>. [Rosenpass README]</li>
+<li>KEMs: <strong>Classic McEliece</strong>
+(authenticity/confidentiality, &quot;store-now decrypt- later&quot; protection via
+a NIST-approved primitive) + <strong>Kyber-512</strong> (forward
+secrecy/confidentiality). Uses <strong>liboqs</strong>. [HN/Rosenpass;
+README]</li>
+<li><strong>Verification status</strong>: NOT a full cryptographic proof
+yet — provides a <strong>symbolic analysis using ProVerif</strong>
+(<code>./analyze.sh</code>); a cryptographic security proof is &quot;in
+progress&quot;. [Rosenpass README]</li>
+<li><strong>Latest release: v0.2.2 (2024-06-05)</strong> at time of
+fetch; repo actively maintained. (Note: still Kyber-512, not yet ML-KEM
+in the tagged release — verify upstream before relying on ML-KEM in
+Rosenpass specifically.) [github.com/rosenpass/rosenpass]</li>
+</ul>
+<h3 id="24-standards-anchor">2.4 Standards anchor</h3>
+<ul>
+<li><strong>FIPS 203 (ML-KEM)</strong> published by NIST
+<strong>2024-08-13</strong>; specifies Module- Lattice KEM. <strong>NSA
+CNSA 2.0</strong> requires ML-KEM for key encapsulation on national
+security systems; migration windows began 2025. [QuantumXchange
+FIPS-203]</li>
+<li>Spec guidance: target <strong>hybrid X25519 + ML-KEM-768</strong>
+for the classical+PQ KEM, optionally + Classic McEliece for the
+McEliece-strength HNDL guarantee (Mullvad-parity = McEliece + ML-KEM).
+Keep it as a <strong>PSK feed into WG</strong>, do not fork the WG
+handshake.</li>
+</ul>
+<hr />
+<h2 id="3-nat-traversal--hole-punching--derp-relay--coordination">3. NAT
+traversal / hole punching / DERP relay / coordination</h2>
+<h3 id="31-wireguard--nat-traversal-core-tailscale-model">3.1 WireGuard
++ NAT traversal core (Tailscale model)</h3>
+<ul>
+<li>Architecture favors <strong>direct peer-to-peer</strong> WG; a
+coordination server + <strong>DERP relays</strong> handle connection
+setup and fallback. Vast majority of traffic goes direct. [Tailscale
+DERP docs]</li>
+<li><strong>STUN</strong> discovers each peer&#39;s public IP:port mapping;
+the coordination layer gets both peers to send packets
+<strong>simultaneously</strong> so each NAT records an outbound flow and
+permits the return (&quot;<strong>UDP hole punching</strong>&quot;). Works for
+<strong>~94%</strong> of NAT configurations / &quot;direct &gt;90% of the
+time&quot;. [Tailscale NAT blog]</li>
+<li><strong>UDP foundation</strong>: NAT traversal is built on UDP (TCP
+adds complexity). Firewall remembers the outbound packet and admits the
+matching inbound even if the original outbound was dropped. [Tailscale
+how-NAT-traversal-works]</li>
+<li><strong>ICE-style</strong>: &quot;try everything at once, pick the best
+that works&quot; — probe all candidate endpoints, transparently upgrade to
+the best path mid-session. [Tailscale]</li>
+</ul>
+<h3 id="32-symmetric-hard-nat--the-hard-case">3.2 Symmetric (&quot;hard&quot;) NAT
+— the hard case</h3>
+<ul>
+<li><strong>Symmetric NAT</strong> randomizes the source-port mapping
+per destination, so the far side can&#39;t predict the port → usually needs
+a relay. Two peers both behind hard NAT almost always relay. [sitepoint;
+Tailscale]</li>
+<li><strong>Birthday-paradox</strong> probe for one-side-symmetric: open
+256 ports while peer random-probes → <strong>50% success ~2 s, 98%
+within ~20 s @100 pkt/s</strong>. <strong>Dual symmetric NAT ~28
+min</strong> for 99.9% → impractical, relay instead. [Tailscale]</li>
+<li>Port-mapping helpers reduce one NAT layer: <strong>UPnP-IGD,
+NAT-PMP, PCP</strong>. Hairpinning support is inconsistent (complicates
+CGNAT P2P). [Tailscale]</li>
+</ul>
+<h3 id="33-derp-relay-the-fallback--signaling-channel">3.3 DERP relay
+(the fallback + signaling channel)</h3>
+<ul>
+<li><strong>DERP = Detoured Encrypted Routing Protocol</strong>, a
+general packet-relay protocol that <strong>runs over
+HTTP/HTTPS</strong>. Two roles: (1) connection-setup <strong>signaling
+channel</strong>, (2) <strong>last-resort relay</strong> when hole
+punching fails. [Tailscale]</li>
+<li><strong>DERP never decrypts</strong>: relays are &quot;dumb pipes for
+ciphertext&quot; — they forward WG-encrypted packets, preserving end-to-end
+encryption. Slower but guarantees <em>some</em> connectivity always.
+[sitepoint; Tailscale DERP docs]</li>
+<li><strong>Peer Relays (introduced Oct 2025)</strong>: designate your
+OWN tailnet nodes as dedicated relays instead of &quot;DERP roulette&quot; —
+relevant for self-hosted parity (run your own relay fleet). Headscale
+supports self-hosted/custom DERP maps. [Tailscale peer-relays blog;
+Headscale DERP docs]</li>
+</ul>
+<h3 id="34-4via6--overlappingduplicate-cidr-overlay">3.4 4via6 —
+overlapping/duplicate CIDR overlay</h3>
+<ul>
+<li><strong>4via6</strong> lets you connect <strong>hundreds/thousands
+of identical (overlapping-CIDR) IPv4 networks</strong> without
+renumbering, by mapping each site&#39;s IPv4 route into a <strong>unique
+IPv6 prefix</strong> (the IPv6 address encodes a <strong>site ID + the
+IPv4 address</strong>). [Tailscale 4via6 docs/blog]</li>
+<li>Generate the route via CLI:
+<strong><code>tailscale debug via &lt;site-id&gt; &lt;ipv4-route&gt;</code></strong>.
+<strong>Site ID = lower 16 bits only, range 0–65535.</strong> [Tailscale
+4via6 docs]</li>
+<li><strong>ACLs must target the IPv6 CIDR/address</strong> as
+destination, not the IPv4. Two 4via6 subnet routers are used when ranges
+overlap to prevent conflicts. <strong>Requires Tailscale v1.24+</strong>
+on the subnet router (clients reaching it can be older). [Tailscale
+4via6 docs; schema.ai insight]</li>
+<li>Use case for the spec: multi-tenant / many-identical-VPC
+connectivity with overlapping RFC1918 space — 4via6 is the clean overlay
+answer.</li>
+</ul>
+<hr />
+<h2 id="sources-verified">Sources verified</h2>
+<ul>
+<li><a href="https://contabo.com/blog/wireguard-vs-openvpn-a-deep-dive-protocol-comparison/">https://contabo.com/blog/wireguard-vs-openvpn-a-deep-dive-protocol-comparison/</a>
+— accessed 2026-06-25</li>
+<li><a href="https://docs.vyos.io/en/latest/configuration/interfaces/wireguard.html">https://docs.vyos.io/en/latest/configuration/interfaces/wireguard.html</a>
+— accessed 2026-06-25</li>
+<li><a href="https://spiffe.io/docs/latest/spire-about/use-cases/">https://spiffe.io/docs/latest/spire-about/use-cases/</a>
+— accessed 2026-06-25</li>
+<li><a href="https://axelspire.com/business/device-identity-spiffe-workload/">https://axelspire.com/business/device-identity-spiffe-workload/</a>
+— accessed 2026-06-25</li>
+<li><a href="https://debugg.ai/resources/goodbye-service-api-keys-spiffe-spire-workload-identity-zero-trust-mtls-kubernetes-multi-cloud-2025">https://debugg.ai/resources/goodbye-service-api-keys-spiffe-spire-workload-identity-zero-trust-mtls-kubernetes-multi-cloud-2025</a>
+— accessed 2026-06-25</li>
+<li><a href="https://www.spletzer.com/2025/03/zero-to-trusted-spiffe-and-spire-demystified/">https://www.spletzer.com/2025/03/zero-to-trusted-spiffe-and-spire-demystified/</a>
+— accessed 2026-06-25</li>
+<li><a href="https://petronellatech.com/blog/machine-identity-is-the-new-perimeter-mtls-spiffe-for-zero-trust/">https://petronellatech.com/blog/machine-identity-is-the-new-perimeter-mtls-spiffe-for-zero-trust/</a>
+— accessed 2026-06-25</li>
+<li><a href="https://mullvad.net/en/blog/quantum-resistant-tunnels-are-now-the-default-on-desktop">https://mullvad.net/en/blog/quantum-resistant-tunnels-are-now-the-default-on-desktop</a>
+— accessed 2026-06-25</li>
+<li><a href="https://mullvad.net/en/blog/experimental-post-quantum-safe-vpn-tunnels">https://mullvad.net/en/blog/experimental-post-quantum-safe-vpn-tunnels</a>
+— accessed 2026-06-25</li>
+<li><a href="https://github.com/mullvad/wgephemeralpeer">https://github.com/mullvad/wgephemeralpeer</a>
+— accessed 2026-06-25</li>
+<li><a href="https://www.techradar.com/pro/vpn/mullvad-launches-post-quantum-protection-for-iphones">https://www.techradar.com/pro/vpn/mullvad-launches-post-quantum-protection-for-iphones</a>
+— accessed 2026-06-25</li>
+<li><a href="https://github.com/rosenpass/rosenpass">https://github.com/rosenpass/rosenpass</a>
+— accessed 2026-06-25</li>
+<li><a href="https://news.ycombinator.com/item?id=34969760">https://news.ycombinator.com/item?id=34969760</a>
+— accessed 2026-06-25</li>
+<li><a href="https://thomwiggers.nl/publications/pq-wireguard/">https://thomwiggers.nl/publications/pq-wireguard/</a>
+— accessed 2026-06-25</li>
+<li><a href="https://quantumxc.com/fips-203-validated-pqc/">https://quantumxc.com/fips-203-validated-pqc/</a>
+— accessed 2026-06-25</li>
+<li><a href="https://tailscale.com/blog/how-nat-traversal-works">https://tailscale.com/blog/how-nat-traversal-works</a>
+— accessed 2026-06-25</li>
+<li><a href="https://tailscale.com/blog/nat-traversal-improvements-pt-1">https://tailscale.com/blog/nat-traversal-improvements-pt-1</a>
+— accessed 2026-06-25</li>
+<li><a href="https://tailscale.com/docs/reference/derp-servers">https://tailscale.com/docs/reference/derp-servers</a>
+— accessed 2026-06-25</li>
+<li><a href="https://www.sitepoint.com/tailscale-peer-relays-nat-traversal-derp/">https://www.sitepoint.com/tailscale-peer-relays-nat-traversal-derp/</a>
+— accessed 2026-06-25</li>
+<li><a href="https://tailscale.com/blog/peer-relays-international-networks">https://tailscale.com/blog/peer-relays-international-networks</a>
+— accessed 2026-06-25</li>
+<li><a href="https://headscale.net/stable/ref/derp/">https://headscale.net/stable/ref/derp/</a>
+— accessed 2026-06-25</li>
+<li><a href="https://tailscale.com/docs/features/subnet-routers/4via6-subnets">https://tailscale.com/docs/features/subnet-routers/4via6-subnets</a>
+— accessed 2026-06-25</li>
+<li><a href="https://tailscale.com/blog/4via6-connectivity-to-edge-devices">https://tailscale.com/blog/4via6-connectivity-to-edge-devices</a>
+— accessed 2026-06-25</li>
+<li><a href="https://schema.ai/technologies/tailscale/insights/4via6-requires-ipv6-destinations">https://schema.ai/technologies/tailscale/insights/4via6-requires-ipv6-destinations</a>
+— accessed 2026-06-25</li>
+</ul>
+</body>
+</html>

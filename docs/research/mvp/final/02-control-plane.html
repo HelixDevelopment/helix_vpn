@@ -1,0 +1,1738 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Control Plane — Go modular monolith, data model, events, coordinator, API</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Control Plane — Go modular monolith, data model,
+events, coordinator, API</h1>
+</header>
+<h1 id="control-plane--go-modular-monolith-data-model-events-coordinator-api">Control
+Plane — Go modular monolith, data model, events, coordinator, API</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-06-25T00:00:00Z</p>
+<blockquote>
+<p>Master technical specification — document 02 of the HelixVPN set.
+Scope: the <strong>Go control plane</strong> (<code>helix-go</code>) —
+the brain that holds identity, topology and policy truth, compiles ACLs,
+and pushes desired-state network maps to every edge. This is a SPEC
+(describe the implementation; do not build the product). Source evidence
+cited inline by id, e.g. [04_P1 §2], [04_ARCH §3], [02_QWN], [SYNTHESIS
+§4].</p>
+</blockquote>
+<hr />
+<h2 id="0-position-in-the-system--what-this-document-owns">0. Position
+in the system &amp; what this document owns</h2>
+<p>HelixVPN is a self-hostable overlay network with a privacy-VPN front
+end: three roles — <strong>Connector</strong> (network-side
+outbound-only agent advertising CIDRs) ⇄ <strong>Gateway</strong>
+(public VPS: control + data plane) ⇄ <strong>Client</strong>
+(Mullvad-style end-user app) [04_ARCH §1.1, 05_YBO, SYNTHESIS §1]. This
+document specifies <strong>only the control plane</strong> — the Go
+services that decide <em>who may reach what</em> and <em>which transport
+to use</em>, and stream that decision to edges.</p>
+<p>It does <strong>not</strong> specify the Rust data plane (doc 01 —
+moves already-encrypted bytes), the client UI (doc 05), or the platform
+tunnel shims (doc 06). The agent wire contract (<code>Coordinator</code>
+protobuf) is <em>introduced</em> here because the control plane is its
+server, but its byte-level evolution semantics belong to doc 03
+(<code>WatchNetworkMap</code> contract); this document gives the
+canonical <code>.proto</code> and the server-side handlers.</p>
+<h3 id="01-the-governing-constraints-every-line-below-obeys-these">0.1
+The governing constraints (every line below obeys these)</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Invariant</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>C1</td>
+<td><strong>Go is never in the packet path.</strong> The control plane
+computes and streams desired state; the Rust edge forwards bytes. If
+control is down, existing tunnels keep forwarding (fail-static).</td>
+<td>[04_ARCH §2.1, SYNTHESIS §2]</td>
+</tr>
+<tr>
+<td>C2</td>
+<td><strong>Postgres is the single source of truth</strong> for
+identity/topology/policy; <strong>Redis is ephemeral</strong> (presence
++ event bus). Losing Redis loses no durable state.</td>
+<td>[04_P1, SYNTHESIS §2]</td>
+</tr>
+<tr>
+<td>C3</td>
+<td><strong>No-logging by construction.</strong> The schema holds
+<em>no</em> connection/traffic/packet/flow table; a CI schema-lint fails
+the build if one appears. Only control actions are audited.</td>
+<td>[04_ARCH §2.7/§7, 04_P1 §2, SYNTHESIS §7]</td>
+</tr>
+<tr>
+<td>C4</td>
+<td><strong>Default-deny, need-to-know.</strong> A peer is delivered to
+a node only if a compiled policy rule grants it; nodes never learn of
+peers they cannot reach.</td>
+<td>[04_ARCH §3.4/§7, 04_P1 §3]</td>
+</tr>
+<tr>
+<td>C5</td>
+<td><strong>Push, don&#39;t poll.</strong> Desired state is event-driven
+(Tailscale <code>MapResponse</code>-style): snapshot then deltas over a
+long-lived stream; convergence p99 &lt; 1 s.</td>
+<td>[04_ARCH §2, 04_P1 §4/§10]</td>
+</tr>
+<tr>
+<td>C6</td>
+<td><strong>Device private keys never leave the device.</strong> The
+control plane registers only the 32-byte WG public key.</td>
+<td>[04_P1 §6, SYNTHESIS §7]</td>
+</tr>
+<tr>
+<td>C7</td>
+<td><strong>Package boundaries == future service boundaries.</strong> A
+modular monolith whose Phase-2 split is mechanical, not a rewrite.</td>
+<td>[04_P1 §1]</td>
+</tr>
+<tr>
+<td>C8</td>
+<td><strong>Multi-tenant isolation enforced at the database</strong> via
+Row-Level Security under a non-superuser role — not merely by
+<code>WHERE</code> clauses.</td>
+<td>[04_P1 §2.2]</td>
+</tr>
+</tbody>
+</table>
+<h3 id="02-settled-stack-floor-for-this-layer">0.2 Settled stack floor
+for this layer</h3>
+<p><strong>Go + Gin + PostgreSQL + Redis + Podman (rootless)</strong>
+[05_YBO mandated, confirmed by all 10 analyses, SYNTHESIS §2]. Postgres
+= truth; Redis = presence + bus; Connect (buf) for agent RPC;
+<code>sqlc</code> for compile-checked SQL;
+<code>goose</code>/<code>atlas</code> for migrations; rootless Podman
+per constitution §11.4.161 + <code>vasic-digital/containers</code>
+submodule per §11.4.76 [SYNTHESIS §8].</p>
+<hr />
+<h2 id="1-module-architecture-the-modular-monolith">1. Module
+architecture (the modular monolith)</h2>
+<p>One Go binary (<code>helixd</code>), many internal packages, deployed
+as one rootless container. Packages talk through <strong>interfaces +
+events</strong>, never by importing each other&#39;s stores [04_P1 §1,
+C7].</p>
+<h3 id="11-repository--package-layout">1.1 Repository / package
+layout</h3>
+<pre><code>helix-go/
+├── cmd/
+│   ├── helixd/              # control-plane binary — wires all modules
+│   └── helixvpnctl/         # bootstrap + ops CLI (Cobra)
+├── internal/
+│   ├── identity/            # tenants, users, OIDC, anonymous device-enroll tokens
+│   ├── registry/            # devices, connectors, advertised prefixes, presence
+│   ├── ipam/                # overlay IP allocation (ULA /48 per tenant — D4)
+│   ├── pki/                 # WG key registry, short-lived device certs, rotation/revoke
+│   ├── policy/              # ACL model + pure, versioned compiler
+│   ├── coordinator/         # in-mem topology graph, deltas, WatchNetworkMap streams
+│   ├── events/              # bus abstraction (Redis Streams MVP → NATS JetStream P2)
+│   ├── telemetry/           # Prometheus metrics + control-action audit sink
+│   ├── api/                 # Gin REST (apps) + Connect (agents) + WS/SSE
+│   └── store/               # Postgres pool, RLS tenant-tx helper, sqlc Queries, migrations
+├── proto/                   # helix/agent/v1/*.proto → buf generate (Go/Dart/Rust)
+├── openapi/                 # REST contract → generated Dart/TS app clients
+└── migrations/              # goose SQL — the schema authority (CI-linted, §2.4)</code></pre>
+<h3 id="12-wiring-rules-enforced-not-aspirational">1.2 Wiring rules
+(enforced, not aspirational)</h3>
+<ul>
+<li><strong>R1 — no cross-store imports.</strong>
+<code>coordinator</code> MUST NOT import <code>internal/store</code>
+directly for another module&#39;s tables; it reads
+<code>registry</code>/<code>policy</code>/<code>pki</code> through their
+exported interfaces (§1.3). A pre-build gate (<code>go list -deps</code>
+graph check) fails on a forbidden edge.</li>
+<li><strong>R2 — <code>coordinator</code> owns no durable
+tables.</strong> Its only state is the in-memory per-tenant graph + open
+streams (a cache hydrated from Postgres + events). [04_P1 §4]</li>
+<li><strong>R3 — every state mutation emits an event.</strong> A write
+to Postgres that changes topology/policy is followed (same logical unit
+of work) by an <code>events.Publish</code> — the bus is the only path by
+which <code>coordinator</code> learns of change (§5).</li>
+<li><strong>R4 — every DB access is tenant-scoped.</strong> No query
+runs outside <code>store.WithTenant</code> (§2.3); a
+<code>golangci-lint</code> custom analyzer flags raw
+<code>db.Query</code> outside <code>store</code>.</li>
+</ul>
+<h3 id="13-inter-module-interface-surface-go-signatures">1.3
+Inter-module interface surface (Go signatures)</h3>
+<div class="sourceCode" id="cb2"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/registry/iface.go</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Registry <span class="kw">interface</span> <span class="op">{</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    EnrollDevice<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> in EnrollInput<span class="op">)</span> <span class="op">(</span>Device<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    SetPrefixes<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> connectorID uuid<span class="op">.</span>UUID<span class="op">,</span> cidrs <span class="op">[]</span>netip<span class="op">.</span>Prefix<span class="op">)</span> <span class="op">([]</span>Conflict<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    DevicesForTenant<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> t uuid<span class="op">.</span>UUID<span class="op">)</span> <span class="op">([]</span>Device<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    MarkPresence<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> deviceID uuid<span class="op">.</span>UUID<span class="op">,</span> online <span class="dt">bool</span><span class="op">,</span> rttMS <span class="dt">uint32</span><span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/policy/iface.go — pure, deterministic, versioned (§7)</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Compiler <span class="kw">interface</span> <span class="op">{</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    Compile<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> t uuid<span class="op">.</span>UUID<span class="op">,</span> spec Spec<span class="op">)</span> <span class="op">(</span>CompiledPolicy<span class="op">,</span> <span class="dt">error</span><span class="op">)</span> <span class="co">// dry-run safe</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    Activate<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> t uuid<span class="op">.</span>UUID<span class="op">,</span> version <span class="dt">int64</span><span class="op">)</span> <span class="dt">error</span>              <span class="co">// flips active</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> CompiledPolicy <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    Version    <span class="dt">int64</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    VisibleTo  <span class="kw">map</span><span class="op">[</span>DeviceID<span class="op">]</span><span class="kw">map</span><span class="op">[</span>DeviceID<span class="op">]</span><span class="kw">struct</span><span class="op">{}</span>        <span class="co">// need-to-know peer set (C4)</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    AllowedIPs <span class="kw">map</span><span class="op">[</span>DeviceID<span class="op">]</span><span class="kw">map</span><span class="op">[</span>DeviceID<span class="op">][]</span>netip<span class="op">.</span>Prefix  <span class="co">// coarse WG AllowedIPs</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    Verdicts   <span class="kw">map</span><span class="op">[</span>DeviceID<span class="op">]</span><span class="kw">map</span><span class="op">[</span>DeviceID<span class="op">][]</span>PortRule      <span class="co">// fine port-level edge verdicts</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    ExitNodes  <span class="kw">map</span><span class="op">[</span>DeviceID<span class="op">]</span><span class="kw">struct</span><span class="op">{}</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/pki/iface.go</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> PKI <span class="kw">interface</span> <span class="op">{</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>    IssueDeviceCert<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> deviceID uuid<span class="op">.</span>UUID<span class="op">,</span> ttl time<span class="op">.</span>Duration<span class="op">)</span> <span class="op">(</span>Cert<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>    Revoke<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> deviceID uuid<span class="op">.</span>UUID<span class="op">)</span> <span class="dt">error</span> <span class="co">// &lt; 1s propagation (C5)</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/events/iface.go — bus-agnostic (D3: Redis Streams now, NATS later)</span></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Bus <span class="kw">interface</span> <span class="op">{</span></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>    Publish<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> stream <span class="dt">string</span><span class="op">,</span> env Envelope<span class="op">)</span> <span class="op">(</span><span class="dt">string</span><span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>    Subscribe<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> group<span class="op">,</span> consumer <span class="dt">string</span><span class="op">,</span> streams <span class="op">...</span><span class="dt">string</span><span class="op">)</span> <span class="op">(&lt;-</span><span class="kw">chan</span> Envelope<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>    Ack<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> stream<span class="op">,</span> group<span class="op">,</span> id <span class="dt">string</span><span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<blockquote>
+<p><strong>Decision D3 — event bus</strong> [SYNTHESIS §3, 04_P1 §5].
+<strong>Recommendation: Redis Streams for the MVP, NATS JetStream for
+scale (Phase 2).</strong> The <code>Bus</code> interface above is the
+seam: the envelope (§5.2) is bus-agnostic, so the swap is a transport
+change, not a rewrite. Camp B (NATS from day one [DSK, KMI]) buys
+multi-region fan-out earlier but adds an operational dependency the
+self-host-first MVP does not need yet — Redis is already mandated for
+presence [05_YBO], so MVP reuses it. We adopt Camp A (CLD) and keep
+<code>events.Bus</code> as the abstraction.</p>
+</blockquote>
+<hr />
+<h2 id="2-data-model--postgres-ddl-with-row-level-security">2. Data
+model — Postgres DDL with Row-Level Security</h2>
+<p>The durable store holds <strong>identity, topology, and
+policy</strong> — never connection/traffic logs (C3). Eleven
+tenant-scoped tables + enums.</p>
+<h3 id="21-er-diagram">2.1 ER diagram</h3>
+<pre class="mermaid"><code>erDiagram
+    TENANTS ||--o{ USERS : &quot;owns&quot;
+    TENANTS ||--o{ DEVICES : &quot;owns&quot;
+    TENANTS ||--o{ GROUPS : &quot;owns&quot;
+    TENANTS ||--o{ POLICIES : &quot;owns&quot;
+    TENANTS ||--|| OVERLAY_POOLS : &quot;has one&quot;
+    TENANTS ||--o{ AUDIT_EVENTS : &quot;records&quot;
+    USERS ||--o{ DEVICES : &quot;may own&quot;
+    DEVICES ||--o| CONNECTORS : &quot;is-a (kind=connector)&quot;
+    CONNECTORS ||--o{ ADVERTISED_PREFIXES : &quot;advertises&quot;
+    GROUPS ||--o{ GROUP_MEMBERS : &quot;contains&quot;
+    DEVICES ||--o{ GROUP_MEMBERS : &quot;member of&quot;
+    DEVICES ||--o{ DEVICE_CERTS : &quot;holds&quot;
+
+    TENANTS {
+        uuid id PK
+        text name
+        timestamptz created_at
+    }
+    USERS {
+        uuid id PK
+        uuid tenant_id FK
+        text email &quot;nullable (anon)&quot;
+        text oidc_sub &quot;nullable (SSO)&quot;
+        user_role role
+    }
+    DEVICES {
+        uuid id PK
+        uuid tenant_id FK
+        uuid user_id FK &quot;nullable&quot;
+        device_kind kind
+        bytea wg_pubkey &quot;32B Curve25519&quot;
+        inet overlay_ip &quot;tenant ULA /48&quot;
+        timestamptz last_seen_at &quot;coarse&quot;
+        timestamptz revoked_at
+    }
+    CONNECTORS {
+        uuid device_id PK,FK
+        uuid tenant_id FK
+        text site_name
+    }
+    ADVERTISED_PREFIXES {
+        uuid id PK
+        uuid tenant_id FK
+        uuid connector_id FK
+        cidr cidr
+        boolean enabled
+    }
+    GROUPS {
+        uuid id PK
+        uuid tenant_id FK
+        text name
+    }
+    GROUP_MEMBERS {
+        uuid group_id PK,FK
+        uuid device_id PK,FK
+    }
+    POLICIES {
+        uuid id PK
+        uuid tenant_id FK
+        jsonb spec
+        bigint version &quot;monotonic per tenant&quot;
+        timestamptz compiled_at
+    }
+    OVERLAY_POOLS {
+        uuid tenant_id PK,FK
+        cidr ula_prefix &quot;fd7a:helix:&lt;rand&gt;::/48&quot;
+        bigint next_host
+    }
+    DEVICE_CERTS {
+        uuid id PK
+        uuid tenant_id FK
+        uuid device_id FK
+        text serial
+        timestamptz not_after
+        boolean revoked
+    }
+    AUDIT_EVENTS {
+        bigint id PK
+        uuid tenant_id FK
+        text actor
+        text action
+        text target
+        jsonb meta
+    }</code></pre>
+<h3 id="22-core-ddl">2.2 Core DDL</h3>
+<div class="sourceCode" id="cb4"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- ============ tenancy &amp; identity ============</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> tenants (</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">id</span>          uuid <span class="kw">PRIMARY</span> <span class="kw">KEY</span> <span class="kw">DEFAULT</span> gen_random_uuid(),</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  name        text <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  created_at  timestamptz <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> now()</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TYPE</span> user_role <span class="kw">AS</span> ENUM (<span class="st">&#39;admin&#39;</span>,<span class="st">&#39;operator&#39;</span>,<span class="st">&#39;member&#39;</span>);</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> users (</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>  <span class="kw">id</span>          uuid <span class="kw">PRIMARY</span> <span class="kw">KEY</span> <span class="kw">DEFAULT</span> gen_random_uuid(),</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>  tenant_id   uuid <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">REFERENCES</span> tenants(<span class="kw">id</span>) <span class="kw">ON</span> <span class="kw">DELETE</span> <span class="kw">CASCADE</span>,</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>  email       text,                       <span class="co">-- nullable: anonymous device-token users (C6 privacy)</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>  oidc_sub    text,                       <span class="co">-- nullable: when SSO is used</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>  <span class="kw">role</span>        user_role <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> <span class="st">&#39;member&#39;</span>,</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>  created_at  timestamptz <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> now(),</span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>  <span class="kw">UNIQUE</span> (tenant_id, email),</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>  <span class="kw">UNIQUE</span> (tenant_id, oidc_sub)</span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a><span class="co">-- ============ devices (clients AND connectors) ============</span></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TYPE</span> device_kind <span class="kw">AS</span> ENUM (<span class="st">&#39;client&#39;</span>,<span class="st">&#39;connector&#39;</span>);</span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> devices (</span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>  <span class="kw">id</span>            uuid <span class="kw">PRIMARY</span> <span class="kw">KEY</span> <span class="kw">DEFAULT</span> gen_random_uuid(),</span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>  tenant_id     uuid <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">REFERENCES</span> tenants(<span class="kw">id</span>) <span class="kw">ON</span> <span class="kw">DELETE</span> <span class="kw">CASCADE</span>,</span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>  user_id       uuid <span class="kw">REFERENCES</span> users(<span class="kw">id</span>) <span class="kw">ON</span> <span class="kw">DELETE</span> <span class="kw">SET</span> <span class="kw">NULL</span>,</span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a>  kind          device_kind <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a>  name          text <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a>  wg_pubkey     bytea <span class="kw">NOT</span> <span class="kw">NULL</span>,           <span class="co">-- 32-byte Curve25519 public key (C6: never the private)</span></span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a>  overlay_ip    inet <span class="kw">NOT</span> <span class="kw">NULL</span>,            <span class="co">-- allocated from tenant ULA /48 (D4)</span></span>
+<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a>  os            text,                     <span class="co">-- ios|android|linux|windows|macos|harmonyos|aurora</span></span>
+<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a>  enrolled_at   timestamptz <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> now(),</span>
+<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a>  last_seen_at  timestamptz,              <span class="co">-- COARSE presence; refreshed from heartbeat, not per-packet (C3)</span></span>
+<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a>  revoked_at    timestamptz,</span>
+<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a>  <span class="kw">UNIQUE</span> (tenant_id, wg_pubkey),</span>
+<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a>  <span class="kw">UNIQUE</span> (tenant_id, overlay_ip)</span>
+<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-40"><a href="#cb4-40" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> connectors (</span>
+<span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a>  device_id   uuid <span class="kw">PRIMARY</span> <span class="kw">KEY</span> <span class="kw">REFERENCES</span> devices(<span class="kw">id</span>) <span class="kw">ON</span> <span class="kw">DELETE</span> <span class="kw">CASCADE</span>,</span>
+<span id="cb4-42"><a href="#cb4-42" aria-hidden="true" tabindex="-1"></a>  tenant_id   uuid <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">REFERENCES</span> tenants(<span class="kw">id</span>) <span class="kw">ON</span> <span class="kw">DELETE</span> <span class="kw">CASCADE</span>,</span>
+<span id="cb4-43"><a href="#cb4-43" aria-hidden="true" tabindex="-1"></a>  site_name   text <span class="kw">NOT</span> <span class="kw">NULL</span></span>
+<span id="cb4-44"><a href="#cb4-44" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb4-45"><a href="#cb4-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-46"><a href="#cb4-46" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> advertised_prefixes (</span>
+<span id="cb4-47"><a href="#cb4-47" aria-hidden="true" tabindex="-1"></a>  <span class="kw">id</span>            uuid <span class="kw">PRIMARY</span> <span class="kw">KEY</span> <span class="kw">DEFAULT</span> gen_random_uuid(),</span>
+<span id="cb4-48"><a href="#cb4-48" aria-hidden="true" tabindex="-1"></a>  tenant_id     uuid <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">REFERENCES</span> tenants(<span class="kw">id</span>) <span class="kw">ON</span> <span class="kw">DELETE</span> <span class="kw">CASCADE</span>,</span>
+<span id="cb4-49"><a href="#cb4-49" aria-hidden="true" tabindex="-1"></a>  connector_id  uuid <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">REFERENCES</span> connectors(device_id) <span class="kw">ON</span> <span class="kw">DELETE</span> <span class="kw">CASCADE</span>,</span>
+<span id="cb4-50"><a href="#cb4-50" aria-hidden="true" tabindex="-1"></a>  cidr          cidr <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb4-51"><a href="#cb4-51" aria-hidden="true" tabindex="-1"></a>  enabled       <span class="dt">boolean</span> <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> <span class="kw">true</span>,</span>
+<span id="cb4-52"><a href="#cb4-52" aria-hidden="true" tabindex="-1"></a>  created_at    timestamptz <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> now()</span>
+<span id="cb4-53"><a href="#cb4-53" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb4-54"><a href="#cb4-54" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> <span class="kw">ON</span> advertised_prefixes (tenant_id, connector_id);</span>
+<span id="cb4-55"><a href="#cb4-55" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-56"><a href="#cb4-56" aria-hidden="true" tabindex="-1"></a><span class="co">-- ============ groups (for policy) ============</span></span>
+<span id="cb4-57"><a href="#cb4-57" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> <span class="kw">groups</span> (</span>
+<span id="cb4-58"><a href="#cb4-58" aria-hidden="true" tabindex="-1"></a>  <span class="kw">id</span>          uuid <span class="kw">PRIMARY</span> <span class="kw">KEY</span> <span class="kw">DEFAULT</span> gen_random_uuid(),</span>
+<span id="cb4-59"><a href="#cb4-59" aria-hidden="true" tabindex="-1"></a>  tenant_id   uuid <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">REFERENCES</span> tenants(<span class="kw">id</span>) <span class="kw">ON</span> <span class="kw">DELETE</span> <span class="kw">CASCADE</span>,</span>
+<span id="cb4-60"><a href="#cb4-60" aria-hidden="true" tabindex="-1"></a>  name        text <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb4-61"><a href="#cb4-61" aria-hidden="true" tabindex="-1"></a>  <span class="kw">UNIQUE</span> (tenant_id, name)</span>
+<span id="cb4-62"><a href="#cb4-62" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb4-63"><a href="#cb4-63" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> group_members (</span>
+<span id="cb4-64"><a href="#cb4-64" aria-hidden="true" tabindex="-1"></a>  tenant_id   uuid <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">REFERENCES</span> tenants(<span class="kw">id</span>) <span class="kw">ON</span> <span class="kw">DELETE</span> <span class="kw">CASCADE</span>,</span>
+<span id="cb4-65"><a href="#cb4-65" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_id</span>    uuid <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">REFERENCES</span> <span class="kw">groups</span>(<span class="kw">id</span>) <span class="kw">ON</span> <span class="kw">DELETE</span> <span class="kw">CASCADE</span>,</span>
+<span id="cb4-66"><a href="#cb4-66" aria-hidden="true" tabindex="-1"></a>  device_id   uuid <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">REFERENCES</span> devices(<span class="kw">id</span>) <span class="kw">ON</span> <span class="kw">DELETE</span> <span class="kw">CASCADE</span>,</span>
+<span id="cb4-67"><a href="#cb4-67" aria-hidden="true" tabindex="-1"></a>  <span class="kw">PRIMARY</span> <span class="kw">KEY</span> (<span class="fu">group_id</span>, device_id)</span>
+<span id="cb4-68"><a href="#cb4-68" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb4-69"><a href="#cb4-69" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-70"><a href="#cb4-70" aria-hidden="true" tabindex="-1"></a><span class="co">-- ============ policy (source + compiled marker) ============</span></span>
+<span id="cb4-71"><a href="#cb4-71" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> policies (</span>
+<span id="cb4-72"><a href="#cb4-72" aria-hidden="true" tabindex="-1"></a>  <span class="kw">id</span>           uuid <span class="kw">PRIMARY</span> <span class="kw">KEY</span> <span class="kw">DEFAULT</span> gen_random_uuid(),</span>
+<span id="cb4-73"><a href="#cb4-73" aria-hidden="true" tabindex="-1"></a>  tenant_id    uuid <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">REFERENCES</span> tenants(<span class="kw">id</span>) <span class="kw">ON</span> <span class="kw">DELETE</span> <span class="kw">CASCADE</span>,</span>
+<span id="cb4-74"><a href="#cb4-74" aria-hidden="true" tabindex="-1"></a>  spec         jsonb <span class="kw">NOT</span> <span class="kw">NULL</span>,            <span class="co">-- the declarative ACL document (§7)</span></span>
+<span id="cb4-75"><a href="#cb4-75" aria-hidden="true" tabindex="-1"></a>  version      bigint <span class="kw">NOT</span> <span class="kw">NULL</span>,           <span class="co">-- monotonic per tenant</span></span>
+<span id="cb4-76"><a href="#cb4-76" aria-hidden="true" tabindex="-1"></a>  active       <span class="dt">boolean</span> <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> <span class="kw">false</span>,</span>
+<span id="cb4-77"><a href="#cb4-77" aria-hidden="true" tabindex="-1"></a>  compiled_at  timestamptz,</span>
+<span id="cb4-78"><a href="#cb4-78" aria-hidden="true" tabindex="-1"></a>  created_at   timestamptz <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> now(),</span>
+<span id="cb4-79"><a href="#cb4-79" aria-hidden="true" tabindex="-1"></a>  <span class="kw">UNIQUE</span> (tenant_id, version)</span>
+<span id="cb4-80"><a href="#cb4-80" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb4-81"><a href="#cb4-81" aria-hidden="true" tabindex="-1"></a><span class="co">-- at most one active policy per tenant (instant rollback = re-activate an older version)</span></span>
+<span id="cb4-82"><a href="#cb4-82" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">UNIQUE</span> <span class="kw">INDEX</span> one_active_policy_per_tenant</span>
+<span id="cb4-83"><a href="#cb4-83" aria-hidden="true" tabindex="-1"></a>  <span class="kw">ON</span> policies (tenant_id) <span class="kw">WHERE</span> active;</span>
+<span id="cb4-84"><a href="#cb4-84" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-85"><a href="#cb4-85" aria-hidden="true" tabindex="-1"></a><span class="co">-- ============ overlay IPAM ============</span></span>
+<span id="cb4-86"><a href="#cb4-86" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> overlay_pools (</span>
+<span id="cb4-87"><a href="#cb4-87" aria-hidden="true" tabindex="-1"></a>  tenant_id   uuid <span class="kw">PRIMARY</span> <span class="kw">KEY</span> <span class="kw">REFERENCES</span> tenants(<span class="kw">id</span>) <span class="kw">ON</span> <span class="kw">DELETE</span> <span class="kw">CASCADE</span>,</span>
+<span id="cb4-88"><a href="#cb4-88" aria-hidden="true" tabindex="-1"></a>  ula_prefix  cidr <span class="kw">NOT</span> <span class="kw">NULL</span>,              <span class="co">-- e.g. fd7a:helix:&lt;rand&gt;::/48 (D4 — §3.1)</span></span>
+<span id="cb4-89"><a href="#cb4-89" aria-hidden="true" tabindex="-1"></a>  next_host   bigint <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> <span class="dv">2</span>   <span class="co">-- ::1 reserved for gateway</span></span>
+<span id="cb4-90"><a href="#cb4-90" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb4-91"><a href="#cb4-91" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-92"><a href="#cb4-92" aria-hidden="true" tabindex="-1"></a><span class="co">-- ============ PKI ============</span></span>
+<span id="cb4-93"><a href="#cb4-93" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> device_certs (</span>
+<span id="cb4-94"><a href="#cb4-94" aria-hidden="true" tabindex="-1"></a>  <span class="kw">id</span>           uuid <span class="kw">PRIMARY</span> <span class="kw">KEY</span> <span class="kw">DEFAULT</span> gen_random_uuid(),</span>
+<span id="cb4-95"><a href="#cb4-95" aria-hidden="true" tabindex="-1"></a>  tenant_id    uuid <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">REFERENCES</span> tenants(<span class="kw">id</span>) <span class="kw">ON</span> <span class="kw">DELETE</span> <span class="kw">CASCADE</span>,</span>
+<span id="cb4-96"><a href="#cb4-96" aria-hidden="true" tabindex="-1"></a>  device_id    uuid <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">REFERENCES</span> devices(<span class="kw">id</span>) <span class="kw">ON</span> <span class="kw">DELETE</span> <span class="kw">CASCADE</span>,</span>
+<span id="cb4-97"><a href="#cb4-97" aria-hidden="true" tabindex="-1"></a>  serial       text <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb4-98"><a href="#cb4-98" aria-hidden="true" tabindex="-1"></a>  not_after    timestamptz <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb4-99"><a href="#cb4-99" aria-hidden="true" tabindex="-1"></a>  revoked      <span class="dt">boolean</span> <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> <span class="kw">false</span>,</span>
+<span id="cb4-100"><a href="#cb4-100" aria-hidden="true" tabindex="-1"></a>  created_at   timestamptz <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> now()</span>
+<span id="cb4-101"><a href="#cb4-101" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb4-102"><a href="#cb4-102" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> <span class="kw">ON</span> device_certs (tenant_id, device_id) <span class="kw">WHERE</span> <span class="kw">NOT</span> revoked;</span>
+<span id="cb4-103"><a href="#cb4-103" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-104"><a href="#cb4-104" aria-hidden="true" tabindex="-1"></a><span class="co">-- ============ audit (CONTROL actions only — never traffic, C3) ============</span></span>
+<span id="cb4-105"><a href="#cb4-105" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> audit_events (</span>
+<span id="cb4-106"><a href="#cb4-106" aria-hidden="true" tabindex="-1"></a>  <span class="kw">id</span>          bigint <span class="kw">GENERATED</span> ALWAYS <span class="kw">AS</span> IDENTITY <span class="kw">PRIMARY</span> <span class="kw">KEY</span>,</span>
+<span id="cb4-107"><a href="#cb4-107" aria-hidden="true" tabindex="-1"></a>  tenant_id   uuid <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">REFERENCES</span> tenants(<span class="kw">id</span>) <span class="kw">ON</span> <span class="kw">DELETE</span> <span class="kw">CASCADE</span>,</span>
+<span id="cb4-108"><a href="#cb4-108" aria-hidden="true" tabindex="-1"></a>  actor       text <span class="kw">NOT</span> <span class="kw">NULL</span>,             <span class="co">-- user id / &quot;system&quot;</span></span>
+<span id="cb4-109"><a href="#cb4-109" aria-hidden="true" tabindex="-1"></a>  action      text <span class="kw">NOT</span> <span class="kw">NULL</span>,             <span class="co">-- e.g. &quot;device.revoke&quot;,&quot;policy.activate&quot;</span></span>
+<span id="cb4-110"><a href="#cb4-110" aria-hidden="true" tabindex="-1"></a>  target      text,</span>
+<span id="cb4-111"><a href="#cb4-111" aria-hidden="true" tabindex="-1"></a>  ts          timestamptz <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> now(),</span>
+<span id="cb4-112"><a href="#cb4-112" aria-hidden="true" tabindex="-1"></a>  meta        jsonb</span>
+<span id="cb4-113"><a href="#cb4-113" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb4-114"><a href="#cb4-114" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> <span class="kw">ON</span> audit_events (tenant_id, ts <span class="kw">DESC</span>);</span></code></pre></div>
+<p><strong>Design notes.</strong></p>
+<ul>
+<li><code>devices</code> holds <strong>both</strong> clients and
+connectors (<code>kind</code>); <code>connectors</code> is a 1:1 detail
+table so a connector inherits all device machinery (enrollment, cert,
+revoke) [04_P1 §2]. The asymmetry (a connector advertises prefixes; a
+client does not) lives in <code>advertised_prefixes</code>.</li>
+<li><code>group_members</code> carries <code>tenant_id</code>
+redundantly (vs. the source&#39;s two-column PK) <strong>so RLS can be
+enforced on it directly</strong> — a refinement over [04_P1 §2.1], which
+left the join table un-RLS&#39;d. The composite PK
+<code>(group_id, device_id)</code> is preserved.</li>
+<li><code>policies.active</code> + the partial unique index replace the
+source&#39;s implicit &quot;newest is active&quot;; this makes <strong>instant
+rollback</strong> a single
+<code>UPDATE ... SET active=true WHERE version=$n</code> inside a tx
+that clears the prior active — see §7.4.</li>
+<li><strong>Absent by design (C3):</strong> no <code>connections</code>,
+<code>sessions</code>, <code>flows</code>, <code>traffic</code>,
+<code>packets</code>, <code>netflow</code>,
+<code>bandwidth_samples</code>. Their absence is a <em>guarantee</em>,
+lint-enforced (§2.4).</li>
+</ul>
+<h3 id="23-row-level-security-tenant-isolation-at-the-database-c8">2.3
+Row-Level Security (tenant isolation at the database, C8)</h3>
+<p>Every tenant-scoped table gets the same policy. The app sets
+<code>app.tenant_id</code> per transaction; Postgres enforces isolation
+even if a query forgets a <code>WHERE</code> [04_P1 §2.2].</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- applied to EVERY tenant-scoped table:</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- users, devices, connectors, advertised_prefixes, groups, group_members,</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="co">-- policies, overlay_pools, device_certs, audit_events</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">TABLE</span> devices <span class="kw">ENABLE</span> <span class="kw">ROW</span> <span class="kw">LEVEL</span> SECURITY;</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">TABLE</span> devices <span class="kw">FORCE</span> <span class="kw">ROW</span> <span class="kw">LEVEL</span> SECURITY;   <span class="co">-- applies even to the table owner</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> POLICY tenant_isolation <span class="kw">ON</span> devices</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">USING</span>       (tenant_id <span class="op">=</span> current_setting(<span class="st">&#39;app.tenant_id&#39;</span>):<span class="ch">:uuid</span>)</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  <span class="kw">WITH</span> <span class="kw">CHECK</span>  (tenant_id <span class="op">=</span> current_setting(<span class="st">&#39;app.tenant_id&#39;</span>):<span class="ch">:uuid</span>);</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="co">-- the application connects as a NON-SUPERUSER, NON-OWNER role (superusers/owners bypass RLS):</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">ROLE</span> helix_app NOLOGIN;</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="kw">GRANT</span> <span class="kw">SELECT</span>, <span class="kw">INSERT</span>, <span class="kw">UPDATE</span>, <span class="kw">DELETE</span> <span class="kw">ON</span> <span class="kw">ALL</span> <span class="kw">TABLES</span> <span class="kw">IN</span> <span class="kw">SCHEMA</span> <span class="kw">public</span> <span class="kw">TO</span> helix_app;</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="kw">GRANT</span> <span class="kw">USAGE</span>, <span class="kw">SELECT</span> <span class="kw">ON</span> <span class="kw">ALL</span> SEQUENCES <span class="kw">IN</span> <span class="kw">SCHEMA</span> <span class="kw">public</span> <span class="kw">TO</span> helix_app;</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="co">-- helixd authenticates as a LOGIN role that is a member of helix_app, never as the owner.</span></span></code></pre></div>
+<blockquote>
+<p><code>FORCE ROW LEVEL SECURITY</code> is the hardening refinement
+over the source: it closes the gap where the table owner (which
+migrations run as) silently bypasses RLS. <code>helixd</code> therefore
+MUST run as <code>helix_app</code> (or a member), never as the migration
+owner. This is asserted by a startup check that runs
+<code>SELECT rolsuper, rolbypassrls FROM pg_roles WHERE rolname = current_user</code>
+and aborts if either is true.</p>
+</blockquote>
+<p>The tenant-scoped transaction helper — the <strong>only</strong> way
+<code>helixd</code> touches the DB (R4):</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/store/tenant.go</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="co">//</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co">// WithTenant runs fn inside a transaction whose RLS scope is pinned to tenantID.</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co">// SET LOCAL is transaction-scoped, so it CANNOT leak across pooled connections.</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>s <span class="op">*</span>Store<span class="op">)</span> WithTenant<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> tenantID uuid<span class="op">.</span>UUID<span class="op">,</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    fn <span class="kw">func</span><span class="op">(</span>q <span class="op">*</span>db<span class="op">.</span>Queries<span class="op">)</span> <span class="dt">error</span><span class="op">)</span> <span class="dt">error</span> <span class="op">{</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    tx<span class="op">,</span> err <span class="op">:=</span> s<span class="op">.</span>pool<span class="op">.</span>BeginTx<span class="op">(</span>ctx<span class="op">,</span> pgx<span class="op">.</span>TxOptions<span class="op">{})</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> err</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">defer</span> <span class="kw">func</span><span class="op">()</span> <span class="op">{</span> _ <span class="op">=</span> tx<span class="op">.</span>Rollback<span class="op">(</span>ctx<span class="op">)</span> <span class="op">}()</span> <span class="co">// no-op after a successful Commit</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>    <span class="co">// set_config(name, value, is_local=true) == SET LOCAL; transaction-scoped.</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> _<span class="op">,</span> err <span class="op">:=</span> tx<span class="op">.</span>Exec<span class="op">(</span>ctx<span class="op">,</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;SELECT set_config(&#39;app.tenant_id&#39;, $1, true)&quot;</span><span class="op">,</span> tenantID<span class="op">.</span>String<span class="op">());</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> fmt<span class="op">.</span>Errorf<span class="op">(</span><span class="st">&quot;pin tenant: %w&quot;</span><span class="op">,</span> err<span class="op">)</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> err <span class="op">:=</span> fn<span class="op">(</span>db<span class="op">.</span>New<span class="op">(</span>tx<span class="op">));</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> err</span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> tx<span class="op">.</span>Commit<span class="op">(</span>ctx<span class="op">)</span></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>A handful of operations (tenant creation, cross-tenant ops) need an
+explicit <code>WithSystem</code> helper that sets
+<code>app.tenant_id</code> to a sentinel and uses a separate
+<code>helix_sys</code> role with narrowly-granted privileges — never a
+superuser. Migrations run as the schema owner (<code>helix_owner</code>)
+out-of-band of request handling.</p>
+<h3 id="24-no-logging-ci-schema-lint-c3-enforced-mechanically">2.4
+No-logging CI schema-lint (C3 enforced mechanically)</h3>
+<p>A pre-build gate parses <code>migrations/</code> and the live schema
+and <strong>fails the build</strong> if any table, column, or view
+matches a forbidden traffic-logging shape [04_ARCH §7, 04_P1 §11.4,
+SYNTHESIS §7]:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">// tools/schemalint/main.go (run in pre-build; constitution §11.4.27/§1.1)</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="kw">var</span> forbiddenTables <span class="op">=</span> regexp<span class="op">.</span>MustCompile<span class="op">(</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">`(?i)\b(connections?|sessions?|flows?|traffic|packets?|netflow|bandwidth_samples?|dns_queries?)\b`</span><span class="op">)</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="kw">var</span> forbiddenCols  <span class="op">=</span> regexp<span class="op">.</span>MustCompile<span class="op">(</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">`(?i)\b(src_ip|dst_ip|dest_ip|src_port|dst_port|bytes_(in|out)|packet_count|payload|sni_host)\b`</span><span class="op">)</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="co">// Exception allowlist: overlay_ip + wg_pubkey on `devices` (identity, not traffic); cidr on</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="co">// advertised_prefixes (topology). The lint asserts these are the ONLY ip/port-shaped columns.</span></span></code></pre></div>
+<p>Paired §1.1 mutation: a test migration that adds a
+<code>connections(src_ip, dst_ip, bytes)</code> table MUST make the lint
+FAIL; removing it MUST make it pass. The lint is the runtime signature
+(§11.4.108) that proves C3 is live, not merely promised.</p>
+<hr />
+<h2 id="3-ipam--overlay-addressing--the-subnet-collision-decision-d4">3.
+IPAM — overlay addressing &amp; the subnet-collision decision (D4)</h2>
+<h3 id="31-the-problem-and-the-decision">3.1 The problem and the
+decision</h3>
+<p>A single user joins <strong>N</strong> private RFC1918 networks (the
+HelixVPN differentiator [SYNTHESIS §1]). Two joined home/lab LANs both
+numbering <code>192.168.1.0/24</code> collide — the client cannot tell
+which <code>192.168.1.50</code> it means. Only three analyses actually
+solve this [SYNTHESIS §3 D4].</p>
+<blockquote>
+<p><strong>Decision D4 — IP-subnet collision.</strong>
+<strong>Recommendation: IPv6 ULA <code>/48</code> per tenant + Tailscale
+<code>4via6</code> mapping</strong> (Camp A / CLD [04_ARCH §3.4]).</p>
+<ul>
+<li><strong>Camp A — ULA /48 + 4via6:</strong> allocate each tenant a
+random <code>fd7a:helix:&lt;rand&gt;::/48</code>
+(<code>overlay_pools.ula_prefix</code>). Every device gets a stable
+overlay address from it (<code>devices.overlay_ip</code>). Colliding
+IPv4 LANs are reached through a deterministic IPv6 encoding
+(<code>4via6</code>):
+<code>fd7a:helix:&lt;rand&gt;:&lt;site-id&gt;::/96</code> + the 32-bit
+IPv4 host → a unique IPv6 the client can always disambiguate. The
+control plane assigns a per-connector <code>site-id</code> and ships the
+<code>4via6</code> mapping inside the network map.</li>
+<li><strong>Camp B — CGNAT <code>100.64.0.0/10</code>, 1:1 NAT per
+network</strong> [GMI, KMI]: each joined network is remapped 1:1 into a
+slice of the carrier-grade range at the connector; the client always
+sees <code>100.x</code>. Simpler for IPv4-only clients but exhausts
+<code>/10</code> space at scale and needs per-network NAT bookkeeping in
+the data path.</li>
+</ul>
+<p><strong>Why A:</strong> it is collision-proof by construction (a /48
+is astronomically unlikely to clash), needs no stateful NAT in the
+packet path (keeps the edge dumb, C1), and is the documented
+Mullvad/Tailscale precedent. <strong>Trade-off honestly stated:</strong>
+legacy IPv4-only apps inside a client cannot dial a raw
+<code>192.168.1.50</code> without a local resolver shim that rewrites to
+the <code>4via6</code> address — the client core ships exactly that shim
+(doc 01 routing layer). For Phase 1 the lean path is: overlay addressing
+is IPv6-ULA; <code>4via6</code> for colliding LANs lands with
+multi-network policy in Phase 1, CGNAT remains the Phase-2 fallback for
+pure-IPv4 connectors.</p>
+</blockquote>
+<h3 id="32-allocation-algorithm-deterministic-gap-free-concurrency-safe">3.2
+Allocation algorithm (deterministic, gap-free, concurrency-safe)</h3>
+<div class="sourceCode" id="cb8"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/ipam/alloc.go</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="co">//</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="co">// AllocOverlayIP hands out the next host address from the tenant&#39;s ULA /48.</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Runs inside WithTenant; the UPDATE ... RETURNING is atomic so two concurrent</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="co">// enrollments never get the same address (the row lock serialises them).</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>a <span class="op">*</span>IPAM<span class="op">)</span> AllocOverlayIP<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> q <span class="op">*</span>db<span class="op">.</span>Queries<span class="op">,</span> t uuid<span class="op">.</span>UUID<span class="op">)</span> <span class="op">(</span>netip<span class="op">.</span>Addr<span class="op">,</span> <span class="dt">error</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    <span class="co">// SELECT ula_prefix, next_host FROM overlay_pools WHERE tenant_id=$1 FOR UPDATE;</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">// UPDATE overlay_pools SET next_host = next_host + 1 WHERE tenant_id=$1 RETURNING next_host;</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>    pool<span class="op">,</span> err <span class="op">:=</span> q<span class="op">.</span>BumpOverlayNextHost<span class="op">(</span>ctx<span class="op">,</span> t<span class="op">)</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> netip<span class="op">.</span>Addr<span class="op">{},</span> err</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>    base <span class="op">:=</span> pool<span class="op">.</span>UlaPrefix<span class="op">.</span>Addr<span class="op">().</span>As16<span class="op">()</span>              <span class="co">// fd7a:helix:rrrr::</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>    host <span class="op">:=</span> <span class="dt">uint64</span><span class="op">(</span>pool<span class="op">.</span>NextHost<span class="op">)</span>                      <span class="co">// monotonic per tenant; ::1 = gateway</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>    <span class="co">// place the host id in the low 64 bits of the /48 (sites use bits [48..64))</span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> embedHost<span class="op">(</span>base<span class="op">,</span> host<span class="op">),</span> <span class="ot">nil</span></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><code>overlay_pools.next_host</code> is monotonic and never reused (a
+revoked device&#39;s address is <em>not</em> recycled in Phase 1 — simpler
+and avoids stale-route hazards; a <code>/48</code> gives ~2^80 hosts, so
+exhaustion is not a real concern). Site-IDs for <code>4via6</code> are
+allocated from a parallel per-connector counter when a connector
+attaches.</p>
+<hr />
+<h2 id="4-agent-contract--protobuf-coordinator-over-connect">4. Agent
+contract — protobuf (<code>Coordinator</code> over Connect)</h2>
+<p>The static <code>map.json</code> of Phase 0 becomes a streamed,
+versioned, delta-capable protobuf served over <strong>Connect</strong>
+(works as gRPC, gRPC-Web, and the Connect protocol — one service serves
+native agents over HTTP/2 and a future WASM Console over HTTP/1.1)
+[04_P1 §3]. The byte-level evolution rules are doc 03; the canonical
+<code>.proto</code> is here.</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode protobuf"><code class="sourceCode protobuf"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co">// proto/helix/agent/v1/agent.proto</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>syntax <span class="op">=</span> <span class="st">&quot;proto3&quot;</span>;</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="kw">package</span> helix.coordinator.v1;</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="kw">option</span> go_package <span class="op">=</span> <span class="st">&quot;github.com/vasic-digital/helix-go/gen/helix/agent/v1;agentv1&quot;</span>;</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="kw">service</span> Coordinator {</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  <span class="co">// One-time device enrollment (exchanges an enroll token for identity + cert).</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>  <span class="kw">rpc</span> Enroll(EnrollRequest) <span class="kw">returns</span> (EnrollResponse);</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>  <span class="co">// The spine of the system: open once, get a snapshot, then a delta stream (C5).</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>  <span class="kw">rpc</span> WatchNetworkMap(WatchRequest) <span class="kw">returns</span> (stream MapUpdate);</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Connectors push their advertised prefixes (also settable via Console/API).</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>  <span class="kw">rpc</span> AdvertisePrefixes(AdvertiseRequest) <span class="kw">returns</span> (AdvertiseResponse);</span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Lightweight heartbeat / status (presence, current transport, rtt). NO traffic data (C3).</span></span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>  <span class="kw">rpc</span> ReportStatus(StatusReport) <span class="kw">returns</span> (StatusAck);</span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a><span class="kw">message</span> EnrollRequest {</span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a>  <span class="dt">string</span>     enroll_token <span class="op">=</span> <span class="dv">1</span>;   <span class="co">// issued by Console/identity, short-lived, single-use</span></span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a>  <span class="dt">bytes</span>      wg_pubkey    <span class="op">=</span> <span class="dv">2</span>;   <span class="co">// device-generated; private key never leaves device (C6)</span></span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a>  <span class="dt">string</span>     os           <span class="op">=</span> <span class="dv">3</span>;</span>
+<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a>  <span class="dt">string</span>     name         <span class="op">=</span> <span class="dv">4</span>;</span>
+<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a>  DeviceKind kind         <span class="op">=</span> <span class="dv">5</span>;</span>
+<span id="cb9-26"><a href="#cb9-26" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb9-27"><a href="#cb9-27" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> DeviceKind { DEVICE_KIND_UNSPECIFIED <span class="op">=</span> <span class="dv">0</span>; CLIENT <span class="op">=</span> <span class="dv">1</span>; CONNECTOR <span class="op">=</span> <span class="dv">2</span>; }</span>
+<span id="cb9-28"><a href="#cb9-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-29"><a href="#cb9-29" aria-hidden="true" tabindex="-1"></a><span class="kw">message</span> EnrollResponse {</span>
+<span id="cb9-30"><a href="#cb9-30" aria-hidden="true" tabindex="-1"></a>  <span class="dt">string</span>      device_id  <span class="op">=</span> <span class="dv">1</span>;</span>
+<span id="cb9-31"><a href="#cb9-31" aria-hidden="true" tabindex="-1"></a>  <span class="dt">string</span>      overlay_ip <span class="op">=</span> <span class="dv">2</span>;    <span class="co">// allocated by IPAM, e.g. &quot;fd7a:helix:1::2&quot; (D4)</span></span>
+<span id="cb9-32"><a href="#cb9-32" aria-hidden="true" tabindex="-1"></a>  <span class="dt">bytes</span>       device_cert <span class="op">=</span> <span class="dv">3</span>;   <span class="co">// short-lived mTLS cert for the control channel</span></span>
+<span id="cb9-33"><a href="#cb9-33" aria-hidden="true" tabindex="-1"></a>  GatewayInfo gateway     <span class="op">=</span> <span class="dv">4</span>;</span>
+<span id="cb9-34"><a href="#cb9-34" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb9-35"><a href="#cb9-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-36"><a href="#cb9-36" aria-hidden="true" tabindex="-1"></a><span class="kw">message</span> WatchRequest {</span>
+<span id="cb9-37"><a href="#cb9-37" aria-hidden="true" tabindex="-1"></a>  <span class="dt">string</span> device_id    <span class="op">=</span> <span class="dv">1</span>;</span>
+<span id="cb9-38"><a href="#cb9-38" aria-hidden="true" tabindex="-1"></a>  <span class="dt">uint64</span> known_version <span class="op">=</span> <span class="dv">2</span>;      <span class="co">// 0 =&gt; full snapshot; else =&gt; deltas since (cheap reconnect)</span></span>
+<span id="cb9-39"><a href="#cb9-39" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb9-40"><a href="#cb9-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-41"><a href="#cb9-41" aria-hidden="true" tabindex="-1"></a><span class="co">// Either a full snapshot or an incremental delta. Agents reconcile to it.</span></span>
+<span id="cb9-42"><a href="#cb9-42" aria-hidden="true" tabindex="-1"></a><span class="kw">message</span> MapUpdate {</span>
+<span id="cb9-43"><a href="#cb9-43" aria-hidden="true" tabindex="-1"></a>  <span class="dt">uint64</span> version <span class="op">=</span> <span class="dv">1</span>;</span>
+<span id="cb9-44"><a href="#cb9-44" aria-hidden="true" tabindex="-1"></a>  <span class="kw">oneof</span> body {</span>
+<span id="cb9-45"><a href="#cb9-45" aria-hidden="true" tabindex="-1"></a>    NetworkMap snapshot  <span class="op">=</span> <span class="dv">2</span>;</span>
+<span id="cb9-46"><a href="#cb9-46" aria-hidden="true" tabindex="-1"></a>    MapDelta   delta     <span class="op">=</span> <span class="dv">3</span>;</span>
+<span id="cb9-47"><a href="#cb9-47" aria-hidden="true" tabindex="-1"></a>    KeepAlive  keepalive <span class="op">=</span> <span class="dv">4</span>;    <span class="co">// periodic; proves liveness without state churn</span></span>
+<span id="cb9-48"><a href="#cb9-48" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb9-49"><a href="#cb9-49" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb9-50"><a href="#cb9-50" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-51"><a href="#cb9-51" aria-hidden="true" tabindex="-1"></a><span class="kw">message</span> NetworkMap {</span>
+<span id="cb9-52"><a href="#cb9-52" aria-hidden="true" tabindex="-1"></a>  Node            self      <span class="op">=</span> <span class="dv">1</span>;</span>
+<span id="cb9-53"><a href="#cb9-53" aria-hidden="true" tabindex="-1"></a>  GatewayInfo     gateway   <span class="op">=</span> <span class="dv">2</span>;</span>
+<span id="cb9-54"><a href="#cb9-54" aria-hidden="true" tabindex="-1"></a>  <span class="kw">repeated</span> Peer   peers     <span class="op">=</span> <span class="dv">3</span>;  <span class="co">// peers this node MAY reach (already policy-filtered, C4)</span></span>
+<span id="cb9-55"><a href="#cb9-55" aria-hidden="true" tabindex="-1"></a>  DnsConfig       dns       <span class="op">=</span> <span class="dv">4</span>;</span>
+<span id="cb9-56"><a href="#cb9-56" aria-hidden="true" tabindex="-1"></a>  TransportPolicy transport <span class="op">=</span> <span class="dv">5</span>;</span>
+<span id="cb9-57"><a href="#cb9-57" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb9-58"><a href="#cb9-58" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-59"><a href="#cb9-59" aria-hidden="true" tabindex="-1"></a><span class="kw">message</span> Node { <span class="dt">string</span> device_id <span class="op">=</span> <span class="dv">1</span>; <span class="dt">string</span> overlay_ip <span class="op">=</span> <span class="dv">2</span>; }</span>
+<span id="cb9-60"><a href="#cb9-60" aria-hidden="true" tabindex="-1"></a><span class="kw">message</span> GatewayInfo {</span>
+<span id="cb9-61"><a href="#cb9-61" aria-hidden="true" tabindex="-1"></a>  <span class="dt">string</span> endpoint   <span class="op">=</span> <span class="dv">1</span>;          <span class="co">// &quot;gw.example:443&quot;</span></span>
+<span id="cb9-62"><a href="#cb9-62" aria-hidden="true" tabindex="-1"></a>  <span class="dt">bytes</span>  wg_pubkey  <span class="op">=</span> <span class="dv">2</span>;</span>
+<span id="cb9-63"><a href="#cb9-63" aria-hidden="true" tabindex="-1"></a>  <span class="dt">string</span> masque_sni <span class="op">=</span> <span class="dv">3</span>;          <span class="co">// host to present for MASQUE/HTTP-3 masquerade (doc 01, D1)</span></span>
+<span id="cb9-64"><a href="#cb9-64" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb9-65"><a href="#cb9-65" aria-hidden="true" tabindex="-1"></a><span class="kw">message</span> Peer {</span>
+<span id="cb9-66"><a href="#cb9-66" aria-hidden="true" tabindex="-1"></a>  <span class="dt">string</span>          device_id     <span class="op">=</span> <span class="dv">1</span>;</span>
+<span id="cb9-67"><a href="#cb9-67" aria-hidden="true" tabindex="-1"></a>  <span class="dt">bytes</span>           wg_pubkey      <span class="op">=</span> <span class="dv">2</span>;</span>
+<span id="cb9-68"><a href="#cb9-68" aria-hidden="true" tabindex="-1"></a>  <span class="kw">repeated</span> <span class="dt">string</span> allowed_ips    <span class="op">=</span> <span class="dv">3</span>;  <span class="co">// compiled from policy: only what this node may reach (C4)</span></span>
+<span id="cb9-69"><a href="#cb9-69" aria-hidden="true" tabindex="-1"></a>  <span class="dt">string</span>          endpoint       <span class="op">=</span> <span class="dv">4</span>;  <span class="co">// via gateway relay in MVP; direct candidates in P2</span></span>
+<span id="cb9-70"><a href="#cb9-70" aria-hidden="true" tabindex="-1"></a>  <span class="dt">bool</span>            is_connector   <span class="op">=</span> <span class="dv">5</span>;</span>
+<span id="cb9-71"><a href="#cb9-71" aria-hidden="true" tabindex="-1"></a>  <span class="kw">repeated</span> Via6Route via6        <span class="op">=</span> <span class="dv">6</span>;  <span class="co">// 4via6 mappings for colliding IPv4 LANs (D4)</span></span>
+<span id="cb9-72"><a href="#cb9-72" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb9-73"><a href="#cb9-73" aria-hidden="true" tabindex="-1"></a><span class="kw">message</span> Via6Route { <span class="dt">string</span> ipv4_cidr <span class="op">=</span> <span class="dv">1</span>; <span class="dt">string</span> via6_prefix <span class="op">=</span> <span class="dv">2</span>; }</span>
+<span id="cb9-74"><a href="#cb9-74" aria-hidden="true" tabindex="-1"></a><span class="kw">message</span> DnsConfig { <span class="kw">repeated</span> <span class="dt">string</span> resolvers <span class="op">=</span> <span class="dv">1</span>; <span class="kw">repeated</span> <span class="dt">string</span> search <span class="op">=</span> <span class="dv">2</span>; }</span>
+<span id="cb9-75"><a href="#cb9-75" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-76"><a href="#cb9-76" aria-hidden="true" tabindex="-1"></a><span class="kw">message</span> TransportPolicy {</span>
+<span id="cb9-77"><a href="#cb9-77" aria-hidden="true" tabindex="-1"></a>  <span class="co">// ordered escalation ladder the client walks on handshake failure (doc 01 §Transport)</span></span>
+<span id="cb9-78"><a href="#cb9-78" aria-hidden="true" tabindex="-1"></a>  <span class="kw">repeated</span> <span class="dt">string</span> order              <span class="op">=</span> <span class="dv">1</span>;  <span class="co">// [&quot;plain-udp&quot;,&quot;lwo&quot;,&quot;masque-h3&quot;]</span></span>
+<span id="cb9-79"><a href="#cb9-79" aria-hidden="true" tabindex="-1"></a>  <span class="dt">bool</span>            allow_user_override <span class="op">=</span> <span class="dv">2</span>;</span>
+<span id="cb9-80"><a href="#cb9-80" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb9-81"><a href="#cb9-81" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-82"><a href="#cb9-82" aria-hidden="true" tabindex="-1"></a><span class="kw">message</span> MapDelta {</span>
+<span id="cb9-83"><a href="#cb9-83" aria-hidden="true" tabindex="-1"></a>  <span class="kw">repeated</span> Peer   upsert_peers    <span class="op">=</span> <span class="dv">1</span>;</span>
+<span id="cb9-84"><a href="#cb9-84" aria-hidden="true" tabindex="-1"></a>  <span class="kw">repeated</span> <span class="dt">string</span> remove_peer_ids <span class="op">=</span> <span class="dv">2</span>;</span>
+<span id="cb9-85"><a href="#cb9-85" aria-hidden="true" tabindex="-1"></a>  TransportPolicy transport       <span class="op">=</span> <span class="dv">3</span>;  <span class="co">// present only if changed</span></span>
+<span id="cb9-86"><a href="#cb9-86" aria-hidden="true" tabindex="-1"></a>  DnsConfig       dns             <span class="op">=</span> <span class="dv">4</span>;  <span class="co">// present only if changed</span></span>
+<span id="cb9-87"><a href="#cb9-87" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb9-88"><a href="#cb9-88" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-89"><a href="#cb9-89" aria-hidden="true" tabindex="-1"></a><span class="kw">message</span> AdvertiseRequest  { <span class="dt">string</span> device_id <span class="op">=</span> <span class="dv">1</span>; <span class="kw">repeated</span> <span class="dt">string</span> cidrs <span class="op">=</span> <span class="dv">2</span>; }</span>
+<span id="cb9-90"><a href="#cb9-90" aria-hidden="true" tabindex="-1"></a><span class="kw">message</span> AdvertiseResponse { <span class="dt">bool</span> accepted <span class="op">=</span> <span class="dv">1</span>; <span class="kw">repeated</span> <span class="dt">string</span> conflicts <span class="op">=</span> <span class="dv">2</span>; }</span>
+<span id="cb9-91"><a href="#cb9-91" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-92"><a href="#cb9-92" aria-hidden="true" tabindex="-1"></a><span class="kw">message</span> StatusReport {</span>
+<span id="cb9-93"><a href="#cb9-93" aria-hidden="true" tabindex="-1"></a>  <span class="dt">string</span> device_id <span class="op">=</span> <span class="dv">1</span>;</span>
+<span id="cb9-94"><a href="#cb9-94" aria-hidden="true" tabindex="-1"></a>  <span class="dt">string</span> transport <span class="op">=</span> <span class="dv">2</span>;          <span class="co">// current transport in use (presence/health only)</span></span>
+<span id="cb9-95"><a href="#cb9-95" aria-hidden="true" tabindex="-1"></a>  <span class="dt">uint32</span> rtt_ms    <span class="op">=</span> <span class="dv">3</span>;</span>
+<span id="cb9-96"><a href="#cb9-96" aria-hidden="true" tabindex="-1"></a>  <span class="co">// deliberately NO bytes/flows/destinations — presence + health only (C3)</span></span>
+<span id="cb9-97"><a href="#cb9-97" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb9-98"><a href="#cb9-98" aria-hidden="true" tabindex="-1"></a><span class="kw">message</span> StatusAck {}</span>
+<span id="cb9-99"><a href="#cb9-99" aria-hidden="true" tabindex="-1"></a><span class="kw">message</span> KeepAlive {}</span></code></pre></div>
+<p><strong>Load-bearing properties</strong> [04_P1 §3]:
+<code>known_version</code> makes reconnects cheap (resume from a
+version, no full resync); the server sends <strong>snapshot then
+deltas</strong>; peers arrive <strong>already policy-filtered</strong>
+so a client never learns of nodes it cannot reach (need-to-know, C4).
+<code>buf generate</code> emits Go (server), Dart (client core), and
+Rust (edge/connector) stubs from this one file — no hand-written
+clients, so the codebases cannot drift [04_ARCH §4.2].</p>
+<hr />
+<h2 id="5-event-backbone--redis-streams-contracts-d3">5. Event backbone
+— Redis Streams contracts (D3)</h2>
+<p>Redis Streams is the MVP bus; the §1.3 <code>events.Bus</code>
+interface keeps the envelope bus-agnostic so NATS JetStream is a Phase-2
+transport swap [04_P1 §5, SYNTHESIS §3].</p>
+<h3 id="51-streams--consumer-groups">5.1 Streams &amp; consumer
+groups</h3>
+<table>
+<thead>
+<tr>
+<th>Stream</th>
+<th>Producers</th>
+<th>Consumer groups</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>events:devices</code></td>
+<td>identity, registry</td>
+<td>coordinator, telemetry, audit</td>
+</tr>
+<tr>
+<td><code>events:routes</code></td>
+<td>registry</td>
+<td>coordinator, telemetry</td>
+</tr>
+<tr>
+<td><code>events:policy</code></td>
+<td>policy</td>
+<td>coordinator, audit</td>
+</tr>
+<tr>
+<td><code>events:presence</code></td>
+<td>api (heartbeats)</td>
+<td>coordinator (TTL/online state)</td>
+</tr>
+<tr>
+<td><code>events:gateway</code></td>
+<td>edge health probes</td>
+<td>coordinator, telemetry</td>
+</tr>
+</tbody>
+</table>
+<h3 id="52-envelope-every-event--bus-agnostic">5.2 Envelope (every event
+— bus-agnostic)</h3>
+<div class="sourceCode" id="cb10"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;id&quot;</span><span class="fu">:</span>        <span class="st">&quot;&lt;redis-stream-id&gt;&quot;</span><span class="fu">,</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;type&quot;</span><span class="fu">:</span>      <span class="st">&quot;device.revoked&quot;</span><span class="fu">,</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;tenant_id&quot;</span><span class="fu">:</span> <span class="st">&quot;uuid&quot;</span><span class="fu">,</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;ts&quot;</span><span class="fu">:</span>        <span class="st">&quot;RFC3339&quot;</span><span class="fu">,</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;actor&quot;</span><span class="fu">:</span>     <span class="st">&quot;user-uuid|system&quot;</span><span class="fu">,</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;payload&quot;</span><span class="fu">:</span>   <span class="fu">{</span> <span class="dt">&quot;...&quot;</span><span class="fu">:</span> <span class="st">&quot;type-specific&quot;</span> <span class="fu">},</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;trace_id&quot;</span><span class="fu">:</span>  <span class="st">&quot;for correlation&quot;</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<h3 id="53-event-taxonomy-concrete">5.3 Event taxonomy (concrete)</h3>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Payload</th>
+<th>Coordinator reaction</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>device.enrolled</code></td>
+<td><code>{device_id, kind, overlay_ip}</code></td>
+<td>add node; if policy grants, push to peers&#39; maps</td>
+</tr>
+<tr>
+<td><code>device.online</code> / <code>.offline</code></td>
+<td><code>{device_id}</code></td>
+<td>update presence; peers see relay availability</td>
+</tr>
+<tr>
+<td><code>device.revoked</code></td>
+<td><code>{device_id}</code></td>
+<td>remove node; push peer-removal delta to everyone who saw it; edge
+drops sessions</td>
+</tr>
+<tr>
+<td><code>connector.attached</code></td>
+<td><code>{device_id, site}</code></td>
+<td>register connector + allocate site-id (D4)</td>
+</tr>
+<tr>
+<td><code>connector.prefixes.changed</code></td>
+<td><code>{connector_id, cidrs[]}</code></td>
+<td>recompute routes; push to nodes whose policy includes it</td>
+</tr>
+<tr>
+<td><code>route.conflict.detected</code></td>
+<td><code>{cidr, connector_ids[]}</code></td>
+<td>flag overlapping-CIDR; surface in Console (§7.3)</td>
+</tr>
+<tr>
+<td><code>policy.updated</code></td>
+<td><code>{version}</code></td>
+<td>trigger compile (dry-run already done)</td>
+</tr>
+<tr>
+<td><code>policy.compiled</code></td>
+<td><code>{version}</code></td>
+<td>recompute tenant visibility; push deltas</td>
+</tr>
+<tr>
+<td><code>gateway.failover</code></td>
+<td><code>{from, to}</code></td>
+<td>re-point affected nodes&#39; gateway endpoint</td>
+</tr>
+</tbody>
+</table>
+<h3 id="54-producer--consumer-mechanics--dlq">5.4 Producer / consumer
+mechanics + DLQ</h3>
+<div class="sourceCode" id="cb11"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co">// produce (registry/policy/etc. via events.Bus)</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>xid<span class="op">,</span> _ <span class="op">:=</span> rdb<span class="op">.</span>XAdd<span class="op">(</span>ctx<span class="op">,</span> <span class="op">&amp;</span>redis<span class="op">.</span>XAddArgs<span class="op">{</span>Stream<span class="op">:</span> <span class="st">&quot;events:policy&quot;</span><span class="op">,</span> Values<span class="op">:</span> env<span class="op">}).</span>Result<span class="op">()</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="co">// consume — durable consumer group, at-least-once</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>res<span class="op">,</span> _ <span class="op">:=</span> rdb<span class="op">.</span>XReadGroup<span class="op">(</span>ctx<span class="op">,</span> <span class="op">&amp;</span>redis<span class="op">.</span>XReadGroupArgs<span class="op">{</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>    Group<span class="op">:</span>   <span class="st">&quot;coordinator&quot;</span><span class="op">,</span> Consumer<span class="op">:</span> hostID<span class="op">,</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>    Streams<span class="op">:</span> <span class="op">[]</span><span class="dt">string</span><span class="op">{</span><span class="st">&quot;events:policy&quot;</span><span class="op">,</span> <span class="st">&quot;&gt;&quot;</span><span class="op">},</span> Count<span class="op">:</span> <span class="dv">64</span><span class="op">,</span> Block<span class="op">:</span> <span class="dv">5</span> <span class="op">*</span> time<span class="op">.</span>Second<span class="op">,</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="op">}).</span>Result<span class="op">()</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a><span class="co">// handle each, then XACK. Stuck/un-acked entries (a crashed consumer) are reclaimed by a</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a><span class="co">// background sweeper using XAUTOCLAIM — the dead-letter recovery path:</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>claimed<span class="op">,</span> _<span class="op">,</span> _ <span class="op">:=</span> rdb<span class="op">.</span>XAutoClaim<span class="op">(</span>ctx<span class="op">,</span> <span class="op">&amp;</span>redis<span class="op">.</span>XAutoClaimArgs<span class="op">{</span></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>    Stream<span class="op">:</span> <span class="st">&quot;events:policy&quot;</span><span class="op">,</span> Group<span class="op">:</span> <span class="st">&quot;coordinator&quot;</span><span class="op">,</span> Consumer<span class="op">:</span> hostID<span class="op">,</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>    MinIdle<span class="op">:</span> <span class="dv">30</span> <span class="op">*</span> time<span class="op">.</span>Second<span class="op">,</span> Start<span class="op">:</span> <span class="st">&quot;0-0&quot;</span><span class="op">,</span> Count<span class="op">:</span> <span class="dv">64</span><span class="op">,</span></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a><span class="op">}).</span>Result<span class="op">()</span></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a><span class="co">// After N delivery attempts (PEL entry&#39;s delivery count), route to events:policy:dlq and alert</span></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a><span class="co">// (telemetry counter helix_events_dlq_total) rather than spin forever.</span></span></code></pre></div>
+<p>At-least-once delivery + <strong>idempotent reactions</strong> (every
+delta is recomputed from current graph state, so a replayed event is
+harmless) [04_P1 §5.4]. <code>XAUTOCLAIM</code> + a per-entry
+delivery-count ceiling gives a real dead-letter path — replacing Phase
+0&#39;s file-watch and any cron-restart loop. This composes with
+constitution §11.4.147 (no-work-loss): a crashed coordinator&#39;s PEL
+entries are reclaimed, never silently dropped.</p>
+<hr />
+<h2 id="6-the-coordinator--building--streaming-maps">6. The
+<code>coordinator</code> — building &amp; streaming maps</h2>
+<p>The coordinator is the brain. It owns no durable tables (R2); it
+<strong>reacts to events</strong>, recomputes affected maps, and pushes
+minimal deltas down open streams [04_P1 §4].</p>
+<h3 id="61-responsibilities">6.1 Responsibilities</h3>
+<ol type="1">
+<li>Maintain an in-memory, per-tenant <strong>topology graph</strong>
+(devices, connectors, prefixes, groups, compiled policy), hydrated from
+Postgres on boot and kept fresh by events.</li>
+<li>Hold the set of <strong>open <code>WatchNetworkMap</code>
+streams</strong> (one per connected agent).</li>
+<li>On each relevant event: determine the <strong>affected
+agents</strong>, compute each one&#39;s <strong>delta</strong>, push it.
+Convergence target: <strong>p99 &lt; 1 s</strong> from event to
+delta-on-wire (a measured SLO, §10).</li>
+</ol>
+<h3 id="62-map-computation-per-node">6.2 Map computation (per node)</h3>
+<pre><code>buildMap(node):
+  reachable := policy.PeersVisibleTo(node)        # need-to-know filter (C4)
+  peers := []
+  for p in reachable:
+     allowed := policy.AllowedIPs(node -&gt; p)       # compiled CIDRs+ports
+     via6    := policy.Via6Routes(node -&gt; p)        # 4via6 for colliding IPv4 LANs (D4)
+     peers.append(Peer{p.pubkey, allowed, relayEndpoint(p), p.isConnector, via6})
+  return NetworkMap{self, gateway, peers, dns(node), transportPolicy(node)}</code></pre>
+<p><code>relayEndpoint</code> in MVP always routes peer traffic
+<strong>through the gateway</strong> (hub-and-spoke); direct P2P is a
+Phase-2 optimization [04_P1 §4.2]. This keeps the MVP data path
+identical to the proven Phase 0 slice.</p>
+<h3 id="63-streaming--delta-loop-go">6.3 Streaming + delta loop
+(Go)</h3>
+<div class="sourceCode" id="cb13"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/coordinator/watch.go</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>c <span class="op">*</span>Coordinator<span class="op">)</span> WatchNetworkMap<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    req <span class="op">*</span>connect<span class="op">.</span>Request<span class="op">[</span>agentv1<span class="op">.</span>WatchRequest<span class="op">],</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    stream <span class="op">*</span>connect<span class="op">.</span>ServerStream<span class="op">[</span>agentv1<span class="op">.</span>MapUpdate<span class="op">])</span> <span class="dt">error</span> <span class="op">{</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>    dev <span class="op">:=</span> authDevice<span class="op">(</span>ctx<span class="op">)</span>                       <span class="co">// from mTLS device cert (§8.2)</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> dev<span class="op">.</span>Revoked <span class="op">{</span>                             <span class="co">// belt-and-suspenders: revoked never streams</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> connect<span class="op">.</span>NewError<span class="op">(</span>connect<span class="op">.</span>CodePermissionDenied<span class="op">,</span> errRevoked<span class="op">)</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>    sub <span class="op">:=</span> c<span class="op">.</span>subscribe<span class="op">(</span>dev<span class="op">.</span>TenantID<span class="op">,</span> dev<span class="op">.</span>ID<span class="op">)</span>     <span class="co">// registers stream + flips presence online</span></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">defer</span> sub<span class="op">.</span>Close<span class="op">()</span>                            <span class="co">// flips presence offline on disconnect</span></span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 1. snapshot (or resume from known_version — diff against the client&#39;s last seen)</span></span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>    cur <span class="op">:=</span> c<span class="op">.</span>version<span class="op">(</span>dev<span class="op">.</span>TenantID<span class="op">)</span></span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> req<span class="op">.</span>Msg<span class="op">.</span>KnownVersion <span class="op">==</span> <span class="dv">0</span> <span class="op">||</span> req<span class="op">.</span>Msg<span class="op">.</span>KnownVersion <span class="op">&gt;</span> cur <span class="op">{</span></span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> err <span class="op">:=</span> stream<span class="op">.</span>Send<span class="op">(&amp;</span>agentv1<span class="op">.</span>MapUpdate<span class="op">{</span>Version<span class="op">:</span> cur<span class="op">,</span></span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>            Body<span class="op">:</span> <span class="op">&amp;</span>agentv1<span class="op">.</span>MapUpdate_Snapshot<span class="op">{</span>Snapshot<span class="op">:</span> c<span class="op">.</span>buildMap<span class="op">(</span>dev<span class="op">)}});</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> err</span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> _<span class="op">,</span> d <span class="op">:=</span> <span class="kw">range</span> c<span class="op">.</span>deltasSince<span class="op">(</span>dev<span class="op">,</span> req<span class="op">.</span>Msg<span class="op">.</span>KnownVersion<span class="op">)</span> <span class="op">{</span> <span class="co">// catch-up deltas</span></span>
+<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> err <span class="op">:=</span> stream<span class="op">.</span>Send<span class="op">(</span>deltaUpdate<span class="op">(</span>d<span class="op">));</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span> <span class="cf">return</span> err <span class="op">}</span></span>
+<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-26"><a href="#cb13-26" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 2. delta loop: events arrive on sub.C, keepalive on a ticker</span></span>
+<span id="cb13-27"><a href="#cb13-27" aria-hidden="true" tabindex="-1"></a>    ka <span class="op">:=</span> time<span class="op">.</span>NewTicker<span class="op">(</span><span class="dv">20</span> <span class="op">*</span> time<span class="op">.</span>Second<span class="op">);</span> <span class="cf">defer</span> ka<span class="op">.</span>Stop<span class="op">()</span></span>
+<span id="cb13-28"><a href="#cb13-28" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">{</span></span>
+<span id="cb13-29"><a href="#cb13-29" aria-hidden="true" tabindex="-1"></a>        <span class="cf">select</span> <span class="op">{</span></span>
+<span id="cb13-30"><a href="#cb13-30" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> <span class="op">&lt;-</span>ctx<span class="op">.</span>Done<span class="op">():</span>  <span class="cf">return</span> ctx<span class="op">.</span>Err<span class="op">()</span></span>
+<span id="cb13-31"><a href="#cb13-31" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> d <span class="op">:=</span> <span class="op">&lt;-</span>sub<span class="op">.</span>C<span class="op">:</span>  <span class="cf">if</span> err <span class="op">:=</span> stream<span class="op">.</span>Send<span class="op">(</span>deltaUpdate<span class="op">(</span>d<span class="op">));</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span> <span class="cf">return</span> err <span class="op">}</span></span>
+<span id="cb13-32"><a href="#cb13-32" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> <span class="op">&lt;-</span>ka<span class="op">.</span>C<span class="op">:</span>        <span class="cf">if</span> err <span class="op">:=</span> stream<span class="op">.</span>Send<span class="op">(</span>keepAlive<span class="op">());</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span> <span class="cf">return</span> err <span class="op">}</span></span>
+<span id="cb13-33"><a href="#cb13-33" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb13-34"><a href="#cb13-34" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb13-35"><a href="#cb13-35" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="64-fan-out-events--minimal-affected-set">6.4 Fan-out: events →
+minimal affected set</h3>
+<p>The coordinator consumes the event streams (§5), updates its graph,
+then computes which open streams are affected and enqueues a delta to
+each. A <code>policy.compiled</code> event recomputes visibility for the
+whole tenant; a <code>connector.prefixes.changed</code> event touches
+only nodes whose policy grants that connector. <strong>Compute the
+minimal affected set — never broadcast a full resync on a small
+change</strong> [04_P1 §4.4]. Each device&#39;s per-stream send queue is
+bounded; a slow consumer that fills its queue is dropped and forced to
+reconnect-with-snapshot (back-pressure, not memory growth — the §10
+24h-soak SLO).</p>
+<hr />
+<h2 id="7-policy-model--compiler">7. Policy model &amp; compiler</h2>
+<p>Tailscale-ACL-flavored, declarative, <strong>default-deny,
+fail-closed</strong> [04_P1 §7]. This is the access-control brain that
+turns &quot;1 user → N networks&quot; into compiled per-node visibility.</p>
+<h3 id="71-source-document-stored-in-policiesspec-jsonb">7.1 Source
+document (stored in <code>policies.spec</code> jsonb)</h3>
+<pre class="jsonc"><code>{
+  &quot;groups&quot;: {
+    &quot;group:admins&quot;:      [&quot;alice@corp&quot;, &quot;bob@corp&quot;],
+    &quot;group:contractors&quot;: [&quot;carol@ext&quot;]
+  },
+  &quot;hosts&quot;: {
+    &quot;warehouse-cams&quot;: &quot;10.10.0.0/24&quot;,      // served by connector A
+    &quot;office-lan&quot;:     &quot;192.168.50.0/24&quot;    // served by connector B
+  },
+  &quot;acls&quot;: [
+    { &quot;action&quot;: &quot;accept&quot;, &quot;src&quot;: [&quot;group:admins&quot;],      &quot;dst&quot;: [&quot;*:*&quot;] },
+    { &quot;action&quot;: &quot;accept&quot;, &quot;src&quot;: [&quot;group:contractors&quot;], &quot;dst&quot;: [&quot;warehouse-cams:554,80&quot;] }
+  ],
+  &quot;exitNodes&quot;: [&quot;group:admins&quot;]            // who may use the gateway as a full-tunnel exit
+}</code></pre>
+<h3 id="72-compilation-algorithm-pure-deterministic-versioned">7.2
+Compilation algorithm (pure, deterministic, versioned)</h3>
+<pre><code>compile(tenant, spec) -&gt; CompiledPolicy:
+  resolve groups -&gt; sets of device_ids (via users + group_members)
+  resolve hosts  -&gt; CIDRs (cross-check vs advertised_prefixes; emit route.conflict if ambiguous)
+  for each device d:
+     visible[d] = {}                        # peers d may reach (need-to-know, C4)
+     for rule in acls where d in resolve(rule.src):
+        for dst in rule.dst:
+           targets = expand(dst)             # connector(s) serving the CIDR, peer devices, or exit
+           for t in targets:
+              visible[d] += t
+              allowedIPs[d][t] += (dst.cidr)            # coarse WG AllowedIPs (CIDR only)
+              verdicts[d][t]   += (dst.cidr, dst.ports) # fine port-level edge verdict map
+  return { visible, allowedIPs, verdicts, exitNodes }</code></pre>
+<ul>
+<li>Two compiled artifacts, because <strong>WG <code>AllowedIPs</code>
+is CIDR-only, not port-aware</strong> [04_P1 §7.2]: (1) coarse per-peer
+<code>AllowedIPs</code> on the data path; (2) a fine <strong>port-level
+verdict map</strong> enforced at the edge via nftables/eBPF (doc 01
+§routing). Output is exactly what <code>coordinator.buildMap</code>
+consumes.</li>
+<li><strong>Pure + versioned:</strong> same spec ⇒ same output (a
+property test asserts determinism). Bump <code>policies.version</code>,
+emit <code>policy.compiled</code>, coordinator diffs and pushes.</li>
+</ul>
+<h3 id="73-validation-fail-closed">7.3 Validation (fail-closed)</h3>
+<p><code>policy.update</code> runs the compiler <strong>dry-run
+first</strong> and rejects on: unknown group/host; a <code>dst</code>
+CIDR not covered by any <code>advertised_prefixes</code> row; a rule
+that would grant a <em>revoked</em> device; or an <code>exitNodes</code>
+entry resolving to a connector (connectors are not exits). Only a clean
+dry-run inserts the new <code>policies</code> row [04_P1 §7.3]. A
+<code>route.conflict.detected</code> (two connectors advertising
+overlapping CIDRs) does not block compile but surfaces in the Console
+and is resolved by <code>4via6</code> site disambiguation (D4) or
+operator choice.</p>
+<h3 id="74-activation--instant-rollback">7.4 Activation &amp; instant
+rollback</h3>
+<div class="sourceCode" id="cb16"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/policy/activate.go — atomic flip; prior version stays compiled for instant rollback</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>p <span class="op">*</span>PolicyService<span class="op">)</span> Activate<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> t uuid<span class="op">.</span>UUID<span class="op">,</span> version <span class="dt">int64</span><span class="op">)</span> <span class="dt">error</span> <span class="op">{</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> p<span class="op">.</span>store<span class="op">.</span>WithTenant<span class="op">(</span>ctx<span class="op">,</span> t<span class="op">,</span> <span class="kw">func</span><span class="op">(</span>q <span class="op">*</span>db<span class="op">.</span>Queries<span class="op">)</span> <span class="dt">error</span> <span class="op">{</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> err <span class="op">:=</span> q<span class="op">.</span>DeactivateAllPolicies<span class="op">(</span>ctx<span class="op">,</span> t<span class="op">);</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span> <span class="cf">return</span> err <span class="op">}</span>        <span class="co">// active=false</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> err <span class="op">:=</span> q<span class="op">.</span>ActivatePolicyVersion<span class="op">(</span>ctx<span class="op">,</span> db<span class="op">.</span>ActivateParams<span class="op">{</span>t<span class="op">,</span> version<span class="op">});</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> err                                                              <span class="co">// active=true, sets compiled_at</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>        <span class="co">// R3: emit on the bus so the coordinator recomputes + pushes</span></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>        _<span class="op">,</span> err <span class="op">:=</span> p<span class="op">.</span>bus<span class="op">.</span>Publish<span class="op">(</span>ctx<span class="op">,</span> <span class="st">&quot;events:policy&quot;</span><span class="op">,</span></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>            events<span class="op">.</span>New<span class="op">(</span><span class="st">&quot;policy.compiled&quot;</span><span class="op">,</span> t<span class="op">,</span> <span class="st">&quot;system&quot;</span><span class="op">,</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="dt">any</span><span class="op">{</span><span class="st">&quot;version&quot;</span><span class="op">:</span> version<span class="op">}))</span></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> err</span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>    <span class="op">})</span></span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>The partial unique index <code>one_active_policy_per_tenant</code>
+(§2.2) guarantees the flip is atomic. A bad policy is rolled back by
+<code>Activate(t, olderVersion)</code> — instant, no recompile, because
+every version&#39;s compiled artifact is reproducible from its
+<code>spec</code>.</p>
+<hr />
+<h2 id="8-api-surface-gin-rest--connect--wssse--authz">8. API surface
+(Gin REST + Connect + WS/SSE) &amp; authz</h2>
+<p>One multiplexed HTTP server [04_P1 §8].</p>
+<table>
+<thead>
+<tr>
+<th>Audience</th>
+<th>Protocol</th>
+<th>Examples</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Apps (Access / Connector / Console)</td>
+<td><strong>REST via Gin</strong></td>
+<td><code>POST /v1/enroll-tokens</code>, <code>GET /v1/devices</code>,
+<code>POST /v1/policies</code>,
+<code>POST /v1/policies/{v}/activate</code>,
+<code>GET /v1/networks</code></td>
+</tr>
+<tr>
+<td>Live UI</td>
+<td><strong>WebSocket / SSE</strong></td>
+<td><code>GET /v1/stream</code> → <code>device.online</code>,
+<code>route.changed</code>, <code>handshake.failing</code></td>
+</tr>
+<tr>
+<td>Agents</td>
+<td><strong>Connect/gRPC</strong></td>
+<td><code>Coordinator.WatchNetworkMap</code>, <code>.Enroll</code>,
+<code>.AdvertisePrefixes</code>, <code>.ReportStatus</code></td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>One server, multiplexed:</strong> Gin serves REST/WS;
+Connect handlers mount alongside on the same listener (Connect speaks
+HTTP/2 for native agents, downgrades to HTTP/1.1 for browsers — so a
+future WASM Console calls the same <code>Coordinator</code> service)
+[04_P1 §8].</li>
+<li><strong>Contracts generated:</strong> OpenAPI → Dart/TS app clients;
+<code>buf generate</code> → Go/Dart/Rust agent stubs. No hand-written
+clients [04_ARCH §4.2].</li>
+</ul>
+<h3 id="81-rest-authz-rbac--rls-backstop">8.1 REST authz (RBAC + RLS
+backstop)</h3>
+<p>REST uses OIDC session <strong>or</strong> API token, then RBAC
+(<code>admin</code> &gt; <code>operator</code> &gt;
+<code>member</code>); RLS is the database-level backstop (C8). Gin
+middleware chain:</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/api/middleware.go</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>r<span class="op">.</span>Use<span class="op">(</span>authn<span class="op">())</span>        <span class="co">// validate OIDC/session/API-token → sets ctx user + tenant</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>r<span class="op">.</span>Use<span class="op">(</span>rbac<span class="op">())</span>         <span class="co">// role gate per route group</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>r<span class="op">.</span>POST<span class="op">(</span><span class="st">&quot;/v1/policies&quot;</span><span class="op">,</span> requireRole<span class="op">(</span><span class="st">&quot;admin&quot;</span><span class="op">,</span><span class="st">&quot;operator&quot;</span><span class="op">),</span> h<span class="op">.</span>CreatePolicy<span class="op">)</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>r<span class="op">.</span>POST<span class="op">(</span><span class="st">&quot;/v1/devices/:id/revoke&quot;</span><span class="op">,</span> requireRole<span class="op">(</span><span class="st">&quot;admin&quot;</span><span class="op">),</span> h<span class="op">.</span>RevokeDevice<span class="op">)</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>r<span class="op">.</span>GET <span class="op">(</span><span class="st">&quot;/v1/devices&quot;</span><span class="op">,</span> requireRole<span class="op">(</span><span class="st">&quot;admin&quot;</span><span class="op">,</span><span class="st">&quot;operator&quot;</span><span class="op">,</span><span class="st">&quot;member&quot;</span><span class="op">),</span> h<span class="op">.</span>ListDevices<span class="op">)</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a><span class="co">// every handler runs its DB work through WithTenant(ctx.TenantID, ...): RLS is the floor even</span></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a><span class="co">// if rbac() is misconfigured — defense in depth.</span></span></code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Route group</th>
+<th>admin</th>
+<th>operator</th>
+<th>member</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>policies (create/activate)</td>
+<td>✓</td>
+<td>✓</td>
+<td>✗</td>
+</tr>
+<tr>
+<td>devices (revoke)</td>
+<td>✓</td>
+<td>✗</td>
+<td>✗</td>
+</tr>
+<tr>
+<td>devices/networks (read)</td>
+<td>✓</td>
+<td>✓</td>
+<td>✓</td>
+</tr>
+<tr>
+<td>enroll-tokens (mint)</td>
+<td>✓</td>
+<td>✓</td>
+<td>✗</td>
+</tr>
+</tbody>
+</table>
+<h3 id="82-agent-authz-device-mtls">8.2 Agent authz (device mTLS)</h3>
+<p>Agent RPCs
+(<code>WatchNetworkMap</code>/<code>AdvertisePrefixes</code>/<code>ReportStatus</code>)
+authenticate with the short-lived <strong>device mTLS cert</strong>
+issued at enrollment (§9). <code>Enroll</code> is the only
+unauthenticated RPC — it instead validates a single-use, hashed
+<strong>enroll token</strong>. <code>authDevice(ctx)</code> resolves the
+cert serial → <code>device_certs</code> row → <code>devices</code> row,
+and rejects if revoked or expired. A revoked device&#39;s open stream is
+force-closed within the convergence SLO (§9.3).</p>
+<hr />
+<h2 id="9-identity-enrollment--pki">9. Identity, enrollment &amp;
+PKI</h2>
+<h3 id="91-two-identity-modes-both-mvp-04_p1-61">9.1 Two identity modes
+(both MVP) [04_P1 §6.1]</h3>
+<ul>
+<li><strong>Managed (OIDC):</strong> tenant admins log into the Console
+via any OIDC IdP (Keycloak/Authentik); users belong to a tenant, devices
+to users.</li>
+<li><strong>Anonymous (privacy mode):</strong> a tenant mints
+<strong>device enroll tokens</strong> with no email/SSO — the Mullvad
+&quot;account number, no PII&quot; posture (C6). The device gets identity + cert
+with zero personal data stored
+(<code>users.email</code>/<code>oidc_sub</code> stay NULL).</li>
+</ul>
+<h3 id="92-enrollment-flow-the-device-never-surrenders-its-private-key-c6">9.2
+Enrollment flow (the device never surrenders its private key, C6)</h3>
+<pre class="mermaid"><code>sequenceDiagram
+    autonumber
+    participant Console
+    participant Identity as identity (helixd)
+    participant IPAM as ipam
+    participant PKI as pki
+    participant Bus as events bus
+    participant Device as Access/Connector
+    Console-&gt;&gt;Identity: create enroll token (admin/operator)
+    Identity--&gt;&gt;Identity: store HASHED single-use token
+    Identity--&gt;&gt;Console: token / QR
+    Console--&gt;&gt;Device: operator hands token (paste / scan)
+    Device--&gt;&gt;Device: generate WG keypair locally (private NEVER leaves, C6)
+    Device-&gt;&gt;Identity: Enroll(token, wg_pubkey, os, kind)  [Connect RPC]
+    Identity--&gt;&gt;Identity: verify+consume token (atomic)
+    Identity-&gt;&gt;IPAM: AllocOverlayIP(tenant)
+    IPAM--&gt;&gt;Identity: overlay_ip (ULA /48, D4)
+    Identity-&gt;&gt;PKI: IssueDeviceCert(device, 24h)
+    PKI--&gt;&gt;Identity: short-lived mTLS cert
+    Identity--&gt;&gt;Identity: persist device row (WithTenant)
+    Identity-&gt;&gt;Bus: publish device.enrolled
+    Identity--&gt;&gt;Device: EnrollResponse{device_id, overlay_ip, cert, gateway}
+    Device-&gt;&gt;Identity: open WatchNetworkMap (mTLS w/ cert)</code></pre>
+<h3 id="93-pki-specifics-04_p1-63">9.3 PKI specifics [04_P1 §6.3]</h3>
+<ul>
+<li><strong>WG keys:</strong> device-generated; only the
+<strong>public</strong> key is registered. The control plane never sees
+a private key (C6).</li>
+<li><strong>Control-channel mTLS:</strong> <code>pki</code> issues a
+short-lived (≈24 h) device cert; the agent uses it to authenticate the
+RPC channel and auto-renews over the existing channel before
+expiry.</li>
+<li><strong>Revoke (&lt; 1 s):</strong> <code>device.revoked</code> (a)
+removes the device&#39;s WG peer from every relevant map (delta push), (b)
+is enforced at the edge (kernel WG peer removed), (c) marks the cert
+revoked. Revocation latency target == convergence SLO (§10).</li>
+<li><strong>Root / KMS:</strong> the tenant CA key is the one true
+secret; back it up (KMS or offline). It and Postgres are the only
+stateful things to protect (architecture §10). Credentials handled per
+constitution §11.4.10 (never git-tracked, never logged).</li>
+</ul>
+<hr />
+<h2 id="10-end-to-end-reconciliation-the--1-s-promise--slos">10.
+End-to-end reconciliation (the &lt; 1 s promise) &amp; SLOs</h2>
+<h3 id="101-policy-apply-reconciliation-sequence">10.1 Policy-apply
+reconciliation sequence</h3>
+<pre class="mermaid"><code>sequenceDiagram
+    autonumber
+    participant Admin as Console (admin)
+    participant API as api (Gin)
+    participant Policy as policy
+    participant Store as Postgres (RLS)
+    participant Bus as Redis Streams
+    participant Coord as coordinator
+    participant Edge as Rust edge / agents
+    Admin-&gt;&gt;API: POST /v1/policies (new spec)
+    API-&gt;&gt;Policy: Compile(dry-run)  -- fail-closed (§7.3)
+    Policy-&gt;&gt;Store: INSERT policies(version, spec)  [WithTenant]
+    Admin-&gt;&gt;API: POST /v1/policies/{v}/activate
+    API-&gt;&gt;Policy: Activate(v) -- atomic flip (§7.4)
+    Policy-&gt;&gt;Store: deactivate all + activate v (one tx)
+    Policy-&gt;&gt;Bus: XADD events:policy {policy.compiled, v}
+    Bus--&gt;&gt;Coord: XReadGroup(coordinator) delivers event
+    Coord--&gt;&gt;Coord: recompute tenant visibility (minimal affected set, §6.4)
+    loop each affected open WatchNetworkMap stream
+        Coord-&gt;&gt;Edge: stream.Send(MapDelta) -- upsert/remove peers, AllowedIPs
+    end
+    Edge--&gt;&gt;Edge: reconcile WG peers + nftables/eBPF verdict map
+    Note over Admin,Edge: target p99 &lt; 1s, event→enforced, ZERO restarts</code></pre>
+<p>This turns the architecture promise (&quot;policy change reflected on all
+affected edges in &lt; 1 s, no restarts&quot; [04_ARCH]) into a concrete,
+measurable behavior — the event-driven, authorized descendant of Phase
+0&#39;s G6 file-delta reconcile [04_P1 §9].</p>
+<h3 id="102-measured-slos-the-anti-bluff-acceptance-numbers-04_p1-10">10.2
+Measured SLOs (the anti-bluff acceptance numbers) [04_P1 §10]</h3>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Target</th>
+<th>How measured</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>event → delta-on-wire</td>
+<td><strong>p99 &lt; 1 s</strong></td>
+<td>coordinator histogram <code>helix_reconcile_seconds</code> from
+event-receive to <code>stream.Send</code></td>
+</tr>
+<tr>
+<td>device revoke → edge enforced</td>
+<td><strong>&lt; 1 s</strong></td>
+<td>revoke-to-WG-peer-removed timer on the edge</td>
+</tr>
+<tr>
+<td>coordinator memory @ 10k streams</td>
+<td>bounded, no leak over 24 h soak</td>
+<td><code>process_resident_memory_bytes</code> slope ≈ 0</td>
+</tr>
+<tr>
+<td>enrollment round-trip</td>
+<td>&lt; 500 ms</td>
+<td>API histogram</td>
+</tr>
+<tr>
+<td>policy compile (1k devices)</td>
+<td>&lt; 200 ms</td>
+<td>compiler benchmark</td>
+</tr>
+</tbody>
+</table>
+<h3 id="103-test-strategy-per-constitution-11427--1145--11">10.3 Test
+strategy (per constitution §11.4.27 / §11.4.5 / §1.1)</h3>
+<ul>
+<li><strong>Unit:</strong> policy compiler determinism (same spec ⇒
+byte-identical <code>CompiledPolicy</code>); IPAM no-double-alloc under
+concurrency.</li>
+<li><strong>Store:</strong> RLS tests — assert tenant A literally cannot
+read tenant B&#39;s rows even with a crafted query and
+<code>FORCE ROW LEVEL SECURITY</code> on, running as
+<code>helix_app</code> [04_P1 §10].</li>
+<li><strong>Integration:</strong> spin Postgres + Redis on-demand via
+the <code>vasic-digital/containers</code> submodule (§11.4.76 —
+<em>not</em> ad-hoc <code>docker run</code>); drive enroll → advertise →
+policy → <code>WatchNetworkMap</code>, assert the delta stream content
+and the &lt; 1 s SLO with captured evidence (§11.4.69/§11.4.107).</li>
+<li><strong>Soak:</strong> N simulated agents holding streams; flap
+policies; assert convergence SLO and zero coordinator memory growth over
+24 h.</li>
+<li><strong>Schema-lint meta-test:</strong> the §2.4 §1.1 mutation (add
+a <code>connections</code> table → lint FAILs).</li>
+</ul>
+<hr />
+<h2 id="11-container--deployment-manifests-rootless-podman-11416111476">11.
+Container &amp; deployment manifests (rootless Podman,
+§11.4.161/§11.4.76)</h2>
+<p>The control plane deploys as rootless Podman quadlets [SYNTHESIS
+§2/§8]. Manifests illustrate the runtime shape;
+<code>helixvpnctl bootstrap</code> renders them.</p>
+<h3 id="111-podman-quadlet-the-mvp-deploy-unit">11.1 Podman quadlet (the
+MVP deploy unit)</h3>
+<div class="sourceCode" id="cb20"><pre class="sourceCode ini"><code class="sourceCode ini"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># deploy/quadlet/helixd.container  (rootless; read-only rootfs; NET no extra caps)</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="kw">[Unit]</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="dt">Description</span><span class="ot">=</span><span class="st">HelixVPN control plane</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="dt">After</span><span class="ot">=</span><span class="st">helix-postgres.service helix-redis.service</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="dt">Requires</span><span class="ot">=</span><span class="st">helix-postgres.service helix-redis.service</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a><span class="kw">[Container]</span></span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a><span class="dt">Image</span><span class="ot">=</span><span class="st">ghcr.io/vasic-digital/helixd:helixvpn-0.1.0   # §11.4.151 release-prefixed tag</span></span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a><span class="co"># helixd connects to Postgres as the NON-superuser, NON-owner role so RLS is enforced (C8):</span></span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a><span class="dt">Environment</span><span class="ot">=</span><span class="st">HELIX_DB_URL=postgres://helix_app_login@helix-postgres/helix?sslmode=verify-full</span></span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a><span class="dt">Environment</span><span class="ot">=</span><span class="st">HELIX_REDIS_URL=redis://helix-redis:6379/0</span></span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a><span class="dt">PublishPort</span><span class="ot">=</span><span class="st">443:8443</span></span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a><span class="dt">ReadOnly</span><span class="ot">=</span><span class="kw">true</span></span>
+<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a><span class="dt">NoNewPrivileges</span><span class="ot">=</span><span class="kw">true</span></span>
+<span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a><span class="dt">DropCapability</span><span class="ot">=</span><span class="st">ALL</span></span>
+<span id="cb20-16"><a href="#cb20-16" aria-hidden="true" tabindex="-1"></a><span class="dt">Volume</span><span class="ot">=</span><span class="st">helix-ca:/var/lib/helix/ca:Z          # tenant CA key (KMS-backed in prod)</span></span>
+<span id="cb20-17"><a href="#cb20-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-18"><a href="#cb20-18" aria-hidden="true" tabindex="-1"></a><span class="kw">[Service]</span></span>
+<span id="cb20-19"><a href="#cb20-19" aria-hidden="true" tabindex="-1"></a><span class="dt">Restart</span><span class="ot">=</span><span class="st">always</span></span>
+<span id="cb20-20"><a href="#cb20-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-21"><a href="#cb20-21" aria-hidden="true" tabindex="-1"></a><span class="kw">[Install]</span></span>
+<span id="cb20-22"><a href="#cb20-22" aria-hidden="true" tabindex="-1"></a><span class="dt">WantedBy</span><span class="ot">=</span><span class="st">default.target</span></span></code></pre></div>
+<h3 id="112-docker-compose-developer-loop-equivalent">11.2 Docker
+Compose (developer-loop equivalent)</h3>
+<div class="sourceCode" id="cb21"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co"># deploy/compose/dev.yml — local dev only; prod is rootless Podman quadlets above</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="fu">services</span><span class="kw">:</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">postgres</span><span class="kw">:</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> postgres:16</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">environment</span><span class="kw">:</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">POSTGRES_DB</span><span class="kw">:</span><span class="at"> helix</span></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a><span class="co">      # migrations run as owner; helixd connects as helix_app_login (RLS-enforced)</span></span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">command</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;postgres&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;-c&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;row_security=on&quot;</span><span class="kw">]</span></span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">redis</span><span class="kw">:</span></span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> redis:7</span></span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">helixd</span><span class="kw">:</span></span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">build</span><span class="kw">:</span><span class="at"> ../../helix-go</span></span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">depends_on</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">postgres</span><span class="kw">,</span><span class="at"> redis</span><span class="kw">]</span></span>
+<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">environment</span><span class="kw">:</span></span>
+<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">HELIX_DB_URL</span><span class="kw">:</span><span class="at">    postgres://helix_app_login@postgres/helix?sslmode=disable</span></span>
+<span id="cb21-16"><a href="#cb21-16" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">HELIX_REDIS_URL</span><span class="kw">:</span><span class="at"> redis://redis:6379/0</span></span>
+<span id="cb21-17"><a href="#cb21-17" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ports</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;8443:8443&quot;</span><span class="kw">]</span></span></code></pre></div>
+<h3 id="113-kubernetes-phase-2-ha-shape--stateless-coordinators">11.3
+Kubernetes (Phase-2 HA shape — stateless coordinators)</h3>
+<div class="sourceCode" id="cb22"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># deploy/k8s/helixd-deployment.yaml — Phase 2: coordinators are stateless (graph rebuilt from PG</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="co"># on boot + events), so they scale horizontally; Patroni-managed PG + NATS JetStream replace</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="co"># single PG + Redis. Shown to prove the Phase-1 seams permit it without reshaping. [04_P2]</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a><span class="fu">apiVersion</span><span class="kw">:</span><span class="at"> apps/v1</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a><span class="fu">kind</span><span class="kw">:</span><span class="at"> Deployment</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a><span class="fu">metadata</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> helixd </span><span class="kw">}</span></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a><span class="fu">spec</span><span class="kw">:</span></span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">replicas</span><span class="kw">:</span><span class="at"> </span><span class="dv">3</span></span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">selector</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">matchLabels</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">app</span><span class="kw">:</span><span class="at"> helixd </span><span class="kw">}</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">template</span><span class="kw">:</span></span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">metadata</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">labels</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">app</span><span class="kw">:</span><span class="at"> helixd </span><span class="kw">}</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">spec</span><span class="kw">:</span></span>
+<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">containers</span><span class="kw">:</span></span>
+<span id="cb22-14"><a href="#cb22-14" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> helixd</span></span>
+<span id="cb22-15"><a href="#cb22-15" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">image</span><span class="kw">:</span><span class="at"> ghcr.io/vasic-digital/helixd:helixvpn-0.2.0</span></span>
+<span id="cb22-16"><a href="#cb22-16" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">securityContext</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">runAsNonRoot</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span><span class="kw">,</span><span class="at"> </span><span class="fu">readOnlyRootFilesystem</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span><span class="kw">,</span></span>
+<span id="cb22-17"><a href="#cb22-17" aria-hidden="true" tabindex="-1"></a><span class="at">                             </span><span class="fu">allowPrivilegeEscalation</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span><span class="kw">,</span><span class="at"> </span><span class="fu">capabilities</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">drop</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;ALL&quot;</span><span class="kw">]</span><span class="at"> </span><span class="kw">}</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb22-18"><a href="#cb22-18" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">env</span><span class="kw">:</span></span>
+<span id="cb22-19"><a href="#cb22-19" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="kw">-</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> HELIX_DB_URL</span><span class="kw">,</span><span class="at">  </span><span class="fu">valueFrom</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">secretKeyRef</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> helix-db</span><span class="kw">,</span><span class="at">  </span><span class="fu">key</span><span class="kw">:</span><span class="at"> url </span><span class="kw">}</span><span class="at"> </span><span class="kw">}</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb22-20"><a href="#cb22-20" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="kw">-</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> HELIX_BUS_URL</span><span class="kw">,</span><span class="at"> </span><span class="fu">valueFrom</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">secretKeyRef</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> helix-bus</span><span class="kw">,</span><span class="at"> </span><span class="fu">key</span><span class="kw">:</span><span class="at"> url </span><span class="kw">}</span><span class="at"> </span><span class="kw">}</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb22-21"><a href="#cb22-21" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">ports</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">containerPort</span><span class="kw">:</span><span class="at"> </span><span class="dv">8443</span><span class="at"> </span><span class="kw">}</span><span class="at"> </span><span class="kw">]</span></span></code></pre></div>
+<hr />
+<h2 id="12-helix-ecosystem--constitution-wiring-this-layer">12.
+Helix-ecosystem &amp; constitution wiring (this layer)</h2>
+<table>
+<thead>
+<tr>
+<th>Submodule / clause</th>
+<th>Use in the control plane</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>vasic-digital/containers</code> (§11.4.76/§11.4.161)</td>
+<td>sole container orchestration: deploy quadlets + boot Postgres/Redis
+on-demand for integration tests — no ad-hoc
+<code>docker</code>/<code>podman</code> [SYNTHESIS §8]</td>
+</tr>
+<tr>
+<td><code>helix_qa</code> + <code>challenges</code>
+(§11.4.27/§11.4.5/.69/.107)</td>
+<td>anti-bluff QA: the §10.3 integration/soak suites + a Challenge that
+drives enroll→policy→delta and asserts the &lt; 1 s SLO with captured
+evidence</td>
+</tr>
+<tr>
+<td><code>docs_chain</code> (§11.4.106)</td>
+<td>mechanizes this spec&#39;s HTML/PDF/DOCX export + workable-items
+(phases→tasks become items) sync</td>
+</tr>
+<tr>
+<td><code>security</code> (§7)</td>
+<td>reviews RLS/mTLS/CA-key handling; pairs with the §2.4
+schema-lint</td>
+</tr>
+<tr>
+<td>§11.4.93/.95</td>
+<td>each Phase-1 task/subtask below becomes a git-tracked workable-items
+DB row</td>
+</tr>
+<tr>
+<td>§11.4.151/.155</td>
+<td>release-prefixed image/tag (<code>helixvpn-0.1.0</code>) + recording
+prefixes for QA evidence</td>
+</tr>
+<tr>
+<td>§11.4.156</td>
+<td>NO active CI — gates run locally (pre-build + meta-test)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="13-phase--task--subtask-plan-control-plane-phase-1">13. Phase →
+task → subtask plan (control plane, Phase 1)</h2>
+<p>Derived from [04_P1] and the §0.1 invariants. Each leaf is a workable
+item (§11.4.93). Ordering is risk-descending (§11.4.132): RLS + no-log
+lint first (they are the irreversible correctness floor).</p>
+<ul>
+<li><strong>CP-T1 — store + schema + RLS (the truth floor).</strong>
+<ul>
+<li>CP-T1.1 <code>migrations/</code> goose DDL (§2.2) + enums;
+<code>helix_app</code>/<code>helix_owner</code>/<code>helix_sys</code>
+roles.</li>
+<li>CP-T1.2 <code>FORCE ROW LEVEL SECURITY</code> +
+<code>tenant_isolation</code> on all 10 tenant tables; startup
+<code>rolsuper/rolbypassrls</code> abort check.</li>
+<li>CP-T1.3 <code>store.WithTenant</code> / <code>WithSystem</code>;
+<code>sqlc</code> <code>Queries</code>; RLS cross-tenant denial
+test.</li>
+<li>CP-T1.4 <code>tools/schemalint</code> (§2.4) + paired §1.1 mutation
+(add <code>connections</code> → FAIL).</li>
+</ul></li>
+<li><strong>CP-T2 — proto + Connect server skeleton.</strong>
+<ul>
+<li>CP-T2.1 <code>proto/helix/agent/v1/agent.proto</code> (§4) +
+<code>buf generate</code> (Go/Dart/Rust).</li>
+<li>CP-T2.2 Connect handlers mounted on the Gin listener;
+<code>authDevice</code> mTLS resolver (§8.2).</li>
+</ul></li>
+<li><strong>CP-T3 — identity + enrollment + PKI.</strong>
+<ul>
+<li>CP-T3.1 OIDC + anonymous enroll-token
+mint/store-hashed/consume-atomic (§9.1).</li>
+<li>CP-T3.2 <code>Enroll</code> RPC: verify token → IPAM alloc →
+device-cert issue → persist → emit <code>device.enrolled</code>
+(§9.2).</li>
+<li>CP-T3.3 device-cert rotation + revoke (&lt; 1 s edge enforcement,
+§9.3).</li>
+</ul></li>
+<li><strong>CP-T4 — ipam (D4).</strong>
+<ul>
+<li>CP-T4.1 <code>overlay_pools</code> ULA <code>/48</code> provisioning
+on tenant create; <code>AllocOverlayIP</code> (§3.2).</li>
+<li>CP-T4.2 per-connector site-id + <code>4via6</code> route emission
+for colliding IPv4 LANs.</li>
+</ul></li>
+<li><strong>CP-T5 — events bus (D3).</strong>
+<ul>
+<li>CP-T5.1 <code>events.Bus</code> Redis Streams impl:
+<code>XADD</code>/<code>XReadGroup</code>/<code>XACK</code> + envelope
+(§5.2).</li>
+<li>CP-T5.2 <code>XAUTOCLAIM</code> DLQ sweeper +
+<code>helix_events_dlq_total</code> (§5.4).</li>
+</ul></li>
+<li><strong>CP-T6 — policy compiler.</strong>
+<ul>
+<li>CP-T6.1 spec parser + group/host resolution + advertised-prefix
+cross-check (§7.2).</li>
+<li>CP-T6.2 two-artifact compile (<code>AllowedIPs</code> + port verdict
+map) + determinism property test.</li>
+<li>CP-T6.3 dry-run fail-closed validation (§7.3) + atomic
+activate/rollback (§7.4).</li>
+</ul></li>
+<li><strong>CP-T7 — coordinator.</strong>
+<ul>
+<li>CP-T7.1 in-mem per-tenant graph hydrate-on-boot + event apply
+(§6.1).</li>
+<li>CP-T7.2 <code>WatchNetworkMap</code> stream loop:
+snapshot/resume/delta/keepalive + bounded send queue (§6.3).</li>
+<li>CP-T7.3 minimal-affected-set fan-out (§6.4) +
+<code>helix_reconcile_seconds</code> histogram.</li>
+</ul></li>
+<li><strong>CP-T8 — api (REST + WS/SSE) + authz.</strong>
+<ul>
+<li>CP-T8.1 Gin REST routes + OpenAPI gen; RBAC middleware (§8.1).</li>
+<li>CP-T8.2 <code>GET /v1/stream</code> WS/SSE live-event fan-out to the
+Console.</li>
+</ul></li>
+<li><strong>CP-T9 — helixvpnctl + deploy.</strong>
+<ul>
+<li>CP-T9.1 Cobra
+<code>bootstrap</code>/<code>migrate</code>/<code>tenant</code>/<code>enroll-token</code>
+ops.</li>
+<li>CP-T9.2 quadlet rendering (§11.1) + on-demand-infra integration
+harness via <code>containers</code>.</li>
+</ul></li>
+<li><strong>CP-T10 — SLO + QA gates.</strong> §10.2 histograms wired;
+§10.3 integration + 24 h soak + Challenge; the 8-criterion MVP DoD
+asserted end-to-end [04_P1 §11].</li>
+</ul>
+<h3 id="131-mvp-definition-of-done-the-control-plane-must-satisfy-04_p1-11-synthesis-4">13.1
+MVP definition-of-done the control plane must satisfy [04_P1 §11,
+SYNTHESIS §4]</h3>
+<p>Self-host from zero; enroll connector + client; reach an authorized
+LAN host <strong>and deny an unauthorized one</strong>; auto-escalate
+transport when WG is blocked (coordinator ships the
+<code>TransportPolicy</code> ladder; the escalation itself is doc 01);
+<strong>policy edit reflected &lt; 1 s, no restart</strong>;
+<strong>revoke &lt; 1 s</strong>; kill-switch + DNS-leak (client side,
+gated by core state the map drives); <strong>no durable connection log
+exists</strong> (§2.4 lint green); the three apps drive it all via
+generated clients.</p>
+<hr />
+<h2 id="14-phase-2-forward-seams-why-this-is-additive-not-a-rewrite-04_p1-12">14.
+Phase-2 forward seams (why this is additive, not a rewrite) [04_P1
+§12]</h2>
+<p>The MVP interfaces extend without reshaping:
+<code>TransportPolicy.order</code> gains
+<code>shadowsocks</code>/<code>udp-over-tcp</code>/<code>daita</code>;
+<code>Peer.endpoint</code> gains direct-P2P NAT-traversal candidates so
+traffic stops always relaying through the gateway;
+<code>coordinator</code> federates across regional instances over
+<strong>NATS JetStream</strong> (the <code>events.Bus</code> swap, D3);
+<code>pki</code> adds the PQ pre-shared layer; the Connect service gains
+multi-hop path fields; and HarmonyOS/Aurora app shims slot under the
+unchanged Flutter UI + Rust core. Phase 2 is additive because Phase 1
+drew the seams in the right places (R1–R4, the
+<code>Bus</code>/<code>Compiler</code>/<code>PKI</code>/<code>Registry</code>
+interfaces).</p>
+<hr />
+<h3 id="sources">Sources</h3>
+<p>[04_P1] HelixVPN-Phase1-MVP.md (control-plane architecture, DDL, RLS,
+proto, coordinator, events, policy, API) · [04_ARCH]
+HelixVPN-Architecture-Refined.md (control/data separation, ULA /48 +
+4via6, no-logging, default-deny) · [04_P0] HelixVPN-Phase0-Spike.md (G6
+file-delta reconcile ancestor) · [04_P2] HelixVPN-Phase2-Parity.md
+(NATS, HA, multi-region seams) · [05_YBO] (Go+Gin+PG+Redis+Podman
+mandate) · [02_QWN], [DSK], [GMI], [KMI], [MST] (D3/D4 divergence camps)
+· [SYNTHESIS] §§1–9 (stack floor, key decisions, ecosystem wiring,
+constitution bindings).</p>
+</body>
+</html>

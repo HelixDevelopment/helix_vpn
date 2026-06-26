@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>RESEARCH mullvad</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">RESEARCH mullvad</h1>
+</header>
+<h1 id="research-mullvad">RESEARCH mullvad</h1>
+<p>Parity-bar research into Mullvad VPN&#39;s full current (2025–2026)
+feature set, for a self-hosted WireGuard-based reimplementation. Every
+claim cited inline; access date 2026-06-25. All sources listed at the
+bottom.</p>
+<hr />
+<h2 id="1-daita--defense-against-ai-guided-traffic-analysis">1. DAITA —
+Defense Against AI-guided Traffic Analysis</h2>
+<p><strong>Threat model.</strong> A passive on-path observer (ISP,
+network tap) cannot read encrypted WireGuard payloads, but CAN observe
+packet <em>sizes</em> and <em>timing</em>. Modern ML/DL
+website-fingerprinting attacks (Deep Fingerprinting, Robust
+Fingerprinting) classify which site/service/contact you are using purely
+from those size+timing traces. DAITA defeats that. [mullvad-daita-blog,
+mullvad-daita-page]</p>
+<p><strong>Core techniques (three pillars):</strong>
+[mullvad-daita-page]</p>
+<ol type="1">
+<li><strong>Constant packet sizes</strong> — all packets sent over the
+tunnel are padded to one uniform size, eliminating size as a
+feature.</li>
+<li><strong>Random background (&quot;cover&quot;) traffic</strong> — dummy packets
+are unpredictably interspersed in <em>both directions</em>
+(client→server and server→client), so an observer cannot tell whether
+the device is actively transmitting or idle.</li>
+<li><strong>Data-pattern distortion</strong> — fake packets reshape the
+burst/timing pattern so the trace no longer matches a fingerprintable
+template.</li>
+</ol>
+<p><strong>Built on maybenot</strong> (see §2). One maybenot instance
+runs at the client, a second at the VPN relay; both inject
+padding/blocking actions. [maybenot-github, maybenot-witwer]</p>
+<p><strong>DAITA v1 architecture</strong> (hardcoded state machines):
+[daita-pulls-blog]</p>
+<ul>
+<li>Client side: four hardcoded maybenot machines — (1) sends padding if
+no data sent in a random [1.5–9.5] s window (defeats NetFlow
+&quot;collapse&quot;/idle detection); (2) ensures an outgoing packet for every 3rd
+packet received; (3) same for every 5th packet received; (4) a
+probabilistic padding machine firing after randomized delays.</li>
+<li>Relay side: three machines per defense — a NetFlow machine, an
+Interspace-inspired padding machine, and a uniquely generated machine
+tuned to reduce classifier accuracy against Deep/Robust
+Fingerprinting.</li>
+<li>Philosophy: <em>randomized</em> defenses rather than strict
+constant-rate regularization (partly forced by
+event-aggregation/reporting latency in the WireGuard-Go
+integration).</li>
+</ul>
+<p><strong>DAITA v2 changes</strong> (dynamic, server-driven defenses):
+[daita-pulls-blog, cyberinsider-daita-v2]</p>
+<ul>
+<li>Defenses are no longer hardcoded in the client. The <strong>relay
+selects from a database of defenses</strong> and pushes the appropriate
+maybenot machines + <strong>limits (&quot;padding budgets&quot;)</strong> to the
+client at connect time.</li>
+<li>~<strong>50% lower bandwidth overhead</strong> vs v1 (Nov 2024
+evaluation).</li>
+<li>Defenses can be improved/rotated <strong>server-side without
+shipping a client update</strong>; periodic DB updates invalidate any
+adversary model trained on the previous defense set.</li>
+<li>Better mobile/low-power performance; now available on desktop,
+Android, iOS.</li>
+</ul>
+<p><strong>Self-host takeaway:</strong> DAITA = maybenot (Rust, MIT)
+integrated into a WireGuard-Go data path on BOTH endpoints. To
+reimplement you need: (a) a WireGuard-Go fork that reports per-packet
+send/recv events into maybenot and lets it schedule padding/blocking;
+(b) a uniform-MTU padding scheme; (c) a server that ships machine
+definitions + budgets to the client at handshake. The defense machines
+themselves are data (probabilistic state machines), not code — they can
+be authored/generated offline.</p>
+<hr />
+<h2 id="2-maybenot-framework-the-engine-under-daita">2. maybenot
+framework (the engine under DAITA)</h2>
+<p>[maybenot-github, maybenot-crates, maybenot-docsrs, maybenot-acm,
+maybenot-witwer]</p>
+<ul>
+<li><strong>What it is:</strong> a general Rust framework for
+traffic-analysis defenses, MIT-licensed, repo
+<code>maybenot-io/maybenot</code> (crates.io <code>maybenot</code>; v2.x
+current). Academically peer reviewed — published at WPES &#39;23 (ACM, doi
+10.1145/3603216.3624953).</li>
+<li><strong>Lineage:</strong> based on Tor&#39;s <strong>Circuit Padding
+Framework</strong> (Perry &amp; Kadianakis 2019), itself a
+generalization of <strong>WTF-PAD</strong> (Juarez et al.)
+website-fingerprinting defense.</li>
+<li><strong>Execution model:</strong> an instance repeatedly takes
+<strong>events</strong> describing the encrypted traffic (packet sent,
+packet received, etc.) and emits <strong>0+ scheduled actions</strong> —
+<em>send padding</em> or <em>block outgoing traffic</em> (with a timer).
+Logic is encoded as one or more <strong>probabilistic state
+machines</strong> (&quot;padding machines&quot;). The framework enforces
+<strong>limits/budgets</strong> that cap how much padding or blocking
+each machine may do.</li>
+<li><strong>Deployment:</strong> symmetric — one instance per endpoint
+(client + VPN server, or Tor client + relay, or HTTPS server). Used by
+Mullvad in DAITA via their WireGuard-Go integration. The maybenot org
+also ships <code>maybenot-ffi</code> (C ABI) and a simulator.</li>
+<li><strong>Self-host takeaway:</strong> this is directly reusable.
+Embed the <code>maybenot</code> crate, feed it your tunnel&#39;s packet
+events, act on its padding/block actions. The hard research part (good
+defense machines) is partly solved by published machines + the simulator
+for evaluating new ones.</li>
+</ul>
+<hr />
+<h2 id="3-multihop-entryexit-server-separation">3. Multihop (entry/exit
+server separation)</h2>
+<p>[mullvad-multihop-help, mullvad-multihop-blog]</p>
+<ul>
+<li><strong>Mechanism:</strong> WireGuard-in-WireGuard. Traffic is
+encrypted <strong>twice on the client device</strong> — an inner
+WireGuard tunnel to the <em>exit</em> server is sent inside an outer
+WireGuard tunnel to the <em>entry</em> server. Every Mullvad WG server
+is meshed to every other via server-to-server WireGuard tunnels, so any
+pair can act as entry+exit.</li>
+<li><strong>Config trick (manual):</strong> in the WG config, the
+<strong>Endpoint port</strong> selects the exit server and the
+<strong>Endpoint IP/hostname</strong> selects the entry server. The
+entry server port-maps that port to the chosen exit. An observer near
+the client sees only ordinary WG traffic to the entry server and cannot
+tell it will be forwarded, nor to where.</li>
+<li><strong>Trust split:</strong> entry server sees your source IP +
+which exit you chose, but not your traffic; exit server sees your
+traffic but only the entry server&#39;s IP, never your real IP. Correlating
+in/out flows across two different ISPs/hosters/jurisdictions is much
+harder; still secure even if the entry server is compromised (end-to-end
+encrypted).</li>
+<li><strong>App config:</strong> Advanced → VPN settings → WireGuard
+settings → Enable multihop, then pick entry + exit locations.</li>
+<li><strong>Self-host takeaway:</strong> needs ≥2 servers meshed with WG
+tunnels and a port→exit forwarding map on each entry server. The &quot;double
+WG&quot; approach is simpler to reimplement than a bespoke relay
+protocol.</li>
+</ul>
+<hr />
+<h2 id="4-quantum-resistant-tunnels-post-quantum-wireguard-handshake">4.
+Quantum-resistant tunnels (post-quantum WireGuard handshake)</h2>
+<p>[mullvad-pq-help, mullvad-pq-stable-blog, mullvad-pq-allservers-blog,
+mullvad-pq-intro-blog]</p>
+<ul>
+<li><strong>Why:</strong> WireGuard&#39;s X25519 ECDH is
+harvest-now-decrypt-later vulnerable to a future quantum computer. PQ
+tunnels protect <em>today&#39;s</em> recorded traffic against
+<em>future</em> decryption.</li>
+<li><strong>How it works:</strong> a normal WireGuard tunnel is
+established first, then used as a secure channel to negotiate a
+post-quantum <strong>shared secret</strong>; that secret is installed as
+WireGuard&#39;s <strong>pre-shared key (PSK)</strong> option (the WG PSK is
+mixed into the symmetric key schedule, so even if X25519 is broken the
+tunnel stays secure). The PSK is negotiated with an <strong>ephemeral
+peer that is only temporarily valid</strong> on the relay. Tool:
+<code>mullvad-upgrade-tunnel</code> (invoked via WG
+<code>PostUp = mullvad-upgrade-tunnel -wg-interface %i</code>). Success
+shows <code>preshared key: (hidden)</code> on the peer.
+(<code>SaveConfig</code> must be OFF or it overwrites the real config
+with the ephemeral peer.)</li>
+<li><strong>KEM algorithms</strong> (selectable via <code>-kem</code>
+flag): [mullvad-pq-help]
+<ul>
+<li><code>cme</code> — Classic McEliece 460896 Round3</li>
+<li><code>mlkem</code> — ML-KEM-1024 (NIST FIPS 203, formerly
+Kyber)</li>
+<li><code>cme-mlkem</code> — Classic McEliece + ML-KEM-1024
+(<strong>default</strong>, hybrid)</li>
+<li><code>mlkem-cme</code> — ML-KEM-1024 + Classic McEliece The hybrid
+combines two independent KEMs so a flaw in either alone does not break
+the PSK. Mullvad moved off the 2017 &quot;New Hope&quot; experiment to NIST
+finalists.</li>
+</ul></li>
+<li><strong>Cost:</strong> ~1–2 s extra to establish the shared secret;
+steady-state performance unchanged. PQ is now default/available on all
+WG servers.</li>
+<li><strong>Self-host takeaway:</strong> the protocol is &quot;vanilla WG
+handshake → PQ KEM exchange over it → result becomes WG PSK.&quot; Classic
+McEliece has <em>huge</em> public keys (~half MB), which is why it is
+used for the static/server key and ML-KEM for the ephemeral part.
+Reusable building blocks: <code>liboqs</code> / Rust <code>ml-kem</code>
++ <code>classic-mceliece-rust</code>.</li>
+</ul>
+<hr />
+<h2 id="5-obfuscation-transports-anti-censorship--anti-dpi">5.
+Obfuscation transports (anti-censorship / anti-DPI)</h2>
+<p>Mullvad now ships <strong>four</strong> WG obfuscation modes, all
+wrapping the WG UDP packets so DPI cannot fingerprint them as VPN
+traffic. An &quot;auto/adaptive&quot; mode tries them after several failed
+connection attempts. [mullvad-quic-blog, mullvad-lwo-blog,
+mullvad-shadowsocks-blog, privacyguides-obfs]</p>
+<ol type="1">
+<li><strong>UDP-over-TCP (udp2tcp)</strong> — original method; tunnels
+WG&#39;s UDP inside a TCP stream to survive UDP-blocking firewalls. Higher
+latency (TCP-over-TCP meltdown risk). Open source as the Rust
+<code>udp-over-tcp</code> crate.</li>
+<li><strong>Shadowsocks</strong> — wraps WG in the Shadowsocks proxy
+protocol (an encrypted SOCKS-like stream designed to defeat the Great
+Firewall). Heavier CPU/throughput cost. Desktop + Android.</li>
+<li><strong>QUIC obfuscation</strong> — tunnels WG UDP through an HTTP/3
+server via <strong>MASQUE (RFC 9298, &quot;Proxying UDP in HTTP&quot;)</strong>.
+To a censor the traffic looks like ordinary HTTPS/HTTP-3 web traffic;
+blocking it would break the normal web. Keeps UDP speed. Desktop app
+2025.9+. [mullvad-quic-blog]</li>
+<li><strong>Lightweight WireGuard Obfuscation (LWO)</strong> — newest
+(2025). Cheaply <strong>scrambles the WireGuard packet header</strong>
+so each packet is hard to fingerprint as WG, adding minimal overhead →
+best throughput + lowest power of the four (vs Shadowsocks). Desktop
+2025.13+, Android 2025.9+;
+<code>mullvad obfuscation set mode lwo</code>. [mullvad-lwo-blog]</li>
+</ol>
+<p><strong>Self-host takeaway:</strong> udp2tcp, Shadowsocks, and
+QUIC/MASQUE all have mature open-source implementations you can put in
+front of a WG endpoint. LWO is the cheapest to add (a keyed
+header-scrambling pass on each packet) but is Mullvad-specific;
+MASQUE/QUIC is the strongest &quot;blends with the web&quot; option.</p>
+<hr />
+<h2 id="6-encrypted-dns--content-blocking">6. Encrypted DNS + content
+blocking</h2>
+<p>[mullvad-dns-malware-blog, mullvad-dns-adblock-blog,
+mullvad-doh-help, mullvad-dns-blocklists-gh]</p>
+<ul>
+<li><strong>Architecture:</strong> every Mullvad VPN server runs its
+<strong>own local DNS resolver</strong>; all connected clients&#39; queries
+egress behind that single server IP, so no individual&#39;s DNS queries are
+distinguishable. Free public encrypted DNS (DoH/DoT) is also offered to
+non-customers.</li>
+<li><strong>Blocking tiers</strong> (separate resolver hostnames /
+Tailscale-style 100.64.0.x IPs):
+<ul>
+<li><code>dns.mullvad.net</code> — vanilla, no blocking</li>
+<li><code>adblock.dns.mullvad.net</code> — ads + trackers</li>
+<li><code>base.dns.mullvad.net</code> — ads + trackers + malware</li>
+<li><code>family.dns.mullvad.net</code> — + adult content</li>
+<li><code>extended</code> — + social media</li>
+<li><code>all.dns.mullvad.net</code> — ads + trackers + malware + adult
++ gambling + social media</li>
+</ul></li>
+<li><strong>Transports:</strong> DNS-over-HTTPS and DNS-over-TLS;
+macOS/iOS config profiles in
+<code>mullvad/encrypted-dns-profiles</code>. In-app toggles for each
+category.</li>
+<li><strong>Data sources:</strong> blocklists are open
+(<code>mullvad/dns-blocklists</code>); malware uses the <strong>URLHaus
+RPZ</strong> list imported into the WG/OpenVPN servers&#39; resolvers.</li>
+<li><strong>Self-host takeaway:</strong> run a per-server resolver
+(unbound/knot) with RPZ blocklists; expose DoH/DoT; offer category
+sub-resolvers. All blocklist data + config are public.</li>
+</ul>
+<hr />
+<h2 id="7-kill-switch-lockdown-mode-split-tunneling">7. Kill switch,
+lockdown mode, split tunneling</h2>
+<p>[mullvad-killswitch-search, mullvad-security-md,
+mullvad-splittunnel-help]</p>
+<ul>
+<li><strong>Kill switch — always on, cannot be disabled.</strong>
+Implemented as <strong>&quot;fail closed&quot; firewall rules</strong>, not a
+separate process: in the <em>connecting / disconnecting / error</em>
+states the app installs firewall rules that block all traffic; if
+packets can&#39;t leave encrypted as intended, they can&#39;t leave at all. On
+connect, the app sets default routes <code>0.0.0.0/0</code> and
+<code>::/0</code> to force every flow through the tunnel.</li>
+<li><strong>Lockdown mode</strong> — extends fail-closed to the
+<strong>disconnected</strong> state: by default the disconnected state
+allows traffic; with lockdown on, disconnected behaves like the error
+state (blocks everything), so quitting/disconnecting the app leaves no
+internet until you reconnect or disable lockdown. Split-tunnel-excluded
+apps still get access.</li>
+<li><strong>Split tunneling</strong> — exclude specific apps from the
+tunnel; excluded apps use the real IP/regular connection (useful for
+VPN-blocking sites, local devices). Excluded apps keep internet even
+under lockdown mode. Platform mechanism differs per OS (cgroup/ netns on
+Linux, per-app on Android, etc.).</li>
+<li><strong>Self-host takeaway:</strong> kill switch is pure firewall
+policy (nftables/pf/WFP) gated on tunnel state — no special protocol.
+Split tunneling is OS-specific routing/marking.</li>
+</ul>
+<hr />
+<h2 id="8-anonymous-account-number-model--no-logging-architecture">8.
+Anonymous account-number model + no-logging architecture</h2>
+<p>[mullvad-nolog-help, mullvad-accountnumbers-blog,
+threads-mullvad-summary]</p>
+<ul>
+<li><strong>Account = one random number, nothing else.</strong> Sign-up
+generates a random numbered account (no username, password, or email).
+The number + remaining time are the only identifiers. Numbers were
+lengthened over time for guessing resistance. Accounts are
+transferable/shareable; deliberately no usernames (a self-chosen name
+could leak identity/locale/cross-service correlation).</li>
+<li><strong>Payments decoupled from identity.</strong> Accepts cash
+(envelope + payment token, mailed, envelope destroyed), Monero,
+Bitcoin/BCH, bank wire, card, PayPal, Swish. Subscriptions were
+<em>removed</em> to avoid storing recurring payment data — time is sold
+in flat blocks. Crypto receiving addresses + transaction IDs deleted
+after 20 days (except Monero tx_hash).</li>
+<li><strong>No-logging (audited):</strong> NO logging of traffic, DNS
+requests, connection/disconnection events or any timestamps, IP
+addresses, or per-user bandwidth.</li>
+<li><strong>Minimal retained data:</strong> per account — random number,
+expiry date, and (if used) the WireGuard public key + assigned tunnel
+address. Connection-count enforcement (5 simultaneous/account) is done
+<strong>in RAM only, never persisted to disk</strong> — so the limit
+works without a connection log.</li>
+<li><strong>Diskless / RAM-only servers:</strong> Mullvad runs servers
+diskless (System Transparency / <code>stboot</code> network-boot;
+nothing written to persistent disk), so a seized server yields no stored
+user data.</li>
+<li><strong>Self-host takeaway:</strong> the privacy guarantee is
+<em>architectural</em>, not policy-only — (a) identifier is a random
+token, not PII; (b) auth state (keys, sim-conn counts) lives in RAM; (c)
+servers boot diskless; (d) payment is decoupled. Reimplementable: random
+account tokens, in-memory session/key store, ephemeral/network-boot
+server images.</li>
+</ul>
+<hr />
+<h2 id="honest-gaps--unknowns-per-1146--stated-not-guessed">Honest gaps
+/ unknowns (per §11.4.6 — stated, not guessed)</h2>
+<ul>
+<li>The exact wire format of the DAITA v2 machine/budget push
+(client↔︎relay) is not in public docs; only that the relay selects from a
+DB and sends machines + limits.</li>
+<li>The precise multihop port→exit forwarding table format on entry
+servers is not publicly documented (the official multihop help page is
+deliberately high-level); the <code>port = exit</code> config convention
+is documented, the server-side mapping is not.</li>
+<li>The PQ ephemeral-peer handshake message sequence beyond &quot;establish
+WG → KEM exchange → install PSK via <code>mullvad-upgrade-tunnel</code>&quot;
+is not fully specified in public docs.</li>
+</ul>
+<hr />
+<h2 id="sources-verified">Sources verified</h2>
+<ul>
+<li>mullvad-daita-blog — <a href="https://mullvad.net/en/blog/introducing-defense-against-ai-guided-traffic-analysis-daita">https://mullvad.net/en/blog/introducing-defense-against-ai-guided-traffic-analysis-daita</a>
+— accessed 2026-06-25</li>
+<li>mullvad-daita-page — <a href="https://mullvad.net/en/vpn/daita">https://mullvad.net/en/vpn/daita</a>
+— accessed 2026-06-25</li>
+<li>cyberinsider-daita-v2 — <a href="https://cyberinsider.com/mullvads-daita-v2-brings-stronger-resistance-to-ai-enhanced-vpn-traffic-analysis/">https://cyberinsider.com/mullvads-daita-v2-brings-stronger-resistance-to-ai-enhanced-vpn-traffic-analysis/</a>
+— accessed 2026-06-25</li>
+<li>daita-pulls-blog — <a href="https://pulls.name/blog/2025-03-27-daita-v1-and-v2-defenses/">https://pulls.name/blog/2025-03-27-daita-v1-and-v2-defenses/</a>
+— accessed 2026-06-25</li>
+<li>maybenot-github — <a href="https://github.com/maybenot-io/maybenot">https://github.com/maybenot-io/maybenot</a>
+— accessed 2026-06-25</li>
+<li>maybenot-crates — <a href="https://crates.io/crates/maybenot">https://crates.io/crates/maybenot</a>
+— accessed 2026-06-25</li>
+<li>maybenot-docsrs — <a href="https://docs.rs/maybenot/latest/maybenot/">https://docs.rs/maybenot/latest/maybenot/</a>
+— accessed 2026-06-25</li>
+<li>maybenot-acm — <a href="https://dl.acm.org/doi/10.1145/3603216.3624953">https://dl.acm.org/doi/10.1145/3603216.3624953</a>
+— accessed 2026-06-25</li>
+<li>maybenot-witwer — <a href="https://www.ethanwitwer.com/posts/maybenot-framework/">https://www.ethanwitwer.com/posts/maybenot-framework/</a>
+— accessed 2026-06-25</li>
+<li>mullvad-multihop-help — <a href="https://mullvad.net/en/help/multihop-wireguard">https://mullvad.net/en/help/multihop-wireguard</a>
+— accessed 2026-06-25</li>
+<li>mullvad-multihop-blog — <a href="https://mullvad.net/en/blog/wireguard-multihop-now-easy-available-app">https://mullvad.net/en/blog/wireguard-multihop-now-easy-available-app</a>
+— accessed 2026-06-25</li>
+<li>mullvad-pq-help — <a href="https://mullvad.net/en/help/quantum-resistant-tunnels-with-wireguard">https://mullvad.net/en/help/quantum-resistant-tunnels-with-wireguard</a>
+— accessed 2026-06-25</li>
+<li>mullvad-pq-stable-blog — <a href="https://mullvad.net/en/blog/stable-quantum-resistant-tunnels-in-the-app">https://mullvad.net/en/blog/stable-quantum-resistant-tunnels-in-the-app</a>
+— accessed 2026-06-25</li>
+<li>mullvad-pq-allservers-blog — <a href="https://mullvad.net/en/blog/post-quantum-safe-vpn-tunnels-available-on-all-wireguard-servers">https://mullvad.net/en/blog/post-quantum-safe-vpn-tunnels-available-on-all-wireguard-servers</a>
+— accessed 2026-06-25</li>
+<li>mullvad-pq-intro-blog — <a href="https://mullvad.net/en/blog/introducing-post-quantum-vpn-mullvads-strategy-future-problem">https://mullvad.net/en/blog/introducing-post-quantum-vpn-mullvads-strategy-future-problem</a>
+— accessed 2026-06-25</li>
+<li>mullvad-quic-blog — <a href="https://mullvad.net/en/blog/introducing-quic-obfuscation-for-wireguard">https://mullvad.net/en/blog/introducing-quic-obfuscation-for-wireguard</a>
+— accessed 2026-06-25</li>
+<li>mullvad-lwo-blog — <a href="https://mullvad.net/en/blog/introducing-lightweight-wireguard-obfuscation">https://mullvad.net/en/blog/introducing-lightweight-wireguard-obfuscation</a>
+— accessed 2026-06-25</li>
+<li>mullvad-shadowsocks-blog — <a href="https://mullvad.net/en/blog/introducing-shadowsocks-obfuscation-for-wireguard">https://mullvad.net/en/blog/introducing-shadowsocks-obfuscation-for-wireguard</a>
+— accessed 2026-06-25</li>
+<li>privacyguides-obfs — <a href="https://discuss.privacyguides.net/t/how-to-choose-the-best-obfuscation-method-with-mullvadvpn/32227">https://discuss.privacyguides.net/t/how-to-choose-the-best-obfuscation-method-with-mullvadvpn/32227</a>
+— accessed 2026-06-25</li>
+<li>mullvad-dns-malware-blog — <a href="https://mullvad.net/en/blog/adding-another-layer-malware-dns-blocking">https://mullvad.net/en/blog/adding-another-layer-malware-dns-blocking</a>
+— accessed 2026-06-25</li>
+<li>mullvad-dns-adblock-blog — <a href="https://mullvad.net/en/blog/how-were-knocking-down-ads-and-tracking">https://mullvad.net/en/blog/how-were-knocking-down-ads-and-tracking</a>
+— accessed 2026-06-25</li>
+<li>mullvad-doh-help — <a href="https://mullvad.net/en/help/dns-over-https-and-dns-over-tls">https://mullvad.net/en/help/dns-over-https-and-dns-over-tls</a>
+— accessed 2026-06-25</li>
+<li>mullvad-dns-blocklists-gh — <a href="https://github.com/mullvad/dns-blocklists">https://github.com/mullvad/dns-blocklists</a>
+— accessed 2026-06-25</li>
+<li>mullvad-killswitch-search — <a href="https://mullvad.net/en/help/using-mullvad-vpn-app">https://mullvad.net/en/help/using-mullvad-vpn-app</a>
+— accessed 2026-06-25</li>
+<li>mullvad-security-md — <a href="https://github.com/mullvad/mullvadvpn-app/blob/main/docs/security.md">https://github.com/mullvad/mullvadvpn-app/blob/main/docs/security.md</a>
+— accessed 2026-06-25</li>
+<li>mullvad-splittunnel-help — <a href="https://mullvad.net/en/help/split-tunneling-with-the-mullvad-app">https://mullvad.net/en/help/split-tunneling-with-the-mullvad-app</a>
+— accessed 2026-06-25</li>
+<li>mullvad-nolog-help — <a href="https://mullvad.net/en/help/no-logging-data-policy">https://mullvad.net/en/help/no-logging-data-policy</a>
+— accessed 2026-06-25</li>
+<li>mullvad-accountnumbers-blog — <a href="https://mullvad.net/en/blog/mullvads-account-numbers-get-longer-and-safer">https://mullvad.net/en/blog/mullvads-account-numbers-get-longer-and-safer</a>
+— accessed 2026-06-25</li>
+<li>threads-mullvad-summary — <a href="https://www.threads.com/@jacaranda7/post/DRzPij5kbA2/">https://www.threads.com/@jacaranda7/post/DRzPij5kbA2/</a>
+— accessed 2026-06-25</li>
+</ul>
+</body>
+</html>

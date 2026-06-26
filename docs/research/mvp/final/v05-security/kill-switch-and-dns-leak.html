@@ -1,0 +1,1521 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Kill-switch &amp; DNS-leak protection</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Kill-switch &amp; DNS-leak protection</h1>
+</header>
+<h1 id="kill-switch--dns-leak-protection">Kill-switch &amp; DNS-leak
+protection</h1>
+<p><strong>Revision:</strong> 2 <strong>Last modified:</strong>
+2026-06-26T12:00:00Z</p>
+<blockquote>
+<p>Master technical specification — <strong>Volume 5 (Security &amp;
+Privacy)</strong>, nano-detail deep-dive. This document
+<strong>deepens</strong> the kill-switch / DNS-leak invariant (<a href="../04-security-privacy-pki.md"><code>04-security-privacy-pki.md</code></a>
+§8, invariant <strong>S9</strong>) into an implementation-ready
+specification of the <strong>leak-proof firewall state machine</strong>:
+how the core-owned <code>KillSwitch</code> arms
+<em>closed-before-the-first-handshake</em>, blocks every non-tunnel
+egress on a drop, and reverts only on a user-initiated stop; how each OS
+shim <em>realises</em> that single abstract state machine in its native
+firewall primitive (Apple NE routing + <code>NEDNSSettings</code>,
+Android always-on lockdown + <code>VpnService.protect()</code>, Windows
+WFP, Linux nftables); how DNS-leak and IPv6-leak windows are closed; and
+how a trip projects to the FFI <code>Danger</code> overlay the UI paints
+red. <strong>SPEC ONLY</strong> — it describes <em>what to build</em>,
+not the shipping product.</p>
+<p><strong>Ownership boundary.</strong> The <strong>state-machine
+bodies</strong> (the <code>Firewall::enforce</code> contract, the
+side-effect matrix, the kill-switch ⇄ DNS coupling) are owned by the
+data-plane orchestrator, cited <code>[v02-orch §8]</code> (<a href="../v02-data-plane/orchestrator-and-state.md"><code>../v02-data-plane/orchestrator-and-state.md</code></a>).
+The <strong>security invariant</strong> (S9: no plaintext egress when
+the tunnel is down or escalating) is owned by the master security doc
+§8, cited <code>[04-SEC §8]</code>. The <strong>per-OS firewall
+realisation</strong> is owned by the four shim docs (cited
+<code>[shim-apple §N]</code>, <code>[shim-android §N]</code>,
+<code>[shim-windows §N]</code>, <code>[shim-linux §N]</code>). The
+<strong>FFI <code>Danger</code> projection</strong> is owned by the Rust
+client core, cited <code>[hc §5/§8]</code> (<a href="../v04-client/helix-core-rust.md"><code>../v04-client/helix-core-rust.md</code></a>).
+This document <strong>owns</strong> the <em>cross-platform
+synthesis</em>: the one abstract state machine, the per-OS capability
+matrix, the DNS/IPv6 leak-closure taxonomy, the honest-gap ledger, and
+the anti-bluff validation contract. It does <strong>not</strong>
+redefine the orchestrator loops, the <code>Transport</code> trait, or
+the WG crypto core.</p>
+<p><strong>Evidence base, cited inline by id.</strong>
+<code>[04-SEC §N]</code> = <a href="../04-security-privacy-pki.md"><code>../04-security-privacy-pki.md</code></a>;
+<code>[hc §N]</code> = <a href="../v04-client/helix-core-rust.md"><code>../v04-client/helix-core-rust.md</code></a>;
+<code>[v02-orch §N]</code> = <a href="../v02-data-plane/orchestrator-and-state.md"><code>../v02-data-plane/orchestrator-and-state.md</code></a>;
+<code>[shim-apple §N]</code> / <code>[shim-android §N]</code> /
+<code>[shim-windows §N]</code> / <code>[shim-linux §N]</code> = the four
+Volume-4 shim nano-docs; <code>[04_ARCH §N]</code> /
+<code>[04_P1 §N]</code> = the pass-1 architecture + Phase-1 MVP docs.
+Any claim not grounded in the evidence base is tagged
+<code>UNVERIFIED</code> per constitution §11.4.6 — never fabricated.</p>
+</blockquote>
+<hr />
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#0-position-ownership-and-invariants">0. Position,
+ownership, and invariants</a></li>
+<li><a href="#1-the-threat-a-privacy-vpn-that-leaks-when-the-tunnel-drops-is-broken">1.
+The threat: a privacy VPN that leaks when the tunnel drops is
+broken</a></li>
+<li><a href="#2-the-abstract-kill-switch-state-machine-one-machine-all-platforms">2.
+The abstract kill-switch state machine (one machine, all
+platforms)</a></li>
+<li><a href="#3-firewall-posture-per-state--the-rules-the-core-emits">3.
+Firewall posture per state — the rules the core emits</a></li>
+<li><a href="#4-the-firewall-trait--the-cross-platform-seam">4. The
+<code>Firewall</code> trait — the cross-platform seam</a></li>
+<li><a href="#5-per-os-enforcement-realisation">5. Per-OS enforcement
+realisation</a></li>
+<li><a href="#6-dns-leak-prevention">6. DNS-leak prevention</a></li>
+<li><a href="#7-ipv6-leak-closure">7. IPv6-leak closure</a></li>
+<li><a href="#8-the-danger-projection--surfacing-a-trip-to-the-ui">8.
+The <code>Danger</code> projection — surfacing a trip to the UI</a></li>
+<li><a href="#9-per-os-capability-matrix--honest-gaps">9. Per-OS
+capability matrix + honest gaps</a></li>
+<li><a href="#10-anti-bluff-validation-1141107114169">10. Anti-bluff
+validation (§11.4.107/§11.4.69)</a></li>
+<li><a href="#11-config-knobs">11. Config knobs</a></li>
+<li><a href="#12-open-decisions--cross-doc-contracts">12. Open decisions
+&amp; cross-doc contracts</a></li>
+<li><a href="#sources-verified">Sources verified</a></li>
+</ul>
+<hr />
+<h2 id="0-position-ownership-and-invariants">0. Position, ownership, and
+invariants</h2>
+<p>The kill-switch and DNS-leak protection are a <strong>core-owned
+state machine</strong> (<code>helix-core</code>, the
+<code>helix-killswitch</code> crate), <strong>never</strong> hand-edited
+firewall rules an operator can forget to apply or forget to revert
+[04-SEC §8, 04_ARCH §6 row]. The core drives the OS firewall;
+<strong>the rules are an <em>output</em> of the state machine, not an
+input</strong>. This is the load-bearing inversion: a VPN whose leak
+protection is a config-file the user toggles has a leak window every
+time the config and the link state disagree. Here the firewall posture
+is a <em>pure function of the <code>OrchState</code> transition</em>
+(O-I10/O-I11 [v02-orch §8]), re-applied <strong>before</strong> the
+network operation it guards, so there is no instant where the UI shows
+&quot;connected&quot; while the firewall is open.</p>
+<h3 id="01-the-invariants-this-document-enforces">0.1 The invariants
+this document enforces</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Invariant</th>
+<th>Enforced where</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>K1</strong></td>
+<td><strong>Armed-closed-before-the-first-handshake.</strong> In Strict
+mode the firewall installs the closed rule set on
+<code>Idle → Connecting</code> — <em>before</em> any packet can leave —
+so there is no pre-connect plaintext window.</td>
+<td>§2, §3</td>
+<td>[v02-orch §8.2], [shim-linux §11.1]</td>
+</tr>
+<tr>
+<td><strong>K2</strong></td>
+<td><strong>Fail-closed on drop.</strong> A lost handshake/keepalive
+transitions to <code>Reconnecting</code>/<code>Down</code> and the
+firewall <strong>stays closed</strong> (keeps the DNS block too). The
+user&#39;s apps cannot reach the underlay while the tunnel is
+re-dialling.</td>
+<td>§2, §3</td>
+<td>[v02-orch §8.4], [04-SEC §8.1]</td>
+</tr>
+<tr>
+<td><strong>K3</strong></td>
+<td><strong>Revert only on user-stop.</strong> The closed rule set is
+removed <strong>only</strong> on a user-initiated stop
+(<code>ShuttingDown → Down{stopped}</code>). Every other terminal
+(<code>auth-failed</code>, ladder-exhausted, crash) leaves it
+closed.</td>
+<td>§2, §5</td>
+<td>[shim-windows §8.6], [shim-linux §8.6]</td>
+</tr>
+<tr>
+<td><strong>K4</strong></td>
+<td><strong>Survives crash.</strong> If the core process dies, the
+closed firewall rules <strong>remain</strong> (Windows
+<code>FWPM_FILTER_FLAG_PERSISTENT</code>; Linux systemd
+<code>ExecStopPost</code>; the next <code>start()</code> re-arms). A
+crash must not become a leak.</td>
+<td>§3, §5</td>
+<td>[v02-orch §8.4 crash row], [shim-windows §8.2]</td>
+</tr>
+<tr>
+<td><strong>K5</strong></td>
+<td><strong>DNS is forced through the tunnel; off-tunnel
+<code>:53</code>/<code>:853</code> is dropped</strong> in every
+non-<code>Disconnected</code> state. A misbehaving app cannot reach a
+hardcoded <code>8.8.8.8</code>.</td>
+<td>§6</td>
+<td>[04-SEC §8.3], [hc §8.1]</td>
+</tr>
+<tr>
+<td><strong>K6</strong></td>
+<td><strong>No partial IPv6 capture.</strong> If the host has native
+IPv6, the core either routes the overlay v6 <strong>and</strong> blocks
+native v6 egress, or fully captures v6 — never a partial-capture
+leak.</td>
+<td>§7</td>
+<td>[04-SEC §8.3]</td>
+</tr>
+<tr>
+<td><strong>K7</strong></td>
+<td><strong>A trip is surfaced, never hidden.</strong> A kill-switch
+trip or a positive leak probe projects to the FFI
+<code>Danger{kind}</code> overlay and the red <code>stateDanger</code>
+palette — and is <em>never guessed</em> (raised only on a concrete
+signal).</td>
+<td>§8</td>
+<td>[hc §5.2/§8.4], §11.4.6</td>
+</tr>
+</tbody>
+</table>
+<h3 id="02-what-this-document-does-not-own">0.2 What this document does
+NOT own</h3>
+<ul>
+<li>The orchestrator state machine bodies and the <code>OrchState</code>
+enum — [v02-orch §3/§8].</li>
+<li>The <code>TunnelStatus</code> core 5-variant enum and its FFI
+projection mechanics — [hc §5].</li>
+<li>The transport ladder / re-dial backoff that drives
+<code>Reconnecting</code> — [v02-orch §7].</li>
+<li>The WireGuard crypto handshake whose success drives
+<code>Connected</code> — doc 01.</li>
+</ul>
+<pre class="mermaid"><code>flowchart TB
+    subgraph core[&quot;helix-core (the conductor)&quot;]
+        ORCH[&quot;Orchestrator OrchState (v02-orch §3/§8)&quot;]
+        KS[&quot;helix-killswitch::KillSwitch\n(single transition authority)&quot;]
+        ORCH --&gt;|&quot;transition(to, ctx)&quot;| KS
+    end
+    subgraph shims[&quot;per-OS Firewall impls (this doc §5)&quot;]
+        NE[&quot;Apple: NE routing +\nNEDNSSettings matchDomains&quot;]
+        AND[&quot;Android: always-on lockdown +\nVpnService.protect()&quot;]
+        WFP[&quot;Windows: WFP persistent\nsub-layer (default-DROP)&quot;]
+        NFT[&quot;Linux: nftables\noutput hook policy drop&quot;]
+    end
+    KS --&gt;|&quot;Box&lt;dyn Firewall&gt;::enforce(state, gw, tun_if, dns)&quot;| NE &amp; AND &amp; WFP &amp; NFT
+    KS --&gt;|&quot;trip / leak signal&quot;| PROJ[&quot;FFI Danger{kind} projection (hc §8.4)&quot;]
+    PROJ --&gt; UI[&quot;UI red stateDanger palette&quot;]</code></pre>
+<hr />
+<h2 id="1-the-threat-a-privacy-vpn-that-leaks-when-the-tunnel-drops-is-broken">1.
+The threat: a privacy VPN that leaks when the tunnel drops is
+broken</h2>
+<p>The end-user promise of a privacy VPN is &quot;my real IP and my DNS
+queries are never visible on the underlay.&quot; That promise is
+<strong>easiest to break at the seams</strong> — the moments the tunnel
+is <em>not</em> steadily up:</p>
+<table>
+<thead>
+<tr>
+<th>Leak window</th>
+<th>What leaks</th>
+<th>Without a kill-switch</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Pre-connect</strong> (app sends before the tunnel is
+up)</td>
+<td>real IP + plaintext DNS to the underlay</td>
+<td>every packet before the first handshake escapes</td>
+</tr>
+<tr>
+<td><strong>Mid-session drop</strong> (Wi-Fi flap, server restart,
+transport ladder re-dial)</td>
+<td>real IP for the entire reconnect window</td>
+<td>the OS silently falls back to the physical interface</td>
+</tr>
+<tr>
+<td><strong>DNS bypass</strong> (app hardcodes <code>8.8.8.8</code> /
+uses DoH to a public resolver)</td>
+<td>the destinations the user visits</td>
+<td>tunnel-DNS settings alone do not block a hardcoded resolver</td>
+</tr>
+<tr>
+<td><strong>IPv6 fall-through</strong> (overlay is v4/ULA-v6 only, host
+has native v6)</td>
+<td>real v6 address + v6 destinations</td>
+<td>native v6 egress bypasses a v4-only tunnel</td>
+</tr>
+<tr>
+<td><strong>Crash / extension restart</strong></td>
+<td>everything until the process re-arms</td>
+<td>the firewall is gone with the process</td>
+</tr>
+</tbody>
+</table>
+<p>Each row is a real, observed failure class in commodity VPNs.
+HelixVPN closes <strong>all five</strong> by construction: the firewall
+is armed <em>before</em> the first handshake (closes pre-connect), stays
+closed on drop (closes mid-session), drops off-tunnel <code>:53</code>
+(closes DNS bypass for plaintext; DoH/DoT handled in §6.4),
+captures-or-blocks v6 (closes IPv6 fall-through), and persists the
+closed rules across a crash (closes the restart window). The
+<strong>acceptance test</strong> is mechanical: drop the tunnel
+mid-transfer and assert via packet capture on the host&#39;s
+<em>physical</em> interface that <strong>zero</strong> plaintext packets
+— including <code>:53</code> — egress during
+<code>Reconnecting</code>/<code>Blocked</code> [04-SEC §8.4, 04_P1 §11
+DoD #6]. See §10.</p>
+<hr />
+<h2 id="2-the-abstract-kill-switch-state-machine-one-machine-all-platforms">2.
+The abstract kill-switch state machine (one machine, all platforms)</h2>
+<p>There is exactly <strong>one</strong> kill-switch state machine. It
+lives in <code>helix-core</code>; every OS shim implements only the
+<code>Firewall::enforce</code> primitive it calls (§4). The link states
+mirror the orchestrator&#39;s <code>OrchState</code> and the
+<code>TunnelStatus</code> it broadcasts [hc §5, v02-orch §4.1];
+<code>Blocked</code> is the hard-lockdown sub-state the kill-switch
+adds.</p>
+<pre class="mermaid"><code>stateDiagram-v2
+    [*] --&gt; Disconnected
+    Disconnected --&gt; Connecting: user connects / auto-reconnect
+    Connecting --&gt; Connected: WG handshake OK on some transport
+    Connecting --&gt; Blocked: handshake fails AND killswitch=Strict (lockdown — NO plaintext egress)
+    Connected --&gt; Reconnecting: handshake / keepalive lost
+    Reconnecting --&gt; Connected: re-handshake OK (same/next rung in the ladder, doc 01)
+    Reconnecting --&gt; Blocked: transport ladder exhausted AND killswitch=Strict
+    Connected --&gt; Disconnecting: user disconnects
+    Disconnecting --&gt; Disconnected: firewall RESTORED (Strict→off) OR stays Blocked (lockdown mode)
+    Blocked --&gt; Connecting: retry (auto-reconnect)
+    note right of Blocked
+      In Blocked / Reconnecting the firewall permits ONLY:
+        - egress to the gateway endpoint(s) (to re-handshake)
+        - traffic on the tunnel interface itself
+      EVERYTHING ELSE (incl. plaintext :53 / :853) is dropped. No leak window. (K2/K5)
+    end note</code></pre>
+<h3 id="21-the-single-transition-authority">2.1 The single transition
+authority</h3>
+<div class="sourceCode" id="cb3"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-core/crates/helix-killswitch/src/sm.rs  (contract — state machine, not full impl)</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co">// [04-SEC §8.4 reproduced; the body coupling is owned by v02-orch §8]</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="bu">Clone</span><span class="op">,</span> <span class="bu">Copy</span><span class="op">,</span> <span class="bu">PartialEq</span><span class="op">,</span> <span class="bu">Eq</span><span class="at">)]</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">enum</span> LinkState <span class="op">{</span> Disconnected<span class="op">,</span> Connecting<span class="op">,</span> Connected<span class="op">,</span> Reconnecting<span class="op">,</span> Blocked<span class="op">,</span> Disconnecting <span class="op">}</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">enum</span> KillSwitchMode <span class="op">{</span> Strict<span class="op">,</span> Permissive<span class="op">,</span> Off <span class="op">}</span>   <span class="co">// maps from Shields.kill_switch (hc §8.1)</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="co">// MVP FFI reach: Shields.kill_switch is a BOOL -&gt; only { Strict (true), Off (false) }.</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="co">// `Permissive` is Phase-2 / internal-only — NOT selectable through the MVP FFI (see §2.2).</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> LinkCtx <span class="op">{</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> gateways<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span>SocketAddr<span class="op">&gt;,</span>   <span class="co">// allow_gateway_endpoints — stay reachable to re-handshake</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> tun_if<span class="op">:</span>   <span class="dt">String</span><span class="op">,</span>            <span class="co">// the tun/wg carrier device name</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> dns<span class="op">:</span>      <span class="dt">Vec</span><span class="op">&lt;</span>IpAddr<span class="op">&gt;,</span>       <span class="co">// tunnel DNS servers (from RouteMap.dns)</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> allow_lan<span class="op">:</span> <span class="dt">bool</span><span class="op">,</span>             <span class="co">// permit RFC1918 LAN while closed (printers etc.)</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> KillSwitch <span class="op">{</span> fw<span class="op">:</span> <span class="dt">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> Firewall<span class="op">&gt;,</span> mode<span class="op">:</span> KillSwitchMode <span class="op">}</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> KillSwitch <span class="op">{</span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// THE single authority for the transition. On EVERY transition it re-enforces the</span></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// firewall BEFORE the network operation, so no plaintext can escape during the change</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// (S9/K1/K2). Idempotent: re-applying the same state is a no-op at the OS layer.</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">fn</span> transition(<span class="op">&amp;</span><span class="kw">mut</span> <span class="kw">self</span><span class="op">,</span> to<span class="op">:</span> LinkState<span class="op">,</span> ctx<span class="op">:</span> <span class="op">&amp;</span>LinkCtx) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">,</span> FwError<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="pp">matches!</span>(<span class="kw">self</span><span class="op">.</span>mode<span class="op">,</span> <span class="pp">KillSwitchMode::</span>Off) <span class="op">{</span> <span class="cf">return</span> <span class="kw">self</span><span class="op">.</span>fw<span class="op">.</span>restore()<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>        <span class="kw">self</span><span class="op">.</span>fw<span class="op">.</span>enforce(to<span class="op">,</span> <span class="op">&amp;</span>ctx<span class="op">.</span>gateways<span class="op">,</span> <span class="op">&amp;</span>ctx<span class="op">.</span>tun_if<span class="op">,</span> <span class="op">&amp;</span>ctx<span class="op">.</span>dns)<span class="op">?;</span>   <span class="co">// firewall FIRST…</span></span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>        <span class="co">// …then the orchestrator&#39;s link operation (bring up/down peer) proceeds (v02-orch §8).</span></span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>        <span class="cn">Ok</span>(())</span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>The <strong>ordering is the invariant</strong>: <code>enforce</code>
+runs <em>before</em> the link op, so even a transition that is about to
+open the tunnel first installs the closed-or-tunnel-only rule set. There
+is never a window where the orchestrator has changed
+<code>OrchState</code> but the firewall has not yet caught up (F-I4 [hc
+§0.3]).</p>
+<h3 id="22-mode-semantics">2.2 Mode semantics</h3>
+<table>
+<thead>
+<tr>
+<th><code>KillSwitchMode</code></th>
+<th>Behaviour</th>
+<th>Typical user</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong><code>Strict</code></strong></td>
+<td>armed-closed before the first handshake; fail-closed on every drop;
+<code>Blocked</code> lockdown when re-dial fails; revert only on
+user-stop</td>
+<td>privacy client (default for Helix Access)</td>
+</tr>
+<tr>
+<td><strong><code>Permissive</code></strong> <em>(Phase-2 /
+internal-only)</em></td>
+<td>tunnel-DNS + off-tunnel <code>:53</code> block while
+<code>Connected</code>, but a drop reverts to system networking (no
+<code>Blocked</code> lockdown)</td>
+<td>a user who prefers connectivity-over-privacy on drop — <strong>not
+reachable from the MVP FFI</strong> (§2.2 note)</td>
+</tr>
+<tr>
+<td><strong><code>Off</code></strong></td>
+<td>no firewall side effects; <code>restore()</code> keeps the host&#39;s
+pre-VPN posture</td>
+<td>the connector appliance (<code>KillSwitchMode::Off</code> default
+[v02-orch §9.4])</td>
+</tr>
+</tbody>
+</table>
+<p><code>Strict</code> is the default for the privacy client; the
+connector defaults to <code>Off</code> because it is an appliance, not a
+privacy endpoint [hc §9.4, v02-orch §9.4].</p>
+<blockquote>
+<p><strong>Reconciled (§11.4.35, 2026-06-26):</strong> the MVP FFI
+surface exposes <code>Shields.kill_switch</code> as a
+<strong>bool</strong>, which maps to exactly two modes —
+<code>Strict</code> (true) and <code>Off</code> (false).
+<code>Permissive</code> is therefore <strong>Phase-2 /
+internal-only</strong>: it exists in the core enum for the future
+&quot;connectivity on drop&quot; choice (an explicit, surfaced mode, never a
+silent fallback, §11.4.6) but is <strong>not selectable through the MVP
+FFI</strong> — the doc must not imply an MVP control that does not yet
+exist.</p>
+</blockquote>
+<hr />
+<h2 id="3-firewall-posture-per-state--the-rules-the-core-emits">3.
+Firewall posture per state — the rules the core emits</h2>
+<p>This is the abstract rule set every shim realises. The columns are
+the <em>intent</em>; §5 maps each to a native primitive.</p>
+<table>
+<thead>
+<tr>
+<th>State</th>
+<th>Allowed egress</th>
+<th>DNS</th>
+<th>FFI projection</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Disconnected</code></td>
+<td>all (Strict→off) <strong>or</strong> none (lockdown-on-disconnect
+toggle)</td>
+<td>system</td>
+<td><code>Disconnected</code></td>
+<td>lockdown toggle = &quot;block until connected&quot;</td>
+</tr>
+<tr>
+<td><code>Connecting</code> / <code>Reconnecting</code></td>
+<td><strong>only</strong> to gateway endpoint IP:port</td>
+<td>blocked (no off-tunnel <code>:53</code>)</td>
+<td><code>Connecting</code> / <code>Reconnecting</code></td>
+<td>prevents leak during the escalation ladder</td>
+</tr>
+<tr>
+<td><code>Connected</code></td>
+<td><strong>only</strong> via the tunnel
+<code>utun</code>/<code>wg0</code> + the gateway endpoint</td>
+<td>tunnel DNS only; off-tunnel <code>:53</code>/<code>:853</code>
+dropped</td>
+<td><code>Connected{...}</code></td>
+<td>the only steady state</td>
+</tr>
+<tr>
+<td><code>Blocked</code></td>
+<td><strong>only</strong> to the gateway endpoint (to recover)</td>
+<td>blocked</td>
+<td><code>Reconnecting</code> or
+<code>Danger{killswitch_tripped}</code></td>
+<td>hard lockdown; UI shows &quot;protected, reconnecting&quot;</td>
+</tr>
+</tbody>
+</table>
+<h3 id="31-the-side-effect-matrix-drives-both-the-firewall-and-the-danger-projection">3.1
+The side-effect matrix (drives both the firewall and the
+<code>Danger</code> projection)</h3>
+<p>This matrix is the canonical coupling [v02-orch §8.4, hc §8.2]; the
+FFI column is the §8 projection.</p>
+<table>
+<thead>
+<tr>
+<th>Transition</th>
+<th>Kill-switch (Strict)</th>
+<th>DNS</th>
+<th>FFI projection</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Idle → Connecting</code></td>
+<td>install <strong>closed</strong> (allow gateway endpoints only) —
+<strong>K1</strong></td>
+<td>system DNS</td>
+<td><code>Connecting</code></td>
+</tr>
+<tr>
+<td><code>Handshaking → Connected</code></td>
+<td><strong>open</strong> (egress via tunnel)</td>
+<td>apply tunnel DNS + block off-tunnel <code>:53</code> —
+<strong>K5</strong></td>
+<td><code>Connected{transport,rtt}</code></td>
+</tr>
+<tr>
+<td><code>Connected → Reconnecting</code> (drop)</td>
+<td><strong>close</strong> — <strong>K2</strong> (O-I11)</td>
+<td>keep tunnel-DNS block (fail-closed)</td>
+<td><code>Reconnecting</code></td>
+</tr>
+<tr>
+<td><code>* → Down{reason≠stopped}</code></td>
+<td><strong>stay closed</strong> — <strong>K3</strong></td>
+<td>keep block</td>
+<td><code>Down{reason}</code> (or
+<code>Danger{killswitch_tripped}</code> if a leak probe fired)</td>
+</tr>
+<tr>
+<td><code>ShuttingDown → Down{stopped}</code> (user)</td>
+<td>revert to <strong>off</strong> (open) — <strong>K3</strong></td>
+<td>revert system DNS</td>
+<td><code>Disconnected</code></td>
+</tr>
+<tr>
+<td>crash / panic</td>
+<td>closed rules <strong>remain</strong> — <strong>K4</strong></td>
+<td>block <strong>remains</strong></td>
+<td>(process restarts; <code>start()</code> re-arms)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="32-the-kill-switch--dns-sub-machine">3.2 The kill-switch ⇄ DNS
+sub-machine</h3>
+<pre class="mermaid"><code>stateDiagram-v2
+    [*] --&gt; Open
+    Open --&gt; Closed : Idle→Connecting (Strict) — arm before first handshake (K1)
+    Closed --&gt; OpenTunnel : Handshaking→Connected — egress via tunnel + tunnel DNS + block :53 (K5)
+    OpenTunnel --&gt; Closed : Connected→Reconnecting/Down (drop) — keep DNS block (K2)
+    Closed --&gt; OpenTunnel : re-dial succeeded (Reconnecting→Connected)
+    Closed --&gt; Open : user Stop ONLY — revert system DNS (K3)
+    OpenTunnel --&gt; Open : user Stop ONLY
+    Closed --&gt; Closed : crash (rules persist) → core restart re-arms (K4)</code></pre>
+<h3 id="33-auth-failed-is-closed-and-terminal">3.3
+<code>auth-failed</code> is closed-and-terminal</h3>
+<p>A revoked device — whose <code>peers_removed</code> delta includes
+the <em>active</em> gateway (the revocation path, [hc §7.3]) — reaches
+<code>Down{auth-failed}</code> with the kill-switch
+<strong>closed</strong> and DNS <strong>blocked</strong>. A revoked
+client <strong>cannot leak onto the underlay by virtue of being
+revoked</strong> [hc §8.5, v02-orch §8.5]: the firewall is in the
+<code>Closed</code> state, not <code>Open</code>. Recovery requires
+explicit user re-enroll through <code>start()</code>. This is the
+security intersection of revocation (S5, [04-SEC §4.6]) and the
+kill-switch (S9): a sub-second revocation does not merely stop the
+tunnel, it leaves the device <em>leak-proofed</em>.</p>
+<hr />
+<h2 id="4-the-firewall-trait--the-cross-platform-seam">4. The
+<code>Firewall</code> trait — the cross-platform seam</h2>
+<p>Every shim implements <strong>one</strong> trait; the abstract state
+machine (§2) is platform-agnostic.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-core/crates/helix-killswitch/src/firewall.rs  (the seam each shim implements)</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="co">// [04-SEC §8.4 reproduced; impls owned by the four shim docs §5]</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">trait</span> Firewall <span class="op">{</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Apply the leak-proof rule set for `state`. MUST be ATOMIC — there is no transient</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// open window between flushing the old rules and installing the new (K1). On a platform</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// whose primitive is non-atomic, the impl uses a transaction/lock (nft atomic ruleset,</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// WFP transaction) so a reader never observes a half-applied posture.</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> enforce(<span class="op">&amp;</span><span class="kw">self</span><span class="op">,</span> state<span class="op">:</span> LinkState<span class="op">,</span> gw<span class="op">:</span> <span class="op">&amp;</span>[SocketAddr]<span class="op">,</span> tun_if<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span><span class="op">,</span> dns<span class="op">:</span> <span class="op">&amp;</span>[IpAddr])</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>        <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">,</span> FwError<span class="op">&gt;;</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Restore the host&#39;s pre-VPN firewall. Called ONLY on Disconnected when the mode is Off</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// or on a user-initiated stop (K3). Never called on a drop.</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> restore(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">,</span> FwError<span class="op">&gt;;</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Probe: does any off-tunnel egress currently escape? Used by the leak probe (§8/§10)</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// to raise Danger{leak} on positive evidence — never to guess (§11.4.6).</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> leak_probe(<span class="op">&amp;</span><span class="kw">self</span><span class="op">,</span> tun_if<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span>) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>LeakVerdict<span class="op">,</span> FwError<span class="op">&gt;;</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">enum</span> LeakVerdict <span class="op">{</span> Clean<span class="op">,</span> OffTunnelEgressDetected <span class="op">{</span> proto<span class="op">:</span> <span class="dt">String</span><span class="op">,</span> dport<span class="op">:</span> <span class="dt">u16</span> <span class="op">}</span> <span class="op">}</span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">enum</span> FwError <span class="op">{</span></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// The host firewall could not be programmed. The core treats this as HostFatal:</span></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// it REFUSES to run a tunnel it cannot leak-protect (maps to CoreError::HostFatal, hc §10.1).</span></span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>    EnforceFailed(<span class="dt">String</span>)<span class="op">,</span></span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>    NotPermitted(<span class="dt">String</span>)<span class="op">,</span>    <span class="co">// missing CAP_NET_ADMIN / WFP access / NE entitlement</span></span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>The <strong><code>EnforceFailed → HostFatal</code></strong> rule is
+load-bearing: if the firewall cannot be programmed, the core does
+<strong>not</strong> silently run an unprotected tunnel — it emits
+<code>Down{host-fatal}</code> and <code>start()</code> returns
+<code>Err(HostFatal)</code> [hc §10.1]. A VPN that cannot guarantee leak
+protection is honestly refused, not optimistically run. This is the
+§11.4 anti-bluff posture at the firewall layer: no &quot;probably protected&quot;
+PASS.</p>
+<hr />
+<h2 id="5-per-os-enforcement-realisation">5. Per-OS enforcement
+realisation</h2>
+<p>One abstract machine, five native primitives. Each shim owns the
+column-3 mechanism; this section is the synthesis with concrete rule
+sketches and exact citations.</p>
+<h3 id="51-linux--nftables-output-hook-default-drop">5.1 Linux —
+nftables <code>output</code>-hook default-drop</h3>
+<p>The reference platform [shim-linux §11]. The kill-switch is an
+nftables table whose <code>output</code> chain has
+<code>policy drop</code>, installed at <code>Idle → Connecting</code>
+(Strict):</p>
+<pre class="nftables"><code># helix-netd installs this at Idle→Connecting (Strict). [shim-linux §11.1]
+table inet helix_killswitch {
+  chain output {
+    type filter hook output priority 0; policy drop;        # default-DROP egress (fail-closed, K1/K2)
+    oifname &quot;helix0&quot; accept                                 # the tun/wg carrier device (tunnel traffic)
+    ip  daddr &lt;gateway_endpoints&gt; udp dport 443 accept      # allow_gateway_endpoints (re-handshake)
+    ip  daddr &lt;gateway_endpoints&gt; tcp dport 443 accept      # masque / uot dial
+    ip6 daddr &lt;gateway_endpoints6&gt; udp dport 443 accept     # dual-stack gateway reach (K6)
+    meta l4proto { icmp, icmpv6 } accept                    # ND / DHCP link bring-up
+    ip  daddr &lt;rfc1918&gt; accept                              # allow_lan (config; printers etc.)
+  }
+}
+# Plaintext :53 leak guard (block_plaintext_53 when Connected) — [shim-linux §11.2]:
+#   chain output { ... meta l4proto { udp, tcp } th dport 53 oifname != &quot;helix0&quot; drop; }</code></pre>
+<ul>
+<li><strong><code>&lt;gateway_endpoints&gt;</code></strong> =
+<code>KillSwitchConfig.allow_gateway_endpoints</code> [v02-orch §8.2] —
+interpolated by the core, never hand-edited.</li>
+<li><strong>Fail-closed across crash (K4):</strong> the table
+<strong>stays installed on crash</strong>; the systemd unit&#39;s
+<code>ExecStopPost=/usr/lib/helixvpn/helix-netd --flush-killswitch-on-crash</code>
+is the <em>only</em> path that flushes it, and only on a <em>user</em>
+stop [shim-linux §8.6, §11.1].</li>
+<li><strong>Atomicity:</strong> the impl swaps the ruleset with an
+<code>nft -f</code> atomic transaction so no reader observes a
+half-applied table.</li>
+<li><strong>DNS:</strong> conditional on the host stack —
+<code>resolvectl dns helix0 &lt;dns&gt;</code> +
+<code>resolvectl domain helix0 &#39;~.&#39;</code> (systemd-resolved),
+<code>resolvconf -a helix0</code> (resolvconf), or an atomic
+<code>/etc/resolv.conf</code> rewrite-with-backup-and-restore (static)
+[shim-linux §11.2].</li>
+</ul>
+<h3 id="52-windows--wfp-persistent-sub-layer">5.2 Windows — WFP
+persistent sub-layer</h3>
+<p>A privileged <code>SYSTEM</code> service hosts the core and installs
+WFP filters [shim-windows §8]. On <code>Idle → Connecting</code>
+(Strict) it installs a <strong>default-block</strong> filter at the
+outbound IP layers plus narrow permits:</p>
+<pre class="text"><code># WFP filters [shim-windows §8.2] — installed FWPM_FILTER_FLAG_PERSISTENT (survive crash, K4)
+Layers:  FWPM_LAYER_OUTBOUND_IPPACKET_V4 / _V6      (dual-stack, K6)
+Default: policy = DROP
+Permits:
+  - ip.remote_address ∈ allow_gateway_endpoints  (udp dport 443, tcp dport 443)
+  - ip.local_interface = wintun LUID             (tunnelled traffic via the adapter)
+  - meta l4proto { icmp, icmpv6 }                (ND / bootstrap)
+  - ip.daddr ∈ RFC1918  (only if allow_lan)
+# DNS guard [shim-windows §8.3] — on Handshaking→Connected:
+  - drop any :53 (UDP+TCP) egress NOT over the wintun interface
+  - apply tunnel DNS via SetInterfaceDnsSettings on the adapter LUID
+# Per-app split: dynamic FWPM_CONDITION_ALE_APP_ID at ALE_AUTH_CONNECT [shim-windows §8.5]</code></pre>
+<ul>
+<li><strong>Persistent filters survive a service crash (K4)</strong> —
+the <code>FWPM_FILTER_FLAG_PERSISTENT</code> flag means the block holds
+even if <code>HelixTunnelSvc</code> dies; the next start
+reconciles.</li>
+<li><strong>The only open path (K3):</strong> the persistent kill-switch
+is removed <strong>only</strong> on a user-initiated
+<code>StopTunnel → ShuttingDown → Down{stopped}</code>; every other
+terminal (crash, <code>auth-failed</code>, ladder-exhausted) leaves it
+closed [shim-windows §8.6].</li>
+<li>The full transition→filter coupling is the [shim-windows §8.4] table
+(mirrors §3.1).</li>
+</ul>
+<h3 id="53-android--always-on-lockdown--protect">5.3 Android — always-on
+lockdown + <code>protect()</code></h3>
+<p>Android has no in-process firewall API for an app; the kill-switch is
+the <strong>system</strong> always-on VPN with <strong>&quot;Block
+connections without VPN&quot; (lockdown)</strong> [shim-android §9.2]. The OS
+drops all non-VPN egress at the routing layer when lockdown is enabled;
+the core&#39;s <code>KillSwitch</code> state machine drives <em>when</em>
+the tunnel should be up, the OS lockdown is the <em>platform
+mechanism</em>.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode kotlin"><code class="sourceCode kotlin"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Loopback avoidance — the Android-specific kill-switch corollary [shim-android §6.2]</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="co">// EVERY outbound transport socket the core opens MUST be protect()ed BEFORE connect(),</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="co">// else the tunnel&#39;s own packets loop back into the tun.</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="kw">override</span> <span class="kw">fun</span> <span class="fu">protect</span><span class="op">(</span><span class="va">fd</span><span class="op">:</span> <span class="dt">Int</span><span class="op">):</span> <span class="dt">Boolean</span> <span class="op">=</span> protect<span class="op">(</span>fd<span class="op">)</span>   <span class="co">// VpnService.protect(int)</span></span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-core: a failed protect() is a HARD dial error — never connect unprotected. [shim-android §6.2]</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="op">!</span>PROTECT<span class="op">.</span>get()<span class="op">.</span>map_or(<span class="cn">false</span><span class="op">,</span> <span class="op">|</span>cb<span class="op">|</span> cb<span class="op">.</span>protect(sock<span class="op">.</span>as_raw_fd())) <span class="op">{</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="cn">Err</span>(<span class="pp">TransportError::</span>Io(<span class="pp">io::</span><span class="bu">Error</span><span class="pp">::</span>other(<span class="st">&quot;protect() failed&quot;</span>)))<span class="op">;</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>sock<span class="op">.</span>connect(<span class="op">&amp;</span>peer<span class="op">.</span>into())<span class="op">?;</span></span></code></pre></div>
+<ul>
+<li><strong>DNS leak guard:</strong>
+<code>b.addDnsServer(&lt;tunnel-dns&gt;)</code> for every tunnel
+resolver; with a full-tunnel <code>0.0.0.0/0</code> + <code>::/0</code>
+route set and no bypass route, off-tunnel <code>:53</code> cannot egress
+[shim-android §10.2].</li>
+<li><strong>Split-tunnel:</strong>
+<code>VpnService.Builder.addDisallowedApplication(pkg)</code>
+(exclude-list model); an unknown package is skipped honestly, never
+aborts the tunnel [shim-android §10.1].</li>
+<li><strong><code>protect()</code> is the kill-switch&#39;s twin:</strong>
+without it the core would leak its <em>own</em> encrypted transport
+packets back through the tunnel — a loop, not a plaintext leak, but the
+same &quot;socket escaped the intended path&quot; defect class [shim-android
+§6].</li>
+</ul>
+<h3 id="54-apple--ne-routing--nednssettings">5.4 Apple — NE routing +
+<code>NEDNSSettings</code></h3>
+<p>The iOS/macOS <code>NEPacketTunnelProvider</code> extension has
+<strong>no in-extension firewall</strong> (the NE sandbox provides
+none); the kill-switch is <strong>protocol/routing enforcement</strong>
+via the Network Extension framework [shim-apple §3.4]:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode swift"><code class="sourceCode swift"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co">// [shim-apple §3.2] — DNS forced into the tunnel; off-tunnel :53 blocked by OS routing</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> <span class="va">dns</span> <span class="op">=</span> NEDNSSettings<span class="op">(</span>servers<span class="op">:</span> cfg<span class="op">.</span>dnsServers<span class="op">)</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>dns<span class="op">.</span>matchDomains <span class="op">=</span> <span class="op">[</span><span class="st">&quot;&quot;</span><span class="op">]</span>                        <span class="co">// match ALL domains → no plaintext :53 off-tunnel (K5)</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>settings<span class="op">.</span>dnsSettings <span class="op">=</span> dns</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="co">// IPv6 capture (K6):</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="kw">let</span> <span class="va">v6</span> <span class="op">=</span> cfg<span class="op">.</span>overlayIp6 <span class="op">{</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">let</span> <span class="va">s6</span> <span class="op">=</span> NEIPv6Settings<span class="op">(</span>addresses<span class="op">:</span> <span class="op">[</span>v6<span class="op">],</span> networkPrefixLengths<span class="op">:</span> <span class="op">[</span><span class="dv">128</span><span class="op">])</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>  s6<span class="op">.</span>includedRoutes <span class="op">=</span> cfg<span class="op">.</span>routes6<span class="op">.</span>map <span class="op">{</span> <span class="co">/* … */</span> <span class="op">}</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>  settings<span class="op">.</span>ipv6Settings <span class="op">=</span> s6</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="co">// Kill-switch routing: NETunnelProviderProtocol.includeAllNetworks = true</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a><span class="co">//   (+ excludeLocalNetworks if allow_lan) — [shim-apple §3.4]</span></span></code></pre></div>
+<ul>
+<li><strong>Kill-switch = <code>includeAllNetworks</code></strong> plus
+<code>NEOnDemandRule</code> for always-on/lockdown; the OS routes
+<em>all</em> networks into the tunnel and there is no in-extension
+firewall to leak around [shim-apple §3.4].</li>
+<li><strong>Honest gap (UNVERIFIED, [shim-apple §3.4]):</strong> whether
+<code>includeAllNetworks</code> fully blocks egress during the
+<strong>extension-restart window</strong> on <em>every</em> iOS version
+is <em>measured</em> in the G3 / SC soak, never assumed. This is a
+tracked, captured-evidence item (§9, §10), not a claimed guarantee.</li>
+</ul>
+<hr />
+<h2 id="6-dns-leak-prevention">6. DNS-leak prevention</h2>
+<p>DNS leakage is the subtlest privacy failure: the tunnel may carry the
+<em>traffic</em>, but if a single query escapes to a public resolver,
+the destinations the user visits are exposed. HelixVPN closes the
+plaintext path mechanically and documents the encrypted-resolver path
+honestly.</p>
+<h3 id="61-force-all-dns-through-the-tunnel">6.1 Force all DNS through
+the tunnel</h3>
+<p>The core sets the <strong>tunnel DNS</strong> — pushed in the
+<code>NetworkMap</code> as <code>dns_servers</code> +
+<code>search_domains</code> [04-SEC §8.3, hc §7.1] — and applies it via
+the platform&#39;s split-DNS API: Apple <code>NEDNSSettings.servers</code> +
+<code>matchDomains=[&quot;&quot;]</code>, Android
+<code>VpnService.Builder.addDnsServer</code>, Windows
+<code>SetInterfaceDnsSettings</code> (NRPT-class), Linux
+<code>resolvectl dns &lt;if&gt;</code> +
+<code>resolvectl domain &lt;if&gt; &#39;~.&#39;</code>.
+<code>matchDomains=[&quot;&quot;]</code> / <code>domain &#39;~.&#39;</code> is the &quot;route
+<em>all</em> domains through this resolver&quot; idiom — a partial
+match-domain set would leak the unmatched domains.</p>
+<h3 id="62-block-plaintext-53853-off-tunnel">6.2 Block plaintext
+<code>:53</code>/<code>:853</code> off-tunnel</h3>
+<p>The split-DNS <em>setting</em> tells well-behaved apps which resolver
+to use; it does <strong>not</strong> stop an app that hardcodes
+<code>8.8.8.8</code>. So the firewall rule is the
+<strong>belt-and-suspenders backstop</strong> [04-SEC §8.3]: in every
+non-<code>Disconnected</code> state, drop UDP+TCP <code>:53</code>
+(plaintext DNS) and <code>:853</code> (DoT) that is <strong>not</strong>
+destined for the tunnel resolver over the tunnel interface. The Linux
+rule (<code>th dport 53 oifname != &quot;helix0&quot; drop</code>), the Windows
+WFP <code>:53</code> filter, and the Apple
+<code>matchDomains=[&quot;&quot;]</code> routing each realise this; Android relies
+on the no-bypass-route full-tunnel posture.</p>
+<h3 id="63-the-two-layers-why-both">6.3 The two layers, why both</h3>
+<pre class="mermaid"><code>flowchart LR
+    app[&quot;app DNS query&quot;] --&gt; match{&quot;app honours\nsplit-DNS setting?&quot;}
+    match -- yes --&gt; tun[&quot;→ tunnel resolver\n(over helix0)&quot;]
+    match -- &quot;no (hardcoded 8.8.8.8)&quot; --&gt; fw{&quot;:53 off-tunnel\nfirewall rule&quot;}
+    fw -- &quot;Connected/Reconnecting/Blocked&quot; --&gt; drop[&quot;DROP — no leak (K5)&quot;]
+    fw -- &quot;Disconnected (Strict off)&quot; --&gt; sys[&quot;system DNS&quot;]
+    tun --&gt; done[&quot;resolved inside the tunnel&quot;]</code></pre>
+<p>The split-DNS setting handles the 99% well-behaved case cheaply; the
+firewall rule catches the hostile/buggy 1%. Setting <em>or</em> rule
+alone is a leak; both together is the guarantee.</p>
+<h3 id="64-doh--dot--the-honest-boundary">6.4 DoH / DoT — the honest
+boundary</h3>
+<p>Plaintext <code>:53</code> and DoT <code>:853</code> are blocked
+off-tunnel by the firewall rule. <strong>DoH</strong> (DNS over HTTPS on
+<code>:443</code>) is <em>indistinguishable from ordinary HTTPS at the
+firewall layer</em> — a <code>:443</code> drop would break the web. The
+honest posture:</p>
+<ul>
+<li><strong>Plaintext <code>:53</code> / DoT <code>:853</code>:</strong>
+mechanically blocked off-tunnel (§6.2). <strong>Closed.</strong></li>
+<li><strong>DoH to a public resolver on <code>:443</code>:</strong>
+<strong><code>UNVERIFIED</code> / out-of-firewall-scope.</strong> The
+firewall cannot distinguish a DoH POST from a web request. Mitigation
+options, surfaced not silently chosen (§11.4.66): (a) the OS-level
+&quot;disable private DNS / DoH&quot; enterprise control on managed
+Android/Windows; (b) an app-level resolver-allowlist where the platform
+exposes one; (c) accept that an app <em>deliberately</em> configured for
+public DoH is the user&#39;s own choice — the VPN routes the
+<code>:443</code> bytes through the tunnel regardless, so the DoH query
+travels <em>inside</em> the tunnel and is <strong>not</strong> an
+underlay leak as long as the full-tunnel route holds. The genuine
+residual leak is a <em>split-tunnelled</em> app doing DoH to a public
+resolver on an excluded route — a documented split-tunnel caveat,
+tracked per §9, never claimed closed.</li>
+</ul>
+<p>This DoH boundary is stated as a fact, not a guess: the firewall
+closes plaintext and DoT; DoH-on-443 inside a full tunnel is not an
+underlay leak; DoH-on-443 on a split-tunnelled route is a documented
+residual the operator configures around.</p>
+<hr />
+<h2 id="7-ipv6-leak-closure">7. IPv6-leak closure</h2>
+<p>The classic dual-stack leak: the overlay is IPv4 (or ULA IPv6 via
+4via6 [doc 03/D4]) but the host has <strong>native</strong> IPv6
+connectivity. A v4-only tunnel leaves native v6 egress on the physical
+interface — the user&#39;s real v6 address and v6 destinations escape.</p>
+<p>The rule (<strong>K6</strong>): the core <strong>never</strong>
+leaves a partial v6 capture. Two acceptable postures, chosen by the
+platform&#39;s capability:</p>
+<table>
+<thead>
+<tr>
+<th>Posture</th>
+<th>Mechanism</th>
+<th>Platforms</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Full v6 capture</strong></td>
+<td>route <code>::/0</code> (or the overlay v6 prefix) into the tunnel;
+native v6 egress is then subject to the same kill-switch rules as
+v4</td>
+<td>Apple <code>NEIPv6Settings.includedRoutes</code>; Android
+<code>addRoute(::/0)</code>; Windows WFP <code>_V6</code> layer; Linux
+<code>inet6</code> nft family</td>
+</tr>
+<tr>
+<td><strong>v6 block</strong></td>
+<td>if the overlay carries no v6, drop <em>all</em> native v6 egress in
+the kill-switch (so v6 cannot fall through)</td>
+<td>Linux nft <code>ip6</code> drop; Windows WFP <code>_V6</code>
+default-DROP; Apple — relies on <code>includeAllNetworks</code></td>
+</tr>
+</tbody>
+</table>
+<p>What is <strong>forbidden</strong> is the third, leaky posture:
+overlay v6 present but native v6 egress left open on the physical
+interface. The kill-switch rule sets are dual-stack by construction —
+Linux nft has both <code>ip</code> and <code>ip6</code> daddr rules,
+Windows installs filters at both
+<code>FWPM_LAYER_OUTBOUND_IPPACKET_V4</code> <strong>and</strong>
+<code>_V6</code>, Apple sets <code>NEIPv6Settings</code> alongside
+<code>NEIPv4Settings</code> [shim-windows §8.2, shim-apple §3.2].
+<code>UNVERIFIED</code>: the exact interaction of
+<code>includeAllNetworks</code> with a host that gains native v6
+<em>mid-session</em> on iOS is a measured item (§9), not an assumed
+guarantee.</p>
+<hr />
+<h2 id="8-the-danger-projection--surfacing-a-trip-to-the-ui">8. The
+<code>Danger</code> projection — surfacing a trip to the UI</h2>
+<p>A leak-proof firewall is necessary but not sufficient: the user must
+<em>see</em> that the tunnel dropped and they are now in lockdown, not
+be told &quot;connected&quot; while re-dialling. The FFI projects a kill-switch
+trip or a positive leak probe to the <code>Danger{kind}</code> overlay
+[hc §5.2, §8.4].</p>
+<h3 id="81-the-two-danger-kinds-raised-only-on-a-concrete-signal">8.1
+The two danger kinds (raised only on a concrete signal)</h3>
+<div class="sourceCode" id="cb12"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-ffi FfiTunnelStatus (hc §5.1) — Danger is an FFI-only overlay, the core never emits it.</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>Danger <span class="op">{</span> kind<span class="op">:</span> <span class="dt">String</span> <span class="op">},</span>   <span class="co">// kind ∈ { &quot;killswitch_tripped&quot;, &quot;leak&quot; }</span></span></code></pre></div>
+<ul>
+<li><strong><code>kind=&quot;killswitch_tripped&quot;</code></strong> — the §3.2
+sub-machine reports the kill-switch <strong>closed while the user
+intends connected</strong> (a drop the user can see). Raised on the
+<code>Connected → Reconnecting/Blocked</code> transition when the user&#39;s
+intent is &quot;connected&quot;.</li>
+<li><strong><code>kind=&quot;leak&quot;</code></strong> — an
+<strong>explicit</strong> DNS/leak probe
+(<code>Firewall::leak_probe</code>, §4) returns
+<code>OffTunnelEgressDetected</code>. Raised only on a <em>positive
+probe result</em>, never inferred.</li>
+</ul>
+<h3 id="82-never-guessed-1146">8.2 Never guessed (§11.4.6)</h3>
+<p><code>Danger</code> is <strong>not</strong> a guessed UI state.
+Absent a concrete signal — the sub-machine reporting
+closed-while-intended-connected, or a leak probe firing — the FFI emits
+<code>Reconnecting</code> / <code>Down</code>, <strong>never</strong>
+<code>Danger</code> [hc §5.1 consistency note]. This is the no-guessing
+mandate at the UI layer: the red <code>stateDanger</code> palette
+appears only when the system has captured evidence of a danger
+condition, so a red screen is always a <em>true positive</em>, never an
+alarmist guess. Conversely, a real trip is <strong>never</strong> hidden
+behind an optimistic <code>Connected</code> — <code>Danger</code>
+overrides any optimistic UI intent and paints red immediately [hc
+§8.4].</p>
+<pre class="mermaid"><code>sequenceDiagram
+    autonumber
+    participant SM as KillSwitch sub-machine (§3.2)
+    participant Probe as leak_probe (§4)
+    participant FFI as helix-ffi projection (hc §8.4)
+    participant UI as Flutter UI
+    Note over SM: Connected → Reconnecting (drop), user intent = connected
+    SM-&gt;&gt;FFI: killswitch closed WHILE intended-connected
+    FFI-&gt;&gt;UI: Danger{killswitch_tripped}  → red stateDanger palette
+    Note over Probe: periodic / on-suspicion probe
+    Probe-&gt;&gt;FFI: LeakVerdict::OffTunnelEgressDetected{udp,53}
+    FFI-&gt;&gt;UI: Danger{leak}  → red + &quot;DNS leak blocked&quot; detail
+    Note over FFI,UI: absent EITHER signal → Reconnecting/Down, never Danger (§11.4.6)</code></pre>
+<hr />
+<h2 id="9-per-os-capability-matrix--honest-gaps">9. Per-OS capability
+matrix + honest gaps</h2>
+<p>The single abstract machine maps to five primitives of
+<strong>differing strength</strong>. This matrix states, per OS, what is
+mechanically guaranteed vs. what is <code>UNVERIFIED</code> /
+operator-attended — the honest-gap ledger (§11.4.6: a capability is
+<code>UNVERIFIED</code> until measured on a real device, never
+assumed).</p>
+<table>
+<thead>
+<tr>
+<th>Capability</th>
+<th>Linux</th>
+<th>Windows</th>
+<th>Android</th>
+<th>Apple (iOS/macOS)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Kill-switch primitive</strong></td>
+<td>nftables <code>output</code> <code>policy drop</code> [shim-linux
+§11.1]</td>
+<td>WFP persistent sub-layer default-DROP [shim-windows §8.2]</td>
+<td>always-on VPN + lockdown (OS) [shim-android §9.2]</td>
+<td><code>includeAllNetworks</code> routing [shim-apple §3.4]</td>
+</tr>
+<tr>
+<td><strong>Arms before first handshake (K1)</strong></td>
+<td>✅ installed at <code>Idle→Connecting</code></td>
+<td>✅ persistent filter installed at Connecting</td>
+<td>⚠️ relies on OS lockdown being enabled (user/MDM setting)</td>
+<td>✅ NE config applied before pump</td>
+</tr>
+<tr>
+<td><strong>Fail-closed on drop (K2)</strong></td>
+<td>✅ table stays</td>
+<td>✅ filter stays</td>
+<td>✅ lockdown holds</td>
+<td>✅ routing holds</td>
+</tr>
+<tr>
+<td><strong>Survives crash (K4)</strong></td>
+<td>✅ <code>ExecStopPost</code>-gated flush only</td>
+<td>✅ <code>FWPM_FILTER_FLAG_PERSISTENT</code></td>
+<td>✅ OS lockdown is OS-side</td>
+<td>⚠️ <strong>UNVERIFIED</strong> extension-restart window [shim-apple
+§3.4]</td>
+</tr>
+<tr>
+<td><strong>Off-tunnel <code>:53</code> block (K5)</strong></td>
+<td>✅ nft <code>:53 oifname != helix0 drop</code></td>
+<td>✅ WFP <code>:53</code> filter</td>
+<td>✅ full-tunnel + no bypass route</td>
+<td>✅ <code>matchDomains=[&quot;&quot;]</code></td>
+</tr>
+<tr>
+<td><strong>DoT <code>:853</code> block</strong></td>
+<td>✅ same nft rule (dport 853)</td>
+<td>✅ WFP filter</td>
+<td>✅ no bypass route</td>
+<td>✅ routing</td>
+</tr>
+<tr>
+<td><strong>DoH-on-443 off-tunnel</strong></td>
+<td>⚠️ out-of-firewall-scope (§6.4)</td>
+<td>⚠️ out-of-firewall-scope (§6.4)</td>
+<td>⚠️ (enterprise DoH control on MDM)</td>
+<td>⚠️ out-of-firewall-scope (§6.4)</td>
+</tr>
+<tr>
+<td><strong>IPv6 capture/block (K6)</strong></td>
+<td>✅ <code>inet6</code> family rules</td>
+<td>✅ <code>_V6</code> WFP layer</td>
+<td>✅ <code>addRoute(::/0)</code></td>
+<td>⚠️ <strong>UNVERIFIED</strong> mid-session native-v6 gain
+[shim-apple §3.2]</td>
+</tr>
+<tr>
+<td><strong>Self-protect socket loopback</strong></td>
+<td>n/a (routing)</td>
+<td>n/a (WFP)</td>
+<td>✅ <code>protect()</code> mandatory [shim-android §6]</td>
+<td>n/a (NE owns the socket)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="91-the-tracked-honest-gaps-each-a-captured-evidence-item-never-a-claimed-pass">9.1
+The tracked honest gaps (each a captured-evidence item, never a claimed
+PASS)</h3>
+<table>
+<thead>
+<tr>
+<th>Gap</th>
+<th>OS</th>
+<th>Posture</th>
+<th>Resolution path</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>includeAllNetworks</code> egress during the extension-restart
+window</td>
+<td>iOS</td>
+<td><code>UNVERIFIED</code> [shim-apple §3.4]</td>
+<td>measured in the G3 / SC on-device soak (§10); tracked migration
+item, not a claimed guarantee</td>
+</tr>
+<tr>
+<td>native-v6 gained mid-session</td>
+<td>iOS</td>
+<td><code>UNVERIFIED</code> [shim-apple §3.2]</td>
+<td>on-device dual-stack capture test (§10)</td>
+</tr>
+<tr>
+<td>always-on lockdown <strong>not enabled</strong> by the user/MDM</td>
+<td>Android</td>
+<td>⚠️ operator/user-attended</td>
+<td>the app surfaces a &quot;enable Always-on VPN + lockdown&quot; prompt; until
+enabled, the core&#39;s kill-switch is the only layer (no OS backstop) —
+documented, not silently assumed protected</td>
+</tr>
+<tr>
+<td>DoH-on-443 on a split-tunnelled excluded route</td>
+<td>all</td>
+<td>⚠️ documented residual (§6.4)</td>
+<td>enterprise DoH control / resolver allowlist where the platform
+exposes one; surfaced per §11.4.66</td>
+</tr>
+</tbody>
+</table>
+<p><strong>No gap is a faked PASS.</strong> Each is either
+<code>UNVERIFIED</code> pending a captured-evidence measurement, or an
+operator/user-attended condition the app surfaces. The §11.4 anti-bluff
+posture forbids reporting &quot;leak-proof on iOS&quot; when the extension-restart
+window is unmeasured — it is reported as <code>UNVERIFIED</code> with a
+tracked resolution path.</p>
+<hr />
+<h2 id="10-anti-bluff-validation-11410711469">10. Anti-bluff validation
+(§11.4.107/§11.4.69)</h2>
+<p>The kill-switch claim is validated by <strong>captured packet-level
+evidence</strong>, never an absence-of-error PASS [04-SEC §8.4, 04_P1
+§11 DoD #6]. The canonical DoD test:</p>
+<ol type="1">
+<li>Establish a tunnel; start a continuous transfer.</li>
+<li><strong>Drop the tunnel mid-transfer</strong> (block the gateway
+endpoint at the upstream, or stop the edge) so the orchestrator
+transitions <code>Connected → Reconnecting → Blocked</code>.</li>
+<li><strong>Capture on the host&#39;s <em>physical</em> interface</strong>
+(<code>tcpdump</code>/<code>pktap</code>) for the entire
+<code>Reconnecting</code>/<code>Blocked</code> window.</li>
+<li><strong>Assert zero plaintext packets egress</strong> — including
+<code>:53</code> DNS — during the window. A single leaked packet is a
+FAIL. The captured pcap is the evidence (sink-side positive evidence per
+§11.4.69, captured-evidence per §11.4.107), not a green log line.</li>
+</ol>
+<h3 id="101-the-test-matrix-per-114169-captured-evidence-per-row">10.1
+The test matrix (per §11.4.169, captured evidence per row)</h3>
+<table>
+<thead>
+<tr>
+<th>Test id</th>
+<th>§11.4.169 codes</th>
+<th>What it proves</th>
+<th>Captured evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>KS-1</td>
+<td><code>SEC</code></td>
+<td>kill-switch closes on drop: <strong>no plaintext egress</strong>
+while <code>Reconnecting</code>/<code>Blocked</code>; off-tunnel
+<code>:53</code> dropped when <code>Connected</code></td>
+<td>physical-iface pcap shows ZERO leaked packets (mirrors [hc §12]
+HC-8)</td>
+</tr>
+<tr>
+<td>KS-2</td>
+<td><code>SEC</code></td>
+<td>pre-connect armed-closed (K1): packets sent <em>before</em> the
+first handshake do not escape</td>
+<td>pcap during <code>Idle→Connecting</code> window</td>
+</tr>
+<tr>
+<td>KS-3</td>
+<td><code>SEC</code>+<code>CHAOS</code></td>
+<td>crash persistence (K4): SIGKILL the core mid-<code>Connected</code>
+→ closed rules remain; no leak until re-arm</td>
+<td>pcap across the kill→restart window; nft/WFP rule dump
+post-kill</td>
+</tr>
+<tr>
+<td>KS-4</td>
+<td><code>SEC</code></td>
+<td>DNS leak: an app hardcoding <code>8.8.8.8</code> cannot resolve
+off-tunnel when <code>Connected</code></td>
+<td>pcap shows the <code>:53</code> packet DROPPED</td>
+</tr>
+<tr>
+<td>KS-5</td>
+<td><code>SEC</code></td>
+<td>IPv6 leak (K6): host with native v6 → no native-v6 egress escapes
+the tunnel</td>
+<td>dual-stack pcap</td>
+</tr>
+<tr>
+<td>KS-6</td>
+<td><code>E2E</code>+<code>UI</code></td>
+<td><code>Danger{killswitch_tripped}</code> projects on a real drop;
+<code>Danger{leak}</code> projects on a positive probe; neither is
+raised absent a signal</td>
+<td><code>FfiTunnelStatus</code> event trace + window-scoped MP4 of the
+red palette (§11.4.159)</td>
+</tr>
+<tr>
+<td>KS-7</td>
+<td><code>SEC</code> (iOS)</td>
+<td>the §9.1 extension-restart-window gap: measured, not assumed</td>
+<td>on-device pcap across an NE restart — resolves the
+<code>UNVERIFIED</code> marker or files the migration item</td>
+</tr>
+</tbody>
+</table>
+<h3 id="102-self-validating-the-analyzer-11410710">10.2 Self-validating
+the analyzer (§11.4.107(10))</h3>
+<p>Each leak-test ships a paired §1.1 mutation so the gate provably
+cannot bluff: emit a <code>Connected</code> projection <em>before</em>
+the firewall opens → KS-1 must FAIL; a golden-bad pcap <em>with</em> a
+leaked <code>:53</code> packet → the pcap analyzer must FAIL it (a
+golden-good leak-free pcap PASSes). An analyzer that PASSes its
+golden-bad fixture is itself a bluff gate. The <code>leak_probe</code>
+(§4) is likewise validated: a synthetic off-tunnel socket must make it
+return <code>OffTunnelEgressDetected</code>, a clean run
+<code>Clean</code>.</p>
+<hr />
+<h2 id="11-config-knobs">11. Config knobs</h2>
+<div class="sourceCode" id="cb14"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-core — configured by start() from Shields + RouteMap [hc §8.1, 04-SEC §8]</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> KillSwitchConfig <span class="op">{</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> mode<span class="op">:</span> KillSwitchMode<span class="op">,</span>                 <span class="co">// Strict | Permissive | Off (§2.2)</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> allow_lan<span class="op">:</span> <span class="dt">bool</span><span class="op">,</span>                      <span class="co">// permit RFC1918 LAN while closed (printers etc.)</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> allow_gateway_endpoints<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span>IpNet<span class="op">&gt;,</span>  <span class="co">// gateway IPs the transport MUST reach (stay open)</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> lockdown_on_disconnect<span class="op">:</span> <span class="dt">bool</span><span class="op">,</span>         <span class="co">// &quot;block until connected&quot; toggle for Disconnected</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> DnsConfig <span class="op">{</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> servers<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span>IpAddr<span class="op">&gt;,</span>                 <span class="co">// tunnel DNS (from RouteMap.dns)</span></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> block_plaintext_53<span class="op">:</span> <span class="dt">bool</span><span class="op">,</span>             <span class="co">// drop off-tunnel :53/:853 when Connected (leak guard)</span></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> apply<span class="op">:</span> DnsApplyMethod<span class="op">,</span>                <span class="co">// resolvconf | systemd-resolved | /etc/resolv.conf | shim</span></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>The FFI <code>Shields</code> (§4.2 of [hc]) maps onto these:
+<code>kill_switch=true ⇒ KillSwitchMode::Strict</code>;
+<code>dns_protection=true ⇒ block_plaintext_53=true</code>.
+<code>set_shields()</code> re-applies live (no restart) [hc §8.1]. Every
+numeric default is calibrated against captured evidence before it is
+frozen (§11.4.6 — a number is a guess until measured); none is hardcoded
+as a guarantee.</p>
+<hr />
+<h2 id="12-open-decisions--cross-doc-contracts">12. Open decisions &amp;
+cross-doc contracts</h2>
+<h3 id="121-decisions-surfaced-options--recommendation-never-silently-resolved--114611466">12.1
+Decisions surfaced (options + recommendation, never silently resolved —
+§11.4.6/§11.4.66)</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Decision</th>
+<th>Option A</th>
+<th>Option B</th>
+<th>Recommendation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>D-KS-1</strong></td>
+<td>DoH-on-443 off-tunnel posture</td>
+<td>accept (DoH inside full tunnel is not an underlay leak); document
+the split-tunnel residual</td>
+<td>enterprise DoH-disable control on MDM platforms</td>
+<td><strong>A</strong> for the default; <strong>B</strong> offered to
+managed tenants — the split-tunnel residual is documented, never claimed
+closed (§6.4)</td>
+</tr>
+<tr>
+<td><strong>D-KS-2</strong></td>
+<td>Android lockdown enforcement</td>
+<td>rely on user/MDM enabling Always-on VPN + lockdown</td>
+<td>ship the core kill-switch as the sole layer with an in-app &quot;enable
+lockdown&quot; prompt</td>
+<td><strong>both layers</strong> — core kill-switch always on; surface
+the OS-lockdown prompt; never silently assume the OS backstop is present
+(§9.1)</td>
+</tr>
+<tr>
+<td><strong>D-KS-3</strong></td>
+<td>iOS extension-restart-window guarantee</td>
+<td>claim leak-proof</td>
+<td>measure on-device, mark <code>UNVERIFIED</code> until proven</td>
+<td><strong>B</strong> — measure in G3/SC (§10); the marker is honest
+until the pcap exists (§11.4.6)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="122-cross-document-contracts-this-document-fixes">12.2
+Cross-document contracts this document fixes</h3>
+<table>
+<thead>
+<tr>
+<th>Contract</th>
+<th>Fixed value</th>
+<th>Consumed by / source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>The abstract kill-switch state machine (<code>LinkState</code>, the
+side-effect matrix)</td>
+<td>§2/§3</td>
+<td>[v02-orch §8] owns the bodies; this doc owns the cross-platform
+synthesis</td>
+</tr>
+<tr>
+<td>The <code>Firewall</code> trait seam
+(<code>enforce</code>/<code>restore</code>/<code>leak_probe</code>,
+<code>EnforceFailed → HostFatal</code>)</td>
+<td>§4</td>
+<td>the four shim <code>Firewall</code> impls; [hc §10.1] for the error
+mapping</td>
+</tr>
+<tr>
+<td>The DNS leak-closure taxonomy (split-DNS setting + <code>:53</code>
+block + DoH boundary)</td>
+<td>§6</td>
+<td>[shim-* §DNS], [04-SEC §8.3]</td>
+</tr>
+<tr>
+<td>The <code>Danger{kind}</code> projection contract (raised only on a
+concrete signal)</td>
+<td>§8</td>
+<td>[hc §5.2/§8.4], the Flutter UI</td>
+</tr>
+<tr>
+<td>The per-OS capability matrix + honest-gap ledger</td>
+<td>§9</td>
+<td>[shim-apple §3], [shim-android §6/§9/§10], [shim-windows §8],
+[shim-linux §11]</td>
+</tr>
+<tr>
+<td>The anti-bluff DoD (physical-iface pcap, zero plaintext)</td>
+<td>§10</td>
+<td>[04-SEC §8.4], [04_P1 §11 DoD #6], [hc §12 HC-8]</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="sources-verified">Sources verified</h2>
+<ul>
+<li><a href="../04-security-privacy-pki.md"><code>../04-security-privacy-pki.md</code></a>
+<code>[04-SEC]</code> — §0.1 (S9 invariant), §8 (kill-switch &amp;
+DNS-leak state machine, the §8.2 posture table, §8.3 DNS specifics +
+IPv6, §8.4 Rust <code>Firewall</code> skeleton + anti-bluff pcap DoD),
+§4.6 (revocation intersection with §8.5 <code>auth-failed</code>).</li>
+<li><a href="../v04-client/helix-core-rust.md"><code>../v04-client/helix-core-rust.md</code></a>
+<code>[hc]</code> — §5.1/§5.2 (<code>FfiTunnelStatus</code> projection,
+the <code>Danger{kind}</code> overlay), §8.1
+(<code>KillSwitchConfig</code> / <code>DnsConfig</code> +
+<code>Shields</code> mapping), §8.2 (side-effect matrix), §8.3
+(sub-machine), §8.4 (<code>Danger</code> projection raised only on a
+concrete signal), §8.5 (<code>auth-failed</code> closed-and-terminal),
+§10.1 (<code>CoreError::HostFatal</code>), §12 (HC-8 kill-switch test
+point).</li>
+<li><a href="../v02-data-plane/orchestrator-and-state.md"><code>../v02-data-plane/orchestrator-and-state.md</code></a>
+<code>[v02-orch]</code> — §8 (the kill-switch/DNS coupling bodies,
+O-I10/O-I11 fail-closed), §8.2 (<code>allow_gateway_endpoints</code>),
+§8.4 (side-effect matrix incl. crash row), §8.5
+(<code>auth-failed</code>), §9.4 (connector
+<code>KillSwitchMode::Off</code>).</li>
+<li><a href="../v04-client/shim-apple.md"><code>../v04-client/shim-apple.md</code></a>
+<code>[shim-apple]</code> — §3.2
+(<code>NEDNSSettings.matchDomains=[&quot;&quot;]</code>,
+<code>NEIPv6Settings.includedRoutes</code>), §3.4 (kill-switch =
+<code>includeAllNetworks</code>; the <code>UNVERIFIED</code>
+extension-restart-window marker).</li>
+<li><a href="../v04-client/shim-android.md"><code>../v04-client/shim-android.md</code></a>
+<code>[shim-android]</code> — §6 (<code>protect()</code>
+loopback-avoidance contract), §9.2 (always-on VPN + lockdown
+kill-switch), §10.1 (<code>addDisallowedApplication</code>
+split-tunnel), §10.2 (<code>addDnsServer</code> DNS leak guard).</li>
+<li><a href="../v04-client/shim-windows.md"><code>../v04-client/shim-windows.md</code></a>
+<code>[shim-windows]</code> — §8.2 (WFP persistent default-DROP
+sub-layer, <code>FWPM_FILTER_FLAG_PERSISTENT</code>, dual-stack
+<code>_V4</code>/<code>_V6</code>), §8.3 (<code>:53</code> DNS guard +
+<code>SetInterfaceDnsSettings</code>), §8.4 (coupling table), §8.5
+(<code>FWPM_CONDITION_ALE_APP_ID</code> per-app split), §8.6
+(user-stop-only open path).</li>
+<li><a href="../v04-client/shim-linux.md"><code>../v04-client/shim-linux.md</code></a>
+<code>[shim-linux]</code> — §11.1 (nftables
+<code>helix_killswitch</code> table, <code>output</code>
+<code>policy drop</code>, gateway/LAN permits, atomic ruleset), §11.2
+(systemd-resolved / resolvconf / <code>/etc/resolv.conf</code> DNS
+methods, <code>:53</code> block), §8.6 (<code>ExecStopPost</code>
+user-stop-only flush).</li>
+<li><a href="../v03-control-plane/svc-telemetry.md"><code>svc-telemetry.md</code></a>
+<code>[svc-telemetry]</code> — §5 (presence is ephemeral; an offline
+tunnel never persists a connection log — the privacy context this
+kill-switch protects).</li>
+</ul>
+<p><em>Constitution: §11.4.44 (revision header), §11.4.6/§11.4.66
+(decisions = options + recommendation, <code>UNVERIFIED</code> never
+fabricated, no-guessing for the <code>Danger</code> projection),
+§11.4.69/§11.4.107/§11.4.159 (sink-side / captured / window-scoped leak
+evidence — physical pcap, never absence-of-error), §11.4.107(10)
+(self-validated leak analyzer + golden-bad pcap), §1.1 (paired
+mutations). SPEC-ONLY — describes what to build, does not build
+it.</em></p>
+<p><em>End of nano-detail specification — Volume 5 (Security &amp;
+Privacy), <code>kill-switch-and-dns-leak.md</code>. Pairs with <a href="audit-and-compliance.md"><code>audit-and-compliance.md</code></a>
+(the audit + compliance posture this leak-proofing supports), the master
+security doc §8 (the invariant it deepens), and the four Volume-4 shim
+docs (the per-OS firewall realisations it synthesises).</em></p>
+</body>
+</html>

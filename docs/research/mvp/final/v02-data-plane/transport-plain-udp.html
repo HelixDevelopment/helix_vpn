@@ -1,0 +1,1556 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Plain-UDP Transport</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Plain-UDP Transport</h1>
+</header>
+<h1 id="plain-udp-transport">Plain-UDP Transport</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-06-25T00:00:00Z</p>
+<blockquote>
+<p>Master technical specification — Volume 2 (Data Plane), nano-detail
+document. Deepens the <em>Plain-UDP Transport</em> section
+(<code>§3.2</code>) of [01-data-plane §3.2]. This is a SPEC — it
+describes the <code>helix-transport::plain_udp</code> module to be
+built, not the shipping product. Source evidence cited inline by id:
+[01-DP §N] = <code>final/01-data-plane.md</code>; [04_ARCH §N] =
+<code>04_VPN_CLD/HelixVPN-Architecture-Refined.md</code>; [04_P0 §N] =
+<code>HelixVPN-Phase0-Spike.md</code>; [SYNTHESIS §N] = the
+cross-document synthesis; [10-QA §N] =
+<code>final/10-testing-acceptance-and-qa.md</code>. External WireGuard
+protocol constants (not part of this evidence base) are tagged
+<code>[WG-PROTO]</code> and, where their exact value is not load-bearing
+for this module, annotated honestly per constitution §11.4.6.</p>
+</blockquote>
+<hr />
+<h2 id="0-scope--contract-summary">0. Scope &amp; contract summary</h2>
+<p><code>plain-udp</code> is the <strong>default fast-path
+transport</strong>: it carries already-encrypted WireGuard datagrams
+directly inside UDP, with <strong>zero obfuscation</strong>, over a
+single <code>tokio::net::UdpSocket</code> [01-DP §3.2, 04_P0 §4.3]. It
+is the lowest-latency, lowest-CPU carrier and the <strong>throughput
+baseline</strong> every other transport is measured against (the
+<code>G1</code> Phase-0 gate: through-tunnel <code>iperf3</code> ≥ 80%
+of bare-link [04_P0 §G1, §8]).</p>
+<p>This document owns, to nano-detail:</p>
+<ol type="1">
+<li>The <code>PlainUdp</code> type and its full <code>Transport</code>
+implementation (§3).</li>
+<li>The on-the-wire byte layout — what plain-udp puts on L1, and why it
+treats the payload as opaque (I1) (§4).</li>
+<li>The connection lifecycle state machine (§5).</li>
+<li><strong>Failure detection that triggers ladder escalation</strong> —
+the hard part, because UDP is connectionless and rarely errors on
+<code>send</code> (§6).</li>
+<li>Error taxonomy, config knobs, edge cases, security, performance
+budget (§7–§11).</li>
+<li>The concrete test points, tied to the §11.4.169 test-type taxonomy
+[10-QA §1] (§12).</li>
+</ol>
+<p><strong>Invariants inherited unchanged</strong> [01-DP §0.1]: I1 the
+transport never sees plaintext (it carries opaque WG datagrams); I2 the
+transport carries <strong>unreliable datagrams</strong>, never an
+ordered stream; I4 one transport crate, three consumers (client /
+connector / edge). plain-udp is the simplest possible witness to all
+three.</p>
+<pre><code>File:  helix-transport/src/plain_udp.rs   (the unit this doc specifies)
+Trait: helix-transport/src/lib.rs::Transport   (the contract; frozen Phase-0 interface)
+Errors: helix-transport/src/error.rs::TransportError</code></pre>
+<hr />
+<h2 id="1-when-plain-udp-is-used--selection-conditions">1. When
+plain-udp is used — selection conditions</h2>
+<p>plain-udp is <strong>ladder rung 0</strong> in every
+<code>TransportPolicy.order</code> [01-DP §5.3]. The orchestrator
+selects it in these cases (closed set):</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Condition</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>C1</td>
+<td><strong>Unrestricted network, auto mode</strong> —
+<code>order[0] == plain-udp</code>; the default first attempt on every
+fresh connect.</td>
+<td>[01-DP §5.3 &quot;Default order&quot;], [04_ARCH §3.2]</td>
+</tr>
+<tr>
+<td>C2</td>
+<td><strong>Per-network memory hit</strong> — a prior successful
+plain-udp connect on this SSID / gateway fingerprint is remembered and
+re-tried first.</td>
+<td>[01-DP §5.3 step 4], [04_P2 §1.4]</td>
+</tr>
+<tr>
+<td>C3</td>
+<td><strong>Manual pin</strong> — user sets
+<code>TransportPolicy.pin = PlainUdp</code>, skipping the ladder
+entirely (Mullvad &quot;WireGuard / automatic&quot; UX).</td>
+<td>[01-DP §5.3 step 1], [04_ARCH §3.2]</td>
+</tr>
+<tr>
+<td>C4</td>
+<td><strong>Cooperative-leg policy</strong> — on the
+<code>gateway↔︎connector</code> leg of an asymmetric topology (D6), where
+the connector dials out of a cooperative network, plain-udp is the
+standing carrier.</td>
+<td>[01-DP §11.3 D6], [SYNTHESIS §3 D6]</td>
+</tr>
+<tr>
+<td>C5</td>
+<td><strong>Phase-0 spike</strong> — the only fully-implemented
+transport alongside <code>masque-h3</code>; the <code>G1</code> vertical
+slice runs on plain-udp.</td>
+<td>[04_P0 §4.3, §S0/§S1]</td>
+</tr>
+</tbody>
+</table>
+<p>It is <strong>escalated away from</strong> (rung 0 → rung 1) only
+when its handshake-failure budget is exceeded (§6.4). It is never
+<em>de-escalated to</em> mid-session: a working tunnel that was
+established on a higher rung does not opportunistically downgrade to
+plain-udp without a fresh ladder walk (the per-network memory in C2
+applies only at the next connect).</p>
+<hr />
+<h2 id="2-module-dependencies">2. Module dependencies</h2>
+<table>
+<thead>
+<tr>
+<th>Dependency</th>
+<th>Role</th>
+<th>Note</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>tokio</code> (<code>net</code>, <code>time</code>,
+<code>sync</code>)</td>
+<td>async <code>UdpSocket</code>, timers, <code>Notify</code></td>
+<td>the single async runtime [01-DP §3.2]</td>
+</tr>
+<tr>
+<td><code>bytes::Bytes</code></td>
+<td>zero-copy datagram buffers</td>
+<td>the <code>Transport</code> send/recv currency [01-DP §3.1]</td>
+</tr>
+<tr>
+<td><code>async_trait</code></td>
+<td>object-safe async <code>Transport</code></td>
+<td>matches the trait def [01-DP §3.1]</td>
+</tr>
+<tr>
+<td><code>socket2</code></td>
+<td>raw socket options (<code>SO_SNDBUF</code>,
+<code>IP_MTU_DISCOVER</code>, <code>SO_BINDTODEVICE</code>,
+<code>recvmmsg</code>)</td>
+<td>needed for the knobs in §11;
+<code>tokio::net::UdpSocket::from_std</code> adopts the configured
+fd</td>
+</tr>
+<tr>
+<td><code>std::sync::atomic</code></td>
+<td>lock-free <code>HealthCell</code> counters</td>
+<td>hot-path health updates without a mutex (§3.3)</td>
+</tr>
+</tbody>
+</table>
+<p>No obfuscation crate, no extra crypto crate — plain-udp adds
+<strong>nothing</strong> to the datagram. WG (<code>helix-wg</code>
+[01-DP §4]) is the only cryptography in the path.</p>
+<hr />
+<h2 id="3-public-api--full-signatures">3. Public API — full
+signatures</h2>
+<h3 id="31-the-plainudp-type">3.1 The <code>PlainUdp</code> type</h3>
+<div class="sourceCode" id="cb2"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-transport/src/plain_udp.rs</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::net::</span>SocketAddr<span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::sync::</span>Arc<span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">bytes::</span>Bytes<span class="op">;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">tokio::net::</span>UdpSocket<span class="op">;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="kw">crate</span><span class="pp">::</span><span class="op">{</span>Transport<span class="op">,</span> TransportError<span class="op">,</span> TransportHealth<span class="op">};</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="co">/// The baseline carrier: one UDP socket, peer endpoint, opaque WG datagrams (I1, I2).</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="co">/// Cheap to clone-share via `Arc`; the orchestrator holds it behind `Box&lt;dyn Transport&gt;`.</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> PlainUdp <span class="op">{</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    sock<span class="op">:</span>   Arc<span class="op">&lt;</span>UdpSocket<span class="op">&gt;,</span>   <span class="co">// bound + (optionally) connected; see §3.4 / §11</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    peer<span class="op">:</span>   SocketAddr<span class="op">,</span>       <span class="co">// gateway/connector endpoint (fixed unless §3.6 rebind)</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    health<span class="op">:</span> HealthCell<span class="op">,</span>       <span class="co">// §3.3 — lock-free liveness counters</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    opts<span class="op">:</span>   UdpSocketOpts<span class="op">,</span>    <span class="co">// §11 — recorded so health/rebind logic can read them</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Field rationale (nano-detail):</p>
+<ul>
+<li><code>sock: Arc&lt;UdpSocket&gt;</code> — <code>Arc</code> (not bare
+<code>UdpSocket</code>) because <code>send</code> and <code>recv</code>
+run on <strong>two independent task loops</strong>
+(<code>tun→wg→transport</code> and <code>transport→wg→tun</code>) [01-DP
+§5.1]; both hold a clone.
+<code>tokio::net::UdpSocket::send</code>/<code>recv</code> take
+<code>&amp;self</code>, so a single socket is shared read+write
+concurrently with no lock — UDP send and recv on one fd are independent
+kernel operations.</li>
+<li><code>peer: SocketAddr</code> — resolved from
+<code>TransportConfig::PlainUdp { peer, bind }</code> [01-DP §3.1],
+itself sourced from the <code>RouteMap</code>&#39;s
+<code>PeerRoute.endpoint_candidates[0]</code> pushed by the coordinator
+(doc 03) [01-DP §6.2]. v4 <strong>or</strong> v6 (§8 E5).</li>
+<li><code>health: HealthCell</code> — the only state the
+<em>transport</em> surfaces upward; the WG handshake state lives in
+<code>helix-wg</code>, fused with this by the ladder (§6.3).</li>
+</ul>
+<h3 id="32-the-transport-impl-complete">3.2 The <code>Transport</code>
+impl (complete)</h3>
+<p>This refines the Phase-0 sketch [01-DP §3.2, 04_P0 §4.3] into the
+production form: pooled recv buffer, RTT-unaware send, health marking,
+idempotent close.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span><span class="pp">async_trait::</span>async_trait<span class="at">]</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> Transport <span class="cf">for</span> PlainUdp <span class="op">{</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">async</span> <span class="kw">fn</span> send(<span class="op">&amp;</span><span class="kw">self</span><span class="op">,</span> dg<span class="op">:</span> Bytes) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">,</span> TransportError<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Oversize guard FIRST (I-budget §4.4): never hand the kernel a datagram the path</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>        <span class="co">// cannot carry — that yields a silent drop or EMSGSIZE depending on DF (§8 E2).</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> dg<span class="op">.</span>len() <span class="op">&gt;</span> <span class="kw">self</span><span class="op">.</span>opts<span class="op">.</span>max_datagram <span class="op">{</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="cn">Err</span>(<span class="pp">TransportError::</span>Oversize(dg<span class="op">.</span>len()))<span class="op">;</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> n <span class="op">=</span> <span class="cf">if</span> <span class="kw">self</span><span class="op">.</span>opts<span class="op">.</span>connect_peer <span class="op">{</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>            <span class="kw">self</span><span class="op">.</span>sock<span class="op">.</span>send(<span class="op">&amp;</span>dg)<span class="op">.</span><span class="kw">await</span>          <span class="co">// connected socket (ICMP errors surface, §6.2)</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>            <span class="kw">self</span><span class="op">.</span>sock<span class="op">.</span>send_to(<span class="op">&amp;</span>dg<span class="op">,</span> <span class="kw">self</span><span class="op">.</span>peer)<span class="op">.</span><span class="kw">await</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>        <span class="op">};</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>        <span class="cf">match</span> n <span class="op">{</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>            <span class="cn">Ok</span>(_sent) <span class="op">=&gt;</span> <span class="op">{</span> <span class="kw">self</span><span class="op">.</span>health<span class="op">.</span>mark_sent()<span class="op">;</span> <span class="cn">Ok</span>(()) <span class="op">}</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>            <span class="cn">Err</span>(e)    <span class="op">=&gt;</span> <span class="op">{</span> <span class="kw">self</span><span class="op">.</span>health<span class="op">.</span>mark_send_err()<span class="op">;</span> <span class="cn">Err</span>(map_io(e)) <span class="op">}</span> <span class="co">// §7</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>    <span class="kw">async</span> <span class="kw">fn</span> recv(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>Bytes<span class="op">,</span> TransportError<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>        <span class="co">// One MTU-sized scratch per call; pooled in the production impl (§10 P4).</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> <span class="kw">mut</span> buf <span class="op">=</span> <span class="pp">vec!</span>[<span class="dv">0u8</span><span class="op">;</span> <span class="kw">self</span><span class="op">.</span>opts<span class="op">.</span>recv_scratch]<span class="op">;</span> <span class="co">// default 1500 (§11)</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> n <span class="op">=</span> <span class="cf">if</span> <span class="kw">self</span><span class="op">.</span>opts<span class="op">.</span>connect_peer <span class="op">{</span></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>            <span class="kw">self</span><span class="op">.</span>sock<span class="op">.</span>recv(<span class="op">&amp;</span><span class="kw">mut</span> buf)<span class="op">.</span><span class="kw">await</span></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>            <span class="co">// recv_from so we can drop datagrams whose source != peer (§8 E4, anti-spoof)</span></span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>            <span class="kw">let</span> (n<span class="op">,</span> from) <span class="op">=</span> <span class="kw">self</span><span class="op">.</span>sock<span class="op">.</span>recv_from(<span class="op">&amp;</span><span class="kw">mut</span> buf)<span class="op">.</span><span class="kw">await</span><span class="op">.</span>map_err(map_io)<span class="op">?;</span></span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">!</span><span class="kw">self</span><span class="op">.</span>source_accepted(from) <span class="op">{</span> <span class="cf">return</span> <span class="cn">Err</span>(<span class="pp">TransportError::</span>Closed <span class="co">/*see §6.2 note*/</span>)<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>            <span class="cn">Ok</span><span class="pp">::</span><span class="op">&lt;</span><span class="dt">usize</span><span class="op">,</span> <span class="pp">std::io::</span><span class="bu">Error</span><span class="op">&gt;</span>(n)</span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>        <span class="op">}.</span>map_err(map_io)<span class="op">?;</span></span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>        <span class="kw">self</span><span class="op">.</span>health<span class="op">.</span>mark_recv()<span class="op">;</span>   <span class="co">// liveness clock reset (§6.2 D2)</span></span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>        buf<span class="op">.</span>truncate(n)<span class="op">;</span></span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>        <span class="cn">Ok</span>(<span class="pp">Bytes::</span>from(buf))</span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> kind(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="op">&amp;</span><span class="ot">&#39;static</span> <span class="dt">str</span> <span class="op">{</span> <span class="st">&quot;plain-udp&quot;</span> <span class="op">}</span></span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> effective_mtu(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">u16</span> <span class="op">{</span> <span class="dv">1420</span> <span class="op">}</span>  <span class="co">// standard WG-over-IPv4 (§4.4) [04_P0 §4.3]</span></span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> health(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> TransportHealth <span class="op">{</span> <span class="kw">self</span><span class="op">.</span>health<span class="op">.</span>snapshot() <span class="op">}</span></span>
+<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a>    <span class="kw">async</span> <span class="kw">fn</span> close(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">,</span> TransportError<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a>        <span class="co">// UDP is connectionless: no FIN. Closing = dropping the socket. Idempotent — a second</span></span>
+<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a>        <span class="co">// close is a no-op. The fd is released when the last Arc clone drops (§5 Closed).</span></span>
+<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a>        <span class="cn">Ok</span>(())</span>
+<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<blockquote>
+<p><strong>Honest correction vs the Phase-0 sketch.</strong> [01-DP
+§3.2] / [04_P0 §4.3] show <code>recv</code> returning on a bare
+<code>self.sock.recv(&amp;mut buf)</code> with no source check and no
+oversize guard. That is a deliberately trivial spike body. The
+production <code>recv</code> here adds the §8 E4 source filter and the
+§3.2 <code>send</code> adds the §4.4 oversize guard — both required to
+avoid the bluff failure modes §6/§8 enumerate. The wire behaviour (an
+unmodified WG datagram in a UDP payload) is identical.</p>
+</blockquote>
+<h3 id="33-healthcell--lock-free-liveness">3.3 <code>HealthCell</code> —
+lock-free liveness</h3>
+<p><code>TransportHealth</code> [01-DP §3.1] is
+<code>{ rtt_ewma_ms: Option&lt;u32&gt;, last_recv_age_ms: u64, send_errors: u32 }</code>.
+plain-udp populates it without a mutex on the hot path:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::sync::atomic::</span><span class="op">{</span>AtomicU64<span class="op">,</span> AtomicU32<span class="op">,</span> Ordering<span class="op">};</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct</span> HealthCell <span class="op">{</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    last_recv_epoch_ms<span class="op">:</span> AtomicU64<span class="op">,</span> <span class="co">// monotonic ms since process start of the last recv</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    send_errors<span class="op">:</span>        AtomicU32<span class="op">,</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    sent<span class="op">:</span>               AtomicU64<span class="op">,</span> <span class="co">// counters (no per-packet log — I5 no-logging)</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    recvd<span class="op">:</span>              AtomicU64<span class="op">,</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    rtt_ewma_ms<span class="op">:</span>        AtomicU32<span class="op">,</span> <span class="co">// 0 == &quot;unset&quot; → mapped to None in snapshot()</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    start<span class="op">:</span>              <span class="pp">std::time::</span>Instant<span class="op">,</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> HealthCell <span class="op">{</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> mark_recv(<span class="op">&amp;</span><span class="kw">self</span>)     <span class="op">{</span> <span class="kw">self</span><span class="op">.</span>last_recv_epoch_ms<span class="op">.</span>store(<span class="kw">self</span><span class="op">.</span>now_ms()<span class="op">,</span> <span class="pp">Ordering::</span>Relaxed)<span class="op">;</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>                              <span class="kw">self</span><span class="op">.</span>recvd<span class="op">.</span>fetch_add(<span class="dv">1</span><span class="op">,</span> <span class="pp">Ordering::</span>Relaxed)<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> mark_sent(<span class="op">&amp;</span><span class="kw">self</span>)     <span class="op">{</span> <span class="kw">self</span><span class="op">.</span>sent<span class="op">.</span>fetch_add(<span class="dv">1</span><span class="op">,</span> <span class="pp">Ordering::</span>Relaxed)<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> mark_send_err(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">{</span> <span class="kw">self</span><span class="op">.</span>send_errors<span class="op">.</span>fetch_add(<span class="dv">1</span><span class="op">,</span> <span class="pp">Ordering::</span>Relaxed)<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// RTT is NOT measured by plain-udp itself (it cannot — it does not parse WG, I1).</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// `helix-wg` measures handshake RTT and pushes it here via `set_rtt` (§6.3).</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> set_rtt(<span class="op">&amp;</span><span class="kw">self</span><span class="op">,</span> ms<span class="op">:</span> <span class="dt">u32</span>) <span class="op">{</span> <span class="kw">self</span><span class="op">.</span>rtt_ewma_ms<span class="op">.</span>store(ms<span class="op">.</span>max(<span class="dv">1</span>)<span class="op">,</span> <span class="pp">Ordering::</span>Relaxed)<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> snapshot(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> TransportHealth <span class="op">{</span></span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> r <span class="op">=</span> <span class="kw">self</span><span class="op">.</span>rtt_ewma_ms<span class="op">.</span>load(<span class="pp">Ordering::</span>Relaxed)<span class="op">;</span></span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>        TransportHealth <span class="op">{</span></span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>            rtt_ewma_ms<span class="op">:</span> <span class="cf">if</span> r <span class="op">==</span> <span class="dv">0</span> <span class="op">{</span> <span class="cn">None</span> <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span> <span class="cn">Some</span>(r) <span class="op">},</span></span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>            last_recv_age_ms<span class="op">:</span> <span class="kw">self</span><span class="op">.</span>now_ms()<span class="op">.</span>saturating_sub(<span class="kw">self</span><span class="op">.</span>last_recv_epoch_ms<span class="op">.</span>load(<span class="pp">Ordering::</span>Relaxed))<span class="op">,</span></span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>            send_errors<span class="op">:</span> <span class="kw">self</span><span class="op">.</span>send_errors<span class="op">.</span>load(<span class="pp">Ordering::</span>Relaxed)<span class="op">,</span></span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> now_ms(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">u64</span> <span class="op">{</span> <span class="kw">self</span><span class="op">.</span>start<span class="op">.</span>elapsed()<span class="op">.</span>as_millis() <span class="kw">as</span> <span class="dt">u64</span> <span class="op">}</span></span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><strong>Why RTT is set externally:</strong> plain-udp obeys I1 (never
+parses the payload), so it cannot tell a handshake-response datagram
+from a transport-data datagram. Liveness it <em>can</em> measure
+(<code>last_recv_age_ms</code> = &quot;a datagram of any kind arrived&quot;). RTT
+it cannot — that requires matching a WG handshake-init to its response,
+which only <code>helix-wg</code> sees. <code>helix-wg</code> calls
+<code>HealthCell::set_rtt</code> on each completed handshake (§6.3).
+This keeps the I1 boundary clean.</p>
+<h3 id="34-construction--the-dial-entry--bind">3.4 Construction — the
+<code>dial()</code> entry &amp; bind</h3>
+<p><code>dial(TransportConfig::PlainUdp { peer, bind })</code> [01-DP
+§3.1] resolves to:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> PlainUdp <span class="op">{</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Bind, apply socket options, optionally connect(), return a live carrier.</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Returns within the orchestrator&#39;s bounded dial timeout; never blocks (§6.4).</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> dial(peer<span class="op">:</span> SocketAddr<span class="op">,</span> bind<span class="op">:</span> SocketAddr<span class="op">,</span> opts<span class="op">:</span> UdpSocketOpts)</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>        <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span><span class="dt">Self</span><span class="op">,</span> TransportError<span class="op">&gt;</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>        <span class="co">// 1. Build the raw socket with socket2 so we can set DF / buffers / SO_BINDTODEVICE</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>        <span class="co">//    BEFORE the fd is adopted by tokio (some options must precede bind).</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> domain <span class="op">=</span> <span class="cf">if</span> bind<span class="op">.</span>is_ipv6() <span class="op">{</span> <span class="pp">socket2::Domain::</span>IPV6 <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span> <span class="pp">socket2::Domain::</span>IPV4 <span class="op">};</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> raw <span class="op">=</span> <span class="pp">socket2::Socket::</span>new(domain<span class="op">,</span> <span class="pp">socket2::Type::</span>DGRAM<span class="op">,</span> <span class="cn">Some</span>(<span class="pp">socket2::Protocol::</span>UDP))<span class="op">?;</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>        raw<span class="op">.</span>set_nonblocking(<span class="cn">true</span>)<span class="op">?;</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>        apply_opts(<span class="op">&amp;</span>raw<span class="op">,</span> <span class="op">&amp;</span>opts)<span class="op">?;</span>                       <span class="co">// §11 — DF, buffers, bind-device, DSCP</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>        raw<span class="op">.</span>bind(<span class="op">&amp;</span>bind<span class="op">.</span>into())<span class="op">?;</span>                         <span class="co">// EADDRINUSE → §7 / §8 E7</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> opts<span class="op">.</span>connect_peer <span class="op">{</span> raw<span class="op">.</span>connect(<span class="op">&amp;</span>peer<span class="op">.</span>into())<span class="op">?;</span> <span class="op">}</span> <span class="co">// surfaces ICMP errors (§6.2)</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> sock <span class="op">=</span> <span class="pp">UdpSocket::</span>from_std(raw<span class="op">.</span>into())<span class="op">?;</span>     <span class="co">// adopt into tokio</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>        <span class="cn">Ok</span>(<span class="dt">Self</span> <span class="op">{</span> sock<span class="op">:</span> <span class="pp">Arc::</span>new(sock)<span class="op">,</span> peer<span class="op">,</span> health<span class="op">:</span> <span class="pp">HealthCell::</span>new()<span class="op">,</span> opts <span class="op">}</span>)</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><code>dial()</code> itself does <strong>no WireGuard
+handshake</strong> — binding a UDP socket cannot fail for &quot;endpoint
+blocked&quot; the way a TCP/QUIC connect can. The <em>connect-time</em>
+failure surfaces later, at the WG layer, as a handshake that never
+completes (§6). This is the crucial asymmetry that shapes plain-udp&#39;s
+failure-detection design: <strong><code>dial()</code> succeeds almost
+always; the failure is discovered after handshake-init, not at
+dial.</strong></p>
+<h3 id="35-no-transportconfig-secrets">3.5 No
+<code>TransportConfig</code> secrets</h3>
+<p><code>TransportConfig::PlainUdp { peer, bind }</code> carries
+<strong>no <code>SecretBytes</code></strong> — unlike
+<code>Shadowsocks</code> (<code>psk</code>), <code>Lwo</code>
+(<code>session_key</code>), or <code>Hysteria2</code>
+(<code>salamander_pw</code>) [01-DP §3.1]. plain-udp has no
+transport-layer key material; all secrecy is WG&#39;s. This is a security
+property, not a gap (§9 S1).</p>
+<h3 id="36-endpoint-rebind-roaming">3.6 Endpoint rebind (roaming)</h3>
+<p>The <code>peer</code> may change once Phase-2 NAT traversal fills
+multiple <code>endpoint_candidates</code> [01-DP §8]. plain-udp exposes
+a non-trait helper the orchestrator calls when WG roaming latches onto a
+new source address:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> PlainUdp <span class="op">{</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Switch the peer endpoint without re-binding the local socket (keeps the source port</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// stable so the gateway&#39;s NAT mapping survives). For connected sockets this re-issues</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// connect(); for unconnected it just swaps `self.peer`. Cheap, lock-free under &amp;mut.</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">fn</span> rebind_peer(<span class="op">&amp;</span><span class="kw">mut</span> <span class="kw">self</span><span class="op">,</span> new_peer<span class="op">:</span> SocketAddr) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">,</span> TransportError<span class="op">&gt;</span> <span class="op">{</span> <span class="co">/* … */</span> <span class="op">}</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Phase-0/Phase-1 never call this (single fixed gateway endpoint). It
+exists so the §8 E6 roaming edge case is handled by construction in
+Phase 2, not retrofitted.</p>
+<hr />
+<h2 id="4-wire-format--byte-layout">4. Wire format — byte layout</h2>
+<p>plain-udp is the one transport whose wire bytes equal the WG bytes —
+there is <strong>no framing of its own</strong>. Understanding what is
+on the wire is what makes the security analysis (§9) and the
+failure-detection design (§6) precise.</p>
+<h3 id="41-l1l2-stack-one-user-bound-wg-datagram-on-plain-udpipv4">4.1
+L1/L2 stack (one user-bound WG datagram on plain-udp/IPv4)</h3>
+<pre><code>+---------------------------------------------------------------+
+| IPv4 header   (20 bytes, no options)                          |  ← L1 (kernel)
++---------------------------------------------------------------+
+| UDP header    (8 bytes:  src port | dst port | len | csum)    |  ← L1 (kernel)
++---------------------------------------------------------------+
+| WireGuard datagram  (≤ 1452 bytes on a 1500-byte path)        |  ← L2 payload = opaque to plain-udp (I1)
+|   byte 0      : message type   (1)                            |
+|   bytes 1..4  : reserved (zero) (3)                           |   [WG-PROTO] — informational only;
+|   bytes 4..   : type-specific body (handshake / transport)   |   plain-udp NEVER reads these.
++---------------------------------------------------------------+</code></pre>
+<ul>
+<li>The <strong>WG datagram is byte-identical</strong> to what a stock
+WireGuard peer would emit. plain-udp copies it from <code>Bytes</code>
+into the UDP payload unmodified and back. That is the entire
+transform.</li>
+<li>Default endpoint: the gateway&#39;s WG UDP port (<code>51820</code> in
+the Phase-0 rig; <code>nft … udp dport 51820 drop</code> is the DPI
+block that triggers escalation [04_P0 §3, §S?]). The production
+<code>peer.port()</code> comes from the <code>RouteMap</code>, not
+hard-coded.</li>
+</ul>
+<p>Packet flow through plain-udp (the two hot loops [01-DP §5.1]; the
+carrier is a thin opaque copy at the L2 boundary):</p>
+<pre class="mermaid"><code>flowchart LR
+    subgraph out[&quot;Outbound loop  (tun → wg → transport)&quot;]
+        TUN1[TUN: plaintext IP pkt] --&gt; WGE[helix-wg encrypt&lt;br/&gt;WgVerdict::WriteToTransport]
+        WGE --&gt;|opaque WG datagram, Bytes| GUARD{len ≤ max_datagram?&lt;br/&gt;§4.4}
+        GUARD -- no --&gt; OVR[Err Oversize&lt;br/&gt;orch lowers inner MTU]
+        GUARD -- yes --&gt; SEND[PlainUdp::send&lt;br/&gt;UdpSocket send / send_to]
+        SEND --&gt; WIRE1[(L1: IP+UDP+WG bytes&lt;br/&gt;to peer)]
+    end
+    subgraph inb[&quot;Inbound loop  (transport → wg → tun)&quot;]
+        WIRE2[(L1: UDP datagram&lt;br/&gt;from network)] --&gt; SRC{source == peer?&lt;br/&gt;§8 E4}
+        SRC -- no --&gt; DROP[drop + counter&lt;br/&gt;keep looping]
+        SRC -- yes --&gt; RECV[PlainUdp::recv&lt;br/&gt;mark_recv → carrier_live]
+        RECV --&gt;|opaque WG datagram| WGD[helix-wg decrypt&lt;br/&gt;WriteToTun / handshake]
+        WGD --&gt; TUN2[TUN: plaintext IP pkt]
+    end
+    classDef crypto fill:#eef,stroke:#447;
+    class WGE,WGD crypto;</code></pre>
+<p>The only plain-udp-owned steps are the <strong>Oversize
+guard</strong>, the <strong>source filter</strong>, and the <strong>1:1
+byte copy</strong> to/from the socket — everything cryptographic (blue)
+is <code>helix-wg</code>&#39;s, honouring I1.</p>
+<h3 id="42-the-payload-is-opaque-i1--what-plain-udp-does-and-does-not-do">4.2
+The payload is opaque (I1) — what plain-udp does and does not do</h3>
+<table>
+<thead>
+<tr>
+<th>plain-udp DOES</th>
+<th>plain-udp DOES NOT</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>copy the WG <code>Bytes</code> into one UDP datagram (1:1, no
+fragmentation, no coalescing)</td>
+<td>parse, decrypt, validate, or reorder the WG payload</td>
+</tr>
+<tr>
+<td>enforce a max size (<code>Oversize</code> guard, §4.4)</td>
+<td>add length prefixes, headers, padding, or obfuscation</td>
+</tr>
+<tr>
+<td>drop datagrams from a non-<code>peer</code> source (§8 E4)</td>
+<td>maintain per-flow or per-packet durable state (I5)</td>
+</tr>
+<tr>
+<td>reset the liveness clock on any recv</td>
+<td>distinguish handshake vs transport-data (that is WG&#39;s job)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="43-wg-message-taxonomy-informational--transport-does-not-branch-on-it">4.3
+WG message taxonomy (informational — transport does NOT branch on
+it)</h3>
+<p>These are <strong>external WireGuard protocol constants</strong>
+<code>[WG-PROTO]</code>, included only so the §6 failure analysis is
+concrete. plain-udp treats all four identically (opaque payload, I1).
+Exact byte sizes are protocol facts outside this evidence base; they are
+<strong>not load-bearing for this module</strong> and any consumer that
+needs them parses WG inside <code>helix-wg</code>, never here:</p>
+<table>
+<thead>
+<tr>
+<th><code>type</code> (byte 0)</th>
+<th>Meaning</th>
+<th>Approx. fixed size</th>
+<th>Relevance to plain-udp</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>1</code></td>
+<td>Handshake Initiation</td>
+<td><code>UNVERIFIED: ~148 B</code> <code>[WG-PROTO]</code></td>
+<td>the <em>first</em> datagram plain-udp sends after dial; its
+loss-without-response is the core failure signal (§6)</td>
+</tr>
+<tr>
+<td><code>2</code></td>
+<td>Handshake Response</td>
+<td><code>UNVERIFIED: ~92 B</code> <code>[WG-PROTO]</code></td>
+<td>the <em>first</em> inbound datagram on a healthy connect; its
+arrival = liveness + RTT sample (§6.3)</td>
+</tr>
+<tr>
+<td><code>3</code></td>
+<td>Cookie Reply</td>
+<td><code>UNVERIFIED: ~64 B</code> <code>[WG-PROTO]</code></td>
+<td>load/DoS defence; opaque to plain-udp</td>
+</tr>
+<tr>
+<td><code>4</code></td>
+<td>Transport Data</td>
+<td>variable, <strong>32 B WG overhead</strong> (4 type+reserved · 4
+receiver-index · 8 counter · 16 Poly1305 tag)</td>
+<td>steady-state payload; the 32-B figure is the grounded basis of the
+MTU budget §4.4 [04_P0 §4.3 via 01-DP §10]</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>The 32-byte transport-data overhead <strong>is</strong> grounded — it
+is the <code>32 WG hdr/tag</code> term in the
+<code>1500 − 20 IP − 8 UDP − 32 = 1420</code> MTU derivation [04_P0
+§4.3, 01-DP §10]. The init/resp/cookie sizes are marked
+<code>UNVERIFIED</code> per §11.4.6 because they are not in the evidence
+base and are not needed by this module.</p>
+</blockquote>
+<h3 id="44-mtu--overhead-budget">4.4 MTU &amp; overhead budget</h3>
+<p>plain-udp adds <strong>zero</strong> transport overhead on top of WG,
+so it reports the highest <code>effective_mtu()</code> of any carrier
+[01-DP §10]:</p>
+<pre><code>effective_mtu = 1420   (IPv4: 1500 − 20 IP − 8 UDP − 32 WG hdr/tag ≈ 1420)   [04_P0 §4.3]</code></pre>
+<table>
+<thead>
+<tr>
+<th>Path</th>
+<th>L1 MTU</th>
+<th>IP hdr</th>
+<th>UDP hdr</th>
+<th>WG hdr/tag</th>
+<th>inner WG MTU</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>IPv4 (typical)</td>
+<td>1500</td>
+<td>20</td>
+<td>8</td>
+<td>32</td>
+<td><strong>1420</strong> [04_P0 §4.3]</td>
+</tr>
+<tr>
+<td>IPv6</td>
+<td>1500</td>
+<td>40</td>
+<td>8</td>
+<td>32</td>
+<td><code>UNVERIFIED: ~1400</code> (derived: 1500−40−8−32; not asserted
+in evidence base)</td>
+</tr>
+<tr>
+<td>IPv6 min-MTU floor</td>
+<td>1280</td>
+<td>40</td>
+<td>8</td>
+<td>32</td>
+<td><code>UNVERIFIED: ~1200</code> (derived)</td>
+</tr>
+</tbody>
+</table>
+<p>Budget rules [01-DP §10]:</p>
+<ol type="1">
+<li><strong>Inner WG MTU =
+<code>min(effective_mtu(), path-MTU-discovered)</code></strong> — the
+orchestrator sets WG&#39;s MTU from <code>effective_mtu()</code> clamped by
+PMTU (§11 <code>set_df = true</code> enables honest PMTUD).</li>
+<li><code>max_datagram</code> (the <code>Oversize</code> threshold,
+§3.2) = <code>effective_mtu() + 32</code> (the WG header/tag), i.e. the
+largest <em>WG datagram</em> a 1420-byte inner MTU can produce ≈
+<strong>1452 bytes</strong> on IPv4. A larger datagram is a hard
+<code>TransportError::Oversize</code> — never silently truncated (§8
+E2).</li>
+<li>plain-udp performs <strong>no L3 fragmentation</strong>; if the path
+MTU drops below the configured inner MTU, the orchestrator lowers the
+inner WG MTU (it does not ask the transport to fragment).</li>
+</ol>
+<hr />
+<h2 id="5-connection-lifecycle-state-machine">5. Connection lifecycle
+state machine</h2>
+<p>plain-udp&#39;s own lifecycle is intentionally tiny — it has no handshake
+of its own. The <em>tunnel</em> state
+(Connecting/Handshaking/Connected/…) is the orchestrator&#39;s
+<code>TunnelStatus</code> [01-DP §5.2]; plain-udp contributes the
+<strong>carrier</strong> sub-states below, observed via
+<code>health()</code>.</p>
+<pre class="mermaid"><code>stateDiagram-v2
+    [*] --&gt; Unbound
+    Unbound --&gt; Bound: dial() — bind + apply opts + (connect)
+    Bound --&gt; Live: first send() succeeds (WG handshake-init out)
+    Live --&gt; Healthy: recv() observed (last_recv_age_ms small) — a datagram came back
+    Healthy --&gt; Live: last_recv_age_ms grows past keepalive interval (no recv yet, still ok)
+    Live --&gt; Stale: last_recv_age_ms &gt; liveness_timeout AND handshake not complete
+    Healthy --&gt; Stale: last_recv_age_ms &gt; liveness_timeout (peer went silent mid-session)
+    Stale --&gt; Live: a recv() arrives again (transient loss recovered)
+    Bound --&gt; Errored: send() returns EHOSTUNREACH/ECONNREFUSED (connected socket, ICMP) 
+    Live --&gt; Errored: send() returns ICMP-derived error (connected socket)
+    Errored --&gt; [*]: close() — drop socket; ladder escalates
+    Stale --&gt; [*]: failure budget exceeded → close() → ladder escalates (§6.4)
+    Healthy --&gt; Closed: close() (orchestrator teardown / pin change)
+    Live --&gt; Closed: close()
+    Closed --&gt; [*]</code></pre>
+<p>State meanings (what the orchestrator reads from
+<code>TransportHealth</code>):</p>
+<table>
+<thead>
+<tr>
+<th>Carrier state</th>
+<th>Detected by</th>
+<th>Tunnel-level meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Bound</code></td>
+<td><code>dial()</code> returned <code>Ok</code></td>
+<td>socket exists; nothing sent yet</td>
+</tr>
+<tr>
+<td><code>Live</code></td>
+<td><code>sent &gt; 0</code>, <code>recvd == 0</code>,
+<code>send_errors == 0</code></td>
+<td>handshake-init(s) out, <strong>awaiting response</strong> — the
+critical window (§6)</td>
+</tr>
+<tr>
+<td><code>Healthy</code></td>
+<td><code>recvd &gt; 0</code>,
+<code>last_recv_age_ms &lt; keepalive</code></td>
+<td>datagrams flowing both ways</td>
+</tr>
+<tr>
+<td><code>Stale</code></td>
+<td><code>last_recv_age_ms &gt; liveness_timeout</code></td>
+<td>peer silent; transient or terminal (§6.2 D2)</td>
+</tr>
+<tr>
+<td><code>Errored</code></td>
+<td><code>send_errors &gt; 0</code> from an ICMP-derived
+<code>io::Error</code> (connected socket)</td>
+<td>endpoint actively rejecting (§6.2 D3)</td>
+</tr>
+<tr>
+<td><code>Closed</code></td>
+<td><code>close()</code> / <code>Arc</code> dropped</td>
+<td>carrier gone</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="6-failure-detection-that-triggers-escalation">6. Failure
+detection that triggers escalation</h2>
+<p>This is the heart of the document. The escalation ladder [01-DP §5.3]
+walks to the next rung on <code>DialTimeout</code> /
+<code>HandshakeFailed</code> / <code>EndpointBlocked</code> exceeding a
+per-rung failure budget. For plain-udp specifically,
+<strong><code>dial()</code> almost never fails</strong> (§3.4) — so the
+failure signal must be synthesised from <em>liveness</em> + <em>WG
+handshake progress</em>, not from a <code>send</code> error.</p>
+<h3 id="61-why-udp-send-rarely-errors-the-connectionless-trap">6.1 Why
+UDP <code>send</code> rarely errors (the connectionless trap)</h3>
+<p>A bare (unconnected) <code>UdpSocket::send_to</code> returns
+<code>Ok</code> as soon as the datagram is queued to the kernel — even
+if the destination is a black hole. There is no SYN/ACK, no connection
+refusal at the transport. Consequently:</p>
+<ul>
+<li><strong>A DPI block that silently drops
+<code>udp dport 51820</code></strong> [04_P0 §3] produces <strong>zero
+send errors</strong>. plain-udp&#39;s <code>send</code> keeps returning
+<code>Ok</code>; the only symptom is that <strong>no response ever
+arrives</strong>.</li>
+<li>Therefore plain-udp&#39;s failure detector is fundamentally a
+<strong>timeout-on-no-recv</strong> detector, optionally sharpened by
+<strong>ICMP errors on a connected socket</strong>.</li>
+</ul>
+<h3 id="62-the-detection-signals-closed-set">6.2 The detection signals
+(closed set)</h3>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Signal</th>
+<th>Source</th>
+<th>Maps to</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>D1</td>
+<td><strong>Dial failure</strong> —
+<code>bind</code>/<code>connect</code> syscall error (rare:
+<code>EADDRINUSE</code>, bad bind addr)</td>
+<td><code>dial()</code> (§3.4)</td>
+<td><code>TransportError::Io</code> → orchestrator may retry bind or
+<code>DialTimeout</code></td>
+</tr>
+<tr>
+<td>D2</td>
+<td><strong>Liveness timeout</strong> —
+<code>health().last_recv_age_ms &gt; liveness_timeout_ms</code> while
+the WG handshake has <strong>not</strong> completed</td>
+<td><code>HealthCell</code> + <code>helix-wg</code> handshake state
+(§6.3)</td>
+<td>synthesised <code>HandshakeFailed(&quot;no response&quot;)</code></td>
+</tr>
+<tr>
+<td>D3</td>
+<td><strong>ICMP rejection</strong> — on a <strong>connected</strong>
+socket (<code>opts.connect_peer = true</code>), an ICMP
+<em>port/host/net unreachable</em> surfaces as
+<code>send</code>/<code>recv</code> returning <code>ECONNREFUSED</code>
+/ <code>EHOSTUNREACH</code> / <code>ENETUNREACH</code></td>
+<td>kernel → <code>io::Error</code> (§3.2)</td>
+<td><code>EndpointBlocked</code> (D3 is a <em>fast</em> signal — no need
+to wait the full liveness timeout)</td>
+</tr>
+<tr>
+<td>D4</td>
+<td><strong>Source mismatch flood</strong> — many inbound datagrams
+whose source ≠ <code>peer</code> (spoof / wrong-NAT)</td>
+<td><code>recv_from</code> filter (§8 E4)</td>
+<td>counter only; does not by itself escalate, but suppresses false
+&quot;Healthy&quot;</td>
+</tr>
+<tr>
+<td>D5</td>
+<td><strong>Persistent send error</strong> — <code>EMSGSIZE</code> (DF +
+oversize), <code>ENOBUFS</code>, <code>EPERM</code> (firewall)</td>
+<td><code>send</code> <code>io::Error</code> (§3.2)</td>
+<td><code>Io</code>; repeated → budget toward escalation</td>
+</tr>
+</tbody>
+</table>
+<p><strong>D3 is why the spec recommends
+<code>connect_peer = true</code> for the fixed-gateway client
+leg</strong> (§11): it converts a silent black hole into a <em>fast,
+explicit</em> <code>EndpointBlocked</code>, cutting escalation latency
+from <code>liveness_timeout</code> (seconds) to one RTT. The trade-off:
+a connected socket pins the peer, so it must be
+<code>rebind_peer</code>&#39;d (§3.6) on Phase-2 roaming. For the connector
+leg (cooperative network, fixed gateway)
+<code>connect_peer = true</code> is strictly better.</p>
+<h3 id="63-fusing-carrier-liveness-with-wg-handshake-state-the-i1-clean-seam">6.3
+Fusing carrier liveness with WG handshake state (the I1-clean seam)</h3>
+<p>Because plain-udp cannot see WG (I1), the <em>authoritative</em> &quot;is
+the tunnel up?&quot; verdict is the WG handshake state in
+<code>helix-wg</code>, not the carrier. The orchestrator fuses them:</p>
+<pre><code>tunnel_up  ==  helix_wg.handshake_complete()           // WG says a session key exists
+carrier_live == health().last_recv_age_ms &lt; liveness_timeout  // plain-udp says bytes flow</code></pre>
+<ul>
+<li><code>helix-wg</code> emits
+<code>WgVerdict::WriteToTransport(handshake_init)</code> on connect; the
+orchestrator <code>send</code>s it via plain-udp. plain-udp marks
+<code>sent</code>.</li>
+<li>If a response arrives, <code>recv</code> yields it, plain-udp marks
+<code>recv</code> (→ <code>carrier_live</code>), and
+<code>helix-wg.handle_transport_in</code> completes the handshake (→
+<code>tunnel_up</code>) and reports RTT, which the orchestrator feeds to
+<code>HealthCell::set_rtt</code> (§3.3).</li>
+<li>If <strong>no</strong> response arrives within
+<code>liveness_timeout</code> AND
+<code>!helix_wg.handshake_complete()</code>, that is <strong>D2</strong>
+→ the orchestrator synthesises
+<code>HandshakeFailed(&quot;plain-udp: no response&quot;)</code> and charges the
+rung&#39;s failure budget.</li>
+</ul>
+<p>This division is deliberate: plain-udp stays a dumb opaque carrier;
+the smart &quot;did the crypto handshake succeed?&quot; decision lives where the
+crypto lives.</p>
+<h3 id="64-the-failure-budget--escalation-trigger">6.4 The failure
+budget &amp; escalation trigger</h3>
+<p>The rung&#39;s
+<code>FailureBudget { max_handshakes: u8, window: Duration }</code>
+[01-DP §5.3] is evaluated by the ladder, fed by plain-udp&#39;s signals:</p>
+<pre><code>on each connect attempt for rung=plain-udp:
+  send WG handshake-init (retry per WG&#39;s own backoff, ~5 s × max_handshakes)
+  await EITHER:
+    tunnel_up                       → Connected{transport:&quot;plain-udp&quot;, rtt}    (emit, remember §C2)
+    D3 (ICMP EndpointBlocked)       → immediate budget hit (fast path)
+    D2 (liveness_timeout, no resp)  → budget hit
+  if budget exceeded (handshakes ≥ max_handshakes within window):
+    close() this PlainUdp; orchestrator emits Reconnecting; ladder → rung 1 (lwo) [01-DP §5.3]</code></pre>
+<p>Recommended Phase-1 defaults (project-tunable knob, §11):
+<code>max_handshakes = 3</code>, <code>window = 15 s</code>,
+<code>liveness_timeout_ms = 4000</code>. These mirror &quot;a few seconds
+before escalating&quot; [04_ARCH §3.2 &quot;after N failed handshakes&quot;] and are
+calibrated, not hard-coded, against the Phase-0 <code>G1</code> rig
+(§12) per §11.4.6/§11.4.107(13).</p>
+<h3 id="65-sequence--plain-udp-failure--escalation-to-rung-1">6.5
+Sequence — plain-udp failure → escalation to rung 1</h3>
+<pre class="mermaid"><code>sequenceDiagram
+    autonumber
+    participant Orch as Orchestrator (helix-core)
+    participant Wg as helix-wg (Tunn)
+    participant Tx as PlainUdp (rung 0)
+    participant Net as Network / DPI
+    participant Lad as Ladder (TransportPolicy)
+
+    Orch-&gt;&gt;Tx: dial(PlainUdp{peer=gw:51820, connect_peer=true})
+    Tx--&gt;&gt;Orch: Ok (bound + connected)  %% dial almost never fails (§3.4)
+    Orch-&gt;&gt;Wg: start handshake
+    Wg--&gt;&gt;Orch: WriteToTransport(handshake_init #1)
+    Orch-&gt;&gt;Tx: send(init#1)
+    Tx-&gt;&gt;Net: UDP :51820 (opaque WG bytes)
+    Net--xTx: DROP (nft udp dport 51820 drop)  %% silent black hole
+
+    alt connected socket → ICMP arrives (D3, fast)
+        Net--&gt;&gt;Tx: ICMP port-unreachable
+        Tx--&gt;&gt;Orch: send()/recv() = Err(EndpointBlocked)
+        Orch-&gt;&gt;Lad: budget hit (fast)
+    else no ICMP → liveness timeout (D2)
+        Note over Tx,Orch: no recv; health.last_recv_age_ms climbs
+        Wg--&gt;&gt;Orch: WriteToTransport(handshake_init #2, #3)  %% WG retries ~5s apart
+        Orch-&gt;&gt;Tx: send(init#2), send(init#3)
+        Tx-&gt;&gt;Net: dropped each time
+        Orch-&gt;&gt;Orch: liveness_timeout 4s, !handshake_complete → synth HandshakeFailed (D2)
+        Orch-&gt;&gt;Lad: budget hit ×3 within 15s window
+    end
+
+    Lad-&gt;&gt;Lad: max_handshakes exceeded → escalate rung 0 → rung 1
+    Orch-&gt;&gt;Tx: close()  %% drop socket
+    Orch--&gt;&gt;Orch: emit TunnelStatus::Reconnecting
+    Lad-&gt;&gt;Orch: next = lwo (rung 1) [01-DP §5.3]
+    Note over Orch,Net: ladder continues lwo → masque-h3 → shadowsocks → udp-over-tcp</code></pre>
+<hr />
+<h2 id="7-error-taxonomy--mapping">7. Error taxonomy &amp; mapping</h2>
+<p>plain-udp produces a strict subset of <code>TransportError</code>
+[01-DP §3.1 <code>error.rs</code>]. The <code>map_io</code> helper
+classifies <code>std::io::Error</code>:</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> map_io(e<span class="op">:</span> <span class="pp">std::io::</span><span class="bu">Error</span>) <span class="op">-&gt;</span> TransportError <span class="op">{</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">use</span> <span class="pp">std::io::ErrorKind::</span><span class="op">*;</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">match</span> e<span class="op">.</span>kind() <span class="op">{</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>        ConnectionRefused                 <span class="op">=&gt;</span> <span class="pp">TransportError::</span>EndpointBlocked<span class="op">,</span> <span class="co">// ICMP port-unreach (D3)</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>        HostUnreachable <span class="op">|</span> NetworkUnreachable <span class="op">=&gt;</span> <span class="pp">TransportError::</span>EndpointBlocked<span class="op">,</span> <span class="co">// ICMP net/host (D3)</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>        <span class="co">// EMSGSIZE has no stable ErrorKind on all platforms → matched via raw_os_error below</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>        _ <span class="cf">if</span> is_emsgsize(<span class="op">&amp;</span>e)              <span class="op">=&gt;</span> <span class="pp">TransportError::</span>Oversize(<span class="dv">0</span>)<span class="op">,</span>     <span class="co">// DF + too big (D5/E2)</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>        _                                 <span class="op">=&gt;</span> <span class="pp">TransportError::</span>Io(e)<span class="op">,</span>          <span class="co">// ENOBUFS, EPERM, …</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<table>
+<thead>
+<tr>
+<th><code>TransportError</code></th>
+<th>Cause on plain-udp</th>
+<th>Triggers escalation?</th>
+<th>Detect signal</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>DialTimeout</code></td>
+<td><code>dial()</code> exceeded the orchestrator&#39;s bound dial timeout
+(rare; bind hang)</td>
+<td>yes</td>
+<td>D1</td>
+</tr>
+<tr>
+<td><code>HandshakeFailed(String)</code></td>
+<td><strong>synthesised</strong> by orchestrator on D2 (liveness
+timeout, no WG response)</td>
+<td>yes (budget)</td>
+<td>D2</td>
+</tr>
+<tr>
+<td><code>EndpointBlocked</code></td>
+<td>ICMP unreachable on connected socket</td>
+<td>yes (fast)</td>
+<td>D3</td>
+</tr>
+<tr>
+<td><code>Oversize(usize)</code></td>
+<td>datagram &gt; <code>max_datagram</code>; or <code>EMSGSIZE</code>
+with DF set</td>
+<td>no — caller bug / PMTU; orchestrator lowers inner MTU (§4.4)</td>
+<td>D5/E2</td>
+</tr>
+<tr>
+<td><code>Closed</code></td>
+<td><code>recv</code> after <code>close()</code>; or source-mismatch
+sentinel (§3.2 note)</td>
+<td>n/a (teardown)</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>Io(io::Error)</code></td>
+<td><code>ENOBUFS</code>, <code>EPERM</code> (firewall),
+<code>EADDRINUSE</code> (bind)</td>
+<td>repeated → budget</td>
+<td>D1/D5</td>
+</tr>
+<tr>
+<td><code>Quic(_)</code></td>
+<td><strong>never</strong> — plain-udp has no QUIC</td>
+<td>—</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>Note (§3.2 source-mismatch): returning <code>Closed</code> for a
+spoofed-source datagram is a placeholder; the production impl
+<strong>loops internally</strong> (drops the bad datagram, keeps
+awaiting a good one) rather than surfacing an error, so one spoofed
+packet cannot tear the tunnel. Treat the inline
+<code>return Err(Closed)</code> in §3.2 as shorthand for &quot;continue the
+recv loop&quot; — captured as test point T-EDGE-4 (§12).</p>
+</blockquote>
+<hr />
+<h2 id="8-edge-cases-closed-enumeration">8. Edge cases (closed
+enumeration)</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Edge case</th>
+<th>Required behaviour</th>
+<th>Test</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>E1</td>
+<td><strong>0-length datagram</strong> received</td>
+<td>accept; <code>Bytes::new()</code>; mark recv (a WG keepalive can be
+tiny but is ≥ 32 B — a true 0-length is a probe, still counts as
+liveness)</td>
+<td>T-EDGE-1</td>
+</tr>
+<tr>
+<td>E2</td>
+<td><strong>Oversize on send</strong>
+(<code>dg.len() &gt; max_datagram</code>)</td>
+<td>hard <code>Oversize</code> BEFORE syscall; never truncate; never
+split</td>
+<td>T-EDGE-2 (UNIT)</td>
+</tr>
+<tr>
+<td>E3</td>
+<td><strong>recv buffer too small</strong>
+(<code>n == recv_scratch</code>, possible truncation)</td>
+<td>the WG payload ≤ inner MTU &lt; <code>recv_scratch=1500</code>, so
+truncation cannot occur for in-spec datagrams; an
+<code>n == scratch</code> event is logged as a counter anomaly (over-MTU
+peer) and the datagram dropped (WG would reject a truncated tag
+anyway)</td>
+<td>T-EDGE-3</td>
+</tr>
+<tr>
+<td>E4</td>
+<td><strong>Source-address mismatch</strong> (<code>recv_from</code>
+source ≠ <code>peer</code>)</td>
+<td>drop + counter (D4); do <strong>not</strong> mark recv (else a
+spoofer keeps <code>carrier_live</code> falsely true); keep looping</td>
+<td>T-EDGE-4 (SEC)</td>
+</tr>
+<tr>
+<td>E5</td>
+<td><strong>Dual-stack v4/v6 peer</strong></td>
+<td>bind domain follows <code>bind.is_ipv6()</code>; a v6 bind with
+<code>IPV6_V6ONLY=false</code> can reach v4-mapped peers (§11 knob);
+<code>effective_mtu</code> adjusts (§4.4)</td>
+<td>T-EDGE-5</td>
+</tr>
+<tr>
+<td>E6</td>
+<td><strong>Peer roams</strong> (Phase 2, new candidate)</td>
+<td><code>rebind_peer</code> (§3.6); keep local port stable so gateway
+NAT mapping survives</td>
+<td>T-EDGE-6 (Phase 2)</td>
+</tr>
+<tr>
+<td>E7</td>
+<td><strong><code>EADDRINUSE</code> on bind</strong></td>
+<td>surface <code>Io</code>; orchestrator picks an ephemeral port (bind
+<code>0.0.0.0:0</code>) and retries once before
+<code>DialTimeout</code></td>
+<td>T-EDGE-7</td>
+</tr>
+<tr>
+<td>E8</td>
+<td><strong><code>ENOBUFS</code> under send burst</strong></td>
+<td><code>Io</code>; the send loop applies bounded backpressure (await
+<code>writable()</code>), never busy-spins; counts toward D5 only if
+persistent</td>
+<td>T-EDGE-8 (STRESS)</td>
+</tr>
+<tr>
+<td>E9</td>
+<td><strong>Socket closed under an in-flight
+<code>recv</code></strong></td>
+<td><code>recv</code> returns <code>Closed</code>; the recv loop exits
+cleanly (cancel-safe — <code>recv</code> is <code>select!</code>-usable
+per the trait contract [01-DP §3.1])</td>
+<td>T-EDGE-9 (RACE)</td>
+</tr>
+<tr>
+<td>E10</td>
+<td><strong>DF set, path MTU shrinks</strong></td>
+<td><code>EMSGSIZE</code> → <code>Oversize</code>; orchestrator lowers
+inner WG MTU and the next send fits (§4.4 rule 3)</td>
+<td>T-EDGE-10</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="9-security-considerations">9. Security considerations</h2>
+<p>plain-udp is the <strong>least private</strong> transport by design —
+it is the fast path for <em>unrestricted</em> networks, not the evasion
+path. Its security posture:</p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Property</th>
+<th>Detail</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>S1</td>
+<td><strong>No transport secrets</strong></td>
+<td><code>TransportConfig::PlainUdp</code> carries no key (§3.5).
+Nothing to leak at the transport layer; WG owns all
+confidentiality/integrity (Noise IK, ChaCha20-Poly1305) [01-DP §4,
+SYNTHESIS §2].</td>
+</tr>
+<tr>
+<td>S2</td>
+<td><strong>Trivially DPI-fingerprintable</strong></td>
+<td>the wire bytes ARE WireGuard (byte 0 = WG message type, fixed
+handshake sizes) [WG-PROTO]; a censor&#39;s
+<code>udp dport 51820 drop</code> or a WG-signature rule blocks it
+instantly [04_P0 §3]. This is <em>expected</em> — when blocked, the
+ladder escalates to an obfuscating rung (lwo/masque-h3) [01-DP §5.3].
+plain-udp must <strong>not</strong> be presented to the user as
+censorship-resistant.</td>
+</tr>
+<tr>
+<td>S3</td>
+<td><strong>Source-spoof resistance</strong></td>
+<td>the <code>recv_from</code> source filter (E4) drops datagrams not
+from <code>peer</code>; combined with WG&#39;s cryptographic peer
+authentication, a spoofed source cannot inject into the tunnel — it can
+at most waste a buffer. No amplification: plain-udp never replies to an
+unsolicited datagram (it only echoes WG, which itself does not
+amplify).</td>
+</tr>
+<tr>
+<td>S4</td>
+<td><strong>Kill-switch interface pin</strong></td>
+<td><code>opts.bind_device = Some(&quot;wg-kill0&quot;)</code>
+(<code>SO_BINDTODEVICE</code>) binds the socket to the protected
+interface so a route flap cannot leak cleartext onto the physical NIC.
+The kill-switch state machine (security doc) drives this; plain-udp only
+honours the option.</td>
+</tr>
+<tr>
+<td>S5</td>
+<td><strong>No-logging by construction (I5)</strong></td>
+<td><code>HealthCell</code> holds only aggregate atomics
+(<code>sent</code>/<code>recvd</code>/<code>send_errors</code>) — never
+a per-packet or per-connection durable record [01-DP §0.1 I5, SYNTHESIS
+§7].</td>
+</tr>
+<tr>
+<td>S6</td>
+<td><strong>PMTU/DF honesty</strong></td>
+<td><code>set_df = true</code> (§11) prevents on-path fragmentation that
+could be a side channel and yields honest <code>EMSGSIZE</code> (E10)
+rather than silent black-holing.</td>
+</tr>
+<tr>
+<td>S7</td>
+<td><strong>ICMP trust</strong></td>
+<td>D3 trusts ICMP unreachable to escalate <em>faster</em>, but ICMP is
+unauthenticated. A forged ICMP could force a premature escalation
+(DoS-to-slow-path, not a confidentiality break). Mitigation: ICMP only
+<strong>accelerates</strong> an escalation that the liveness timeout
+(D2) would reach anyway; it never causes a <em>downgrade</em> or key
+exposure. Recorded as an accepted residual risk (§11.4.6 — stated, not
+hidden).</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="10-performance-budget">10. Performance budget</h2>
+<p>plain-udp is the <strong>baseline</strong> — every other transport is
+measured as a fraction of it [01-DP §3.2, 04_P0 §8].</p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Metric</th>
+<th>Target</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>P1</td>
+<td>through-tunnel throughput (TCP+UDP <code>iperf3</code>)</td>
+<td><strong>≥ 80% of bare-link</strong> (the <code>G1</code> gate)</td>
+<td>[04_P0 §G1, §8]</td>
+</tr>
+<tr>
+<td>P2</td>
+<td>added latency vs bare path (<code>ping</code> overlay)</td>
+<td><strong>&lt; 2 ms</strong> added, p50 and p99</td>
+<td>[04_P0 §8 table]</td>
+</tr>
+<tr>
+<td>P3</td>
+<td>CPU</td>
+<td>lowest of all transports (no obfuscation, no extra crypto)</td>
+<td>[01-DP §3.2, 04_ARCH §3.2]</td>
+</tr>
+<tr>
+<td>P4</td>
+<td>per-recv allocation</td>
+<td>one pooled MTU buffer; production uses a <code>BytesMut</code> slab
++ <code>recvmmsg</code> batch (§11 <code>recv_mmsg_batch</code>) to
+amortise syscalls — the §3.2 <code>vec![0u8;1500]</code> per call is the
+spike form, replaced by a pool</td>
+<td>derived [04_P0 §8 &quot;CPU/Gbps&quot;]</td>
+</tr>
+<tr>
+<td>P5</td>
+<td>handshake-to-Connected</td>
+<td>one RTT after a non-blocked path (no transport handshake to
+add)</td>
+<td>derived (§6)</td>
+</tr>
+</tbody>
+</table>
+<p>Performance levers (nano-detail, all §11 knobs):</p>
+<ul>
+<li><strong><code>SO_SNDBUF</code> / <code>SO_RCVBUF</code></strong>
+sized to ≥ BDP so bursts do not <code>ENOBUFS</code> (E8) / drop on
+recv.</li>
+<li><strong>GSO/GRO</strong> (Linux <code>UDP_SEGMENT</code> /
+<code>UDP_GRO</code>): batch multiple WG datagrams per syscall on the
+edge&#39;s high-fan-in path. <code>UNVERIFIED</code> whether Phase-0/1
+enables it — flagged as a Phase-2 edge-throughput lever, not asserted as
+shipped.</li>
+<li><strong><code>recvmmsg</code></strong> (P4) batches inbound
+datagrams; the recv loop yields a <code>Vec&lt;Bytes&gt;</code>
+internally and feeds them to WG one at a time (preserving I2
+unreliable-datagram semantics).</li>
+</ul>
+<hr />
+<h2 id="11-configuration-knobs--udpsocketopts">11. Configuration knobs —
+<code>UdpSocketOpts</code></h2>
+<div class="sourceCode" id="cb15"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="bu">Clone</span><span class="op">,</span> <span class="bu">Debug</span><span class="at">)]</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> UdpSocketOpts <span class="op">{</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> send_buf_bytes<span class="op">:</span>   <span class="dt">usize</span><span class="op">,</span>          <span class="co">// SO_SNDBUF      — default 2 MiB</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> recv_buf_bytes<span class="op">:</span>   <span class="dt">usize</span><span class="op">,</span>          <span class="co">// SO_RCVBUF      — default 4 MiB (edge: larger)</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> recv_scratch<span class="op">:</span>     <span class="dt">usize</span><span class="op">,</span>          <span class="co">// per-recv buffer — default 1500 (≥ max_datagram)</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> max_datagram<span class="op">:</span>     <span class="dt">usize</span><span class="op">,</span>          <span class="co">// Oversize guard  — default effective_mtu()+32 = 1452</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> set_df<span class="op">:</span>           <span class="dt">bool</span><span class="op">,</span>           <span class="co">// IP_MTU_DISCOVER=DO / IP_DONTFRAG — default true (PMTUD)</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> connect_peer<span class="op">:</span>     <span class="dt">bool</span><span class="op">,</span>           <span class="co">// UdpSocket::connect() → ICMP errors (D3) — default true (fixed gw)</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> bind_device<span class="op">:</span>      <span class="dt">Option</span><span class="op">&lt;</span><span class="dt">String</span><span class="op">&gt;,</span> <span class="co">// SO_BINDTODEVICE — kill-switch pin (S4) — default None</span></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> dscp<span class="op">:</span>             <span class="dt">Option</span><span class="op">&lt;</span><span class="dt">u8</span><span class="op">&gt;,</span>     <span class="co">// IP_TOS / IPV6_TCLASS — default None</span></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> v6_only<span class="op">:</span>          <span class="dt">bool</span><span class="op">,</span>           <span class="co">// IPV6_V6ONLY — default false (dual-stack, E5)</span></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> recv_mmsg_batch<span class="op">:</span>  <span class="dt">usize</span><span class="op">,</span>          <span class="co">// recvmmsg batch (Linux) — default 64</span></span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>    <span class="co">// --- ladder-facing (read by the orchestrator, not the socket) ---</span></span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> liveness_timeout_ms<span class="op">:</span> <span class="dt">u64</span><span class="op">,</span>         <span class="co">// D2 — default 4000</span></span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> max_handshakes<span class="op">:</span>   <span class="dt">u8</span><span class="op">,</span>             <span class="co">// failure budget — default 3      [04_ARCH §3.2]</span></span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> budget_window_ms<span class="op">:</span> <span class="dt">u64</span><span class="op">,</span>            <span class="co">// failure budget window — default 15000</span></span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Every numeric default is <strong>calibrated against the Phase-0
+<code>G1</code> rig</strong>, not adopted from literature, per §11.4.6 /
+§11.4.107(13). They are project knobs (§11.4.35) the coordinator may
+override per-network via the pushed <code>TransportPolicy</code> [01-DP
+§5.3].</p>
+<hr />
+<h2 id="12-test-points--tied-to-114169-10-qa-1">12. Test points — tied
+to §11.4.169 [10-QA §1]</h2>
+<p>Each row is a workable-item test obligation; abbreviations are the
+[10-QA §1] taxonomy. Every PASS cites captured evidence
+(§11.4.5/.69/.107), never config-only.</p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Test point</th>
+<th>§11.4.169 type</th>
+<th>Evidence / harness</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>T-UNIT-1</td>
+<td><code>effective_mtu() == 1420</code>;
+<code>max_datagram == 1452</code></td>
+<td><code>UNIT</code></td>
+<td><code>cargo test</code> assert</td>
+</tr>
+<tr>
+<td>T-UNIT-2</td>
+<td>Oversize guard: <code>send(1453 B)</code> →
+<code>Err(Oversize(1453))</code>, <strong>no syscall</strong></td>
+<td><code>UNIT</code></td>
+<td><code>cargo test</code> (mock socket)</td>
+</tr>
+<tr>
+<td>T-UNIT-3</td>
+<td><code>map_io</code> classification table
+(ECONNREFUSED→EndpointBlocked, EMSGSIZE→Oversize, …)</td>
+<td><code>UNIT</code></td>
+<td>table-driven <code>cargo test</code></td>
+</tr>
+<tr>
+<td>T-UNIT-4</td>
+<td><code>HealthCell</code> snapshot math:
+<code>last_recv_age_ms</code>, <code>rtt None↔︎Some</code>, atomic
+counters</td>
+<td><code>UNIT</code></td>
+<td><code>cargo test</code></td>
+</tr>
+<tr>
+<td>T-S0</td>
+<td>loopback echo: <code>dial()</code> two <code>PlainUdp</code>,
+<code>send</code>/<code>recv</code> round-trips a WG-sized blob (the
+<code>S0</code> milestone)</td>
+<td><code>INT</code></td>
+<td>netns loopback [04_P0 §S0]</td>
+</tr>
+<tr>
+<td>T-G1</td>
+<td>through-tunnel <code>iperf3</code> ≥ 80% bare-link +
+<code>ping</code> LAN host succeeds (the <code>G1</code> gate,
+throughput <strong>baseline</strong>)</td>
+<td><code>BENCH</code>/<code>E2E</code>/<code>PERF</code></td>
+<td>netns+netem rig, <code>bench.sh</code> [04_P0 §G1, §8]</td>
+</tr>
+<tr>
+<td>T-FAIL-D2</td>
+<td>DPI drop (<code>nft udp dport 51820 drop</code>) → no response → D2
+liveness timeout → synth <code>HandshakeFailed</code> → ladder escalates
+rung 0→1; captured as an ordered <code>TunnelStatus</code> trace</td>
+<td><code>E2E</code>/<code>SEC</code></td>
+<td>netns + nftables [04_P0 §3]</td>
+</tr>
+<tr>
+<td>T-FAIL-D3</td>
+<td>connected socket + ICMP port-unreachable →
+<code>EndpointBlocked</code> within one RTT (faster than D2)</td>
+<td><code>E2E</code></td>
+<td>netns reject rule</td>
+</tr>
+<tr>
+<td>T-EDGE-1..10</td>
+<td>the §8 edge cases (0-len, oversize, source-mismatch drop,
+dual-stack, EADDRINUSE, ENOBUFS, cancel-safe recv, DF/PMTU)</td>
+<td><code>UNIT</code>/<code>SEC</code>/<code>RACE</code>/<code>STRESS</code></td>
+<td>per-row harness in §8</td>
+</tr>
+<tr>
+<td>T-STRESS-1</td>
+<td>≥ 100 iters / ≥ 30 s sustained + ≥ 10 parallel sockets; no leak, no
+<code>ENOBUFS</code> storm (§11.4.85)</td>
+<td><code>STRESS</code></td>
+<td><code>stress_chaos.sh ab_stress_*</code> [10-QA §5.9]</td>
+</tr>
+<tr>
+<td>T-CHAOS-1</td>
+<td>kill the edge mid-<code>iperf3</code>; assert the tunnel recovers
+(reconnect/escalate) <strong>and no cleartext leaks during the
+gap</strong></td>
+<td><code>CHAOS</code></td>
+<td><code>ab_chaos_kill_pid_during</code> [10-QA §5.9]</td>
+</tr>
+<tr>
+<td>T-RACE-1</td>
+<td>concurrent <code>send</code>+<code>recv</code> on the shared
+<code>Arc&lt;UdpSocket&gt;</code>; <code>cargo +nightly</code> loom /
+tsan — no data race, no deadlock</td>
+<td><code>RACE</code></td>
+<td>loom model [10-QA §1]</td>
+</tr>
+<tr>
+<td>T-SEC-1</td>
+<td>source-spoof injection (E4): spoofed-source datagrams dropped,
+<code>carrier_live</code> not falsely set, WG never accepts</td>
+<td><code>SEC</code></td>
+<td>pcap + netns [10-QA §1]</td>
+</tr>
+<tr>
+<td>T-REC-1</td>
+<td>window-scoped MP4 of the <code>G1</code> slice + media-validation
+verdict (per user-visible-claim, §11.4.154/.163)</td>
+<td><code>REC</code></td>
+<td><code>panoptic</code>→<code>vision_engine</code> [10-QA §1]</td>
+</tr>
+<tr>
+<td>T-CHAL-1</td>
+<td>a <code>challenges</code>/<code>helix_qa</code> bank entry scoring
+PASS only on the captured <code>G1</code> evidence (§11.4.27/.107)</td>
+<td><code>CHAL</code>/<code>HQA</code></td>
+<td><code>challenges</code> submodule [10-QA §1]</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><code>DDOS</code> and <code>SCALE</code> are
+<code>NOT_APPLICABLE</code> for plain-udp at MVP (single-node self-host
+topology, §11.4.3 topology-SKIP) and re-arm in Phase 2 [10-QA §1 table].
+The plain-udp paired §1.1 meta-test mutation: invert the Oversize guard
+(<code>&gt;</code> → <code>&lt;</code>) and assert T-UNIT-2 FAILs —
+proving the guard test is not a bluff.</p>
+</blockquote>
+<hr />
+<h2 id="13-frozen-contract--out-of-scope">13. Frozen contract &amp;
+out-of-scope</h2>
+<ul>
+<li><strong>Frozen Phase-0 interface</strong> [01-DP §3.1, 04_P0 §14]:
+the <code>Transport</code> trait method set
+(<code>send</code>/<code>recv</code>/<code>kind</code>/<code>effective_mtu</code>/<code>health</code>/<code>close</code>)
+is a frozen contract; <code>PlainUdp</code>&#39;s <em>implementation</em>
+(pooling, <code>recvmmsg</code>, GSO) may evolve, its
+<em>signatures</em> may not.</li>
+<li><strong>Out of scope here</strong> (owned elsewhere): the
+<code>Transport</code> trait &amp; <code>dial()</code> registry, the
+escalation-ladder algorithm, and <code>TransportPolicy</code> live in
+[01-DP §3.1 / §5.3]; WG handshake state and <code>WgVerdict</code> in
+<code>helix-wg</code> [01-DP §4]; the <code>RouteMap</code> that sources
+<code>peer</code> in <code>helix-route</code> [01-DP §6.2]; the
+obfuscating transports (<code>lwo</code>, <code>masque-h3</code>,
+<code>shadowsocks</code>, <code>udp-over-tcp</code>) in their own v02
+docs. The kill-switch state machine (which drives
+<code>bind_device</code>, S4) is referenced for its seam only and
+specified in the security doc.</li>
+</ul>
+<p><em>End of <code>transport-plain-udp.md</code> (Volume 2 — Data
+Plane). Pair with <code>01-data-plane.md</code> §3.2 (the parent section
+this deepens), the <code>transport-masque-h3.md</code> nano-spec (the
+rung-2 obfuscating counterpart whose MTU/CPU penalty is measured against
+this baseline), and <code>10-testing-acceptance-and-qa.md</code> §1 (the
+§11.4.169 test-type contract the §12 points instantiate).</em></p>
+</body>
+</html>

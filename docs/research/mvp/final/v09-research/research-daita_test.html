@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>RESEARCH daita_test</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">RESEARCH daita_test</h1>
+</header>
+<h1 id="research-daita_test">RESEARCH daita_test</h1>
+<p>Scope: (1) DAITA / maybenot traffic-analysis defense — current state
+of the maybenot framework and Mullvad&#39;s DAITA v1/v2; (2) VPN testing
+methodology — Linux netns rigs, nftables DPI/leak blocking, tc netem
+impairment, iperf3 throughput, DNS / kill-switch leak testing. Access
+date for all sources: <strong>2026-06-25</strong>.</p>
+<hr />
+<h2 id="1-maybenot-framework--current-state-2025-2026">1. maybenot
+framework — current state (2025-2026)</h2>
+<p><strong>What it is.</strong> maybenot is an open-source
+<strong>framework for traffic-analysis defenses</strong> that &quot;hide
+patterns in encrypted communication&quot; to increase the uncertainty of a
+network attacker. It is an evolution/generalization of the Tor
+<strong>Circuit Padding Framework</strong> (Perry &amp; Kadianakis),
+generalized to support many protocols (TLS, QUIC,
+<strong>WireGuard</strong>, Tor). Originally published as an academic
+paper (Pulls, WPES&#39;23 / arXiv 2304.09510). [maybenot GitHub], [arXiv
+2304.09510], [ACM WPES&#39;23 DOI 10.1145/3603216.3624953].</p>
+<p><strong>Model — probabilistic state machines.</strong> A defense is
+expressed as <strong>a list of probabilistic state machines</strong>
+plus <strong>limits on padding and blocking actions</strong>. Each
+machine reacts to events (packet sent/received, timers) and triggers two
+classes of action:</p>
+<ul>
+<li><strong>Padding</strong> — inject cover/dummy packets.</li>
+<li><strong>Blocking</strong> — delay/hold outgoing traffic (timing
+normalization). The &quot;limits&quot; cap how much padding traffic and how much
+outgoing-traffic blocking a machine may impose (the <strong>padding
+budget</strong>). [maybenot GitHub], [pulls.name DAITA blog].</li>
+</ul>
+<p><strong>Implementation / crates (Rust).</strong> Written in Rust,
+<strong>MSRV 1.85</strong>. The workspace publishes several crates:</p>
+<ul>
+<li><code>maybenot</code> — core framework. Latest version
+<strong>2.2.2</strong>. [libraries.io/cargo/maybenot]</li>
+<li><code>maybenot-simulator</code> — testing/eval simulator. Latest
+<strong>2.2.1</strong>. [crates.io maybenot-simulator]</li>
+<li><code>maybenot-ffi</code> — C FFI wrapper (used for non-Rust
+integration).</li>
+<li><code>maybenot-machines</code> — a published library of
+useful/ready-made machines, latest <strong>1.0.1</strong>. [search
+result, crates.io maybenot-machines] So the <strong>2.x line</strong> is
+current (core 2.2.2). [maybenot GitHub], [libraries.io].</li>
+</ul>
+<p><strong>Integration.</strong> maybenot &quot;is used by Mullvad VPN in
+DAITA,&quot; via a <strong>WireGuard-Go integration</strong>. Third parties
+are adopting it: NetBird has an open issue to add DAITA via the maybenot
+framework. [maybenot GitHub], [netbirdio/netbird#2366].</p>
+<hr />
+<h2 id="2-mullvad-daita--the-three-defenses-the-mullvad-parity-target">2.
+Mullvad DAITA — the three defenses (the Mullvad-parity target)</h2>
+<p>DAITA = <strong>Defense Against AI-guided Traffic Analysis</strong>,
+built on maybenot, developed with Karlstad University. Resists ML/AI
+<strong>website-fingerprinting</strong> attacks (Deep Fingerprinting
+&quot;DF&quot;, Robust Fingerprinting &quot;RF&quot;). Three mechanisms (Mullvad&#39;s own
+framing): [mullvad.net/vpn/daita], [mullvad.net DAITA blog].</p>
+<ol type="1">
+<li><strong>Packet Size Normalization (constant packet size).</strong>
+All packets sent over the VPN are padded to <strong>one constant
+size</strong>. Small packets are especially revealing, so this removes
+size as a feature.</li>
+<li><strong>Dummy Packet Injection (cover traffic).</strong> Dummy
+packets are interspersed <strong>unpredictably</strong> to mask routine
+signals — observer can&#39;t separate real activity from background
+noise.</li>
+<li><strong>Traffic Pattern Distortion.</strong> During bursty activity
+(e.g. a page load) DAITA sends cover traffic <strong>in both
+directions</strong> (client↔︎relay) to distort the recognizable shape of
+a site visit.</li>
+</ol>
+<hr />
+<h2 id="3-daita-v1--hardcoded-client-machines-concrete-numbers">3. DAITA
+v1 — hardcoded client machines (concrete numbers)</h2>
+<p>In <strong>v1</strong> the <strong>client</strong> runs <strong>four
+hardcoded state machines</strong>: [pulls.name 2025-03-27 DAITA v1 and
+v2 blog], [WebSearch summary].</p>
+<ol type="1">
+<li><strong>Inactivity padding</strong> — sends a padding packet if
+<strong>no data has been sent on the tunnel for a randomized [1.5, 9.5]
+seconds</strong>.</li>
+<li><strong>3rd-packet ratio</strong> — ensures a packet is sent
+<strong>for every 3rd packet received</strong>.</li>
+<li><strong>5th-packet ratio</strong> — ensures a packet is sent
+<strong>for every 5th packet received</strong>.</li>
+<li><strong>Randomized padding</strong> — sends padding after randomized
+delays, active when the connection is otherwise idle.</li>
+</ol>
+<p><strong>Relay-side (v1):</strong> each relay defense = <strong>three
+machines</strong> — a <strong>NetFlow</strong> machine, an
+<strong>Interspace-inspired padding</strong> machine, and <strong>a
+unique machine generated to reduce accuracy against DF and RF</strong>.
+[pulls.name DAITA blog].</p>
+<hr />
+<h2 id="4-daita-v2--dynamic-negotiated-defenses-the-current-generation">4.
+DAITA v2 — dynamic negotiated defenses (the current generation)</h2>
+<p>v2 overhauls the architecture: <strong>no more hardcoded client
+machines — defenses are dynamic and negotiated.</strong> [pulls.name
+DAITA blog], [cyberinsider DAITA v2], [mullvad blogs].</p>
+<ul>
+<li><strong>Negotiation.</strong> When a v2 client negotiates DAITA, the
+<strong>relay selects from a database of defenses</strong> and
+<strong>sends the appropriate machines + limits (padding budgets) to the
+client</strong>. Strategy is chosen server-side and pushed.</li>
+<li><strong>Bandwidth overhead.</strong> v2 uses roughly <strong>half as
+many dummy packets</strong> as v1 (&quot;the same level of protection at
+<strong>half the average bandwidth overhead</strong>&quot;), via more precise
+insertion logic — notably better on mobile. [pulls.name],
+[cyberinsider].</li>
+<li><strong>Protection retained.</strong> Internal benchmarks: v2
+maintains v1-level protection against <strong>Deep
+Fingerprinting</strong> and <strong>Robust Fingerprinting</strong> while
+cutting average bandwidth. [cyberinsider], [pulls.name].</li>
+<li><strong>Platform availability.</strong> DAITA is shipped on Mullvad
+clients incl. Linux and macOS (Mullvad blog &quot;DAITA now available on
+Linux and macOS&quot;). [mullvad blog].</li>
+</ul>
+<p><strong>Parity design takeaways for a self-hosted VPN:</strong>
+implement (a) constant packet padding to a single MTU-bounded size, (b)
+probabilistic dummy injection with a capped padding budget, (c)
+bidirectional cover traffic during bursts, and (d) server-pushed machine
+selection (v2 model) rather than hardcoded client timers. Reuse the
+<strong>maybenot</strong> crate (core 2.2.2) +
+<code>maybenot-machines</code> rather than reimplementing the
+state-machine engine.</p>
+<hr />
+<h2 id="5-vpn-testing-methodology">5. VPN testing methodology</h2>
+<h3 id="51-linux-network-namespaces-netns--isolated-test-rig">5.1 Linux
+network namespaces (netns) — isolated test rig</h3>
+<ul>
+<li><code>ip netns</code> creates isolated network stacks; pair
+namespaces with <strong>veth</strong> virtual-ethernet links to build a
+client-ns ↔︎ gateway/relay-ns ↔︎ &quot;internet-ns&quot; topology without touching
+host/production traffic. [oneuptime ip netns guide], [girondi.net
+network namespaces].</li>
+<li>Run the VPN client in one ns, the relay/server in another, and a
+synthetic &quot;internet&quot; upstream in a third — fully reproducible,
+CI-friendly, no real WAN. [girondi.net], [oneuptime].</li>
+</ul>
+<h3 id="52-tc-netem--network-impairment-emulation">5.2 tc netem —
+network impairment emulation</h3>
+<ul>
+<li><code>netem</code> is a <strong>tc qdisc</strong> that injects
+<strong>latency, jitter, packet loss, duplication, reordering,
+corruption</strong>. Apply it <strong>inside a namespace</strong> on the
+veth so only the test path is impaired. [man7 tc-netem(8)], [oneuptime
+netem RHEL9], [srtlab netem cookbook].</li>
+<li>Realism features: <strong>delay correlation</strong> (e.g. 25% —
+each packet&#39;s delay correlates to the previous), and the
+<strong>Gilbert-Elliott model</strong> for <strong>bursty loss</strong>
+(more realistic for wireless than uniform random loss). Combine with
+<strong>HTB</strong> to impair only selected traffic classes /
+rate-limit. [oneuptime netem], [man7], [samwho.dev emulating bad
+networks].</li>
+</ul>
+<h3 id="53-iperf3--throughput--loss--jitter-bars">5.3 iperf3 —
+throughput / loss / jitter bars</h3>
+<ul>
+<li>Client-server tool measuring <strong>TCP/UDP throughput, packet
+loss, jitter</strong>. Control channel on <strong>TCP 5201</strong>;
+data on the same TCP/UDP port. Run server in one ns, client in another,
+measure tunnel goodput vs bare-link, and re-run under each netem profile
+to produce throughput-vs-impairment bars. [redhat iperf3 blog],
+[andrewbaker iperf3], [cisconetsolutions iperf3].</li>
+</ul>
+<h3 id="54-nftables--dpi-simulation--kill-switch--leak-blocking">5.4
+nftables — DPI simulation + kill-switch + leak blocking</h3>
+<ul>
+<li><strong>Kill-switch (fwmark routing).</strong> WireGuard tags tunnel
+traffic with an <strong>fwmark</strong>; an OUTPUT firewall rule
+<strong>rejects any traffic NOT matching the WireGuard fwmark</strong>,
+so if the tunnel drops, all egress fails closed. Classic WireGuard
+<code>PostUp</code> pattern (iptables/nftables). [ivpn WireGuard kill
+switch], [ivpn nftables leak prevention].</li>
+<li><strong>DNS-leak blocking (DPI-style port drop).</strong> nftables
+rules that <strong>drop UDP/53 and TCP/53 on the physical (non-VPN)
+interface</strong> physically prevent any DNS query from escaping the
+tunnel — &quot;brutal but effective&quot;; leaking apps get connection-refused
+instead of reaching the ISP resolver. [WebSearch DNS-leak summary],
+[vpnsmith WireGuard DNS leak].</li>
+<li>A &quot;DPI simulation&quot; rig generalizes this: nftables (or netem
+corruption) on the middle namespace to <strong>drop/mangle the VPN&#39;s
+wire signature</strong> and confirm the obfuscation/transport still
+connects (fail-closed vs fall-through behaviour).</li>
+</ul>
+<h3 id="55-dns--kill-switch--ipv6-leak-testing">5.5 DNS / kill-switch /
+IPv6 leak testing</h3>
+<ul>
+<li><strong>DNS leak test</strong>: confirm DNS queries resolve via the
+tunnel resolver, not the local/ISP resolver (dnsleaktest.com-style, or
+query a controlled resolver in the upstream ns and assert the source).
+[WebSearch DNS-leak summary], [vpn.how 2026 leak testing].</li>
+<li><strong>Leak-test the full matrix</strong>: <strong>DNS, WebRTC,
+IPv6</strong>. IPv6 is a common gap — either route v6 through the tunnel
+or <strong>block v6 egress</strong> at nftables; assert no v6 escapes.
+[vpn.how 2026], [a.vpn.how IPv6 leaks 2026].</li>
+<li><strong>Kill-switch test</strong>: bring the tunnel interface down
+mid-iperf3/curl and assert <strong>zero packets</strong> reach the
+upstream ns (fail-closed), then restore. [ivpn kill switch], [WebSearch
+DNS-leak summary].</li>
+<li><strong>Priority order</strong> (defense-in-depth): tunnel DNS
+config (systemd-resolved PostUp) → nftables drop of 53 outside tunnel →
+server-side resolver (Unbound/AdGuard Home) → server-side DNAT of
+UDP/53. [WebSearch DNS-leak summary].</li>
+</ul>
+<hr />
+<h2 id="negative-findings--gaps">Negative findings / gaps</h2>
+<ul>
+<li>maybenot GitHub README does not print an explicit version banner;
+version 2.2.2 (core) confirmed via libraries.io, not the README.
+<code>maybenot-machines</code> 1.0.1 is from a search-result snippet,
+not a fetched crates.io page — treat the machines-crate version as
+<strong>UNCONFIRMED</strong> pending a direct crates.io read.</li>
+<li>Exact DAITA v2 padding-budget numbers and the relay defense-database
+size are not published by Mullvad in detail (the &quot;half the dummy
+packets&quot; / &quot;half average bandwidth overhead&quot; figure is the public
+quantitative claim).</li>
+<li>DAITA v1 client machine numbers ([1.5,9.5]s, 3rd/5th-packet ratios)
+come from Tobias Pulls&#39; (maybenot author) blog, which is authoritative
+for this design; Mullvad&#39;s own blog states the mechanisms qualitatively,
+not these constants.</li>
+</ul>
+<h2 id="sources-verified">Sources verified</h2>
+<ul>
+<li><a href="https://github.com/maybenot-io/maybenot">https://github.com/maybenot-io/maybenot</a>
+— 2026-06-25</li>
+<li><a href="https://arxiv.org/abs/2304.09510">https://arxiv.org/abs/2304.09510</a>
+(Maybenot: A Framework for Traffic Analysis Defenses) — 2026-06-25</li>
+<li><a href="https://dl.acm.org/doi/10.1145/3603216.3624953">https://dl.acm.org/doi/10.1145/3603216.3624953</a>
+(WPES&#39;23) — 2026-06-25</li>
+<li><a href="https://libraries.io/cargo/maybenot">https://libraries.io/cargo/maybenot</a>
+(core v2.2.2) — 2026-06-25</li>
+<li><a href="https://crates.io/crates/maybenot-simulator">https://crates.io/crates/maybenot-simulator</a>
+(v2.2.1) — 2026-06-25</li>
+<li><a href="https://crates.io/crates/maybenot">https://crates.io/crates/maybenot</a>
+— 2026-06-25</li>
+<li><a href="https://pulls.name/blog/2025-03-27-daita-v1-and-v2-defenses/">https://pulls.name/blog/2025-03-27-daita-v1-and-v2-defenses/</a>
+— 2026-06-25</li>
+<li><a href="https://mullvad.net/en/vpn/daita">https://mullvad.net/en/vpn/daita</a>
+— 2026-06-25</li>
+<li><a href="https://mullvad.net/en/blog/daita-defense-against-ai-guided-traffic-analysis">https://mullvad.net/en/blog/daita-defense-against-ai-guided-traffic-analysis</a>
+— 2026-06-25</li>
+<li><a href="https://mullvad.net/en/blog/introducing-defense-against-ai-guided-traffic-analysis-daita">https://mullvad.net/en/blog/introducing-defense-against-ai-guided-traffic-analysis-daita</a>
+— 2026-06-25</li>
+<li><a href="https://mullvad.net/en/blog/defense-against-ai-guided-traffic-analysis-daita-now-available-on-linux-and-macos">https://mullvad.net/en/blog/defense-against-ai-guided-traffic-analysis-daita-now-available-on-linux-and-macos</a>
+— 2026-06-25</li>
+<li><a href="https://cyberinsider.com/mullvads-daita-v2-brings-stronger-resistance-to-ai-enhanced-vpn-traffic-analysis/">https://cyberinsider.com/mullvads-daita-v2-brings-stronger-resistance-to-ai-enhanced-vpn-traffic-analysis/</a>
+— 2026-06-25</li>
+<li><a href="https://github.com/netbirdio/netbird/issues/2366">https://github.com/netbirdio/netbird/issues/2366</a>
+— 2026-06-25</li>
+<li><a href="https://man7.org/linux/man-pages/man8/tc-netem.8.html">https://man7.org/linux/man-pages/man8/tc-netem.8.html</a>
+— 2026-06-25</li>
+<li><a href="https://oneuptime.com/blog/post/2026-03-04-simulate-network-latency-packet-loss-tc-netem-rhel-9/view">https://oneuptime.com/blog/post/2026-03-04-simulate-network-latency-packet-loss-tc-netem-rhel-9/view</a>
+— 2026-06-25</li>
+<li><a href="https://oneuptime.com/blog/post/2026-03-02-how-to-use-ip-netns-for-network-namespace-testing-on-ubuntu/view">https://oneuptime.com/blog/post/2026-03-02-how-to-use-ip-netns-for-network-namespace-testing-on-ubuntu/view</a>
+— 2026-06-25</li>
+<li><a href="https://girondi.net/post/network_namespaces/">https://girondi.net/post/network_namespaces/</a>
+— 2026-06-25</li>
+<li><a href="https://srtlab.github.io/srt-cookbook/how-to-articles/using-netem-to-emulate-networks.html">https://srtlab.github.io/srt-cookbook/how-to-articles/using-netem-to-emulate-networks.html</a>
+— 2026-06-25</li>
+<li><a href="https://samwho.dev/blog/emulating-bad-networks/">https://samwho.dev/blog/emulating-bad-networks/</a>
+— 2026-06-25</li>
+<li><a href="https://www.redhat.com/en/blog/network-testing-iperf3">https://www.redhat.com/en/blog/network-testing-iperf3</a>
+— 2026-06-25</li>
+<li><a href="https://andrewbaker.ninja/2026/01/04/iperf3-the-engineers-swiss-army-knife-for-network-performance-testing/">https://andrewbaker.ninja/2026/01/04/iperf3-the-engineers-swiss-army-knife-for-network-performance-testing/</a>
+— 2026-06-25</li>
+<li><a href="https://www.cisconetsolutions.com/iperf-network-testing-and-troubleshooting-tool/">https://www.cisconetsolutions.com/iperf-network-testing-and-troubleshooting-tool/</a>
+— 2026-06-25</li>
+<li><a href="https://www.ivpn.net/knowledgebase/linux/linux-wireguard-kill-switch/">https://www.ivpn.net/knowledgebase/linux/linux-wireguard-kill-switch/</a>
+— 2026-06-25</li>
+<li><a href="https://www.ivpn.net/knowledgebase/linux/linux-how-do-i-prevent-vpn-leaks-using-nftables-and-openvpn/">https://www.ivpn.net/knowledgebase/linux/linux-how-do-i-prevent-vpn-leaks-using-nftables-and-openvpn/</a>
+— 2026-06-25</li>
+<li><a href="https://www.vpnsmith.com/en/blog/wireguard-dns-leak-prevention-2026">https://www.vpnsmith.com/en/blog/wireguard-dns-leak-prevention-2026</a>
+— 2026-06-25</li>
+<li><a href="https://vpn.how/en/pages/vpn-leak-testing-in-2026-step-by-step-guide-with-dns-webrtc-and-ipv6-checks.html">https://vpn.how/en/pages/vpn-leak-testing-in-2026-step-by-step-guide-with-dns-webrtc-and-ipv6-checks.html</a>
+— 2026-06-25</li>
+<li><a href="https://a.vpn.how/en/pages/ipv6-leaks-and-vpns-in-2026-how-to-seal-every-gap-without-losing-speed.html">https://a.vpn.how/en/pages/ipv6-leaks-and-vpns-in-2026-how-to-seal-every-gap-without-losing-speed.html</a>
+— 2026-06-25</li>
+</ul>
+</body>
+</html>

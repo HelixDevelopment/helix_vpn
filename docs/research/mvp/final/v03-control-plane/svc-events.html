@@ -1,0 +1,1835 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>events backbone (Redis Streams)</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">events backbone (Redis Streams)</h1>
+</header>
+<h1 id="events-backbone-redis-streams">events backbone (Redis
+Streams)</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-06-25T00:00:00Z</p>
+<blockquote>
+<p>Master technical specification — Volume 3, Control Plane (Go),
+nano-detail service spec. Deepens the <strong>events backbone</strong>
+introduced in [02-control-plane §5] (<code>internal/events</code>). This
+document owns the <em>byte-level and operational contract</em> of the
+event bus: the bus-agnostic <code>Envelope</code>, the five Redis
+Streams, the full event taxonomy → coordinator reactions, the
+<code>XReadGroup</code>/<code>XACK</code>/<code>XAUTOCLAIM</code>
+consumer + dead-letter machinery, at-least-once + idempotent-reaction
+discipline, the per-event authz rules, the edge cases, the <strong>&lt;
+1 s convergence SLO</strong>, and the Phase-2 NATS-JetStream swap behind
+the same <code>Bus</code> interface. This is a <strong>SPEC</strong> —
+it describes the implementation; it does not build it. Source evidence
+cited inline by id: [02_CP] (final/02-control-plane.md), [04_P1]
+(HelixVPN-Phase1-MVP.md), [04_ARCH §4] (HelixVPN-Architecture-Refined.md
+§4), [research-go_cp] (cited research, accessed 2026-06-25), [SYNTHESIS
+§N]. Proto package is unified across the Volume-3 set:
+<strong><code>helix.coordinator.v1</code></strong>.</p>
+</blockquote>
+<hr />
+<h2 id="1-position-scope-and-governing-invariants">1. Position, scope,
+and governing invariants</h2>
+<h3 id="11-what-this-service-owns-vs-what-it-does-not">1.1 What this
+service owns vs. what it does not</h3>
+<p><code>internal/events</code> is the <strong>only path by which a
+Postgres state mutation reaches the coordinator</strong> [02_CP R3]. It
+is a thin, durable, bus-agnostic message fabric. It owns:</p>
+<ul>
+<li>the <code>events.Bus</code> interface (the swap seam, D3) and its
+Redis Streams implementation;</li>
+<li>the <code>Envelope</code> wire shape
+<code>{id,type,tenant_id,ts,actor,payload,trace_id}</code> [02_CP
+§5.2];</li>
+<li>the five canonical streams + their consumer-group topology [02_CP
+§5.1];</li>
+<li>the at-least-once consume loop, <code>XACK</code> discipline,
+<code>XAUTOCLAIM</code> reclaim, and DLQ routing;</li>
+<li>the idempotency contract every consumer must honour;</li>
+<li>the publish-side transactional-outbox guarantee that couples a DB
+write to its event.</li>
+</ul>
+<p>It does <strong>not</strong> own: the durable tables (those are
+<code>internal/store</code> — the bus carries no truth, only change
+notifications [02_CP C2]); the topology graph or map-diffing (that is
+<code>internal/coordinator</code> §6, which is <em>a consumer</em> of
+this bus); the agent wire protocol (<code>Coordinator</code> proto §4 —
+the bus is internal east-west, never exposed to agents).</p>
+<h3 id="12-governing-invariants-this-service-obeys-from-02_cp-01">1.2
+Governing invariants this service obeys (from [02_CP §0.1])</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Invariant</th>
+<th>Consequence for the bus</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>C2</td>
+<td>Postgres = truth; <strong>Redis is ephemeral</strong>. Losing Redis
+loses no durable state.</td>
+<td>A lost event is recoverable by <strong>rehydrating the coordinator
+graph from Postgres</strong> (§7.4). The bus is a fast-path, never the
+system of record.</td>
+</tr>
+<tr>
+<td>C3</td>
+<td>No-logging by construction.</td>
+<td>Event payloads carry <strong>identity/topology/policy deltas
+only</strong> — never src/dst IP pairs, ports-in-use, byte counts,
+flows. A §1.1 payload-lint mirrors the schema-lint [02_CP §2.4]
+(§9.4).</td>
+</tr>
+<tr>
+<td>C4</td>
+<td>Default-deny, need-to-know.</td>
+<td>Events carry a <code>tenant_id</code> and the coordinator filters
+fan-out by compiled policy; an event NEVER instructs delivery of a peer
+a node may not reach.</td>
+</tr>
+<tr>
+<td>C5</td>
+<td>Push, don&#39;t poll; convergence <strong>p99 &lt; 1 s</strong>.</td>
+<td>The bus latency budget (event-publish → consumer-receive) is the
+largest single term in the SLO; §8 allots it ≤ 250 ms p99.</td>
+</tr>
+<tr>
+<td>C7</td>
+<td>Package boundaries == service boundaries.</td>
+<td><code>events.Bus</code> is bus-agnostic so the Phase-2 NATS swap is
+a transport change, not a rewrite (§10).</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Decision D3 (restated, [02_CP §1.3, SYNTHESIS §3]).</strong>
+Redis Streams for the MVP, NATS JetStream for Phase-2 scale. Redis is
+already mandated for presence [05_YBO], so the MVP reuses it with zero
+new operational dependency; the <code>Bus</code> interface is the
+seam.</p>
+</blockquote>
+<hr />
+<h2 id="2-the-bus-agnostic-contract">2. The bus-agnostic contract</h2>
+<h3 id="21-eventsbus-interface-the-swap-seam">2.1
+<code>events.Bus</code> interface (the swap seam)</h3>
+<div class="sourceCode" id="cb1"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/events/iface.go</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co">//</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Bus is the bus-agnostic seam (D3). The MVP impl is Redis Streams (§4); the Phase-2 impl</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co">// is NATS JetStream (§10). NOTHING above this interface knows which transport is live.</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="kw">package</span> events</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="op">(</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;context&quot;</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;time&quot;</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;github.com/google/uuid&quot;</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="co">// Stream is a typed stream name. The five canonical values are declared in §3.1.</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Stream <span class="dt">string</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="co">// Bus is the publish/subscribe/ack contract. All methods are context-cancellable.</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Bus <span class="kw">interface</span> <span class="op">{</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Publish appends env to stream and returns the transport-assigned message id</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>    <span class="co">// (Redis stream id &quot;&lt;ms&gt;-&lt;seq&gt;&quot;; NATS sequence as decimal string in P2). At-least-once.</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>    <span class="co">// MUST be called inside the same logical unit of work as the DB write that caused it</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>    <span class="co">// (transactional outbox, §5.2) — never best-effort fire-and-forget.</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>    Publish<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> stream Stream<span class="op">,</span> env Envelope<span class="op">)</span> <span class="op">(</span>msgID <span class="dt">string</span><span class="op">,</span> err <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Subscribe joins (group,consumer) to the given streams and returns a delivery channel.</span></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>    <span class="co">// The channel yields Delivery values until ctx is cancelled or the bus is closed.</span></span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Delivery semantics: at-least-once; the caller MUST Ack each Delivery after a</span></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>    <span class="co">// successful, idempotent reaction (§6). Redelivery on crash is the contract, not a bug.</span></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>    Subscribe<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> group<span class="op">,</span> consumer <span class="dt">string</span><span class="op">,</span> streams <span class="op">...</span>Stream<span class="op">)</span> <span class="op">(&lt;-</span><span class="kw">chan</span> Delivery<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Ack marks one delivered message as processed for (stream,group). Idempotent: acking an</span></span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>    <span class="co">// already-acked or unknown id is a no-op, not an error.</span></span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>    Ack<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> stream Stream<span class="op">,</span> group<span class="op">,</span> msgID <span class="dt">string</span><span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Nack signals the reaction failed and the message should be retried later. The Redis impl</span></span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a>    <span class="co">// simply does NOT ack (the entry stays in the PEL and is reclaimed by XAUTOCLAIM, §6.4);</span></span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Nack increments an in-process metric so retries are observable. Provided so callers do</span></span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a>    <span class="co">// not rely on &quot;forget to ack&quot; as the failure signal.</span></span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a>    Nack<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> stream Stream<span class="op">,</span> group<span class="op">,</span> msgID <span class="dt">string</span><span class="op">,</span> cause <span class="dt">error</span><span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Health returns nil when the transport is reachable (PING ok) AND no consumer group is</span></span>
+<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a>    <span class="co">// lagging beyond the alarm threshold (§8.4). Wired into /healthz readiness.</span></span>
+<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a>    Health<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Close stops all subscriptions and releases the connection pool.</span></span>
+<span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a>    Close<span class="op">()</span> <span class="dt">error</span></span>
+<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a><span class="co">// Delivery is one received message plus the addressing needed to Ack it.</span></span>
+<span id="cb1-50"><a href="#cb1-50" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Delivery <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb1-51"><a href="#cb1-51" aria-hidden="true" tabindex="-1"></a>    Stream   Stream</span>
+<span id="cb1-52"><a href="#cb1-52" aria-hidden="true" tabindex="-1"></a>    Group    <span class="dt">string</span></span>
+<span id="cb1-53"><a href="#cb1-53" aria-hidden="true" tabindex="-1"></a>    MsgID    <span class="dt">string</span>    <span class="co">// transport message id; the Ack key</span></span>
+<span id="cb1-54"><a href="#cb1-54" aria-hidden="true" tabindex="-1"></a>    Env      Envelope  <span class="co">// decoded payload (§2.2)</span></span>
+<span id="cb1-55"><a href="#cb1-55" aria-hidden="true" tabindex="-1"></a>    Attempt  <span class="dt">int</span>       <span class="co">// 1 on first delivery; &gt;1 means a prior delivery was not acked (PEL)</span></span>
+<span id="cb1-56"><a href="#cb1-56" aria-hidden="true" tabindex="-1"></a>    IdleSince time<span class="op">.</span>Time <span class="co">// when this entry was last delivered/claimed (for XAUTOCLAIM forensics)</span></span>
+<span id="cb1-57"><a href="#cb1-57" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="22-envelope--the-wire-shape-bus-agnostic-02_cp-52">2.2
+<code>Envelope</code> — the wire shape (bus-agnostic, [02_CP §5.2])</h3>
+<p>The envelope is identical across Redis (MVP) and NATS (P2). It is
+encoded as a <strong>flat Redis hash field-set</strong> on
+<code>XADD</code> (one field per envelope key; <code>payload</code> is a
+JSON string) and as a <strong>JSON message body</strong> on NATS. The
+canonical Go type and its JSON form:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/events/envelope.go</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">package</span> events</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="op">(</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;encoding/json&quot;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;fmt&quot;</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;time&quot;</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;github.com/google/uuid&quot;</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Envelope <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ID is the transport-assigned message id, filled by the bus on receive (empty on publish).</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    <span class="co">// On Redis this is the stream entry id &quot;&lt;ms&gt;-&lt;seq&gt;&quot;; it doubles as the natural dedup key (§6.2).</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    ID       <span class="dt">string</span>          <span class="st">`json:&quot;id&quot;`</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    Type     EventType       <span class="st">`json:&quot;type&quot;`</span>               <span class="co">// closed vocabulary, §3.3</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    TenantID uuid<span class="op">.</span>UUID       <span class="st">`json:&quot;tenant_id&quot;`</span>          <span class="co">// RLS/fan-out scope (C4); NEVER empty except SystemTenant</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    TS       time<span class="op">.</span>Time       <span class="st">`json:&quot;ts&quot;`</span>                 <span class="co">// RFC3339 UTC, producer clock at publish</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    Actor    <span class="dt">string</span>          <span class="st">`json:&quot;actor&quot;`</span>             <span class="co">// &quot;user:&lt;uuid&gt;&quot; | &quot;device:&lt;uuid&gt;&quot; | &quot;system&quot;</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>    Payload  json<span class="op">.</span>RawMessage <span class="st">`json:&quot;payload&quot;`</span>           <span class="co">// type-specific, schema per §3.4; identity/topology/policy ONLY (C3)</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>    TraceID  <span class="dt">string</span>          <span class="st">`json:&quot;trace_id&quot;`</span>          <span class="co">// W3C traceparent-derived; correlates DB→bus→stream.Send</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>    <span class="co">// SchemaV is the payload schema version (default 1). Lets a consumer reject/upgrade an</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>    <span class="co">// unknown payload shape instead of mis-parsing it (forward-compat, §10.3).</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>    SchemaV  <span class="dt">int</span>             <span class="st">`json:&quot;schema_v&quot;`</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a><span class="co">// redisFields renders the envelope as the field map XADD stores. payload + ts are stringified.</span></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>e Envelope<span class="op">)</span> redisFields<span class="op">()</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="dt">any</span> <span class="op">{</span></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="dt">any</span><span class="op">{</span></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;type&quot;</span><span class="op">:</span>      <span class="dt">string</span><span class="op">(</span>e<span class="op">.</span>Type<span class="op">),</span></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;tenant_id&quot;</span><span class="op">:</span> e<span class="op">.</span>TenantID<span class="op">.</span>String<span class="op">(),</span></span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;ts&quot;</span><span class="op">:</span>        e<span class="op">.</span>TS<span class="op">.</span>UTC<span class="op">().</span>Format<span class="op">(</span>time<span class="op">.</span>RFC3339Nano<span class="op">),</span></span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;actor&quot;</span><span class="op">:</span>     e<span class="op">.</span>Actor<span class="op">,</span></span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;payload&quot;</span><span class="op">:</span>   <span class="dt">string</span><span class="op">(</span>e<span class="op">.</span>Payload<span class="op">),</span> <span class="co">// already-compact JSON</span></span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;trace_id&quot;</span><span class="op">:</span>  e<span class="op">.</span>TraceID<span class="op">,</span></span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;schema_v&quot;</span><span class="op">:</span>  e<span class="op">.</span>SchemaV<span class="op">,</span></span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a><span class="co">// New builds an envelope with TS=now, SchemaV=1, and a validated, compacted payload.</span></span>
+<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a><span class="co">// It is the ONLY constructor producers use; it enforces the C3 payload shape via the</span></span>
+<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a><span class="co">// payload lint (§9.4) at build time in tests and at publish time as a cheap guard.</span></span>
+<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> New<span class="op">(</span>t EventType<span class="op">,</span> tenant uuid<span class="op">.</span>UUID<span class="op">,</span> actor <span class="dt">string</span><span class="op">,</span> payload <span class="dt">any</span><span class="op">)</span> <span class="op">(</span>Envelope<span class="op">,</span> <span class="dt">error</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a>    raw<span class="op">,</span> err <span class="op">:=</span> json<span class="op">.</span>Marshal<span class="op">(</span>payload<span class="op">)</span></span>
+<span id="cb2-45"><a href="#cb2-45" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb2-46"><a href="#cb2-46" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> Envelope<span class="op">{},</span> fmt<span class="op">.</span>Errorf<span class="op">(</span><span class="st">&quot;events.New marshal %s: %w&quot;</span><span class="op">,</span> t<span class="op">,</span> err<span class="op">)</span></span>
+<span id="cb2-47"><a href="#cb2-47" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb2-48"><a href="#cb2-48" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">!</span>t<span class="op">.</span>Valid<span class="op">()</span> <span class="op">{</span> <span class="co">// closed-vocabulary guard (§3.3)</span></span>
+<span id="cb2-49"><a href="#cb2-49" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> Envelope<span class="op">{},</span> fmt<span class="op">.</span>Errorf<span class="op">(</span><span class="st">&quot;events.New: unknown type %q&quot;</span><span class="op">,</span> t<span class="op">)</span></span>
+<span id="cb2-50"><a href="#cb2-50" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb2-51"><a href="#cb2-51" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> Envelope<span class="op">{</span></span>
+<span id="cb2-52"><a href="#cb2-52" aria-hidden="true" tabindex="-1"></a>        Type<span class="op">:</span> t<span class="op">,</span> TenantID<span class="op">:</span> tenant<span class="op">,</span> TS<span class="op">:</span> time<span class="op">.</span>Now<span class="op">().</span>UTC<span class="op">(),</span></span>
+<span id="cb2-53"><a href="#cb2-53" aria-hidden="true" tabindex="-1"></a>        Actor<span class="op">:</span> actor<span class="op">,</span> Payload<span class="op">:</span> raw<span class="op">,</span> TraceID<span class="op">:</span> traceIDFromContext<span class="op">(),</span> SchemaV<span class="op">:</span> <span class="dv">1</span><span class="op">,</span></span>
+<span id="cb2-54"><a href="#cb2-54" aria-hidden="true" tabindex="-1"></a>    <span class="op">},</span> <span class="ot">nil</span></span>
+<span id="cb2-55"><a href="#cb2-55" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Canonical JSON instance (the <code>device.revoked</code> example,
+[02_CP §5.2]):</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="st">&quot;1735689600000-0&quot;</span><span class="fu">,</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;device.revoked&quot;</span><span class="fu">,</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;tenant_id&quot;</span><span class="fu">:</span> <span class="st">&quot;8a1f9c2e-0b3d-4e5a-9f6b-1c2d3e4f5a6b&quot;</span><span class="fu">,</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;ts&quot;</span><span class="fu">:</span> <span class="st">&quot;2026-06-25T12:00:00.000Z&quot;</span><span class="fu">,</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;actor&quot;</span><span class="fu">:</span> <span class="st">&quot;user:3f2a...&quot;</span><span class="fu">,</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;payload&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;device_id&quot;</span><span class="fu">:</span> <span class="st">&quot;d41d8cd9-8f00-4b20-a8d1-3c2e1f0a9b8c&quot;</span> <span class="fu">},</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;trace_id&quot;</span><span class="fu">:</span> <span class="st">&quot;00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01&quot;</span><span class="fu">,</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;schema_v&quot;</span><span class="fu">:</span> <span class="dv">1</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<blockquote>
+<p><strong>Privacy boundary (C3, anti-bluff).</strong> The
+<code>payload</code> object is structurally constrained to
+identity/topology/policy keys. There is <strong>no</strong> field
+anywhere in the taxonomy for a source/destination address pair in use, a
+port a flow used, a byte count, or a DNS query.
+<code>advertised_prefixes</code> CIDRs and a device&#39;s stable
+<code>overlay_ip</code> appear (they are topology, not traffic) —
+exactly the same allowlist the schema-lint enforces [02_CP §2.4]. The
+§9.4 payload-lint is the runtime signature that proves this is live, not
+merely promised.</p>
+</blockquote>
+<hr />
+<h2 id="3-streams-groups-and-the-event-taxonomy">3. Streams, groups, and
+the event taxonomy</h2>
+<h3 id="31-the-five-canonical-streams--consumer-groups-02_cp-51">3.1 The
+five canonical streams + consumer groups [02_CP §5.1]</h3>
+<div class="sourceCode" id="cb4"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/events/streams.go</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> <span class="op">(</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    StreamDevices  Stream <span class="op">=</span> <span class="st">&quot;events:devices&quot;</span>  <span class="co">// identity + registry produce</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    StreamRoutes   Stream <span class="op">=</span> <span class="st">&quot;events:routes&quot;</span>   <span class="co">// registry produces (connector prefixes)</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    StreamPolicy   Stream <span class="op">=</span> <span class="st">&quot;events:policy&quot;</span>   <span class="co">// policy produces</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    StreamPresence Stream <span class="op">=</span> <span class="st">&quot;events:presence&quot;</span> <span class="co">// api (heartbeats) produces; high-churn, short TTL</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    StreamGateway  Stream <span class="op">=</span> <span class="st">&quot;events:gateway&quot;</span>  <span class="co">// edge health probes produce</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="co">// dlqOf returns the dead-letter stream name for a primary stream (§6.5).</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> dlqOf<span class="op">(</span>s Stream<span class="op">)</span> Stream <span class="op">{</span> <span class="cf">return</span> s <span class="op">+</span> <span class="st">&quot;:dlq&quot;</span> <span class="op">}</span></span></code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Stream</th>
+<th>Producers</th>
+<th>Consumer groups (<code>&lt;group&gt;</code>)</th>
+<th>Trim policy (§8.5)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>events:devices</code></td>
+<td>identity, registry</td>
+<td><code>coordinator</code>, <code>telemetry</code>,
+<code>audit</code></td>
+<td><code>MAXLEN ~ 100000</code></td>
+</tr>
+<tr>
+<td><code>events:routes</code></td>
+<td>registry</td>
+<td><code>coordinator</code>, <code>telemetry</code></td>
+<td><code>MAXLEN ~ 50000</code></td>
+</tr>
+<tr>
+<td><code>events:policy</code></td>
+<td>policy</td>
+<td><code>coordinator</code>, <code>audit</code></td>
+<td><code>MAXLEN ~ 20000</code></td>
+</tr>
+<tr>
+<td><code>events:presence</code></td>
+<td>api (heartbeats)</td>
+<td><code>coordinator</code></td>
+<td><code>MAXLEN ~ 200000</code> (high churn)</td>
+</tr>
+<tr>
+<td><code>events:gateway</code></td>
+<td>edge health probes</td>
+<td><code>coordinator</code>, <code>telemetry</code></td>
+<td><code>MAXLEN ~ 50000</code></td>
+</tr>
+</tbody>
+</table>
+<p>Each <code>(stream, group)</code> pair is a durable cursor; multiple
+<code>helixd</code> replicas in Phase 2 join the <strong>same</strong>
+group with distinct consumer names so work is partitioned, not
+duplicated [research-go_cp §5]. In the MVP single-binary deploy there is
+one consumer per group named by the host id (<code>hostID</code>, the
+container&#39;s stable name).</p>
+<h3 id="32-streamgroup-topology-diagram">3.2 Stream/group topology
+diagram</h3>
+<pre class="mermaid"><code>flowchart LR
+    subgraph Producers
+      ID[identity]
+      RG[registry]
+      PO[policy]
+      AP[api / heartbeats]
+      EH[edge health probes]
+    end
+    ID --&gt; SD[events:devices]
+    RG --&gt; SD
+    RG --&gt; SR[events:routes]
+    PO --&gt; SP[events:policy]
+    AP --&gt; SE[events:presence]
+    EH --&gt; SG[events:gateway]
+
+    subgraph Groups
+      CO[coordinator]
+      TE[telemetry]
+      AU[audit]
+    end
+    SD --&gt;|XReadGroup| CO
+    SD --&gt;|XReadGroup| TE
+    SD --&gt;|XReadGroup| AU
+    SR --&gt; CO
+    SR --&gt; TE
+    SP --&gt; CO
+    SP --&gt; AU
+    SE --&gt; CO
+    SG --&gt; CO
+    SG --&gt; TE
+
+    CO -. XAUTOCLAIM reclaim .-&gt; CO
+    SD -. poison &gt;5 .-&gt; DLQ[events:*:dlq]
+    SP -. poison &gt;5 .-&gt; DLQ</code></pre>
+<h3 id="33-eventtype--the-closed-vocabulary">3.3 <code>EventType</code>
+— the closed vocabulary</h3>
+<div class="sourceCode" id="cb6"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/events/types.go</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> EventType <span class="dt">string</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> <span class="op">(</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    EvDeviceEnrolled         EventType <span class="op">=</span> <span class="st">&quot;device.enrolled&quot;</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    EvDeviceOnline           EventType <span class="op">=</span> <span class="st">&quot;device.online&quot;</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    EvDeviceOffline          EventType <span class="op">=</span> <span class="st">&quot;device.offline&quot;</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    EvDeviceRevoked          EventType <span class="op">=</span> <span class="st">&quot;device.revoked&quot;</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    EvConnectorAttached      EventType <span class="op">=</span> <span class="st">&quot;connector.attached&quot;</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    EvConnectorPrefixesChng  EventType <span class="op">=</span> <span class="st">&quot;connector.prefixes.changed&quot;</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>    EvRouteConflictDetected  EventType <span class="op">=</span> <span class="st">&quot;route.conflict.detected&quot;</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    EvPolicyUpdated          EventType <span class="op">=</span> <span class="st">&quot;policy.updated&quot;</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>    EvPolicyCompiled         EventType <span class="op">=</span> <span class="st">&quot;policy.compiled&quot;</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>    EvGatewayFailover        EventType <span class="op">=</span> <span class="st">&quot;gateway.failover&quot;</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a><span class="kw">var</span> validTypes <span class="op">=</span> <span class="kw">map</span><span class="op">[</span>EventType<span class="op">]</span>Stream<span class="op">{</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>    EvDeviceEnrolled<span class="op">:</span>        StreamDevices<span class="op">,</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>    EvDeviceOnline<span class="op">:</span>          StreamPresence<span class="op">,</span> <span class="co">// online/offline are presence, not durable identity</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>    EvDeviceOffline<span class="op">:</span>         StreamPresence<span class="op">,</span></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>    EvDeviceRevoked<span class="op">:</span>         StreamDevices<span class="op">,</span></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>    EvConnectorAttached<span class="op">:</span>     StreamDevices<span class="op">,</span></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>    EvConnectorPrefixesChng<span class="op">:</span> StreamRoutes<span class="op">,</span></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>    EvRouteConflictDetected<span class="op">:</span> StreamRoutes<span class="op">,</span></span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>    EvPolicyUpdated<span class="op">:</span>         StreamPolicy<span class="op">,</span></span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>    EvPolicyCompiled<span class="op">:</span>        StreamPolicy<span class="op">,</span></span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>    EvGatewayFailover<span class="op">:</span>       StreamGateway<span class="op">,</span></span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>t EventType<span class="op">)</span> Valid<span class="op">()</span> <span class="dt">bool</span> <span class="op">{</span> _<span class="op">,</span> ok <span class="op">:=</span> validTypes<span class="op">[</span>t<span class="op">];</span> <span class="cf">return</span> ok <span class="op">}</span></span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a><span class="co">// Stream returns the canonical stream a type belongs on. Publishing a type to the wrong</span></span>
+<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a><span class="co">// stream is a programmer error caught by a unit test (§9.1) and by Publish (§5.2).</span></span>
+<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>t EventType<span class="op">)</span> Stream<span class="op">()</span> Stream <span class="op">{</span> <span class="cf">return</span> validTypes<span class="op">[</span>t<span class="op">]</span> <span class="op">}</span></span></code></pre></div>
+<h3 id="34-full-taxonomy-payload-schema--coordinator-reaction--idempotency-key">3.4
+Full taxonomy: payload schema → coordinator reaction → idempotency
+key</h3>
+<p>Every payload is <code>{...}</code>-JSON under the envelope&#39;s
+<code>payload</code>. The <strong>Idempotency key</strong> column is the
+natural key a consumer derives to make the reaction safe under
+at-least-once redelivery (§6.2). All reactions are recomputed from
+current graph state, so replay is harmless [02_CP §5.4].</p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Payload schema (Go struct)</th>
+<th>Coordinator reaction</th>
+<th>Idempotency key</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>device.enrolled</code></td>
+<td><code>{device_id uuid, kind &quot;client&quot;|&quot;connector&quot;, overlay_ip string}</code></td>
+<td>Insert node into tenant graph; if any active policy grants it,
+recompute + push upsert-peer delta to grantee maps (C4).</td>
+<td><code>(tenant, &quot;enrolled&quot;, device_id)</code></td>
+</tr>
+<tr>
+<td><code>device.online</code></td>
+<td><code>{device_id uuid, rtt_ms uint32}</code></td>
+<td>Flip presence→online; mark relay availability; push presence-only
+delta to peers that already see it. <strong>No</strong> topology
+change.</td>
+<td><code>(tenant, device_id, last-write-wins on TS)</code></td>
+</tr>
+<tr>
+<td><code>device.offline</code></td>
+<td><code>{device_id uuid}</code></td>
+<td>Flip presence→offline; peers see relay unavailable; no peer removal
+(still authorized, just unreachable).</td>
+<td>LWW on TS</td>
+</tr>
+<tr>
+<td><code>device.revoked</code></td>
+<td><code>{device_id uuid}</code></td>
+<td>Remove node from graph; push remove-peer delta to <strong>everyone
+who could see it</strong>; edge drops the WG peer (&lt; 1 s, §8). Cert
+marked revoked by <code>pki</code>.</td>
+<td><code>(tenant, &quot;revoked&quot;, device_id)</code> — terminal,
+monotonic</td>
+</tr>
+<tr>
+<td><code>connector.attached</code></td>
+<td><code>{device_id uuid, site string}</code></td>
+<td>Register connector; allocate <code>site_id</code> for
+<code>4via6</code> (D4); recompute routes for nodes whose policy
+includes its prefixes.</td>
+<td><code>(tenant, &quot;attached&quot;, device_id)</code></td>
+</tr>
+<tr>
+<td><code>connector.prefixes.changed</code></td>
+<td><code>{connector_id uuid, cidrs []string, gen int64}</code></td>
+<td>Recompute routes; push delta to nodes whose <strong>compiled
+policy</strong> grants any of these CIDRs (minimal affected set, §6.4).
+<code>gen</code> is a per-connector monotonic counter — drop a stale
+<code>gen</code>.</td>
+<td><code>(tenant, connector_id, gen)</code></td>
+</tr>
+<tr>
+<td><code>route.conflict.detected</code></td>
+<td><code>{cidr string, connector_ids []uuid}</code></td>
+<td>Flag overlapping-CIDR; surface in Console via
+<code>events:*</code>→WS (§3.6). Does <strong>not</strong> block;
+resolved by <code>4via6</code> or operator choice [02_CP §7.3].</td>
+<td><code>(tenant, cidr, sorted(connector_ids))</code></td>
+</tr>
+<tr>
+<td><code>policy.updated</code></td>
+<td><code>{version int64}</code></td>
+<td>(Informational.) Trigger compile if not already dry-run-compiled.
+Usually a no-op for the coordinator (it waits for
+<code>policy.compiled</code>).</td>
+<td><code>(tenant, &quot;updated&quot;, version)</code></td>
+</tr>
+<tr>
+<td><code>policy.compiled</code></td>
+<td><code>{version int64}</code></td>
+<td>Recompute the <strong>whole tenant&#39;s</strong> visibility from the
+new <code>CompiledPolicy</code>; diff against last pushed map per node;
+push minimal deltas. The heaviest reaction.</td>
+<td><code>(tenant, &quot;compiled&quot;, version)</code> — monotonic; ignore a
+<code>version</code> ≤ last-applied</td>
+</tr>
+<tr>
+<td><code>gateway.failover</code></td>
+<td><code>{from string, to string}</code></td>
+<td>Re-point affected nodes&#39; <code>GatewayInfo.endpoint</code>; push
+<code>GatewayInfo</code>-only delta.</td>
+<td><code>(tenant, &quot;gw&quot;, to, TS)</code> LWW</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb7"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/events/payloads.go — the typed payload structs (one per type), all snake_case JSON.</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> DeviceEnrolled        <span class="kw">struct</span> <span class="op">{</span> DeviceID uuid<span class="op">.</span>UUID <span class="st">`json:&quot;device_id&quot;`</span><span class="op">;</span> Kind <span class="dt">string</span> <span class="st">`json:&quot;kind&quot;`</span><span class="op">;</span> OverlayIP <span class="dt">string</span> <span class="st">`json:&quot;overlay_ip&quot;`</span> <span class="op">}</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> DevicePresence        <span class="kw">struct</span> <span class="op">{</span> DeviceID uuid<span class="op">.</span>UUID <span class="st">`json:&quot;device_id&quot;`</span><span class="op">;</span> RTTMs <span class="dt">uint32</span> <span class="st">`json:&quot;rtt_ms,omitempty&quot;`</span> <span class="op">}</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> DeviceRevoked         <span class="kw">struct</span> <span class="op">{</span> DeviceID uuid<span class="op">.</span>UUID <span class="st">`json:&quot;device_id&quot;`</span> <span class="op">}</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> ConnectorAttached     <span class="kw">struct</span> <span class="op">{</span> DeviceID uuid<span class="op">.</span>UUID <span class="st">`json:&quot;device_id&quot;`</span><span class="op">;</span> Site <span class="dt">string</span> <span class="st">`json:&quot;site&quot;`</span> <span class="op">}</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> ConnectorPrefixes     <span class="kw">struct</span> <span class="op">{</span> ConnectorID uuid<span class="op">.</span>UUID <span class="st">`json:&quot;connector_id&quot;`</span><span class="op">;</span> CIDRs <span class="op">[]</span><span class="dt">string</span> <span class="st">`json:&quot;cidrs&quot;`</span><span class="op">;</span> Gen <span class="dt">int64</span> <span class="st">`json:&quot;gen&quot;`</span> <span class="op">}</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> RouteConflict         <span class="kw">struct</span> <span class="op">{</span> CIDR <span class="dt">string</span> <span class="st">`json:&quot;cidr&quot;`</span><span class="op">;</span> ConnectorIDs <span class="op">[]</span>uuid<span class="op">.</span>UUID <span class="st">`json:&quot;connector_ids&quot;`</span> <span class="op">}</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> PolicyVersion         <span class="kw">struct</span> <span class="op">{</span> Version <span class="dt">int64</span> <span class="st">`json:&quot;version&quot;`</span> <span class="op">}</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> GatewayFailover       <span class="kw">struct</span> <span class="op">{</span> From <span class="dt">string</span> <span class="st">`json:&quot;from&quot;`</span><span class="op">;</span> To <span class="dt">string</span> <span class="st">`json:&quot;to&quot;`</span> <span class="op">}</span></span></code></pre></div>
+<h3 id="35-per-event-authorization-rules-who-may-emit-what">3.5
+Per-event authorization rules (who may emit what)</h3>
+<p>The bus is internal — agents NEVER publish. Authz is enforced at the
+<em>producing module&#39;s</em> public boundary (REST RBAC [02_CP §8.1] /
+agent mTLS [02_CP §8.2]) <strong>before</strong>
+<code>events.New</code>. The bus itself enforces two structural rules at
+<code>Publish</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Event</th>
+<th>Permitted producer module</th>
+<th>Permitted actor origin</th>
+<th>Bus-enforced structural rule</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>device.enrolled</code></td>
+<td>identity</td>
+<td>the enrolled <code>device:&lt;id&gt;</code> via a valid single-use
+enroll token</td>
+<td><code>tenant_id</code> must match the device&#39;s tenant;
+<code>actor</code> prefix <code>device:</code> or
+<code>system</code></td>
+</tr>
+<tr>
+<td><code>device.online/offline</code></td>
+<td>api (heartbeat handler)</td>
+<td><code>device:&lt;id&gt;</code> (mTLS cert)</td>
+<td>actor <code>device:&lt;id&gt;</code> must equal payload
+<code>device_id</code></td>
+</tr>
+<tr>
+<td><code>device.revoked</code></td>
+<td>identity / api</td>
+<td><code>user:&lt;uuid&gt;</code> with <code>admin</code> role, or
+<code>system</code></td>
+<td>actor must be <code>user:</code> (admin) or <code>system</code>;
+never <code>device:</code> (a device cannot revoke itself or
+others)</td>
+</tr>
+<tr>
+<td><code>connector.attached</code></td>
+<td>registry</td>
+<td><code>device:&lt;id&gt;</code> (connector mTLS)</td>
+<td><code>kind=connector</code> asserted from the device row</td>
+</tr>
+<tr>
+<td><code>connector.prefixes.changed</code></td>
+<td>registry</td>
+<td>the connector <code>device:&lt;id&gt;</code> or <code>user:</code>
+admin/operator</td>
+<td>prefixes must already be persisted+validated (no unvalidated CIDR on
+the bus)</td>
+</tr>
+<tr>
+<td><code>route.conflict.detected</code></td>
+<td>registry (compiler dry-run)</td>
+<td><code>system</code></td>
+<td>actor <code>system</code> only</td>
+</tr>
+<tr>
+<td><code>policy.updated</code>/<code>policy.compiled</code></td>
+<td>policy</td>
+<td><code>user:</code> admin/operator or <code>system</code></td>
+<td>actor must be <code>user:</code>(admin/operator) or
+<code>system</code></td>
+</tr>
+<tr>
+<td><code>gateway.failover</code></td>
+<td>(edge health subsystem)</td>
+<td><code>system</code></td>
+<td>actor <code>system</code> only</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb8"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/events/authz.go — structural guards applied inside the Redis Publish (§5.2).</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="co">// These are belt-and-suspenders: the producing module already authorized the action; the bus</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="co">// refuses a malformed actor/tenant so a coding bug cannot inject a spoofed-origin event.</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> guardPublish<span class="op">(</span>stream Stream<span class="op">,</span> env Envelope<span class="op">)</span> <span class="dt">error</span> <span class="op">{</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> env<span class="op">.</span>Type<span class="op">.</span>Stream<span class="op">()</span> <span class="op">!=</span> stream <span class="op">{</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> fmt<span class="op">.</span>Errorf<span class="op">(</span><span class="st">&quot;events: type %s may not publish to %s&quot;</span><span class="op">,</span> env<span class="op">.</span>Type<span class="op">,</span> stream<span class="op">)</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> env<span class="op">.</span>TenantID <span class="op">==</span> uuid<span class="op">.</span>Nil <span class="op">&amp;&amp;</span> env<span class="op">.</span>Actor <span class="op">!=</span> <span class="st">&quot;system&quot;</span> <span class="op">{</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> fmt<span class="op">.</span>Errorf<span class="op">(</span><span class="st">&quot;events: non-system event %s requires tenant_id&quot;</span><span class="op">,</span> env<span class="op">.</span>Type<span class="op">)</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">switch</span> env<span class="op">.</span>Type <span class="op">{</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> EvDeviceRevoked<span class="op">,</span> EvPolicyUpdated<span class="op">,</span> EvPolicyCompiled<span class="op">:</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">!</span>strings<span class="op">.</span>HasPrefix<span class="op">(</span>env<span class="op">.</span>Actor<span class="op">,</span> <span class="st">&quot;user:&quot;</span><span class="op">)</span> <span class="op">&amp;&amp;</span> env<span class="op">.</span>Actor <span class="op">!=</span> <span class="st">&quot;system&quot;</span> <span class="op">{</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> fmt<span class="op">.</span>Errorf<span class="op">(</span><span class="st">&quot;events: %s requires user/system actor, got %q&quot;</span><span class="op">,</span> env<span class="op">.</span>Type<span class="op">,</span> env<span class="op">.</span>Actor<span class="op">)</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> EvRouteConflictDetected<span class="op">,</span> EvGatewayFailover<span class="op">:</span></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> env<span class="op">.</span>Actor <span class="op">!=</span> <span class="st">&quot;system&quot;</span> <span class="op">{</span></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> fmt<span class="op">.</span>Errorf<span class="op">(</span><span class="st">&quot;events: %s requires system actor&quot;</span><span class="op">,</span> env<span class="op">.</span>Type<span class="op">)</span></span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="ot">nil</span></span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="36-bridge-to-the-live-ui-stream">3.6 Bridge to the live-UI
+stream</h3>
+<p>A subset of events (<code>device.online</code>,
+<code>route.conflict.detected</code>,
+<code>connector.prefixes.changed</code>, <code>gateway.failover</code>)
+is re-emitted to the Console WS/SSE endpoint <code>GET /v1/stream</code>
+[02_CP §8]. The <code>api</code> module runs a thin
+<code>events:*</code> consumer in group <code>ws-fanout</code> that maps
+an <code>Envelope</code> → a UI event JSON and writes it to connected
+admin sockets. This is read-only projection; it never acks on behalf of
+<code>coordinator</code> (distinct group), so a slow Console cannot
+stall map convergence (back-pressure isolation, §6.6).</p>
+<hr />
+<h2 id="4-redis-streams-implementation">4. Redis Streams
+implementation</h2>
+<h3 id="41-construction--client">4.1 Construction &amp; client</h3>
+<p>Go client: <strong><code>redis/go-redis/v9</code></strong>
+(<code>XAdd</code>, <code>XReadGroup</code>, <code>XAck</code>,
+<code>XAutoClaim</code>, <code>XPending</code>, <code>XTrim</code> with
+<code>MAXLEN</code>) [research-go_cp §5]. Redis pinned to a known
+version; if ≥ 8.4 the single-shot <code>XREADGROUP ... CLAIM</code> form
+is available (§6.4 note) — the MVP uses the portable
+<code>XAUTOCLAIM</code>-then-<code>XREADGROUP</code> two-step so it does
+not require 8.4 [research-go_cp §5].</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/events/redisbus.go</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> RedisBus <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    rdb    <span class="op">*</span>redis<span class="op">.</span>Client</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    hostID <span class="dt">string</span>                 <span class="co">// stable consumer name (container name)</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    dlqCap <span class="dt">int</span>                    <span class="co">// poison redelivery ceiling (default 5, §6.5)</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    log    <span class="op">*</span>slog<span class="op">.</span>Logger</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>    mx     metrics                <span class="co">// §8 counters/histograms</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> NewRedisBus<span class="op">(</span>rdb <span class="op">*</span>redis<span class="op">.</span>Client<span class="op">,</span> hostID <span class="dt">string</span><span class="op">,</span> log <span class="op">*</span>slog<span class="op">.</span>Logger<span class="op">,</span> mx metrics<span class="op">)</span> <span class="op">*</span>RedisBus <span class="op">{</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">&amp;</span>RedisBus<span class="op">{</span>rdb<span class="op">:</span> rdb<span class="op">,</span> hostID<span class="op">:</span> hostID<span class="op">,</span> dlqCap<span class="op">:</span> <span class="dv">5</span><span class="op">,</span> log<span class="op">:</span> log<span class="op">,</span> mx<span class="op">:</span> mx<span class="op">}</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a><span class="co">// EnsureGroups is called once at boot. It creates each (stream,group) with MKSTREAM so the</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a><span class="co">// stream exists even before the first XADD, and starts the cursor at &quot;$&quot; (only-new) for a</span></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a><span class="co">// FRESH group or &quot;0&quot; to replay backlog — the coordinator uses &quot;0&quot; exactly once on cold boot</span></span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a><span class="co">// AFTER it has hydrated from Postgres, so it never double-applies (§7.4).</span></span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>b <span class="op">*</span>RedisBus<span class="op">)</span> EnsureGroups<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> plan <span class="kw">map</span><span class="op">[</span>Stream<span class="op">][]</span><span class="dt">string</span><span class="op">)</span> <span class="dt">error</span> <span class="op">{</span></span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> stream<span class="op">,</span> groups <span class="op">:=</span> <span class="kw">range</span> plan <span class="op">{</span></span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> _<span class="op">,</span> g <span class="op">:=</span> <span class="kw">range</span> groups <span class="op">{</span></span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a>            err <span class="op">:=</span> b<span class="op">.</span>rdb<span class="op">.</span>XGroupCreateMkStream<span class="op">(</span>ctx<span class="op">,</span> <span class="dt">string</span><span class="op">(</span>stream<span class="op">),</span> g<span class="op">,</span> <span class="st">&quot;$&quot;</span><span class="op">).</span>Err<span class="op">()</span></span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">&amp;&amp;</span> <span class="op">!</span>strings<span class="op">.</span>Contains<span class="op">(</span>err<span class="op">.</span>Error<span class="op">(),</span> <span class="st">&quot;BUSYGROUP&quot;</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> fmt<span class="op">.</span>Errorf<span class="op">(</span><span class="st">&quot;xgroupcreate %s/%s: %w&quot;</span><span class="op">,</span> stream<span class="op">,</span> g<span class="op">,</span> err<span class="op">)</span></span>
+<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb9-26"><a href="#cb9-26" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb9-27"><a href="#cb9-27" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="ot">nil</span></span>
+<span id="cb9-28"><a href="#cb9-28" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="42-decode--encode">4.2 Decode / encode</h3>
+<div class="sourceCode" id="cb10"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co">// fromRedis reconstructs an Envelope from an XMessage&#39;s Values (the redisFields map, §2.2).</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> fromRedis<span class="op">(</span>stream Stream<span class="op">,</span> group <span class="dt">string</span><span class="op">,</span> m redis<span class="op">.</span>XMessage<span class="op">,</span> attempt <span class="dt">int</span><span class="op">,</span> idle time<span class="op">.</span>Time<span class="op">)</span> <span class="op">(</span>Delivery<span class="op">,</span> <span class="dt">error</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    get <span class="op">:=</span> <span class="kw">func</span><span class="op">(</span>k <span class="dt">string</span><span class="op">)</span> <span class="dt">string</span> <span class="op">{</span> v<span class="op">,</span> _ <span class="op">:=</span> m<span class="op">.</span>Values<span class="op">[</span>k<span class="op">].(</span><span class="dt">string</span><span class="op">);</span> <span class="cf">return</span> v <span class="op">}</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    tenant<span class="op">,</span> err <span class="op">:=</span> uuid<span class="op">.</span>Parse<span class="op">(</span>get<span class="op">(</span><span class="st">&quot;tenant_id&quot;</span><span class="op">))</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">&amp;&amp;</span> get<span class="op">(</span><span class="st">&quot;tenant_id&quot;</span><span class="op">)</span> <span class="op">!=</span> <span class="st">&quot;&quot;</span> <span class="op">{</span> <span class="co">// SystemTenant events carry no tenant</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> Delivery<span class="op">{},</span> fmt<span class="op">.</span>Errorf<span class="op">(</span><span class="st">&quot;bad tenant_id on %s: %w&quot;</span><span class="op">,</span> m<span class="op">.</span>ID<span class="op">,</span> err<span class="op">)</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>    ts<span class="op">,</span> _ <span class="op">:=</span> time<span class="op">.</span>Parse<span class="op">(</span>time<span class="op">.</span>RFC3339Nano<span class="op">,</span> get<span class="op">(</span><span class="st">&quot;ts&quot;</span><span class="op">))</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>    sv<span class="op">,</span> _ <span class="op">:=</span> strconv<span class="op">.</span>Atoi<span class="op">(</span>get<span class="op">(</span><span class="st">&quot;schema_v&quot;</span><span class="op">))</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>    env <span class="op">:=</span> Envelope<span class="op">{</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>        ID<span class="op">:</span> m<span class="op">.</span>ID<span class="op">,</span> Type<span class="op">:</span> EventType<span class="op">(</span>get<span class="op">(</span><span class="st">&quot;type&quot;</span><span class="op">)),</span> TenantID<span class="op">:</span> tenant<span class="op">,</span> TS<span class="op">:</span> ts<span class="op">,</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>        Actor<span class="op">:</span> get<span class="op">(</span><span class="st">&quot;actor&quot;</span><span class="op">),</span> Payload<span class="op">:</span> json<span class="op">.</span>RawMessage<span class="op">(</span>get<span class="op">(</span><span class="st">&quot;payload&quot;</span><span class="op">)),</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>        TraceID<span class="op">:</span> get<span class="op">(</span><span class="st">&quot;trace_id&quot;</span><span class="op">),</span> SchemaV<span class="op">:</span> sv<span class="op">,</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">!</span>env<span class="op">.</span>Type<span class="op">.</span>Valid<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> Delivery<span class="op">{},</span> fmt<span class="op">.</span>Errorf<span class="op">(</span><span class="st">&quot;unknown event type %q on %s&quot;</span><span class="op">,</span> env<span class="op">.</span>Type<span class="op">,</span> m<span class="op">.</span>ID<span class="op">)</span></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> Delivery<span class="op">{</span>Stream<span class="op">:</span> stream<span class="op">,</span> Group<span class="op">:</span> group<span class="op">,</span> MsgID<span class="op">:</span> m<span class="op">.</span>ID<span class="op">,</span> Env<span class="op">:</span> env<span class="op">,</span> Attempt<span class="op">:</span> attempt<span class="op">,</span> IdleSince<span class="op">:</span> idle<span class="op">},</span> <span class="ot">nil</span></span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<hr />
+<h2 id="5-publish-side--transactional-outbox-guarantee">5. Publish side
+— transactional outbox guarantee</h2>
+<h3 id="51-the-hazard-and-the-rule">5.1 The hazard and the rule</h3>
+<p>[02_CP R3] says &quot;every state mutation emits an event.&quot; The hazard: if
+the DB <code>COMMIT</code> succeeds but the <code>XADD</code> is lost
+(process crash between the two), the coordinator never learns of the
+change and a node converges to a stale map — a <strong>silent
+correctness hole</strong>, worse than a duplicate. Conversely,
+<code>XADD</code> before <code>COMMIT</code> can publish a change that
+then rolls back.</p>
+<p><strong>Rule P1 — outbox-then-relay (at-least-once, never
+at-most-once).</strong> The producing module writes an
+<code>outbox</code> row in the <strong>same <code>WithTenant</code>
+transaction</strong> as the state mutation; a relay loop drains the
+outbox to Redis and deletes the row only after a successful
+<code>XADD</code>. A crash after commit re-drains on restart (duplicate
+<code>XADD</code> possible → harmless, idempotent reactions §6.2). A
+crash before commit rolls back the outbox row too (no phantom event).
+This is the canonical transactional-outbox pattern; it is the only way
+to make &quot;DB write ⇒ event&quot; atomic without distributed transactions
+[research-go_cp §7 async-path; SYNTHESIS §3].</p>
+<h3 id="52-outbox-table-relay-and-publish">5.2 Outbox table, relay, and
+<code>Publish</code></h3>
+<div class="sourceCode" id="cb11"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- migrations/NNNN_outbox.sql  (tenant-scoped, RLS like every table — [02_CP §2.3])</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> event_outbox (</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">id</span>          bigint <span class="kw">GENERATED</span> ALWAYS <span class="kw">AS</span> IDENTITY <span class="kw">PRIMARY</span> <span class="kw">KEY</span>,</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  tenant_id   uuid <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">REFERENCES</span> tenants(<span class="kw">id</span>) <span class="kw">ON</span> <span class="kw">DELETE</span> <span class="kw">CASCADE</span>,</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>  stream      text <span class="kw">NOT</span> <span class="kw">NULL</span>,            <span class="co">-- &quot;events:policy&quot; etc.</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">type</span>        text <span class="kw">NOT</span> <span class="kw">NULL</span>,            <span class="co">-- closed vocabulary (§3.3)</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>  actor       text <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>  payload     jsonb <span class="kw">NOT</span> <span class="kw">NULL</span>,           <span class="co">-- identity/topology/policy only (C3) — payload-lint §9.4</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>  trace_id    text <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>  schema_v    <span class="dt">int</span>  <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> <span class="dv">1</span>,</span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>  created_at  timestamptz <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> now(),</span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>  relayed_at  timestamptz               <span class="co">-- NULL = pending; set when XADD succeeds, then row is reaped</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> event_outbox_pending <span class="kw">ON</span> event_outbox (<span class="kw">id</span>) <span class="kw">WHERE</span> relayed_at <span class="kw">IS</span> <span class="kw">NULL</span>;</span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">TABLE</span> event_outbox <span class="kw">ENABLE</span> <span class="kw">ROW</span> <span class="kw">LEVEL</span> SECURITY;</span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">TABLE</span> event_outbox <span class="kw">FORCE</span> <span class="kw">ROW</span> <span class="kw">LEVEL</span> SECURITY;</span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> POLICY tenant_isolation <span class="kw">ON</span> event_outbox</span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a>  <span class="kw">USING</span> (tenant_id <span class="op">=</span> current_setting(<span class="st">&#39;app.tenant_id&#39;</span>):<span class="ch">:uuid</span>)</span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a>  <span class="kw">WITH</span> <span class="kw">CHECK</span> (tenant_id <span class="op">=</span> current_setting(<span class="st">&#39;app.tenant_id&#39;</span>):<span class="ch">:uuid</span>);</span></code></pre></div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/events/outbox.go</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="co">//</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="co">// StageInTx writes the outbox row inside the caller&#39;s existing tenant transaction. The caller</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="co">// (policy.Activate, registry.SetPrefixes, identity.Enroll, ...) MUST call this within the same</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="co">// q the state mutation used — that is the atomicity guarantee (P1).</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> StageInTx<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> q <span class="op">*</span>db<span class="op">.</span>Queries<span class="op">,</span> env Envelope<span class="op">)</span> <span class="dt">error</span> <span class="op">{</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> err <span class="op">:=</span> env<span class="op">.</span>Type<span class="op">.</span>requireStream<span class="op">(</span>env<span class="op">.</span>Type<span class="op">.</span>Stream<span class="op">());</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span> <span class="co">// §3.3 guard</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> err</span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> q<span class="op">.</span>InsertOutbox<span class="op">(</span>ctx<span class="op">,</span> db<span class="op">.</span>InsertOutboxParams<span class="op">{</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>        TenantID<span class="op">:</span> env<span class="op">.</span>TenantID<span class="op">,</span> Stream<span class="op">:</span> <span class="dt">string</span><span class="op">(</span>env<span class="op">.</span>Type<span class="op">.</span>Stream<span class="op">()),</span> Type<span class="op">:</span> <span class="dt">string</span><span class="op">(</span>env<span class="op">.</span>Type<span class="op">),</span></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>        Actor<span class="op">:</span> env<span class="op">.</span>Actor<span class="op">,</span> Payload<span class="op">:</span> env<span class="op">.</span>Payload<span class="op">,</span> TraceID<span class="op">:</span> env<span class="op">.</span>TraceID<span class="op">,</span> SchemaV<span class="op">:</span> <span class="dt">int32</span><span class="op">(</span>env<span class="op">.</span>SchemaV<span class="op">),</span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">})</span></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a><span class="co">// Relay is the single background loop that moves committed outbox rows to Redis. One per</span></span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a><span class="co">// helixd process; a SKIP-LOCKED claim makes it safe to run on every replica in Phase 2.</span></span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>b <span class="op">*</span>RedisBus<span class="op">)</span> Relay<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> store <span class="op">*</span>store<span class="op">.</span>Store<span class="op">)</span> <span class="dt">error</span> <span class="op">{</span></span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a>    t <span class="op">:=</span> time<span class="op">.</span>NewTicker<span class="op">(</span><span class="dv">50</span> <span class="op">*</span> time<span class="op">.</span>Millisecond<span class="op">)</span> <span class="co">// tight: contributes to the §8 publish budget</span></span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">defer</span> t<span class="op">.</span>Stop<span class="op">()</span></span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">{</span></span>
+<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a>        <span class="cf">select</span> <span class="op">{</span></span>
+<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> <span class="op">&lt;-</span>ctx<span class="op">.</span>Done<span class="op">():</span></span>
+<span id="cb12-24"><a href="#cb12-24" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> ctx<span class="op">.</span>Err<span class="op">()</span></span>
+<span id="cb12-25"><a href="#cb12-25" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> <span class="op">&lt;-</span>t<span class="op">.</span>C<span class="op">:</span></span>
+<span id="cb12-26"><a href="#cb12-26" aria-hidden="true" tabindex="-1"></a>            <span class="co">// FOR UPDATE SKIP LOCKED LIMIT 256: each replica grabs a disjoint batch (no dup relay).</span></span>
+<span id="cb12-27"><a href="#cb12-27" aria-hidden="true" tabindex="-1"></a>            rows<span class="op">,</span> err <span class="op">:=</span> store<span class="op">.</span>ClaimOutboxBatch<span class="op">(</span>ctx<span class="op">,</span> <span class="dv">256</span><span class="op">)</span></span>
+<span id="cb12-28"><a href="#cb12-28" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span> b<span class="op">.</span>log<span class="op">.</span>Error<span class="op">(</span><span class="st">&quot;outbox claim&quot;</span><span class="op">,</span> <span class="st">&quot;err&quot;</span><span class="op">,</span> err<span class="op">);</span> <span class="cf">continue</span> <span class="op">}</span></span>
+<span id="cb12-29"><a href="#cb12-29" aria-hidden="true" tabindex="-1"></a>            <span class="cf">for</span> _<span class="op">,</span> r <span class="op">:=</span> <span class="kw">range</span> rows <span class="op">{</span></span>
+<span id="cb12-30"><a href="#cb12-30" aria-hidden="true" tabindex="-1"></a>                env <span class="op">:=</span> r<span class="op">.</span>ToEnvelope<span class="op">()</span></span>
+<span id="cb12-31"><a href="#cb12-31" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> err <span class="op">:=</span> guardPublish<span class="op">(</span>env<span class="op">.</span>Type<span class="op">.</span>Stream<span class="op">(),</span> env<span class="op">);</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span> <span class="co">// §3.5</span></span>
+<span id="cb12-32"><a href="#cb12-32" aria-hidden="true" tabindex="-1"></a>                    b<span class="op">.</span>log<span class="op">.</span>Error<span class="op">(</span><span class="st">&quot;outbox guard reject&quot;</span><span class="op">,</span> <span class="st">&quot;id&quot;</span><span class="op">,</span> r<span class="op">.</span>ID<span class="op">,</span> <span class="st">&quot;err&quot;</span><span class="op">,</span> err<span class="op">)</span></span>
+<span id="cb12-33"><a href="#cb12-33" aria-hidden="true" tabindex="-1"></a>                    _ <span class="op">=</span> store<span class="op">.</span>MarkOutboxRelayed<span class="op">(</span>ctx<span class="op">,</span> r<span class="op">.</span>ID<span class="op">)</span> <span class="co">// poison-out a malformed row; never block the loop</span></span>
+<span id="cb12-34"><a href="#cb12-34" aria-hidden="true" tabindex="-1"></a>                    b<span class="op">.</span>mx<span class="op">.</span>outboxRejected<span class="op">.</span>Inc<span class="op">()</span></span>
+<span id="cb12-35"><a href="#cb12-35" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">continue</span></span>
+<span id="cb12-36"><a href="#cb12-36" aria-hidden="true" tabindex="-1"></a>                <span class="op">}</span></span>
+<span id="cb12-37"><a href="#cb12-37" aria-hidden="true" tabindex="-1"></a>                id<span class="op">,</span> err <span class="op">:=</span> b<span class="op">.</span>xadd<span class="op">(</span>ctx<span class="op">,</span> env<span class="op">)</span>               <span class="co">// the actual XADD with MAXLEN trim</span></span>
+<span id="cb12-38"><a href="#cb12-38" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span> b<span class="op">.</span>mx<span class="op">.</span>publishErrors<span class="op">.</span>Inc<span class="op">();</span> <span class="cf">break</span> <span class="op">}</span> <span class="co">// leave row pending; retry next tick</span></span>
+<span id="cb12-39"><a href="#cb12-39" aria-hidden="true" tabindex="-1"></a>                _ <span class="op">=</span> store<span class="op">.</span>MarkOutboxRelayed<span class="op">(</span>ctx<span class="op">,</span> r<span class="op">.</span>ID<span class="op">)</span></span>
+<span id="cb12-40"><a href="#cb12-40" aria-hidden="true" tabindex="-1"></a>                b<span class="op">.</span>mx<span class="op">.</span>published<span class="op">.</span>WithLabelValues<span class="op">(</span><span class="dt">string</span><span class="op">(</span>env<span class="op">.</span>Type<span class="op">)).</span>Inc<span class="op">()</span></span>
+<span id="cb12-41"><a href="#cb12-41" aria-hidden="true" tabindex="-1"></a>                b<span class="op">.</span>mx<span class="op">.</span>outboxLagSeconds<span class="op">.</span>Observe<span class="op">(</span>time<span class="op">.</span>Since<span class="op">(</span>r<span class="op">.</span>CreatedAt<span class="op">).</span>Seconds<span class="op">())</span></span>
+<span id="cb12-42"><a href="#cb12-42" aria-hidden="true" tabindex="-1"></a>                _ <span class="op">=</span> id</span>
+<span id="cb12-43"><a href="#cb12-43" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb12-44"><a href="#cb12-44" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb12-45"><a href="#cb12-45" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb12-46"><a href="#cb12-46" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb12-47"><a href="#cb12-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-48"><a href="#cb12-48" aria-hidden="true" tabindex="-1"></a><span class="co">// xadd is the low-level append with the per-stream trim cap (§8.5).</span></span>
+<span id="cb12-49"><a href="#cb12-49" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>b <span class="op">*</span>RedisBus<span class="op">)</span> xadd<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> env Envelope<span class="op">)</span> <span class="op">(</span><span class="dt">string</span><span class="op">,</span> <span class="dt">error</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb12-50"><a href="#cb12-50" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> b<span class="op">.</span>rdb<span class="op">.</span>XAdd<span class="op">(</span>ctx<span class="op">,</span> <span class="op">&amp;</span>redis<span class="op">.</span>XAddArgs<span class="op">{</span></span>
+<span id="cb12-51"><a href="#cb12-51" aria-hidden="true" tabindex="-1"></a>        Stream<span class="op">:</span> <span class="dt">string</span><span class="op">(</span>env<span class="op">.</span>Type<span class="op">.</span>Stream<span class="op">()),</span></span>
+<span id="cb12-52"><a href="#cb12-52" aria-hidden="true" tabindex="-1"></a>        MaxLen<span class="op">:</span> trimCapFor<span class="op">(</span>env<span class="op">.</span>Type<span class="op">.</span>Stream<span class="op">()),</span> <span class="co">// approximate (~) trim, O(1) amortized</span></span>
+<span id="cb12-53"><a href="#cb12-53" aria-hidden="true" tabindex="-1"></a>        Approx<span class="op">:</span> <span class="ot">true</span><span class="op">,</span></span>
+<span id="cb12-54"><a href="#cb12-54" aria-hidden="true" tabindex="-1"></a>        Values<span class="op">:</span> env<span class="op">.</span>redisFields<span class="op">(),</span></span>
+<span id="cb12-55"><a href="#cb12-55" aria-hidden="true" tabindex="-1"></a>    <span class="op">}).</span>Result<span class="op">()</span></span>
+<span id="cb12-56"><a href="#cb12-56" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb12-57"><a href="#cb12-57" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-58"><a href="#cb12-58" aria-hidden="true" tabindex="-1"></a><span class="co">// Publish (the Bus interface method) is the NON-transactional convenience for the rare</span></span>
+<span id="cb12-59"><a href="#cb12-59" aria-hidden="true" tabindex="-1"></a><span class="co">// caller that has no DB write to couple (e.g. gateway.failover from the edge-health loop,</span></span>
+<span id="cb12-60"><a href="#cb12-60" aria-hidden="true" tabindex="-1"></a><span class="co">// actor=system). It stages to outbox in an autonomous tx then lets Relay carry it, so even</span></span>
+<span id="cb12-61"><a href="#cb12-61" aria-hidden="true" tabindex="-1"></a><span class="co">// the &quot;no DB mutation&quot; path keeps the same at-least-once + ordering guarantees.</span></span>
+<span id="cb12-62"><a href="#cb12-62" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>b <span class="op">*</span>RedisBus<span class="op">)</span> Publish<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> stream Stream<span class="op">,</span> env Envelope<span class="op">)</span> <span class="op">(</span><span class="dt">string</span><span class="op">,</span> <span class="dt">error</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb12-63"><a href="#cb12-63" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> err <span class="op">:=</span> guardPublish<span class="op">(</span>stream<span class="op">,</span> env<span class="op">);</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span> <span class="cf">return</span> <span class="st">&quot;&quot;</span><span class="op">,</span> err <span class="op">}</span></span>
+<span id="cb12-64"><a href="#cb12-64" aria-hidden="true" tabindex="-1"></a>    err <span class="op">:=</span> b<span class="op">.</span>store<span class="op">.</span>WithSystemOrTenant<span class="op">(</span>ctx<span class="op">,</span> env<span class="op">.</span>TenantID<span class="op">,</span> <span class="kw">func</span><span class="op">(</span>q <span class="op">*</span>db<span class="op">.</span>Queries<span class="op">)</span> <span class="dt">error</span> <span class="op">{</span></span>
+<span id="cb12-65"><a href="#cb12-65" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> StageInTx<span class="op">(</span>ctx<span class="op">,</span> q<span class="op">,</span> env<span class="op">)</span></span>
+<span id="cb12-66"><a href="#cb12-66" aria-hidden="true" tabindex="-1"></a>    <span class="op">})</span></span>
+<span id="cb12-67"><a href="#cb12-67" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="st">&quot;&quot;</span><span class="op">,</span> err <span class="co">// real msgID is assigned by Relay&#39;s XADD; callers needing it read the outbox row</span></span>
+<span id="cb12-68"><a href="#cb12-68" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="53-why-not-publish-directly-inside-the-tenant-tx">5.3 Why not
+publish directly inside the tenant tx?</h3>
+<p>A direct <code>XADD</code> inside the SQL transaction would couple
+Redis availability to every DB commit (a Redis blip would roll back
+legitimate identity/policy writes — violating C2 &quot;losing Redis loses no
+durable state&quot;). The outbox decouples them: <strong>Postgres commits
+regardless of Redis health</strong>; the relay catches up when Redis
+returns. This is the C2-correct ordering.</p>
+<hr />
+<h2 id="6-consume-side--at-least-once-idempotent-dead-letter">6. Consume
+side — at-least-once, idempotent, dead-letter</h2>
+<h3 id="61-the-consumer-loop-coordinator-is-the-canonical-consumer">6.1
+The consumer loop (coordinator is the canonical consumer)</h3>
+<div class="sourceCode" id="cb13"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/events/consumer.go</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="co">//</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Run is the durable consume loop for one (group). It is started once per group per process.</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Order each tick: (1) reclaim stalled work with XAUTOCLAIM, then (2) read new work with</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="co">// XREADGROUP &gt; — the production-proven order [research-go_cp §5]. Every successfully reacted</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="co">// message is XACKed; a failed reaction is LEFT in the PEL (no ack) so the next XAUTOCLAIM</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="co">// retries it; a message past the redelivery ceiling is DLQ&#39;d (§6.5).</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>b <span class="op">*</span>RedisBus<span class="op">)</span> Run<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> group <span class="dt">string</span><span class="op">,</span> streams <span class="op">[]</span>Stream<span class="op">,</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>    react <span class="kw">func</span><span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> d Delivery<span class="op">)</span> <span class="dt">error</span><span class="op">)</span> <span class="dt">error</span> <span class="op">{</span></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">{</span></span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>        <span class="cf">select</span> <span class="op">{</span></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> <span class="op">&lt;-</span>ctx<span class="op">.</span>Done<span class="op">():</span></span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> ctx<span class="op">.</span>Err<span class="op">()</span></span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>        <span class="cf">default</span><span class="op">:</span></span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>        <span class="co">// (1) reclaim: per stream, claim PEL entries idle &gt;= MinIdle (30s) into THIS consumer.</span></span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> _<span class="op">,</span> s <span class="op">:=</span> <span class="kw">range</span> streams <span class="op">{</span></span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a>            b<span class="op">.</span>reclaimAndHandle<span class="op">(</span>ctx<span class="op">,</span> s<span class="op">,</span> group<span class="op">,</span> react<span class="op">)</span></span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a>        <span class="co">// (2) new work: block up to 2s across all streams for this group.</span></span>
+<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a>        args <span class="op">:=</span> <span class="op">&amp;</span>redis<span class="op">.</span>XReadGroupArgs<span class="op">{</span></span>
+<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a>            Group<span class="op">:</span> group<span class="op">,</span> Consumer<span class="op">:</span> b<span class="op">.</span>hostID<span class="op">,</span> Count<span class="op">:</span> <span class="dv">64</span><span class="op">,</span> Block<span class="op">:</span> <span class="dv">2</span> <span class="op">*</span> time<span class="op">.</span>Second<span class="op">,</span></span>
+<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a>            Streams<span class="op">:</span> idsForRead<span class="op">(</span>streams<span class="op">),</span> <span class="co">// [stream1, stream2, ..., &quot;&gt;&quot;, &quot;&gt;&quot;, ...]</span></span>
+<span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb13-26"><a href="#cb13-26" aria-hidden="true" tabindex="-1"></a>        res<span class="op">,</span> err <span class="op">:=</span> b<span class="op">.</span>rdb<span class="op">.</span>XReadGroup<span class="op">(</span>ctx<span class="op">,</span> args<span class="op">).</span>Result<span class="op">()</span></span>
+<span id="cb13-27"><a href="#cb13-27" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> err <span class="op">==</span> redis<span class="op">.</span>Nil <span class="op">{</span> <span class="cf">continue</span> <span class="op">}</span>      <span class="co">// timeout, no new messages — loop</span></span>
+<span id="cb13-28"><a href="#cb13-28" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span> b<span class="op">.</span>mx<span class="op">.</span>readErrors<span class="op">.</span>Inc<span class="op">();</span> time<span class="op">.</span>Sleep<span class="op">(</span><span class="dv">200</span> <span class="op">*</span> time<span class="op">.</span>Millisecond<span class="op">);</span> <span class="cf">continue</span> <span class="op">}</span></span>
+<span id="cb13-29"><a href="#cb13-29" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> _<span class="op">,</span> st <span class="op">:=</span> <span class="kw">range</span> res <span class="op">{</span></span>
+<span id="cb13-30"><a href="#cb13-30" aria-hidden="true" tabindex="-1"></a>            <span class="cf">for</span> _<span class="op">,</span> m <span class="op">:=</span> <span class="kw">range</span> st<span class="op">.</span>Messages <span class="op">{</span></span>
+<span id="cb13-31"><a href="#cb13-31" aria-hidden="true" tabindex="-1"></a>                d<span class="op">,</span> derr <span class="op">:=</span> fromRedis<span class="op">(</span>Stream<span class="op">(</span>st<span class="op">.</span>Stream<span class="op">),</span> group<span class="op">,</span> m<span class="op">,</span> <span class="dv">1</span><span class="op">,</span> time<span class="op">.</span>Now<span class="op">())</span></span>
+<span id="cb13-32"><a href="#cb13-32" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> derr <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span>                      <span class="co">// undecodable → straight to DLQ (poison)</span></span>
+<span id="cb13-33"><a href="#cb13-33" aria-hidden="true" tabindex="-1"></a>                    b<span class="op">.</span>toDLQ<span class="op">(</span>ctx<span class="op">,</span> Stream<span class="op">(</span>st<span class="op">.</span>Stream<span class="op">),</span> group<span class="op">,</span> m<span class="op">,</span> derr<span class="op">,</span> <span class="dv">1</span><span class="op">);</span> <span class="cf">continue</span></span>
+<span id="cb13-34"><a href="#cb13-34" aria-hidden="true" tabindex="-1"></a>                <span class="op">}</span></span>
+<span id="cb13-35"><a href="#cb13-35" aria-hidden="true" tabindex="-1"></a>                b<span class="op">.</span>handleOne<span class="op">(</span>ctx<span class="op">,</span> group<span class="op">,</span> react<span class="op">,</span> d<span class="op">)</span></span>
+<span id="cb13-36"><a href="#cb13-36" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb13-37"><a href="#cb13-37" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb13-38"><a href="#cb13-38" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb13-39"><a href="#cb13-39" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb13-40"><a href="#cb13-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-41"><a href="#cb13-41" aria-hidden="true" tabindex="-1"></a><span class="co">// handleOne runs the reaction under a per-message timeout, then acks on success.</span></span>
+<span id="cb13-42"><a href="#cb13-42" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>b <span class="op">*</span>RedisBus<span class="op">)</span> handleOne<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> group <span class="dt">string</span><span class="op">,</span></span>
+<span id="cb13-43"><a href="#cb13-43" aria-hidden="true" tabindex="-1"></a>    react <span class="kw">func</span><span class="op">(</span>context<span class="op">.</span>Context<span class="op">,</span> Delivery<span class="op">)</span> <span class="dt">error</span><span class="op">,</span> d Delivery<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb13-44"><a href="#cb13-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-45"><a href="#cb13-45" aria-hidden="true" tabindex="-1"></a>    start <span class="op">:=</span> time<span class="op">.</span>Now<span class="op">()</span></span>
+<span id="cb13-46"><a href="#cb13-46" aria-hidden="true" tabindex="-1"></a>    hctx<span class="op">,</span> cancel <span class="op">:=</span> context<span class="op">.</span>WithTimeout<span class="op">(</span>ctx<span class="op">,</span> <span class="dv">3</span><span class="op">*</span>time<span class="op">.</span>Second<span class="op">)</span></span>
+<span id="cb13-47"><a href="#cb13-47" aria-hidden="true" tabindex="-1"></a>    <span class="cf">defer</span> cancel<span class="op">()</span></span>
+<span id="cb13-48"><a href="#cb13-48" aria-hidden="true" tabindex="-1"></a>    err <span class="op">:=</span> react<span class="op">(</span>hctx<span class="op">,</span> d<span class="op">)</span></span>
+<span id="cb13-49"><a href="#cb13-49" aria-hidden="true" tabindex="-1"></a>    b<span class="op">.</span>mx<span class="op">.</span>reactSeconds<span class="op">.</span>WithLabelValues<span class="op">(</span><span class="dt">string</span><span class="op">(</span>d<span class="op">.</span>Env<span class="op">.</span>Type<span class="op">)).</span>Observe<span class="op">(</span>time<span class="op">.</span>Since<span class="op">(</span>start<span class="op">).</span>Seconds<span class="op">())</span></span>
+<span id="cb13-50"><a href="#cb13-50" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> err <span class="op">==</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb13-51"><a href="#cb13-51" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> aerr <span class="op">:=</span> b<span class="op">.</span>rdb<span class="op">.</span>XAck<span class="op">(</span>ctx<span class="op">,</span> <span class="dt">string</span><span class="op">(</span>d<span class="op">.</span>Stream<span class="op">),</span> group<span class="op">,</span> d<span class="op">.</span>MsgID<span class="op">).</span>Err<span class="op">();</span> aerr <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb13-52"><a href="#cb13-52" aria-hidden="true" tabindex="-1"></a>            b<span class="op">.</span>mx<span class="op">.</span>ackErrors<span class="op">.</span>Inc<span class="op">()</span> <span class="co">// ack failed → entry stays in PEL → reclaimed later (still safe)</span></span>
+<span id="cb13-53"><a href="#cb13-53" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb13-54"><a href="#cb13-54" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span></span>
+<span id="cb13-55"><a href="#cb13-55" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb13-56"><a href="#cb13-56" aria-hidden="true" tabindex="-1"></a>    <span class="co">// reaction failed → DO NOT ack. Leave in PEL; XAUTOCLAIM retries; ceiling routes to DLQ.</span></span>
+<span id="cb13-57"><a href="#cb13-57" aria-hidden="true" tabindex="-1"></a>    b<span class="op">.</span>mx<span class="op">.</span>reactErrors<span class="op">.</span>WithLabelValues<span class="op">(</span><span class="dt">string</span><span class="op">(</span>d<span class="op">.</span>Env<span class="op">.</span>Type<span class="op">)).</span>Inc<span class="op">()</span></span>
+<span id="cb13-58"><a href="#cb13-58" aria-hidden="true" tabindex="-1"></a>    b<span class="op">.</span>log<span class="op">.</span>Warn<span class="op">(</span><span class="st">&quot;reaction failed&quot;</span><span class="op">,</span> <span class="st">&quot;type&quot;</span><span class="op">,</span> d<span class="op">.</span>Env<span class="op">.</span>Type<span class="op">,</span> <span class="st">&quot;id&quot;</span><span class="op">,</span> d<span class="op">.</span>MsgID<span class="op">,</span> <span class="st">&quot;attempt&quot;</span><span class="op">,</span> d<span class="op">.</span>Attempt<span class="op">,</span> <span class="st">&quot;err&quot;</span><span class="op">,</span> err<span class="op">)</span></span>
+<span id="cb13-59"><a href="#cb13-59" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="62-idempotency-contract-the-heart-of-at-least-once-safety">6.2
+Idempotency contract (the heart of at-least-once safety)</h3>
+<p>At-least-once means <strong>every consumer MUST be safe under
+redelivery</strong> [02_CP §5.4, research-go_cp §5]. Two cooperating
+mechanisms:</p>
+<ol type="1">
+<li><p><strong>Recompute-from-state reactions (primary).</strong> The
+coordinator never applies a <em>delta of a delta</em>; it applies the
+event to its in-memory graph and <strong>recomputes</strong> the
+affected nodes&#39; maps from current state. Replaying
+<code>policy.compiled v=7</code> twice yields the identical map the
+second time — a no-op diff, nothing pushed. This makes most reactions
+naturally idempotent with no dedup store [02_CP §5.4].</p></li>
+<li><p><strong>Monotonic-version / seen-set guard (for non-idempotent
+side effects).</strong> Where a reaction has an external side effect
+that is NOT naturally idempotent (e.g. the <code>audit</code> group
+writes an <code>audit_events</code> row; the <code>ws-fanout</code>
+group emits a UI toast), the consumer derives the §3.4
+<strong>Idempotency key</strong> and guards on it:</p></li>
+</ol>
+<div class="sourceCode" id="cb14"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/events/idem.go</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="co">//</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="co">// The coordinator tracks the last-applied monotonic marker per (tenant,kind) in-memory; an</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="co">// event whose version/gen is &lt;= the applied marker is dropped. Durable consumers (audit) use a</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="co">// small Redis SET with TTL as the seen-set so a duplicate XADD does not write two audit rows.</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> applied <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>    policyVersion <span class="kw">map</span><span class="op">[</span>uuid<span class="op">.</span>UUID<span class="op">]</span><span class="dt">int64</span>           <span class="co">// tenant -&gt; last applied policy.compiled version</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>    connectorGen  <span class="kw">map</span><span class="op">[</span>uuid<span class="op">.</span>UUID<span class="op">]</span><span class="dt">int64</span>           <span class="co">// connector -&gt; last applied prefixes gen</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>    revoked       <span class="kw">map</span><span class="op">[</span>uuid<span class="op">.</span>UUID<span class="op">]</span><span class="kw">struct</span><span class="op">{}</span>         <span class="co">// device ids already removed (terminal)</span></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a><span class="co">// shouldApply returns false (skip) when the event is stale/duplicate by its monotonic key.</span></span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>a <span class="op">*</span>applied<span class="op">)</span> shouldApply<span class="op">(</span>d Delivery<span class="op">)</span> <span class="dt">bool</span> <span class="op">{</span></span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">switch</span> d<span class="op">.</span>Env<span class="op">.</span>Type <span class="op">{</span></span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> EvPolicyCompiled<span class="op">:</span></span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>        <span class="kw">var</span> p PolicyVersion<span class="op">;</span> _ <span class="op">=</span> json<span class="op">.</span>Unmarshal<span class="op">(</span>d<span class="op">.</span>Env<span class="op">.</span>Payload<span class="op">,</span> <span class="op">&amp;</span>p<span class="op">)</span></span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> p<span class="op">.</span>Version <span class="op">&lt;=</span> a<span class="op">.</span>policyVersion<span class="op">[</span>d<span class="op">.</span>Env<span class="op">.</span>TenantID<span class="op">]</span> <span class="op">{</span> <span class="cf">return</span> <span class="ot">false</span> <span class="op">}</span> <span class="co">// already applied or older</span></span>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a>        a<span class="op">.</span>policyVersion<span class="op">[</span>d<span class="op">.</span>Env<span class="op">.</span>TenantID<span class="op">]</span> <span class="op">=</span> p<span class="op">.</span>Version</span>
+<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="ot">true</span></span>
+<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> EvConnectorPrefixesChng<span class="op">:</span></span>
+<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a>        <span class="kw">var</span> c ConnectorPrefixes<span class="op">;</span> _ <span class="op">=</span> json<span class="op">.</span>Unmarshal<span class="op">(</span>d<span class="op">.</span>Env<span class="op">.</span>Payload<span class="op">,</span> <span class="op">&amp;</span>c<span class="op">)</span></span>
+<span id="cb14-22"><a href="#cb14-22" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> c<span class="op">.</span>Gen <span class="op">&lt;=</span> a<span class="op">.</span>connectorGen<span class="op">[</span>c<span class="op">.</span>ConnectorID<span class="op">]</span> <span class="op">{</span> <span class="cf">return</span> <span class="ot">false</span> <span class="op">}</span></span>
+<span id="cb14-23"><a href="#cb14-23" aria-hidden="true" tabindex="-1"></a>        a<span class="op">.</span>connectorGen<span class="op">[</span>c<span class="op">.</span>ConnectorID<span class="op">]</span> <span class="op">=</span> c<span class="op">.</span>Gen</span>
+<span id="cb14-24"><a href="#cb14-24" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="ot">true</span></span>
+<span id="cb14-25"><a href="#cb14-25" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> EvDeviceRevoked<span class="op">:</span></span>
+<span id="cb14-26"><a href="#cb14-26" aria-hidden="true" tabindex="-1"></a>        <span class="kw">var</span> r DeviceRevoked<span class="op">;</span> _ <span class="op">=</span> json<span class="op">.</span>Unmarshal<span class="op">(</span>d<span class="op">.</span>Env<span class="op">.</span>Payload<span class="op">,</span> <span class="op">&amp;</span>r<span class="op">)</span></span>
+<span id="cb14-27"><a href="#cb14-27" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> _<span class="op">,</span> done <span class="op">:=</span> a<span class="op">.</span>revoked<span class="op">[</span>r<span class="op">.</span>DeviceID<span class="op">];</span> done <span class="op">{</span> <span class="cf">return</span> <span class="ot">false</span> <span class="op">}</span> <span class="co">// revoke is terminal+idempotent</span></span>
+<span id="cb14-28"><a href="#cb14-28" aria-hidden="true" tabindex="-1"></a>        a<span class="op">.</span>revoked<span class="op">[</span>r<span class="op">.</span>DeviceID<span class="op">]</span> <span class="op">=</span> <span class="kw">struct</span><span class="op">{}{}</span></span>
+<span id="cb14-29"><a href="#cb14-29" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="ot">true</span></span>
+<span id="cb14-30"><a href="#cb14-30" aria-hidden="true" tabindex="-1"></a>    <span class="cf">default</span><span class="op">:</span></span>
+<span id="cb14-31"><a href="#cb14-31" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="ot">true</span> <span class="co">// online/offline/enrolled/etc. are recompute-from-state idempotent (mechanism 1)</span></span>
+<span id="cb14-32"><a href="#cb14-32" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb14-33"><a href="#cb14-33" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<blockquote>
+<p><strong>Ordering note.</strong> Redis Streams preserve per-stream
+order; the monotonic guard means an out-of-order <em>retry</em> of an
+older version (delivered late by <code>XAUTOCLAIM</code> after a newer
+one already applied) is correctly dropped, not regressed. This is why
+the taxonomy keys are monotonic (<code>version</code>, <code>gen</code>)
+rather than wall-clock for the topology-changing events.</p>
+</blockquote>
+<h3 id="63-consumer-state-machine-per-message">6.3 Consumer state
+machine (per message)</h3>
+<pre class="mermaid"><code>stateDiagram-v2
+    [*] --&gt; Delivered: XREADGROUP &gt; (or XAUTOCLAIM reclaim)
+    Delivered --&gt; Decoding
+    Decoding --&gt; Poisoned: decode error
+    Decoding --&gt; Reacting: decoded ok
+    Reacting --&gt; Skipped: shouldApply()==false (stale/dup)
+    Reacting --&gt; Reacted: react() ok
+    Reacting --&gt; Failed: react() error
+    Skipped --&gt; Acked: XACK
+    Reacted --&gt; Acked: XACK
+    Failed --&gt; Pending: NO ack (stays in PEL)
+    Pending --&gt; Reacting: XAUTOCLAIM (idle&gt;=30s), attempt++
+    Pending --&gt; Poisoned: attempt &gt; ceiling(5)
+    Poisoned --&gt; DLQ: XADD events:*:dlq + XACK off main
+    Acked --&gt; [*]
+    DLQ --&gt; [*]</code></pre>
+<h3 id="64-xautoclaim-reclaim--the-crash-recovery-path">6.4
+<code>XAUTOCLAIM</code> reclaim — the crash-recovery path</h3>
+<div class="sourceCode" id="cb16"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co">// reclaimAndHandle transfers stalled PEL entries (idle &gt;= 30s) to this consumer and re-reacts.</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="co">// This is the dead-letter recovery path: a crashed coordinator&#39;s un-acked entries are NOT lost</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="co">// — composes constitution §11.4.147 (no-work-loss) [02_CP §5.4].</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>b <span class="op">*</span>RedisBus<span class="op">)</span> reclaimAndHandle<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> s Stream<span class="op">,</span> group <span class="dt">string</span><span class="op">,</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>    react <span class="kw">func</span><span class="op">(</span>context<span class="op">.</span>Context<span class="op">,</span> Delivery<span class="op">)</span> <span class="dt">error</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>    cursor <span class="op">:=</span> <span class="st">&quot;0-0&quot;</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">{</span></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>        msgs<span class="op">,</span> next<span class="op">,</span> err <span class="op">:=</span> b<span class="op">.</span>rdb<span class="op">.</span>XAutoClaim<span class="op">(</span>ctx<span class="op">,</span> <span class="op">&amp;</span>redis<span class="op">.</span>XAutoClaimArgs<span class="op">{</span></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>            Stream<span class="op">:</span> <span class="dt">string</span><span class="op">(</span>s<span class="op">),</span> Group<span class="op">:</span> group<span class="op">,</span> Consumer<span class="op">:</span> b<span class="op">.</span>hostID<span class="op">,</span></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>            MinIdle<span class="op">:</span> <span class="dv">30</span> <span class="op">*</span> time<span class="op">.</span>Second<span class="op">,</span> Start<span class="op">:</span> cursor<span class="op">,</span> Count<span class="op">:</span> <span class="dv">64</span><span class="op">,</span></span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>        <span class="op">}).</span>Result<span class="op">()</span></span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span> b<span class="op">.</span>mx<span class="op">.</span>claimErrors<span class="op">.</span>Inc<span class="op">();</span> <span class="cf">return</span> <span class="op">}</span></span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> _<span class="op">,</span> m <span class="op">:=</span> <span class="kw">range</span> msgs <span class="op">{</span></span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a>            <span class="co">// delivery count from XPENDING tells us the attempt; ceiling check first.</span></span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a>            attempt <span class="op">:=</span> b<span class="op">.</span>deliveryCount<span class="op">(</span>ctx<span class="op">,</span> s<span class="op">,</span> group<span class="op">,</span> m<span class="op">.</span>ID<span class="op">)</span></span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> attempt <span class="op">&gt;</span> b<span class="op">.</span>dlqCap <span class="op">{</span></span>
+<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a>                b<span class="op">.</span>toDLQ<span class="op">(</span>ctx<span class="op">,</span> s<span class="op">,</span> group<span class="op">,</span> m<span class="op">,</span> errPoison<span class="op">,</span> attempt<span class="op">)</span></span>
+<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a>                <span class="cf">continue</span></span>
+<span id="cb16-20"><a href="#cb16-20" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb16-21"><a href="#cb16-21" aria-hidden="true" tabindex="-1"></a>            d<span class="op">,</span> derr <span class="op">:=</span> fromRedis<span class="op">(</span>s<span class="op">,</span> group<span class="op">,</span> m<span class="op">,</span> attempt<span class="op">,</span> time<span class="op">.</span>Now<span class="op">())</span></span>
+<span id="cb16-22"><a href="#cb16-22" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> derr <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span> b<span class="op">.</span>toDLQ<span class="op">(</span>ctx<span class="op">,</span> s<span class="op">,</span> group<span class="op">,</span> m<span class="op">,</span> derr<span class="op">,</span> attempt<span class="op">);</span> <span class="cf">continue</span> <span class="op">}</span></span>
+<span id="cb16-23"><a href="#cb16-23" aria-hidden="true" tabindex="-1"></a>            b<span class="op">.</span>handleOne<span class="op">(</span>ctx<span class="op">,</span> group<span class="op">,</span> react<span class="op">,</span> d<span class="op">)</span></span>
+<span id="cb16-24"><a href="#cb16-24" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb16-25"><a href="#cb16-25" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> next <span class="op">==</span> <span class="st">&quot;0-0&quot;</span> <span class="op">||</span> <span class="bu">len</span><span class="op">(</span>msgs<span class="op">)</span> <span class="op">==</span> <span class="dv">0</span> <span class="op">{</span> <span class="cf">return</span> <span class="op">}</span> <span class="co">// cursor wrapped — done this pass</span></span>
+<span id="cb16-26"><a href="#cb16-26" aria-hidden="true" tabindex="-1"></a>        cursor <span class="op">=</span> next</span>
+<span id="cb16-27"><a href="#cb16-27" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb16-28"><a href="#cb16-28" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<blockquote>
+<p><strong>Redis 8.4 shortcut (deferred).</strong> Redis ≥ 8.4 folds
+reclaim into the read via
+<code>XREADGROUP ... CLAIM &lt;min-idle&gt;</code> [research-go_cp §5].
+The MVP keeps the portable two-step so it does not pin 8.4; §10.4 lists
+the one-line swap if the deployment can guarantee ≥ 8.4.</p>
+</blockquote>
+<h3 id="65-dead-letter-routing-poison-messages">6.5 Dead-letter routing
+(poison messages)</h3>
+<div class="sourceCode" id="cb17"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co">// toDLQ moves a message past the redelivery ceiling (or an undecodable one) to the per-stream</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="co">// DLQ and ACKs it off the main PEL so it stops being redelivered. The DLQ entry carries the</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="co">// delivery count + first-seen + the failure cause for forensics [research-go_cp §5].</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>b <span class="op">*</span>RedisBus<span class="op">)</span> toDLQ<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> s Stream<span class="op">,</span> group <span class="dt">string</span><span class="op">,</span> m redis<span class="op">.</span>XMessage<span class="op">,</span> cause <span class="dt">error</span><span class="op">,</span> attempt <span class="dt">int</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>    dlq <span class="op">:=</span> dlqOf<span class="op">(</span>s<span class="op">)</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>    fields <span class="op">:=</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="dt">any</span><span class="op">{}</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> k<span class="op">,</span> v <span class="op">:=</span> <span class="kw">range</span> m<span class="op">.</span>Values <span class="op">{</span> fields<span class="op">[</span>k<span class="op">]</span> <span class="op">=</span> v <span class="op">}</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>    fields<span class="op">[</span><span class="st">&quot;dlq_reason&quot;</span><span class="op">]</span> <span class="op">=</span> cause<span class="op">.</span>Error<span class="op">()</span></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>    fields<span class="op">[</span><span class="st">&quot;dlq_attempts&quot;</span><span class="op">]</span> <span class="op">=</span> attempt</span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>    fields<span class="op">[</span><span class="st">&quot;dlq_group&quot;</span><span class="op">]</span> <span class="op">=</span> group</span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>    fields<span class="op">[</span><span class="st">&quot;dlq_orig_id&quot;</span><span class="op">]</span> <span class="op">=</span> m<span class="op">.</span>ID</span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>    fields<span class="op">[</span><span class="st">&quot;dlq_at&quot;</span><span class="op">]</span> <span class="op">=</span> time<span class="op">.</span>Now<span class="op">().</span>UTC<span class="op">().</span>Format<span class="op">(</span>time<span class="op">.</span>RFC3339Nano<span class="op">)</span></span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>    <span class="co">// DLQ retention OUTLIVES the main stream (audit), so a larger MAXLEN.</span></span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>    _ <span class="op">=</span> b<span class="op">.</span>rdb<span class="op">.</span>XAdd<span class="op">(</span>ctx<span class="op">,</span> <span class="op">&amp;</span>redis<span class="op">.</span>XAddArgs<span class="op">{</span>Stream<span class="op">:</span> <span class="dt">string</span><span class="op">(</span>dlq<span class="op">),</span> MaxLen<span class="op">:</span> <span class="dv">1_000_000</span><span class="op">,</span> Approx<span class="op">:</span> <span class="ot">true</span><span class="op">,</span> Values<span class="op">:</span> fields<span class="op">}).</span>Err<span class="op">()</span></span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>    _ <span class="op">=</span> b<span class="op">.</span>rdb<span class="op">.</span>XAck<span class="op">(</span>ctx<span class="op">,</span> <span class="dt">string</span><span class="op">(</span>s<span class="op">),</span> group<span class="op">,</span> m<span class="op">.</span>ID<span class="op">).</span>Err<span class="op">()</span> <span class="co">// remove from main PEL</span></span>
+<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a>    b<span class="op">.</span>mx<span class="op">.</span>dlqTotal<span class="op">.</span>WithLabelValues<span class="op">(</span><span class="dt">string</span><span class="op">(</span>s<span class="op">),</span> <span class="dt">string</span><span class="op">(</span>group<span class="op">)).</span>Inc<span class="op">()</span> <span class="co">// helix_events_dlq_total [02_CP §5.4]</span></span>
+<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a>    b<span class="op">.</span>log<span class="op">.</span>Error<span class="op">(</span><span class="st">&quot;event dead-lettered&quot;</span><span class="op">,</span> <span class="st">&quot;stream&quot;</span><span class="op">,</span> s<span class="op">,</span> <span class="st">&quot;group&quot;</span><span class="op">,</span> group<span class="op">,</span> <span class="st">&quot;id&quot;</span><span class="op">,</span> m<span class="op">.</span>ID<span class="op">,</span></span>
+<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;attempts&quot;</span><span class="op">,</span> attempt<span class="op">,</span> <span class="st">&quot;reason&quot;</span><span class="op">,</span> cause<span class="op">)</span></span>
+<span id="cb17-19"><a href="#cb17-19" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>A DLQ entry is <strong>never silently dropped</strong>;
+<code>helix_events_dlq_total</code> increments fire an alert (§8.4). The
+DLQ is inspectable (<code>XRANGE events:policy:dlq - +</code>) and
+replayable by an operator tool
+(<code>helixvpnctl events replay-dlq &lt;stream&gt;</code>), which
+re-<code>XADD</code>s the original fields onto the primary stream after
+the operator fixes the cause — closing the §11.4.147 no-work-loss
+loop.</p>
+<h3 id="66-back-pressure--slow-consumer-isolation">6.6 Back-pressure
+&amp; slow-consumer isolation</h3>
+<p>Each consumer group has an independent cursor; a slow
+<code>audit</code>/<code>ws-fanout</code>/<code>telemetry</code> group
+<strong>cannot</strong> stall the <code>coordinator</code> group
+(distinct PELs). Within the coordinator, the <strong>per-stream
+send-queue to each agent is bounded</strong> [02_CP §6.4]; a slow agent
+that fills its queue is dropped and forced to reconnect-with-snapshot —
+so a slow <em>downstream</em> never converts into unbounded coordinator
+memory or a stuck event cursor (the §8 24 h-soak SLO).</p>
+<hr />
+<h2 id="7-end-to-end-reconciliation-through-the-bus-the--1-s-promise">7.
+End-to-end reconciliation through the bus (the &lt; 1 s promise)</h2>
+<h3 id="71-the-policy-activate-path-event-publish--delta-on-wire">7.1
+The policy-activate path (event publish → delta on wire)</h3>
+<pre class="mermaid"><code>sequenceDiagram
+    autonumber
+    participant API as api (Gin)
+    participant POL as policy
+    participant PG as Postgres (RLS)
+    participant OB as event_outbox
+    participant RL as Relay loop
+    participant RS as Redis Stream events:policy
+    participant CO as coordinator (group)
+    participant ED as Rust edge / agents
+    API-&gt;&gt;POL: Activate(v)
+    POL-&gt;&gt;PG: deactivate all + activate v (one tx)
+    POL-&gt;&gt;OB: StageInTx(policy.compiled, v)   %% same tx — atomic (P1)
+    Note over PG,OB: COMMIT — DB truth + outbox row land together
+    RL-&gt;&gt;OB: ClaimOutboxBatch (FOR UPDATE SKIP LOCKED)
+    RL-&gt;&gt;RS: XADD events:policy {policy.compiled, v}  + MarkOutboxRelayed
+    RS--&gt;&gt;CO: XReadGroup(coordinator) delivers
+    CO-&gt;&gt;CO: shouldApply(v) → recompute tenant visibility (minimal set, §6.4)
+    loop each affected open WatchNetworkMap stream
+        CO-&gt;&gt;ED: stream.Send(MapDelta)
+    end
+    CO-&gt;&gt;RS: XACK
+    Note over API,ED: target p99 &lt; 1s event→enforced, ZERO restarts</code></pre>
+<h3 id="72-latency-budget-decomposition-how--1-s-is-met">7.2 Latency
+budget decomposition (how &lt; 1 s is met)</h3>
+<table>
+<thead>
+<tr>
+<th>Segment</th>
+<th>Budget (p99)</th>
+<th>Mechanism</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>COMMIT</code> → outbox row visible</td>
+<td>≤ 20 ms</td>
+<td>same-tx insert; index <code>event_outbox_pending</code></td>
+</tr>
+<tr>
+<td>Relay tick latency (claim→<code>XADD</code>)</td>
+<td>≤ 70 ms</td>
+<td>50 ms ticker + <code>SKIP LOCKED</code> batch</td>
+</tr>
+<tr>
+<td>Redis <code>XADD</code>→consumer <code>XReadGroup</code></td>
+<td>≤ 60 ms</td>
+<td><code>BLOCK 2s</code> returns immediately on append</td>
+</tr>
+<tr>
+<td>coordinator recompute + diff (tenant ≤ 1k devices)</td>
+<td>≤ 200 ms</td>
+<td>in-mem graph; minimal affected set §6.4; [02_CP §10.2 compile
+&lt;200ms]</td>
+</tr>
+<tr>
+<td><code>stream.Send</code> enqueue → edge reconcile</td>
+<td>≤ 150 ms</td>
+<td>bounded per-agent queue; HTTP/2 server-stream</td>
+</tr>
+<tr>
+<td><strong>Total event→enforced</strong></td>
+<td><strong>≤ 500 ms typical, &lt; 1 s p99</strong></td>
+<td>measured by <code>helix_reconcile_seconds</code> [02_CP §10.2]</td>
+</tr>
+</tbody>
+</table>
+<p>The bus&#39;s own contribution (outbox+relay+XADD+deliver) is budgeted ≤
+250 ms p99 — comfortably inside the 1 s SLO, leaving headroom for the
+coordinator&#39;s recompute and the edge apply.</p>
+<h3 id="73-revoke-path-the--1-s-security-critical-case">7.3 Revoke path
+(the &lt; 1 s security-critical case)</h3>
+<p><code>device.revoked</code> is the latency-critical security event.
+It travels the same outbox→relay→
+<code>events:devices</code>→coordinator path; the coordinator removes
+the node, pushes a remove-peer delta to every map that contained it, and
+the edge removes the kernel WG peer — all within the same &lt; 1 s
+budget [02_CP §9.3]. Because revoke is <strong>terminal +
+idempotent</strong> (§6.2), a redelivered <code>device.revoked</code> is
+a no-op (the node is already gone), so an <code>XAUTOCLAIM</code> retry
+after a coordinator crash re-enforces rather than errors.</p>
+<h3 id="74-cold-boot-rehydration-redis-loss--coordinator-restart-correctness-c2">7.4
+Cold-boot rehydration (Redis-loss / coordinator-restart correctness,
+C2)</h3>
+<pre class="mermaid"><code>flowchart TD
+    A[helixd boot] --&gt; B[hydrate in-mem graph from Postgres&lt;br/&gt;devices, connectors, prefixes, groups, active policy]
+    B --&gt; C{Redis stream backlog?}
+    C --&gt;|fresh group| D[XGROUPCREATE at &#39;$&#39;&lt;br/&gt;only-new — no replay needed,&lt;br/&gt;graph already current from PG]
+    C --&gt;|existing group, lag| E[XAUTOCLAIM own PEL +&lt;br/&gt;XREADGROUP &#39;&gt;&#39; to drain backlog&lt;br/&gt;monotonic guard drops stale §6.2]
+    D --&gt; F[serve WatchNetworkMap streams]
+    E --&gt; F</code></pre>
+<p>Because Postgres is truth (C2), the coordinator
+<strong>always</strong> rebuilds its graph from Postgres on boot, then
+attaches to the bus for the <em>delta</em> stream. A totally lost Redis
+(flushed, restarted empty) costs nothing durable: the next state
+mutation re-publishes via the outbox, and any in-flight change that was
+only on the bus is reconstructable because its DB write already
+committed (the outbox row either relayed or will re-relay). This is the
+C2 guarantee made concrete: <strong>the bus is a fast-path accelerator
+over Postgres truth, never a second source of truth.</strong></p>
+<hr />
+<h2 id="8-slo-metrics-and-operational-thresholds">8. SLO, metrics, and
+operational thresholds</h2>
+<h3 id="81-the-convergence-slo-anti-bluff-measured">8.1 The convergence
+SLO (anti-bluff, measured)</h3>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Target</th>
+<th>How measured [02_CP §10.2]</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>event-publish → consumer-receive</td>
+<td>p99 ≤ 250 ms</td>
+<td><code>helix_event_bus_seconds</code> (outbox.created_at → consumer
+fromRedis)</td>
+</tr>
+<tr>
+<td>event → delta-on-wire (whole chain)</td>
+<td><strong>p99 &lt; 1 s</strong></td>
+<td><code>helix_reconcile_seconds</code> (event-receive →
+<code>stream.Send</code>)</td>
+</tr>
+<tr>
+<td>device revoke → edge enforced</td>
+<td>&lt; 1 s</td>
+<td>revoke-to-WG-peer-removed timer on the edge</td>
+</tr>
+<tr>
+<td>outbox relay lag</td>
+<td>p99 ≤ 100 ms</td>
+<td><code>helix_event_outbox_lag_seconds</code> (created_at →
+relayed)</td>
+</tr>
+<tr>
+<td>DLQ rate</td>
+<td>0 sustained</td>
+<td><code>helix_events_dlq_total</code> (any sustained increase
+alerts)</td>
+</tr>
+<tr>
+<td>coordinator memory @ 10k streams</td>
+<td>bounded, no leak / 24 h</td>
+<td><code>process_resident_memory_bytes</code> slope ≈ 0</td>
+</tr>
+</tbody>
+</table>
+<h3 id="82-prometheus-metric-definitions">8.2 Prometheus metric
+definitions</h3>
+<div class="sourceCode" id="cb20"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/events/metrics.go</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> metrics <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>    published        <span class="op">*</span>prometheus<span class="op">.</span>CounterVec   <span class="co">// helix_events_published_total{type}</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>    publishErrors    prometheus<span class="op">.</span>Counter        <span class="co">// helix_events_publish_errors_total</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>    outboxRejected   prometheus<span class="op">.</span>Counter        <span class="co">// helix_events_outbox_rejected_total (guard reject)</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>    outboxLagSeconds prometheus<span class="op">.</span>Histogram      <span class="co">// helix_event_outbox_lag_seconds</span></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>    busSeconds       <span class="op">*</span>prometheus<span class="op">.</span>HistogramVec  <span class="co">// helix_event_bus_seconds{type} (publish→receive)</span></span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>    reactSeconds     <span class="op">*</span>prometheus<span class="op">.</span>HistogramVec  <span class="co">// helix_event_react_seconds{type}</span></span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>    reactErrors      <span class="op">*</span>prometheus<span class="op">.</span>CounterVec    <span class="co">// helix_event_react_errors_total{type}</span></span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>    readErrors       prometheus<span class="op">.</span>Counter        <span class="co">// helix_events_read_errors_total</span></span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>    claimErrors      prometheus<span class="op">.</span>Counter        <span class="co">// helix_events_claim_errors_total</span></span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a>    ackErrors        prometheus<span class="op">.</span>Counter        <span class="co">// helix_events_ack_errors_total</span></span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>    dlqTotal         <span class="op">*</span>prometheus<span class="op">.</span>CounterVec    <span class="co">// helix_events_dlq_total{stream,group}</span></span>
+<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a>    pelDepth         <span class="op">*</span>prometheus<span class="op">.</span>GaugeVec      <span class="co">// helix_events_pel_depth{stream,group} (lag gauge)</span></span>
+<span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="83-consumer-group-lag-gauge">8.3 Consumer-group lag gauge</h3>
+<p>A background sampler runs
+<code>XPENDING &lt;stream&gt; &lt;group&gt;</code> every 5 s and sets
+<code>helix_events_pel_depth{stream,group}</code> to the pending-entries
+count. A growing PEL depth is the leading indicator of a stuck consumer
+<strong>before</strong> the DLQ rate moves — it feeds the
+<code>Health</code> readiness check.</p>
+<h3 id="84-alert-thresholds-operational">8.4 Alert thresholds
+(operational)</h3>
+<table>
+<thead>
+<tr>
+<th>Condition</th>
+<th>Threshold</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>helix_events_dlq_total</code> rate</td>
+<td>&gt; 0 over 1 min</td>
+<td>page; inspect DLQ, fix cause, <code>replay-dlq</code></td>
+</tr>
+<tr>
+<td><code>helix_events_pel_depth</code> (coordinator)</td>
+<td>&gt; 1000 sustained 30 s</td>
+<td>warn; consumer likely stalled/slow</td>
+</tr>
+<tr>
+<td><code>helix_event_bus_seconds</code> p99</td>
+<td>&gt; 250 ms 5 min</td>
+<td>warn; Redis or relay degraded</td>
+</tr>
+<tr>
+<td><code>helix_event_outbox_lag_seconds</code> p99</td>
+<td>&gt; 500 ms 5 min</td>
+<td>warn; relay loop starved</td>
+</tr>
+<tr>
+<td><code>Bus.Health</code> PING fail</td>
+<td>any</td>
+<td>readiness <code>NOT READY</code> (fail-static: existing tunnels keep
+forwarding, C1)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="85-stream-trimming-bounded-memory">8.5 Stream trimming (bounded
+memory)</h3>
+<p>Each <code>XADD</code> carries the per-stream <code>MAXLEN ~ N</code>
+from the §3.1 table so a stream never grows unbounded [research-go_cp
+§5]. Presence (<code>events:presence</code>) gets the largest cap (high
+churn); policy the smallest (rare, high-value). DLQ streams use
+<code>MAXLEN ~ 1_000_000</code> and outlive the primary for audit. A
+nightly <code>XTRIM MINID</code> reaps anything older than 24 h on the
+non-DLQ streams as a backstop.</p>
+<hr />
+<h2 id="9-test-points-constitution-114169--comprehensive-test-type-coverage">9.
+Test points (constitution §11.4.169 — comprehensive test-type
+coverage)</h2>
+<blockquote>
+<p>§11.4.169 mandates comprehensive test-type coverage; every claim
+below is backed by a concrete, anti-bluff test with captured evidence
+per §11.4.5/§11.4.69/§11.4.107. Mocks/stubs are permitted
+<strong>only</strong> in unit tests (§11.4.27); all other types exercise
+a real Redis + Postgres booted on-demand via the
+<code>vasic-digital/containers</code> submodule (§11.4.76) — never
+ad-hoc <code>docker run</code>.</p>
+</blockquote>
+<h3 id="91-unit-tests-mocks-allowed">9.1 Unit tests (mocks allowed)</h3>
+<ul>
+<li><strong>Envelope round-trip:</strong>
+<code>New → redisFields → fromRedis</code> is byte-stable for every
+type; <code>payload</code> JSON is canonical/compact;
+<code>schema_v</code> defaults to 1.</li>
+<li><strong>Type/stream mapping:</strong>
+<code>EventType.Stream()</code> returns the §3.3 table for all 10 types;
+<code>guardPublish</code> rejects a type on the wrong stream and a
+non-<code>user</code>/<code>system</code> actor on
+<code>device.revoked</code>/<code>policy.*</code>.</li>
+<li><strong>Idempotency guard (<code>shouldApply</code>):</strong>
+replaying <code>policy.compiled v=7</code> twice → second call returns
+<code>false</code>; an out-of-order <code>v=6</code> after
+<code>v=7</code> → <code>false</code>;
+<code>connector.prefixes.changed</code> stale <code>gen</code> →
+<code>false</code>; duplicate <code>device.revoked</code> →
+<code>false</code> after first.</li>
+</ul>
+<h3 id="92-integration-tests-real-redis--postgres-11476">9.2 Integration
+tests (real Redis + Postgres, §11.4.76)</h3>
+<ul>
+<li><strong>Transactional outbox atomicity (P1):</strong> kill the relay
+between <code>COMMIT</code> and <code>XADD</code>; restart; assert the
+event still reaches the stream exactly once acked (at-least-once, no
+loss, no phantom on a rolled-back tx). Captured evidence: stream
+<code>XRANGE</code> + outbox row state.</li>
+<li><strong>At-least-once + idempotent reaction:</strong> force a
+redelivery (don&#39;t ack, wait <code>MinIdle</code>,
+<code>XAUTOCLAIM</code>); assert the coordinator graph + pushed deltas
+are identical to the single- delivery run (recompute-from-state
+idempotence, §6.2).</li>
+<li><strong>DLQ routing:</strong> inject a poison
+<code>policy.compiled</code> whose reaction always errors; assert it is
+redelivered exactly <code>ceiling=5</code> times then lands in
+<code>events:policy:dlq</code> with <code>dlq_attempts=6</code>
+<ul>
+<li><code>dlq_reason</code>, and <code>helix_events_dlq_total</code>
+increments; assert it is gone from the main PEL.</li>
+</ul></li>
+<li><strong>Cold-boot rehydration (C2):</strong> flush Redis; restart
+<code>helixd</code>; assert the graph is rebuilt from Postgres and
+<code>WatchNetworkMap</code> serves a correct snapshot with zero durable
+loss.</li>
+</ul>
+<h3 id="93-end-to-end--full-automation-tests">9.3 End-to-end /
+full-automation tests</h3>
+<ul>
+<li>Drive
+<code>enroll → connector.attached → connector.prefixes.changed → policy.compiled</code>
+through the real bus; assert the <code>WatchNetworkMap</code> delta
+stream content <strong>and</strong> the event→delta
+<code>helix_reconcile_seconds</code> <strong>p99 &lt; 1 s</strong> with
+captured evidence (§11.4.69/§11.4.107) — the same SLO the parent doc
+asserts [02_CP §10.3].</li>
+<li>Revoke E2E: <code>device.revoked</code> → edge WG-peer-removed timer
+&lt; 1 s.</li>
+</ul>
+<h3 id="94-payload-no-logging-lint-c3--paired-11-mutation">9.4 Payload
+no-logging lint (C3) + paired §1.1 mutation</h3>
+<div class="sourceCode" id="cb21"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co">// tools/payloadlint/main.go — parses internal/events/payloads.go + every events.New call site</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="co">// and FAILS the build if any payload struct/field matches the forbidden traffic-log shape</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="co">// (mirrors the schema-lint [02_CP §2.4]). Allowlist: device_id, overlay_ip, cidr(s),</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="co">// connector_id, version, gen, site, kind, rtt_ms, from, to — identity/topology/policy only.</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="kw">var</span> forbiddenPayloadFields <span class="op">=</span> regexp<span class="op">.</span>MustCompile<span class="op">(</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">`(?i)\b(src_ip|dst_ip|dest_ip|src_port|dst_port|bytes_(in|out)|packet_count|payload_bytes|sni_host|flow_id|dns_query)\b`</span><span class="op">)</span></span></code></pre></div>
+<p><strong>Paired §1.1 mutation:</strong> a test that adds a
+<code>BytesOut int json:&quot;bytes_out&quot;</code> field to a payload struct
+MUST make <code>payloadlint</code> FAIL; removing it MUST make it pass.
+This is the runtime signature (§11.4.108) proving the bus carries no
+traffic data — C3 is live, not promised.</p>
+<h3 id="95-stress--chaos-11485">9.5 Stress + chaos (§11.4.85)</h3>
+<ul>
+<li><strong>Stress:</strong> 50k events across the five streams at 5k/s;
+assert no PEL growth beyond the §8.4 threshold,
+<code>helix_event_bus_seconds</code> p99 ≤ 250 ms, zero DLQ.</li>
+<li><strong>Chaos — consumer kill:</strong> SIGKILL the coordinator
+mid-batch; assert <code>XAUTOCLAIM</code> reclaims the un-acked PEL on
+restart and no event is lost (§11.4.147 no-work-loss).</li>
+<li><strong>Chaos — Redis partition:</strong> drop the Redis connection
+for 30 s; assert Postgres commits keep succeeding (C2), the outbox
+accumulates, and the relay drains the backlog on reconnect with no
+duplicate-induced incorrect map (idempotent reactions absorb the
+duplicates).</li>
+<li><strong>Chaos — clock skew:</strong> publish events with a producer
+clock 5 s ahead; assert the monotonic
+<code>version</code>/<code>gen</code> guards (not wall-clock) keep
+ordering correct.</li>
+</ul>
+<hr />
+<h2 id="10-phase-2-nats-jetstream-swap-the-bus-agnostic-seam-d3">10.
+Phase-2 NATS-JetStream swap (the bus-agnostic seam, D3)</h2>
+<h3 id="101-why-the-swap-is-a-transport-change-not-a-rewrite">10.1 Why
+the swap is a transport change, not a rewrite</h3>
+<p>The <code>events.Bus</code> interface (§2.1) and the
+<code>Envelope</code> (§2.2) are the entire surface above the transport.
+NATS JetStream provides the same primitives the Redis impl uses
+[SYNTHESIS §3, 04_P1 §12]:</p>
+<table>
+<thead>
+<tr>
+<th>Redis Streams (MVP)</th>
+<th>NATS JetStream (P2)</th>
+<th>Maps to</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>stream <code>events:policy</code></td>
+<td>JetStream stream <code>EVENTS_POLICY</code> (subject
+<code>events.policy.*</code>)</td>
+<td><code>Stream</code> name</td>
+</tr>
+<tr>
+<td>consumer group <code>coordinator</code></td>
+<td>durable pull consumer <code>coordinator</code></td>
+<td><code>Subscribe(group,...)</code></td>
+</tr>
+<tr>
+<td><code>XReadGroup &gt;</code></td>
+<td><code>fetch()</code> on the pull consumer</td>
+<td>delivery channel</td>
+</tr>
+<tr>
+<td><code>XACK</code></td>
+<td><code>msg.Ack()</code></td>
+<td><code>Bus.Ack</code></td>
+</tr>
+<tr>
+<td><code>XAUTOCLAIM</code> (MinIdle reclaim)</td>
+<td>JetStream <code>AckWait</code> + auto-redelivery</td>
+<td>reclaim (built-in)</td>
+</tr>
+<tr>
+<td><code>:dlq</code> stream + ceiling</td>
+<td><code>MaxDeliver</code> + advisory → DLQ subject</td>
+<td><code>toDLQ</code></td>
+</tr>
+<tr>
+<td><code>MAXLEN ~ N</code></td>
+<td>stream <code>MaxMsgs</code>/<code>MaxAge</code> retention</td>
+<td>trim</td>
+</tr>
+<tr>
+<td><code>XADD</code> outbox relay</td>
+<td>JetStream publish (same outbox relay)</td>
+<td><code>Relay</code>/<code>xadd</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="102-what-changes--what-does-not">10.2 What changes / what does
+not</h3>
+<p><strong>Changes (transport only):</strong> a new
+<code>internal/events/natsbus.go</code> implementing <code>Bus</code>;
+the deployment swaps Redis-for-bus → NATS (Redis stays for presence in
+some topologies, or presence also moves). <strong>Unchanged:</strong>
+the outbox table + relay (relay&#39;s <code>xadd</code> becomes a NATS
+publish), the <code>Envelope</code>, the taxonomy, every consumer&#39;s
+reaction + idempotency guard, the authz guards, the metrics names, and
+every test in §9 (they target the <code>Bus</code> interface, so they
+re-run unchanged against the NATS impl — the §11.4.81
+cross-platform-parity discipline applied to the transport axis).</p>
+<h3 id="103-forward-compat-already-wired">10.3 Forward-compat already
+wired</h3>
+<p><code>Envelope.SchemaV</code> lets a Phase-2 consumer reject/upgrade
+an unknown payload shape rather than mis-parse it; the closed
+<code>EventType</code> vocabulary + <code>validTypes</code> map mean a
+new event type is an additive map entry, not a reshaping. NATS
+multi-region fan-out (the actual reason to swap) needs no envelope
+change — <code>tenant_id</code> already scopes routing.</p>
+<h3 id="104-the-one-line-mvp-optimisation-redis--84">10.4 The one-line
+MVP optimisation (Redis ≥ 8.4)</h3>
+<p>If the MVP deployment can guarantee Redis ≥ 8.4, the §6.4 two-step
+reclaim collapses to the single-shot
+<code>XREADGROUP ... CLAIM &lt;min-idle&gt;</code> [research-go_cp §5] —
+a localized change inside <code>Run</code> only; the <code>Bus</code>
+interface and all callers are untouched.</p>
+<hr />
+<h2 id="11-phase--task--subtask-plan-events-backbone-slice">11. Phase →
+task → subtask plan (events backbone slice)</h2>
+<p>Derived from [02_CP §13] CP-T5, expanded to nano-detail. Each leaf is
+a workable item (§11.4.93). Risk-descending (§11.4.132): the outbox
+atomicity + payload-lint first (they are the correctness/privacy
+floor).</p>
+<ul>
+<li><strong>EV-T1 — bus-agnostic contract.</strong>
+<ul>
+<li>EV-T1.1 <code>events.Bus</code> interface + <code>Envelope</code> +
+<code>EventType</code> closed vocabulary + <code>validTypes</code>.</li>
+<li>EV-T1.2 <code>events.New</code> constructor +
+<code>guardPublish</code> structural authz (§3.5).</li>
+</ul></li>
+<li><strong>EV-T2 — transactional outbox (the atomicity floor).</strong>
+<ul>
+<li>EV-T2.1 <code>event_outbox</code> table + RLS +
+<code>event_outbox_pending</code> index (§5.2).</li>
+<li>EV-T2.2 <code>StageInTx</code> + <code>ClaimOutboxBatch</code>
+(<code>FOR UPDATE SKIP LOCKED</code>) +
+<code>MarkOutboxRelayed</code>.</li>
+<li>EV-T2.3 <code>Relay</code> loop (50 ms tick) + <code>xadd</code>
+with <code>MAXLEN ~</code> trim; P1 atomicity integration test
+(§9.2).</li>
+</ul></li>
+<li><strong>EV-T3 — Redis Streams impl.</strong>
+<ul>
+<li>EV-T3.1 <code>RedisBus</code> + <code>EnsureGroups</code> (MKSTREAM)
++ <code>fromRedis</code>/<code>redisFields</code> codec.</li>
+<li>EV-T3.2 <code>Run</code> consume loop:
+<code>XAUTOCLAIM</code>-then-<code>XReadGroup</code> +
+<code>handleOne</code> + <code>XACK</code> (§6.1).</li>
+<li>EV-T3.3 <code>reclaimAndHandle</code> (MinIdle 30 s) +
+delivery-count ceiling + <code>toDLQ</code> + replay tool.</li>
+</ul></li>
+<li><strong>EV-T4 — idempotency + reactions.</strong>
+<ul>
+<li>EV-T4.1 <code>applied</code>/<code>shouldApply</code> monotonic
+guards (policy version, connector gen, revoke).</li>
+<li>EV-T4.2 coordinator reaction adapter (recompute-from-state, §6.2
+mechanism 1).</li>
+</ul></li>
+<li><strong>EV-T5 — observability + SLO.</strong>
+<ul>
+<li>EV-T5.1 the §8.2 metric set +
+<code>helix_event_bus_seconds</code>/<code>helix_reconcile_seconds</code>
+wiring.</li>
+<li>EV-T5.2 PEL-depth sampler (<code>XPENDING</code>) +
+<code>Bus.Health</code> + §8.4 alert rules.</li>
+</ul></li>
+<li><strong>EV-T6 — privacy + anti-bluff gates.</strong>
+<ul>
+<li>EV-T6.1 <code>tools/payloadlint</code> (§9.4) + paired §1.1 mutation
+(add <code>bytes_out</code> → FAIL).</li>
+<li>EV-T6.2 §9.2–9.5 integration/E2E/stress/chaos suites + a
+<code>challenges</code> Challenge asserting the event→delta &lt; 1 s SLO
+with captured evidence (§11.4.27/§11.4.69/§11.4.107).</li>
+</ul></li>
+<li><strong>EV-T7 — Phase-2 seam proof.</strong>
+<ul>
+<li>EV-T7.1 <code>Bus</code> interface conformance test-suite
+re-runnable against any impl (the seam proof for the NATS swap,
+§10.2).</li>
+</ul></li>
+</ul>
+<hr />
+<h2 id="12-edge-cases-explicit-no-guessing--1146">12. Edge cases
+(explicit, no-guessing — §11.4.6)</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Edge case</th>
+<th>Defined behaviour</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>E1</td>
+<td><code>XADD</code> succeeds but the relay crashes before
+<code>MarkOutboxRelayed</code></td>
+<td>Row stays pending → re-relayed → duplicate <code>XADD</code> →
+idempotent reaction absorbs it (§6.2). At-least-once, never lost.</td>
+</tr>
+<tr>
+<td>E2</td>
+<td>Reaction partially completes then errors (e.g. pushed delta to 3 of
+5 streams)</td>
+<td>Not acked → reclaimed → re-reacted; recompute-from-state re-pushes
+all 5 (the 3 already-correct are no-op diffs). Safe.</td>
+</tr>
+<tr>
+<td>E3</td>
+<td>Duplicate <code>policy.compiled</code> for the same
+<code>version</code></td>
+<td><code>shouldApply</code> drops the second (version ≤ applied
+marker). No double recompute.</td>
+</tr>
+<tr>
+<td>E4</td>
+<td>Out-of-order delivery: <code>v=6</code> reclaimed <em>after</em>
+<code>v=7</code> applied</td>
+<td>Monotonic guard drops <code>v=6</code> (no regression). The taxonomy
+uses <code>version</code>/<code>gen</code>, not wall-clock, exactly for
+this.</td>
+</tr>
+<tr>
+<td>E5</td>
+<td>Redis fully flushed while helixd up</td>
+<td>Coordinator graph already current from PG (C2); next mutation
+re-publishes via outbox; PEL reset is harmless.</td>
+</tr>
+<tr>
+<td>E6</td>
+<td>Poison event that NO consumer can ever process</td>
+<td>Redelivered <code>ceiling=5</code> times → DLQ + alert; operator
+inspects/fixes/<code>replay-dlq</code>. Never spins forever (§6.5).</td>
+</tr>
+<tr>
+<td>E7</td>
+<td>Undecodable message (corrupt fields)</td>
+<td>Straight to DLQ on first delivery (no retry loop on a
+structurally-broken message), <code>dlq_reason=&quot;bad ...&quot;</code>.</td>
+</tr>
+<tr>
+<td>E8</td>
+<td>Producer clock skew</td>
+<td>Ordering keys are monotonic counters, not <code>ts</code>;
+<code>ts</code> is informational only — skew cannot misorder topology
+changes (§9.5 chaos).</td>
+</tr>
+<tr>
+<td>E9</td>
+<td>Slow <code>audit</code>/<code>ws-fanout</code> consumer</td>
+<td>Distinct group/PEL — cannot stall <code>coordinator</code>; isolated
+back-pressure (§6.6).</td>
+</tr>
+<tr>
+<td>E10</td>
+<td>Event for a tenant whose RLS context is unset</td>
+<td><code>guardPublish</code> rejects a non-<code>system</code> event
+with <code>tenant_id == Nil</code>; consumer fan-out is tenant-scoped so
+a malformed-tenant event cannot leak across tenants (C4).</td>
+</tr>
+<tr>
+<td>E11</td>
+<td>DLQ itself grows unbounded</td>
+<td>DLQ <code>MAXLEN ~ 1_000_000</code> + nightly audit export; alert
+fires long before the cap.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="13-sources">13. Sources</h2>
+<p>[02_CP] final/02-control-plane.md (events backbone §5, coordinator
+§6, SLO §10, invariants §0.1, RLS §2.3, proto
+<code>helix.coordinator.v1</code> §4) · [04_P1] HelixVPN-Phase1-MVP.md
+(Redis Streams backbone, at-least-once + idempotent reactions, DLQ, p99
+&lt; 1 s convergence, Phase-2 NATS seam §12) · [04_ARCH §4]
+HelixVPN-Architecture-Refined.md (schema-generated clients, control/data
+separation, no-logging, default-deny) · [research-go_cp] cited research
+(accessed 2026-06-25): Redis Streams consumer-groups +
+<code>XAUTOCLAIM</code> dead-letter + delivery-count ceiling + Redis 8.4
+<code>CLAIM</code>; <code>redis/go-redis/v9</code>; transactional-outbox
+async path; goose RLS migrations — full source list with access dates in
+that file&#39;s &quot;Sources verified&quot; section · [SYNTHESIS] §2 (stack floor),
+§3 (D3 event-bus decision Redis→NATS), §7 (no-logging invariant), §8/§9
+(ecosystem + constitution bindings).</p>
+</body>
+</html>

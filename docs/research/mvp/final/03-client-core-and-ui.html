@@ -1,0 +1,1758 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Clients — helix-core FFI, Flutter helix-ui, per-platform shims</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Clients — helix-core FFI, Flutter helix-ui,
+per-platform shims</h1>
+</header>
+<h1 id="clients--helix-core-ffi-flutter-helix-ui-per-platform-shims">Clients
+— helix-core FFI, Flutter helix-ui, per-platform shims</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-06-25T00:00:00Z</p>
+<blockquote>
+<p>Master technical specification — document <strong>03</strong> of the
+HelixVPN set under <code>docs/research/mvp/final/</code>. Scope: the
+<strong>client stack</strong> — the Rust <code>helix-core</code> FFI
+surface consumed by the apps, the Flutter <code>helix-ui</code> codebase
+(design system + state + three flavors), and the <strong>per-platform
+<code>TunnelPlatform</code> shims</strong> (the only platform-specific
+code). This is a SPEC: it describes <em>what to build and why</em>, to
+phase → task → subtask and near-code granularity. It does
+<strong>not</strong> build the product (two-to-three refinement passes
+follow).</p>
+<p><strong>Boundary with sibling docs.</strong> This document
+<strong>consumes</strong> the data-plane contract owned by doc
+<code>01</code> (the <code>Transport</code> trait,
+<code>helix-wg</code>, the orchestrator, the <code>TunnelStatus</code>
+event stream) and the control-plane / proto contract owned by doc
+<code>02</code> (REST/WS, <code>WatchNetworkMap</code>, enrollment). It
+<strong>owns</strong> everything from the FFI surface upward: how Dart
+drives the core, how every pixel is shared across 3 apps × 8 platforms,
+and how each OS&#39;s tunnel lifecycle is isolated behind one channel
+contract. The Rust <em>internals</em> of <code>helix-core</code> are doc
+<code>01</code>&#39;s; this doc owns only its <em>exported</em> surface.</p>
+<p><strong>Evidence base.</strong> Citations inline by id:
+<code>[04_ARCH §N]</code> =
+<code>04_VPN_CLD/HelixVPN-Architecture-Refined.md</code>;
+<code>[04_UI]</code> =
+<code>04_VPN_CLD/HelixVPN-helix-ui-Flutter.md</code>;
+<code>[04_P0]</code> = <code>…Phase0-Spike.md</code>;
+<code>[04_P1]</code> = <code>…Phase1-MVP.md</code>; <code>[04_P2]</code>
+= <code>…Phase2-Parity.md</code>; <code>[05_YBO]</code> = operator
+mandate; per-LLM analyses
+<code>[02_QWN] [07_GMI] [10_KMI] [11_MST]</code> etc.;
+<code>[SYN]</code> = cross-document synthesis.</p>
+</blockquote>
+<hr />
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#0-position-in-the-system--what-this-document-owns">0.
+Position in the system &amp; what this document owns</a></li>
+<li><a href="#1-the-shared-codebase-strategy-two-cores-thin-shims">1.
+The shared-codebase strategy: two cores, thin shims</a></li>
+<li><a href="#2-melos-monorepo-layout-helix-ui">2. melos monorepo layout
+(<code>helix-ui/</code>)</a></li>
+<li><a href="#3-the-ffi-surface--dart--helix-core">3. The FFI surface —
+Dart ⇄ <code>helix-core</code></a></li>
+<li><a href="#4-the-tunnelplatform-shim-contract-the-only-platform-specific-code">4.
+The <code>TunnelPlatform</code> shim contract (the only
+platform-specific code)</a></li>
+<li><a href="#5-per-platform-shim-implementations">5. Per-platform shim
+implementations</a></li>
+<li><a href="#6-three-flavors-from-one-tree-capability-gating">6. Three
+flavors from one tree (capability gating)</a></li>
+<li><a href="#7-helix_design--the-design-system">7.
+<code>helix_design</code> — the design system</a></li>
+<li><a href="#8-riverpod-data-layer">8. Riverpod data layer</a></li>
+<li><a href="#9-why-flutter-for-8-platforms-and-not-the-alternatives">9.
+Why Flutter for 8 platforms (and not the alternatives)</a></li>
+<li><a href="#10-size--memory--performance-budgets">10. Size / memory /
+performance budgets</a></li>
+<li><a href="#11-build-codegen-signing-ci">11. Build, codegen, signing,
+CI</a></li>
+<li><a href="#12-testing-strategy--anti-bluff-evidence">12. Testing
+strategy + anti-bluff evidence</a></li>
+<li><a href="#13-phase--task--subtask-plan">13. Phase → task → subtask
+plan</a></li>
+<li><a href="#14-open-decisions-surfaced-by-this-document">14. Open
+decisions surfaced by this document</a></li>
+<li><a href="#15-cross-document-contracts-this-document-fixes">15.
+Cross-document contracts this document fixes</a></li>
+<li><a href="#sources-verified">Sources verified</a></li>
+</ul>
+<hr />
+<h2 id="0-position-in-the-system--what-this-document-owns">0. Position
+in the system &amp; what this document owns</h2>
+<p>HelixVPN ships <strong>three first-party app classes</strong> —
+<strong>Helix Access</strong> (end user), <strong>Helix
+Connector</strong> (network operator), <strong>Helix Console</strong>
+(admin) — across <strong>eight platforms</strong> (iOS, Android, macOS,
+Windows, Linux, Web, HarmonyOS NEXT, Aurora OS), all from <strong>one
+Flutter codebase</strong> sitting on <strong>one Rust core</strong>
+[04_ARCH §5, 04_UI §0, 05_YBO]. The discipline of the whole client
+stack:</p>
+<blockquote>
+<p><em>One widget tree, three flavors, eight targets — and the only
+per-platform code is the thin tunnel shim.</em> [04_UI §0]</p>
+</blockquote>
+<p>This document owns four contracts and nothing else:</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Contract</th>
+<th>Owned here</th>
+<th>Consumed from</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>C1</td>
+<td><strong>FFI surface</strong> — the exact Dart-facing API of
+<code>helix-core</code>
+(start/stop/status_stream/exits/shields/advertise) and the
+<strong>mirrored <code>TunnelStatus</code> enum</strong></td>
+<td>§3</td>
+<td><code>helix-core</code> internals → doc <code>01</code></td>
+</tr>
+<tr>
+<td>C2</td>
+<td><strong><code>TunnelPlatform</code> shim contract</strong> — the
+single MethodChannel+EventChannel every OS implements</td>
+<td>§4–5</td>
+<td>OS tunnel APIs (NE, VpnService, …)</td>
+</tr>
+<tr>
+<td>C3</td>
+<td><strong>Flavor + capability model</strong> —
+<code>runHelixApp(flavor, home, capabilities)</code>; what compiles into
+Access vs Connector vs Console</td>
+<td>§6</td>
+<td>—</td>
+</tr>
+<tr>
+<td>C4</td>
+<td><strong><code>helix_design</code> + Riverpod data layer</strong> —
+tokens, signature components, the &quot;UI is a pure function of the status
+stream&quot; rule</td>
+<td>§7–8</td>
+<td><code>helix_api</code> (REST/WS) → doc <code>02</code></td>
+</tr>
+</tbody>
+</table>
+<p>The load-bearing invariant that justifies the entire split [04_ARCH
+§5.1, 04_UI §10, SYN §5]:</p>
+<blockquote>
+<p><strong>A VPN client is two programs fused: a bounded-memory
+data-plane core (crypto, packet I/O, obfuscation — line-rate, must NOT
+be Dart, must NOT be reimplemented per platform) and a UI/orchestration
+layer (screens, settings, picker — benefits from one cross-platform
+toolkit).</strong> Hence <strong>Rust core + Flutter UI</strong>, never
+one framework doing everything.</p>
+</blockquote>
+<h3 id="01-non-negotiable-client-invariants">0.1 Non-negotiable client
+invariants</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Invariant</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CI1</td>
+<td><code>helix_core_ffi</code> owns <em>logic and status</em>; it does
+<strong>NOT</strong> own the OS tunnel lifecycle — that is the platform
+shim, because on most platforms the tunnel runs in a separate OS-managed
+process/extension.</td>
+<td>[04_UI §5]</td>
+</tr>
+<tr>
+<td>CI2</td>
+<td><strong>The UI is a pure function of the core&#39;s status
+stream.</strong> No polling; the <code>ConnectButton</code> reflects a
+stream the Rust core pushes.</td>
+<td>[04_UI §4.2]</td>
+</tr>
+<tr>
+<td>CI3</td>
+<td><strong>Console builds to Web; Access/Connector do not need
+to</strong> — browsers cannot open a TUN. Console depends on
+<code>helix_api</code> <em>only</em> (no
+<code>helix_core_ffi</code>).</td>
+<td>[04_ARCH §5.7, 04_UI §1]</td>
+</tr>
+<tr>
+<td>CI4</td>
+<td><strong>iOS Network Extension memory ceiling (historically ~15 MB
+working set) is the hardest constraint</strong> and the single strongest
+reason the core is Rust not Go. Every platform/transport decision defers
+to it.</td>
+<td>[04_ARCH §5.6/§5.7, 04_P0 §6]</td>
+</tr>
+<tr>
+<td>CI5</td>
+<td><strong>State must be announced, not just colored</strong> — never
+rely on color alone for protected/unprotected (accessibility +
+safety).</td>
+<td>[04_UI §9]</td>
+</tr>
+<tr>
+<td>CI6</td>
+<td><strong>Never Electron, never webview-wrapped</strong> for native
+targets. Flutter AOT + Rust core is the <em>only</em> way the size/speed
+targets are reachable on 8 platforms at once.</td>
+<td>[04_UI §10, 04_ARCH §5.6]</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="1-the-shared-codebase-strategy-two-cores-thin-shims">1. The
+shared-codebase strategy: two cores, thin shims</h2>
+<pre class="mermaid"><code>flowchart TB
+    subgraph Shared[&quot;SHARED — written once&quot;]
+        direction TB
+        UI[&quot;helix-ui (Flutter/Dart)&lt;br/&gt;design system · screens · state · API client&quot;]
+        FFI[&quot;helix_core_ffi&lt;br/&gt;(flutter_rust_bridge v2 bindings)&quot;]
+        CORE[&quot;helix-core (Rust)&lt;br/&gt;WG control · helix-transport · reconciler · kill-switch · DNS&quot;]
+        UI --&gt; FFI --&gt; CORE
+    end
+    subgraph Shims[&quot;PER-PLATFORM — the irreducible minimum (a few hundred LOC each)&quot;]
+        direction LR
+        S_APPLE[&quot;apple/&lt;br/&gt;NEPacketTunnelProvider (Swift)&quot;]
+        S_ANDROID[&quot;android/&lt;br/&gt;VpnService + JNI (Kotlin)&quot;]
+        S_WIN[&quot;windows/&lt;br/&gt;wireguard-nt + service (Rust/C#)&quot;]
+        S_LINUX[&quot;linux/&lt;br/&gt;kernel WG / tun (Rust)&quot;]
+        S_OHOS[&quot;harmonyos/&lt;br/&gt;Network Kit ability (ArkTS→NAPI)&quot;]
+        S_AURORA[&quot;aurora/&lt;br/&gt;Qt/C++ + tun&quot;]
+        S_WEB[&quot;web/&lt;br/&gt;— none — (Console only)&quot;]
+    end
+    CORE -. &quot;UniFFI / cbindgen static-lib&quot; .-&gt; S_APPLE
+    CORE -. JNI .-&gt; S_ANDROID
+    CORE -. named-pipe IPC .-&gt; S_WIN
+    CORE -. in-process .-&gt; S_LINUX
+    CORE -. &quot;NAPI .so&quot; .-&gt; S_OHOS
+    CORE -. &quot;C ABI&quot; .-&gt; S_AURORA
+    UI -. &quot;TunnelPlatform channel&quot; .-&gt; S_APPLE &amp; S_ANDROID &amp; S_WIN &amp; S_LINUX &amp; S_OHOS &amp; S_AURORA</code></pre>
+<p><strong>Three reuse pillars</strong> [04_ARCH §5.5, SYN §6]:</p>
+<ol type="1">
+<li><strong>Rust core</strong> (<code>helix-core</code>) — data plane
+shared by <strong>client + connector + gateway edge</strong> (same
+crate, three consumers — doc <code>01</code> I4).</li>
+<li><strong>Flutter UI</strong> (<code>helix-ui</code>) — every screen
+shared by <strong>all three apps</strong>.</li>
+<li><strong>Schema-generated clients</strong> (<code>helix-proto</code>)
+— Dart/Go/Rust clients generated from one schema so the codebases never
+drift (doc <code>02</code>).</li>
+</ol>
+<p>The reuse map [04_ARCH §5.5]:</p>
+<pre><code>helix-core (Rust)        ─┬─► Helix Access (client mode)
+  ├ helix-transport       ├─► Helix Connector (advertise/route mode)
+  ├ helix-wg control      └─► Gateway edge (server mode)     ← SAME crate, 3 consumers
+  └ reconciler
+
+helix-ui (Flutter/Dart)  ─┬─► Helix Access
+  ├ helix_design          ├─► Helix Connector (config UI)
+  ├ helix_api (generated) └─► Helix Console (web + desktop)
+  └ helix_domain (state)
+
+helix-proto (schemas)    ──► generates Dart + Go + Rust clients (no drift)</code></pre>
+<hr />
+<h2 id="2-melos-monorepo-layout-helix-ui">2. melos monorepo layout
+(<code>helix-ui/</code>)</h2>
+<p>The Flutter codebase is a <code>melos</code>-managed multi-package
+workspace [04_UI §1/§11]. Decoupling per §11.4.28/§11.4.74:
+<code>helix_design</code>, <code>helix_api</code>, and
+<code>helix_core_ffi</code> are independently publishable / reusable;
+project-specific glue lives only in <code>helix_domain</code> and the
+three <code>apps/</code>.</p>
+<pre><code>helix-ui/
+├── melos.yaml                       # workspace task runner (bootstrap/version/run-everywhere)
+├── packages/
+│   ├── helix_design/                # tokens · theme · widgets · icons · motion  → reusable
+│   │   └── lib/
+│   │       ├── tokens.dart           # HelixTokens (palette, spacing, radius, type, motion)
+│   │       ├── theme.dart            # HelixTheme ThemeExtension on ThemeData
+│   │       ├── widgets/              # ConnectButton, StatusChip, ExitPicker, ShieldIndicator,
+│   │       │                         #   NetworkTile, PolicyEditor, AdaptiveScaffold
+│   │       └── motion.dart
+│   ├── helix_core_ffi/              # flutter_rust_bridge bindings to helix-core (Access/Connector)
+│   │   ├── lib/
+│   │   │   ├── frb_generated.dart    # GENERATED — do not hand-edit
+│   │   │   ├── helix_core.dart       # thin idiomatic wrapper over the generated API
+│   │   │   └── tunnel_platform.dart  # TunnelPlatform channel contract (§4)
+│   │   └── rust/ -&gt; ../../helix-core/crates/helix-ffi   # symlink to the Rust FFI crate
+│   ├── helix_api/                   # generated OpenAPI REST client + WS/SSE client (all apps)
+│   │   └── lib/{rest_generated.dart, ws_client.dart}
+│   ├── helix_domain/                # models, Riverpod providers, use-cases, runHelixApp()
+│   │   └── lib/{run_helix_app.dart, providers/, usecases/, models/}
+│   └── helix_l10n/                  # ARB localization (en, ru, zh-Hans, …)
+├── apps/
+│   ├── access/                      # flavor: end-user VPN app (core_ffi + design + domain)
+│   │   ├── lib/main_access.dart
+│   │   ├── ios/ macos/              # NEPacketTunnelProvider shim (Swift)
+│   │   ├── android/                 # VpnService shim (Kotlin)
+│   │   ├── windows/ linux/          # service / in-process shims
+│   │   ├── ohos/                    # HarmonyOS HAP + ArkTS ability (OpenHarmony SIG fork)
+│   │   └── aurora/                  # Aurora RPM + Qt/C++ backend (OMP fork)
+│   ├── connector/                   # flavor: network-side config UI (core_ffi advertise mode)
+│   │   └── lib/main_connector.dart  # + headless daemon entrypoint (no UI) reuses same core
+│   └── console/                     # flavor: admin console — helix_api ONLY, no core_ffi
+│       └── lib/main_console.dart    # the ONLY flavor that builds to Web
+└── tool/                            # codegen scripts (frb, openapi, intl), drift checks</code></pre>
+<blockquote>
+<p><strong>Why <code>console/</code> has no <code>core_ffi</code>
+dependency:</strong> capability gating (§6) + dependency separation.
+Console never tunnels, so it never links the Rust staticlib; this is
+what lets it build to Web (CI3) and keeps its bundle lean. Access +
+Connector additionally share <strong>one Rust VPN/transport
+core</strong>; all three share <strong>one design system, one Dart UI
+core, one API client</strong> [04_UI §1].</p>
+</blockquote>
+<p><code>helix-ui/</code> is <em>one</em> package-group of the umbrella
+repo. The Rust crates (<code>helix-core/</code>,
+<code>helix-edge/</code>), the Go control plane
+(<code>helix-go/</code>), the schemas (<code>helix-proto/</code>), and
+the platform shim roots live as siblings under the umbrella per [04_ARCH
+§11] (see doc <code>00</code> §13 for the umbrella layout). Each
+reusable component graduates to its own <code>vasic-digital</code> repo
+with <code>upstreams/</code></p>
+<ul>
+<li><code>install_upstreams</code> per §11.4.28/§11.4.36.</li>
+</ul>
+<hr />
+<h2 id="3-the-ffi-surface--dart--helix-core">3. The FFI surface — Dart ⇄
+<code>helix-core</code></h2>
+<p>The Phase-0 G5 boundary, promoted to the production contract [04_P0
+§9, 04_UI §5]. <strong>flutter_rust_bridge v2 (frb)</strong> generates
+the Dart⇄Rust glue from the Rust <code>helix-ffi</code> crate;
+<strong>UniFFI</strong> generates the native-shim bindings (Swift /
+Kotlin / C) where a platform extension links the core directly rather
+than going through Dart [04_ARCH §5.1]. Two binding generators, one Rust
+surface — the canonical Mullvad/WARP pattern.</p>
+<h3 id="31-the-rust-side-source-of-truth-helix-ffisrcapirs">3.1 The
+Rust-side source of truth (<code>helix-ffi/src/api.rs</code>)</h3>
+<p>This is the <em>only</em> hand-authored FFI source; both generators
+read it. It is a SPEC sketch — final field sets are ratified at the
+Phase-0 → Phase-1 graduation [04_P0 §11].</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-ffi/src/api.rs  — frb + UniFFI generate Dart/Swift/Kotlin/C bindings from this.</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co">// The transport/WG internals are doc 01&#39;s; this is purely the EXPORTED surface.</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> ClientConfig <span class="op">{</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> map_path_or_session<span class="op">:</span> <span class="dt">String</span><span class="op">,</span> <span class="co">// file in Phase 0; control-plane session token in Phase 1+</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> transport<span class="op">:</span> <span class="dt">String</span><span class="op">,</span>           <span class="co">// &quot;auto&quot; | &quot;plain&quot; | &quot;masque&quot; | &quot;shadowsocks&quot; | &quot;uot&quot; | &quot;lwo&quot;</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> mode<span class="op">:</span> CoreMode<span class="op">,</span>              <span class="co">// Client | Connector</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>frb<span class="at">(</span>mirror<span class="at">)]</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">enum</span> CoreMode <span class="op">{</span> Client<span class="op">,</span> Connector <span class="op">}</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="co">// ---- lifecycle (logic only — NOT the OS tunnel; the shim owns that, CI1) ----</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> start(cfg<span class="op">:</span> ClientConfig) <span class="op">-&gt;</span> <span class="pp">anyhow::</span><span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">&gt;;</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> stop() <span class="op">-&gt;</span> <span class="pp">anyhow::</span><span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">&gt;;</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a><span class="co">// ---- the live status stream (maps to the orchestrator broadcast channel, doc 01 §4.5) ----</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">fn</span> status_stream(sink<span class="op">:</span> StreamSink<span class="op">&lt;</span>TunnelStatus<span class="op">&gt;</span>)<span class="op">;</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a><span class="co">// ---- exits / routing (Phase 1+) ----</span></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> exits() <span class="op">-&gt;</span> <span class="pp">anyhow::</span><span class="dt">Result</span><span class="op">&lt;</span><span class="dt">Vec</span><span class="op">&lt;</span>ExitOption<span class="op">&gt;&gt;;</span></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> set_exit(id<span class="op">:</span> <span class="dt">String</span><span class="op">,</span> multi_hop_chain<span class="op">:</span> <span class="dt">Option</span><span class="op">&lt;</span><span class="dt">Vec</span><span class="op">&lt;</span><span class="dt">String</span><span class="op">&gt;&gt;</span>) <span class="op">-&gt;</span> <span class="pp">anyhow::</span><span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">&gt;;</span></span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a><span class="co">// ---- privacy shields ----</span></span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> set_shields(s<span class="op">:</span> Shields) <span class="op">-&gt;</span> <span class="pp">anyhow::</span><span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">&gt;;</span></span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a><span class="co">// ---- connector mode only ----</span></span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> advertise(cidrs<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span><span class="dt">String</span><span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="pp">anyhow::</span><span class="dt">Result</span><span class="op">&lt;</span>AdvertiseResult<span class="op">&gt;;</span></span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a><span class="co">// ---- shim handoff: the core never opens the TUN; the shim hands it a packet fd / pump ----</span></span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">fn</span> attach_tun(fd<span class="op">:</span> <span class="dt">i32</span>) <span class="op">-&gt;</span> <span class="pp">anyhow::</span><span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">&gt;;</span>       <span class="co">// Android ParcelFileDescriptor, Linux tun fd</span></span>
+<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">fn</span> detach_tun() <span class="op">-&gt;</span> <span class="pp">anyhow::</span><span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">&gt;;</span></span>
+<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>frb<span class="at">(</span>mirror<span class="at">)]</span></span>
+<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">enum</span> TunnelStatus <span class="op">{</span></span>
+<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a>    Disconnected<span class="op">,</span></span>
+<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a>    Connecting<span class="op">,</span></span>
+<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a>    Handshaking<span class="op">,</span></span>
+<span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a>    Connected <span class="op">{</span> transport<span class="op">:</span> <span class="dt">String</span><span class="op">,</span> path<span class="op">:</span> <span class="dt">String</span><span class="op">,</span> rtt_ms<span class="op">:</span> <span class="dt">u32</span> <span class="op">},</span> <span class="co">// path = &quot;direct&quot; | &quot;relay&quot;</span></span>
+<span id="cb4-40"><a href="#cb4-40" aria-hidden="true" tabindex="-1"></a>    Reconnecting<span class="op">,</span></span>
+<span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a>    Down <span class="op">{</span> reason<span class="op">:</span> <span class="dt">String</span> <span class="op">},</span>        <span class="co">// distinct from Disconnected: an unexpected drop</span></span>
+<span id="cb4-42"><a href="#cb4-42" aria-hidden="true" tabindex="-1"></a>    Danger <span class="op">{</span> kind<span class="op">:</span> <span class="dt">String</span> <span class="op">},</span>        <span class="co">// &quot;leak&quot; | &quot;killswitch_tripped&quot; — drives the red palette (§7)</span></span>
+<span id="cb4-43"><a href="#cb4-43" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb4-44"><a href="#cb4-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-45"><a href="#cb4-45" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>frb<span class="at">(</span>mirror<span class="at">)]</span></span>
+<span id="cb4-46"><a href="#cb4-46" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> Shields <span class="op">{</span></span>
+<span id="cb4-47"><a href="#cb4-47" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> kill_switch<span class="op">:</span> <span class="dt">bool</span><span class="op">,</span></span>
+<span id="cb4-48"><a href="#cb4-48" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> dns_protection<span class="op">:</span> <span class="dt">bool</span><span class="op">,</span></span>
+<span id="cb4-49"><a href="#cb4-49" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> daita<span class="op">:</span> <span class="dt">bool</span><span class="op">,</span></span>
+<span id="cb4-50"><a href="#cb4-50" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> post_quantum<span class="op">:</span> <span class="dt">bool</span><span class="op">,</span></span>
+<span id="cb4-51"><a href="#cb4-51" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> split_tunnel<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span><span class="dt">String</span><span class="op">&gt;,</span>  <span class="co">// per-route bypass; per-app handled in the shim layer</span></span>
+<span id="cb4-52"><a href="#cb4-52" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb4-53"><a href="#cb4-53" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-54"><a href="#cb4-54" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>frb<span class="at">(</span>mirror<span class="at">)]</span></span>
+<span id="cb4-55"><a href="#cb4-55" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> ExitOption <span class="op">{</span></span>
+<span id="cb4-56"><a href="#cb4-56" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> id<span class="op">:</span> <span class="dt">String</span><span class="op">,</span> <span class="kw">pub</span> kind<span class="op">:</span> <span class="dt">String</span><span class="op">,</span> <span class="co">// &quot;privacy_exit&quot; | &quot;network&quot;</span></span>
+<span id="cb4-57"><a href="#cb4-57" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> label<span class="op">:</span> <span class="dt">String</span><span class="op">,</span> <span class="kw">pub</span> country<span class="op">:</span> <span class="dt">Option</span><span class="op">&lt;</span><span class="dt">String</span><span class="op">&gt;,</span> <span class="kw">pub</span> rtt_ms<span class="op">:</span> <span class="dt">Option</span><span class="op">&lt;</span><span class="dt">u32</span><span class="op">&gt;,</span></span>
+<span id="cb4-58"><a href="#cb4-58" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> jurisdiction<span class="op">:</span> <span class="dt">Option</span><span class="op">&lt;</span><span class="dt">String</span><span class="op">&gt;,</span> <span class="co">// for multi-hop labels</span></span>
+<span id="cb4-59"><a href="#cb4-59" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb4-60"><a href="#cb4-60" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-61"><a href="#cb4-61" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>frb<span class="at">(</span>mirror<span class="at">)]</span></span>
+<span id="cb4-62"><a href="#cb4-62" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> AdvertiseResult <span class="op">{</span> <span class="kw">pub</span> accepted<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span><span class="dt">String</span><span class="op">&gt;,</span> <span class="kw">pub</span> conflicts<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span><span class="dt">String</span><span class="op">&gt;</span> <span class="op">}</span></span></code></pre></div>
+<blockquote>
+<p><strong>Status-enum note.</strong> The Phase-0 spike shipped the lean
+five-variant enum
+<code>Connecting | Handshaking | Connected{transport,rtt} | Reconnecting | Down{reason}</code>
+[04_P0 §4.5/§9]. This document <strong>mirrors and extends</strong> it
+to add <code>Disconnected</code> (clean idle, distinct from
+<code>Down</code>), <code>path</code> on <code>Connected</code> (direct
+vs relay — surfaced by the <code>StatusChip</code>), and
+<code>Danger{kind}</code> (leak / kill-switch tripped — drives the red
+<code>stateDanger</code> palette). The Dart mirror in §3.2 MUST match
+byte-for-byte; the FFI contract test (§12) asserts it.</p>
+</blockquote>
+<h3 id="32-the-dart-facing-surface-helix_coredart">3.2 The Dart-facing
+surface (<code>helix_core.dart</code>)</h3>
+<p>frb mirrors every <code>#[frb(mirror)]</code> type into an identical
+Dart type, so the Dart <code>TunnelStatus</code> is the
+<em>generated</em> mirror, never a hand-written parallel. The thin
+wrapper adds ergonomics only:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode dart"><code class="sourceCode dart"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix_core_ffi/lib/helix_core.dart — idiomatic wrapper over frb_generated.dart</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="kw">abstract</span> <span class="kw">class</span> HelixCore <span class="op">{</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Future</span><span class="op">&lt;</span><span class="dt">void</span><span class="op">&gt;</span> start(<span class="op">{</span>required <span class="dt">String</span> transport<span class="op">,</span> <span class="dt">String</span><span class="op">?</span> mapPathOrSession<span class="op">,</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>                      CoreMode mode <span class="op">=</span> CoreMode<span class="op">.</span>client<span class="op">}</span>);</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Future</span><span class="op">&lt;</span><span class="dt">void</span><span class="op">&gt;</span> stop();</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Stream</span><span class="op">&lt;</span>TunnelStatus<span class="op">&gt;</span> statusStream();          <span class="co">// frb StreamSink → Dart broadcast Stream</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Future</span><span class="op">&lt;</span><span class="dt">List</span><span class="op">&lt;</span>ExitOption<span class="op">&gt;&gt;</span> exits();</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Future</span><span class="op">&lt;</span><span class="dt">void</span><span class="op">&gt;</span> setExit(<span class="dt">String</span> id<span class="op">,</span> <span class="op">{</span><span class="dt">List</span><span class="op">&lt;</span><span class="dt">String</span><span class="op">&gt;?</span> multiHopChain<span class="op">}</span>);</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Future</span><span class="op">&lt;</span><span class="dt">void</span><span class="op">&gt;</span> setShields(Shields s);</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>  <span class="co">// connector mode:</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Future</span><span class="op">&lt;</span>AdvertiseResult<span class="op">&gt;</span> advertise(<span class="dt">List</span><span class="op">&lt;</span><span class="dt">String</span><span class="op">&gt;</span> cidrs);</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>  <span class="co">// shim handoff (called by the platform shim, not the UI):</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Future</span><span class="op">&lt;</span><span class="dt">void</span><span class="op">&gt;</span> attachTun(<span class="dt">int</span> fd);</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Future</span><span class="op">&lt;</span><span class="dt">void</span><span class="op">&gt;</span> detachTun();</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode dart"><code class="sourceCode dart"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">// the entire happy path a client app drives (mirrors the Phase-0 G5 demo, [04_P0 §9]):</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="at">await</span> core<span class="op">.</span>start(transport<span class="op">:</span> <span class="st">&#39;auto&#39;</span><span class="op">,</span> mapPathOrSession<span class="op">:</span> session<span class="op">.</span>token);</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>core<span class="op">.</span>statusStream()<span class="op">.</span>listen((s) <span class="op">=&gt;</span> <span class="co">/* Riverpod fold, §8 */</span>);</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co">// ...later:</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="at">await</span> core<span class="op">.</span>stop();</span></code></pre></div>
+<h3 id="33-ffi--shim-division-of-labor-the-seam-that-prevents-the-classic-bug">3.3
+FFI ⇄ shim division of labor (the seam that prevents the classic
+bug)</h3>
+<pre class="mermaid"><code>sequenceDiagram
+    participant UI as Flutter UI (Dart)
+    participant FFI as helix_core_ffi (frb)
+    participant SHIM as TunnelPlatform shim (native)
+    participant OS as OS tunnel (NE / VpnService / wg-nt / tun)
+    participant CORE as helix-core (Rust)
+
+    UI-&gt;&gt;SHIM: startTunnel(TunnelConfig)         %% via MethodChannel
+    SHIM-&gt;&gt;OS: request permission + create TUN (overlay IP, routes, DNS)
+    OS--&gt;&gt;SHIM: tun fd / packetFlow
+    SHIM-&gt;&gt;CORE: helix_core_start(cfg) + attach_tun(fd)   %% via UniFFI/JNI/C ABI
+    SHIM--&gt;&gt;UI: PlatformTunnelEvent.up               %% via EventChannel
+    Note over CORE: pumps tun ↔ WG ↔ transport (doc 01)
+    CORE--&gt;&gt;FFI: TunnelStatus events (StreamSink)
+    FFI--&gt;&gt;UI: statusStream() → ConnectButton/StatusChip
+    UI-&gt;&gt;FFI: core.setShields(...) / setExit(...)    %% logic-only, no OS tunnel
+    UI-&gt;&gt;SHIM: stopTunnel()
+    SHIM-&gt;&gt;CORE: detach_tun() + helix_core_stop()
+    OS--&gt;&gt;SHIM: tunnel torn down
+    SHIM--&gt;&gt;UI: PlatformTunnelEvent.down</code></pre>
+<p>The seam: <strong>lifecycle commands flow UI → shim → core</strong>
+(the OS owns the tunnel process), while <strong>status events flow core
+→ FFI → UI</strong> (the core owns truth about protection state).
+<code>setShields</code>/<code>setExit</code>/<code>exits</code> are pure
+logic and go straight UI → FFI without touching the OS tunnel (CI1).
+This is precisely the boundary that prevents &quot;UI says connected while
+the OS tunnel is actually down&quot;: the UI <em>only</em> believes the
+core&#39;s <code>statusStream</code>, never its own intent (CI2; §8.4).</p>
+<hr />
+<h2 id="4-the-tunnelplatform-shim-contract-the-only-platform-specific-code">4.
+The <code>TunnelPlatform</code> shim contract (the only
+platform-specific code)</h2>
+<p>Every shim implements <strong>one contract</strong> and does
+<strong>only three things</strong>: configure the OS tunnel, hand
+packets to/from <code>helix-core</code>, and report lifecycle [04_UI
+§6]. Everything else is shared Dart.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode dart"><code class="sourceCode dart"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix_core_ffi/lib/tunnel_platform.dart</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="co">// One MethodChannel (&quot;helixvpn/tunnel&quot;) + one EventChannel (&quot;helixvpn/tunnel/events&quot;).</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="kw">abstract</span> <span class="kw">class</span> TunnelPlatform <span class="op">{</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="co">/// OS asks permission, creates the TUN, links the core, starts the pump.</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Future</span><span class="op">&lt;</span><span class="dt">void</span><span class="op">&gt;</span> startTunnel(TunnelConfig cfg);</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  <span class="co">/// Tear down: detach core, destroy TUN, release permission hold.</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Future</span><span class="op">&lt;</span><span class="dt">void</span><span class="op">&gt;</span> stopTunnel();</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>  <span class="co">/// Lifecycle only — NOT data. Up/down/permissionDenied/revoked/error.</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Stream</span><span class="op">&lt;</span>PlatformTunnelEvent<span class="op">&gt;</span> events();</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> TunnelConfig <span class="op">{</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">final</span> <span class="dt">String</span> overlayIp;            <span class="co">// e.g. 100.64.0.7/32  (or fd7a:…/128 for v6 overlay)</span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>  <span class="at">final</span> <span class="dt">List</span><span class="op">&lt;</span><span class="dt">String</span><span class="op">&gt;</span> routes;         <span class="co">// AllowedIPs the OS should send into the tunnel</span></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>  <span class="at">final</span> <span class="dt">List</span><span class="op">&lt;</span><span class="dt">String</span><span class="op">&gt;</span> dnsServers;     <span class="co">// tunnel DNS (kill plaintext :53 off-tunnel)</span></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>  <span class="at">final</span> <span class="dt">List</span><span class="op">&lt;</span><span class="dt">String</span><span class="op">&gt;</span> splitExcludeApps; <span class="co">// Android/desktop per-app bypass (platform-handled)</span></span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>  <span class="at">final</span> <span class="dt">int</span> mtu;                     <span class="co">// negotiated; default 1280 over MASQUE, 1420 plain WG</span></span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>  <span class="at">final</span> <span class="dt">String</span> sessionOrMapToken;    <span class="co">// handed straight to helix_core_start</span></span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>  TunnelConfig(<span class="op">{</span>required <span class="kw">this</span><span class="op">.</span>overlayIp<span class="op">,</span> required <span class="kw">this</span><span class="op">.</span>routes<span class="op">,</span> required <span class="kw">this</span><span class="op">.</span>dnsServers<span class="op">,</span></span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>    <span class="kw">this</span><span class="op">.</span>splitExcludeApps <span class="op">=</span> <span class="at">const</span> []<span class="op">,</span> <span class="kw">this</span><span class="op">.</span>mtu <span class="op">=</span> <span class="dv">1280</span><span class="op">,</span> required <span class="kw">this</span><span class="op">.</span>sessionOrMapToken<span class="op">}</span>);</span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> PlatformTunnelEventKind <span class="op">{</span> up<span class="op">,</span> down<span class="op">,</span> permissionDenied<span class="op">,</span> revoked<span class="op">,</span> error <span class="op">}</span></span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> PlatformTunnelEvent <span class="op">{</span></span>
+<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a>  <span class="at">final</span> PlatformTunnelEventKind kind;</span>
+<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a>  <span class="at">final</span> <span class="dt">String</span><span class="op">?</span> detail;              <span class="co">// honest reason on error/revoked (§11.4.6: no guessing)</span></span>
+<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a>  PlatformTunnelEvent(<span class="kw">this</span><span class="op">.</span>kind<span class="op">,</span> [<span class="kw">this</span><span class="op">.</span>detail]);</span>
+<span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="41-contract-obligations-every-shim-must-satisfy">4.1 Contract
+obligations (every shim MUST satisfy)</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Obligation</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>O1</td>
+<td><code>startTunnel</code> is <strong>idempotent +
+permission-aware</strong>: if the OS denies VPN permission, emit
+<code>permissionDenied</code> (not <code>error</code>) and leave no
+half-open TUN (§11.4.14 cleanup).</td>
+<td>clean UX, no leaks</td>
+</tr>
+<tr>
+<td>O2</td>
+<td>The shim <strong>hands the core a packet fd / pump</strong>, it does
+<strong>not</strong> itself crypto/obfuscate. <code>helix-core</code> is
+the only place WG + transport live (doc <code>01</code> I4).</td>
+<td>one core, no fork</td>
+</tr>
+<tr>
+<td>O3</td>
+<td><code>events()</code> reports <code>revoked</code> when the OS (or
+admin via <code>device.revoked</code>, doc <code>02</code>) kills the
+tunnel out-of-band — the UI must show this within the §11.4.x
+convergence budget, never claim &quot;connected&quot;.</td>
+<td>CI2 honesty</td>
+</tr>
+<tr>
+<td>O4</td>
+<td>On <code>stopTunnel</code> the shim restores the OS to a quiescent
+state (no orphan routes, no leaked DNS, kill-switch firewall rules
+removed) on <strong>every exit path</strong>
+(<code>finally</code>/<code>defer</code>).</td>
+<td>§11.4.14</td>
+</tr>
+<tr>
+<td>O5</td>
+<td>The shim is the <strong>only untyped seam</strong> (native ⇄ Dart) —
+it is covered by a per-OS smoke test on real devices (§12), never by
+mocks-claiming-PASS.</td>
+<td>§11.4.27</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="5-per-platform-shim-implementations">5. Per-platform shim
+implementations</h2>
+<p>The matrix (one row = one <code>TunnelPlatform</code> impl) [04_ARCH
+§5.3, 04_UI §6]:</p>
+<table>
+<thead>
+<tr>
+<th>Platform</th>
+<th>OS mechanism</th>
+<th>Shim language</th>
+<th>How <code>helix-core</code> is loaded</th>
+<th>Core↔︎OS packet path</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>iOS / macOS</strong></td>
+<td><code>NEPacketTunnelProvider</code> (Network Extension)</td>
+<td>Swift</td>
+<td>Rust staticlib (<code>aarch64-apple-ios</code>) linked into the
+extension; UniFFI/cbindgen header</td>
+<td><code>packetFlow.readPackets ⇄ core.attach_tun</code></td>
+</tr>
+<tr>
+<td><strong>Android</strong></td>
+<td><code>VpnService</code> + foreground service</td>
+<td>Kotlin</td>
+<td>core <code>.so</code> via <strong>JNI</strong></td>
+<td><code>ParcelFileDescriptor</code> fd →
+<code>attach_tun(fd)</code></td>
+</tr>
+<tr>
+<td><strong>Windows</strong></td>
+<td><code>wireguard-nt</code> / <code>wintun</code> + privileged
+<strong>service</strong></td>
+<td>C# (+Rust)</td>
+<td>service process hosts the core; Flutter ↔︎ service over
+<strong>named-pipe IPC</strong></td>
+<td>wintun ring ⇄ core</td>
+</tr>
+<tr>
+<td><strong>Linux</strong></td>
+<td>kernel <code>wireguard</code> or <code>tun</code></td>
+<td>Rust / Dart FFI</td>
+<td>core <strong>in-process</strong> (desktop) or a small helper
+daemon</td>
+<td>tun fd → <code>attach_tun(fd)</code></td>
+</tr>
+<tr>
+<td><strong>HarmonyOS NEXT</strong></td>
+<td>Network Kit VPN extension <em>ability</em></td>
+<td><strong>ArkTS</strong> shim → NAPI</td>
+<td>core as native <code>.so</code> via <strong>N-API</strong>; ArkTS
+MethodChannel bridges to Flutter</td>
+<td>ability tun ⇄ core</td>
+</tr>
+<tr>
+<td><strong>Aurora OS</strong></td>
+<td>Qt/C++ network backend + <code>tun</code></td>
+<td><strong>C++</strong> shim</td>
+<td>core linked as <strong>C lib</strong> into the Qt backend; Friflex
+Flutter plugin bridges</td>
+<td>Qt backend tun ⇄ core</td>
+</tr>
+<tr>
+<td><strong>Web (Console only)</strong></td>
+<td>— none —</td>
+<td>n/a</td>
+<td><strong>no tunnel</strong> — Console is API-only (CI3)</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>The payoff</strong> [04_UI §6]: <code>ConnectButton</code>,
+<code>ExitPicker</code>, settings, account, policy views — <em>every
+pixel</em> — are identical Dart across all of these. Adding HarmonyOS or
+Aurora is &quot;write one shim that satisfies <code>TunnelPlatform</code> +
+bend the build,&quot; not &quot;port the app.&quot; The UI ports for free; the
+<em>shim</em> does not.</p>
+</blockquote>
+<h3 id="51-ios--macos--nepackettunnelprovider-swift">5.1 iOS / macOS —
+<code>NEPacketTunnelProvider</code> (Swift)</h3>
+<p>The make-or-break platform (CI4). The core is a Rust
+<strong>staticlib</strong> linked into a Network Extension; the
+extension owns <code>packetFlow</code> and pumps it through the core
+[04_P0 §6].</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode swift"><code class="sourceCode swift"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co">// apps/access/ios/HelixTunnel/PacketTunnelProvider.swift</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="im">NetworkExtension</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="kw">final</span> <span class="kw">class</span> PacketTunnelProvider<span class="op">:</span> <span class="dt">NEPacketTunnelProvider</span> <span class="op">{</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">override</span> <span class="kw">func</span> <span class="fu">startTunnel</span><span class="op">(</span><span class="va">options</span><span class="op">:</span> [<span class="dt">String</span><span class="op">:</span><span class="dt">NSObject</span>]?<span class="op">,</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>                            <span class="va">completionHandler</span><span class="op">:</span> @<span class="dt">escaping</span> (<span class="va">Error</span>?<span class="op">)</span> -&gt; <span class="fu">Void</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="va">cfg</span> <span class="op">=</span> decodeTunnelConfig<span class="op">(</span>options<span class="op">)</span>             <span class="co">// overlay IP, routes, DNS, session token</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="va">settings</span> <span class="op">=</span> NEPacketTunnelNetworkSettings<span class="op">(</span>tunnelRemoteAddress<span class="op">:</span> cfg<span class="op">.</span>gatewayHost<span class="op">)</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>    settings<span class="op">.</span>ipv4Settings <span class="op">=</span> NEIPv4Settings<span class="op">(</span>addresses<span class="op">:</span> <span class="op">[</span>cfg<span class="op">.</span>overlayIp<span class="op">],</span> subnetMasks<span class="op">:</span> <span class="op">[</span><span class="st">&quot;255.255.255.255&quot;</span><span class="op">])</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>    settings<span class="op">.</span>dnsSettings  <span class="op">=</span> NEDNSSettings<span class="op">(</span>servers<span class="op">:</span> cfg<span class="op">.</span>dnsServers<span class="op">)</span>        <span class="co">// tunnel DNS (anti-leak)</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>    settings<span class="op">.</span>ipv4Settings<span class="op">?.</span>includedRoutes <span class="op">=</span> cfg<span class="op">.</span>routes<span class="op">.</span>map <span class="op">{</span> NEIPv4Route<span class="op">(...)</span> <span class="op">}</span> <span class="co">// AllowedIPs</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>    setTunnelNetworkSettings<span class="op">(</span>settings<span class="op">)</span> <span class="op">{</span> <span class="op">[</span><span class="kw">weak</span> <span class="kw">self</span><span class="op">]</span> err <span class="cf">in</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>      <span class="cf">guard</span> err <span class="op">==</span> <span class="kw">nil</span><span class="op">,</span> <span class="kw">let</span> <span class="va">self</span> <span class="cf">else</span> <span class="op">{</span> <span class="kw">return</span> completionHandler<span class="op">(</span>err<span class="op">)</span> <span class="op">}</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>      helix_core_start<span class="op">(</span>cfg<span class="op">.</span>sessionToken<span class="op">,</span> CoreMode<span class="op">.</span>client<span class="op">)</span>                 <span class="co">// UniFFI/cbindgen</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>      <span class="kw">self</span><span class="op">.</span>pump<span class="op">()</span>                                                        <span class="co">// packetFlow ⇄ core</span></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>      completionHandler<span class="op">(</span><span class="kw">nil</span><span class="op">)</span></span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a>  <span class="kw">private</span> <span class="kw">func</span> <span class="fu">pump</span><span class="op">()</span> <span class="op">{</span></span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a>    packetFlow<span class="op">.</span>readPackets <span class="op">{</span> <span class="op">[</span><span class="kw">weak</span> <span class="kw">self</span><span class="op">]</span> packets<span class="op">,</span> _ <span class="cf">in</span></span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a>      <span class="cf">for</span> p <span class="cf">in</span> packets <span class="op">{</span> helix_core_tun_out<span class="op">(</span>p<span class="op">)</span> <span class="op">}</span>       <span class="co">// core encrypts + sends via transport</span></span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a>      <span class="kw">self</span><span class="op">?.</span>pump<span class="op">()</span></span>
+<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a>    helix_core_set_tun_writer <span class="op">{</span> data <span class="cf">in</span> <span class="kw">self</span><span class="op">.</span>packetFlow<span class="op">.</span>writePackets<span class="op">([</span>data<span class="op">],</span> withProtocols<span class="op">:</span> <span class="op">[</span>AF_INET<span class="op">])</span> <span class="op">}</span></span>
+<span id="cb9-26"><a href="#cb9-26" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb9-27"><a href="#cb9-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-28"><a href="#cb9-28" aria-hidden="true" tabindex="-1"></a>  <span class="kw">override</span> <span class="kw">func</span> <span class="fu">stopTunnel</span><span class="op">(</span><span class="va">with</span> <span class="va">reason</span><span class="op">:</span> <span class="dt">NEProviderStopReason</span><span class="op">,</span></span>
+<span id="cb9-29"><a href="#cb9-29" aria-hidden="true" tabindex="-1"></a>                           <span class="va">completionHandler</span><span class="op">:</span> @<span class="dt">escaping</span> (<span class="op">)</span> -&gt; <span class="fu">Void</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb9-30"><a href="#cb9-30" aria-hidden="true" tabindex="-1"></a>    helix_core_stop<span class="op">();</span> completionHandler<span class="op">()</span>             <span class="co">// O4: quiescent restore</span></span>
+<span id="cb9-31"><a href="#cb9-31" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb9-32"><a href="#cb9-32" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><strong>The memory constraint is the architecture.</strong> The
+Phase-0 G3 gate [04_P0 §6.3/§6.4] mandates: build the same
+<code>helix-core</code> as <code>aarch64-apple-ios</code> with
+<code>opt-level=z/s</code> + LTO + <code>panic=abort</code> + strip;
+drive a sustained <strong>1 GB transfer on a real device</strong>
+(Simulator memory is <em>not</em> representative); sample the
+<strong>extension process</strong> RSS via Instruments; run
+<strong>plain-UDP and MASQUE separately</strong> (QUIC buffers cost more
+memory — both must pass). <strong>Pass = steady-state RSS under the
+device-enforced ceiling with ≥ 30 % headroom across a 30-minute
+soak.</strong> If it fails, the documented fallbacks in order are: (1)
+shrink buffers / cap QUIC flow-control windows in the iOS build; (2)
+move MASQUE off-device for iOS (plain WG + on-path obfuscation only —
+partial feature loss); (3) split the core so only the lean WG datapath
+is in-extension and QUIC negotiation lives in the app via app-extension
+IPC. Each fallback is a real product decision (§14 D-CLIENT-1) — never
+hand-waved [04_P0 §6.4].</p>
+<h3 id="52-android--vpnservice--jni-kotlin">5.2 Android —
+<code>VpnService</code> + JNI (Kotlin)</h3>
+<div class="sourceCode" id="cb10"><pre class="sourceCode kotlin"><code class="sourceCode kotlin"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co">// apps/access/android/.../HelixVpnService.kt</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> HelixVpnService <span class="op">:</span> <span class="dt">VpnService</span><span class="op">()</span> <span class="op">{</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">private</span> <span class="kw">external</span> <span class="kw">fun</span> <span class="fu">coreStart</span><span class="op">(</span><span class="va">sessionToken</span><span class="op">:</span> <span class="dt">String</span><span class="op">,</span> <span class="va">fd</span><span class="op">:</span> <span class="dt">Int</span><span class="op">)</span>   <span class="co">// JNI → helix-core .so</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">private</span> <span class="kw">external</span> <span class="kw">fun</span> <span class="fu">coreStop</span><span class="op">()</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">init</span> <span class="op">{</span> System<span class="op">.</span>loadLibrary<span class="op">(</span><span class="st">&quot;helix_core&quot;</span><span class="op">)</span> <span class="op">}</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">override</span> <span class="kw">fun</span> <span class="fu">onStartCommand</span><span class="op">(</span><span class="va">intent</span><span class="op">:</span> <span class="dt">Intent</span><span class="op">?,</span> <span class="va">flags</span><span class="op">:</span> <span class="dt">Int</span><span class="op">,</span> <span class="va">startId</span><span class="op">:</span> <span class="dt">Int</span><span class="op">):</span> <span class="dt">Int</span> <span class="op">{</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">val</span> <span class="va">cfg</span> <span class="op">=</span> TunnelConfig<span class="op">.</span>from<span class="op">(</span>intent<span class="op">)</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">val</span> <span class="va">builder</span> <span class="op">=</span> Builder<span class="op">()</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>      <span class="op">.</span>addAddress<span class="op">(</span>cfg<span class="op">.</span>overlayIp<span class="op">,</span> <span class="dv">32</span><span class="op">)</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>      <span class="op">.</span>setMtu<span class="op">(</span>cfg<span class="op">.</span>mtu<span class="op">)</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>    cfg<span class="op">.</span>routes<span class="op">.</span>forEach <span class="op">{</span> builder<span class="op">.</span>addRoute<span class="op">(</span>it<span class="op">.</span>addr<span class="op">,</span> it<span class="op">.</span>prefix<span class="op">)</span> <span class="op">}</span>       <span class="co">// AllowedIPs</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>    cfg<span class="op">.</span>dnsServers<span class="op">.</span>forEach <span class="op">{</span> builder<span class="op">.</span>addDnsServer<span class="op">(</span>it<span class="op">)</span> <span class="op">}</span>               <span class="co">// tunnel DNS</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>    cfg<span class="op">.</span>splitExcludeApps<span class="op">.</span>forEach <span class="op">{</span> builder<span class="op">.</span>addDisallowedApplication<span class="op">(</span>it<span class="op">)</span> <span class="op">}</span> <span class="co">// per-app split</span></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">val</span> <span class="va">pfd</span><span class="op">:</span> ParcelFileDescriptor <span class="op">=</span> builder<span class="op">.</span>establish<span class="op">()!!</span>            <span class="co">// OS creates TUN</span></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>    startForeground<span class="op">(</span>NOTIF_ID<span class="op">,</span> persistentNotification<span class="op">())</span>              <span class="co">// required: bg tunnel</span></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>    coreStart<span class="op">(</span>cfg<span class="op">.</span>sessionToken<span class="op">,</span> pfd<span class="op">.</span>fd<span class="op">)</span>                              <span class="co">// hand fd to core (attach_tun)</span></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>    <span class="kw">return</span> START_STICKY</span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>  <span class="kw">override</span> <span class="kw">fun</span> <span class="fu">onRevoke</span><span class="op">()</span> <span class="op">{</span> coreStop<span class="op">();</span> emitEvent<span class="op">(</span>REVOKED<span class="op">)</span> <span class="op">}</span>          <span class="co">// O3: OS killed us</span></span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>  <span class="kw">override</span> <span class="kw">fun</span> <span class="fu">onDestroy</span><span class="op">()</span> <span class="op">{</span> coreStop<span class="op">();</span> stopForeground<span class="op">(</span><span class="kw">true</span><span class="op">)</span> <span class="op">}</span>       <span class="co">// O4</span></span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="53-windows--wireguard-ntwintun--privileged-service-crust">5.3
+Windows — <code>wireguard-nt</code>/<code>wintun</code> + privileged
+service (C#/Rust)</h3>
+<p>Flutter runs unprivileged; the tunnel needs admin. So a
+<strong>privileged Windows service</strong> hosts the core and the
+<code>wireguard-nt</code> adapter; the Flutter app talks to it over a
+<strong>named pipe</strong> [04_ARCH §5.3, 04_UI §6].</p>
+<pre><code>[Flutter app (user)] --named-pipe (\\.\pipe\helixvpn)--&gt; [HelixTunnelSvc (SYSTEM)]
+                                                              ├─ wireguard-nt / wintun adapter
+                                                              └─ helix-core (Rust, in-service)</code></pre>
+<ul>
+<li>The service exposes the same <code>TunnelPlatform</code> verbs over
+the pipe (<code>startTunnel</code>/<code>stopTunnel</code>/event
+stream); the Flutter side is a <code>TunnelPlatform</code> impl that
+marshals to the pipe.</li>
+<li>Signing: the service binary + any kernel-adjacent driver are
+Authenticode-signed (§11; §11.4.133 target-system safety — no unsigned
+privileged code).</li>
+<li>Kill-switch on Windows is WFP (Windows Filtering Platform) rules
+driven by the core&#39;s state machine, removed on <code>stopTunnel</code>
+(O4).</li>
+</ul>
+<h3 id="54-linux--kernel-wg--tun-rust-in-process">5.4 Linux — kernel WG
+/ tun (Rust, in-process)</h3>
+<p>Simplest case: on desktop Linux the core drives the TUN
+<strong>in-process</strong> (no separate service needed for a
+user-launched app; a <code>setcap cap_net_admin</code> helper or a small
+polkit-gated helper daemon covers the privilege) [04_ARCH §5.3, 04_P0
+§9]. Kernel WireGuard is the fast path; <code>boringtun</code> userspace
+is the fallback (doc <code>01</code>). This is the Phase-0 G5 reference
+platform — &quot;on Linux the core can drive the TUN directly&quot; [04_P0
+§9].</p>
+<h3 id="55-harmonyos-next--network-kit-ability-arkts--napi--phase-3">5.5
+HarmonyOS NEXT — Network Kit ability (ArkTS → NAPI) — Phase 3</h3>
+<p>HarmonyOS NEXT dropped Android/ART compatibility entirely (native
+ArkTS/ArkUI/ DevEco only) [04_ARCH §5.2]. Build with the
+<strong>OpenHarmony SIG Flutter fork</strong>
+(<code>gitee.com/openharmony-sig/flutter_flutter</code>,
+<code>ohos</code> channel → HAP). The VPN <em>ability</em> and platform
+plugins are written in <strong>ArkTS</strong> and bridge via
+MethodChannel/NAPI to the Rust <code>.so</code>; sign in DevEco. The
+fork lags mainline Flutter — <strong>pin versions, budget plugin
+work</strong>: the UI ports for free, the shim does not [04_UI §6.1].
+Biggest platform risk in the program (§13 Phase 3).</p>
+<h3 id="56-aurora-os--qtc--tun-phase-3">5.6 Aurora OS — Qt/C++ + tun
+(Phase 3)</h3>
+<p>Build with the <strong>OMP Russia Flutter fork</strong>
+(<code>gitlab.com/omprussia/flutter</code>, <code>flutter-aurora</code>
+→ signed RPM); tunnel backend in <strong>Qt/C++</strong>, Flutter
+plugins via <strong>Friflex</strong> [04_ARCH §5.2, 04_UI §6.1].
+Toolchain is Russian-hosted (GitLab omprussia / Mos.Hub) and Aurora is
+enterprise/government-oriented — treat it as an <strong>enterprise
+SKU</strong> with its own CI runners and signing, not a consumer
+afterthought [04_ARCH §5.7].</p>
+<h3 id="57-web--no-shim-console-only">5.7 Web — no shim (Console
+only)</h3>
+<p>Browsers cannot open a TUN device [04_ARCH §5.7, CI3]. The web build
+is <strong>Helix Console (management) + account/config</strong>,
+<em>plus an optional in-page WASM MASQUE client</em> that can proxy
+<em>the browser&#39;s own</em> traffic to a joined network —
+<strong>not</strong> a system-wide tunnel. State this plainly to users:
+&quot;fully responsive web app&quot; = the Console and a browser-scoped proxy,
+never a device VPN. The web flavor has <strong>no
+<code>TunnelPlatform</code> implementation and no
+<code>helix_core_ffi</code> dependency</strong>.</p>
+<hr />
+<h2 id="6-three-flavors-from-one-tree-capability-gating">6. Three
+flavors from one tree (capability gating)</h2>
+<p>Flutter <code>--flavor</code> + distinct entrypoints select the app;
+shared code is 80–90 % of each [04_UI §2]. The flavor&#39;s
+<strong>capability set</strong> gates which features compile/appear — a
+capability the flavor lacks is <strong>tree-shaken out</strong>, keeping
+each binary lean.</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode dart"><code class="sourceCode dart"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co">// apps/access/lib/main_access.dart</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> main() <span class="op">=&gt;</span> runHelixApp(</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  flavor<span class="op">:</span> HelixFlavor<span class="op">.</span>access<span class="op">,</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  home<span class="op">:</span> <span class="at">const</span> ConnectScreen()<span class="op">,</span>       <span class="co">// the big connect button</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  capabilities<span class="op">:</span> <span class="at">const</span> <span class="op">{</span>Capability<span class="op">.</span>tunnel<span class="op">,</span> Capability<span class="op">.</span>account<span class="op">,</span> Capability<span class="op">.</span>splitTunnel<span class="op">},</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="co">// apps/connector/lib/main_connector.dart</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> main() <span class="op">=&gt;</span> runHelixApp(</span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>  flavor<span class="op">:</span> HelixFlavor<span class="op">.</span>connector<span class="op">,</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>  home<span class="op">:</span> <span class="at">const</span> ConnectorDashboard()<span class="op">,</span>  <span class="co">// advertise CIDRs, local status</span></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>  capabilities<span class="op">:</span> <span class="at">const</span> <span class="op">{</span>Capability<span class="op">.</span>tunnel<span class="op">,</span> Capability<span class="op">.</span>advertise<span class="op">,</span> Capability<span class="op">.</span>localAcl<span class="op">},</span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a><span class="co">// apps/console/lib/main_console.dart</span></span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> main() <span class="op">=&gt;</span> runHelixApp(</span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>  flavor<span class="op">:</span> HelixFlavor<span class="op">.</span>console<span class="op">,</span></span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a>  home<span class="op">:</span> <span class="at">const</span> ConsoleShell()<span class="op">,</span>        <span class="co">// tenants/devices/networks/policy/audit</span></span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a>  capabilities<span class="op">:</span> <span class="at">const</span> <span class="op">{</span>Capability<span class="op">.</span>admin<span class="op">},</span>   <span class="co">// NO Capability.tunnel → no core_ffi linked</span></span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a>);</span></code></pre></div>
+<div class="sourceCode" id="cb13"><pre class="sourceCode dart"><code class="sourceCode dart"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix_domain/lib/run_helix_app.dart  (the wiring point)</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="dt">Future</span><span class="op">&lt;</span><span class="dt">void</span><span class="op">&gt;</span> runHelixApp(<span class="op">{</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  required HelixFlavor flavor<span class="op">,</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  required Widget home<span class="op">,</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>  required <span class="dt">Set</span><span class="op">&lt;</span>Capability<span class="op">&gt;</span> capabilities<span class="op">,</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span>) <span class="at">async</span> <span class="op">{</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">final</span> container <span class="op">=</span> ProviderContainer(overrides<span class="op">:</span> [</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>    flavorProvider<span class="op">.</span>overrideWithValue(flavor)<span class="op">,</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>    capabilitiesProvider<span class="op">.</span>overrideWithValue(capabilities)<span class="op">,</span></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">// only flavors with Capability.tunnel get a real HelixCore; Console gets a null impl:</span></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>    helixCoreProvider<span class="op">.</span>overrideWith((ref) <span class="op">=&gt;</span></span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>      capabilities<span class="op">.</span>contains(Capability<span class="op">.</span>tunnel) <span class="op">?</span> RealHelixCore() <span class="op">:</span> NoCore())<span class="op">,</span></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>  ]);</span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>  runApp(UncontrolledProviderScope(container<span class="op">:</span> container<span class="op">,</span></span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>    child<span class="op">:</span> HelixApp(home<span class="op">:</span> home<span class="op">,</span> theme<span class="op">:</span> helixTheme(flavor))));   <span class="co">// theme per role (§7)</span></span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Capability</th>
+<th>Compiles in</th>
+<th>In flavor</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>tunnel</code></td>
+<td><code>helix_core_ffi</code>, <code>TunnelPlatform</code> shim,
+ConnectButton, ShieldIndicator</td>
+<td>Access, Connector</td>
+</tr>
+<tr>
+<td><code>account</code></td>
+<td>account screen, OIDC + anonymous device-token enrollment</td>
+<td>Access</td>
+</tr>
+<tr>
+<td><code>splitTunnel</code></td>
+<td>per-app/per-route bypass UI</td>
+<td>Access</td>
+</tr>
+<tr>
+<td><code>advertise</code></td>
+<td>CIDR advertise UI, overlapping-CIDR conflict surface</td>
+<td>Connector</td>
+</tr>
+<tr>
+<td><code>localAcl</code></td>
+<td>site-local restriction editor</td>
+<td>Connector</td>
+</tr>
+<tr>
+<td><code>admin</code></td>
+<td>tenants/devices/networks/policy/audit/topology +
+<code>helix_api</code> heavy tables</td>
+<td>Console</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Console = the only Web build</strong> because it lacks
+<code>Capability.tunnel</code>, so it never links the Rust staticlib
+(CI3). Connector additionally ships a <strong>headless daemon
+entrypoint</strong> (the same Rust core, no Flutter UI) — the Flutter
+Connector UI is the <em>optional</em> config surface [04_ARCH §5.4].</p>
+</blockquote>
+<hr />
+<h2 id="7-helix_design--the-design-system">7. <code>helix_design</code>
+— the design system</h2>
+<p>A VPN client&#39;s UI has one emotional center of gravity: <strong>am I
+protected right now?</strong> The system makes that state instantly
+legible, then gets out of the way [04_UI §3]. Material 3 is the
+substrate; brand tokens override the defaults so it never reads as a
+stock Flutter app (a real risk to design against).</p>
+<h3 id="71-tokens--the-single-source-of-truth">7.1 Tokens — the single
+source of truth</h3>
+<div class="sourceCode" id="cb14"><pre class="sourceCode dart"><code class="sourceCode dart"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix_design/lib/tokens.dart</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> HelixTokens <span class="op">{</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  <span class="co">// ---- connection-state palette (the signature semantic colors, mapped to TunnelStatus) ----</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">static</span> <span class="at">const</span> stateDisconnected <span class="op">=</span> Color(<span class="dv">0xFF6B7280</span>); <span class="co">// neutral grey  ← Disconnected</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">static</span> <span class="at">const</span> stateConnecting   <span class="op">=</span> Color(<span class="dv">0xFFF59E0B</span>); <span class="co">// amber, in-motion ← Connecting/Handshaking/Reconnecting</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">static</span> <span class="at">const</span> stateConnected    <span class="op">=</span> Color(<span class="dv">0xFF10B981</span>); <span class="co">// green, safe   ← Connected</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">static</span> <span class="at">const</span> stateDanger       <span class="op">=</span> Color(<span class="dv">0xFFEF4444</span>); <span class="co">// red           ← Danger{leak|killswitch_tripped}/Down</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">static</span> <span class="at">const</span> brandSeed <span class="op">=</span> Color(<span class="dv">0xFF3B5BDB</span>);         <span class="co">// drives M3 ColorScheme, overridden per role</span></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>  <span class="co">// spacing 4-base: 4 8 12 16 24 32 48 · radius sm8 md12 lg20 pill999</span></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>  <span class="co">// type: display/headline/title/body/label (M3 scale, brand font — NOT Roboto default)</span></span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>  <span class="co">// motion: fast120 base220 slow360, emphasized easing reserved for state change</span></span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>  <span class="co">// elevation 0..3 used sparingly; flat surfaces, color-as-hierarchy</span></span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><code>light + dark</code> are both first-class (privacy users skew
+dark; respect system + manual override) [04_UI §3.1/§9]. Tokens are
+consumed via a <code>HelixTheme</code> <code>ThemeExtension</code> so
+screens never hardcode colors/spacing — they reference roles
+(<code>context.helix.stateConnected</code>), which keeps the eight
+platforms visually identical and re-themeable (a future white-label is a
+<strong>token swap, not a refactor</strong>).</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode dart"><code class="sourceCode dart"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix_design/lib/theme.dart — the state→color mapping the whole app reads</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="kw">extension</span> HelixThemeX <span class="kw">on</span> BuildContext <span class="op">{</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  Color colorForStatus(TunnelStatus s) <span class="op">=&gt;</span> <span class="cf">switch</span> (s) <span class="op">{</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    Disconnected() <span class="op">=&gt;</span> HelixTokens<span class="op">.</span>stateDisconnected<span class="op">,</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>    Connecting()  <span class="op">||</span> Handshaking() <span class="op">||</span> Reconnecting() <span class="op">=&gt;</span> HelixTokens<span class="op">.</span>stateConnecting<span class="op">,</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>    Connected()   <span class="op">=&gt;</span> HelixTokens<span class="op">.</span>stateConnected<span class="op">,</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>    Danger() <span class="op">||</span> Down() <span class="op">=&gt;</span> HelixTokens<span class="op">.</span>stateDanger<span class="op">,</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span>;</span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="72-signature-components">7.2 Signature components</h3>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Purpose</th>
+<th>Driven by</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ConnectButton</code></td>
+<td>the giant tap target; morphs disconnected→connecting→connected</td>
+<td><code>statusStream</code> color+label+motion (§8)</td>
+</tr>
+<tr>
+<td><code>StatusChip</code></td>
+<td>current transport · path · RTT
+(<code>MASQUE · direct · 23ms</code>)</td>
+<td>live <code>Connected{transport,path,rtt}</code></td>
+</tr>
+<tr>
+<td><code>ExitPicker</code></td>
+<td>choose exit gateway / network / multi-hop chain</td>
+<td><code>core.exits()</code>, RTT-sorted, jurisdiction labels</td>
+</tr>
+<tr>
+<td><code>ShieldIndicator</code></td>
+<td>kill-switch / DNS / DAITA / PQ badges</td>
+<td><code>Shields</code> + honest cost note on tap</td>
+</tr>
+<tr>
+<td><code>NetworkTile</code></td>
+<td>a joined network (Console/Access)</td>
+<td>connector health, advertised CIDRs, access level</td>
+</tr>
+<tr>
+<td><code>PolicyEditor</code></td>
+<td>Console ACL editing</td>
+<td>text + <strong>effect-diff</strong> preview (doc
+<code>02</code>)</td>
+</tr>
+<tr>
+<td><code>AdaptiveScaffold</code></td>
+<td>responsive shell: BottomNav (phone) ⇄ NavigationRail
+(tablet/desktop) ⇄ extended rail (web)</td>
+<td>layout width, <strong>never</strong> <code>Platform.isX</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Avoiding the &quot;default Flutter&quot; look</strong> [04_UI §3.3]: a
+real brand typeface, restrained flat surfaces with color-as-hierarchy,
+one confident accent, generous spacing, and <strong>motion reserved for
+state change</strong> (the connect transition is the one place to spend
+animation budget). The connection state owns the screen; settings
+recede.</p>
+<p><strong>Accessibility (CI5):</strong> semantic labels on
+<code>ConnectButton</code>/<code>ShieldIndicator</code> announce state,
+large-text + high-contrast support, full keyboard nav on desktop/web —
+never rely on color alone for protected/unprotected [04_UI §9].</p>
+<h3 id="73-responsive--adaptive-one-tree-every-form-factor">7.3
+Responsive / adaptive (one tree, every form factor)</h3>
+<div class="sourceCode" id="cb16"><pre class="sourceCode dart"><code class="sourceCode dart"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co">// breakpoints — branch on SIZE, never on Platform.isX (so a resized desktop window</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="co">// behaves like a phone and web &quot;just works&quot;)</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>compact  (<span class="op">&lt;</span> <span class="dv">600</span>)    → BottomNavigationBar · single pane · full<span class="op">-</span>width ConnectButton</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>medium   (<span class="dv">600</span>–<span class="dv">1024</span>) → NavigationRail · master<span class="op">/</span>detail</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>expanded (<span class="op">&gt;</span> <span class="dv">1024</span>)   → extended NavigationRail · multi<span class="op">-</span>pane (Console<span class="op">:</span> list <span class="op">|</span> detail <span class="op">|</span> live events)</span></code></pre></div>
+<p>Touch targets ≥ 48 dp on mobile; pointer + keyboard shortcuts (⌘K
+command palette in Console) on desktop/web. Console&#39;s heavy tables /
+topology graph / policy editor are <strong>deferred-loaded</strong> so
+they never bloat Access/Connector [04_UI §7].</p>
+<hr />
+<h2 id="8-riverpod-data-layer">8. Riverpod data layer</h2>
+<p><strong>Riverpod</strong> is the choice [04_UI §4]: compile-safe DI,
+first-class turning of the FFI/WS <strong>streams</strong> into reactive
+UI, trivial to test (override providers), no <code>BuildContext</code>
+coupling. (Bloc is the viable alternative if the team prefers explicit
+event/state classes — the layering maps onto either; §14
+D-CLIENT-2.)</p>
+<h3 id="81-layering">8.1 Layering</h3>
+<pre><code>UI (widgets)  ─watch→  Providers (state)  ─call→  Use-cases  ─use→  Repositories
+                                                                    ├─ helix_core_ffi  (tunnel control + status stream)
+                                                                    ├─ helix_api       (REST: enroll, devices, policy, networks → doc 02)
+                                                                    └─ WS/SSE client   (live events for Console → doc 02)</code></pre>
+<h3 id="82-the-tunnel-state-provider-access--connector">8.2 The
+tunnel-state provider (Access / Connector)</h3>
+<div class="sourceCode" id="cb18"><pre class="sourceCode dart"><code class="sourceCode dart"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix_domain — turn the Rust core&#39;s event stream into reactive Dart state</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="at">final</span> tunnelStatusProvider <span class="op">=</span> StreamProvider<span class="op">&lt;</span>TunnelStatus<span class="op">&gt;</span>((ref) <span class="op">{</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">final</span> core <span class="op">=</span> ref<span class="op">.</span>watch(helixCoreProvider);</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">return</span> core<span class="op">.</span>statusStream();           <span class="co">// frb StreamSink → Dart Stream — NO polling (CI2)</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span>);</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a><span class="at">final</span> connectControllerProvider <span class="op">=</span></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>    AsyncNotifierProvider<span class="op">&lt;</span>ConnectController<span class="op">,</span> <span class="dt">void</span><span class="op">&gt;</span>(ConnectController<span class="op">.</span><span class="kw">new</span>);</span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> ConnectController <span class="kw">extends</span> AsyncNotifier<span class="op">&lt;</span><span class="dt">void</span><span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>  <span class="kw">@override</span> <span class="dt">Future</span><span class="op">&lt;</span><span class="dt">void</span><span class="op">&gt;</span> build() <span class="at">async</span> <span class="op">{}</span></span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Future</span><span class="op">&lt;</span><span class="dt">void</span><span class="op">&gt;</span> connect(<span class="op">{</span><span class="dt">String</span> transport <span class="op">=</span> <span class="st">&#39;auto&#39;</span><span class="op">}</span>) <span class="at">async</span> <span class="op">{</span></span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">final</span> cfg <span class="op">=</span> <span class="at">await</span> ref<span class="op">.</span>read(sessionProvider)<span class="op">.</span>resolve();</span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">await</span> ref<span class="op">.</span>read(tunnelPlatformProvider)<span class="op">.</span>startTunnel(cfg);   <span class="co">// shim creates TUN + links core</span></span>
+<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Future</span><span class="op">&lt;</span><span class="dt">void</span><span class="op">&gt;</span> disconnect() <span class="op">=&gt;</span> ref<span class="op">.</span>read(tunnelPlatformProvider)<span class="op">.</span>stopTunnel();</span>
+<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Future</span><span class="op">&lt;</span><span class="dt">void</span><span class="op">&gt;</span> toggle(TunnelStatus<span class="op">?</span> s) <span class="op">=&gt;</span></span>
+<span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a>    (s <span class="kw">is</span> Connected) <span class="op">?</span> disconnect() <span class="op">:</span> connect();</span>
+<span id="cb18-19"><a href="#cb18-19" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb19"><pre class="sourceCode dart"><code class="sourceCode dart"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co">// the ConnectButton is a pure function of the stream — no polling, no manual refresh (CI2)</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="at">final</span> status <span class="op">=</span> ref<span class="op">.</span>watch(tunnelStatusProvider);</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>ConnectButton(</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  state<span class="op">:</span> status<span class="op">.</span>valueOrNull <span class="op">??</span> <span class="at">const</span> TunnelStatus<span class="op">.</span>disconnected()<span class="op">,</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>  onTap<span class="op">:</span> () <span class="op">=&gt;</span> ref<span class="op">.</span>read(connectControllerProvider<span class="op">.</span>notifier)<span class="op">.</span>toggle(status<span class="op">.</span>valueOrNull)<span class="op">,</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>);</span></code></pre></div>
+<h3 id="83-console-live-data">8.3 Console live data</h3>
+<p>The Console subscribes to the control-plane WS/SSE
+(<code>GET /v1/stream</code>, doc <code>02</code>) and folds events
+(<code>device.online</code>, <code>route.changed</code>,
+<code>policy.compiled</code>, <code>device.revoked</code>) into Riverpod
+state, so device lists, the topology view, and the audit feed update
+<strong>live without refresh</strong> [04_UI §4.3]. This is the Phase-1
+event taxonomy made visible.</p>
+<h3 id="84-offline--optimistic-behavior-the-honesty-rule">8.4 Offline /
+optimistic behavior (the honesty rule)</h3>
+<p>Access/Connector keep last-known status + a local <em>intent</em>
+(user wants connected) so a flaky control channel never makes the UI
+lie. <strong>The core&#39;s status stream is always the source of truth for
+<em>actual</em> protection state</strong>; the UI distinguishes intended
+from actual (e.g. <code>Reconnecting…</code>) and never paints green on
+intent alone [04_UI §4.4, CI2]. A <code>Danger</code> status overrides
+any intent and paints the red palette immediately.</p>
+<hr />
+<h2 id="9-why-flutter-for-8-platforms-and-not-the-alternatives">9. Why
+Flutter for 8 platforms (and not the alternatives)</h2>
+<p>The brief mandates <strong>iOS, Android, Aurora, HarmonyOS, Windows,
+Linux, macOS, Web</strong> [05_YBO]. <strong>Only Flutter reaches all of
+them</strong> [04_ARCH §5.2]:</p>
+<table>
+<thead>
+<tr>
+<th>Target</th>
+<th>Flutter path</th>
+<th>KMP / Compose MP</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>iOS / Android</td>
+<td>mainline</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Windows / Linux / macOS</td>
+<td>mainline</td>
+<td>✅ (Desktop JVM)</td>
+</tr>
+<tr>
+<td>Web</td>
+<td>mainline (CanvasKit / Wasm)</td>
+<td>✅ (Wasm/JS)</td>
+</tr>
+<tr>
+<td><strong>Aurora OS</strong></td>
+<td><strong>OMP fork</strong> <code>flutter-aurora</code> → signed RPM
+(plugins via Friflex)</td>
+<td>❌ none</td>
+</tr>
+<tr>
+<td><strong>HarmonyOS NEXT</strong></td>
+<td><strong>OpenHarmony SIG fork</strong> <code>ohos</code> channel →
+HAP (ArkTS plugins)</td>
+<td>❌ none</td>
+</tr>
+</tbody>
+</table>
+<p>HarmonyOS NEXT dropped Android/ART entirely (native
+ArkTS/ArkUI/DevEco only) and Aurora is Qt/QML-native — so an Android APK
+or a KMP artifact simply will not run on either. The Flutter forks are
+the <strong>only</strong> realistic single-codebase path [04_ARCH §5.2].
+<strong>Conclusion: Flutter for UI; KMP is not viable for the full
+target set.</strong> Combined with the Rust core, this is the only way
+to hit <em>tiny + fast + 8-platform</em> simultaneously (CI6).</p>
+<hr />
+<h2 id="10-size--memory--performance-budgets">10. Size / memory /
+performance budgets</h2>
+<p>The brief demands tiny, fast, stable [04_UI §10, 05_YBO]. Concrete
+targets and the means:</p>
+<table>
+<thead>
+<tr>
+<th>Budget</th>
+<th>Target</th>
+<th>How</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Mobile install size</td>
+<td>Access <strong>&lt; ~15–20 MB per ABI</strong></td>
+<td><code>--split-per-abi</code>, tree-shake icons/fonts, no bundled
+video, lean Rust staticlib (LTO + strip)</td>
+</tr>
+<tr>
+<td>Cold start</td>
+<td><strong>&lt; 1 s</strong> mid-range mobile</td>
+<td>AOT, deferred non-critical providers, no work on the UI thread at
+launch</td>
+</tr>
+<tr>
+<td>Idle app memory</td>
+<td>single-digit → low-tens MB</td>
+<td>Flutter AOT (no Electron); tunnel-core memory is the Rust
+budget</td>
+</tr>
+<tr>
+<td><strong>iOS NE tunnel core RSS</strong></td>
+<td><strong>under device ceiling, ≥ 30 % headroom</strong> (G3)</td>
+<td>Rust core
+<code>opt-level=z/s</code>+LTO+<code>panic=abort</code>+strip;
+real-device 1 GB soak; both transports (CI4, §5.1)</td>
+</tr>
+<tr>
+<td>Frame budget</td>
+<td>60/120 fps, no jank</td>
+<td><code>const</code> widgets, <code>RepaintBoundary</code> on animated
+state, motion only on state change</td>
+</tr>
+<tr>
+<td>Web (Console)</td>
+<td>fast first paint</td>
+<td>Wasm/CanvasKit, route-level deferred loading, <strong>no core_ffi
+weight</strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Non-negotiable (CI6):</strong> never Electron, never a
+webview-wrapped app for native targets. <strong>Flutter AOT + Rust core
+is the entire reason the size/speed targets are reachable on eight
+platforms at once</strong> [04_UI §10]. The iOS NE ceiling is the
+<em>reason the core is Rust not Go</em> — a Go data plane with its
+runtime + GC would risk the ~15 MB working set [04_ARCH §5.6, SYN
+§5].</p>
+<hr />
+<h2 id="11-build-codegen-signing-ci">11. Build, codegen, signing,
+CI</h2>
+<blockquote>
+<p><strong>§11.4.156 — NO active server-side CI.</strong> GitHub Actions
+/ GitLab pipelines are disabled across all owned repos [SYN §9]. The &quot;CI
+matrix&quot; below describes the <em>local</em> <code>melos</code> build/test
+ritual + the operator&#39;s pre-tag sweep (§11.4.40), not a hosted runner.
+Any preserved workflow file is named
+<code>*.disabled-local-only</code>.</p>
+</blockquote>
+<ul>
+<li><strong><code>melos</code></strong> runs analyze/test/build across
+packages; each app builds per platform via its flavor [04_UI §11].</li>
+<li><strong>Build matrix:</strong> mainline Flutter for
+iOS/Android/Win/macOS/Linux/Web; <strong>separate (local)
+runners</strong> for the OpenHarmony SIG fork (HAP, DevEco signing) and
+the OMP fork (Aurora RPM signing) — pinned to specific fork versions and
+<strong>isolated so a fork lag never blocks mainline
+releases</strong>.</li>
+<li><strong>Codegen + drift check (the no-drift guarantee):</strong>
+<code>flutter_rust_bridge</code> bindings, OpenAPI→Dart client, and
+<code>intl</code> ARBs are generated and <strong>checked for
+drift</strong> — the apps can never silently diverge from the Rust core
+or the control-plane API [04_UI §11, 04_ARCH §4.2]. A drift is a
+build-blocking finding (§12 FFI contract test).</li>
+<li><strong>Signing/notarization per platform:</strong> Apple notarize;
+Windows Authenticode-sign the service + any driver; HarmonyOS DevEco;
+Aurora RPM sign (§11.4.133 — no unsigned privileged code) [04_UI
+§11].</li>
+<li><strong>Recording / release prefixes:</strong> every QA recording is
+prefixed <code>helixvpn---&lt;feature&gt;---&lt;run-id&gt;.mp4</code>
+(§11.4.155); release tags <code>helixvpn-&lt;version&gt;</code>
+(§11.4.151) [SYN §9].</li>
+</ul>
+<hr />
+<h2 id="12-testing-strategy--anti-bluff-evidence">12. Testing strategy +
+anti-bluff evidence</h2>
+<p>Every PASS carries captured evidence per §11.4.5/§11.4.69/§11.4.107;
+the shim is the only untyped seam and is covered on real devices (O5).
+[04_UI §12]</p>
+<table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Tooling</th>
+<th>What it proves</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Widget</td>
+<td><code>flutter_test</code></td>
+<td>each component renders per state (<code>ConnectButton</code> across
+<strong>every</strong> <code>TunnelStatus</code>)</td>
+<td>golden frames</td>
+</tr>
+<tr>
+<td>Golden</td>
+<td><code>golden_toolkit</code></td>
+<td>the design system stays visually stable across themes/breakpoints
+(light+dark, compact/medium/expanded)</td>
+<td>golden PNGs</td>
+</tr>
+<tr>
+<td>State</td>
+<td>Riverpod overrides</td>
+<td>controllers/use-cases with a <strong>fake <code>HelixCore</code> +
+fake API</strong> (same generated model types)</td>
+<td>test logs</td>
+</tr>
+<tr>
+<td>Integration</td>
+<td><code>integration_test</code></td>
+<td>flavor flows: connect→status, advertise→accepted,
+policy-edit→effect-diff</td>
+<td>run recording</td>
+</tr>
+<tr>
+<td><strong>FFI contract</strong></td>
+<td>shared fixtures</td>
+<td>the Dart
+<code>TunnelStatus</code>/<code>ExitOption</code>/<code>Shields</code>
+mirrors match the Rust <code>helix-ffi</code> types
+<strong>byte-for-byte</strong> (generated, asserted) — a drift FAILs the
+build</td>
+<td>golden fixture diff</td>
+</tr>
+<tr>
+<td><strong>Platform shim</strong></td>
+<td>per-OS smoke on <strong>real devices</strong></td>
+<td>tunnel up/down/permission/revoke + the iOS NE memory soak (G3) —
+never a mock-claiming-PASS (§11.4.27)</td>
+<td>device RSS report + window-scoped MP4 (§11.4.159)</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Anti-bluff coupling (§11.4.107/§11.4.158).</strong> A green
+widget test is not proof the user is protected. The <strong>integration
++ platform-shim layers</strong> are the evidence: a window-scoped MP4 of
+the real connect journey on a real device, with the
+<code>StatusChip</code> reading <code>MASQUE · direct · 23ms</code>
+confirmed by OCR/vision validation, plus the iOS NE Instruments RSS
+report. Fake the core/API with the <em>same model types the generators
+produce</em> so unit tests exercise real contracts; but the user-visible
+claim is only earned by the device recording.</p>
+</blockquote>
+<hr />
+<h2 id="13-phase--task--subtask-plan">13. Phase → task → subtask
+plan</h2>
+<p>Aligned to the program roadmap [SYN §4, 04_P0/P1/P2/P3]. Each subtask
+is a workable item (§11.4.93 SQLite SSoT).</p>
+<h3 id="phase-0--prove-the-client-seams-the-spike-04_p0">Phase 0 — prove
+the client seams (the spike) [04_P0]</h3>
+<ul>
+<li><strong>T0.1 FFI boundary (gate G5).</strong>
+<ul>
+<li>S0.1.1 Author <code>helix-ffi/src/api.rs</code> minimal surface
+(<code>start/stop/status_stream</code>).</li>
+<li>S0.1.2 frb v2 codegen → <code>frb_generated.dart</code>; thin
+<code>HelixCore</code> wrapper.</li>
+<li>S0.1.3 Flutter-Linux window: one connect/disconnect toggle + a
+<code>StatusChip</code> that goes
+<code>Connecting → Handshaking → Connected(masque,23ms)</code> driven
+<em>only</em> by the Rust event stream. <strong>G5 pass = that demo
+recorded</strong> [04_P0 §9].</li>
+</ul></li>
+<li><strong>T0.2 iOS NE memory experiment (gate G3 —
+make-or-break).</strong>
+<ul>
+<li>S0.2.1 Build <code>helix-core</code> as
+<code>aarch64-apple-ios</code> staticlib (z/s+LTO+strip); record binary
+size.</li>
+<li>S0.2.2 <code>PacketTunnelProvider</code> skeleton; pump
+<code>packetFlow ⇄ core</code>.</li>
+<li>S0.2.3 Real-device 1 GB soak, plain-UDP <em>and</em> MASQUE
+separately; Instruments RSS on the <strong>extension</strong> process.
+<strong>G3 pass = ≥30 % headroom, 30-min soak, both transports</strong>
+[04_P0 §6]. Record the verdict + fallbacks (§5.1).</li>
+</ul></li>
+<li><strong>T0.3 Static-map reconcile in the UI (gate G6).</strong>
+Drive <code>core.start(mapPath)</code> against
+<code>/etc/helix/map.json</code> (the exact shape Phase-1
+<code>WatchNetworkMap</code> will stream); prove the
+<code>ConnectButton</code> reflects reconcile outcomes.</li>
+</ul>
+<h3 id="phase-1--mvp-client-self-hostable-04_p1">Phase 1 — MVP client
+(self-hostable) [04_P1]</h3>
+<ul>
+<li><strong>T1.1 Promote the FFI surface</strong> to the Phase-1 field
+set (<code>exits</code>, <code>setExit</code>, <code>setShields</code>,
+<code>advertise</code>, <code>attach_tun</code>); regenerate +
+drift-gate.</li>
+<li><strong>T1.2 <code>helix_design</code> v1</strong> — tokens,
+<code>HelixTheme</code>, the 7 signature components, light+dark, golden
+tests.</li>
+<li><strong>T1.3 Riverpod data layer</strong> —
+<code>tunnelStatusProvider</code>, <code>ConnectController</code>,
+<code>helix_api</code> (generated REST) + WS client; offline/intent
+honesty (§8.4).</li>
+<li><strong>T1.4 Three flavors</strong> — <code>runHelixApp</code> +
+capability gating; Access (Connect/ Exits/Shields/Account), Connector
+(Dashboard/Advertise/Local-ACL/headless), Console
+(Devices/Networks/Policy/Audit/Topology, Web build).</li>
+<li><strong>T1.5 Production shims (desktop+mobile)</strong> — Linux
+in-process, Android VpnService+JNI, iOS/macOS NE, Windows service+pipe.
+Per-OS real-device smoke.</li>
+<li><strong>T1.6 Enrollment UX</strong> — device-generated WG keypair
+(private key never leaves), OIDC + anonymous device-token paths, QR
+enroll-token minting in Console.</li>
+<li><strong>T1.7 Kill-switch + DNS-leak UI</strong> —
+<code>ShieldIndicator</code> wired to core state; <code>Danger</code>
+palette on trip; honest cost notes.</li>
+</ul>
+<h3 id="phase-2--parity--reach-client-surface-04_p2">Phase 2 — parity +
+reach (client surface) [04_P2]</h3>
+<ul>
+<li><strong>T2.1 ExitPicker multi-hop</strong> — chain builder,
+jurisdiction labels, RTT sort.</li>
+<li><strong>T2.2 DAITA + post-quantum shields</strong> — toggles +
+honest cost notes; <code>Shields</code> fields wired to core (maybenot
+DAITA, PQ PSK — doc <code>01</code>).</li>
+<li><strong>T2.3 Direct-vs-relay path indicator</strong> —
+<code>StatusChip</code> <code>path</code> field surfaced
+(P2P/NAT-traversal vs DERP-style relay — doc <code>01</code>).</li>
+<li><strong>T2.4 Console policy-as-code / GitOps</strong> —
+<code>PolicyEditor</code> effect-diff + version history + one-click
+rollback.</li>
+</ul>
+<h3 id="phase-3--extended-reach-the-hard-platforms-04_p3-04_ui-61">Phase
+3 — extended reach (the hard platforms) [04_P3, 04_UI §6.1]</h3>
+<ul>
+<li><strong>T3.1 HarmonyOS NEXT</strong> — OpenHarmony SIG fork build,
+ArkTS Network Kit ability, NAPI to the <code>.so</code>, DevEco signing.
+(Biggest platform risk.)</li>
+<li><strong>T3.2 Aurora OS</strong> — OMP fork build, Qt/C++ tunnel
+backend, Friflex bridge, RPM signing; enterprise SKU CI.</li>
+<li><strong>T3.3 Web WASM MASQUE proxy</strong> — optional in-page
+browser-scoped proxy in Console (not a system tunnel; CI3).</li>
+</ul>
+<hr />
+<h2 id="14-open-decisions-surfaced-by-this-document">14. Open decisions
+surfaced by this document</h2>
+<p>Per §11.4.6/§11.4.66 — options + recommendation, never silently
+resolved. These are <em>client-stack</em> decisions (the program-level
+D1–D8 live in doc <code>00</code>).</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Decision</th>
+<th>Option A</th>
+<th>Option B</th>
+<th>Recommendation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>D-CLIENT-1</strong></td>
+<td>iOS NE memory fallback (if G3 fails)</td>
+<td>shrink buffers / cap QUIC windows in iOS build</td>
+<td>move MASQUE off-device for iOS (plain WG only) <strong>or</strong>
+split-core app-extension IPC</td>
+<td><strong>Gate on G3 measurement</strong> (§5.1). Prefer A (buffer
+caps) if it reaches ≥30 % headroom; B only if A insufficient. Each is a
+real product/feature decision — surface to operator [04_P0 §6.4].</td>
+</tr>
+<tr>
+<td><strong>D-CLIENT-2</strong></td>
+<td>App state management</td>
+<td><strong>Riverpod</strong></td>
+<td>Bloc</td>
+<td><strong>Riverpod</strong> — best fit for stream-driven UI +
+testability; the layering maps onto Bloc if the team prefers explicit
+event/state classes [04_UI §4].</td>
+</tr>
+<tr>
+<td><strong>D-CLIENT-3</strong></td>
+<td>Native shim binding generator</td>
+<td><strong>UniFFI</strong> (Swift/Kotlin) + frb (Dart)</td>
+<td>cbindgen C header everywhere</td>
+<td><strong>UniFFI for native shims, frb for Dart</strong> — UniFFI
+gives typed Swift/Kotlin; cbindgen is the fallback where UniFFI support
+is thin (HarmonyOS/Aurora may need raw C) [04_ARCH §5.1, 04_P0
+§6.1].</td>
+</tr>
+<tr>
+<td><strong>D-CLIENT-4</strong></td>
+<td>Connector UI</td>
+<td>Flutter config UI (optional) <strong>+</strong> headless daemon</td>
+<td>headless-only</td>
+<td><strong>Both</strong> — same Rust core; the Flutter UI is the
+<em>optional</em> surface, headless is primary on appliances [04_ARCH
+§5.4].</td>
+</tr>
+<tr>
+<td><strong>D-CLIENT-5</strong></td>
+<td>Web tunnel ambition</td>
+<td>Console + optional WASM MASQUE in-page proxy</td>
+<td>Console only</td>
+<td><strong>A (Phase 3)</strong> — be explicit it is browser-scoped,
+never a device VPN (CI3) [04_ARCH §5.7].</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="15-cross-document-contracts-this-document-fixes">15.
+Cross-document contracts this document fixes</h2>
+<table>
+<thead>
+<tr>
+<th>Contract</th>
+<th>Fixed value</th>
+<th>Consumed by</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>FFI surface</strong>
+(<code>start/stop/status_stream/exits/setExit/setShields/advertise/attach_tun</code>)
++ mirrored
+<code>TunnelStatus</code>/<code>Shields</code>/<code>ExitOption</code></td>
+<td>§3</td>
+<td>doc <code>01</code> (must emit these events), all apps</td>
+</tr>
+<tr>
+<td><strong><code>TunnelPlatform</code> channel contract</strong>
+(<code>startTunnel/stopTunnel/events</code>, <code>TunnelConfig</code>,
+<code>PlatformTunnelEvent</code>)</td>
+<td>§4</td>
+<td>every per-platform shim, doc <code>02</code>
+(<code>device.revoked</code> → <code>revoked</code> event)</td>
+</tr>
+<tr>
+<td><strong>Flavor + capability model</strong>
+(<code>runHelixApp</code>, <code>Capability.*</code>)</td>
+<td>§6</td>
+<td>the three apps; Console-no-core-ffi rule</td>
+</tr>
+<tr>
+<td><strong>Connection-state palette</strong>
+(<code>Disconnected/Connecting/Connected/Danger</code> → tokens)</td>
+<td>§7.1</td>
+<td><code>helix_design</code>, every screen</td>
+</tr>
+<tr>
+<td><strong>UI-is-a-pure-function-of-the-status-stream</strong> rule
+(CI2)</td>
+<td>§0.1/§8</td>
+<td>all reactive UI; the honesty guarantee</td>
+</tr>
+<tr>
+<td><strong>iOS NE memory ceiling = the Rust-core justification</strong>
+(G3)</td>
+<td>§5.1/§10</td>
+<td>doc <code>01</code> build flags, the whole &quot;Rust not Go&quot; thesis</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="sources-verified">Sources verified</h2>
+<ul>
+<li><code>04_VPN_CLD/HelixVPN-helix-ui-Flutter.md</code>
+<code>[04_UI]</code> — §0 (is/is-not), §1 (melos layout), §2 (flavors),
+§3 (design system + tokens + signature components), §4 (Riverpod), §5
+(FFI surface), §6 (per-platform shim matrix + HarmonyOS/Aurora), §7
+(responsive), §9 (a11y/i18n), §10 (budgets), §11 (build/CI), §12
+(testing).</li>
+<li><code>04_VPN_CLD/HelixVPN-Architecture-Refined.md</code>
+<code>[04_ARCH]</code> — §5.1–§5.7 (two-cores strategy, why Flutter,
+shim matrix, three apps, reuse map, size/ memory/speed, honest platform
+caveats), §9 (observability), §11 (repo layout).</li>
+<li><code>04_VPN_CLD/HelixVPN-Phase0-Spike.md</code>
+<code>[04_P0]</code> — §4.5 (orchestrator + <code>TunnelStatus</code>
+broadcast), §6 (iOS NE memory experiment G3 + fallbacks), §9 (FFI
+boundary G5 + Rust/Dart skeletons), §10 (static map shape), §11
+(graduation).</li>
+<li><code>[05_YBO]</code> operator mandate — eight-platform requirement;
+tiny/fast/stable app bar. <code>[SYN]</code> cross-document synthesis —
+§4 (phases), §5 (client architecture), §6 (repo layout), §9
+(constitution bindings).</li>
+<li>Sibling final docs <code>00-product-scope-and-principles.md</code>
+(roles, D1–D8), <code>01-data-plane.md</code> (Transport trait,
+<code>helix-wg</code>, orchestrator, status events), <code>02</code>
+(control plane: REST/WS, <code>WatchNetworkMap</code>, enrollment,
+<code>device.revoked</code>).</li>
+</ul>
+<p>*Constitution: §11.4.44 (revision header), §11.4.6/§11.4.66
+(decisions = options</p>
+<ul>
+<li>recommendation), §11.4.5/§11.4.69/§11.4.107/§11.4.158/§11.4.159
+(captured/ window-scoped evidence), §11.4.28/§11.4.74 (decoupled
+reusable packages), §11.4.151/§11.4.155 (release/recording prefixes),
+§11.4.156 (no active CI), §11.4.133 (signed privileged code / target
+safety).*</li>
+</ul>
+<p><em>End of document 03 — Clients (helix-core FFI, Flutter helix-ui,
+per-platform shims).</em></p>
+</body>
+</html>

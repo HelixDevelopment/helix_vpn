@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>RESEARCH hysteria2</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">RESEARCH hysteria2</h1>
+</header>
+<h1 id="research-hysteria2">RESEARCH hysteria2</h1>
+<p>Deep web research for a Mullvad-parity self-hosted VPN spec. Topic:
+Hysteria2 + Salamander vs MASQUE; sing-box; AmneziaWG;
+udp2tcp/Shadowsocks; which obfuscation survives which censorship regime.
+All facts cite a source URL + access date. Web access:
+<strong>YES</strong> (WebSearch reachable; WebFetch blocked on a few
+domains — <code>v2.hysteria.network</code>, <code>mullvad.net</code> —
+worked around via mirrors/search summaries). Access date for all entries
+unless noted: <strong>2026-06-25</strong>.</p>
+<hr />
+<h2 id="1-hysteria2--salamander--gecko-obfuscation">1. Hysteria2 +
+Salamander / Gecko obfuscation</h2>
+<p><strong>What it is.</strong> Hysteria is a TCP &amp; UDP proxy built
+on <strong>QUIC (RFC 9000) with the Unreliable Datagram Extension (RFC
+9221)</strong>. The protocol shipped since v2.0.0 is internally &quot;v4&quot;. It
+is designed for speed + censorship resistance, with a custom
+congestion-control called <strong>Brutal</strong> that deliberately
+<em>ignores packet loss</em> to maximise throughput on lossy/throttled
+links (the &quot;bandwidth cheating&quot; behaviour — the client tells the server
+a fixed bandwidth and Brutal sends at that rate regardless of loss
+signals). [hysteria protocol docs; sing-box hysteria2 docs]</p>
+<p><strong>Salamander obfuscation.</strong> Encapsulates <em>all</em>
+QUIC packets. The obfuscator computes a <strong>BLAKE2b-256</strong>
+hash of a randomly-generated <strong>8-byte salt</strong> appended to a
+<strong>user-provided pre-shared key</strong>, and XOR/scrambles every
+packet into seemingly-random bytes with no pattern. Purpose: defeat
+networks that specifically fingerprint/block <strong>QUIC or
+HTTP/3</strong> (but not UDP in general) — it hides the QUIC Initial
+packet structure so DPI cannot see a QUIC handshake or SNI. It does
+<strong>not</strong> help where UDP itself is blocked. [hysteria
+protocol docs]</p>
+<p><strong>Gecko (experimental).</strong> Builds on Salamander and
+<em>additionally fragments the QUIC handshake packets into
+randomly-sized, randomly-padded chunks</em> (configurable
+<code>min_packet_size</code> / <code>max_packet_size</code>). This
+directly targets the GFW&#39;s single-datagram QUIC-Initial inspection
+weakness (see §5). Added to both apernet hysteria and sing-box in
+2025–2026. [sing-box changelog; hysteria changelog]</p>
+<p><strong>Current version (load-bearing fact):</strong>
+apernet/hysteria latest = <strong>app/v2.9.2, released
+2026-05-23</strong>. That release adds the <strong>Gecko</strong>
+obfuscation, fixes a UDP ACL-bypass security issue, and OOM hardening.
+(&quot;important security fixes … strongly encourage everyone to upgrade.&quot;)
+[github.com/apernet/hysteria/releases]</p>
+<p><strong>Auth.</strong> Hysteria2 uses a password/userpass over an
+HTTP/3-style auth exchange inside the QUIC tunnel; combined with
+Salamander PSK this gives two independent secrets (PSK for the wire
+obfuscation, password for authz).</p>
+<hr />
+<h2 id="2-masque-connect-udp-rfc-9298--and-mullvads-2025-deployment">2.
+MASQUE (CONNECT-UDP, RFC 9298) — and Mullvad&#39;s 2025 deployment</h2>
+<p><strong>What it is.</strong> <strong>RFC 9298 &quot;Proxying UDP in HTTP&quot;
+(Aug 2022)</strong> defines CONNECT-UDP: the client sends an Extended
+CONNECT with <code>:protocol = connect-udp</code>, encodes target
+host/port in a URI template, and the proxy maps <strong>QUIC DATAGRAM
+frames ↔︎ UDP packets</strong> to the target. Over HTTP/3 it is
+native-UDP; <strong>RFC 9298 + RFC 9484 (CONNECT-IP) require HTTP/2
+fallback</strong> when QUIC is unavailable (works in
+maximally-restrictive nets, but loses native-UDP semantics →
+TCP-over-TCP-ish). [ietf-wg-masque draft / http.dev/masque]</p>
+<p><strong>Mullvad&#39;s production use (the parity target).</strong>
+Mullvad shipped <strong>&quot;QUIC Obfuscation for WireGuard&quot;</strong> on
+<strong>2025-09-09, app version 2025.9</strong>, on all desktop
+platforms (Android/iOS announced as forthcoming). It <strong>tunnels
+WireGuard&#39;s UDP through an HTTP/3 proxy using MASQUE (RFC 9298)</strong>
+so the traffic &quot;resemble[s] standard web activity.&quot; Default behaviour:
+the desktop app <strong>automatically tries QUIC after failed connection
+attempts</strong> (can be forced permanently in settings/CLI). It is
+positioned for &quot;regions/networks where WireGuard or Mullvad&#39;s other
+obfuscation methods face restrictions.&quot; Mullvad published <strong>no
+performance/overhead numbers</strong> and stated <strong>no explicit
+threat it does not defend against</strong> in the launch post. [mullvad
+blog 2025/9/9; alternativeto.net 2025-09]</p>
+<p><strong>Tooling.</strong> <code>quic-go/masque-go</code> is the
+reference Go implementation of RFC 9298 (MASQUE over HTTP/3) — directly
+relevant if building a self-hosted MASQUE proxy in Go.
+[github.com/quic-go/masque-go]</p>
+<hr />
+<h2 id="3-sing-box-protocol-landscape-20252026">3. sing-box protocol
+landscape (2025–2026)</h2>
+<p>sing-box supports the relevant censorship-resistant set:
+<strong>Hysteria2, TUIC, VLESS+ Reality, ShadowTLS, AnyTLS, Shadowsocks,
+Trojan, WireGuard</strong>. Key facts:</p>
+<ul>
+<li><strong>Hysteria2</strong> — QUIC + Brutal; &quot;measurably higher
+throughput than TCP-based alternatives on stable connections&quot;;
+<strong>Gecko</strong> obfuscation added as a new QUIC obfs type with
+<code>min/max_packet_size</code>. Caveat: UDP-based, so <strong>blocked
+in corporate/restricted nets that drop UDP</strong> → best as one option
+in a fallback chain, not a sole solution. [sing-box hysteria2 docs;
+sing-box changelog]</li>
+<li><strong>VLESS + Reality</strong> — the standout for DPI evasion:
+borrows the <strong>TLS fingerprint of a real high-traffic
+site</strong>, making connections indistinguishable from normal HTTPS to
+DPI. TCP-based → survives UDP blocks. [curevpn comparison;
+sing-box]</li>
+<li><strong>AnyTLS</strong> (added to sing-box ~<strong>March
+2025</strong>) — designed to mitigate TLS-proxy traffic-shape
+characteristics with a new multiplexing scheme. [sing-box
+changelog]</li>
+<li><strong>ShadowTLS</strong> — wraps an inner protocol inside a real
+TLS handshake to a real site so the handshake passes as genuine TLS.
+[sing-box]</li>
+</ul>
+<p>Architectural takeaway: a Mullvad-parity self-host wants <strong>a
+QUIC/UDP primary (Hysteria2 or MASQUE) + a TLS-camouflage TCP fallback
+(Reality / ShadowTLS / AnyTLS) + a UDP-block fallback
+(udp2tcp/Phantun)</strong> rather than one protocol.</p>
+<hr />
+<h2 id="4-amneziawg--obfuscated-wireguard-the-wireguard-native-alternative">4.
+AmneziaWG — obfuscated WireGuard (the WireGuard-native alternative)</h2>
+<p>WireGuard fork adding protocol-level obfuscation against DPI. The
+standard WireGuard fingerprint DPI exploits: <strong>fixed 32-bit
+message types (1–4) + invariant packet sizes</strong> (handshake init
+always <strong>148 bytes</strong>, response always <strong>92
+bytes</strong>). AmneziaWG breaks both:</p>
+<ul>
+<li><strong>Junk packets:</strong> before each handshake, send
+<code>Jc</code> junk packets of random size <code>Jmin..Jmax</code>
+(noise; client-side recommended only).</li>
+<li><strong>Header/size obfuscation (AmneziaWG 2.0):</strong> dynamic
+header ranges instead of static 1–4, random padding on all message
+types, extended signature/junk (&quot;CPS&quot;) packets before handshakes to
+mimic other UDP protocols. <strong>Every server effectively speaks its
+own dialect → no universal DPI signature.</strong></li>
+<li><strong>Performance:</strong> ~3% throughput cost on an uncensored
+net (WireGuard 95 Mbps vs AmneziaWG 92 Mbps in a cited benchmark).</li>
+<li>Still <strong>UDP-based</strong> → does not survive a hard UDP block
+on its own (pair with udp2tcp/Phantun). [docs.amnezia.org/amnezia-wg;
+dev.to AmneziaWG 2.0; deepwiki amneziawg-go]</li>
+</ul>
+<p>Relevance to a Mullvad-parity self-host: AmneziaWG is the
+<em>lowest-overhead</em> DPI evasion when the threat is
+<strong>WireGuard fingerprinting, not UDP blocking</strong>; MASQUE/
+Hysteria2 are heavier but survive QUIC-permitting nets and
+HTTP-camouflage regimes.</p>
+<hr />
+<h2 id="5-which-obfuscation-survives-which-censorship-regime">5. Which
+obfuscation survives which censorship regime</h2>
+<h3 id="a-china-gfw--sni-based-quic-censorship-usenix-security-2025">(a)
+China GFW — SNI-based QUIC censorship (USENIX Security 2025)</h3>
+<ul>
+<li>GFW began <strong>blocking QUIC by SNI since ~2024-04-07</strong>;
+independently confirmed by USENIX Sec &#39;25 (&quot;Exposing and Circumventing
+SNI-based QUIC Censorship of the GFW&quot;) and UPB-SysSec (discovered
+<strong>Jan 2025</strong>, tested <strong>Mar–Apr 2025</strong>).</li>
+<li>Mechanism: GFW <strong>derives the QUIC-Initial decryption key from
+the packet header</strong> (the key is header-derivable per RFC 9001),
+extracts the <strong>SNI</strong>, matches a blocklist. Weekly it
+blocked an avg of <strong>43.8K FQDNs</strong> (Oct 2024–Jan 2025).</li>
+<li><strong>Critical weakness for circumvention:</strong> the GFW
+<strong>does NOT reassemble QUIC Initials split across &gt;1 UDP
+datagram.</strong> Chrome (since 2024-09-13) made Initials too large for
+one datagram → GFW less effective; Hysteria/sing-box/Xray added GFW-QUIC
+workarounds <strong>almost immediately</strong>. Firefox (Apr 2025)
+splits SNI to slip past. → <strong>Gecko&#39;s handshake fragmentation
+directly defeats this.</strong></li>
+<li>Enforcement is <strong>residual</strong> (3-min block after a
+trigger; ~500ms to start; 58% 3-tuple / 37% 4-tuple). Long-lived QUIC
+tunnels are disrupted; short-lived may complete in the uncensored
+window. <strong>Salamander (full QUIC scramble) hides the SNI/Initial
+entirely → survives this regime</strong>; plain QUIC does not.</li>
+<li>Researchers explicitly warn QUIC-reliant tools to &quot;anticipate
+further GFW efforts to block QUIC and increased residual censorship.&quot;
+[gfw.report/usenixsecurity25; upb-syssec.github.io/blog/2025/quic-china;
+theregister 2025-08-04]</li>
+</ul>
+<h3 id="b-hard-udp-block--udp-throttling-common-in-china-domestic--corporate">(b)
+Hard UDP block / UDP throttling (common in China domestic +
+corporate)</h3>
+<ul>
+<li>QUIC/Hysteria2/MASQUE-over-H3/WireGuard/AmneziaWG <strong>all
+fail</strong> — they need UDP.</li>
+<li>Survivors: <strong>TCP-camouflage</strong> (VLESS+Reality,
+ShadowTLS, AnyTLS) <strong>or</strong> <strong>udp2tcp</strong>:
+<code>dndx/phantun</code> masquerades UDP as a <em>fake</em> TCP stream
+through L3/L4 NAT/firewalls, <strong>12-byte overhead</strong>, no real
+TCP retransmit/flow-control penalty (user-mode TCP state machine, 100%
+safe Rust). Standard pairing: WireGuard/ AmneziaWG <strong>over
+Phantun</strong> for UDP-blocked nets. MASQUE&#39;s <strong>HTTP/2
+fallback</strong> is the in-protocol analogue. [github.com/dndx/phantun;
+deepwiki phantun; mullvad]</li>
+</ul>
+<h3 id="c-sni-filtering--tls-based-dpi-tcp-443">(c) SNI filtering /
+TLS-based DPI (TCP 443)</h3>
+<ul>
+<li>Survivors: <strong>VLESS+Reality</strong> (real-site TLS
+fingerprint), <strong>ShadowTLS</strong> (real TLS handshake to a real
+host), <strong>AnyTLS</strong>. Salamander-obfuscated QUIC also has no
+SNI on the wire. Plain TLS proxies with a self-issued cert are
+detectable. [sing-box]</li>
+</ul>
+<h3 id="d-active-probing-shadowsocks-class">(d) Active probing
+(Shadowsocks-class)</h3>
+<ul>
+<li>GFW passively flags suspicious connections (partly by
+<strong>packet-size</strong> distribution), then <strong>actively probes
+the server</strong> to confirm. Mitigation: randomise packet sizes; AEAD
+Shadowsocks + probe-resistant front. Hysteria2&#39;s password auth +
+Salamander make active probing return nothing useful (no protocol
+response to an unauthenticated prober).
+[gfw.report/blog/gfw_shadowsocks; gfw.report/blog/ss_advise]</li>
+</ul>
+<hr />
+<h2 id="6-hysteria2-primary-vs-masque-primary--the-tradeoff-current-facts">6.
+Hysteria2-primary vs MASQUE-primary — the tradeoff (current facts)</h2>
+<table>
+<thead>
+<tr>
+<th>Axis</th>
+<th><strong>Hysteria2-primary</strong> (+ Salamander/Gecko)</th>
+<th><strong>MASQUE-primary</strong> (RFC 9298, à la Mullvad)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Standardisation</td>
+<td>Custom protocol, single main impl (apernet) + sing-box</td>
+<td><strong>IETF RFC 9298</strong>, multiple impls (masque-go,
+Cloudflare, Apple Private Relay)</td>
+</tr>
+<tr>
+<td>Throughput on lossy/throttled links</td>
+<td><strong>Best</strong> — Brutal ignores loss, &quot;bandwidth
+cheating&quot;</td>
+<td>Standard QUIC congestion control (fair, lower on lossy links)</td>
+</tr>
+<tr>
+<td>Looks like normal web traffic</td>
+<td>Salamander = random noise (hides QUIC, but <em>is</em> unusual UDP);
+Gecko fragments</td>
+<td><strong>Strong</strong> — genuinely <em>is</em> HTTP/3 to an HTTP
+proxy; blends with web</td>
+</tr>
+<tr>
+<td>GFW QUIC-SNI (2024–25)</td>
+<td>Survives via Salamander (no SNI) / Gecko (frag)</td>
+<td>Survives <strong>iff</strong> the H3 proxy&#39;s own SNI is
+unblocked/fronted; otherwise SNI-filtered like any QUIC</td>
+</tr>
+<tr>
+<td>Hard UDP block</td>
+<td>Fails (needs UDP) — add Phantun</td>
+<td><strong>Has in-protocol HTTP/2 fallback</strong> (degraded but
+connects)</td>
+</tr>
+<tr>
+<td>Self-host maturity</td>
+<td>Very mature, one-click installers, low-RAM</td>
+<td>Newer for self-host; masque-go exists; more moving parts</td>
+</tr>
+<tr>
+<td>WireGuard compatibility</td>
+<td>Tunnels arbitrary TCP/UDP incl. WG</td>
+<td><strong>Designed to carry WireGuard UDP</strong> (Mullvad&#39;s exact
+model)</td>
+</tr>
+<tr>
+<td>Ecosystem clients</td>
+<td>sing-box, mihomo, NekoBox, etc.</td>
+<td>sing-box (less mature), Mullvad app, browsers&#39; H3 stacks</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Synthesis for a Mullvad-parity self-host:</strong></p>
+<ul>
+<li><strong>Primary</strong> should be a <strong>QUIC/UDP obfuscated
+transport</strong>. Mullvad chose <strong>MASQUE</strong> because it is
+an <strong>IETF standard that genuinely looks like HTTP/3 web
+traffic</strong> and carries WireGuard UDP — strongest &quot;blend in&quot; +
+in-protocol HTTP/2 fallback.</li>
+<li><strong>Hysteria2 + Salamander/Gecko</strong> beats MASQUE on
+<strong>raw throughput over throttled/lossy links</strong> and on
+<strong>out-of-the-box GFW-QUIC evasion (Gecko frag)</strong>, with far
+more mature self-host tooling — but it is a non-standard protocol whose
+obfuscation is <em>random noise</em> rather than <em>genuine web
+traffic</em>.</li>
+<li><strong>Neither survives a hard UDP block alone</strong> → both need
+a TCP fallback (MASQUE: native HTTP/2 fallback; Hysteria2: pair with
+<strong>Phantun udp2tcp</strong> or a Reality/ShadowTLS sibling).</li>
+<li><strong>Recommended layered design:</strong> MASQUE
+<strong>or</strong> Hysteria2/Gecko as QUIC primary → AmneziaWG for
+low-overhead WG-fingerprint evasion where UDP is allowed → Phantun
+(udp2tcp) + VLESS-Reality/ShadowTLS as the UDP-blocked / SNI-filtered
+fallback chain. This mirrors Mullvad&#39;s &quot;auto-try obfuscation after
+failure&quot; model.</li>
+</ul>
+<hr />
+<h2 id="sources-verified">Sources verified</h2>
+<ul>
+<li><a href="https://v2.hysteria.network/docs/developers/Protocol/">https://v2.hysteria.network/docs/developers/Protocol/</a>
+— Hysteria2 protocol, Salamander/Gecko, QUIC RFC 9000 + datagram ext
+(accessed 2026-06-25, via WebSearch summary; direct fetch blocked)</li>
+<li><a href="https://github.com/apernet/hysteria/releases">https://github.com/apernet/hysteria/releases</a>
+— latest app/v2.9.2, 2026-05-23, Gecko + UDP ACL security fix (accessed
+2026-06-25)</li>
+<li><a href="https://v2.hysteria.network/docs/Changelog/">https://v2.hysteria.network/docs/Changelog/</a>
+— Hysteria changelog (accessed 2026-06-25, via search)</li>
+<li><a href="https://sing-box.sagernet.org/configuration/outbound/hysteria2/">https://sing-box.sagernet.org/configuration/outbound/hysteria2/</a>
+— sing-box Hysteria2 (accessed 2026-06-25)</li>
+<li><a href="https://sing-box.sagernet.org/changelog/">https://sing-box.sagernet.org/changelog/</a>
+— sing-box changelog, AnyTLS Mar 2025, Gecko (accessed 2026-06-25)</li>
+<li><a href="https://mullvad.net/en/blog/2025/9/9/introducing-quic-obfuscation-for-wireguard">https://mullvad.net/en/blog/2025/9/9/introducing-quic-obfuscation-for-wireguard</a>
+— Mullvad MASQUE/QUIC obfuscation, RFC 9298, v2025.9, 2025-09-09
+(accessed 2026-06-25, via alternativeto mirror; direct fetch
+blocked)</li>
+<li><a href="https://alternativeto.net/news/2025/9/mullvad-vpn-adds-quic-obfuscation-for-wireguard-to-bypass-censorship/">https://alternativeto.net/news/2025/9/mullvad-vpn-adds-quic-obfuscation-for-wireguard-to-bypass-censorship/</a>
+— Mullvad launch details + dates (accessed 2026-06-25)</li>
+<li><a href="https://ietf-wg-masque.github.io/draft-ietf-masque-connect-udp/draft-ietf-masque-connect-udp.html">https://ietf-wg-masque.github.io/draft-ietf-masque-connect-udp/draft-ietf-masque-connect-udp.html</a>
+— RFC 9298 CONNECT-UDP (accessed 2026-06-25)</li>
+<li><a href="https://http.dev/masque">https://http.dev/masque</a> —
+MASQUE explained, HTTP/2 fallback requirement (accessed 2026-06-25)</li>
+<li><a href="https://github.com/quic-go/masque-go">https://github.com/quic-go/masque-go</a>
+— masque-go reference impl RFC 9298 (accessed 2026-06-25)</li>
+<li><a href="https://docs.amnezia.org/documentation/amnezia-wg/">https://docs.amnezia.org/documentation/amnezia-wg/</a>
+— AmneziaWG obfuscation params (accessed 2026-06-25)</li>
+<li><a href="https://dev.to/bivlked/amneziawg-20-self-host-an-obfuscated-wireguard-vpn-that-bypasses-dpi-4692">https://dev.to/bivlked/amneziawg-20-self-host-an-obfuscated-wireguard-vpn-that-bypasses-dpi-4692</a>
+— AmneziaWG 2.0 junk packets, 148/92-byte fingerprint, ~3% perf
+(accessed 2026-06-25)</li>
+<li><a href="https://deepwiki.com/amnezia-vpn/amneziawg-go">https://deepwiki.com/amnezia-vpn/amneziawg-go</a>
+— AmneziaWG obfuscation features (accessed 2026-06-25)</li>
+<li><a href="https://gfw.report/publications/usenixsecurity25/en/">https://gfw.report/publications/usenixsecurity25/en/</a>
+— USENIX Sec &#39;25 SNI-based QUIC censorship of GFW (accessed
+2026-06-25)</li>
+<li><a href="https://upb-syssec.github.io/blog/2025/quic-china/">https://upb-syssec.github.io/blog/2025/quic-china/</a>
+— GFW QUIC-Initial SNI key derivation, residual censorship
+3-tuple/4-tuple, timeline (accessed 2026-06-25)</li>
+<li><a href="https://www.theregister.com/2025/08/04/china_great_firewall_quic_security_flaws/">https://www.theregister.com/2025/08/04/china_great_firewall_quic_security_flaws/</a>
+— GFW QUIC upgrade analysis (accessed 2026-06-25)</li>
+<li><a href="https://gfw.report/blog/gfw_shadowsocks/">https://gfw.report/blog/gfw_shadowsocks/</a>
+— Shadowsocks active probing + packet-size detection (accessed
+2026-06-25)</li>
+<li><a href="https://gfw.report/blog/ss_advise/en/">https://gfw.report/blog/ss_advise/en/</a>
+— defend against GFW active probing (accessed 2026-06-25)</li>
+<li><a href="https://github.com/dndx/phantun">https://github.com/dndx/phantun</a>
+— Phantun udp2tcp, 12-byte overhead, fake-TCP (accessed 2026-06-25)</li>
+<li><a href="https://deepwiki.com/dndx/phantun">https://deepwiki.com/dndx/phantun</a>
+— Phantun internals (accessed 2026-06-25)</li>
+<li><a href="https://www.wireguard.com/known-limitations/">https://www.wireguard.com/known-limitations/</a>
+— WireGuard UDP-only limitation (accessed 2026-06-25)</li>
+</ul>
+</body>
+</html>

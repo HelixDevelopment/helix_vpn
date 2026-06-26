@@ -1,7 +1,7 @@
 # Security, Privacy & PKI
 
-**Revision:** 1
-**Last modified:** 2026-06-25T00:00:00Z
+**Revision:** 2
+**Last modified:** 2026-06-26T12:00:00Z
 
 > Master technical specification — document 04 of the HelixVPN set.
 > Scope: the **security model, identity, public-key infrastructure, edge hardening,
@@ -171,8 +171,8 @@ data ever being stored. This is the privacy-VPN front end's default for end user
   its **Argon2id hash** is stored (`enroll_tokens.token_hash`), never the plaintext (S11-class
   secret hygiene). The plaintext is shown/QR'd exactly once.
 - Tokens are **single-use** (consumed on `Enroll`) or **bounded multi-use** (admin-set `max_uses`
-  for fleet rollout), always with a short TTL (default 15 min, max 24 h) and an optional
-  `bind_kind` (`client|connector`).
+  for fleet rollout), always with a short TTL (default **1 h**, clamped **[5 m, 24 h]**) and an
+  optional `bind_kind` (`client|connector`).
 - The resulting `users` row has `email = NULL`, `oidc_sub = NULL`; the device is owned by a
   synthetic "anonymous" user scoped to the tenant. No reverse-link to a human exists by design.
 
@@ -294,7 +294,7 @@ pub struct EnrolledIdentity {
     pub cert_der:   Vec<u8>,        // current device cert (mTLS leaf)
     pub cert_key:   SigningKey,     // Ed25519 leaf private — also sealed in keystore
     pub ca_chain:   Vec<Vec<u8>>,   // for pinning the control channel
-    pub renew_at:   SystemTime,     // = not_after - renew_window
+    pub renew_at:   SystemTime,     // = not_after - renewSkew (renewSkew = max(1h, 0.2×TTL), §4.5)
 }
 
 pub trait Enroller {
@@ -348,13 +348,12 @@ here so the wire format need not change later [04_P2 §0 "everything additive", 
 ```mermaid
 flowchart TD
   Root["Tenant CA root key (Ed25519)<br/>offline / KMS / HSM — the one true secret (S11)"]
-  Int["(optional) Intermediate CA<br/>online signer, short-lived"]
+  Int["Issuing CA (intermediate, Ed25519)<br/>online signer, ~1y — signs EVERY device leaf"]
   Leaf["Per-device leaf cert (Ed25519)<br/>≤24h, mTLS control channel (S4)"]
   WGgw["Gateway WG static key<br/>rotated independently"]
   WGdev["Per-device WG static key<br/>device-generated (S2), rotated on schedule + on revoke"]
   PSK["PQ-derived PSK (ML-KEM)<br/>per-session, rekey interval (§9)"]
-  Root --> Int --> Leaf
-  Root -.->|MVP: root signs leaves directly| Leaf
+  Root -->|MVP: offline root signs the issuing CA once| Int -->|MVP: issuing CA signs every device leaf| Leaf
   WGgw -. independent .-> WGdev
   WGdev -. mixed-in .-> PSK
 ```
@@ -371,22 +370,31 @@ Three **independent** key planes, deliberately uncoupled so a compromise in one 
 
 ### 4.2 Certificate authority topology (decision, with recommendation)
 
+> **Reconciled (§11.4.35, 2026-06-26) — `D-PKI-CA-TIER`: MVP ships a two-tier issuing CA**
+> (source-aligned with the authoritative control-plane spec
+> [`v03-control-plane/svc-pki.md` §2] and [`v05-security/pki-and-certs.md`]): an **offline /
+> KMS root** signs an **online issuing intermediate** once, and the issuing intermediate signs
+> **every** ≤24 h device leaf. The earlier "single-tier (root signs leaves directly) is the MVP
+> default, two-tier is Phase 2" framing was stale and is corrected below.
+
 | Option | Description | Pro | Con | Recommendation |
 |---|---|---|---|---|
-| **A. Single-tier per-tenant CA** | Tenant CA root signs device leaves directly. | Simplest; one key to back up per tenant; matches [04_P1 §6.3]. | Root key must be reachable by the online signer (or signing is offline-batched, impractical for 24 h certs). | **MVP default.** Root lives in KMS; the `pki` service holds a *signing grant*, not the raw key. |
-| **B. Two-tier (root + online intermediate)** | Offline root signs a short-lived intermediate; intermediate (online) signs leaves. | Root stays fully offline; intermediate rotates; cleaner revocation blast radius. | More moving parts; intermediate rotation tooling. | **Phase 2** for managed/multi-region — reserve the `ca_chain` field now (§3.2) so the leaf chain already carries an intermediate slot. |
+| **A. Single-tier per-tenant CA** | Tenant CA root signs device leaves directly. | Simplest; one key to back up per tenant. | Root key must be reachable by the online signer for every 24 h leaf — the offline-root property is lost, larger compromise blast radius. | **Rejected for MVP** — keeping the root online to sign 24 h leaves defeats S11. |
+| **B. Two-tier issuing CA (offline root + online issuing intermediate)** | Offline / KMS root signs the issuing intermediate once; the online issuing intermediate signs every device leaf. | Root stays fully offline (S11); issuing CA rotates without re-establishing the root; cleaner revocation blast radius; matches the control-plane `ca_keys` hierarchy [`v03-control-plane/svc-pki.md` §2]. | More moving parts; issuing-CA rotation tooling (§2.3 of svc-pki). | **MVP default.** Root in KMS/HSM or offline; the online `pki` service signs leaves with the issuing intermediate, never with the root. |
 
-The `ca_chain` in `EnrollResponse` (length ≥1) means clients pin a chain from day one; promoting
-A→B is additive (the chain grows from 1 to 2 entries), honouring §11.4.6 (no silent reshape).
+The `ca_chain` in `EnrollResponse` carries **root + issuing CA** from day one so clients pin the
+full chain root→issuing→leaf (§3.2). **Phase-2 strengthening** (additive, no reshape, §11.4.6):
+add a **2nd intermediate / per-region issuer** + an HSM root-ceremony, growing the issuance fan-out
+without changing the wire format.
 
 ### 4.3 Certificate profiles (X.509, TLS 1.3 mutual)
 
-| Field | Device leaf | Tenant CA (root) | Intermediate (Phase 2) |
+| Field | Device leaf | Tenant CA (root) | Issuing CA (intermediate, MVP) |
 |---|---|---|---|
 | Key alg | Ed25519 | Ed25519 | Ed25519 |
-| Validity | ≤24 h | 10 y (offline) | 90 d |
+| Validity | ≤24 h | 10 y (offline) | ~1 y |
 | `subject` | `CN=<device_id>, O=<tenant_id>` | `CN=HelixVPN Tenant CA <tenant_id>` | `CN=HelixVPN Issuing CA` |
-| `subjectAltName` | URI `helix://<tenant>/<device_id>` | — | — |
+| `subjectAltName` | URI `spiffe://<tenant_id>/device/<device_id>` | — | — |
 | `keyUsage` | `digitalSignature` | `keyCertSign, cRLSign` | `keyCertSign, cRLSign` |
 | `extKeyUsage` | `clientAuth` (and `serverAuth` for gateway-facing edge cert) | — | — |
 | `basicConstraints` | `CA:FALSE` | `CA:TRUE, pathlen:1` | `CA:TRUE, pathlen:0` |
@@ -403,7 +411,7 @@ server side [04_ARCH §7, research-pki_pq_nat].
 stateDiagram-v2
     [*] --> Requested: device sends CSR (Enroll)
     Requested --> Active: pki signs (PoP verified), device_certs row inserted
-    Active --> Renewing: now ≥ not_after - renew_window (default 6h)
+    Active --> Renewing: now ≥ not_after - renewSkew (= max(1h, 0.2×TTL) ≈ 4.8h for a 24h cert)
     Renewing --> Active: re-sign over existing mTLS channel (new serial)
     Active --> Expired: now ≥ not_after (no renewal)
     Active --> Revoked: device.revoked event (admin / compromise / policy)
@@ -419,8 +427,10 @@ stateDiagram-v2
 
 ### 4.5 Rotation policy
 
-- **Device leaf cert:** auto-renewed by the core when `now ≥ not_after − renew_window` (default 6 h
-  before a 24 h cert), over the *existing* authenticated mTLS channel — no enroll token, no human
+- **Device leaf cert:** auto-renewed by the core when `now ≥ not_after − renewSkew`, where
+  `renewSkew = max(1h, 0.2 × TTL)` (≈ 4.8 h before a 24 h cert; source-aligned with
+  [`v03-control-plane/svc-pki.md` §6.1] / [`v05-security/pki-and-certs.md`]), over the *existing*
+  authenticated mTLS channel — no enroll token, no human
   [04_P1 §6.3]. A missed renewal degrades to re-enrollment, not a silent failure.
 - **Device WG static key:** rotated on a schedule (default 90 d, tenant-configurable) and
   **immediately on `device.revoked`** of a *sibling* device only if policy requires; the rotating
@@ -654,9 +664,22 @@ Every state-changing control action is audited to `audit_events` and streamed li
 -- audit_events(id, tenant_id, actor, action, target, ts, meta jsonb)
 ```
 
-- **Audited actions (closed-ish set):** `token.create`, `token.revoke`, `device.enroll`,
-  `device.revoke`, `device.keyrotate`, `policy.update`, `policy.compile`, `prefix.advertise`,
-  `prefix.withdraw`, `gateway.keyrotate`, `user.role.change`, `auth.login`, `auth.enroll.denied`.
+- **Audited actions (closed set — the canonical `AuditAction` enum [`v03-control-plane/svc-telemetry.md`
+  §4.2], mirrored in [`v05-security/audit-and-compliance.md` §4]):** `enroll_token.mint`,
+  `enroll_token.used`, `device.enrolled`, `device.revoke`, `device.cert.issued`,
+  `device.cert.rotated`, `policy.create`, `policy.activate`, `policy.rollback`,
+  `connector.attached`, `connector.prefixes.changed`, `tenant.create`, `user.role.change`,
+  `auth.login`, `auth.enroll.denied`.
+
+  > **Reconciled (§11.4.35, 2026-06-26):** this list is rewritten to the canonical enum names
+  > (the closed `AuditAction` set is the source of truth, §4.2 of svc-telemetry). The prior
+  > divergent labels map as: `token.create`→`enroll_token.mint`; `device.enroll`→`device.enrolled`;
+  > `device.keyrotate`→`device.cert.rotated`; `policy.update`→`policy.create`/`policy.activate`;
+  > `prefix.advertise`/`prefix.withdraw`→`connector.prefixes.changed`;
+  > `gateway.keyrotate`→`device.cert.rotated` (the gateway is itself a device row — its credential
+  > rotation audits under the same action, no new enum member). `token.revoke` and `policy.compile`
+  > have **no** canonical audit action (token revocation + internal policy compilation are not
+  > separately audited control actions in the MVP closed set) and are dropped.
 - **Never audited:** any packet, flow, destination, DNS query, or byte-count attributable to a
   user — those don't exist (S6), so they cannot be audited even by mistake.
 - **Actor binding:** `actor` is the OIDC `sub`/user id for human actions, `"system"` for automated
@@ -835,7 +858,7 @@ addresses it → residual risk (§11.4.6 — stated honestly, never "fully solve
 | T9 | **DoS** on the gateway | Flood the public data port | Rate limits (Redis token buckets); stateless edge fail-static (S; doc 01 I3); rootless restart | Volumetric DDoS needs upstream scrubbing (doc 09) |
 | T10 | **DoS** on enrollment | Enroll-token brute force | Single/bounded-use TTL'd tokens, Argon2id hash, const-time check, rate limit (§3.4) | None practical; tokens expire |
 | T11 | **Elevation of privilege** — container escape | Exploit the edge process | Rootless Podman, read-only rootfs, `cap_drop ALL` + `NET_ADMIN` only, seccomp allowlist, no SSH/shell (S8, §5) | Kernel 0-day in the tiny allowed syscall set |
-| T12 | **Elevation of privilege** — CA compromise | Steal the tenant CA key | KMS/HSM-held CA, signing delegated (S11, §4.7); offline root (Phase-2 two-tier §4.2) | KMS/HSM compromise = full tenant compromise → rotate CA, re-enroll |
+| T12 | **Elevation of privilege** — CA compromise | Steal the tenant CA key | Two-tier issuing CA in MVP — offline/KMS root + online issuing intermediate (S11, §4.2/§4.7); signing delegated, root stays offline | Online issuing-CA or KMS compromise still mints leaves until rotated → rotate issuing CA (root unaffected), re-enroll; Phase-2 HSM root ceremony hardens the root further |
 | T13 | **Spoofing** the gateway to a client | MITM the control/data endpoint | Client pins `ca_chain` (§3.2) for mTLS; WG gateway static key in the signed map (S4) | First-enroll trust-on-the-token; mitigated by out-of-band token delivery |
 | T14 | **Cross-tenant leakage** | Multi-tenant self-host bug | Postgres RLS per tenant (§2.3) + app RBAC; fungible relays see only ciphertext (doc 01) | App+RLS both bypassed (defence-in-depth) |
 | T15 | **Censorship / blocking** (availability of privacy) | DPI blocks WG | Pluggable obfuscation, auto-ladder, MASQUE/QUIC (doc 01); regional priors (doc 01) | Aggressive active-probing censor → DAITA + transport tuning (doc 01) |
@@ -849,10 +872,13 @@ Per S11, the durable secret surface is deliberately tiny [04_ARCH §10, 04_P1 §
 - **The two things to protect:** (1) the **tenant CA key** (root of device identity), (2)
   **Postgres** (identity/topology/policy truth). Everything else (data-plane nodes, edge config) is
   cattle, reprovisioned from IaC in minutes [04_ARCH §10].
-- **CA key custody:** KMS/HSM-backed in production (`CASigner` delegates signing, §4.7) so the raw
-  private key is never in `pki` process memory; offline-root + online-intermediate is the Phase-2
-  upgrade (§4.2). Self-host minimal mode: CA key in an OS keystore / age-encrypted file with a
-  documented operator passphrase (§11.4.10 — never git-tracked, `chmod 600`).
+- **CA key custody:** the **offline / KMS root + online issuing intermediate** two-tier hierarchy is
+  the **MVP baseline** (§4.2, `D-PKI-CA-TIER`): the root signs the issuing CA once and stays offline,
+  the online `pki` service signs leaves with the issuing intermediate via `CASigner` (§4.7) so the
+  raw root private key is never in `pki` process memory; the Phase-2 upgrade is a **per-region / 2nd
+  intermediate issuer + an HSM root ceremony** (§4.2), not the introduction of two tiers. Self-host
+  minimal mode: CA keys in an OS keystore / age-encrypted file with a documented operator passphrase
+  (§11.4.10 — never git-tracked, `chmod 600`).
 - **Backup set:** GPG/age-encrypted offsite backups of Postgres (PITR) + the CA root; restic, 3-2-1,
   quarterly DR drill [04_ARCH §10]. RPO ≈ 0 (config in Git + Postgres PITR), RTO 15–30 min.
 - **Secret hygiene (§11.4.10):** enroll tokens hashed (Argon2id), API tokens hashed at rest, no
@@ -881,8 +907,10 @@ every closure carries captured evidence (§11.4.5/.69/.107) and a paired §1.1 m
   IPAM overlay-IP allocation; `device.enrolled` event; sequence per §3.1.
   - 1.S3.a CSR proof-of-possession; 1.S3.b platform keystore sealing (per shim, doc 06);
     1.S3.c re-enroll on missed renewal.
-- **1.S4 `pki` single-tier CA** — `PKI`/`CASigner` interfaces; ≤24 h Ed25519 leaves; `device_certs`;
-  KMS-backed signer (with self-host file-CA fallback); cert profiles per §4.3.
+- **1.S4 `pki` two-tier issuing CA** — `PKI`/`CASigner` interfaces; offline/KMS root signs the
+  online issuing intermediate once, the issuing intermediate signs every ≤24 h Ed25519 leaf
+  (`D-PKI-CA-TIER`, §4.2); `ca_keys` + `device_certs`; KMS-backed signer (with self-host file-CA
+  fallback); cert profiles per §4.3; `ca_chain` carries root + issuing from day one.
 - **1.S5 cert lifecycle + auto-renew** — renew-before-expiry over mTLS; lifecycle state machine §4.4.
 - **1.S6 revocation < 1 s** — revoke pipeline §4.6; edge WG-peer removal + verdict-map drop +
   serial blacklist; close revoked control stream; measure p99 < 1 s (captured timing evidence).
@@ -901,7 +929,9 @@ every closure carries captured evidence (§11.4.5/.69/.107) and a paired §1.1 m
 - **2.S1 PQ handshake** — `PqKem` ML-KEM-768 (FIPS 203) over mTLS; HKDF→WG PSK; capability negotiate;
   rotate on rekey; "Quantum-resistant" toggle on-by-default (§9). Spike: ML-KEM vs Rosenpass vs
   McEliece-hybrid (decision, §9.2).
-- **2.S2 two-tier CA** — offline root + online intermediate; `ca_chain` grows to 2 (§4.2).
+- **2.S2 per-region / multi-intermediate issuance + HSM root ceremony** — add a 2nd intermediate /
+  per-region issuing CA under the (already two-tier, MVP) hierarchy and an HSM-backed root ceremony;
+  additive to §4.2, no wire-format change (`ca_chain` already carries root + issuing).
 - **2.S3 platform attestation** — verify `EnrollRequest.attestation` (Apple/Android/TPM) (§3.5).
 - **2.S4 hash-chained audit** — tamper-evident `meta.prev_hash` (§7).
 - **2.S5 WG key rotation** — scheduled + make-before-break edge swap (§4.5).

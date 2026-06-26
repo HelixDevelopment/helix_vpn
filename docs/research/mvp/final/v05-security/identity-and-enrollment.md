@@ -1,7 +1,7 @@
 # Identity & Enrollment — the key-never-leaves invariant
 
-**Revision:** 1
-**Last modified:** 2026-06-25T12:00:00Z
+**Revision:** 2
+**Last modified:** 2026-06-26T12:00:00Z
 
 > Master technical specification — Volume 5 (Security & Privacy), nano-detail document
 > **identity-and-enrollment**. Deepens the **identity + enrollment slice** of the security
@@ -395,7 +395,7 @@ Mullvad "account number, no PII" stance [04_P1 §6.1, 04_ARCH §6]. This is the 
 
 | Front door | Use | Secret | Stored as |
 |---|---|---|---|
-| **Device enroll token** | one device joins (paste/QR) | 256-bit base32-Crockford string (`het_…`) | `argon2id(token)` / `sha256(token)` (hash only) |
+| **Device enroll token** | one device joins (paste/QR) | 256-bit base32-Crockford string (`het_…`) | `argon2id(token)` (hash only) |
 | **Account number** | a human-memorable login for a privacy account (Mullvad-style) | 16-digit decimal, grouped `####-####-####-####` | `argon2id(number)` (hash only) |
 
 ```sql
@@ -445,10 +445,15 @@ RPC's credential.
 
 ### 6.1 Token security properties
 
+> **Reconciled (§11.4.35, 2026-06-26):** the enroll token is hashed with **Argon2id only** — the
+> earlier "`sha256(raw)` (or argon2id)" alternative is dropped. It is a bootstrap **bearer**
+> credential, so a memory-hard hash (matching the overview + [`no-logging-as-code`]) is required;
+> a plain `sha256` is reserved for opaque high-rate session tokens, not this bearer secret.
+
 | Property | Mechanism | Why |
 |---|---|---|
 | **High entropy** | 256-bit `randomBytes(32)`, `het_`-prefixed (greppable), base32-no-pad | infeasible to guess |
-| **Hash-at-rest only** | `sha256(raw)` (or argon2id) stored; raw returned **once** | a DB read never yields a usable token (AS-TOKEN; S11-class hygiene) |
+| **Hash-at-rest only** | `argon2id(raw)` stored; raw returned **once** | a DB read never yields a usable token (AS-TOKEN; S11-class hygiene) |
 | **Short TTL** | clamped to `[5m, 24h]`, default 1h | a leaked token expires fast |
 | **Single / bounded use** | `max_uses` (default 1); atomic conditional consume | no double-spend |
 | **Kind-bound** | `bind_kind ∈ {client, connector}` enforced at `Enroll` | a connector token can't mint a client device |

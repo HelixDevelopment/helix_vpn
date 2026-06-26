@@ -1,0 +1,2148 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>State management &amp; data layer (Riverpod)</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">State management &amp; data layer (Riverpod)</h1>
+</header>
+<h1 id="state-management--data-layer-riverpod">State management &amp;
+data layer (Riverpod)</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-06-25T00:00:00Z</p>
+<blockquote>
+<p>Master technical specification — <strong>Volume 4 (Clients)</strong>,
+nano-detail deep-dive. This document <strong>deepens</strong> the
+<em>Riverpod data layer</em> (§8) and the <em>FFI surface</em> (§3) of
+the pass-1 client overview [04_UI §4/§5, doc <code>03</code> §3/§8] into
+an implementation-ready specification of the <code>helix_domain</code>
+state layer: the Riverpod provider graph, the rule that <strong>the UI
+is a pure function of the Rust core&#39;s status stream</strong> (CI2), the
+<code>flutter_rust_bridge</code> <code>StreamSink → Stream</code>
+mechanics, the <code>helix_api</code> REST + WS/SSE client, how
+<strong>Helix Console</strong> folds control-plane events into Riverpod
+state, and the offline / optimistic (intent-vs-actual) honesty machine.
+SPEC-ONLY: it describes <strong>what to build</strong>, not the shipping
+product.</p>
+<p><strong>Boundary with sibling docs.</strong> This document
+<strong>consumes</strong>: the FFI surface + <code>TunnelStatus</code>
+mirror owned by doc <code>03</code> [03 §3]; the orchestrator
+<code>tokio::broadcast&lt;TunnelStatus&gt;</code> stream + state machine
+owned by <code>v02-data-plane/orchestrator-and-state.md</code> [02-ORCH
+§4/§5]; the <code>Transport</code> contract [02-TT]; and the
+control-plane REST/WS/SSE + event taxonomy owned by doc <code>02</code>.
+It <strong>owns</strong> everything from the Dart <code>HelixCore</code>
+wrapper upward: how providers turn streams into reactive UI, how
+controllers issue commands, how events are reduced, and the offline
+honesty rule. It does <strong>NOT</strong> own the Rust orchestrator
+internals, the per-platform <code>TunnelPlatform</code> shim
+implementations (doc <code>03</code> §4–5, doc <code>06</code>), the
+<code>helix_design</code> widgets (doc <code>03</code> §7), or the
+REST/WS wire schema (doc <code>02</code>).</p>
+<p><strong>Evidence base.</strong> Citations inline by id:
+<code>[04_UI]</code> =
+<code>04_VPN_CLD/HelixVPN-helix-ui-Flutter.md</code>;
+<code>[04_ARCH §N]</code> =
+<code>04_VPN_CLD/HelixVPN-Architecture-Refined.md</code>;
+<code>[03 §N]</code> = <code>final/03-client-core-and-ui.md</code>;
+<code>[02-ORCH §N]</code> =
+<code>final/v02-data-plane/orchestrator-and-state.md</code>;
+<code>[02-TT §N]</code> =
+<code>final/v02-data-plane/transport-trait.md</code>;
+<code>[SYN §N]</code> = <code>v09-research/_SYNTHESIS.md</code>;
+<code>[research-flutter_ffi]</code> /
+<code>[research-ios_android]</code> = the cited platform research
+digests. Any claim not grounded in the evidence base is tagged
+<code>UNVERIFIED</code> per constitution §11.4.6 — never fabricated.</p>
+</blockquote>
+<hr />
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#0-position-ownership-and-invariants">0. Position,
+ownership, and invariants</a></li>
+<li><a href="#1-the-single-load-bearing-rule-ui--pure-function-of-the-status-stream">1.
+The single load-bearing rule: UI = pure function of the status
+stream</a></li>
+<li><a href="#2-the-tunnelstatus-type--ffi-mirror--projection-from-the-orchestrator-wire-enum">2.
+The <code>TunnelStatus</code> type — FFI mirror &amp; projection from
+the orchestrator wire enum</a></li>
+<li><a href="#3-the-ffi-seam--streamsink--dart-broadcast-stream">3. The
+FFI seam — <code>StreamSink</code> → Dart broadcast
+<code>Stream</code></a></li>
+<li><a href="#4-the-provider-graph">4. The provider graph</a></li>
+<li><a href="#5-tunnelstatusprovider--connectcontroller-accessconnector">5.
+<code>tunnelStatusProvider</code> + <code>ConnectController</code>
+(Access/Connector)</a></li>
+<li><a href="#6-the-helix_api-client--rest--wsse">6. The
+<code>helix_api</code> client — REST + WS/SSE</a></li>
+<li><a href="#7-console-folding-control-plane-events-into-riverpod-state">7.
+Console: folding control-plane events into Riverpod state</a></li>
+<li><a href="#8-offline--optimistic--the-intent-vs-actual-honesty-machine">8.
+Offline / optimistic — the intent-vs-actual honesty machine</a></li>
+<li><a href="#9-app-lifecycle-provider-disposal--memory-budgets">9. App
+lifecycle, provider disposal &amp; memory budgets</a></li>
+<li><a href="#10-error-handling--edge-cases">10. Error handling &amp;
+edge cases</a></li>
+<li><a href="#11-test-points--tied-to-the-1141169-closed-test-type-vocabulary">11.
+Test points — tied to the §11.4.169 closed test-type vocabulary</a></li>
+<li><a href="#12-frozen-contracts-this-document-fixes">12. Frozen
+contracts this document fixes</a></li>
+<li><a href="#sources-verified">Sources verified</a></li>
+</ul>
+<hr />
+<h2 id="0-position-ownership-and-invariants">0. Position, ownership, and
+invariants</h2>
+<h3 id="01-what-this-document-owns">0.1 What this document owns</h3>
+<p>The state layer lives in the <code>helix_domain</code> melos package
+[03 §2] (<code>packages/ helix_domain/lib/</code>). It owns five
+contracts:</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Contract</th>
+<th>Owned here</th>
+<th>Consumed from</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>S1</td>
+<td><strong>The Dart <code>TunnelStatus</code> projection</strong> + the
+mapping from the orchestrator wire enum to the FFI/Dart enum</td>
+<td>§2</td>
+<td>wire enum [02-ORCH §4.1]; FFI mirror [03 §3.1]</td>
+</tr>
+<tr>
+<td>S2</td>
+<td><strong>The provider graph</strong> — every Riverpod provider, its
+dependencies, its lifetime, its override seams for flavor + test</td>
+<td>§4</td>
+<td>—</td>
+</tr>
+<tr>
+<td>S3</td>
+<td><strong><code>tunnelStatusProvider</code> +
+<code>ConnectController</code></strong> — the stream→state binding and
+the command controller</td>
+<td>§5</td>
+<td><code>HelixCore</code> FFI [03 §3.2], <code>TunnelPlatform</code>
+[03 §4]</td>
+</tr>
+<tr>
+<td>S4</td>
+<td><strong>The <code>helix_api</code> consumption layer</strong> — REST
+repositories + the WS/SSE client + the Console event reducer</td>
+<td>§6, §7</td>
+<td>REST/WS schema, event taxonomy → doc <code>02</code></td>
+</tr>
+<tr>
+<td>S5</td>
+<td><strong>The offline / optimistic honesty machine</strong> — intent
+vs actual, never green-on-intent (CI2)</td>
+<td>§8</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<h3 id="02-what-this-document-does-not-own">0.2 What this document does
+NOT own</h3>
+<ul>
+<li>The Rust orchestrator (its loops, state machine, kill-switch,
+broadcast <em>sender</em>) — owned by [02-ORCH]; this doc owns the
+<em>receiver</em> side.</li>
+<li>The <code>helix-ffi</code> Rust source <code>api.rs</code> (the
+hand-authored FFI surface) — owned by [03 §3.1]; this doc consumes its
+<strong>generated</strong> Dart mirror.</li>
+<li>The per-platform <code>TunnelPlatform</code> shim impls
+(Swift/Kotlin/C#/C++/ArkTS) — owned by [03 §4–5]; this doc owns only the
+Dart <code>TunnelPlatform</code> <em>abstract contract</em> it drives
+and the provider that injects the per-OS impl.</li>
+<li>REST/WS/SSE wire schema, auth, the
+<code>device.revoked</code>/<code>route.changed</code>/… event payloads
+— owned by doc <code>02</code>; this doc owns only the Dart
+<em>reducer</em> over them.</li>
+<li>Widgets / tokens / theming — owned by [03 §7].</li>
+</ul>
+<h3 id="03-invariants-this-document-inherits-and-tightens">0.3
+Invariants this document inherits and tightens</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Invariant</th>
+<th>Source</th>
+<th>State-layer tightening</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CI2</td>
+<td><strong>The UI is a pure function of the core&#39;s status
+stream.</strong> No polling.</td>
+<td>[03 §0.1 CI2, 04_UI §4.2]</td>
+<td>§1, §5: the ONLY writer of the rendered connection state is
+<code>tunnelStatusProvider</code>, fed by the FFI
+<code>StreamSink</code>. A widget never derives &quot;connected&quot; from its own
+command success.</td>
+</tr>
+<tr>
+<td>CI5</td>
+<td><strong>State must be announced, not just colored.</strong></td>
+<td>[03 §0.1 CI5]</td>
+<td>§2: the Dart enum carries a <code>semanticLabel</code> projection so
+a11y readers announce state from the same source the color reads.</td>
+</tr>
+<tr>
+<td>H-I1</td>
+<td><strong>Intent ≠ actual.</strong> The user&#39;s wish to be connected is
+local optimistic state; <em>actual</em> protection is only the core
+stream.</td>
+<td>[04_UI §4.4, 03 §8.4]</td>
+<td>§8: a dedicated <code>connectIntentProvider</code>, never conflated
+with <code>tunnelStatusProvider</code>.</td>
+</tr>
+<tr>
+<td>H-I2</td>
+<td><strong>A <code>Danger</code> state overrides any intent</strong>,
+paints red immediately, and cannot be optimistically suppressed.</td>
+<td>[03 §8.4]</td>
+<td>§8.3.</td>
+</tr>
+<tr>
+<td>H-I3</td>
+<td><strong>Console links <code>helix_api</code> ONLY</strong> (no
+<code>helix_core_ffi</code>) — so it builds to Web.</td>
+<td>[03 §0.1 CI3]</td>
+<td>§4.4: <code>helixCoreProvider</code> is overridden to
+<code>NoCore()</code> in the Console flavor;
+<code>tunnelStatusProvider</code> is never watched in Console
+screens.</td>
+</tr>
+<tr>
+<td>H-I4</td>
+<td><strong>Every provider is overridable</strong> for flavor wiring
+(§4.4) and for tests (fake <code>HelixCore</code> + fake API with the
+<em>same generated model types</em>).</td>
+<td>[03 §12, 04_UI §12]</td>
+<td>§4.5, §11.</td>
+</tr>
+<tr>
+<td>H-I5</td>
+<td><strong>Lag is not an error.</strong> A <code>broadcast</code>/WS
+receiver that falls behind re-reads latest, never surfaces an error to
+the user.</td>
+<td>[02-ORCH §4.6]</td>
+<td>§3.4, §10.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="1-the-single-load-bearing-rule-ui--pure-function-of-the-status-stream">1.
+The single load-bearing rule: UI = pure function of the status
+stream</h2>
+<p>A VPN client&#39;s one safety-critical claim is <em>&quot;am I protected right
+now?&quot;</em> The architecture makes that claim un-faleable by
+construction: the rendered connection state is <strong>derived
+only</strong> from a stream the Rust core pushes [04_UI §4.2, 03 §0.1
+CI2]. The button reflects the stream; it never reflects its own
+<code>onTap</code>.</p>
+<pre class="mermaid"><code>flowchart LR
+    CORE[&quot;helix-core orchestrator (Rust)&lt;br/&gt;tokio::broadcast&amp;lt;TunnelStatus_wire&amp;gt;&lt;br/&gt;[02-ORCH §4]&quot;]
+    FFI[&quot;helix-ffi adapter (Rust)&lt;br/&gt;project wire→FFI enum (§2.3)&lt;br/&gt;StreamSink&amp;lt;TunnelStatus&amp;gt;&quot;]
+    FRB[&quot;frb_generated.dart&lt;br/&gt;StreamSink → Dart Stream (§3)&quot;]
+    SP[&quot;tunnelStatusProvider&lt;br/&gt;StreamProvider&amp;lt;TunnelStatus&amp;gt; (§5.1)&quot;]
+    W[&quot;ConnectButton / StatusChip / ShieldIndicator&lt;br/&gt;ref.watch(tunnelStatusProvider)&quot;]
+    CTRL[&quot;ConnectController (§5.2)&lt;br/&gt;start/stop COMMANDS only&quot;]
+    SHIM[&quot;TunnelPlatform shim (§5.3)&quot;]
+
+    CORE --&gt; FFI --&gt; FRB --&gt; SP --&gt; W
+    W -. &quot;onTap (a command, NOT a state write)&quot; .-&gt; CTRL
+    CTRL -. &quot;startTunnel / stopTunnel&quot; .-&gt; SHIM
+    SHIM -. &quot;creates TUN, links core&quot; .-&gt; CORE
+    classDef truth fill:#10B98122,stroke:#10B981;
+    class CORE,FFI,FRB,SP,W truth;</code></pre>
+<p>The asymmetry is the whole point [03 §3.3]: <strong>commands flow
+down</strong> (widget → controller → shim → core), <strong>truth flows
+up</strong> (core → FFI → provider → widget), and the two paths never
+short-circuit. A <code>connect()</code> that succeeds does not let the
+UI paint green — only the subsequent <code>Connected</code> event on the
+stream does. This structurally eliminates the classic &quot;UI says connected
+while the OS tunnel is down&quot; defect (it is the UI-layer mirror of
+[02-ORCH §13.1] &quot;single state authority&quot; O-I10).</p>
+<hr />
+<h2 id="2-the-tunnelstatus-type--ffi-mirror--projection-from-the-orchestrator-wire-enum">2.
+The <code>TunnelStatus</code> type — FFI mirror &amp; projection from
+the orchestrator wire enum</h2>
+<h3 id="21-the-two-enums-and-why-both-exist">2.1 The two enums and why
+both exist</h3>
+<p>There are <strong>two</strong> <code>TunnelStatus</code> shapes in
+the system, and they are deliberately not identical:</p>
+<ol type="1">
+<li><strong>The orchestrator wire enum</strong> (the broadcast payload,
+[02-ORCH §4.1]) — the lean five-variant truth the data plane emits:
+<code>Connecting | Handshaking | Connected{transport, rtt_ms} | Reconnecting | Down{reason}</code>.</li>
+<li><strong>The FFI/Dart enum</strong> (the mirror the UI binds, [03
+§3.1]) — extends the wire enum with three UI-affordances:
+<code>Disconnected</code> (clean idle, distinct from an unexpected
+<code>Down</code>), a <code>path</code> field on <code>Connected</code>
+(<code>&quot;direct&quot; | &quot;relay&quot;</code>), and <code>Danger{kind}</code>
+(<code>&quot;leak&quot; | &quot;killswitch_tripped&quot;</code> — drives the red
+palette).</li>
+</ol>
+<p>This document <strong>fixes the projection</strong> between them
+(§2.3) so the two never drift silently — the projection is the single,
+auditable place the extension happens, and it is consistent with both
+[02-ORCH §4.1] (which it consumes verbatim) and [03 §3.1] (which it
+produces verbatim). The projection lives in the <strong>Rust
+<code>helix-ffi</code> adapter</strong> (so frb mirrors one enum into
+Dart — never a hand-written Dart parallel), per [03 §3.2].</p>
+<h3 id="22-the-rust-ffi-source-consumed-verbatim-from-03-31">2.2 The
+Rust FFI source (consumed verbatim from [03 §3.1])</h3>
+<div class="sourceCode" id="cb2"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-ffi/src/api.rs — frb mirrors #[frb(mirror)] types into identical Dart types.</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co">// CONSISTENCY: this is the [03 §3.1] enum, byte-for-byte; the FFI-contract test</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co">// (§11 FFI-1) asserts the Dart mirror matches it. Do NOT re-define it here.</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>frb<span class="at">(</span>mirror<span class="at">)]</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">enum</span> TunnelStatus <span class="op">{</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    Disconnected<span class="op">,</span>                                                 <span class="co">// clean idle (FFI-synth, §2.3)</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    Connecting<span class="op">,</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    Handshaking<span class="op">,</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    Connected <span class="op">{</span> transport<span class="op">:</span> <span class="dt">String</span><span class="op">,</span> path<span class="op">:</span> <span class="dt">String</span><span class="op">,</span> rtt_ms<span class="op">:</span> <span class="dt">u32</span> <span class="op">},</span>  <span class="co">// path = &quot;direct&quot; | &quot;relay&quot;</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    Reconnecting<span class="op">,</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    Down <span class="op">{</span> reason<span class="op">:</span> <span class="dt">String</span> <span class="op">},</span>                                     <span class="co">// unexpected drop; stable prefix [02-ORCH §4.4]</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    Danger <span class="op">{</span> kind<span class="op">:</span> <span class="dt">String</span> <span class="op">},</span>                                     <span class="co">// &quot;leak&quot; | &quot;killswitch_tripped&quot;</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="23-the-projection-adapter-wire--ffi-the-single-mapping-authority">2.3
+The projection adapter (wire → FFI), the single mapping authority</h3>
+<div class="sourceCode" id="cb3"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-ffi/src/status_adapter.rs</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Subscribes to the orchestrator broadcast [02-ORCH §2.1 Orchestrator::subscribe()],</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co">// projects each lean wire event into the extended FFI enum, and re-emits on the</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co">// StreamSink the Dart side listens to (§3). This is the ONLY place the extension</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co">// from 5→7 variants happens. It is a pure function of (wire event, danger signal).</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> project(wire<span class="op">:</span> WireStatus<span class="op">,</span> danger<span class="op">:</span> <span class="dt">Option</span><span class="op">&lt;</span>DangerKind<span class="op">&gt;</span>) <span class="op">-&gt;</span> TunnelStatus <span class="op">{</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">match</span> (wire<span class="op">,</span> danger) <span class="op">{</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Danger overrides everything (H-I2): a leak / tripped kill-switch paints red</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>        <span class="co">// regardless of the underlying wire state.</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>        (_<span class="op">,</span> <span class="cn">Some</span>(<span class="pp">DangerKind::</span>Leak))             <span class="op">=&gt;</span> <span class="pp">TunnelStatus::</span>Danger <span class="op">{</span> kind<span class="op">:</span> <span class="st">&quot;leak&quot;</span><span class="op">.</span>into() <span class="op">},</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>        (_<span class="op">,</span> <span class="cn">Some</span>(<span class="pp">DangerKind::</span>KillSwitchTripped))<span class="op">=&gt;</span> <span class="pp">TunnelStatus::</span>Danger <span class="op">{</span> kind<span class="op">:</span> <span class="st">&quot;killswitch_tripped&quot;</span><span class="op">.</span>into() <span class="op">},</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>        (<span class="pp">WireStatus::</span>Connecting<span class="op">,</span>  <span class="cn">None</span>)         <span class="op">=&gt;</span> <span class="pp">TunnelStatus::</span>Connecting<span class="op">,</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>        (<span class="pp">WireStatus::</span>Handshaking<span class="op">,</span> <span class="cn">None</span>)         <span class="op">=&gt;</span> <span class="pp">TunnelStatus::</span>Handshaking<span class="op">,</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>        (<span class="pp">WireStatus::</span>Connected <span class="op">{</span> transport<span class="op">,</span> rtt_ms <span class="op">},</span> <span class="cn">None</span>) <span class="op">=&gt;</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>            <span class="pp">TunnelStatus::</span>Connected <span class="op">{</span> transport<span class="op">,</span> path<span class="op">:</span> path_label()<span class="op">,</span> rtt_ms <span class="op">},</span> <span class="co">// §2.4 path source</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>        (<span class="pp">WireStatus::</span>Reconnecting<span class="op">,</span> <span class="cn">None</span>)        <span class="op">=&gt;</span> <span class="pp">TunnelStatus::</span>Reconnecting<span class="op">,</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>        <span class="co">// The KEY reconciliation: a CLEAN user-stop (Down{reason:&quot;stopped&quot;}) projects to</span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Disconnected (idle), NOT Down. Every OTHER Down reason stays Down. This mirrors the</span></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>        <span class="co">// orchestrator&#39;s own Idle/ShuttingDown→Connecting/Down internal projection [02-ORCH §5.1].</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>        (<span class="pp">WireStatus::</span>Down <span class="op">{</span> reason <span class="op">},</span> <span class="cn">None</span>) <span class="cf">if</span> reason <span class="op">==</span> <span class="st">&quot;stopped&quot;</span> <span class="op">=&gt;</span> <span class="pp">TunnelStatus::</span>Disconnected<span class="op">,</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>        (<span class="pp">WireStatus::</span>Down <span class="op">{</span> reason <span class="op">},</span> <span class="cn">None</span>)     <span class="op">=&gt;</span> <span class="pp">TunnelStatus::</span>Down <span class="op">{</span> reason <span class="op">},</span></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Wire enum [02-ORCH §4.1]</th>
+<th>Danger signal</th>
+<th>FFI/Dart enum [03 §3.1]</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>(pre-start / post-clean-stop)</td>
+<td>—</td>
+<td><code>Disconnected</code></td>
+<td>FFI-synthesized idle; the orchestrator&#39;s
+<code>Idle</code>/<code>Down{stopped}</code></td>
+</tr>
+<tr>
+<td><code>Connecting</code></td>
+<td>—</td>
+<td><code>Connecting</code></td>
+<td>1:1</td>
+</tr>
+<tr>
+<td><code>Handshaking</code></td>
+<td>—</td>
+<td><code>Handshaking</code></td>
+<td>1:1</td>
+</tr>
+<tr>
+<td><code>Connected{transport,rtt_ms}</code></td>
+<td>—</td>
+<td><code>Connected{transport,path,rtt_ms}</code></td>
+<td><code>path</code> added by FFI (§2.4)</td>
+</tr>
+<tr>
+<td><code>Reconnecting</code></td>
+<td>—</td>
+<td><code>Reconnecting</code></td>
+<td>1:1</td>
+</tr>
+<tr>
+<td><code>Down{reason=&quot;stopped&quot;}</code></td>
+<td>—</td>
+<td><code>Disconnected</code></td>
+<td>clean idle, <strong>not</strong> Down</td>
+</tr>
+<tr>
+<td><code>Down{reason≠&quot;stopped&quot;}</code></td>
+<td>—</td>
+<td><code>Down{reason}</code></td>
+<td>reason prefix preserved [02-ORCH §4.4]</td>
+</tr>
+<tr>
+<td>any</td>
+<td><code>Leak</code> / <code>KillSwitchTripped</code></td>
+<td><code>Danger{kind}</code></td>
+<td>overrides all (H-I2)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="24-path-and-danger-provenance-honest-boundary-1146">2.4
+<code>path</code> and <code>danger</code> provenance (honest boundary,
+§11.4.6)</h3>
+<ul>
+<li><strong><code>path</code></strong>
+(<code>&quot;direct&quot;</code>|<code>&quot;relay&quot;</code>) is a Phase-2 affordance
+(direct P2P vs DERP-style relay [SYN §4]). <code>UNVERIFIED</code>: the
+Phase-0/1 wire enum does <strong>not</strong> carry a path field. Until
+the orchestrator surfaces NAT-traversal state, the FFI adapter sets
+<code>path</code> from the active transport posture —
+<code>&quot;relay&quot;</code> for any gateway-routed carrier,
+<code>&quot;direct&quot;</code> only when the orchestrator reports a hole-punched
+P2P session [SYN §4]. The default in Phase 1 is <code>&quot;relay&quot;</code>;
+the <code>StatusChip</code> renders it but MUST NOT claim &quot;direct&quot;
+without that signal.</li>
+<li><strong><code>danger</code></strong> is a separate orchestrator
+signal, <strong>not</strong> a wire <code>TunnelStatus</code> variant: a
+DNS-leak detection or a tripped kill-switch firewall rule [02-ORCH §8]
+raises a <code>DangerKind</code> the adapter folds in.
+<code>UNVERIFIED</code>: the exact leak-detection mechanism (continuous
+resolver probe vs firewall-counter) is a
+doc-<code>02</code>/orchestrator concern; this doc only consumes the
+resulting <code>DangerKind</code>.</li>
+</ul>
+<h3 id="25-the-dart-facing-type-generated-mirror--a11y-projection-ci5">2.5
+The Dart-facing type (generated mirror) + a11y projection (CI5)</h3>
+<div class="sourceCode" id="cb4"><pre class="sourceCode dart"><code class="sourceCode dart"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix_core_ffi/lib/frb_generated.dart  — GENERATED from §2.2; do NOT hand-edit.</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="at">sealed</span> <span class="kw">class</span> TunnelStatus <span class="op">{</span> <span class="at">const</span> TunnelStatus(); <span class="op">}</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Disconnected <span class="kw">extends</span> TunnelStatus <span class="op">{</span> <span class="at">const</span> Disconnected(); <span class="op">}</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Connecting   <span class="kw">extends</span> TunnelStatus <span class="op">{</span> <span class="at">const</span> Connecting(); <span class="op">}</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Handshaking  <span class="kw">extends</span> TunnelStatus <span class="op">{</span> <span class="at">const</span> Handshaking(); <span class="op">}</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Connected    <span class="kw">extends</span> TunnelStatus <span class="op">{</span> <span class="at">final</span> <span class="dt">String</span> transport<span class="op">,</span> path; <span class="at">final</span> <span class="dt">int</span> rttMs;</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>                                          <span class="at">const</span> Connected(<span class="kw">this</span><span class="op">.</span>transport<span class="op">,</span> <span class="kw">this</span><span class="op">.</span>path<span class="op">,</span> <span class="kw">this</span><span class="op">.</span>rttMs); <span class="op">}</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Reconnecting <span class="kw">extends</span> TunnelStatus <span class="op">{</span> <span class="at">const</span> Reconnecting(); <span class="op">}</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Down         <span class="kw">extends</span> TunnelStatus <span class="op">{</span> <span class="at">final</span> <span class="dt">String</span> reason; <span class="at">const</span> Down(<span class="kw">this</span><span class="op">.</span>reason); <span class="op">}</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Danger       <span class="kw">extends</span> TunnelStatus <span class="op">{</span> <span class="at">final</span> <span class="dt">String</span> kind;   <span class="at">const</span> Danger(<span class="kw">this</span><span class="op">.</span>kind); <span class="op">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode dart"><code class="sourceCode dart"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix_domain/lib/models/tunnel_status_x.dart — a11y + classification helpers (CI5).</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Color is read in helix_design [03 §7.1]; the SEMANTIC LABEL is read here, from the</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="co">// SAME source, so &quot;announced, not just colored&quot; cannot drift (CI5).</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="kw">extension</span> TunnelStatusX <span class="kw">on</span> TunnelStatus <span class="op">{</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="co">/// The screen-reader announcement — never color alone (CI5).</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">String</span> <span class="kw">get</span> semanticLabel <span class="op">=&gt;</span> <span class="cf">switch</span> (<span class="kw">this</span>) <span class="op">{</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    Disconnected() <span class="op">=&gt;</span> <span class="st">&#39;Not protected. Disconnected.&#39;</span><span class="op">,</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    Connecting()   <span class="op">=&gt;</span> <span class="st">&#39;Connecting…&#39;</span><span class="op">,</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    Handshaking()  <span class="op">=&gt;</span> <span class="st">&#39;Establishing secure tunnel…&#39;</span><span class="op">,</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    Connected(<span class="op">:</span><span class="at">final</span> transport<span class="op">,</span> <span class="op">:</span><span class="at">final</span> path<span class="op">,</span> <span class="op">:</span><span class="at">final</span> rttMs) <span class="op">=&gt;</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;Protected via $transport, $path path, $rttMs milliseconds.&#39;</span><span class="op">,</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    Reconnecting() <span class="op">=&gt;</span> <span class="st">&#39;Connection dropped. Reconnecting…&#39;</span><span class="op">,</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    Down(<span class="op">:</span><span class="at">final</span> reason) <span class="op">=&gt;</span> <span class="st">&#39;Disconnected unexpectedly: $reason.&#39;</span><span class="op">,</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    Danger(<span class="op">:</span><span class="at">final</span> kind) <span class="op">=&gt;</span> kind <span class="op">==</span> <span class="st">&#39;leak&#39;</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>        <span class="op">?</span> <span class="st">&#39;WARNING: traffic may be leaking. Not protected.&#39;</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>        <span class="op">:</span> <span class="st">&#39;WARNING: kill-switch tripped. Traffic is blocked.&#39;</span><span class="op">,</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span>;</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>  <span class="dt">bool</span> <span class="kw">get</span> isProtected   <span class="op">=&gt;</span> <span class="kw">this</span> <span class="kw">is</span> Connected;             <span class="co">// the ONLY protected state</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>  <span class="dt">bool</span> <span class="kw">get</span> isTransitional<span class="op">=&gt;</span> <span class="kw">this</span> <span class="kw">is</span> Connecting <span class="op">||</span> <span class="kw">this</span> <span class="kw">is</span> Handshaking <span class="op">||</span> <span class="kw">this</span> <span class="kw">is</span> Reconnecting;</span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>  <span class="dt">bool</span> <span class="kw">get</span> isDanger      <span class="op">=&gt;</span> <span class="kw">this</span> <span class="kw">is</span> Danger;</span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<blockquote>
+<p><strong>Consistency assertion (FFI-1, §11).</strong> The Dart sealed
+class above MUST be the frb-generated mirror of §2.2, and §2.2 MUST
+equal [03 §3.1] verbatim, which in turn projects [02-ORCH §4.1] via
+§2.3. The contract test asserts all three links so a drift at any seam
+FAILs the build [03 §12].</p>
+</blockquote>
+<hr />
+<h2 id="3-the-ffi-seam--streamsink--dart-broadcast-stream">3. The FFI
+seam — <code>StreamSink</code> → Dart broadcast <code>Stream</code></h2>
+<h3 id="31-the-rust-side-one-streamsink-per-subscription">3.1 The Rust
+side: one <code>StreamSink</code> per subscription</h3>
+<div class="sourceCode" id="cb6"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-ffi/src/api.rs  [03 §3.1]</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="co">// frb turns this into a Dart `Stream&lt;TunnelStatus&gt;`. The sink is fed by the projection</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co">// adapter (§2.3), which is driven by the orchestrator broadcast receiver [02-ORCH §4.6].</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">fn</span> status_stream(sink<span class="op">:</span> StreamSink<span class="op">&lt;</span>TunnelStatus<span class="op">&gt;</span>) <span class="op">{</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> rx <span class="op">=</span> ORCH<span class="op">.</span>get()<span class="op">.</span>expect(<span class="st">&quot;started&quot;</span>)<span class="op">.</span>subscribe()<span class="op">;</span>          <span class="co">// broadcast::Receiver</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    <span class="pp">tokio::</span>spawn(<span class="kw">async</span> <span class="kw">move</span> <span class="op">{</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>        <span class="co">// emit the current state immediately so a late Dart listener is never blank (§3.3)</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> _ <span class="op">=</span> sink<span class="op">.</span>add(project(current_wire()<span class="op">,</span> current_danger()))<span class="op">;</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>        <span class="cf">loop</span> <span class="op">{</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>            <span class="cf">match</span> rx<span class="op">.</span>recv()<span class="op">.</span><span class="kw">await</span> <span class="op">{</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>                <span class="cn">Ok</span>(wire)                        <span class="op">=&gt;</span> <span class="op">{</span> <span class="kw">let</span> _ <span class="op">=</span> sink<span class="op">.</span>add(project(wire<span class="op">,</span> current_danger()))<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>                <span class="cn">Err</span>(<span class="pp">RecvError::</span>Lagged(_))       <span class="op">=&gt;</span> <span class="op">{</span> <span class="kw">let</span> _ <span class="op">=</span> sink<span class="op">.</span>add(project(current_wire()<span class="op">,</span> current_danger()))<span class="op">;</span> <span class="op">}</span> <span class="co">// re-read latest (H-I5)</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>                <span class="cn">Err</span>(<span class="pp">RecvError::</span>Closed)          <span class="op">=&gt;</span> <span class="cf">break</span><span class="op">,</span>            <span class="co">// orchestrator gone → close the sink</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>        <span class="co">// sink dropped here → Dart Stream completes (§3.4)</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Key properties: (1) the <strong>first</strong> <code>sink.add</code>
+is the <em>current</em> projected state, so a Dart
+<code>StreamProvider</code> that subscribes after a connection is
+already up renders correctly without a race (§3.3); (2) a broadcast
+<code>Lagged</code> is converted to a re-emit of latest,
+<strong>never</strong> propagated as an error (H-I5) [02-ORCH §4.6]; (3)
+the spawned task ends when the orchestrator&#39;s sender closes, completing
+the Dart stream cleanly.</p>
+<h3 id="32-the-frb-threading--isolate-model">3.2 The frb threading &amp;
+isolate model</h3>
+<p><code>flutter_rust_bridge</code> v2 runs Rust async on its own worker
+(a Rust-side Tokio runtime, not the Dart isolate) and marshals each
+<code>sink.add(value)</code> across the isolate boundary onto the Dart
+event loop [research-flutter_ffi]. Consequences the state layer MUST
+respect:</p>
+<table>
+<thead>
+<tr>
+<th>Concern</th>
+<th>Behaviour</th>
+<th>State-layer rule</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Threading</td>
+<td>events arrive on the Dart <strong>platform</strong> isolate&#39;s event
+queue (frb serializes)</td>
+<td>providers may mutate freely; no extra isolate hop needed</td>
+</tr>
+<tr>
+<td>Ordering</td>
+<td>frb preserves per-sink <code>add</code> order
+[research-flutter_ffi]</td>
+<td>the reducer (§5.1) may assume monotonic delivery within one
+sink</td>
+</tr>
+<tr>
+<td>Backpressure</td>
+<td>the Dart side cannot stall the Rust broadcast (the §3.1 loop drops
+to latest on <code>Lagged</code>)</td>
+<td>a slow widget rebuild never wedges the core (H-I5)</td>
+</tr>
+<tr>
+<td>Cancellation</td>
+<td>dropping the Dart <code>StreamSubscription</code> drops the sink;
+the §3.1 task exits on next <code>add</code> failure</td>
+<td><code>ref.onDispose</code> MUST cancel the subscription (§3.4,
+§9.2)</td>
+</tr>
+<tr>
+<td>Memory</td>
+<td>one spawned Rust task + one channel per <code>status_stream()</code>
+call</td>
+<td>call <code>status_stream()</code> <strong>once</strong>, fan-out in
+Dart via a broadcast <code>StreamProvider</code> (§3.3, §9.3)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="33-the-dart-wrapper-one-sink-broadcast-fan-out">3.3 The Dart
+wrapper: one sink, broadcast fan-out</h3>
+<div class="sourceCode" id="cb7"><pre class="sourceCode dart"><code class="sourceCode dart"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix_core_ffi/lib/helix_core.dart — the idiomatic wrapper [03 §3.2].</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> RealHelixCore <span class="kw">implements</span> HelixCore <span class="op">{</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Stream</span><span class="op">&lt;</span>TunnelStatus<span class="op">&gt;?</span> _statusCache;           <span class="co">// single underlying sink, fanned out</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">@override</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Stream</span><span class="op">&lt;</span>TunnelStatus<span class="op">&gt;</span> statusStream() <span class="op">=&gt;</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>      <span class="co">// frb StreamSink → a single-subscription Dart Stream; .asBroadcastStream()</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>      <span class="co">// lets N widgets watch via the StreamProvider without N Rust sinks (§9.3).</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>      _statusCache <span class="op">??=</span> HelixCoreFfi<span class="op">.</span>instance<span class="op">.</span>statusStream()<span class="op">.</span>asBroadcastStream();</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>  <span class="kw">@override</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Future</span><span class="op">&lt;</span><span class="dt">void</span><span class="op">&gt;</span> start(<span class="op">{</span>required <span class="dt">String</span> transport<span class="op">,</span> <span class="dt">String</span><span class="op">?</span> mapPathOrSession<span class="op">,</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>                      CoreMode mode <span class="op">=</span> CoreMode<span class="op">.</span>client<span class="op">}</span>) <span class="op">=&gt;</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>      HelixCoreFfi<span class="op">.</span>instance<span class="op">.</span>start(cfg<span class="op">:</span> ClientConfig(</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>          transport<span class="op">:</span> transport<span class="op">,</span> mapPathOrSession<span class="op">:</span> mapPathOrSession <span class="op">??</span> <span class="st">&#39;&#39;</span><span class="op">,</span> mode<span class="op">:</span> mode));</span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>  <span class="kw">@override</span> <span class="dt">Future</span><span class="op">&lt;</span><span class="dt">void</span><span class="op">&gt;</span> stop()                       <span class="op">=&gt;</span> HelixCoreFfi<span class="op">.</span>instance<span class="op">.</span>stop();</span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>  <span class="kw">@override</span> <span class="dt">Future</span><span class="op">&lt;</span><span class="dt">List</span><span class="op">&lt;</span>ExitOption<span class="op">&gt;&gt;</span> exits()          <span class="op">=&gt;</span> HelixCoreFfi<span class="op">.</span>instance<span class="op">.</span>exits();</span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>  <span class="kw">@override</span> <span class="dt">Future</span><span class="op">&lt;</span><span class="dt">void</span><span class="op">&gt;</span> setExit(<span class="dt">String</span> id<span class="op">,</span> <span class="op">{</span><span class="dt">List</span><span class="op">&lt;</span><span class="dt">String</span><span class="op">&gt;?</span> multiHopChain<span class="op">}</span>) <span class="op">=&gt;</span></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>      HelixCoreFfi<span class="op">.</span>instance<span class="op">.</span>setExit(id<span class="op">:</span> id<span class="op">,</span> multiHopChain<span class="op">:</span> multiHopChain);</span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>  <span class="kw">@override</span> <span class="dt">Future</span><span class="op">&lt;</span><span class="dt">void</span><span class="op">&gt;</span> setShields(Shields s)        <span class="op">=&gt;</span> HelixCoreFfi<span class="op">.</span>instance<span class="op">.</span>setShields(s<span class="op">:</span> s);</span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>  <span class="kw">@override</span> <span class="dt">Future</span><span class="op">&lt;</span>AdvertiseResult<span class="op">&gt;</span> advertise(<span class="dt">List</span><span class="op">&lt;</span><span class="dt">String</span><span class="op">&gt;</span> cidrs) <span class="op">=&gt;</span></span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>      HelixCoreFfi<span class="op">.</span>instance<span class="op">.</span>advertise(cidrs<span class="op">:</span> cidrs);</span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>  <span class="kw">@override</span> <span class="dt">Future</span><span class="op">&lt;</span><span class="dt">void</span><span class="op">&gt;</span> attachTun(<span class="dt">int</span> fd)            <span class="op">=&gt;</span> HelixCoreFfi<span class="op">.</span>instance<span class="op">.</span>attachTun(fd<span class="op">:</span> fd);</span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a>  <span class="kw">@override</span> <span class="dt">Future</span><span class="op">&lt;</span><span class="dt">void</span><span class="op">&gt;</span> detachTun()                  <span class="op">=&gt;</span> HelixCoreFfi<span class="op">.</span>instance<span class="op">.</span>detachTun();</span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a><span class="co">/// Console flavor: no Rust staticlib linked (CI3, H-I3). statusStream is a const idle.</span></span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> NoCore <span class="kw">implements</span> HelixCore <span class="op">{</span></span>
+<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a>  <span class="kw">@override</span> <span class="dt">Stream</span><span class="op">&lt;</span>TunnelStatus<span class="op">&gt;</span> statusStream() <span class="op">=&gt;</span> <span class="at">const</span> <span class="dt">Stream</span><span class="op">.</span>empty();</span>
+<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a>  <span class="kw">@override</span> <span class="dt">Future</span><span class="op">&lt;</span><span class="dt">void</span><span class="op">&gt;</span> start(<span class="op">{</span>required <span class="dt">String</span> transport<span class="op">,</span> <span class="dt">String</span><span class="op">?</span> mapPathOrSession<span class="op">,</span></span>
+<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a>      CoreMode mode <span class="op">=</span> CoreMode<span class="op">.</span>client<span class="op">}</span>) <span class="at">async</span> <span class="op">=&gt;</span> <span class="cf">throw</span> <span class="kw">UnsupportedError</span>(<span class="st">&#39;Console has no tunnel (CI3)&#39;</span>);</span>
+<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a>  <span class="co">// …every tunnel method throws UnsupportedError; Console never calls them (§4.4).</span></span>
+<span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a>  <span class="kw">@override</span> <span class="dt">Future</span><span class="op">&lt;</span><span class="dt">void</span><span class="op">&gt;</span> stop() <span class="at">async</span> <span class="op">{}</span></span>
+<span id="cb7-35"><a href="#cb7-35" aria-hidden="true" tabindex="-1"></a>  <span class="kw">@override</span> <span class="dt">Future</span><span class="op">&lt;</span><span class="dt">List</span><span class="op">&lt;</span>ExitOption<span class="op">&gt;&gt;</span> exits() <span class="at">async</span> <span class="op">=&gt;</span> <span class="at">const</span> [];</span>
+<span id="cb7-36"><a href="#cb7-36" aria-hidden="true" tabindex="-1"></a>  <span class="kw">@override</span> <span class="dt">Future</span><span class="op">&lt;</span><span class="dt">void</span><span class="op">&gt;</span> setExit(<span class="dt">String</span> id<span class="op">,</span> <span class="op">{</span><span class="dt">List</span><span class="op">&lt;</span><span class="dt">String</span><span class="op">&gt;?</span> multiHopChain<span class="op">}</span>) <span class="at">async</span> <span class="op">{}</span></span>
+<span id="cb7-37"><a href="#cb7-37" aria-hidden="true" tabindex="-1"></a>  <span class="kw">@override</span> <span class="dt">Future</span><span class="op">&lt;</span><span class="dt">void</span><span class="op">&gt;</span> setShields(Shields s) <span class="at">async</span> <span class="op">{}</span></span>
+<span id="cb7-38"><a href="#cb7-38" aria-hidden="true" tabindex="-1"></a>  <span class="kw">@override</span> <span class="dt">Future</span><span class="op">&lt;</span>AdvertiseResult<span class="op">&gt;</span> advertise(<span class="dt">List</span><span class="op">&lt;</span><span class="dt">String</span><span class="op">&gt;</span> cidrs) <span class="at">async</span> <span class="op">=&gt;</span></span>
+<span id="cb7-39"><a href="#cb7-39" aria-hidden="true" tabindex="-1"></a>      <span class="cf">throw</span> <span class="kw">UnsupportedError</span>(<span class="st">&#39;Console cannot advertise&#39;</span>);</span>
+<span id="cb7-40"><a href="#cb7-40" aria-hidden="true" tabindex="-1"></a>  <span class="kw">@override</span> <span class="dt">Future</span><span class="op">&lt;</span><span class="dt">void</span><span class="op">&gt;</span> attachTun(<span class="dt">int</span> fd) <span class="at">async</span> <span class="op">{}</span></span>
+<span id="cb7-41"><a href="#cb7-41" aria-hidden="true" tabindex="-1"></a>  <span class="kw">@override</span> <span class="dt">Future</span><span class="op">&lt;</span><span class="dt">void</span><span class="op">&gt;</span> detachTun() <span class="at">async</span> <span class="op">{}</span></span>
+<span id="cb7-42"><a href="#cb7-42" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="34-stream-lifecycle--disposal">3.4 Stream lifecycle &amp;
+disposal</h3>
+<pre class="mermaid"><code>sequenceDiagram
+    autonumber
+    participant W as Widget (ref.watch)
+    participant SP as tunnelStatusProvider (StreamProvider)
+    participant DC as RealHelixCore (Dart)
+    participant FRB as frb StreamSink (Rust task §3.1)
+    participant ORCH as orchestrator broadcast
+
+    W-&gt;&gt;SP: first watch → provider initializes
+    SP-&gt;&gt;DC: statusStream()  (cached broadcast)
+    DC-&gt;&gt;FRB: status_stream(sink)  (spawns Rust task ONCE)
+    FRB-&gt;&gt;ORCH: subscribe()
+    FRB--&gt;&gt;SP: add(project(current))   %% immediate current state (§3.1)
+    ORCH--&gt;&gt;FRB: wire event
+    FRB--&gt;&gt;SP: add(project(event))
+    SP--&gt;&gt;W: AsyncData(status) → rebuild
+    Note over SP: last watcher gone → autoDispose → ref.onDispose cancels sub
+    SP-&gt;&gt;FRB: StreamSubscription.cancel() → sink dropped → Rust task exits
+    FRB-&gt;&gt;ORCH: receiver dropped</code></pre>
+<p>The <code>StreamProvider</code> is <strong>NOT</strong>
+<code>autoDispose</code> for Access/Connector (the status must survive
+screen navigation so a backgrounded connect keeps streaming) — it is
+explicitly <code>keepAlive</code> and disposed only at app teardown
+(§9.2). The single Rust sink (§3.3) is therefore long-lived; this is
+intentional and bounded (one task, one channel; §9.3).</p>
+<hr />
+<h2 id="4-the-provider-graph">4. The provider graph</h2>
+<h3 id="41-the-full-graph-mermaid">4.1 The full graph (Mermaid)</h3>
+<pre class="mermaid"><code>flowchart TB
+    subgraph cfg[&quot;config / DI (overridden in runHelixApp, §4.4)&quot;]
+        FLV[&quot;flavorProvider&lt;br/&gt;Provider&amp;lt;HelixFlavor&amp;gt;&quot;]
+        CAP[&quot;capabilitiesProvider&lt;br/&gt;Provider&amp;lt;Set&amp;lt;Capability&amp;gt;&amp;gt;&quot;]
+        CORE[&quot;helixCoreProvider&lt;br/&gt;Provider&amp;lt;HelixCore&amp;gt;&lt;br/&gt;(Real | NoCore)&quot;]
+        TP[&quot;tunnelPlatformProvider&lt;br/&gt;Provider&amp;lt;TunnelPlatform&amp;gt;&lt;br/&gt;(per-OS impl | NoTunnelPlatform)&quot;]
+        API[&quot;apiClientProvider&lt;br/&gt;Provider&amp;lt;HelixApi&amp;gt;&quot;]
+        WS[&quot;wsClientProvider&lt;br/&gt;Provider&amp;lt;HelixWsClient&amp;gt;&quot;]
+    end
+    subgraph tun[&quot;tunnel state (Access/Connector)&quot;]
+        TS[&quot;tunnelStatusProvider&lt;br/&gt;StreamProvider&amp;lt;TunnelStatus&amp;gt; (§5.1)&quot;]
+        CC[&quot;connectControllerProvider&lt;br/&gt;AsyncNotifierProvider (§5.2)&quot;]
+        INTENT[&quot;connectIntentProvider&lt;br/&gt;NotifierProvider&amp;lt;bool&amp;gt; (§8.1)&quot;]
+        DISP[&quot;displayStatusProvider&lt;br/&gt;Provider&amp;lt;DisplayStatus&amp;gt; (§8.2)&quot;]
+        SH[&quot;shieldsProvider&lt;br/&gt;AsyncNotifierProvider&amp;lt;Shields&amp;gt; (§5.4)&quot;]
+        EX[&quot;exitsProvider&lt;br/&gt;FutureProvider&amp;lt;List&amp;lt;ExitOption&amp;gt;&amp;gt; (§5.5)&quot;]
+        SEL[&quot;selectedExitProvider&lt;br/&gt;NotifierProvider&amp;lt;ExitOption?&amp;gt;&quot;]
+    end
+    subgraph ctl[&quot;control-plane state (all flavors)&quot;]
+        SESS[&quot;sessionProvider&lt;br/&gt;AsyncNotifierProvider&amp;lt;Session&amp;gt; (§6.2)&quot;]
+        EVT[&quot;eventStreamProvider&lt;br/&gt;StreamProvider&amp;lt;ControlEvent&amp;gt; (§7.1)&quot;]
+        DEV[&quot;devicesProvider&lt;br/&gt;NotifierProvider&amp;lt;DeviceList&amp;gt; (§7.2)&quot;]
+        NET[&quot;networksProvider&lt;br/&gt;NotifierProvider&amp;lt;NetworkList&amp;gt;&quot;]
+        POL[&quot;policyProvider&lt;br/&gt;AsyncNotifierProvider&amp;lt;Policy&amp;gt;&quot;]
+        AUD[&quot;auditFeedProvider&lt;br/&gt;NotifierProvider&amp;lt;AuditFeed&amp;gt;&quot;]
+    end
+
+    FLV --&gt; CORE &amp; TP
+    CAP --&gt; CORE &amp; TP
+    CORE --&gt; TS
+    TS --&gt; DISP
+    INTENT --&gt; DISP
+    TP --&gt; CC
+    SESS --&gt; CC
+    CORE --&gt; CC &amp; SH &amp; EX
+    SESS --&gt; API &amp; WS
+    API --&gt; SESS &amp; DEV &amp; NET &amp; POL &amp; EX
+    WS --&gt; EVT
+    EVT --&gt; DEV &amp; NET &amp; POL &amp; AUD
+    EX --&gt; SEL --&gt; CC</code></pre>
+<h3 id="42-provider-catalogue-type-lifetime-flavor-scope">4.2 Provider
+catalogue (type, lifetime, flavor scope)</h3>
+<table>
+<thead>
+<tr>
+<th>Provider</th>
+<th>Riverpod kind</th>
+<th>Lifetime</th>
+<th>Flavors</th>
+<th>Reads</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>flavorProvider</code></td>
+<td><code>Provider&lt;HelixFlavor&gt;</code></td>
+<td>keepAlive (overridden)</td>
+<td>all</td>
+<td>—</td>
+<td>§4.4</td>
+</tr>
+<tr>
+<td><code>capabilitiesProvider</code></td>
+<td><code>Provider&lt;Set&lt;Capability&gt;&gt;</code></td>
+<td>keepAlive (overridden)</td>
+<td>all</td>
+<td>—</td>
+<td>[03 §6]</td>
+</tr>
+<tr>
+<td><code>helixCoreProvider</code></td>
+<td><code>Provider&lt;HelixCore&gt;</code></td>
+<td>keepAlive (overridden)</td>
+<td>Access/Connector real; Console <code>NoCore</code></td>
+<td>caps</td>
+<td>[03 §6]</td>
+</tr>
+<tr>
+<td><code>tunnelPlatformProvider</code></td>
+<td><code>Provider&lt;TunnelPlatform&gt;</code></td>
+<td>keepAlive (overridden)</td>
+<td>Access/Connector</td>
+<td>flavor/OS</td>
+<td>[03 §4]</td>
+</tr>
+<tr>
+<td><code>apiClientProvider</code></td>
+<td><code>Provider&lt;HelixApi&gt;</code></td>
+<td>keepAlive</td>
+<td>all</td>
+<td>session</td>
+<td>doc <code>02</code></td>
+</tr>
+<tr>
+<td><code>wsClientProvider</code></td>
+<td><code>Provider&lt;HelixWsClient&gt;</code></td>
+<td>keepAlive</td>
+<td>Console (+Access for own events)</td>
+<td>session</td>
+<td>§6.3</td>
+</tr>
+<tr>
+<td><code>tunnelStatusProvider</code></td>
+<td><code>StreamProvider&lt;TunnelStatus&gt;</code></td>
+<td><strong>keepAlive</strong> (§3.4)</td>
+<td>Access/Connector</td>
+<td>core</td>
+<td>§5.1</td>
+</tr>
+<tr>
+<td><code>connectControllerProvider</code></td>
+<td><code>AsyncNotifierProvider&lt;…,void&gt;</code></td>
+<td>keepAlive</td>
+<td>Access/Connector</td>
+<td>platform, session, intent</td>
+<td>§5.2</td>
+</tr>
+<tr>
+<td><code>connectIntentProvider</code></td>
+<td><code>NotifierProvider&lt;…,bool&gt;</code></td>
+<td>keepAlive</td>
+<td>Access/Connector</td>
+<td>—</td>
+<td>§8.1</td>
+</tr>
+<tr>
+<td><code>displayStatusProvider</code></td>
+<td><code>Provider&lt;DisplayStatus&gt;</code></td>
+<td>autoDispose</td>
+<td>Access/Connector</td>
+<td>status, intent</td>
+<td>§8.2</td>
+</tr>
+<tr>
+<td><code>shieldsProvider</code></td>
+<td><code>AsyncNotifierProvider&lt;…,Shields&gt;</code></td>
+<td>keepAlive</td>
+<td>Access</td>
+<td>core</td>
+<td>§5.4</td>
+</tr>
+<tr>
+<td><code>exitsProvider</code></td>
+<td><code>FutureProvider&lt;List&lt;ExitOption&gt;&gt;</code></td>
+<td>autoDispose</td>
+<td>Access</td>
+<td>core</td>
+<td>§5.5</td>
+</tr>
+<tr>
+<td><code>selectedExitProvider</code></td>
+<td><code>NotifierProvider&lt;…,ExitOption?&gt;</code></td>
+<td>keepAlive</td>
+<td>Access</td>
+<td>—</td>
+<td>§5.5</td>
+</tr>
+<tr>
+<td><code>sessionProvider</code></td>
+<td><code>AsyncNotifierProvider&lt;…,Session&gt;</code></td>
+<td>keepAlive</td>
+<td>all</td>
+<td>api</td>
+<td>§6.2</td>
+</tr>
+<tr>
+<td><code>eventStreamProvider</code></td>
+<td><code>StreamProvider&lt;ControlEvent&gt;</code></td>
+<td>keepAlive</td>
+<td>Console (+Access)</td>
+<td>ws</td>
+<td>§7.1</td>
+</tr>
+<tr>
+<td><code>devicesProvider</code>/<code>networksProvider</code>/<code>policyProvider</code>/<code>auditFeedProvider</code></td>
+<td><code>NotifierProvider</code>/<code>AsyncNotifierProvider</code></td>
+<td>autoDispose per screen</td>
+<td>Console</td>
+<td>api, events</td>
+<td>§7.2</td>
+</tr>
+</tbody>
+</table>
+<h3 id="43-generator-vs-hand-written-providers-decision">4.3 Generator
+vs hand-written providers (decision)</h3>
+<p>Both <code>@riverpod</code> codegen (<code>riverpod_generator</code>)
+and hand-written providers are viable. <strong>Recommendation:</strong>
+use <code>@riverpod</code> codegen for the family providers
+(<code>devicesProvider(tenantId)</code>,
+<code>policyProvider(networkId)</code>) where typed arguments matter,
+and hand-written <code>StreamProvider</code>/<code>Provider</code> for
+the small fixed set (status/intent/core) — keeping the FFI-adjacent
+providers hand-written makes the stream wiring auditable. Codegen drift
+is checked in the <code>melos</code> drift gate [03 §11].
+(<code>UNVERIFIED</code>: the exact <code>riverpod_generator</code>
+version is a Phase-1 pin.)</p>
+<h3 id="44-flavor-wiring--runhelixapp-overrides-the-only-di-seam">4.4
+Flavor wiring — <code>runHelixApp</code> overrides (the only DI
+seam)</h3>
+<div class="sourceCode" id="cb10"><pre class="sourceCode dart"><code class="sourceCode dart"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix_domain/lib/run_helix_app.dart  [03 §6]</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="dt">Future</span><span class="op">&lt;</span><span class="dt">void</span><span class="op">&gt;</span> runHelixApp(<span class="op">{</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  required HelixFlavor flavor<span class="op">,</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  required Widget home<span class="op">,</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  required <span class="dt">Set</span><span class="op">&lt;</span>Capability<span class="op">&gt;</span> capabilities<span class="op">,</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span>) <span class="at">async</span> <span class="op">{</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">final</span> container <span class="op">=</span> ProviderContainer(overrides<span class="op">:</span> [</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>    flavorProvider<span class="op">.</span>overrideWithValue(flavor)<span class="op">,</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>    capabilitiesProvider<span class="op">.</span>overrideWithValue(capabilities)<span class="op">,</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Only flavors with Capability.tunnel link a real Rust core (CI3, H-I3):</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>    helixCoreProvider<span class="op">.</span>overrideWith((ref) <span class="op">=&gt;</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>        capabilities<span class="op">.</span>contains(Capability<span class="op">.</span>tunnel) <span class="op">?</span> RealHelixCore() <span class="op">:</span> NoCore())<span class="op">,</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>    <span class="co">// The per-OS shim impl is injected here; Console gets a no-op:</span></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>    tunnelPlatformProvider<span class="op">.</span>overrideWith((ref) <span class="op">=&gt;</span></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>        capabilities<span class="op">.</span>contains(Capability<span class="op">.</span>tunnel)</span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>            <span class="op">?</span> TunnelPlatform<span class="op">.</span>forCurrentOs()      <span class="co">// §5.3 — MethodChannel/EventChannel impl</span></span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>            <span class="op">:</span> <span class="at">const</span> NoTunnelPlatform())<span class="op">,</span></span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>  ]);</span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>  runApp(UncontrolledProviderScope(container<span class="op">:</span> container<span class="op">,</span></span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a>      child<span class="op">:</span> HelixApp(home<span class="op">:</span> home<span class="op">,</span> theme<span class="op">:</span> helixTheme(flavor))));   <span class="co">// [03 §7]</span></span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>The override list is the <strong>single</strong> place flavor
+capability gates the graph: Console&#39;s
+<code>NoCore</code>/<code>NoTunnelPlatform</code> mean its widget tree
+never even references <code>tunnelStatusProvider</code>, so the Rust
+staticlib is tree-shaken (CI3) [03 §6].</p>
+<h3 id="45-test-override-seam-h-i4">4.5 Test override seam (H-I4)</h3>
+<div class="sourceCode" id="cb11"><pre class="sourceCode dart"><code class="sourceCode dart"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co">// test: same generated model types, faked behaviour (no mocks-claiming-PASS, [03 §12]).</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>ProviderContainer(overrides<span class="op">:</span> [</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  helixCoreProvider<span class="op">.</span>overrideWithValue(FakeHelixCore(scriptedStatus<span class="op">:</span> [</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">const</span> Connecting()<span class="op">,</span> <span class="at">const</span> Handshaking()<span class="op">,</span> <span class="at">const</span> Connected(<span class="st">&#39;masque-h3&#39;</span><span class="op">,</span> <span class="st">&#39;relay&#39;</span><span class="op">,</span> <span class="dv">23</span>)<span class="op">,</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>  ]))<span class="op">,</span>                                                   <span class="co">// drives a real StreamProvider</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>  tunnelPlatformProvider<span class="op">.</span>overrideWithValue(FakeTunnelPlatform())<span class="op">,</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>  apiClientProvider<span class="op">.</span>overrideWithValue(FakeHelixApi<span class="op">.</span>fromFixtures())<span class="op">,</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>]);</span></code></pre></div>
+<p><code>FakeHelixCore</code> emits the <strong>generated</strong>
+<code>TunnelStatus</code> types (never a parallel stub), so a state test
+exercises the real contract — the §11 STATE/FFI invariant.</p>
+<hr />
+<h2 id="5-tunnelstatusprovider--connectcontroller-accessconnector">5.
+<code>tunnelStatusProvider</code> + <code>ConnectController</code>
+(Access/Connector)</h2>
+<h3 id="51-the-status-provider-the-truth-binding">5.1 The status
+provider (the truth binding)</h3>
+<div class="sourceCode" id="cb12"><pre class="sourceCode dart"><code class="sourceCode dart"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix_domain/lib/providers/tunnel.dart</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="at">final</span> tunnelStatusProvider <span class="op">=</span> StreamProvider<span class="op">&lt;</span>TunnelStatus<span class="op">&gt;</span>((ref) <span class="op">{</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">final</span> core <span class="op">=</span> ref<span class="op">.</span>watch(helixCoreProvider);</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  ref<span class="op">.</span>keepAlive();                                    <span class="co">// survive navigation (§3.4)</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">return</span> core<span class="op">.</span>statusStream();                         <span class="co">// frb StreamSink → broadcast Stream (CI2)</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span>);</span></code></pre></div>
+<p><code>AsyncValue&lt;TunnelStatus&gt;</code> semantics the UI relies
+on:</p>
+<table>
+<thead>
+<tr>
+<th><code>AsyncValue</code></th>
+<th>Meaning at the UI</th>
+<th>Rendered state</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>AsyncLoading</code> (no value yet)</td>
+<td>provider initialized, first <code>sink.add</code> not arrived</td>
+<td>treat as <code>Disconnected</code> placeholder (§3.1 emits current
+immediately, so this is sub-frame)</td>
+</tr>
+<tr>
+<td><code>AsyncData(s)</code></td>
+<td>latest projected status</td>
+<td>render <code>s</code></td>
+</tr>
+<tr>
+<td><code>AsyncError(e)</code></td>
+<td>the Dart stream errored (should be unreachable — §3.1 never adds
+errors)</td>
+<td>log + render last good; surface as
+<code>Down{reason:&quot;ffi-stream-error&quot;}</code> (§10)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="52-connectcontroller--commands-only-never-writes-rendered-state">5.2
+<code>ConnectController</code> — commands only (never writes rendered
+state)</h3>
+<div class="sourceCode" id="cb13"><pre class="sourceCode dart"><code class="sourceCode dart"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix_domain/lib/providers/connect_controller.dart</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="at">final</span> connectControllerProvider <span class="op">=</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    AsyncNotifierProvider<span class="op">&lt;</span>ConnectController<span class="op">,</span> <span class="dt">void</span><span class="op">&gt;</span>(ConnectController<span class="op">.</span><span class="kw">new</span>);</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> ConnectController <span class="kw">extends</span> AsyncNotifier<span class="op">&lt;</span><span class="dt">void</span><span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">@override</span> <span class="dt">Future</span><span class="op">&lt;</span><span class="dt">void</span><span class="op">&gt;</span> build() <span class="at">async</span> <span class="op">{}</span>             <span class="co">// no state of its own (CI2)</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>  <span class="co">/// Issue the CONNECT command. Does NOT set &quot;connected&quot; — the stream does (§1).</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Future</span><span class="op">&lt;</span><span class="dt">void</span><span class="op">&gt;</span> connect(<span class="op">{</span><span class="dt">String</span> transport <span class="op">=</span> <span class="st">&#39;auto&#39;</span><span class="op">}</span>) <span class="at">async</span> <span class="op">{</span></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>    state <span class="op">=</span> <span class="at">const</span> AsyncLoading();</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>    ref<span class="op">.</span>read(connectIntentProvider<span class="op">.</span>notifier)<span class="op">.</span><span class="kw">set</span>(<span class="cn">true</span>);          <span class="co">// optimistic intent (§8.1)</span></span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>    state <span class="op">=</span> <span class="at">await</span> AsyncValue<span class="op">.</span>guard(() <span class="at">async</span> <span class="op">{</span></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>      <span class="at">final</span> cfg <span class="op">=</span> <span class="at">await</span> ref<span class="op">.</span>read(sessionProvider<span class="op">.</span>future)</span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>                          <span class="op">.</span>then((s) <span class="op">=&gt;</span> s<span class="op">.</span>resolveTunnelConfig(   <span class="co">// §6.2 → TunnelConfig [03 §4]</span></span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>                              exit<span class="op">:</span> ref<span class="op">.</span>read(selectedExitProvider)));</span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>      <span class="at">await</span> ref<span class="op">.</span>read(tunnelPlatformProvider)<span class="op">.</span>startTunnel(cfg);   <span class="co">// shim creates TUN + links core</span></span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>      <span class="co">// </span><span class="al">NOTE</span><span class="co">: returns when the COMMAND is accepted, NOT when Connected. The</span></span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>      <span class="co">// tunnelStatusProvider stream is the sole source of the green state (CI2).</span></span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span>);</span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (state<span class="op">.</span>hasError) <span class="op">{</span></span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a>      ref<span class="op">.</span>read(connectIntentProvider<span class="op">.</span>notifier)<span class="op">.</span><span class="kw">set</span>(<span class="cn">false</span>);       <span class="co">// command failed → drop intent</span></span>
+<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Future</span><span class="op">&lt;</span><span class="dt">void</span><span class="op">&gt;</span> disconnect() <span class="at">async</span> <span class="op">{</span></span>
+<span id="cb13-26"><a href="#cb13-26" aria-hidden="true" tabindex="-1"></a>    ref<span class="op">.</span>read(connectIntentProvider<span class="op">.</span>notifier)<span class="op">.</span><span class="kw">set</span>(<span class="cn">false</span>);</span>
+<span id="cb13-27"><a href="#cb13-27" aria-hidden="true" tabindex="-1"></a>    state <span class="op">=</span> <span class="at">await</span> AsyncValue<span class="op">.</span>guard(</span>
+<span id="cb13-28"><a href="#cb13-28" aria-hidden="true" tabindex="-1"></a>        () <span class="op">=&gt;</span> ref<span class="op">.</span>read(tunnelPlatformProvider)<span class="op">.</span>stopTunnel());</span>
+<span id="cb13-29"><a href="#cb13-29" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb13-30"><a href="#cb13-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-31"><a href="#cb13-31" aria-hidden="true" tabindex="-1"></a>  <span class="co">/// Toggle off the LATEST stream value (the actual state), not internal guesswork.</span></span>
+<span id="cb13-32"><a href="#cb13-32" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Future</span><span class="op">&lt;</span><span class="dt">void</span><span class="op">&gt;</span> toggle(TunnelStatus<span class="op">?</span> s) <span class="op">=&gt;</span></span>
+<span id="cb13-33"><a href="#cb13-33" aria-hidden="true" tabindex="-1"></a>      (s <span class="kw">is</span> Connected) <span class="op">?</span> disconnect() <span class="op">:</span> connect();</span>
+<span id="cb13-34"><a href="#cb13-34" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb14"><pre class="sourceCode dart"><code class="sourceCode dart"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co">// the ConnectButton — a pure function of the stream (CI2), command on tap (§1)</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="at">final</span> status <span class="op">=</span> ref<span class="op">.</span>watch(tunnelStatusProvider);</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="at">final</span> display <span class="op">=</span> ref<span class="op">.</span>watch(displayStatusProvider);   <span class="co">// intent-vs-actual blend (§8.2)</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>ConnectButton(</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>  state<span class="op">:</span> status<span class="op">.</span>valueOrNull <span class="op">??</span> <span class="at">const</span> Disconnected()<span class="op">,</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>  display<span class="op">:</span> display<span class="op">,</span>                                  <span class="co">// shows &quot;Reconnecting…&quot; honestly (§8)</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>  busy<span class="op">:</span> ref<span class="op">.</span>watch(connectControllerProvider)<span class="op">.</span>isLoading<span class="op">,</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>  onTap<span class="op">:</span> () <span class="op">=&gt;</span> ref<span class="op">.</span>read(connectControllerProvider<span class="op">.</span>notifier)<span class="op">.</span>toggle(status<span class="op">.</span>valueOrNull)<span class="op">,</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>);</span></code></pre></div>
+<h3 id="53-tunnelplatform-injection-the-command-channel">5.3
+<code>TunnelPlatform</code> injection (the command channel)</h3>
+<div class="sourceCode" id="cb15"><pre class="sourceCode dart"><code class="sourceCode dart"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix_core_ffi/lib/tunnel_platform.dart  [03 §4] — the abstract contract (recap).</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="kw">abstract</span> <span class="kw">class</span> TunnelPlatform <span class="op">{</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Future</span><span class="op">&lt;</span><span class="dt">void</span><span class="op">&gt;</span> startTunnel(TunnelConfig cfg);</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Future</span><span class="op">&lt;</span><span class="dt">void</span><span class="op">&gt;</span> stopTunnel();</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Stream</span><span class="op">&lt;</span>PlatformTunnelEvent<span class="op">&gt;</span> events();              <span class="co">// up/down/permissionDenied/revoked/error</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>  <span class="co">/// Factory selecting the per-OS MethodChannel/EventChannel impl (§4.4).</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">static</span> TunnelPlatform forCurrentOs() <span class="op">=&gt;</span> <span class="cf">switch</span> (defaultTargetPlatform) <span class="op">{</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>    TargetPlatform<span class="op">.</span>iOS <span class="op">||</span> TargetPlatform<span class="op">.</span>macOS <span class="op">=&gt;</span> <span class="at">const</span> _AppleTunnelPlatform()<span class="op">,</span></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>    TargetPlatform<span class="op">.</span>android                     <span class="op">=&gt;</span> <span class="at">const</span> _AndroidTunnelPlatform()<span class="op">,</span></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>    TargetPlatform<span class="op">.</span>windows                     <span class="op">=&gt;</span> <span class="at">const</span> _WindowsPipeTunnelPlatform()<span class="op">,</span></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>    TargetPlatform<span class="op">.</span>linux                       <span class="op">=&gt;</span> <span class="at">const</span> _LinuxTunnelPlatform()<span class="op">,</span></span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>    _                                          <span class="op">=&gt;</span> <span class="at">const</span> _ChannelTunnelPlatform()<span class="op">,</span> <span class="co">// ohos/aurora</span></span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span>;</span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>The <code>events()</code> stream (lifecycle:
+<code>permissionDenied</code>/<code>revoked</code>/<code>error</code>)
+is a <strong>separate</strong> signal from
+<code>tunnelStatusProvider</code> (protection state). The state layer
+folds it: a <code>revoked</code> event (OS or admin killed the tunnel
+out-of-band, [03 §4.1 O3]) sets intent=false and lets the core stream&#39;s
+subsequent <code>Down</code>/<code>Danger</code> paint the truth — the
+UI never claims connected after a revoke [03 §4.1 O3, CI2].</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode dart"><code class="sourceCode dart"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix_domain/lib/providers/platform_events.dart</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="at">final</span> platformEventsProvider <span class="op">=</span> StreamProvider<span class="op">&lt;</span>PlatformTunnelEvent<span class="op">&gt;</span>((ref) <span class="op">{</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  ref<span class="op">.</span>keepAlive();</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">return</span> ref<span class="op">.</span>watch(tunnelPlatformProvider)<span class="op">.</span>events();</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span>);</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="co">// folded by a listener wired once at app start (§9.1):</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> wirePlatformEvents(Ref ref) <span class="op">{</span></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>  ref<span class="op">.</span>listen(platformEventsProvider<span class="op">,</span> (_<span class="op">,</span> next) <span class="op">{</span></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">final</span> ev <span class="op">=</span> next<span class="op">.</span>valueOrNull; <span class="cf">if</span> (ev <span class="op">==</span> <span class="cn">null</span>) <span class="kw">return</span>;</span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">switch</span> (ev<span class="op">.</span>kind) <span class="op">{</span></span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>      <span class="cf">case</span> PlatformTunnelEventKind<span class="op">.</span>permissionDenied<span class="op">:</span></span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>        ref<span class="op">.</span>read(connectIntentProvider<span class="op">.</span>notifier)<span class="op">.</span><span class="kw">set</span>(<span class="cn">false</span>);     <span class="co">// honest: not connecting</span></span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>      <span class="cf">case</span> PlatformTunnelEventKind<span class="op">.</span>revoked<span class="op">:</span></span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a>      <span class="cf">case</span> PlatformTunnelEventKind<span class="op">.</span>error<span class="op">:</span></span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a>        ref<span class="op">.</span>read(connectIntentProvider<span class="op">.</span>notifier)<span class="op">.</span><span class="kw">set</span>(<span class="cn">false</span>);     <span class="co">// core stream paints Down/Danger</span></span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a>      <span class="cf">case</span> PlatformTunnelEventKind<span class="op">.</span>up<span class="op">:</span></span>
+<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a>      <span class="cf">case</span> PlatformTunnelEventKind<span class="op">.</span>down<span class="op">:</span></span>
+<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a>        <span class="cf">break</span>;                                                    <span class="co">// the core stream is authoritative</span></span>
+<span id="cb16-20"><a href="#cb16-20" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb16-21"><a href="#cb16-21" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span>);</span>
+<span id="cb16-22"><a href="#cb16-22" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="54-shieldsprovider--logic-only-no-os-tunnel-ci1">5.4
+<code>shieldsProvider</code> — logic-only, no OS tunnel (CI1)</h3>
+<div class="sourceCode" id="cb17"><pre class="sourceCode dart"><code class="sourceCode dart"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix_domain/lib/providers/shields.dart — setShields is pure core logic (no shim) [03 §3.3].</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="at">final</span> shieldsProvider <span class="op">=</span> AsyncNotifierProvider<span class="op">&lt;</span>ShieldsController<span class="op">,</span> Shields<span class="op">&gt;</span>(ShieldsController<span class="op">.</span><span class="kw">new</span>);</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> ShieldsController <span class="kw">extends</span> AsyncNotifier<span class="op">&lt;</span>Shields<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">@override</span> <span class="dt">Future</span><span class="op">&lt;</span>Shields<span class="op">&gt;</span> build() <span class="at">async</span> <span class="op">=&gt;</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>      <span class="at">const</span> Shields(killSwitch<span class="op">:</span> <span class="cn">true</span><span class="op">,</span> dnsProtection<span class="op">:</span> <span class="cn">true</span><span class="op">,</span> daita<span class="op">:</span> <span class="cn">false</span><span class="op">,</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>                    postQuantum<span class="op">:</span> <span class="cn">false</span><span class="op">,</span> splitTunnel<span class="op">:</span> []);</span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Future</span><span class="op">&lt;</span><span class="dt">void</span><span class="op">&gt;</span> update(Shields s) <span class="at">async</span> <span class="op">{</span></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>    state <span class="op">=</span> <span class="at">const</span> AsyncLoading();</span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>    state <span class="op">=</span> <span class="at">await</span> AsyncValue<span class="op">.</span>guard(() <span class="at">async</span> <span class="op">{</span></span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>      <span class="at">await</span> ref<span class="op">.</span>read(helixCoreProvider)<span class="op">.</span>setShields(s);            <span class="co">// UI→FFI direct (CI1, no shim)</span></span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>      <span class="kw">return</span> s;</span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span>);</span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="55-exitsprovider--selectedexitprovider">5.5
+<code>exitsProvider</code> + <code>selectedExitProvider</code></h3>
+<div class="sourceCode" id="cb18"><pre class="sourceCode dart"><code class="sourceCode dart"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="at">final</span> exitsProvider <span class="op">=</span> FutureProvider<span class="op">.</span>autoDispose<span class="op">&lt;</span><span class="dt">List</span><span class="op">&lt;</span>ExitOption<span class="op">&gt;&gt;</span>((ref) <span class="at">async</span> <span class="op">{</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">final</span> list <span class="op">=</span> <span class="at">await</span> ref<span class="op">.</span>watch(helixCoreProvider)<span class="op">.</span>exits();        <span class="co">// core.exits() [03 §3]</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  list<span class="op">.</span>sort((a<span class="op">,</span> b) <span class="op">=&gt;</span> (a<span class="op">.</span>rttMs <span class="op">??</span> <span class="dv">1</span> <span class="op">&lt;&lt;</span> <span class="dv">30</span>)<span class="op">.</span>compareTo(b<span class="op">.</span>rttMs <span class="op">??</span> <span class="dv">1</span> <span class="op">&lt;&lt;</span> <span class="dv">30</span>)); <span class="co">// RTT-sorted [03 §7.2]</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">return</span> list;</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span>);</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a><span class="at">final</span> selectedExitProvider <span class="op">=</span> NotifierProvider<span class="op">&lt;</span>SelectedExit<span class="op">,</span> ExitOption<span class="op">?&gt;</span>(SelectedExit<span class="op">.</span><span class="kw">new</span>);</span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> SelectedExit <span class="kw">extends</span> Notifier<span class="op">&lt;</span>ExitOption<span class="op">?&gt;</span> <span class="op">{</span></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>  <span class="kw">@override</span> ExitOption<span class="op">?</span> build() <span class="op">=&gt;</span> <span class="cn">null</span>;</span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Future</span><span class="op">&lt;</span><span class="dt">void</span><span class="op">&gt;</span> choose(ExitOption e<span class="op">,</span> <span class="op">{</span><span class="dt">List</span><span class="op">&lt;</span><span class="dt">String</span><span class="op">&gt;?</span> chain<span class="op">}</span>) <span class="at">async</span> <span class="op">{</span></span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">await</span> ref<span class="op">.</span>read(helixCoreProvider)<span class="op">.</span>setExit(e<span class="op">.</span>id<span class="op">,</span> multiHopChain<span class="op">:</span> chain); <span class="co">// logic-only (CI1)</span></span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>    state <span class="op">=</span> e;</span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<hr />
+<h2 id="6-the-helix_api-client--rest--wssse">6. The
+<code>helix_api</code> client — REST + WS/SSE</h2>
+<h3 id="61-package-surface">6.1 Package surface</h3>
+<p><code>helix_api</code> is a decoupled, reusable package [03 §2]: a
+<strong>generated</strong> OpenAPI REST client
+(<code>rest_generated.dart</code>) plus a hand-written WS/SSE client
+(<code>ws_client.dart</code>) [04_UI §1]. The wire schema, auth, and
+event payloads are doc <code>02</code>&#39;s; this doc fixes only the Dart
+consumption surface.</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode dart"><code class="sourceCode dart"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix_api/lib/helix_api.dart — the typed facade over rest_generated.dart (doc 02 schema).</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="kw">abstract</span> <span class="kw">class</span> HelixApi <span class="op">{</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  <span class="co">// auth / enrollment (doc 02):</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Future</span><span class="op">&lt;</span>Session<span class="op">&gt;</span> enrollOidc(<span class="dt">String</span> idToken);</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Future</span><span class="op">&lt;</span>Session<span class="op">&gt;</span> enrollDeviceToken(<span class="dt">String</span> enrollToken<span class="op">,</span> WgPublicKey devicePub);</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Future</span><span class="op">&lt;</span>Session<span class="op">&gt;</span> refresh(Session expiring);</span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>  <span class="co">// resources (Console + Access):</span></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Future</span><span class="op">&lt;</span><span class="dt">List</span><span class="op">&lt;</span>Device<span class="op">&gt;&gt;</span>  listDevices(TenantId t);</span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Future</span><span class="op">&lt;</span><span class="dt">void</span><span class="op">&gt;</span>          revokeDevice(DeviceId d);          <span class="co">// → device.revoked event (doc 02)</span></span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Future</span><span class="op">&lt;</span><span class="dt">List</span><span class="op">&lt;</span>Network<span class="op">&gt;&gt;</span> listNetworks(TenantId t);</span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Future</span><span class="op">&lt;</span>Policy<span class="op">&gt;</span>        getPolicy(NetworkId n);</span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Future</span><span class="op">&lt;</span>PolicyDiff<span class="op">&gt;</span>    previewPolicy(NetworkId n<span class="op">,</span> PolicyDraft draft); <span class="co">// effect-diff [03 §7.2]</span></span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Future</span><span class="op">&lt;</span><span class="dt">void</span><span class="op">&gt;</span>          applyPolicy(NetworkId n<span class="op">,</span> PolicyDraft draft);</span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Future</span><span class="op">&lt;</span>EnrollToken<span class="op">&gt;</span>   mintEnrollToken(NetworkId n);      <span class="co">// QR enroll [03 §13 T1.6]</span></span>
+<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="62-sessionprovider--the-auth-root-every-repo-depends-on">6.2
+<code>sessionProvider</code> — the auth root every repo depends on</h3>
+<div class="sourceCode" id="cb20"><pre class="sourceCode dart"><code class="sourceCode dart"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="at">final</span> sessionProvider <span class="op">=</span> AsyncNotifierProvider<span class="op">&lt;</span>SessionController<span class="op">,</span> Session<span class="op">&gt;</span>(SessionController<span class="op">.</span><span class="kw">new</span>);</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> SessionController <span class="kw">extends</span> AsyncNotifier<span class="op">&lt;</span>Session<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">@override</span> <span class="dt">Future</span><span class="op">&lt;</span>Session<span class="op">&gt;</span> build() <span class="at">async</span> <span class="op">{</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">final</span> stored <span class="op">=</span> <span class="at">await</span> ref<span class="op">.</span>read(secureStoreProvider)<span class="op">.</span>readSession();   <span class="co">// §11.4.10: secure storage</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (stored <span class="op">==</span> <span class="cn">null</span>) <span class="cf">throw</span> <span class="at">const</span> UnauthenticatedException();</span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (stored<span class="op">.</span>isExpiring) <span class="kw">return</span> ref<span class="op">.</span>read(apiClientProvider)<span class="op">.</span>refresh(stored);</span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">// schedule a refresh before expiry so REST/WS never 401 mid-session:</span></span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>    ref<span class="op">.</span>onDispose(_refreshTimer<span class="op">.</span>cancel);</span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>    _scheduleRefresh(stored);</span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">return</span> stored;</span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>  <span class="co">// resolveTunnelConfig: turn the session + selected exit into the [03 §4] TunnelConfig the shim needs.</span></span>
+<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><code>apiClientProvider</code> and <code>wsClientProvider</code>
+<code>ref.watch(sessionProvider)</code> so a token refresh transparently
+re-bears every request and re-auths the socket (§6.3). The
+<strong>device WG private key never leaves the device</strong> [SYN §7]
+— only its public key + the session token cross <code>helix_api</code>
+(the keypair is shim/secure-store owned, doc <code>06</code>).</p>
+<h3 id="63-the-wssse-client-helixwsclient">6.3 The WS/SSE client
+(<code>HelixWsClient</code>)</h3>
+<div class="sourceCode" id="cb21"><pre class="sourceCode dart"><code class="sourceCode dart"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix_api/lib/ws_client.dart — live control-plane events (doc 02 GET /v1/stream).</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> HelixWsClient <span class="op">{</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>  HelixWsClient(<span class="kw">this</span><span class="op">.</span>_session);</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">final</span> Session _session;</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>  <span class="co">/// Long-lived event stream. Auto-reconnects with backoff; replays from the last</span></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>  <span class="co">/// acked cursor so no event is lost across a flap (doc 02 stream resume semantics).</span></span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Stream</span><span class="op">&lt;</span>ControlEvent<span class="op">&gt;</span> events() <span class="at">async</span><span class="op">*</span> <span class="op">{</span></span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">var</span> backoff <span class="op">=</span> <span class="at">const</span> Duration(milliseconds<span class="op">:</span> <span class="dv">500</span>);</span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">var</span> cursor <span class="op">=</span> <span class="at">await</span> _store<span class="op">.</span>lastCursor();</span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> (<span class="cn">true</span>) <span class="op">{</span></span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a>      <span class="cf">try</span> <span class="op">{</span></span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a>        <span class="at">final</span> socket <span class="op">=</span> <span class="at">await</span> _connect(_session<span class="op">.</span>bearer<span class="op">,</span> since<span class="op">:</span> cursor);  <span class="co">// WS upgrade or SSE fallback</span></span>
+<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a>        backoff <span class="op">=</span> <span class="at">const</span> Duration(milliseconds<span class="op">:</span> <span class="dv">500</span>);                    <span class="co">// reset on success</span></span>
+<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a>        <span class="at">await</span> <span class="cf">for</span> (<span class="at">final</span> raw <span class="kw">in</span> socket) <span class="op">{</span></span>
+<span id="cb21-16"><a href="#cb21-16" aria-hidden="true" tabindex="-1"></a>          <span class="at">final</span> ev <span class="op">=</span> ControlEvent<span class="op">.</span>fromJson(raw);                        <span class="co">// doc 02 schema</span></span>
+<span id="cb21-17"><a href="#cb21-17" aria-hidden="true" tabindex="-1"></a>          cursor <span class="op">=</span> ev<span class="op">.</span>cursor; <span class="at">await</span> _store<span class="op">.</span>saveCursor(cursor);          <span class="co">// at-least-once</span></span>
+<span id="cb21-18"><a href="#cb21-18" aria-hidden="true" tabindex="-1"></a>          <span class="kw">yield</span> ev;</span>
+<span id="cb21-19"><a href="#cb21-19" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb21-20"><a href="#cb21-20" aria-hidden="true" tabindex="-1"></a>      <span class="op">}</span> <span class="kw">on</span> SocketException <span class="op">{</span></span>
+<span id="cb21-21"><a href="#cb21-21" aria-hidden="true" tabindex="-1"></a>        <span class="at">await</span> <span class="dt">Future</span><span class="op">.</span>delayed(backoff);</span>
+<span id="cb21-22"><a href="#cb21-22" aria-hidden="true" tabindex="-1"></a>        backoff <span class="op">=</span> _capped(backoff <span class="op">*</span> <span class="dv">2</span><span class="op">,</span> <span class="at">const</span> Duration(seconds<span class="op">:</span> <span class="dv">30</span>));    <span class="co">// jittered, capped</span></span>
+<span id="cb21-23"><a href="#cb21-23" aria-hidden="true" tabindex="-1"></a>      <span class="op">}</span></span>
+<span id="cb21-24"><a href="#cb21-24" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb21-25"><a href="#cb21-25" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb21-26"><a href="#cb21-26" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<blockquote>
+<p><strong>Transport choice (§11.4.6).</strong> <code>UNVERIFIED</code>:
+whether the control stream is WS or SSE per platform — doc
+<code>02</code> fixes the wire (<code>GET /v1/stream</code> [04_UI
+§4.3]). The Dart client MUST support <strong>both</strong> (WS where
+bi-directional acks are wanted, SSE where a plain
+<code>EventSource</code> suffices — Web/Console) and present the
+<strong>same</strong> <code>Stream&lt;ControlEvent&gt;</code> upward so
+the reducer (§7) is transport-agnostic.</p>
+</blockquote>
+<hr />
+<h2 id="7-console-folding-control-plane-events-into-riverpod-state">7.
+Console: folding control-plane events into Riverpod state</h2>
+<h3 id="71-the-event-provider--taxonomy">7.1 The event provider +
+taxonomy</h3>
+<div class="sourceCode" id="cb22"><pre class="sourceCode dart"><code class="sourceCode dart"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix_domain/lib/providers/events.dart</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="at">final</span> eventStreamProvider <span class="op">=</span> StreamProvider<span class="op">&lt;</span>ControlEvent<span class="op">&gt;</span>((ref) <span class="op">{</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>  ref<span class="op">.</span>keepAlive();</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">return</span> ref<span class="op">.</span>watch(wsClientProvider)<span class="op">.</span>events();         <span class="co">// §6.3</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span>);</span></code></pre></div>
+<p>The closed event taxonomy the reducer handles [04_UI §4.3, doc
+<code>02</code>] — Console folds each into the relevant collection so
+the device list, topology view, and audit feed update <strong>live
+without refresh</strong> [03 §8.3]:</p>
+<table>
+<thead>
+<tr>
+<th>Event</th>
+<th>Payload (doc 02)</th>
+<th>Reduced into</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>device.online</code> / <code>device.offline</code></td>
+<td><code>{deviceId, at}</code></td>
+<td><code>devicesProvider</code> presence</td>
+</tr>
+<tr>
+<td><code>device.revoked</code></td>
+<td><code>{deviceId, reason}</code></td>
+<td><code>devicesProvider</code> (mark revoked) + (Access self) drop
+intent (§5.3)</td>
+</tr>
+<tr>
+<td><code>route.changed</code></td>
+<td><code>{networkId, delta}</code></td>
+<td><code>networksProvider</code> topology</td>
+</tr>
+<tr>
+<td><code>policy.compiled</code></td>
+<td><code>{networkId, version, hash}</code></td>
+<td><code>policyProvider</code> version + audit</td>
+</tr>
+<tr>
+<td><code>enroll.completed</code></td>
+<td><code>{deviceId, networkId}</code></td>
+<td><code>devicesProvider</code> add</td>
+</tr>
+<tr>
+<td><code>audit.appended</code></td>
+<td><code>{actor, action, at}</code></td>
+<td><code>auditFeedProvider</code> prepend</td>
+</tr>
+</tbody>
+</table>
+<h3 id="72-the-reducer-fold-events-into-collection-state">7.2 The
+reducer (fold events into collection state)</h3>
+<pre class="mermaid"><code>flowchart TB
+    WS[&quot;wsClientProvider.events()&quot;] --&gt; EV[&quot;eventStreamProvider&lt;br/&gt;StreamProvider&amp;lt;ControlEvent&amp;gt;&quot;]
+    EV --&gt;|ref.listen| RED[&quot;per-collection reducers (§7.2)&quot;]
+    subgraph RED
+        D[&quot;devicesProvider.apply(ev)&quot;]
+        N[&quot;networksProvider.apply(ev)&quot;]
+        P[&quot;policyProvider.apply(ev)&quot;]
+        A[&quot;auditFeedProvider.prepend(ev)&quot;]
+    end
+    SNAP[&quot;REST snapshot on screen open&lt;br/&gt;(devicesProvider build → api.listDevices)&quot;] --&gt; D
+    D --&gt; UI1[&quot;DeviceList (live)&quot;]
+    N --&gt; UI2[&quot;TopologyView (live)&quot;]
+    A --&gt; UI3[&quot;AuditFeed (live)&quot;]</code></pre>
+<div class="sourceCode" id="cb24"><pre class="sourceCode dart"><code class="sourceCode dart"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix_domain/lib/providers/devices.dart — snapshot from REST, then live deltas from WS.</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="at">final</span> devicesProvider <span class="op">=</span> NotifierProvider<span class="op">&lt;</span>DevicesController<span class="op">,</span> DeviceList<span class="op">&gt;</span>(DevicesController<span class="op">.</span><span class="kw">new</span>);</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> DevicesController <span class="kw">extends</span> Notifier<span class="op">&lt;</span>DeviceList<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">@override</span> DeviceList build() <span class="op">{</span></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">final</span> tenant <span class="op">=</span> ref<span class="op">.</span>watch(currentTenantProvider);</span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>    <span class="co">// initial snapshot (REST) — render immediately, then live-patch from events:</span></span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>    ref<span class="op">.</span>read(apiClientProvider)<span class="op">.</span>listDevices(tenant)<span class="op">.</span>then((d) <span class="op">=&gt;</span> state <span class="op">=</span> DeviceList(d));</span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>    <span class="co">// subscribe to the live stream; fold each relevant event:</span></span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a>    ref<span class="op">.</span>listen(eventStreamProvider<span class="op">,</span> (_<span class="op">,</span> next) <span class="op">{</span></span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a>      <span class="at">final</span> ev <span class="op">=</span> next<span class="op">.</span>valueOrNull; <span class="cf">if</span> (ev <span class="op">==</span> <span class="cn">null</span>) <span class="kw">return</span>;</span>
+<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a>      state <span class="op">=</span> <span class="cf">switch</span> (ev) <span class="op">{</span></span>
+<span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a>        DeviceOnline(<span class="op">:</span><span class="at">final</span> id)  <span class="op">=&gt;</span> state<span class="op">.</span>markOnline(id)<span class="op">,</span></span>
+<span id="cb24-14"><a href="#cb24-14" aria-hidden="true" tabindex="-1"></a>        DeviceOffline(<span class="op">:</span><span class="at">final</span> id) <span class="op">=&gt;</span> state<span class="op">.</span>markOffline(id)<span class="op">,</span></span>
+<span id="cb24-15"><a href="#cb24-15" aria-hidden="true" tabindex="-1"></a>        DeviceRevoked(<span class="op">:</span><span class="at">final</span> id) <span class="op">=&gt;</span> state<span class="op">.</span>markRevoked(id)<span class="op">,</span></span>
+<span id="cb24-16"><a href="#cb24-16" aria-hidden="true" tabindex="-1"></a>        EnrollCompleted(<span class="op">:</span><span class="at">final</span> device) <span class="op">=&gt;</span> state<span class="op">.</span>add(device)<span class="op">,</span></span>
+<span id="cb24-17"><a href="#cb24-17" aria-hidden="true" tabindex="-1"></a>        _ <span class="op">=&gt;</span> state<span class="op">,</span>                                       <span class="co">// not ours → ignore</span></span>
+<span id="cb24-18"><a href="#cb24-18" aria-hidden="true" tabindex="-1"></a>      <span class="op">}</span>;</span>
+<span id="cb24-19"><a href="#cb24-19" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span>);</span>
+<span id="cb24-20"><a href="#cb24-20" aria-hidden="true" tabindex="-1"></a>    <span class="kw">return</span> <span class="at">const</span> DeviceList<span class="op">.</span>empty();</span>
+<span id="cb24-21"><a href="#cb24-21" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb24-22"><a href="#cb24-22" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>The pattern is <strong>snapshot-then-stream</strong>: a REST
+<code>list*</code> for the initial state (so the screen is not blank on
+open), then <code>eventStreamProvider</code> deltas patch it in place —
+the same &quot;snapshot+deltas, push-don&#39;t-poll&quot; shape the coordinator uses
+on the data plane [SYN §2, 04_UI §4.3]. The reducer is a pure
+<code>(state, event) → state</code> function (testable per §11
+STATE).</p>
+<h3 id="73-idempotency--ordering-no-double-apply">7.3 Idempotency &amp;
+ordering (no double-apply)</h3>
+<ul>
+<li>Each <code>ControlEvent</code> carries a monotonic
+<code>cursor</code> (§6.3). The reducer is <strong>idempotent</strong>:
+re-applying an event already folded (post-reconnect replay) is a no-op
+(e.g. <code>markOnline</code> of an already-online device). This is
+required because the WS resume (§6.3) is <strong>at-least-once</strong>,
+not exactly-once.</li>
+<li>A snapshot that arrives <em>after</em> some deltas (slow REST, fast
+WS) reconciles by <strong>last-writer-by-cursor</strong>: deltas with a
+cursor newer than the snapshot&#39;s <code>as_of</code> are re-applied on
+top of the snapshot. <code>UNVERIFIED</code>: the exact snapshot
+<code>as_of</code> field is doc <code>02</code>&#39;s; the reducer assumes
+it exists and SKIPs reconciliation with an honest log line if absent
+(§11.4.6).</li>
+</ul>
+<hr />
+<h2 id="8-offline--optimistic--the-intent-vs-actual-honesty-machine">8.
+Offline / optimistic — the intent-vs-actual honesty machine</h2>
+<h3 id="81-connectintentprovider--local-wish-never-truth">8.1
+<code>connectIntentProvider</code> — local wish, never truth</h3>
+<div class="sourceCode" id="cb25"><pre class="sourceCode dart"><code class="sourceCode dart"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix_domain/lib/providers/intent.dart</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="at">final</span> connectIntentProvider <span class="op">=</span> NotifierProvider<span class="op">&lt;</span>ConnectIntent<span class="op">,</span> <span class="dt">bool</span><span class="op">&gt;</span>(ConnectIntent<span class="op">.</span><span class="kw">new</span>);</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> ConnectIntent <span class="kw">extends</span> Notifier<span class="op">&lt;</span><span class="dt">bool</span><span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">@override</span> <span class="dt">bool</span> build() <span class="op">=&gt;</span> <span class="cn">false</span>;                     <span class="co">// default: user wants disconnected</span></span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">void</span> <span class="kw">set</span>(<span class="dt">bool</span> wantConnected) <span class="op">=&gt;</span> state <span class="op">=</span> wantConnected;</span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Intent is set true on <code>connect()</code> and false on
+<code>disconnect()</code>/<code>revoked</code>/command failure
+(§5.2/§5.3). It is <strong>never</strong> read as protection state — it
+only refines <em>how</em> a transitional/idle status is
+<em>labelled</em> (§8.2). This is the literal &quot;distinguish intended from
+actual&quot; rule [04_UI §4.4, 03 §8.4].</p>
+<h3 id="82-displaystatusprovider--blend-actual-is-authoritative">8.2
+<code>displayStatusProvider</code> — blend (actual is
+authoritative)</h3>
+<div class="sourceCode" id="cb26"><pre class="sourceCode dart"><code class="sourceCode dart"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix_domain/lib/providers/display_status.dart</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> DisplayState <span class="op">{</span> disconnected<span class="op">,</span> connecting<span class="op">,</span> reconnecting<span class="op">,</span> connected<span class="op">,</span> danger <span class="op">}</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> DisplayStatus <span class="op">{</span></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">final</span> DisplayState state; <span class="at">final</span> TunnelStatus actual; <span class="at">final</span> <span class="dt">bool</span> intended;</span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">const</span> DisplayStatus(<span class="kw">this</span><span class="op">.</span>state<span class="op">,</span> <span class="kw">this</span><span class="op">.</span>actual<span class="op">,</span> <span class="kw">this</span><span class="op">.</span>intended);</span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a><span class="at">final</span> displayStatusProvider <span class="op">=</span> Provider<span class="op">.</span>autoDispose<span class="op">&lt;</span>DisplayStatus<span class="op">&gt;</span>((ref) <span class="op">{</span></span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">final</span> actual <span class="op">=</span> ref<span class="op">.</span>watch(tunnelStatusProvider)<span class="op">.</span>valueOrNull <span class="op">??</span> <span class="at">const</span> Disconnected();</span>
+<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">final</span> intended <span class="op">=</span> ref<span class="op">.</span>watch(connectIntentProvider);</span>
+<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-12"><a href="#cb26-12" aria-hidden="true" tabindex="-1"></a>  <span class="co">// RULE (H-I1, H-I2): ACTUAL is authoritative for color/protection. Intent only</span></span>
+<span id="cb26-13"><a href="#cb26-13" aria-hidden="true" tabindex="-1"></a>  <span class="co">// refines the LABEL of a non-connected state so the UI never freezes on a stale</span></span>
+<span id="cb26-14"><a href="#cb26-14" aria-hidden="true" tabindex="-1"></a>  <span class="co">// &quot;Disconnected&quot; while a connect is genuinely in flight.</span></span>
+<span id="cb26-15"><a href="#cb26-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">final</span> state <span class="op">=</span> <span class="cf">switch</span> (actual) <span class="op">{</span></span>
+<span id="cb26-16"><a href="#cb26-16" aria-hidden="true" tabindex="-1"></a>    Danger()        <span class="op">=&gt;</span> DisplayState<span class="op">.</span>danger<span class="op">,</span>                         <span class="co">// overrides intent (H-I2)</span></span>
+<span id="cb26-17"><a href="#cb26-17" aria-hidden="true" tabindex="-1"></a>    Connected()     <span class="op">=&gt;</span> DisplayState<span class="op">.</span>connected<span class="op">,</span>                      <span class="co">// actual green only</span></span>
+<span id="cb26-18"><a href="#cb26-18" aria-hidden="true" tabindex="-1"></a>    Connecting() <span class="op">||</span> Handshaking() <span class="op">=&gt;</span> DisplayState<span class="op">.</span>connecting<span class="op">,</span></span>
+<span id="cb26-19"><a href="#cb26-19" aria-hidden="true" tabindex="-1"></a>    Reconnecting()  <span class="op">=&gt;</span> DisplayState<span class="op">.</span>reconnecting<span class="op">,</span></span>
+<span id="cb26-20"><a href="#cb26-20" aria-hidden="true" tabindex="-1"></a>    <span class="co">// idle but the user WANTS connected (e.g. control channel flaky, command sent,</span></span>
+<span id="cb26-21"><a href="#cb26-21" aria-hidden="true" tabindex="-1"></a>    <span class="co">// stream not yet flowing) → show &quot;connecting…&quot;, NOT a misleading green, NOT a</span></span>
+<span id="cb26-22"><a href="#cb26-22" aria-hidden="true" tabindex="-1"></a>    <span class="co">// dead &quot;disconnected&quot; (honest in-between):</span></span>
+<span id="cb26-23"><a href="#cb26-23" aria-hidden="true" tabindex="-1"></a>    Disconnected() <span class="op">||</span> Down() <span class="op">=&gt;</span> intended <span class="op">?</span> DisplayState<span class="op">.</span>connecting <span class="op">:</span> DisplayState<span class="op">.</span>disconnected<span class="op">,</span></span>
+<span id="cb26-24"><a href="#cb26-24" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span>;</span>
+<span id="cb26-25"><a href="#cb26-25" aria-hidden="true" tabindex="-1"></a>  <span class="kw">return</span> DisplayStatus(state<span class="op">,</span> actual<span class="op">,</span> intended);</span>
+<span id="cb26-26"><a href="#cb26-26" aria-hidden="true" tabindex="-1"></a><span class="op">}</span>);</span></code></pre></div>
+<table>
+<thead>
+<tr>
+<th><code>actual</code> (stream)</th>
+<th><code>intended</code></th>
+<th><code>DisplayState</code></th>
+<th>Color [03 §7.1]</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Connected</code></td>
+<td>any</td>
+<td><code>connected</code></td>
+<td>green <code>stateConnected</code></td>
+</tr>
+<tr>
+<td><code>Danger</code></td>
+<td>any</td>
+<td><code>danger</code></td>
+<td>red <code>stateDanger</code> (override)</td>
+</tr>
+<tr>
+<td><code>Connecting</code>/<code>Handshaking</code></td>
+<td>any</td>
+<td><code>connecting</code></td>
+<td>amber <code>stateConnecting</code></td>
+</tr>
+<tr>
+<td><code>Reconnecting</code></td>
+<td>any</td>
+<td><code>reconnecting</code></td>
+<td>amber <code>stateConnecting</code></td>
+</tr>
+<tr>
+<td><code>Disconnected</code>/<code>Down</code></td>
+<td><code>true</code></td>
+<td><code>connecting</code></td>
+<td>amber (honest &quot;trying&quot;)</td>
+</tr>
+<tr>
+<td><code>Disconnected</code>/<code>Down</code></td>
+<td><code>false</code></td>
+<td><code>disconnected</code></td>
+<td>grey <code>stateDisconnected</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>The honesty guarantee (H-I1):</strong> the only path to
+<code>connected</code> (green) is an <code>actual</code>
+<code>Connected</code> event — intent can never produce green. The only
+thing intent does is upgrade a <em>grey idle</em> to an <em>amber
+connecting</em> while a command is in flight, so the UI is neither
+lying-green nor frozen-grey.</p>
+<h3 id="83-danger-is-non-suppressible-h-i2">8.3 <code>Danger</code> is
+non-suppressible (H-I2)</h3>
+<p>A <code>Danger{leak|killswitch_tripped}</code> projection (§2.3) maps
+to <code>DisplayState.danger</code> <strong>before</strong> any intent
+check, paints red immediately, and cannot be optimistically hidden. This
+mirrors the orchestrator&#39;s fail-closed posture [02-ORCH §8.4]: the data
+plane has closed the kill-switch / detected a leak, and the UI must say
+so the instant the event arrives — the user&#39;s &quot;I want connected&quot; intent
+is irrelevant to a safety alarm.</p>
+<h3 id="84-offline-control-channel--offline-tunnel">8.4 Offline control
+channel ≠ offline tunnel</h3>
+<p>A flaky <strong>control</strong> channel (REST/WS to the coordinator,
+§6) is independent of the <strong>data</strong> tunnel (the core stream,
+§5): the tunnel keeps forwarding on its last-applied map even if the
+coordinator is unreachable (fail-static [02-ORCH §6.5, I3]). The state
+layer reflects this honestly:</p>
+<pre class="mermaid"><code>stateDiagram-v2
+    [*] --&gt; Idle
+    Idle --&gt; Connecting : user connect() → intent=true
+    Connecting --&gt; Connected : core stream Connected (ACTUAL, not intent)
+    Connecting --&gt; Connecting : control WS down (irrelevant — data path is core stream)
+    Connected --&gt; Reconnecting : core stream Reconnecting (data drop)
+    Connected --&gt; Danger : core stream Danger (leak/killswitch) — overrides intent
+    Reconnecting --&gt; Connected : core stream Connected
+    Connected --&gt; Idle : user disconnect() → intent=false → stream Disconnected
+    Danger --&gt; Idle : user disconnect()
+    note right of Connected
+      A control-plane (REST/WS) outage NEVER changes this machine —
+      only the CORE STATUS STREAM does (CI2, fail-static).
+    end note</code></pre>
+<p>A WS reconnect banner (&quot;reconnecting to console…&quot;) is a
+<strong>separate</strong> UI affordance driven by
+<code>eventStreamProvider</code>&#39;s <code>AsyncError</code>/reconnect
+state — it MUST NOT be confused with the tunnel&#39;s
+<code>Reconnecting</code> (different stream, different meaning).</p>
+<hr />
+<h2 id="9-app-lifecycle-provider-disposal--memory-budgets">9. App
+lifecycle, provider disposal &amp; memory budgets</h2>
+<h3 id="91-startup-wiring-once-at-runhelixapp">9.1 Startup wiring (once,
+at <code>runHelixApp</code>)</h3>
+<div class="sourceCode" id="cb28"><pre class="sourceCode dart"><code class="sourceCode dart"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co">// after runApp: wire the cross-cutting listeners that fold side-streams (§5.3, §7.2).</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Done via a top-level Consumer/ref so they live for the app&#39;s lifetime and are</span></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a><span class="co">// disposed only at teardown.</span></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> HelixApp <span class="kw">extends</span> ConsumerStatefulWidget <span class="op">{</span> <span class="co">/* … */</span> <span class="op">}</span></span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> _HelixAppState <span class="kw">extends</span> ConsumerState<span class="op">&lt;</span>HelixApp<span class="op">&gt;</span> <span class="kw">with</span> WidgetsBindingObserver <span class="op">{</span></span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">@override</span> <span class="dt">void</span> initState() <span class="op">{</span></span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">super</span><span class="op">.</span>initState();</span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a>    WidgetsBinding<span class="op">.</span>instance<span class="op">.</span>addObserver(<span class="kw">this</span>);</span>
+<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (ref<span class="op">.</span>read(capabilitiesProvider)<span class="op">.</span>contains(Capability<span class="op">.</span>tunnel)) <span class="op">{</span></span>
+<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a>      wirePlatformEvents(ref);                       <span class="co">// §5.3 — fold shim lifecycle events</span></span>
+<span id="cb28-11"><a href="#cb28-11" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb28-12"><a href="#cb28-12" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb28-13"><a href="#cb28-13" aria-hidden="true" tabindex="-1"></a>  <span class="kw">@override</span> <span class="dt">void</span> dispose() <span class="op">{</span> WidgetsBinding<span class="op">.</span>instance<span class="op">.</span>removeObserver(<span class="kw">this</span>); <span class="kw">super</span><span class="op">.</span>dispose(); <span class="op">}</span></span>
+<span id="cb28-14"><a href="#cb28-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-15"><a href="#cb28-15" aria-hidden="true" tabindex="-1"></a>  <span class="kw">@override</span> <span class="dt">void</span> didChangeAppLifecycleState(AppLifecycleState s) <span class="op">{</span></span>
+<span id="cb28-16"><a href="#cb28-16" aria-hidden="true" tabindex="-1"></a>    <span class="co">// §9.4: on resume, force-refresh the control snapshot (WS may have flapped while backgrounded);</span></span>
+<span id="cb28-17"><a href="#cb28-17" aria-hidden="true" tabindex="-1"></a>    <span class="co">// the tunnel status stream needs no action (the core kept running in its OS process, [03 §4]).</span></span>
+<span id="cb28-18"><a href="#cb28-18" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (s <span class="op">==</span> AppLifecycleState<span class="op">.</span>resumed) ref<span class="op">.</span>invalidate(devicesProvider);</span>
+<span id="cb28-19"><a href="#cb28-19" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb28-20"><a href="#cb28-20" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="92-disposal-rules">9.2 Disposal rules</h3>
+<table>
+<thead>
+<tr>
+<th>Provider class</th>
+<th>Disposal</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>tunnelStatusProvider</code>,
+<code>platformEventsProvider</code>,
+<code>eventStreamProvider</code></td>
+<td><strong>keepAlive</strong></td>
+<td>streams must survive screen navigation; one Rust sink / one WS
+(§3.4)</td>
+</tr>
+<tr>
+<td><code>helixCoreProvider</code>, <code>tunnelPlatformProvider</code>,
+<code>apiClientProvider</code>, <code>wsClientProvider</code>,
+<code>sessionProvider</code></td>
+<td>keepAlive</td>
+<td>app-singletons; disposed only at container teardown</td>
+</tr>
+<tr>
+<td><code>exitsProvider</code>, screen
+<code>devicesProvider</code>/<code>policyProvider</code></td>
+<td><strong>autoDispose</strong></td>
+<td>re-fetched on screen open; freed when the screen pops</td>
+</tr>
+<tr>
+<td><code>connectIntentProvider</code>,
+<code>selectedExitProvider</code>, <code>shieldsProvider</code></td>
+<td>keepAlive</td>
+<td>user state spanning screens</td>
+</tr>
+</tbody>
+</table>
+<p>Every provider that holds a <code>StreamSubscription</code> MUST
+cancel it in <code>ref.onDispose</code> (<code>StreamProvider</code>
+does this automatically; hand-folded <code>ref.listen</code>
+subscriptions are auto-cancelled when the host provider disposes). A
+leaked subscription is a §11 MEM defect.</p>
+<h3 id="93-memory-budget-state-layer">9.3 Memory budget (state
+layer)</h3>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Budget</th>
+<th>How</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Rust FFI status sinks</td>
+<td><strong>exactly 1</strong> live <code>status_stream()</code>
+task</td>
+<td>Dart caches + <code>asBroadcastStream()</code> (§3.3) — N widgets, 1
+sink</td>
+</tr>
+<tr>
+<td>WS/SSE socket</td>
+<td>exactly 1 per session</td>
+<td><code>wsClientProvider</code> singleton (§6.3)</td>
+</tr>
+<tr>
+<td>Event history retained</td>
+<td>bounded ring (audit feed cap, e.g. last 500)</td>
+<td><code>auditFeedProvider</code> caps + drops oldest (no unbounded
+growth)</td>
+</tr>
+<tr>
+<td>Provider graph footprint</td>
+<td>low-tens of KB</td>
+<td>sealed states, no large caches; heavy Console tables are
+<code>autoDispose</code> + deferred-loaded [03 §7.3]</td>
+</tr>
+<tr>
+<td>Rebuild cost</td>
+<td>only widgets watching the changed provider rebuild</td>
+<td>granular providers (status ≠ devices ≠ policy); <code>select</code>
+for field-level watches</td>
+</tr>
+</tbody>
+</table>
+<p>These sit under the app-wide budgets [03 §10]: idle memory
+single-digit→low-tens MB; the <em>tunnel core</em> memory is the Rust
+budget (the iOS NE ceiling, [03 §5.1]), <strong>not</strong> the Dart
+state layer&#39;s.</p>
+<h3 id="94-background--resume">9.4 Background / resume</h3>
+<ul>
+<li><strong>Access/Connector:</strong> the tunnel runs in a separate OS
+process/extension [03 §0.1 CI1], so backgrounding the Flutter app does
+<strong>not</strong> stop the tunnel; on resume,
+<code>tunnelStatusProvider</code> re-reads the current state via the
+§3.1 immediate-emit, so the UI is correct within a frame — no
+re-poll.</li>
+<li><strong>Console:</strong> on resume, the WS may have dropped while
+backgrounded; <code>eventStreamProvider</code>&#39;s auto-reconnect (§6.3)
+replays from the cursor, and <code>didChangeAppLifecycleState</code>
+invalidates the visible collection so a fresh REST snapshot reconciles
+any missed deltas (§7.3).</li>
+</ul>
+<hr />
+<h2 id="10-error-handling--edge-cases">10. Error handling &amp; edge
+cases</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Edge case</th>
+<th>Required state-layer behaviour</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>C1</td>
+<td>FFI stream emits nothing yet (cold start)</td>
+<td>§3.1 emits <em>current</em> immediately; <code>AsyncLoading</code>
+is sub-frame; render <code>Disconnected</code> placeholder</td>
+<td>§3.1, §5.1</td>
+</tr>
+<tr>
+<td>C2</td>
+<td>broadcast <code>Lagged</code> (UI wedged &gt; 64 events behind)</td>
+<td>§3.1 converts to a re-emit of latest; provider never sees an error
+(H-I5)</td>
+<td>[02-ORCH §4.6]</td>
+</tr>
+<tr>
+<td>C3</td>
+<td><code>connect()</code> command throws (shim
+<code>permissionDenied</code>)</td>
+<td><code>ConnectController</code> sets <code>AsyncError</code>,
+intent←false; <code>displayStatus</code>→<code>disconnected</code>; show
+permission rationale (NOT <code>error</code> red — distinct from
+<code>Danger</code>) [03 §4.1 O1]</td>
+<td>§5.2, §5.3</td>
+</tr>
+<tr>
+<td>C4</td>
+<td>OS <code>revoked</code> event mid-<code>Connected</code></td>
+<td>platform-events listener sets intent←false; core stream emits
+<code>Down</code>/<code>Danger</code>; UI paints honestly, never stays
+green [03 §4.1 O3]</td>
+<td>§5.3</td>
+</tr>
+<tr>
+<td>C5</td>
+<td>control WS down while tunnel <code>Connected</code></td>
+<td>tunnel UI unaffected (different stream, fail-static); only a
+&quot;reconnecting to console&quot; banner shows</td>
+<td>§8.4</td>
+</tr>
+<tr>
+<td>C6</td>
+<td>session token expired mid-use</td>
+<td><code>sessionProvider</code> auto-refreshes (§6.2); REST/WS re-bear;
+on hard-fail → <code>UnauthenticatedException</code> routes to
+re-enroll</td>
+<td>§6.2</td>
+</tr>
+<tr>
+<td>C7</td>
+<td>duplicate control event after WS replay</td>
+<td>idempotent reducer no-ops (§7.3)</td>
+<td>§7.3</td>
+</tr>
+<tr>
+<td>C8</td>
+<td>snapshot arrives after deltas</td>
+<td>last-writer-by-cursor reconciliation; SKIP-with-log if
+<code>as_of</code> absent (§11.4.6)</td>
+<td>§7.3</td>
+</tr>
+<tr>
+<td>C9</td>
+<td><code>Danger</code> arrives while user intent=true</td>
+<td><code>displayStatus</code>→<code>danger</code> (red) regardless of
+intent (H-I2)</td>
+<td>§8.3</td>
+</tr>
+<tr>
+<td>C10</td>
+<td>Console screen watches <code>tunnelStatusProvider</code>
+(mis-wire)</td>
+<td><code>NoCore().statusStream()</code> = <code>Stream.empty()</code> →
+<code>AsyncLoading</code> forever; a lint/test (§11 STATE) flags any
+Console widget referencing tunnel providers (H-I3)</td>
+<td>§3.3, §4.4</td>
+</tr>
+<tr>
+<td>C11</td>
+<td>rapid toggle (connect→disconnect→connect)</td>
+<td><code>AsyncNotifier.guard</code> serializes; <code>toggle</code>
+reads the <em>latest</em> stream value, not stale intent; no torn
+state</td>
+<td>§5.2</td>
+</tr>
+<tr>
+<td>C12</td>
+<td>FFI stream errors (should be unreachable)</td>
+<td><code>tunnelStatusProvider</code> surfaces <code>AsyncError</code>;
+mapped to synthetic <code>Down{reason:&quot;ffi-stream-error&quot;}</code>;
+logged; NOT shown as <code>Danger</code> (it is an app fault, not a
+leak)</td>
+<td>§5.1</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>No-guessing on causes (§11.4.6).</strong> Error labels are
+observational, never guessed: <code>permissionDenied</code> (C3) comes
+from the shim&#39;s explicit
+<code>PlatformTunnelEventKind.permissionDenied</code> [03 §4], never
+inferred from a generic failure; an ambiguous failure is
+<code>Down{reason}</code> with the shim&#39;s honest <code>detail</code>
+string, never silently upgraded to <code>Danger</code>.</p>
+</blockquote>
+<hr />
+<h2 id="11-test-points--tied-to-the-114169-closed-test-type-vocabulary">11.
+Test points — tied to the §11.4.169 closed test-type vocabulary</h2>
+<p>Per <strong>§11.4.169</strong> every workable item declares its
+required test types from the CLOSED set (unit · integration · e2e ·
+full-automation · Challenges · HelixQA · DDoS/load · security ·
+stress+chaos · concurrency · race · memory · benchmarking); the ONLY
+permitted absence of a warranted type is an honest §11.4.3
+SKIP-with-reason, never a silent gap; every PASS cites rock-solid
+captured evidence (§11.4.5/.69/.107). Four-layer §11.4.4(b) enforcement
+applies to every closure; each meta-test ships a paired §1.1
+mutation.</p>
+<table>
+<thead>
+<tr>
+<th>Test id</th>
+<th>§11.4.169 type</th>
+<th>What it proves for the state layer</th>
+<th>Rig / captured evidence</th>
+<th>§1.1 mutation (must FAIL)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ST-1</td>
+<td><strong>unit</strong></td>
+<td><code>project()</code> (§2.3) maps every (wire, danger) pair → exact
+FFI enum; <code>Down{stopped}</code>→<code>Disconnected</code>, danger
+overrides</td>
+<td>table-driven test over §2.3 matrix</td>
+<td>flip <code>Down{stopped}</code>→<code>Down</code> → ST-1 FAILs</td>
+</tr>
+<tr>
+<td>ST-2</td>
+<td><strong>unit</strong></td>
+<td><code>displayStatusProvider</code> (§8.2) never yields
+<code>connected</code> without <code>actual==Connected</code>;
+<code>Danger</code> overrides intent</td>
+<td>truth-table over (actual × intent)</td>
+<td>let intent force <code>connected</code> → ST-2 FAILs</td>
+</tr>
+<tr>
+<td>ST-3</td>
+<td><strong>unit</strong></td>
+<td>the §7.2 reducer is a pure idempotent
+<code>(state,event)→state</code>; double-apply = no-op</td>
+<td>golden event sequences incl. replay</td>
+<td>make <code>markOnline</code> non-idempotent → ST-3 FAILs</td>
+</tr>
+<tr>
+<td>ST-4</td>
+<td><strong>integration</strong> (real System, infra via containers
+submodule §11.4.76)</td>
+<td><code>tunnelStatusProvider</code> reflects a REAL
+<code>helix-core</code> stream over frb on Linux; <code>helix_api</code>
+hits a booted coordinator</td>
+<td>netns + booted gateway/coordinator; provider-value capture log</td>
+<td>swap stream source to a constant → ST-4 FAILs</td>
+</tr>
+<tr>
+<td>ST-5</td>
+<td><strong>e2e</strong></td>
+<td>full Access journey: tap Connect →
+<code>Connecting→Handshaking→Connected{masque-h3,relay,23}</code>
+rendered ONLY from the stream; tap → Disconnected</td>
+<td>Flutter-Linux app; window-scoped MP4 + vision verdict (§11.4.159) of
+the StatusChip</td>
+<td>paint green on <code>connect()</code> success → ST-5 FAILs
+(CI2)</td>
+</tr>
+<tr>
+<td>ST-6</td>
+<td><strong>full-automation</strong> (deterministic §11.4.50)</td>
+<td>N=3 identical runs of the connect→status arc produce byte-identical
+rendered-state traces</td>
+<td>scripted <code>FakeHelixCore</code>; 3× identical trace
+artifacts</td>
+<td>introduce intent-derived green → diverges → ST-6 FAILs</td>
+</tr>
+<tr>
+<td>ST-7</td>
+<td><strong>Challenges</strong> (challenges submodule §11.4.27(B))</td>
+<td>a Challenge bank scores PASS only on the captured ST-5 status-arc
+MP4 + the no-green-on-intent assertion, not config</td>
+<td>Challenge <code>result.json</code></td>
+<td>weaken assertion to &quot;any green&quot; → Challenge FAILs</td>
+</tr>
+<tr>
+<td>ST-8</td>
+<td><strong>HelixQA</strong> (helix_qa submodule)</td>
+<td>autonomous QA session drives connect/disconnect/revoke across
+flavors; asserts honest display state each step</td>
+<td>HelixQA session evidence bundle</td>
+<td>— (SKIP only if HelixQA bank absent, honest §11.4.3)</td>
+</tr>
+<tr>
+<td>ST-9</td>
+<td><strong>DDoS / load-flood</strong></td>
+<td>Console WS event-flood (≥10k events/s) folds without dropping UI
+frames or unbounded growth; audit ring caps</td>
+<td>event-flood harness; frame-time + RSS CSV</td>
+<td>remove ring cap → memory grows → ST-9 FAILs</td>
+</tr>
+<tr>
+<td>ST-10</td>
+<td><strong>security</strong> (§11.4.10 + security submodule)</td>
+<td>no <code>Session</code> bearer / WG key / <code>SecretBytes</code>
+ever logged or rendered; secure-store read/write only</td>
+<td>plant-and-grep over logs + tracked files (grep-empty proof)</td>
+<td>log the bearer → ST-10 FAILs</td>
+</tr>
+<tr>
+<td>ST-11</td>
+<td><strong>stress + chaos</strong> (§11.4.85)</td>
+<td>control WS killed mid-<code>Connected</code> → tunnel UI unchanged
+(fail-static); revoke mid-connect → honest Down; rapid toggle (C11) no
+torn state</td>
+<td>chaos harness: WS SIGKILL, revoke injection, 100× toggle; recovery
+trace</td>
+<td>let a WS drop flip the tunnel state → ST-11 FAILs (§8.4)</td>
+</tr>
+<tr>
+<td>ST-12</td>
+<td><strong>concurrency / atomicity</strong></td>
+<td>concurrent stream event + command + WS event mutating providers
+leaves consistent state; <code>guard</code> serializes commands</td>
+<td>concurrency harness over <code>connectControllerProvider</code></td>
+<td>drop the <code>AsyncValue.guard</code> → torn state → ST-12
+FAILs</td>
+</tr>
+<tr>
+<td>ST-13</td>
+<td><strong>race / deadlock</strong></td>
+<td>provider re-entrancy / <code>ref.listen</code> fold during dispose
+has no use-after-dispose / deadlock</td>
+<td>Riverpod <code>ProviderContainer</code> stress +
+dispose-during-emit</td>
+<td>leak a subscription past dispose → ST-13 FAILs</td>
+</tr>
+<tr>
+<td>ST-14</td>
+<td><strong>memory</strong></td>
+<td>exactly 1 live frb status sink + 1 WS socket regardless of widget
+count; no subscription leak across 1000 navigations</td>
+<td>sink/socket counter + RSS over a navigation soak</td>
+<td>drop <code>asBroadcastStream</code> cache → N sinks → ST-14
+FAILs</td>
+</tr>
+<tr>
+<td>ST-15</td>
+<td><strong>benchmarking / performance</strong></td>
+<td>only providers whose value changed trigger rebuilds; status emit →
+frame within budget; no jank on the connect transition</td>
+<td>rebuild-count + frame-time CSV (<code>select</code>
+granularity)</td>
+<td>watch the whole status object instead of <code>select</code> → extra
+rebuilds → ST-15 regresses</td>
+</tr>
+<tr>
+<td>FFI-1</td>
+<td><strong>unit</strong> (contract)</td>
+<td>the Dart <code>TunnelStatus</code> mirror == §2.2 Rust == [03 §3.1]
+== projection of [02-ORCH §4.1]; a drift FAILs the build</td>
+<td>shared generated fixtures; byte-for-byte enum diff [03 §12]</td>
+<td>add a Dart-only variant → FFI-1 FAILs</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Anti-bluff coupling (§11.4.107/§11.4.158).</strong> A green
+widget/state unit test is NOT proof the user sees the truth. ST-5 (e2e,
+window-scoped MP4 + vision verdict of the StatusChip reading
+<code>MASQUE · relay · 23ms</code>) + ST-4 (real-core integration) are
+the load-bearing evidence; the unit layer (ST-1..3, FFI-1) exercises
+real contracts via the <em>generated</em> model types (H-I4), never
+mocks-claiming-PASS [03 §12]. Honest §11.4.3 SKIP applies where a type
+is not warranted at this layer (e.g. ST-9 DDoS for Access — a pure
+end-user app has no server-side flood surface; the Console event-flood
+IS the warranted instance, so it is NOT skipped).</p>
+</blockquote>
+<hr />
+<h2 id="12-frozen-contracts-this-document-fixes">12. Frozen contracts
+this document fixes</h2>
+<table>
+<thead>
+<tr>
+<th>Contract</th>
+<th>Fixed value</th>
+<th>Consumed by</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>wire→FFI <code>TunnelStatus</code> projection</strong>
+(§2.3) — the single 5→7 variant mapping authority</td>
+<td>§2.3 table</td>
+<td>the FFI adapter [03 §3], FFI-1 test</td>
+</tr>
+<tr>
+<td><strong><code>tunnelStatusProvider</code> = the sole rendered-state
+source</strong> (CI2)</td>
+<td>§5.1</td>
+<td>every reactive Access/Connector widget</td>
+</tr>
+<tr>
+<td><strong>command/truth asymmetry</strong> — controllers issue
+commands, never write rendered state</td>
+<td>§1, §5.2</td>
+<td><code>ConnectController</code>, ST-5</td>
+</tr>
+<tr>
+<td><strong>intent-vs-actual blend</strong>
+(<code>displayStatusProvider</code>) — green only on actual
+<code>Connected</code>; <code>Danger</code> overrides</td>
+<td>§8.2</td>
+<td><code>ConnectButton</code>, the honesty guarantee</td>
+</tr>
+<tr>
+<td><strong>snapshot-then-stream reducer</strong> (idempotent,
+cursor-ordered)</td>
+<td>§7.2/§7.3</td>
+<td>Console live collections</td>
+</tr>
+<tr>
+<td><strong>provider override DI seam</strong>
+(<code>runHelixApp</code>) — flavor + test wiring</td>
+<td>§4.4/§4.5</td>
+<td>the three flavors; all state tests</td>
+</tr>
+<tr>
+<td><strong>single frb sink + single WS socket</strong> memory
+invariant</td>
+<td>§3.3/§9.3</td>
+<td>ST-14 MEM gate</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="sources-verified">Sources verified</h2>
+<ul>
+<li><code>final/03-client-core-and-ui.md</code> <code>[03]</code> — §0.1
+(client invariants CI1–CI6), §3 (FFI surface, <code>TunnelStatus</code>
+mirror + extension note, FFI⇄shim seam), §4 (<code>TunnelPlatform</code>
+contract + obligations), §6 (flavor/capability gating,
+<code>runHelixApp</code>), §7 (tokens/state→color, a11y CI5), §8
+(Riverpod data layer, tunnel-state provider, Console live data,
+offline/optimistic), §12 (testing + FFI contract test).</li>
+<li><code>final/v02-data-plane/orchestrator-and-state.md</code>
+<code>[02-ORCH]</code> — §4.1 (the lean wire <code>TunnelStatus</code>
+enum), §4.4 (<code>Down.reason</code> prefixes), §4.6 (receiver contract
+/ <code>Lagged</code>), §5.1 (<code>OrchState</code>
+internal-vs-projection), §6.5 (fail-static), §8 (kill-switch/DNS /
+<code>Danger</code> source), §13.1 (single state authority O-I10), §14
+(test points / §11.4.169).</li>
+<li><code>final/v02-data-plane/transport-trait.md</code>
+<code>[02-TT]</code> — §2 (<code>Transport</code> trait), §5.2
+(tunnel-level <code>TunnelStatus</code> projection note), §9 (§11.4.169
+test-type table precedent).</li>
+<li><code>04_VPN_CLD/HelixVPN-helix-ui-Flutter.md</code>
+<code>[04_UI]</code> — §1 (melos packages, Console-no-core-ffi), §4
+(Riverpod choice, layering, <code>tunnelStatusProvider</code>,
+<code>ConnectController</code>, Console live data §4.3,
+offline/optimistic §4.4), §5 (FFI surface <code>HelixCore</code>), §6
+(<code>TunnelPlatform</code> MethodChannel+EventChannel), §7
+(responsive), §12 (state tests with fake core + fake API).</li>
+<li><code>04_VPN_CLD/HelixVPN-Architecture-Refined.md</code>
+<code>[04_ARCH]</code> — §5 (two-cores strategy, FFI via
+flutter_rust_bridge v2 + UniFFI, why Flutter), §5.6/§5.7 (iOS NE
+ceiling, Console-web/CI3).</li>
+<li><code>v09-research/_SYNTHESIS.md</code> <code>[SYN]</code> — §2
+(push-don&#39;t-poll, event-driven map), §4 (phases — direct-P2P/relay path
+is Phase 2), §5 (client architecture, Riverpod = pure function of core
+status stream), §7 (no-logging, keys never leave device), §9
+(constitution bindings).</li>
+<li><code>[research-flutter_ffi]</code> /
+<code>[research-ios_android]</code> — frb v2
+<code>StreamSink</code>→Dart <code>Stream</code> isolate/threading
+model; per-OS shim channel mechanics. <code>UNVERIFIED</code> items
+(path-field provenance §2.4, WS-vs-SSE per platform §6.3, exact
+riverpod_generator pin §4.3) flagged inline per §11.4.6, never
+fabricated.</li>
+</ul>
+<p><em>Constitution: §11.4.44 (revision header), §11.4.6 (no-guessing —
+UNVERIFIED markers, observational error labels), §11.4.66 (decisions
+surfaced not silently resolved),
+§11.4.5/§11.4.69/§11.4.107/§11.4.158/§11.4.159 (captured/window-scoped
+evidence), §11.4.169 (comprehensive test-type coverage), §11.4.10 (no
+secret leak — ST-10), §11.4.28/§11.4.74 (decoupled reusable packages),
+§11.4.50 (deterministic FA), §11.4.85 (stress+chaos), §11.4.27
+(Challenges/HelixQA), §1.1 (paired mutations).</em></p>
+<p><em>End of nano-detail specification — Volume 4 (Clients),
+<code>state-management.md</code>. Pairs with
+<code>03-client-core-and-ui.md</code> (the client overview this
+deepens), <code>v02-data-plane/orchestrator-and-state.md</code> (the
+<code>TunnelStatus</code> stream + state machine this consumes), and
+<code>v02-data-plane/transport-trait.md</code> (the carrier the
+<code>Connected.transport</code> label names). The wire→FFI projection
+(§2.3), the provider graph (§4), and the intent-vs-actual honesty
+machine (§8) are the frozen state-layer contracts; their implementations
+may evolve, their shapes may not.</em></p>
+</body>
+</html>

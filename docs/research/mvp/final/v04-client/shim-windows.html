@@ -1,0 +1,1889 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Windows shim (wireguard-nt + service)</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Windows shim (wireguard-nt + service)</h1>
+</header>
+<h1 id="windows-shim-wireguard-nt--service">Windows shim (wireguard-nt +
+service)</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-06-25T00:00:00Z</p>
+<blockquote>
+<p>Volume 4 (Clients) nano-detail specification — deepens the
+<strong>Windows row</strong> of the per-platform shim matrix in the
+pass-1 client overview [04_UI §5/§6, 03-client §5.3]. Where doc
+<code>03</code> says <em>one sentence</em> (&quot;a privileged Windows
+service hosts the core and the <code>wireguard-nt</code> adapter; the
+Flutter app talks to it over a named pipe&quot;), this document pins the
+<strong>process model, the named-pipe IPC wire protocol, the SYSTEM
+service lifecycle, the wintun/wireguard-nt adapter handoff, WFP-based
+split-tunnel + kill-switch, the Authenticode signing chain, and the
+<code>TunnelPlatform</code> contract implementation</strong> to
+near-code granularity.</p>
+<p><strong>SPEC ONLY</strong> — it describes <em>what to build and
+why</em> (signatures, state machines, wire formats, error taxonomy,
+memory budgets, edge cases, test points). It does not build the product.
+Sources cited inline by id: <code>[03-client §N]</code> =
+<code>final/03-client-core-and-ui.md</code>; <code>[04_UI §N]</code> =
+<code>04_VPN_CLD/HelixVPN-helix-ui-Flutter.md</code>;
+<code>[04_ARCH §N]</code> =
+<code>04_VPN_CLD/HelixVPN-Architecture-Refined.md</code>;
+<code>[01-orch §N]</code> =
+<code>final/v02-data-plane/orchestrator-and-state.md</code>;
+<code>[01-trans §N]</code> =
+<code>final/v02-data-plane/transport-trait.md</code>;
+<code>[SYN §N]</code> = <code>v09-research/_SYNTHESIS.md</code>.
+External Windows-platform facts that the evidence base does not itself
+contain are tagged <code>UNVERIFIED</code> per constitution §11.4.6 —
+recommendations to be ratified against the Microsoft WFP / Service /
+wintun / wireguard-nt documentation and a real machine, never
+fabricated.</p>
+<p><strong>Boundary with sibling docs.</strong> This document
+<strong>consumes</strong> the FFI surface + <code>TunnelStatus</code>
+enum owned by <code>[03-client §3]</code> and the
+orchestrator/<code>TunnelStatus</code> contract owned by
+<code>[01-orch §4.1]</code>, and the <code>TunnelPlatform</code> channel
+contract owned by <code>[03-client §4]</code>. It <strong>owns</strong>
+everything Windows-specific from those contracts down to the OS: the
+service, the pipe, the adapter, WFP, and signing. It does
+<strong>not</strong> redefine the FFI surface, the
+<code>Transport</code> trait <code>[01-trans]</code>, the orchestrator
+loops <code>[01-orch §3]</code>, nor the WG crypto core.</p>
+</blockquote>
+<hr />
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#0-position-ownership-and-the-windows-specific-invariants">0.
+Position, ownership, and the Windows-specific invariants</a></li>
+<li><a href="#1-process--trust-model-why-a-system-service-at-all">1.
+Process &amp; trust model (why a SYSTEM service at all)</a></li>
+<li><a href="#2-the-adapter-wintun-vs-wireguard-nt-the-load-bearing-choice">2.
+The adapter: wintun vs wireguard-nt (the load-bearing choice)</a></li>
+<li><a href="#3-the-in-service-core-host-ffi-surface-on-windows">3. The
+in-service core host (FFI surface on Windows)</a></li>
+<li><a href="#4-named-pipe-ipc--the-ui--service-wire-protocol">4.
+Named-pipe IPC — the UI ⇄ service wire protocol</a></li>
+<li><a href="#5-the-tunnelplatform-contract-implementation-dart-side">5.
+The <code>TunnelPlatform</code> contract implementation (Dart
+side)</a></li>
+<li><a href="#6-windows-service-lifecycle-scm-state-machine">6. Windows
+service lifecycle (SCM state machine)</a></li>
+<li><a href="#7-tunnel-lifecycle-on-windows-end-to-end-sequence">7.
+Tunnel lifecycle on Windows (end-to-end sequence)</a></li>
+<li><a href="#8-wfp--kill-switch--split-tunnel">8. WFP — kill-switch +
+split-tunnel</a></li>
+<li><a href="#9-code-signing--driver-trust-1141133">9. Code signing
+&amp; driver trust (§11.4.133)</a></li>
+<li><a href="#10-memory--resource-budgets">10. Memory / resource
+budgets</a></li>
+<li><a href="#11-error-taxonomy--edge-cases">11. Error taxonomy &amp;
+edge cases</a></li>
+<li><a href="#12-test-points--1141169-closed-test-type-vocabulary">12.
+Test points — §11.4.169 closed test-type vocabulary</a></li>
+<li><a href="#13-open-decisions-surfaced-by-this-document">13. Open
+decisions surfaced by this document</a></li>
+<li><a href="#sources-verified">Sources verified</a></li>
+</ul>
+<hr />
+<h2 id="0-position-ownership-and-the-windows-specific-invariants">0.
+Position, ownership, and the Windows-specific invariants</h2>
+<p>Windows is the one desktop target where the tunnel
+<strong>cannot</strong> run in the same process as the Flutter UI:
+creating a TUN adapter, loading a driver, and installing WFP filters all
+require administrator / <code>SYSTEM</code> privilege, while the Flutter
+app runs unprivileged in the interactive user&#39;s session [04_UI §6,
+03-client §5.3]. The shim is therefore split across a <strong>privilege
+boundary</strong>: a long-lived <strong>privileged Windows
+service</strong> (<code>HelixTunnelSvc</code>, runs as
+<code>LocalSystem</code>) hosts <code>helix-core</code> + the network
+adapter, and the unprivileged Flutter app drives it over a <strong>named
+pipe</strong> that satisfies the <code>TunnelPlatform</code> contract
+<code>[03-client §4]</code>.</p>
+<p>This document owns five Windows-specific contracts and nothing
+else:</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Contract</th>
+<th>Owned here</th>
+<th>Consumed from</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>W-C1</td>
+<td><strong>Process/trust model</strong> — unprivileged UI ⇄
+<code>SYSTEM</code> service split; who holds the adapter, WFP, and the
+core</td>
+<td>§1</td>
+<td>OS privilege model</td>
+</tr>
+<tr>
+<td>W-C2</td>
+<td><strong>Named-pipe IPC protocol</strong> — pipe name, security
+descriptor, framing, the request/response + event envelope that carries
+the FFI surface <code>[03-client §3]</code> and
+<code>TunnelPlatform</code> verbs <code>[03-client §4]</code></td>
+<td>§4</td>
+<td><code>[03-client §3/§4]</code></td>
+</tr>
+<tr>
+<td>W-C3</td>
+<td><strong>Adapter handoff</strong> — wintun (production) /
+wireguard-nt (optional plain-udp fast path); how the service pumps
+packets into <code>helix-core</code> without a Unix fd</td>
+<td>§2–3</td>
+<td>wintun / wireguard-nt API</td>
+</tr>
+<tr>
+<td>W-C4</td>
+<td><strong>WFP kill-switch + split-tunnel</strong> — the Windows
+realisation of the core&#39;s kill-switch/DNS state effects
+<code>[01-orch §8]</code> and per-app/per-route split
+<code>[03-client §4 TunnelConfig]</code></td>
+<td>§8</td>
+<td><code>[01-orch §8]</code></td>
+</tr>
+<tr>
+<td>W-C5</td>
+<td><strong>Signing chain</strong> — Authenticode for the service +
+installer, driver trust for wintun/wireguard-nt (§11.4.133)</td>
+<td>§9</td>
+<td>operator-supplied certs</td>
+</tr>
+</tbody>
+</table>
+<h3 id="01-windows-specific-invariants-extend-never-weaken-the-client-invariants">0.1
+Windows-specific invariants (extend, never weaken, the client
+invariants)</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Invariant</th>
+<th>Source / rationale</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>W-I1</td>
+<td><strong>The unprivileged UI never touches the adapter, the driver,
+or WFP.</strong> All privileged operations happen only inside
+<code>HelixTunnelSvc</code>; the UI&#39;s only capability is &quot;send a
+<code>TunnelPlatform</code> command, receive events&quot; over the pipe. A
+compromised UI cannot install firewall rules or open a TUN.</td>
+<td>least privilege; W-C1</td>
+</tr>
+<tr>
+<td>W-I2</td>
+<td><strong><code>helix-core</code> is the <em>only</em> place WG +
+transport live</strong> — the service hosts the same Rust core as every
+other platform; it does <strong>not</strong> re-implement crypto or
+obfuscation. wintun is a <em>generic L3 carrier</em>, not a WG
+implementation (O2 <code>[03-client §4]</code>, I4
+<code>[01-trans §1]</code>).</td>
+<td>one core, no fork</td>
+</tr>
+<tr>
+<td>W-I3</td>
+<td><strong>Kill-switch filters survive a service crash
+(fail-closed).</strong> WFP kill-switch filters are installed in a
+<strong>persistent</strong> sub-layer so an abnormal service exit leaves
+egress blocked (O-I11 <code>[01-orch §8]</code>); only a <em>graceful
+user stop</em> removes them. Split-tunnel exclusion filters are
+<strong>dynamic</strong> (auto-removed when the engine handle closes
+with the tunnel).</td>
+<td>O-I11; §8.4</td>
+</tr>
+<tr>
+<td>W-I4</td>
+<td><strong>The pipe is authenticated by its DACL, not by trust in the
+caller.</strong> The pipe&#39;s security descriptor restricts
+<code>CONNECT</code> to the interactive desktop user(s); the service
+verifies the connecting client&#39;s token (§4.3) before honouring any
+command.</td>
+<td>W-C2; §11.4.10</td>
+</tr>
+<tr>
+<td>W-I5</td>
+<td><strong>Status truth flows core → service → pipe → UI; the UI never
+paints &quot;connected&quot; on intent.</strong> The pipe re-emits the core&#39;s
+<code>TunnelStatus</code> <code>[01-orch §4.1]</code> byte-for-byte; the
+UI is a pure function of that stream (CI2
+<code>[03-client §0.1]</code>).</td>
+<td>CI2 honesty</td>
+</tr>
+<tr>
+<td>W-I6</td>
+<td><strong>No secret crosses the pipe in cleartext logs or tracked
+files.</strong> The session/map token + any transport
+<code>SecretBytes</code> <code>[01-trans §3.2]</code> ride the pipe body
+but are never logged; the pipe body is local-only (kernel-mediated),
+never persisted (§11.4.10).</td>
+<td>§11.4.10</td>
+</tr>
+</tbody>
+</table>
+<pre class="mermaid"><code>flowchart TB
+    subgraph user[&quot;Interactive user session (Medium IL, unprivileged)&quot;]
+        UI[&quot;Flutter app (helix-ui)\nWindowsTunnelPlatform : TunnelPlatform&quot;]
+        PC[&quot;named-pipe CLIENT\n(dart:ffi → kernel32 CreateFile/Read/Write)&quot;]
+        UI --&gt; PC
+    end
+    subgraph sys[&quot;HelixTunnelSvc — Windows service (LocalSystem, SYSTEM IL)&quot;]
+        PS[&quot;named-pipe SERVER\n\\\\.\\pipe\\helixvpn\\tunnel&quot;]
+        CORE[&quot;helix-core (Rust, in-service)\norchestrator + helix-wg + helix-transport&quot;]
+        ADP[&quot;wintun adapter (generic L3 TUN)\n(opt: wireguard-nt for plain-udp)&quot;]
+        WFP[&quot;WFP engine\nkill-switch (persistent) + split-tunnel (dynamic)&quot;]
+        PS &lt;--&gt; CORE
+        CORE &lt;--&gt; ADP
+        CORE --&gt; WFP
+    end
+    PC &lt;== &quot;named-pipe IPC (length-prefixed frames)&quot; ==&gt; PS
+    ADP -. &quot;encrypted/obfuscated datagrams&quot; .-&gt; NET[[&quot;gateway :443 / :51820&quot;]]</code></pre>
+<hr />
+<h2 id="1-process--trust-model-why-a-system-service-at-all">1. Process
+&amp; trust model (why a SYSTEM service at all)</h2>
+<p>Three facts force the split [04_UI §6, 03-client §5.3]:</p>
+<ol type="1">
+<li><strong>wintun / wireguard-nt require privilege.</strong> Creating
+or opening a tunnel adapter and loading the kernel driver need
+<code>SeLoadDriverPrivilege</code> + administrator rights; WFP filter
+installation needs <code>FWPM_ACTRL_ADD</code> (administrator). The
+interactive Flutter app does not and must not hold these.</li>
+<li><strong>A tunnel must outlive the UI.</strong> The user closes the
+app window; the VPN stays up. A service is the OS-native &quot;runs without
+an interactive session, survives logoff&quot; host.</li>
+<li><strong>One privileged surface, audited once.</strong> Concentrating
+every privileged operation in one signed service (W-I1) gives a single,
+small, reviewable attack surface instead of scattering elevation prompts
+through the UI.</li>
+</ol>
+<h3 id="11-who-runs-as-what">1.1 Who runs as what</h3>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Process</th>
+<th>Security context</th>
+<th>Holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Flutter UI + <code>WindowsTunnelPlatform</code></td>
+<td><code>helix_access.exe</code></td>
+<td>interactive user, Medium IL</td>
+<td>nothing privileged — only the pipe client</td>
+</tr>
+<tr>
+<td><code>HelixTunnelSvc</code></td>
+<td><code>helix_tunnel_svc.exe</code></td>
+<td><code>LocalSystem</code> (SYSTEM IL)</td>
+<td>the core, the adapter, WFP filters, the pipe server</td>
+</tr>
+<tr>
+<td>wintun / wireguard-nt</td>
+<td>kernel driver</td>
+<td>kernel</td>
+<td>the L3 adapter object</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Service-account hardening (recommended, §11.4.133).</strong>
+<code>LocalSystem</code> is the simplest account that can load the
+driver + edit WFP. A hardened variant runs the service under a dedicated
+<strong>virtual service account</strong>
+(<code>NT SERVICE\HelixTunnelSvc</code>) granted only the required
+privileges (<code>SeLoadDriverPrivilege</code>, the WFP
+<code>FWPM_ACTRL_*</code> rights, <code>SeChangeNotifyPrivilege</code>)
+and a write-restricted token. <code>UNVERIFIED</code>: whether wintun
+adapter creation succeeds under a non-<code>LocalSystem</code> service
+SID is a Phase-1 SEC/IT measurement, not an assumption — surfaced as
+decision <strong>D-WIN-3 (§13)</strong>.</p>
+</blockquote>
+<hr />
+<h2 id="2-the-adapter-wintun-vs-wireguard-nt-the-load-bearing-choice">2.
+The adapter: wintun vs wireguard-nt (the load-bearing choice)</h2>
+<p>The doc-03 row reads &quot;<code>wireguard-nt</code>/<code>wintun</code>&quot;
+[03-client §5.3]; this section pins <strong>which one carries the
+obfuscated datapath and why</strong>, honouring W-I2 (one core, no
+fork).</p>
+<table>
+<thead>
+<tr>
+<th>Adapter</th>
+<th>What it is</th>
+<th>Carries</th>
+<th>Compatible with helix-core&#39;s obfuscation ladder?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>wintun</strong></td>
+<td>a generic, signed <strong>L3 TUN</strong> adapter (raw IP packets
+to/from userspace via a ring buffer)</td>
+<td>whatever userspace puts on the ring</td>
+<td><strong>Yes</strong> — the service does WG + <code>Transport</code>
+in <code>helix-core</code> and pumps the wintun ring, exactly mirroring
+the iOS <code>packetFlow ⇄ core</code> pump
+<code>[03-client §5.1]</code></td>
+</tr>
+<tr>
+<td><strong>wireguard-nt</strong></td>
+<td>the <strong>kernel WireGuard</strong> driver — does WG Noise +
+ChaCha20-Poly1305 <strong>in kernel</strong>, speaks <strong>plain
+WG-over-UDP only</strong></td>
+<td>inner WG only, plain UDP</td>
+<td><strong>No</strong> for
+<code>masque-h3</code>/<code>shadowsocks</code>/<code>lwo</code>/… —
+kernel WG cannot be wrapped in the <code>helix-transport</code>
+carriers; using it would duplicate WG outside the one core (violates
+O2/I4)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Decision (surfaced as D-WIN-1, §13).</strong> The
+<strong>production carrier is wintun</strong>: the service runs
+<code>helix-core</code> (WG + the full <code>Transport</code> ladder
+<code>[01-trans §6]</code>) in userspace and pumps the wintun ring, so
+every obfuscation transport works identically to every other platform
+(W-I2, I4 <code>[01-trans §1]</code>). <strong>wireguard-nt is an
+<em>optional</em> kernel fast path for the <code>plain-udp</code> rung
+only</strong> — when the ladder selects <code>plain-udp</code> on a
+cooperative network it MAY hand the WG config to wireguard-nt for
+in-kernel throughput, and MUST fall back to the wintun+core path the
+instant the ladder escalates to any obfuscated rung. Phase-1 ships
+<strong>wintun only</strong>; the wireguard-nt fast path is a Phase-2
+throughput optimisation gated on a BENCH measurement (§12).</p>
+<h3 id="21-wintun-adapter-handle--session-the-packet-ring">2.1 wintun
+adapter handle &amp; session (the packet ring)</h3>
+<p>The wintun API (<code>wintun.dll</code>, the official WireGuard
+component) exposes an adapter + a session holding a ring buffer;
+userspace allocates/sends and receives/releases packets. The
+<code>helix-core</code> Windows shim wraps it behind a
+<code>WinTunDevice</code> that satisfies the same packet-source/sink
+role the Unix <code>helix-tun::TunDevice</code> plays
+<code>[01-orch §2.1]</code>.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-core/src/platform/windows/wintun.rs  (the Windows TunDevice impl)</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co">// FFI to wintun.dll — names per the official WireGuard wintun.h. UNVERIFIED: exact</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co">// argument list pinned against the shipped wintun.h header, not memory.</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>link<span class="at">(</span>name <span class="op">=</span> <span class="st">&quot;wintun&quot;</span><span class="at">)]</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="kw">extern</span> <span class="st">&quot;C&quot;</span> <span class="op">{</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> WintunCreateAdapter(name<span class="op">:</span> PCWSTR<span class="op">,</span> tunnel_type<span class="op">:</span> PCWSTR<span class="op">,</span> guid<span class="op">:</span> <span class="op">*</span><span class="kw">const</span> GUID) <span class="op">-&gt;</span> WINTUN_ADAPTER_HANDLE<span class="op">;</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> WintunStartSession(adapter<span class="op">:</span> WINTUN_ADAPTER_HANDLE<span class="op">,</span> capacity<span class="op">:</span> <span class="dt">u32</span>) <span class="op">-&gt;</span> WINTUN_SESSION_HANDLE<span class="op">;</span> <span class="co">// capacity = pow2, 0x20000..=0x4000000</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> WintunGetReadWaitEvent(session<span class="op">:</span> WINTUN_SESSION_HANDLE) <span class="op">-&gt;</span> HANDLE<span class="op">;</span>                            <span class="co">// wait-handle for rx readiness</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> WintunReceivePacket(session<span class="op">:</span> WINTUN_SESSION_HANDLE<span class="op">,</span> size<span class="op">:</span> <span class="op">*</span><span class="kw">mut</span> <span class="dt">u32</span>) <span class="op">-&gt;</span> <span class="op">*</span><span class="kw">mut</span> <span class="dt">u8</span><span class="op">;</span>              <span class="co">// borrow an inbound IP packet</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> WintunReleaseReceivePacket(session<span class="op">:</span> WINTUN_SESSION_HANDLE<span class="op">,</span> packet<span class="op">:</span> <span class="op">*</span><span class="kw">const</span> <span class="dt">u8</span>)<span class="op">;</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> WintunAllocateSendPacket(session<span class="op">:</span> WINTUN_SESSION_HANDLE<span class="op">,</span> size<span class="op">:</span> <span class="dt">u32</span>) <span class="op">-&gt;</span> <span class="op">*</span><span class="kw">mut</span> <span class="dt">u8</span><span class="op">;</span>              <span class="co">// borrow an outbound slot</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> WintunSendPacket(session<span class="op">:</span> WINTUN_SESSION_HANDLE<span class="op">,</span> packet<span class="op">:</span> <span class="op">*</span><span class="kw">const</span> <span class="dt">u8</span>)<span class="op">;</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> WintunEndSession(session<span class="op">:</span> WINTUN_SESSION_HANDLE)<span class="op">;</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> WintunCloseAdapter(adapter<span class="op">:</span> WINTUN_ADAPTER_HANDLE)<span class="op">;</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="co">/// Windows L3 carrier — drop-in for the orchestrator&#39;s TunDevice role [01-orch §2.1].</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> WinTunDevice <span class="op">{</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    adapter<span class="op">:</span> WintunAdapter<span class="op">,</span>   <span class="co">// RAII: WintunCloseAdapter on Drop</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>    session<span class="op">:</span> WintunSession<span class="op">,</span>   <span class="co">// RAII: WintunEndSession on Drop</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>    read_evt<span class="op">:</span> HANDLE<span class="op">,</span>         <span class="co">// WintunGetReadWaitEvent — awaited on the rx loop</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> WinTunDevice <span class="op">{</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Create+configure the adapter: overlay IP, routes (AllowedIPs), MTU, tunnel DNS.</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// IP/route/DNS are set via the iphlpapi / netsh route table, NOT via wintun (it is L3-only).</span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">fn</span> create(cfg<span class="op">:</span> <span class="op">&amp;</span>TunnelConfig) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span><span class="dt">Self</span><span class="op">,</span> WinShimError<span class="op">&gt;;</span>     <span class="co">// §4.5 TunnelConfig</span></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Cancel-safe async recv: wait on read_evt, WintunReceivePacket → copy out → release.</span></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> recv(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>Bytes<span class="op">,</span> WinShimError<span class="op">&gt;;</span>             <span class="co">// → orchestrator loop A [01-orch §3.1]</span></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Send a decrypted inbound IP packet onto the ring (orchestrator loop B) [01-orch §3.2].</span></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> send(<span class="op">&amp;</span><span class="kw">self</span><span class="op">,</span> ip_pkt<span class="op">:</span> Bytes) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">,</span> WinShimError<span class="op">&gt;;</span></span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>The orchestrator&#39;s three loops <code>[01-orch §3]</code> are
+<strong>unchanged</strong> on Windows: loop A reads
+<code>WinTunDevice::recv</code> (plaintext IP) → WG encrypt →
+<code>Transport::send</code>; loop B <code>Transport::recv</code> → WG
+decrypt → <code>WinTunDevice::send</code>. The wintun ring replaces the
+Unix <code>tun fd</code>; nothing else in the core differs (W-I2). IP
+address, routes (<code>AllowedIPs</code>), and tunnel DNS are applied
+via <code>iphlpapi</code> (<code>CreateUnicastIpAddressEntry</code>,
+<code>CreateIpForwardEntry2</code>,
+<code>SetInterfaceDnsSettings</code>) against the adapter&#39;s LUID — not
+via wintun, which is pure L3 transport.</p>
+<hr />
+<h2 id="3-the-in-service-core-host-ffi-surface-on-windows">3. The
+in-service core host (FFI surface on Windows)</h2>
+<p>The service hosts the <strong>same Rust FFI surface</strong> authored
+in <code>helix-ffi/src/api.rs</code> <code>[03-client §3.1]</code> — but
+unlike Dart-driven platforms, on Windows the <em>consumer</em> of that
+surface is the <strong>pipe server inside the same process</strong>, not
+flutter_rust_bridge. The FFI surface is therefore called natively (Rust
+→ Rust), and its <code>StreamSink&lt;TunnelStatus&gt;</code> is wired to
+the pipe&#39;s event pump (§4.4) rather than to frb.</p>
+<h3 id="31-the-surface-the-service-drives-consistent-with-03-client-31-and-01-orch-41">3.1
+The surface the service drives (consistent with
+<code>[03-client §3.1]</code> and <code>[01-orch §4.1]</code>)</h3>
+<div class="sourceCode" id="cb3"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// The service calls these exact functions; the TunnelStatus they emit is the CANONICAL</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co">// orchestrator enum [01-orch §4.1], re-emitted over the pipe verbatim (W-I5).</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> start(cfg<span class="op">:</span> ClientConfig) <span class="op">-&gt;</span> <span class="pp">anyhow::</span><span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">&gt;;</span>       <span class="co">// ClientConfig [03-client §3.1]</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> stop() <span class="op">-&gt;</span> <span class="pp">anyhow::</span><span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">&gt;;</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">fn</span> status_stream(sink<span class="op">:</span> StreamSink<span class="op">&lt;</span>TunnelStatus<span class="op">&gt;</span>)<span class="op">;</span>              <span class="co">// → pipe event pump (§4.4)</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> exits() <span class="op">-&gt;</span> <span class="pp">anyhow::</span><span class="dt">Result</span><span class="op">&lt;</span><span class="dt">Vec</span><span class="op">&lt;</span>ExitOption<span class="op">&gt;&gt;;</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> set_exit(id<span class="op">:</span> <span class="dt">String</span><span class="op">,</span> multi_hop_chain<span class="op">:</span> <span class="dt">Option</span><span class="op">&lt;</span><span class="dt">Vec</span><span class="op">&lt;</span><span class="dt">String</span><span class="op">&gt;&gt;</span>) <span class="op">-&gt;</span> <span class="pp">anyhow::</span><span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">&gt;;</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> set_shields(s<span class="op">:</span> Shields) <span class="op">-&gt;</span> <span class="pp">anyhow::</span><span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">&gt;;</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> advertise(cidrs<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span><span class="dt">String</span><span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="pp">anyhow::</span><span class="dt">Result</span><span class="op">&lt;</span>AdvertiseResult<span class="op">&gt;;</span> <span class="co">// connector flavor</span></span></code></pre></div>
+<h3 id="32-the-windows-tun-handoff--attach_tunfd-has-no-fd-here">3.2 The
+Windows TUN handoff — <code>attach_tun(fd)</code> has no fd here</h3>
+<p>The cross-platform FFI exposes <code>attach_tun(fd: i32)</code> for
+Unix fd platforms (Android <code>ParcelFileDescriptor</code>, Linux
+<code>tun</code> fd) <code>[03-client §3.1]</code>. <strong>Windows has
+no fd</strong>: wintun hands userspace a <em>ring</em>, exactly as iOS
+hands the extension a <code>packetFlow</code>
+<code>[03-client §5.1]</code>. The core therefore exposes the
+<strong>pump-callback variant</strong> (identical in shape to the iOS
+<code>helix_core_set_tun_writer</code> / <code>helix_core_tun_out</code>
+pair <code>[03-client §5.1]</code>), and the Windows service wires
+<code>WinTunDevice</code> into it:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-ffi/src/api.rs — the writer-callback pump variant (Windows + iOS; consistent surface)</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">fn</span> attach_tun_pump(reader<span class="op">:</span> WinTunReader<span class="op">,</span> writer<span class="op">:</span> WinTunWriter) <span class="op">-&gt;</span> <span class="pp">anyhow::</span><span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">&gt;;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">fn</span> detach_tun() <span class="op">-&gt;</span> <span class="pp">anyhow::</span><span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">&gt;;</span>   <span class="co">// shared with the fd variant [03-client §3.1]</span></span></code></pre></div>
+<blockquote>
+<p><strong>Consistency note (§11.4.6).</strong>
+<code>attach_tun(fd)</code> and
+<code>attach_tun_pump(reader, writer)</code> are the two members of
+<em>one</em> TUN-handoff contract: fd-platforms call the former,
+ring/packetFlow platforms (Windows, iOS) call the latter. The exported
+set, the <code>TunnelStatus</code> enum, and the
+<code>Shields</code>/<code>ExitOption</code>/<code>AdvertiseResult</code>
+types are otherwise <strong>byte-for-byte the doc-03 surface</strong>
+<code>[03-client §3.1]</code> — the FFI contract test (§12
+<code>UT</code>) asserts the mirror.</p>
+</blockquote>
+<h3 id="33-the-canonical-tunnelstatus-the-pipe-carries-consistent-with-01-orch-41">3.3
+The canonical <code>TunnelStatus</code> the pipe carries (CONSISTENT
+with <code>[01-orch §4.1]</code>)</h3>
+<p>The service marshals the <strong>orchestrator&#39;s</strong> five-variant
+<code>TunnelStatus</code> <code>[01-orch §4.1]</code> onto the pipe
+verbatim — this is the frozen core contract:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-core/src/status.rs — the wire form on the pipe (W-I5) [01-orch §4.1]</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="bu">Clone</span><span class="op">,</span> <span class="bu">Debug</span><span class="op">,</span> <span class="bu">PartialEq</span><span class="op">,</span> <span class="bu">Eq</span><span class="at">)]</span>   <span class="co">// + serde for the pipe envelope (§4.2)</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">enum</span> TunnelStatus <span class="op">{</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    Connecting<span class="op">,</span>                                   <span class="co">// dialling a rung</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    Handshaking<span class="op">,</span>                                  <span class="co">// carrier up, WG handshake in flight</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    Connected <span class="op">{</span> transport<span class="op">:</span> <span class="dt">String</span><span class="op">,</span> rtt_ms<span class="op">:</span> <span class="dt">u32</span> <span class="op">},</span> <span class="co">// e.g. (&quot;masque-h3&quot;, 23)</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    Reconnecting<span class="op">,</span>                                 <span class="co">// a working tunnel dropped; re-dialling</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    Down <span class="op">{</span> reason<span class="op">:</span> <span class="dt">String</span> <span class="op">},</span>                      <span class="co">// terminal for this attempt (§11 reasons)</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>The <strong>client-side FFI extension</strong>
+(<code>Disconnected</code>, <code>Connected.path</code>,
+<code>Danger{kind}</code>) defined in <code>[03-client §3.1]</code> is
+layered <strong>above</strong> the pipe in the Dart
+<code>helix_core_ffi</code> package, derived from this core enum +
+<code>PlatformTunnelEvent</code>s (§5.2) — it is NOT a second wire enum.
+Keeping the pipe on the orchestrator&#39;s five-variant enum is what makes
+the Windows pipe consistent with <code>[01-orch §4.1]</code> while the
+UI still gets the richer doc-03 surface (mapping in §5.2).</p>
+<hr />
+<h2 id="4-named-pipe-ipc--the-ui--service-wire-protocol">4. Named-pipe
+IPC — the UI ⇄ service wire protocol</h2>
+<p>The named pipe is the single seam between the unprivileged UI and the
+privileged service. It <strong>is</strong> the Windows
+<code>TunnelPlatform</code> transport: every <code>TunnelPlatform</code>
+verb <code>[03-client §4]</code> and the core&#39;s status stream cross
+it.</p>
+<h3 id="41-pipe-identity--connection-model">4.1 Pipe identity &amp;
+connection model</h3>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Value</th>
+<th>Rationale</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Pipe name</td>
+<td><code>\\.\pipe\helixvpn\tunnel</code></td>
+<td>well-known, single instance; service is the server</td>
+</tr>
+<tr>
+<td>Type</td>
+<td>byte-stream, <strong>duplex</strong>
+(<code>PIPE_ACCESS_DUPLEX</code>), message-read mode
+(<code>PIPE_READMODE_MESSAGE</code>) <code>UNVERIFIED</code> (byte-mode
++ own framing is the fallback)</td>
+<td>one channel carries both req/resp and pushed events</td>
+</tr>
+<tr>
+<td>Instances</td>
+<td><code>PIPE_UNLIMITED_INSTANCES</code> capped at a small N (e.g.
+4)</td>
+<td>one UI + headroom; reject excess (§11)</td>
+</tr>
+<tr>
+<td>Server</td>
+<td><code>HelixTunnelSvc</code> creates it at service start
+(<code>CreateNamedPipeW</code>)</td>
+<td>the privileged side owns it</td>
+</tr>
+<tr>
+<td>Client</td>
+<td>the UI opens it (<code>CreateFileW</code> via <code>dart:ffi</code>,
+§5.1)</td>
+<td>unprivileged side connects</td>
+</tr>
+</tbody>
+</table>
+<h3 id="42-frame-format--message-envelope">4.2 Frame format &amp;
+message envelope</h3>
+<p>Every message is a <strong>4-byte little-endian length prefix + a
+serialized body</strong>. Body encoding is a self-describing binary
+format (recommended <strong>MessagePack</strong> via
+<code>rmp-serde</code>; <code>UNVERIFIED</code> final pick — JSON
+acceptable for debuggability, bincode for size — tracked as a minor
+decision, not surfaced).</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helixvpn-ipc/src/lib.rs  — SHARED crate compiled into BOTH the Rust service and (via cbindgen</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="co">// or a hand-mirrored Dart type) the Dart client, so the wire types can never drift (§12 UT).</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span>Serialize<span class="op">,</span> Deserialize<span class="at">)]</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">enum</span> PipeFrame <span class="op">{</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    Req  <span class="op">{</span> id<span class="op">:</span> <span class="dt">u64</span><span class="op">,</span> cmd<span class="op">:</span> Command <span class="op">},</span>        <span class="co">// UI → service (request/reply correlated by id)</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    Resp <span class="op">{</span> id<span class="op">:</span> <span class="dt">u64</span><span class="op">,</span> result<span class="op">:</span> CmdResult <span class="op">},</span>   <span class="co">// service → UI (reply to a Req)</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    Event(PipeEvent)<span class="op">,</span>                      <span class="co">// service → UI (unsolicited push: status + lifecycle)</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span>Serialize<span class="op">,</span> Deserialize<span class="at">)]</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">enum</span> Command <span class="op">{</span>                         <span class="co">// mirrors TunnelPlatform [03-client §4] + the FFI surface [03-client §3]</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    StartTunnel(TunnelConfig)<span class="op">,</span>             <span class="co">// §4.5</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>    StopTunnel<span class="op">,</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>    SetShields(Shields)<span class="op">,</span>                   <span class="co">// logic-only, forwarded to core.set_shields</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>    SetExit <span class="op">{</span> id<span class="op">:</span> <span class="dt">String</span><span class="op">,</span> multi_hop_chain<span class="op">:</span> <span class="dt">Option</span><span class="op">&lt;</span><span class="dt">Vec</span><span class="op">&lt;</span><span class="dt">String</span><span class="op">&gt;&gt;</span> <span class="op">},</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>    Exits<span class="op">,</span>                                 <span class="co">// → Vec&lt;ExitOption&gt;</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>    Advertise(<span class="dt">Vec</span><span class="op">&lt;</span><span class="dt">String</span><span class="op">&gt;</span>)<span class="op">,</span>                <span class="co">// connector flavor</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>    Hello <span class="op">{</span> protocol_version<span class="op">:</span> <span class="dt">u32</span><span class="op">,</span> client_token<span class="op">:</span> [<span class="dt">u8</span><span class="op">;</span> <span class="dv">32</span>] <span class="op">},</span> <span class="co">// §4.3 handshake</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>    Ping<span class="op">,</span>                                  <span class="co">// liveness keepalive (§4.6)</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span>Serialize<span class="op">,</span> Deserialize<span class="at">)]</span></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">enum</span> CmdResult <span class="op">{</span></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>    <span class="cn">Ok</span><span class="op">,</span></span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>    Exits(<span class="dt">Vec</span><span class="op">&lt;</span>ExitOption<span class="op">&gt;</span>)<span class="op">,</span></span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>    Advertised(AdvertiseResult)<span class="op">,</span></span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>    HelloOk <span class="op">{</span> protocol_version<span class="op">:</span> <span class="dt">u32</span><span class="op">,</span> service_version<span class="op">:</span> <span class="dt">String</span> <span class="op">},</span></span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>    <span class="cn">Err</span>(PipeError)<span class="op">,</span>                        <span class="co">// §11 error taxonomy (never carries a secret, W-I6)</span></span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span>Serialize<span class="op">,</span> Deserialize<span class="at">)]</span></span>
+<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">enum</span> PipeEvent <span class="op">{</span></span>
+<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a>    Status(TunnelStatus)<span class="op">,</span>                  <span class="co">// the CANONICAL core enum (§3.3) [01-orch §4.1]</span></span>
+<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a>    Platform(PlatformTunnelEvent)<span class="op">,</span>         <span class="co">// up/down/permissionDenied/revoked/error [03-client §4]</span></span>
+<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<blockquote>
+<p><strong>Why both <code>Status</code> and <code>Platform</code>
+events.</strong> <code>TunnelStatus</code> carries the <em>core&#39;s</em>
+truth (it is connecting/connected/reconnecting);
+<code>PlatformTunnelEvent</code> carries the <em>shim&#39;s</em> lifecycle
+truth (adapter up/down, the service was revoked/stopped out-of-band, a
+privileged step errored). The <code>TunnelPlatform</code> contract
+<code>[03-client §4]</code> is realised by mapping these two event
+streams into its <code>events()</code> stream (§5.2). They are distinct
+because a <code>permissionDenied</code>/<code>error</code> can occur
+<em>before</em> the core ever emits a <code>TunnelStatus</code> (e.g.
+WFP install failed).</p>
+</blockquote>
+<h3 id="43-pipe-security-descriptor--client-authentication-w-i4">4.3
+Pipe security descriptor + client authentication (W-I4)</h3>
+<p>Two layers guard the pipe:</p>
+<ol type="1">
+<li><strong>DACL on the pipe object.</strong>
+<code>CreateNamedPipeW</code> is given a
+<code>SECURITY_ATTRIBUTES</code> whose security descriptor (SDDL) grants
+<strong>connect/read/write only to the interactive desktop
+user(s)</strong> and full control to <code>SYSTEM</code> +
+<code>Administrators</code>, and <strong>denies
+<code>NETWORK</code></strong> (no remote pipe access — pipes are
+reachable over SMB by default; this MUST be blocked):
+<pre class="text"><code>D:(D;;FA;;;NU)(A;;0x12019b;;;IU)(A;;FA;;;SY)(A;;FA;;;BA)
+;  NU = NETWORK USERS  → DENY ;  IU = INTERACTIVE USERS → connect+rw ;  SY/BA → full</code></pre>
+<code>UNVERIFIED</code>: exact access mask <code>0x12019b</code> (=
+<code>GENERIC_READ|GENERIC_WRITE|SYNCHRONIZE</code> minus
+<code>FILE_CREATE_PIPE_INSTANCE</code>) is a recommendation to pin
+against <code>winnt.h</code>, calibrated so a client can read/write but
+<strong>cannot create a second server instance</strong>.</li>
+<li><strong>Token check on connect.</strong> On
+<code>ConnectNamedPipe</code>, the service calls
+<code>GetNamedPipeClientProcessId</code> → opens the client process
+token → asserts the client runs in the <strong>same interactive
+session</strong> (<code>WTSGetActiveConsoleSessionId</code>) and is not
+elevated beyond what is expected, then requires the first frame to be a
+<code>Command::Hello</code> carrying a <code>client_token</code> minted
+at install/launch time. A connection that does not <code>Hello</code>
+within <code>HELLO_TIMEOUT</code> (recommend 2 s,
+<code>UNVERIFIED</code>) is dropped (§11). This defeats a malicious
+local process racing to the pipe before the real UI.</li>
+</ol>
+<h3 id="44-the-event-pump-core-streamsink--pipe">4.4 The event pump
+(core <code>StreamSink</code> → pipe)</h3>
+<p><code>status_stream(sink)</code> (§3.1) is handed a
+<code>StreamSink&lt;TunnelStatus&gt;</code> whose implementation, in the
+service, <strong>serialises each <code>TunnelStatus</code> into a
+<code>PipeFrame::Event(PipeEvent::Status(..))</code> and writes it to
+every connected pipe instance</strong>. The service also injects
+<code>PipeEvent::Platform(..)</code> for adapter/WFP/service-lifecycle
+transitions (§7). Backpressure: the pipe write uses a bounded per-client
+queue (recommend 64 frames, mirroring the
+<code>STATUS_CHANNEL_CAP</code> of <code>[01-orch §4.2]</code>); a
+wedged client that overflows is <strong>disconnected</strong> (not
+blocked) so a stuck UI never stalls the core — the UI reconnects and
+re-reads latest (§5.3), exactly the <code>Lagged → re-read latest</code>
+discipline of <code>[01-orch §4.6]</code>.</p>
+<h3 id="45-tunnelconfig-on-the-wire-consistent-with-03-client-4">4.5
+<code>TunnelConfig</code> on the wire (consistent with
+<code>[03-client §4]</code>)</h3>
+<div class="sourceCode" id="cb8"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span>Serialize<span class="op">,</span> Deserialize<span class="op">,</span> <span class="bu">Clone</span><span class="at">)]</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> TunnelConfig <span class="op">{</span>                    <span class="co">// mirrors Dart TunnelConfig [03-client §4]</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> overlay_ip<span class="op">:</span> <span class="dt">String</span><span class="op">,</span>                  <span class="co">// &quot;100.64.0.7/32&quot; | &quot;fd7a:…/128&quot;</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> routes<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span><span class="dt">String</span><span class="op">&gt;,</span>                 <span class="co">// AllowedIPs → wintun route table (iphlpapi)</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> dns_servers<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span><span class="dt">String</span><span class="op">&gt;,</span>            <span class="co">// tunnel DNS (§8.3 leak guard)</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> split_exclude_apps<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span><span class="dt">String</span><span class="op">&gt;,</span>     <span class="co">// per-app bypass → WFP app-id filters (§8.5)</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> split_exclude_routes<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span><span class="dt">String</span><span class="op">&gt;,</span>   <span class="co">// per-route bypass → route-table exclusions (§8.5)</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> mtu<span class="op">:</span> <span class="dt">u16</span><span class="op">,</span>                            <span class="co">// default 1280 over MASQUE / 1420 plain WG</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> session_or_map_token<span class="op">:</span> <span class="dt">String</span><span class="op">,</span>        <span class="co">// → ClientConfig.map_path_or_session [03-client §3.1] (W-I6: never logged)</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="46-pipe-level-liveness--reconnect">4.6 Pipe-level liveness &amp;
+reconnect</h3>
+<ul>
+<li><strong>Keepalive.</strong> The UI sends <code>Command::Ping</code>
+every <code>PING_INTERVAL</code> (recommend 5 s,
+<code>UNVERIFIED</code>); the service replies
+<code>CmdResult::Ok</code>. A missed reply past
+<code>PING_TIMEOUT</code> (recommend 3× interval) ⇒ the UI treats the
+pipe as dead, tears it, and reconnects.</li>
+<li><strong>Service-restart resilience.</strong> If the service restarts
+(crash → SCM recovery, §6.4) the pipe handle breaks; the UI&#39;s read
+returns <code>ERROR_BROKEN_PIPE</code>. The UI reconnects with backoff
+and re-issues <code>Hello</code>; the service replays the
+<strong>current</strong> <code>TunnelStatus</code> as the first event so
+the UI re-syncs (W-I5). The <em>tunnel itself is unaffected</em> by a
+UI/pipe drop — the core keeps forwarding (the pipe is control-only,
+never in the packet path; the Windows analogue of the fail-static I3
+<code>[01-orch §0.3]</code>).</li>
+</ul>
+<hr />
+<h2 id="5-the-tunnelplatform-contract-implementation-dart-side">5. The
+<code>TunnelPlatform</code> contract implementation (Dart side)</h2>
+<p>On Windows, <code>WindowsTunnelPlatform</code> is the
+<code>TunnelPlatform</code> <code>[03-client §4]</code> impl whose body
+is &quot;marshal the verb to the pipe, fold the pipe&#39;s event stream into
+<code>events()</code>&quot; [03-client §5.3].</p>
+<h3 id="51-the-dart-implementation">5.1 The Dart implementation</h3>
+<div class="sourceCode" id="cb9"><pre class="sourceCode dart"><code class="sourceCode dart"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix_core_ffi/lib/src/windows/windows_tunnel_platform.dart</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> WindowsTunnelPlatform <span class="kw">implements</span> TunnelPlatform <span class="op">{</span>       <span class="co">// contract: [03-client §4]</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">final</span> _PipeClient _pipe;                                    <span class="co">// dart:ffi → kernel32 (§5.1.1)</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">final</span> _events <span class="op">=</span> StreamController<span class="op">&lt;</span>PlatformTunnelEvent<span class="op">&gt;.</span>broadcast();</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">@override</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Future</span><span class="op">&lt;</span><span class="dt">void</span><span class="op">&gt;</span> startTunnel(TunnelConfig cfg) <span class="at">async</span> <span class="op">{</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">await</span> _pipe<span class="op">.</span>ensureConnected();                            <span class="co">// CreateFileW + Hello (§4.3)</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">final</span> r <span class="op">=</span> <span class="at">await</span> _pipe<span class="op">.</span>request(Command<span class="op">.</span>startTunnel(cfg));  <span class="co">// O1: idempotent, permission-aware</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (r <span class="kw">is</span> CmdErr) <span class="cf">throw</span> TunnelException(r<span class="op">.</span>error);          <span class="co">// never a half-open adapter (O1)</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>  <span class="kw">@override</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Future</span><span class="op">&lt;</span><span class="dt">void</span><span class="op">&gt;</span> stopTunnel() <span class="op">=&gt;</span> _pipe<span class="op">.</span>request(<span class="at">const</span> Command<span class="op">.</span>stopTunnel()); <span class="co">// O4: quiescent restore</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>  <span class="kw">@override</span></span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Stream</span><span class="op">&lt;</span>PlatformTunnelEvent<span class="op">&gt;</span> events() <span class="op">=&gt;</span> _events<span class="op">.</span>stream;     <span class="co">// O3: surfaces revoked/error</span></span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>  <span class="co">// wiring: pipe events → TunnelPlatform.events() + the helix_core status stream (§5.2)</span></span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a>  <span class="dt">void</span> _onPipeEvent(PipeEvent e) <span class="op">=&gt;</span> <span class="cf">switch</span> (e) <span class="op">{</span></span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a>    StatusEvent(<span class="op">:</span><span class="at">final</span> status)   <span class="op">=&gt;</span> _statusController<span class="op">.</span>add(status)<span class="op">,</span>      <span class="co">// → helix_core.statusStream()</span></span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a>    PlatformEvt(<span class="op">:</span><span class="at">final</span> platform) <span class="op">=&gt;</span> _events<span class="op">.</span>add(platform)<span class="op">,</span>             <span class="co">// → TunnelPlatform.events()</span></span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span>;</span>
+<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode dart"><code class="sourceCode dart"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co">// §5.1.1 — the pipe client is a thin dart:ffi binding to kernel32 (no third-party plugin needed):</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="co">//   CreateFileW(r&#39;\\.\pipe\helixvpn\tunnel&#39;, GENERIC_READ|GENERIC_WRITE, 0, null, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, null)</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="co">//   ReadFile / WriteFile with the 4-byte length-prefix framing (§4.2), on a dedicated isolate so</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="co">//   the overlapped reads never block the UI isolate. UNVERIFIED: overlapped-IO ergonomics from Dart</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="co">//   vs a blocking read on a background isolate — pick by the FA/IT smoke (§12); a small native</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="co">//   helper DLL is the fallback if dart:ffi overlapped-IO proves awkward.</span></span></code></pre></div>
+<h3 id="52-mapping-the-two-pipe-event-streams-to-the-doc-03-surface">5.2
+Mapping the two pipe event streams to the doc-03 surface</h3>
+<p><code>WindowsTunnelPlatform</code> feeds <strong>two</strong> Dart
+sinks from the <strong>one</strong> pipe event stream, and the Dart
+<code>helix_core_ffi</code> wrapper composes them into the
+<strong>richer doc-03 <code>TunnelStatus</code></strong>
+(<code>Disconnected</code>/<code>path</code>/<code>Danger</code>)
+<code>[03-client §3.1]</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Pipe event</th>
+<th>Drives</th>
+<th>Doc-03 UI surface</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Status(Connecting/Handshaking/Reconnecting)</code></td>
+<td><code>helix_core.statusStream()</code></td>
+<td>amber <code>stateConnecting</code>
+<code>[03-client §7.1]</code></td>
+</tr>
+<tr>
+<td><code>Status(Connected{transport,rtt})</code></td>
+<td><code>helix_core.statusStream()</code></td>
+<td>green <code>stateConnected</code>; <code>StatusChip</code> shows
+transport·rtt</td>
+</tr>
+<tr>
+<td><code>Status(Down{reason})</code></td>
+<td><code>helix_core.statusStream()</code></td>
+<td>mapped to <code>Disconnected</code> (reason <code>&quot;stopped&quot;</code>)
+or <code>Danger</code>/<code>Down</code> palette (any other reason)
+<code>[03-client §7.1]</code></td>
+</tr>
+<tr>
+<td><code>Platform(revoked)</code></td>
+<td><code>TunnelPlatform.events()</code></td>
+<td><code>Danger{kind:&quot;revoked&quot;}</code> overlay — admin/OS killed the
+tunnel (O3)</td>
+</tr>
+<tr>
+<td><code>Platform(permissionDenied)</code></td>
+<td><code>TunnelPlatform.events()</code></td>
+<td>a permission/elevation prompt, never silent failure (O1)</td>
+</tr>
+<tr>
+<td><code>Platform(error, detail)</code></td>
+<td><code>TunnelPlatform.events()</code></td>
+<td>honest error surface with <code>detail</code> (§11.4.6 no
+guessing)</td>
+</tr>
+</tbody>
+</table>
+<p>This is the W-I5 + CI2 honesty guarantee made concrete: the green
+palette is painted <strong>only</strong> on a core
+<code>Connected</code>, never on UI intent
+<code>[03-client §8.4]</code>.</p>
+<h3 id="53-contract-obligations-on-windows-the-o1o5-of-03-client-41">5.3
+Contract obligations on Windows (the O1–O5 of
+<code>[03-client §4.1]</code>)</h3>
+<table>
+<thead>
+<tr>
+<th>O#</th>
+<th>Windows realisation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>O1</strong> idempotent + permission-aware
+<code>startTunnel</code></td>
+<td>a second <code>StartTunnel</code> while connected is a no-op
+<code>Ok</code>; if the service is not installed / not elevated, the UI
+emits <code>permissionDenied</code> (offering to (re)install/repair the
+service via an elevated installer), <strong>never</strong> a half-open
+adapter — the service rolls back the adapter + WFP on any start failure
+(§7.4)</td>
+</tr>
+<tr>
+<td><strong>O2</strong> shim hands the core packets, never crypto</td>
+<td>the service pumps the wintun ring into <code>helix-core</code>; WG +
+transport live only in the core (W-I2)</td>
+</tr>
+<tr>
+<td><strong>O3</strong> report <code>revoked</code> out-of-band</td>
+<td><code>device.revoked</code> (doc 02) → core
+<code>Down{auth-failed}</code> <code>[01-orch §5.4]</code> →
+<code>Platform(revoked)</code>; an admin/MDM <code>sc stop</code> →
+<code>Platform(down)</code>; SCM <code>SERVICE_CONTROL_STOP</code> →
+graceful teardown event</td>
+</tr>
+<tr>
+<td><strong>O4</strong> quiescent restore on stop</td>
+<td>on <code>StopTunnel</code> the service removes routes, reverts DNS,
+deletes <strong>dynamic</strong> split-tunnel WFP filters, and (user
+stop only) removes the <strong>persistent</strong> kill-switch filters,
+then ends the wintun session — on <strong>every</strong> exit path
+(<code>Drop</code>/<code>finally</code>), §8.4</td>
+</tr>
+<tr>
+<td><strong>O5</strong> the only untyped seam, covered on real
+hardware</td>
+<td>the pipe + adapter + WFP are exercised by a real-Windows-VM smoke
+(§12 <code>IT</code>/<code>SC</code>), never a mock-claiming-PASS
+(§11.4.27)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="6-windows-service-lifecycle-scm-state-machine">6. Windows
+service lifecycle (SCM state machine)</h2>
+<h3 id="61-service-identity--install">6.1 Service identity &amp;
+install</h3>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Service name</td>
+<td><code>HelixTunnelSvc</code></td>
+</tr>
+<tr>
+<td>Display name</td>
+<td><code>Helix VPN Tunnel Service</code></td>
+</tr>
+<tr>
+<td>Binary</td>
+<td><code>helix_tunnel_svc.exe</code> (Authenticode-signed, §9)</td>
+</tr>
+<tr>
+<td>Account</td>
+<td><code>LocalSystem</code> (or hardened virtual account, §1.1 /
+D-WIN-3)</td>
+</tr>
+<tr>
+<td>Start type</td>
+<td><code>SERVICE_AUTO_START</code> (so a tunnel can auto-reconnect at
+boot) or <code>DEMAND_START</code> (privacy default — only runs when the
+UI asks) — <strong>D-WIN-4 (§13)</strong></td>
+</tr>
+<tr>
+<td>Error control</td>
+<td><code>SERVICE_ERROR_NORMAL</code></td>
+</tr>
+<tr>
+<td>Recovery</td>
+<td>restart on failure with backoff (§6.4)</td>
+</tr>
+</tbody>
+</table>
+<p>Install is performed by the <strong>signed installer</strong>
+(MSI/MSIX, §9) via the Service Control Manager
+(<code>CreateServiceW</code> / <code>ChangeServiceConfig2W</code> for
+recovery actions), <strong>never</strong> by the unprivileged UI. The
+installer also drops <code>wintun.dll</code> (+ optional
+<code>wireguard.sys</code>) into the service directory and stages the
+pipe <code>client_token</code> (§4.3) in a per-machine location the UI
+can read.</p>
+<blockquote>
+<p><strong>Service authoring language — D-WIN-2 (§13).</strong>
+Recommended: a <strong>Rust</strong> service binary
+(<code>windows-service</code> crate for the SCM
+<code>ServiceMain</code>/<code>ServiceCtrlHandler</code> plumbing) so
+<code>helix-core</code> is hosted <strong>in-process with zero
+intra-process FFI</strong> and no GC on the datapath (W-I2,
+byte-for-byte core reuse). The doc-03 &quot;C#/Rust&quot; note
+<code>[03-client §5.3]</code> is honoured as the alternative: a
+<strong>.NET Worker Service</strong> hosting the core as a native DLL
+via P/Invoke — viable but adds a CLR + a marshalling seam. Both are
+surfaced; Rust is the recommendation.</p>
+</blockquote>
+<h3 id="62-scm-state-machine">6.2 SCM state machine</h3>
+<pre class="mermaid"><code>stateDiagram-v2
+    [*] --&gt; Stopped : installed (CreateServiceW)
+    Stopped --&gt; StartPending : SCM Start (UI requests via installer-staged trigger / sc start)
+    StartPending --&gt; Running : ServiceMain ready — pipe server up, core idle, kill-switch ARMED per config (§8.2)
+    StartPending --&gt; Stopped : init failed (driver missing / WFP denied) → SetServiceStatus(STOPPED, win32_exit)
+    Running --&gt; StopPending : SCM Stop (SERVICE_CONTROL_STOP) OR last UI graceful StopTunnel+idle-timeout
+    StopPending --&gt; Stopped : teardown done (§8.4) — adapter ended, DNS reverted, kill-switch per §8.6
+    Running --&gt; Running : SERVICE_CONTROL_INTERROGATE / SESSIONCHANGE (logon/logoff) — re-evaluate pipe ACL
+    Running --&gt; [*] : SERVICE_CONTROL_SHUTDOWN (machine shutdown) — fast quiescent stop</code></pre>
+<h3 id="63-servicemain-skeleton">6.3 ServiceMain skeleton</h3>
+<div class="sourceCode" id="cb12"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix_tunnel_svc/src/main.rs  (Rust, windows-service crate)</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> service_main(_args<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span>OsString<span class="op">&gt;</span>) <span class="op">{</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> status_handle <span class="op">=</span> <span class="pp">service_control_handler::</span>register(<span class="st">&quot;HelixTunnelSvc&quot;</span><span class="op">,</span> ctrl_handler)<span class="op">?;</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    set_status(<span class="op">&amp;</span>status_handle<span class="op">,</span> StartPending)<span class="op">;</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> rt <span class="op">=</span> <span class="pp">tokio::runtime::Builder::</span>new_multi_thread()<span class="op">.</span>enable_all()<span class="op">.</span>build()<span class="op">?;</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    rt<span class="op">.</span>block_on(<span class="kw">async</span> <span class="op">{</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> pipe <span class="op">=</span> <span class="pp">PipeServer::</span>create(PIPE_NAME<span class="op">,</span> security_descriptor())<span class="op">?;</span>  <span class="co">// §4.1/§4.3</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> svc <span class="op">=</span> <span class="pp">ServiceState::</span>new()<span class="op">;</span>                                     <span class="co">// owns Option&lt;Orchestrator&gt;</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>        set_status(<span class="op">&amp;</span>status_handle<span class="op">,</span> Running)<span class="op">;</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>        svc<span class="op">.</span>serve(pipe<span class="op">,</span> shutdown_rx)<span class="op">.</span><span class="kw">await</span><span class="op">;</span>                                <span class="co">// accept clients, dispatch Commands</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>    set_status(<span class="op">&amp;</span>status_handle<span class="op">,</span> Stopped)<span class="op">;</span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a><span class="kw">extern</span> <span class="st">&quot;system&quot;</span> <span class="kw">fn</span> ctrl_handler(control<span class="op">:</span> ServiceControl) <span class="op">-&gt;</span> ServiceControlHandlerResult <span class="op">{</span></span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">match</span> control <span class="op">{</span></span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>        <span class="pp">ServiceControl::</span>Stop <span class="op">|</span> <span class="pp">ServiceControl::</span>Shutdown <span class="op">=&gt;</span> <span class="op">{</span> signal_shutdown()<span class="op">;</span> Handled <span class="op">}</span></span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a>        <span class="pp">ServiceControl::</span>Interrogate <span class="op">=&gt;</span> Handled<span class="op">,</span></span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a>        <span class="pp">ServiceControl::</span>SessionChange(_) <span class="op">=&gt;</span> <span class="op">{</span> reeval_pipe_acl()<span class="op">;</span> Handled <span class="op">}</span>  <span class="co">// logon/logoff</span></span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a>        _ <span class="op">=&gt;</span> NotImplemented<span class="op">,</span></span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="64-crash-recovery--fail-closed-coupling-w-i3">6.4 Crash recovery
+&amp; fail-closed coupling (W-I3)</h3>
+<p>SCM recovery actions (<code>SC_ACTION_RESTART</code>) restart the
+service after a crash with backoff (recommend: 1st failure +1 s, 2nd +5
+s, subsequent +30 s, reset window 24 h — <code>UNVERIFIED</code>, tune).
+<strong>Critically:</strong> because kill-switch WFP filters are
+<strong>persistent</strong> (W-I3, §8.4), a crash leaves egress blocked
+until the restarted service either re-establishes the tunnel (→ open via
+tunnel) or a user graceful-stop removes them — there is <strong>no leak
+window across a crash</strong>. On restart the service re-reads its last
+desired state and re-dials (the core&#39;s own reconnection backoff
+<code>[01-orch §7]</code> then governs).</p>
+<hr />
+<h2 id="7-tunnel-lifecycle-on-windows-end-to-end-sequence">7. Tunnel
+lifecycle on Windows (end-to-end sequence)</h2>
+<pre class="mermaid"><code>sequenceDiagram
+    autonumber
+    participant UI as Flutter UI (user)
+    participant PIPE as named pipe
+    participant SVC as HelixTunnelSvc (SYSTEM)
+    participant CORE as helix-core (in-service)
+    participant WT as wintun adapter
+    participant WFP as WFP engine
+    participant GW as gateway :443/:51820
+
+    UI-&gt;&gt;PIPE: Hello{proto, client_token}            %% §4.3 handshake
+    PIPE-&gt;&gt;SVC: verify session+token → HelloOk
+    UI-&gt;&gt;PIPE: StartTunnel(TunnelConfig)             %% §4.5
+    PIPE-&gt;&gt;SVC: Command::StartTunnel
+    SVC-&gt;&gt;WFP: install PERSISTENT kill-switch (closed: allow gw endpoints only)  %% §8.2 (W-I3)
+    SVC-&gt;&gt;WT: WintunCreateAdapter + StartSession + set IP/routes/DNS (iphlpapi)
+    SVC-&gt;&gt;CORE: start(ClientConfig{token,...}) + attach_tun_pump(reader,writer)   %% §3.1/§3.2
+    SVC--&gt;&gt;PIPE: Event Platform(up)
+    SVC--&gt;&gt;PIPE: Event Status(Connecting)            %% core enum, verbatim (W-I5)
+    CORE-&gt;&gt;GW: dial ladder rung → WG handshake [01-trans §6]
+    SVC--&gt;&gt;PIPE: Event Status(Handshaking)
+    GW--&gt;&gt;CORE: WG handshake reply
+    SVC-&gt;&gt;WFP: OPEN kill-switch (egress via tunnel) + apply DNS leak block  %% §8.4
+    SVC--&gt;&gt;PIPE: Event Status(Connected{transport:&quot;masque-h3&quot;, rtt_ms:23})
+    Note over CORE,WT: loops pump wintun ring ⇄ WG ⇄ transport [01-orch §3]
+    UI-&gt;&gt;PIPE: SetShields(...) / SetExit(...)        %% logic-only, no adapter touch (CI1)
+    PIPE-&gt;&gt;SVC: → core.set_shields / set_exit
+    UI-&gt;&gt;PIPE: StopTunnel
+    PIPE-&gt;&gt;SVC: Command::StopTunnel
+    SVC-&gt;&gt;CORE: stop() + detach_tun()
+    SVC-&gt;&gt;WT: WintunEndSession + WintunCloseAdapter; revert routes/DNS
+    SVC-&gt;&gt;WFP: delete DYNAMIC split filters; remove PERSISTENT kill-switch (user stop only, §8.6)
+    SVC--&gt;&gt;PIPE: Event Status(Down{reason:&quot;stopped&quot;}) + Platform(down)</code></pre>
+<p>The seam mirrors the cross-platform rule
+<code>[03-client §3.3]</code>: <strong>lifecycle commands flow UI → pipe
+→ service → core</strong>, <strong>status events flow core → service →
+pipe → UI</strong>, and
+<code>setShields</code>/<code>setExit</code>/<code>exits</code> are pure
+logic that never touch the adapter or WFP (CI1).</p>
+<h3 id="71-start-ordering-the-no-leak-ordering">7.1 Start ordering (the
+no-leak ordering)</h3>
+<ol type="1">
+<li>Install <strong>persistent closed</strong> kill-switch (egress
+blocked except gateway endpoints) — <em>before</em> the adapter exists,
+so there is no pre-connect leak window (§8.2, mirrors
+<code>[01-orch §8.2]</code>).</li>
+<li>Create + configure the wintun adapter (IP/routes/DNS).</li>
+<li><code>core.start(...)</code> + <code>attach_tun_pump(...)</code>;
+the orchestrator drives the ladder.</li>
+<li>On core <code>Connected</code>: <strong>open</strong> the
+kill-switch to route via the tunnel + apply the DNS-leak block (§8.4).
+The UI sees green only here.</li>
+</ol>
+<h3 id="72-stop-ordering-the-quiescent-restore-o4">7.2 Stop ordering
+(the quiescent restore, O4)</h3>
+<p><code>stop</code> reverses: <code>core.stop()</code> → end wintun
+session → revert routes/DNS → delete dynamic split filters → (user stop
+only) remove persistent kill-switch → emit <code>Down{stopped}</code>.
+On a <strong>crash</strong> or <strong>non-user terminal</strong>
+(<code>ladder-exhausted</code>, <code>auth-failed</code>,
+<code>host-fatal</code> <code>[01-orch §4.4/§8.4]</code>) the persistent
+kill-switch <strong>stays</strong> (W-I3 / O-I11).</p>
+<h3 id="73-idempotency--rollback">7.3 Idempotency &amp; rollback</h3>
+<p>Every privileged step is paired with a rollback registered in reverse
+order (a Rust <code>Drop</code>-guard stack). If step 3 fails (e.g. dial
+never succeeds within the ladder budget), the guard stack runs: detach
+core → end session → close adapter → keep kill-switch closed (no leak) →
+emit <code>Platform(error, detail)</code> +
+<code>Status(Down{reason})</code>. There is never a half-configured
+adapter left behind (O1).</p>
+<hr />
+<h2 id="8-wfp--kill-switch--split-tunnel">8. WFP — kill-switch +
+split-tunnel</h2>
+<p>The Windows realisation of the core&#39;s kill-switch + DNS coupling
+<code>[01-orch §8]</code> and the <code>TunnelConfig</code> split fields
+(§4.5) is <strong>WFP (Windows Filtering Platform)</strong> — filters
+installed by the service against the FWPM filter engine, driven by the
+core&#39;s <code>OrchState</code> transitions <code>[01-orch §8.4]</code>
+(never hand-edited).</p>
+<h3 id="81-wfp-object-model-used">8.1 WFP object model used</h3>
+<table>
+<thead>
+<tr>
+<th>WFP object</th>
+<th>Use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Engine handle (<code>FwpmEngineOpen0</code>)</td>
+<td>one per service; opened at start, closed at stop</td>
+</tr>
+<tr>
+<td><strong>Persistent</strong> sub-layer (<code>FWPM_SUBLAYER</code> +
+<code>FWPM_FILTER_FLAG_PERSISTENT</code>)</td>
+<td>the <strong>kill-switch</strong> filters — survive a service crash /
+reboot (W-I3, fail-closed)</td>
+</tr>
+<tr>
+<td><strong>Dynamic</strong> sub-layer
+(<code>FWPM_SESSION_FLAG_DYNAMIC</code>)</td>
+<td>the <strong>split-tunnel</strong> exclusion filters — auto-removed
+when the engine handle closes with the tunnel</td>
+</tr>
+<tr>
+<td>Layers</td>
+<td><code>FWPM_LAYER_ALE_AUTH_CONNECT_V4/_V6</code> (per-connection
+allow/block, incl. app-id conditions) and
+<code>FWPM_LAYER_OUTBOUND_IPPACKET_V4/_V6</code> (catch-all egress)</td>
+</tr>
+<tr>
+<td>Conditions</td>
+<td><code>FWPM_CONDITION_IP_REMOTE_ADDRESS</code> (gateway allow),
+<code>FWPM_CONDITION_IP_LOCAL_INTERFACE</code> (the wintun LUID),
+<code>FWPM_CONDITION_ALE_APP_ID</code> (per-app split),
+<code>FWPM_CONDITION_IP_REMOTE_PORT</code> (<code>:53</code> DNS leak
+guard)</td>
+</tr>
+</tbody>
+</table>
+<p><code>UNVERIFIED</code>: exact GUIDs / struct layouts pinned against
+the Microsoft <code>fwpmu.h</code> / <code>fwpmtypes.h</code> headers;
+the model above is the documented WFP usage pattern (the same one
+WireGuard&#39;s own Windows kill-switch uses).</p>
+<h3 id="82-kill-switch-filters-persistent-fail-closed">8.2 Kill-switch
+filters (persistent, fail-closed)</h3>
+<p>On <code>Idle → Connecting</code> (Strict mode
+<code>[01-orch §8.2]</code>) the service installs, in the persistent
+sub-layer, a <strong>default-block</strong> egress filter (high weight)
+plus narrow <strong>permit</strong> filters:</p>
+<table>
+<thead>
+<tr>
+<th>Permit filter</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>remote-address ∈ <code>allow_gateway_endpoints</code>
+<code>[01-orch §8.2]</code></td>
+<td>the transport must reach <code>:443</code>/<code>:51820</code></td>
+</tr>
+<tr>
+<td>local-interface = wintun LUID</td>
+<td>tunnelled traffic is always allowed</td>
+</tr>
+<tr>
+<td>DHCP / ND (bootstrap)</td>
+<td>link bring-up</td>
+</tr>
+<tr>
+<td>optional: RFC1918 LAN if <code>allow_lan</code></td>
+<td>printers etc. <code>[01-orch §8.2]</code></td>
+</tr>
+</tbody>
+</table>
+<p>Everything else egress is <strong>blocked</strong>. A WFP-install
+failure at start ⇒ <code>Down{host-fatal}</code>
+<code>[01-orch §4.4]</code> — never proceed on an unverified kill-switch
+(§11.4.6). Because these filters are persistent, a service crash leaves
+them installed (W-I3).</p>
+<h3 id="83-dns-leak-guard">8.3 DNS-leak guard</h3>
+<p>On <code>Handshaking → Connected</code> <code>[01-orch §8.4]</code>
+the service (if <code>block_plaintext_53</code>) installs a filter
+dropping any <code>:53</code> egress (UDP+TCP) <strong>not</strong>
+destined for the tunnel DNS over the wintun interface, and applies the
+tunnel DNS via <code>SetInterfaceDnsSettings</code> on the adapter LUID.
+The block <strong>stays</strong> across
+<code>Connected → Reconnecting/Down</code> (fail-closed) until reconnect
+re-applies tunnel DNS or a user stop reverts to system resolvers (§8.6)
+— exactly <code>[01-orch §8.3]</code>.</p>
+<h3 id="84-coupling-table-windows-realisation-of-01-orch-84">8.4
+Coupling table (Windows realisation of <code>[01-orch §8.4]</code>)</h3>
+<table>
+<thead>
+<tr>
+<th>Core transition <code>[01-orch §5.2]</code></th>
+<th>Kill-switch (persistent)</th>
+<th>DNS / split (dynamic)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Idle → Connecting</code> (Strict)</td>
+<td>install <strong>block</strong> + gateway permits</td>
+<td>leave system DNS</td>
+</tr>
+<tr>
+<td><code>Handshaking → Connected</code></td>
+<td><strong>add tunnel permit</strong> (egress via wintun)</td>
+<td>apply tunnel DNS + <code>:53</code> block + install split-tunnel
+excludes</td>
+</tr>
+<tr>
+<td><code>Connected → Reconnecting</code></td>
+<td>revoke tunnel permit (block holds)</td>
+<td>keep <code>:53</code> block; keep split excludes</td>
+</tr>
+<tr>
+<td><code>* → Down{reason≠stopped}</code></td>
+<td><strong>stays blocked</strong></td>
+<td>keep block</td>
+</tr>
+<tr>
+<td><code>ShuttingDown → Down{stopped}</code> (user)</td>
+<td><strong>remove all</strong> kill-switch filters</td>
+<td>revert system DNS; delete split excludes</td>
+</tr>
+<tr>
+<td>crash / panic</td>
+<td>persistent filters <strong>remain</strong></td>
+<td>dynamic excludes auto-removed (engine handle closed) — kill-switch
+still blocks</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>The crash asymmetry is deliberate (W-I3).</strong>
+Kill-switch = persistent → <em>survives</em> crash (fail-closed, no
+leak). Split-tunnel excludes = dynamic → <em>vanish</em> on crash (so a
+crash can only make traffic <em>more</em> tunnelled / blocked, never
+<em>less</em> protected). This is the WFP encoding of O-I11.</p>
+</blockquote>
+<h3 id="85-split-tunnel-per-app--per-route">8.5 Split-tunnel (per-app +
+per-route)</h3>
+<ul>
+<li><strong>Per-route</strong> (<code>split_exclude_routes</code>): the
+excluded CIDRs are <strong>removed from the wintun route table</strong>
+(they egress on the physical adapter) AND a dynamic WFP <em>permit</em>
+filter lets them bypass the kill-switch. Simplest, app-agnostic.</li>
+<li><strong>Per-app</strong> (<code>split_exclude_apps</code>): a
+dynamic <code>FWPM_CONDITION_ALE_APP_ID</code> filter at the
+<code>ALE_AUTH_CONNECT</code> layer permits the named executable&#39;s
+connections to bypass the tunnel. <code>app_id</code> is the device-path
+form of the binary (<code>FwpmGetAppIdFromFileName0</code>).
+<code>UNVERIFIED</code>: full per-app split fidelity (vs route-based) is
+a Phase-2 item — Phase-1 ships per-route split, per-app behind a
+capability flag (<code>Capability.splitTunnel</code>
+<code>[03-client §6]</code>).</li>
+</ul>
+<h3 id="86-the-only-open-path">8.6 The only open path</h3>
+<p>The persistent kill-switch is removed on <strong>exactly one</strong>
+path — a user-initiated graceful stop (<code>StopTunnel</code> →
+<code>ShuttingDown</code> → <code>Down{stopped}</code>) — identical to
+the core rule <code>[01-orch §8.6]</code>. Every other terminal leaves
+it closed.</p>
+<hr />
+<h2 id="9-code-signing--driver-trust-114133">9. Code signing &amp;
+driver trust (§11.4.133)</h2>
+<p>§11.4.133 (target-system safety) + the doc-03 signing note
+<code>[03-client §11]</code> require <strong>no unsigned privileged
+code</strong>. Three trust tiers:</p>
+<table>
+<thead>
+<tr>
+<th>Artifact</th>
+<th>Signing requirement</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>wintun.dll</code> / <code>wireguard.sys</code></td>
+<td><strong>Microsoft/WireGuard-LLC signed</strong> drivers, shipped
+<strong>as-is</strong> — we do <strong>not</strong> re-sign third-party
+drivers. If a custom driver were ever needed it would require <strong>EV
++ Microsoft attestation signing</strong> (Partner Center hardware
+dashboard) — out of scope for MVP (we use the upstream signed
+wintun).</td>
+</tr>
+<tr>
+<td><code>helix_tunnel_svc.exe</code> + DLLs</td>
+<td><strong>Authenticode</strong> signed with the project&#39;s <strong>EV
+(or OV) code-signing cert</strong>, SHA-256, <strong>RFC-3161
+timestamped</strong> so signatures outlive cert expiry.</td>
+</tr>
+<tr>
+<td>Installer (MSI/MSIX)</td>
+<td>Authenticode signed (same cert); MSIX additionally for
+Store/sideload trust.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="91-signing-pipeline-local-114156-no-server-ci">9.1 Signing
+pipeline (local, §11.4.156 no server CI)</h3>
+<pre class="text"><code># local pre-tag step (§11.4.40 sweep) — operator runs with the EV token/HSM present
+signtool sign /fd SHA256 /tr http://timestamp.acme/rfc3161 /td SHA256 /a helix_tunnel_svc.exe
+signtool sign /fd SHA256 /tr http://timestamp.acme/rfc3161 /td SHA256 /a HelixVPN-Setup.msi
+signtool verify /pa /v helix_tunnel_svc.exe        # MUST pass before the artifact ships</code></pre>
+<p><code>UNVERIFIED</code>: the cert is
+<strong>operator-supplied</strong> (§11.4.10 — the private key lives on
+an EV token/HSM, never in the repo, never in <code>.env</code> tracked
+files). SmartScreen reputation accrues over EV-signed releases. The
+signing step is a <strong>release-gate blocker</strong>: an unsigned
+<code>helix_tunnel_svc.exe</code> cannot ship (§11.4.133). The
+verification output (<code>signtool verify /pa</code>) is the captured
+evidence (§12 <code>SEC</code>).</p>
+<h3 id="92-what-signing-buys-honest-boundary-1146">9.2 What signing buys
+(honest boundary, §11.4.6)</h3>
+<p>Signing proves <strong>provenance + integrity</strong> (the binary is
+ours, untampered) and is required for the driver to load + for
+SmartScreen/UAC trust. It does <strong>not</strong> prove the code is
+<em>correct</em> or <em>leak-free</em> — that is the §12 test matrix&#39;s
+job. Do not conflate &quot;signed&quot; with &quot;safe&quot;.</p>
+<hr />
+<h2 id="10-memory--resource-budgets">10. Memory / resource budgets</h2>
+<p>Windows has <strong>no iOS-NE-class ~15 MB ceiling</strong>
+[03-client §0.1 CI4]; the service is a normal desktop process. Budgets
+are nonetheless bounded (host-safety adjacency, §12.6):</p>
+<table>
+<thead>
+<tr>
+<th>Budget</th>
+<th>Target (recommendation, <code>UNVERIFIED</code> — calibrate in BENCH
+§12)</th>
+<th>How</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Service idle RSS</td>
+<td><strong>&lt; ~30–40 MB</strong></td>
+<td>Rust service (no CLR/GC); reused encrypt/decrypt scratch buffers per
+loop (no per-packet alloc, <code>[01-orch §3.1]</code>); LTO + strip
+release build</td>
+</tr>
+<tr>
+<td>wintun ring capacity</td>
+<td><strong>4 MiB</strong> (<code>0x400000</code>, power-of-two within
+<code>0x20000..=0x4000000</code>)</td>
+<td>bounded send/recv ring; back-pressure rather than unbounded
+growth</td>
+</tr>
+<tr>
+<td>Pipe per-client queue</td>
+<td><strong>64 frames</strong> (mirrors <code>STATUS_CHANNEL_CAP</code>
+<code>[01-orch §4.2]</code>)</td>
+<td>overflow ⇒ disconnect the wedged client, never block the core
+(§4.4)</td>
+</tr>
+<tr>
+<td>Status broadcast cap</td>
+<td>64 (the core&#39;s <code>[01-orch §4.2]</code>)</td>
+<td>unchanged from the cross-platform core</td>
+</tr>
+<tr>
+<td>UI (unprivileged) idle</td>
+<td>single-digit → low-tens MB</td>
+<td>Flutter AOT, no core linked in the UI process (the core is in the
+service)</td>
+</tr>
+<tr>
+<td>CPU per Gbps</td>
+<td>per the transport BENCH <code>[01-trans §11]</code></td>
+<td>core is identical to every platform; the shim adds only the wintun
+copy + pipe marshalling of <em>control</em> frames (not packets)</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>The pipe never carries packets.</strong> Data packets flow
+wintun ⇄ core ⇄ network entirely inside the service; only
+<em>control</em> (commands + status events) crosses the pipe. The pipe
+is therefore low-bandwidth and never a throughput bottleneck (W-C2).</p>
+</blockquote>
+<hr />
+<h2 id="11-error-taxonomy--edge-cases">11. Error taxonomy &amp; edge
+cases</h2>
+<div class="sourceCode" id="cb15"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helixvpn-ipc / helix-core/src/platform/windows  — surfaced as PipeError on the wire + PlatformTunnelEvent</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span>Serialize<span class="op">,</span> Deserialize<span class="op">,</span> <span class="bu">Debug</span><span class="at">)]</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">enum</span> PipeError <span class="op">{</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    ServiceNotInstalled<span class="op">,</span>        <span class="co">// UI: offer elevated (re)install → PlatformTunnelEvent.permissionDenied</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>    NotElevatedToInstall<span class="op">,</span>       <span class="co">// installer needs admin</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>    AdapterCreateFailed(<span class="dt">String</span>)<span class="op">,</span><span class="co">// wintun WintunCreateAdapter failed (driver missing / name clash)</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>    WfpInstallFailed(<span class="dt">String</span>)<span class="op">,</span>   <span class="co">// kill-switch could not be installed → Down{host-fatal} (never proceed)</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>    PipeAuthRejected<span class="op">,</span>           <span class="co">// Hello failed / wrong session / token mismatch (§4.3)</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>    ProtocolVersionMismatch <span class="op">{</span> service<span class="op">:</span> <span class="dt">u32</span><span class="op">,</span> client<span class="op">:</span> <span class="dt">u32</span> <span class="op">},</span></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>    Busy<span class="op">,</span>                       <span class="co">// too many pipe instances / a start already in flight</span></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>    CoreError(<span class="dt">String</span>)<span class="op">,</span>          <span class="co">// forwarded anyhow::Error from the FFI surface (never a secret, W-I6)</span></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="111-edge-case-matrix">11.1 Edge-case matrix</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Edge case</th>
+<th>Required behaviour</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>E1</td>
+<td>Service not installed / stopped when UI calls
+<code>startTunnel</code></td>
+<td><code>permissionDenied</code> + offer elevated installer/repair;
+never silent failure (O1)</td>
+</tr>
+<tr>
+<td>E2</td>
+<td>UI process killed mid-tunnel</td>
+<td>pipe breaks; <strong>tunnel keeps running</strong> (control-only
+pipe, §4.6); UI reconnects + re-syncs <code>TunnelStatus</code></td>
+</tr>
+<tr>
+<td>E3</td>
+<td>Service crashes mid-tunnel</td>
+<td>SCM restarts it (§6.4); <strong>persistent kill-switch holds → no
+leak</strong> (W-I3); core re-dials on restart</td>
+</tr>
+<tr>
+<td>E4</td>
+<td>Two UIs (or a malicious local proc) race the pipe</td>
+<td>DACL + <code>Hello</code> token gate (§4.3); excess instances →
+<code>Busy</code>; <code>NETWORK</code> denied (W-I4)</td>
+</tr>
+<tr>
+<td>E5</td>
+<td>wintun driver absent / wrong version</td>
+<td><code>AdapterCreateFailed</code> → installer repair flow; never a
+half-open adapter</td>
+</tr>
+<tr>
+<td>E6</td>
+<td>WFP filter install denied (policy/AV)</td>
+<td><code>WfpInstallFailed</code> → <code>Down{host-fatal}</code>;
+<strong>do not run with a believed-but-unverified kill-switch</strong>
+(§11.4.6)</td>
+</tr>
+<tr>
+<td>E7</td>
+<td>Machine sleep/resume; NIC change (Wi-Fi→Ethernet)</td>
+<td>the core&#39;s <code>RoamDetected</code> fast-path
+<code>[01-orch §7.5]</code> re-dials; the wintun adapter persists across
+the roam (WG roams on top)</td>
+</tr>
+<tr>
+<td>E8</td>
+<td>User logoff while tunnel up (auto-start mode)</td>
+<td>service keeps running headless; pipe ACL re-evaluated on
+<code>SESSIONCHANGE</code> (§6.3); UI reconnects on next logon</td>
+</tr>
+<tr>
+<td>E9</td>
+<td>Machine shutdown</td>
+<td><code>SERVICE_CONTROL_SHUTDOWN</code> → fast quiescent stop;
+persistent kill-switch is fine to leave (next boot re-arms)</td>
+</tr>
+<tr>
+<td>E10</td>
+<td><code>Oversize</code> datagram on MTU change (transport swap)</td>
+<td>core lowers inner MTU / re-fragments (<code>[01-trans §4.8]</code>
+rule 3); shim re-applies adapter MTU via iphlpapi</td>
+</tr>
+</tbody>
+</table>
+<h3 id="112-no-guessing-classification-1146">11.2 No-guessing
+classification (§11.4.6)</h3>
+<p>A pipe/adapter/WFP failure is <strong>never</strong> reported as
+&quot;transient&quot; without captured evidence; each <code>PipeError</code>
+variant maps to a concrete observed signal (a Win32 error code, a WFP
+HRESULT, a wintun return). Ambiguous &quot;the UI lost the pipe&quot; is
+<code>ERROR_BROKEN_PIPE</code> → reconnect, not a guess about
+<em>why</em> — the core&#39;s <code>TunnelStatus</code> remains the truth
+about the <em>tunnel</em> (W-I5).</p>
+<hr />
+<h2 id="12-test-points--114169-closed-test-type-vocabulary">12. Test
+points — §11.4.169 closed test-type vocabulary</h2>
+<p>Every Windows-shim workable item declares its required test types
+from the §11.4.169 closed set; the only permitted absence of a warranted
+type is an honest §11.4.3 SKIP-with-reason, never a silent gap.
+Four-layer enforcement per §11.4.4(b) applies to every closure. Captured
+evidence per §11.4.5/.69/.107; the shim is the only untyped seam and is
+covered on a <strong>real Windows VM / machine</strong>, never a
+mock-claiming-PASS (O5, §11.4.27).</p>
+<table>
+<thead>
+<tr>
+<th>Code (§11.4.169)</th>
+<th>Concrete Windows-shim test point</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>UT</code></td>
+<td><code>PipeFrame</code>/<code>Command</code>/<code>TunnelStatus</code>
+serde round-trip is identity; the Dart mirror types match the Rust
+<code>helixvpn-ipc</code> types byte-for-byte (drift FAILs build);
+<code>PipeError</code> mapping; SDDL string builds the intended
+DACL</td>
+<td><code>cargo test</code> + Dart <code>flutter test</code> output;
+mirror-diff</td>
+</tr>
+<tr>
+<td><code>IT</code></td>
+<td>on a real Windows VM (booted via the containers submodule §11.4.76
+where virtualisation allows, else a pinned VM runner): install the
+service, create a wintun adapter, open the pipe, drive
+<code>Hello → StartTunnel → Connected</code> against a real edge</td>
+<td>adapter-up log + pipe transcript + per-carrier round-trip</td>
+</tr>
+<tr>
+<td><code>E2E</code></td>
+<td>UI → pipe → service → core → wintun → gateway: <code>curl</code> to
+a LAN host succeeds over <code>plain-udp</code> and over
+<code>masque-h3</code> (with plain WG <code>nft</code>-blocked at the
+edge)</td>
+<td>window-scoped MP4 (§11.4.159) of the connect journey +
+<code>curl</code> capture</td>
+</tr>
+<tr>
+<td><code>FA</code></td>
+<td>one-shot scripted install→connect→shields→stop→uninstall,
+<strong>N=3 identical</strong> runs producing the same ordered
+<code>TunnelStatus</code> trace (deterministic §11.4.50)</td>
+<td>3× identical status-trace artifacts</td>
+</tr>
+<tr>
+<td><code>CH</code></td>
+<td>a Challenge (challenges submodule §11.4.27(B)) scores the captured
+E2E evidence (real connect, not config)</td>
+<td>Challenge <code>result.json</code></td>
+</tr>
+<tr>
+<td><code>HQA</code></td>
+<td>HelixQA autonomous session drives install→connect→roam→stop across
+carriers</td>
+<td>HelixQA session evidence</td>
+</tr>
+<tr>
+<td><code>LOAD</code></td>
+<td>rapid connect/disconnect churn (100×) + many concurrent pipe
+<code>Hello</code> attempts: no adapter leak, no handle leak, bounded
+RSS</td>
+<td>handle-count + RSS CSV</td>
+</tr>
+<tr>
+<td><code>SEC</code></td>
+<td>(a) <code>signtool verify /pa</code> passes on the service +
+installer (§9); (b) pipe DACL denies a
+<code>NETWORK</code>/non-interactive caller (W-I4); (c) plant the
+session token + a <code>SecretBytes</code> → grep proves it appears in
+<strong>no</strong> log/tracked file (§11.4.10, W-I6); (d) kill-switch:
+pull the carrier, assert <strong>zero</strong> egress leaks via packet
+capture</td>
+<td><code>signtool</code> output; rejected-connect log; grep-empty
+proof; leak-capture</td>
+</tr>
+<tr>
+<td><code>SC</code></td>
+<td>crash the service mid-tunnel → assert persistent kill-switch
+<strong>still blocks</strong> (W-I3) + SCM restart recovers &lt; 3 s
+<code>[01-orch §7.1]</code>; NIC flap (Wi-Fi→Ethernet) → roam recovery;
+kill the UI → tunnel survives (E2)</td>
+<td>recovery trace + leak-during-crash capture (MUST be empty)</td>
+</tr>
+<tr>
+<td><code>CONC</code></td>
+<td>concurrent pipe clients (allowed N) + atomic transport swap under
+load → zero dropped control frames; loop A send / loop B recv during a
+wintun-ring contention burst</td>
+<td>concurrency harness log</td>
+</tr>
+<tr>
+<td><code>RACE</code></td>
+<td><code>cargo test --features loom</code> on the pipe per-client queue
++ the service <code>ServiceState</code> shared cell; pipe-connect race
+vs <code>Hello</code> token gate</td>
+<td>loom report</td>
+</tr>
+<tr>
+<td><code>MEM</code></td>
+<td>service RSS bound under churn (§10); no per-datagram heap growth on
+the wintun pump; no handle leak across 100 connect cycles</td>
+<td><code>/proc</code>-equivalent (PerfMon) RSS + handle CSV</td>
+</tr>
+<tr>
+<td><code>BENCH</code></td>
+<td>per-carrier throughput / CPU-per-Gbps through the wintun path;
+wintun vs (optional) wireguard-nt plain-udp fast-path delta (informs
+D-WIN-1)</td>
+<td>throughput/CPU/p99 CSV</td>
+</tr>
+</tbody>
+</table>
+<h3 id="121-anti-bluff-rule-114569107">12.1 Anti-bluff rule
+(§11.4.5/.69/.107)</h3>
+<p>A green <code>UT</code> serde test does <strong>not</strong> prove
+the tunnel works — the
+<strong><code>IT</code>/<code>E2E</code>/<code>SC</code> layers on a
+real Windows machine are the authoritative evidence</strong>: the
+window-scoped MP4 of the real connect journey (<code>StatusChip</code>
+reading <code>masque-h3 · 23ms</code>, OCR/vision-validated §11.4.159) +
+the <strong>empty</strong> leak capture during a forced crash (W-I3) +
+the <code>signtool verify</code> pass. The kill-switch claim in
+particular is proven by a packet capture showing zero egress while the
+carrier is down, never asserted (§11.4.6/.123).</p>
+<hr />
+<h2 id="13-open-decisions-surfaced-by-this-document">13. Open decisions
+surfaced by this document</h2>
+<p>Per §11.4.6/§11.4.66 — options + recommendation, never silently
+resolved. These are <em>Windows-shim</em> decisions; program-level D1–D8
+live in doc <code>00</code>, client-stack D-CLIENT-1..5 in
+<code>[03-client §14]</code>.</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Decision</th>
+<th>Option A</th>
+<th>Option B</th>
+<th>Recommendation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>D-WIN-1</strong></td>
+<td>Primary tunnel adapter</td>
+<td><strong>wintun</strong> + core-owned WG/transport (every obfuscation
+carrier works, W-I2)</td>
+<td>wireguard-nt kernel WG (plain-udp only, in-kernel speed)</td>
+<td><strong>A for the datapath</strong>; wireguard-nt as an
+<em>optional</em> Phase-2 <code>plain-udp</code> kernel fast path, gated
+on the <code>BENCH</code> delta. Ship <strong>wintun-only</strong> in
+Phase 1.</td>
+</tr>
+<tr>
+<td><strong>D-WIN-2</strong></td>
+<td>Service language</td>
+<td><strong>Rust</strong> (<code>windows-service</code>, core
+in-process, no GC/marshalling)</td>
+<td>C# .NET Worker Service (core via P/Invoke)</td>
+<td><strong>A</strong> — byte-for-byte core reuse (I4), smaller, no CLR;
+honours the doc-03 &quot;C#/Rust&quot; note as the alternative.</td>
+</tr>
+<tr>
+<td><strong>D-WIN-3</strong></td>
+<td>Service account</td>
+<td><code>LocalSystem</code> (simplest, certainly works)</td>
+<td>dedicated virtual service account
+<code>NT SERVICE\HelixTunnelSvc</code> with minimal privileges</td>
+<td><strong>B if a SEC/IT measurement (§12) confirms wintun + WFP work
+under the reduced token</strong>; else A. Surface the measurement, do
+not assume.</td>
+</tr>
+<tr>
+<td><strong>D-WIN-4</strong></td>
+<td>Service start type</td>
+<td><code>DEMAND_START</code> (privacy: runs only when asked)</td>
+<td><code>AUTO_START</code> (reconnect-at-boot convenience)</td>
+<td><strong>A default</strong> (least-surprise/privacy); offer
+<code>AUTO_START</code> as an explicit user opt-in for always-on.</td>
+</tr>
+<tr>
+<td><strong>D-WIN-5</strong></td>
+<td>Pipe body encoding</td>
+<td><strong>MessagePack</strong> (<code>rmp-serde</code>, compact,
+self-describing)</td>
+<td>JSON (debuggable) / bincode (smallest)</td>
+<td><strong>A</strong> — compact + cross-language; the
+<code>helixvpn-ipc</code> crate freezes the schema so Dart + Rust cannot
+drift (§12 <code>UT</code>).</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="sources-verified">Sources verified</h2>
+<ul>
+<li><code>final/03-client-core-and-ui.md</code> <code>[03-client]</code>
+— §0.1 (client invariants CI1–CI6), §3 (FFI surface,
+<code>TunnelStatus</code>/<code>Shields</code>/<code>ExitOption</code>
+types, the iOS pump pattern this doc mirrors for wintun), §4
+(<code>TunnelPlatform</code> contract + <code>TunnelConfig</code> +
+<code>PlatformTunnelEvent</code> + obligations O1–O5), §5.1 (iOS
+<code>packetFlow ⇄ core</code> pump — the model for the wintun pump),
+§5.3 (Windows row: wireguard-nt/wintun + privileged service + named-pipe
+IPC + WFP + Authenticode), §6 (capabilities incl.
+<code>splitTunnel</code>), §7.1 (state palette), §8.4 (intent-vs-actual
+honesty), §11 (signing), §12 (testing + anti-bluff).</li>
+<li><code>final/v02-data-plane/orchestrator-and-state.md</code>
+<code>[01-orch]</code> — §0.3 (invariants incl. O-I11 fail-closed), §2.1
+(<code>TunDevice</code> role wintun fills), §3 (the three loops —
+unchanged on Windows), §4.1 (the canonical five-variant
+<code>TunnelStatus</code> the pipe carries), §4.2 (channel cap), §4.4
+(<code>Down.reason</code> vocabulary), §4.6 (receiver
+<code>Lagged → re-read latest</code>), §5.2 (state diagram), §7
+(reconnection backoff + roam fast-path), §8 (kill-switch + DNS coupling
+— the WFP realisation in §8 here).</li>
+<li><code>final/v02-data-plane/transport-trait.md</code>
+<code>[01-trans]</code> — §1 (invariant I4: one core, three consumers —
+why wintun not wireguard-nt for obfuscated carriers), §3.2
+(<code>SecretBytes</code> no-leak), §4.8 (MTU/<code>Oversize</code>), §6
+(the ladder the in-service core runs), §11 (perf budget).</li>
+<li><code>04_VPN_CLD/HelixVPN-helix-ui-Flutter.md</code>
+<code>[04_UI]</code> — §5/§6 (per-platform shim matrix: Windows =
+wireguard-nt/wintun + privileged service + named-pipe IPC, C#/Rust;
+signing note).</li>
+<li><code>04_VPN_CLD/HelixVPN-Architecture-Refined.md</code>
+<code>[04_ARCH]</code> — §5.3 (shim matrix), §5.6 (kill switch +
+DNS-leak driven by core state), §5.7 (desktop posture).</li>
+<li><code>[SYN]</code> cross-document synthesis — §5 (client
+architecture: Windows wireguard-nt/wintun + privileged service +
+named-pipe IPC), §9 (constitution bindings).</li>
+</ul>
+<p><em>Constitution: §11.4.44 (revision header), §11.4.6/§11.4.66
+(decisions = options + recommendation; no guessing), §11.4.10 (no secret
+leak — <code>SecretBytes</code>/token never logged, W-I6), §11.4.27 (no
+fakes beyond unit tests — the shim covered on real hardware),
+§11.4.5/§11.4.69/§11.4.107/§11.4.159 (captured / window-scoped
+evidence), §11.4.133 (signed privileged code / target safety — §9),
+§11.4.156 (no active CI — local signing/test ritual), §11.4.169
+(comprehensive test-type coverage — §12).</em></p>
+<p><em>End of nano-detail specification — Windows shim (wireguard-nt +
+service), Volume 4 (Clients). Pairs with <code>[03-client §5.3]</code>
+(the overview this deepens), <code>[01-orch §4.1/§8]</code> (the
+<code>TunnelStatus</code> + kill-switch contracts this realises on WFP),
+and the sibling per-platform shim docs. Surfaced decisions: D-WIN-1
+(adapter), D-WIN-2 (service language), D-WIN-3 (service account),
+D-WIN-4 (start type), D-WIN-5 (pipe encoding) — all presented, none
+silently resolved (§11.4.66).</em></p>
+</body>
+</html>

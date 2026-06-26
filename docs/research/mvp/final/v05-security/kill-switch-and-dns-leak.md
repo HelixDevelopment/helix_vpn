@@ -1,7 +1,7 @@
 # Kill-switch & DNS-leak protection
 
-**Revision:** 1
-**Last modified:** 2026-06-25T12:00:00Z
+**Revision:** 2
+**Last modified:** 2026-06-26T12:00:00Z
 
 > Master technical specification — **Volume 5 (Security & Privacy)**, nano-detail
 > deep-dive. This document **deepens** the kill-switch / DNS-leak invariant
@@ -172,6 +172,8 @@ stateDiagram-v2
 pub enum LinkState { Disconnected, Connecting, Connected, Reconnecting, Blocked, Disconnecting }
 
 pub enum KillSwitchMode { Strict, Permissive, Off }   // maps from Shields.kill_switch (hc §8.1)
+// MVP FFI reach: Shields.kill_switch is a BOOL -> only { Strict (true), Off (false) }.
+// `Permissive` is Phase-2 / internal-only — NOT selectable through the MVP FFI (see §2.2).
 
 pub struct LinkCtx {
     pub gateways: Vec<SocketAddr>,   // allow_gateway_endpoints — stay reachable to re-handshake
@@ -205,13 +207,17 @@ firewall has not yet caught up (F-I4 [hc §0.3]).
 | `KillSwitchMode` | Behaviour | Typical user |
 |---|---|---|
 | **`Strict`** | armed-closed before the first handshake; fail-closed on every drop; `Blocked` lockdown when re-dial fails; revert only on user-stop | privacy client (default for Helix Access) |
-| **`Permissive`** | tunnel-DNS + off-tunnel `:53` block while `Connected`, but a drop reverts to system networking (no `Blocked` lockdown) | a user who prefers connectivity-over-privacy on drop (explicit opt-out, surfaced not silent) |
+| **`Permissive`** *(Phase-2 / internal-only)* | tunnel-DNS + off-tunnel `:53` block while `Connected`, but a drop reverts to system networking (no `Blocked` lockdown) | a user who prefers connectivity-over-privacy on drop — **not reachable from the MVP FFI** (§2.2 note) |
 | **`Off`** | no firewall side effects; `restore()` keeps the host's pre-VPN posture | the connector appliance (`KillSwitchMode::Off` default [v02-orch §9.4]) |
 
 `Strict` is the default for the privacy client; the connector defaults to `Off` because it
-is an appliance, not a privacy endpoint [hc §9.4, v02-orch §9.4]. `Permissive` exists so
-the "connectivity on drop" choice is an **explicit, surfaced** mode, never an
-undocumented silent fallback (§11.4.6).
+is an appliance, not a privacy endpoint [hc §9.4, v02-orch §9.4].
+
+> **Reconciled (§11.4.35, 2026-06-26):** the MVP FFI surface exposes `Shields.kill_switch` as a
+> **bool**, which maps to exactly two modes — `Strict` (true) and `Off` (false). `Permissive` is
+> therefore **Phase-2 / internal-only**: it exists in the core enum for the future "connectivity on
+> drop" choice (an explicit, surfaced mode, never a silent fallback, §11.4.6) but is **not
+> selectable through the MVP FFI** — the doc must not imply an MVP control that does not yet exist.
 
 ---
 

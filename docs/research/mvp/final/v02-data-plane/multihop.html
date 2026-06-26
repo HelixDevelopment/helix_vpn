@@ -1,0 +1,1340 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Multi-Hop (Entry/Exit Separation)</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Multi-Hop (Entry/Exit Separation)</h1>
+</header>
+<h1 id="multi-hop-entryexit-separation">Multi-Hop (Entry/Exit
+Separation)</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-06-25T00:00:00Z</p>
+<blockquote>
+<p>Volume 2 (Data Plane) nano-detail specification. Deepens the
+<strong>Multi-Hop (nested WireGuard)</strong> section of the pass-1
+data-plane overview [01-data-plane §11.1]. SPEC-ONLY: this document
+describes <em>what to build</em> (Rust traits, structs, enums, fns, wire
+byte layouts, state machines, error taxonomy, config knobs, edge cases,
+security, performance, tests). It does not ship the product. Source
+evidence cited inline by id, e.g. [04_ARCH §3.5], [01-DP §11.1],
+[SYNTHESIS §3 D6], [research-pki_pq_nat §3].</p>
+</blockquote>
+<hr />
+<h2 id="0-position-scope-and-what-this-document-owns">0. Position,
+scope, and what this document owns</h2>
+<p>HelixVPN multi-hop generalises the original &quot;chain two VPSes&quot; design
+into a client-driven <strong>nested-WireGuard tunnel chain</strong>
+[04_ARCH §3.5, 01-DP §11.1]. The canonical 2-hop topology:</p>
+<pre><code>Client ──▶ Gateway-Entry ──▶ Gateway-Exit ──▶ { public internet | connector LAN }</code></pre>
+<p>The defining privacy property — the <strong>Mullvad multi-hop
+property</strong> [04_ARCH §3.5] — is <strong>entry/exit
+separation</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Hop</th>
+<th>Knows</th>
+<th>Does NOT know</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Entry</strong> (first gateway)</td>
+<td>the client&#39;s real source IP; that <em>some</em> exit follows</td>
+<td>the final destination, the plaintext</td>
+</tr>
+<tr>
+<td><strong>Exit</strong> (last gateway)</td>
+<td>the final destination; the exit-leg ciphertext source</td>
+<td>the client&#39;s real source IP, the plaintext</td>
+</tr>
+</tbody>
+</table>
+<p>No single relay simultaneously sees <em>who</em> the client is
+<strong>and</strong> <em>what</em> it is talking to. This is achieved
+structurally, by <strong>nesting two independent WireGuard
+sessions</strong> so each hop can only strip its own layer, never the
+inner one [04_ARCH §3.5].</p>
+<p><strong>This document owns:</strong> the
+<code>helix-core/src/hop_chain.rs</code> module — the nested-WG data
+structures, the encapsulation/decapsulation pipeline, the per-hop key
+model, the hop-chain state machine, the multi-hop <code>RouteMap</code>
+consumption, the MTU/overhead budget for chains, the error taxonomy,
+config knobs, edge cases, and the §11.4.169 test points. It is the
+Phase-2 work item <code>helix-core/src/hop_chain.rs</code> from the
+build checklist [01-DP §12].</p>
+<p><strong>This document does NOT own</strong> (cross-references): the
+<code>Transport</code> trait and its impls (owned by [01-DP §3] — each
+hop reuses an ordinary <code>Transport</code> <em>unchanged</em>); the
+<code>helix-wg</code> boringtun wrapper [01-DP §4]; the
+<code>WatchNetworkMap</code> wire contract that <em>streams</em> the
+multi-hop chain (doc 03); the control-plane chain-selection /
+jurisdiction policy that <em>decides</em> which Entry+Exit pair to
+assign (doc 02); the post-quantum PSK layer (security doc); the
+kill-switch/DNS-leak interaction (security doc, referenced at §11).</p>
+<h3 id="01-non-negotiable-multi-hop-invariants">0.1 Non-negotiable
+multi-hop invariants</h3>
+<p>These extend the data-plane invariants I1–I6 [01-DP §0.1]; an
+implementation violating any is a release blocker.</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Invariant</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>M1</td>
+<td><strong>No new wire protocol.</strong> A hop chain is N independent
+WireGuard sessions over N independent <code>Transport</code>s; the bytes
+on each leg are exactly what that leg&#39;s <code>Transport</code> already
+carries (I1/I2 preserved per-leg).</td>
+<td>[01-DP §11.1], [04_ARCH §3.5]</td>
+</tr>
+<tr>
+<td>M2</td>
+<td><strong>Per-hop keys are independent.</strong> The client holds a
+<em>distinct</em> Curve25519 keypair and a <em>distinct</em> WG session
+for every hop. No key is shared across hops.</td>
+<td>[04_ARCH §3.5], [research-pki_pq_nat §1.1]</td>
+</tr>
+<tr>
+<td>M3</td>
+<td><strong>Strict layering: each hop strips exactly one layer.</strong>
+Entry decrypts the outer WG session and forwards the
+<em>still-encrypted</em> inner datagram; only Exit can decrypt the inner
+session. Entry never possesses the inner key.</td>
+<td>[04_ARCH §3.5]</td>
+</tr>
+<tr>
+<td>M4</td>
+<td><strong>Entry-blindness / Exit-blindness by construction</strong>,
+not by policy: Entry&#39;s <code>AllowedIPs</code> for the client peer
+permit only the Exit overlay address; Exit&#39;s view of the source is the
+Entry leg, never the client.</td>
+<td>[04_ARCH §3.5], [01-DP §7]</td>
+</tr>
+<tr>
+<td>M5</td>
+<td><strong>Fail-static per hop.</strong> If the control plane is down,
+an established chain keeps forwarding (I3); a single-hop failure tears
+down the <em>whole chain</em> (no silent half-tunnel) and surfaces
+<code>Down</code>.</td>
+<td>[01-DP §0.1 I3]</td>
+</tr>
+<tr>
+<td>M6</td>
+<td><strong>Jurisdiction separation is an input, not a guarantee the
+data plane can verify.</strong> The data plane faithfully chains
+whatever Entry/Exit the control plane assigns; it cannot itself attest
+the two gateways are in different jurisdictions (that is doc-02 policy).
+The data plane MUST expose the assigned <code>jurisdiction</code> labels
+in status so the UX/policy layer can assert the property.</td>
+<td>[SYNTHESIS §7], §11.4.6</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="1-conceptual-model--nested-wireguard">1. Conceptual model —
+nested WireGuard</h2>
+<p>A single-hop tunnel is one WG session inside one
+<code>Transport</code>:</p>
+<pre><code>[ inner IP packet ] ──WG_exit?── no, single hop:  [ IP ] ─WG(gw)→ [ Transport ] → wire</code></pre>
+<p>A 2-hop chain composes <strong>two</strong> WG sessions where the
+<em>inner</em> session&#39;s encrypted datagram is the <em>plaintext
+payload</em> of the <em>outer</em> session [04_ARCH §3.5, 01-DP
+§11.1]:</p>
+<pre><code>            ┌────────────────────────── what the CLIENT does on egress ───────────────────────────┐
+ user IP pkt
+   │
+   ├─① WG-Exit encrypt  (client↔Exit session, key pair K_exit)  →  Ed = WG_exit(IP)
+   │        Ed is an opaque WireGuard transport-data message addressed to the Exit overlay IP
+   │
+   ├─② treat Ed as the *inner IP payload* destined for the Exit overlay address, then
+   │   WG-Entry encrypt (client↔Entry session, key pair K_entry)  →  Ee = WG_entry(Ed)
+   │
+   └─③ Ee handed to the ENTRY-leg Transport.send()  (e.g. masque-h3)  → wire to Entry:443</code></pre>
+<p>On the return path the client reverses: the Entry
+<code>Transport</code> yields <code>Ee</code>, <code>WG-Entry</code>
+decrypts to <code>Ed</code>, <code>WG-Exit</code> decrypts to the user
+IP packet.</p>
+<p>The gateways do the middle unwrapping:</p>
+<pre><code> ENTRY gateway:  Transport.recv() → Ee → WG_entry.decrypt → Ed (still WG ciphertext)
+                 → route Ed toward Exit over the Entry↔Exit Transport (Entry CANNOT read inside Ed; M3)
+ EXIT  gateway:  Transport.recv() → Ed → WG_exit.decrypt → user IP packet
+                 → forward to {internet | connector} per Exit policy</code></pre>
+<p><strong>Key insight (M1):</strong> from each <code>Transport</code>&#39;s
+point of view nothing changed. The Entry leg carries opaque WG datagrams
+(<code>Ee</code>); the Entry↔︎Exit leg carries opaque WG datagrams
+(<code>Ed</code>). The nesting lives entirely in
+<code>helix-core</code>&#39;s encrypt/decrypt ordering —
+<strong>not</strong> in any new framing on the wire [01-DP §11.1]. This
+is why §11.1 says &quot;the transport layer is unchanged.&quot;</p>
+<h3 id="11-generalisation-to-n-hops">1.1 Generalisation to N hops</h3>
+<p>The 2-hop case is the MVP target [04_ARCH §3.5]. The data structures
+generalise to an ordered chain
+<code>[H₀=Entry, H₁, …, H_{n-1}=Exit]</code>; egress encrypts
+<strong>innermost-first</strong> (Exit session applied first, Entry
+session applied last) and the outermost layer is handed to
+<code>H₀</code>&#39;s transport. Each intermediate hop strips one layer and
+forwards. The spec implements and tests <strong>n ≤
+<code>MAX_HOPS</code> (default 4)</strong>; n=2 is the only
+configuration with a Phase-2 acceptance gate, n=3/4 are validated by
+unit/integration tests only and gated behind config
+(<code>HopChainConfig.max_hops</code>). <code>MAX_HOPS = 4</code> is a
+denial-of-amplification ceiling, not a protocol limit (UNVERIFIED that
+any source mandates a specific ceiling — chosen here as a safe default
+per §11.4.6; tune in Phase 2 from latency budget §10).</p>
+<hr />
+<h2 id="2-module-layout--data-model-helix-coresrchop_chainrs">2. Module
+layout &amp; data model (<code>helix-core/src/hop_chain.rs</code>)</h2>
+<p>The pass-1 sketch [01-DP §11.1] is:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> HopChain <span class="op">{</span> <span class="kw">pub</span> hops<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span>Hop<span class="op">&gt;</span> <span class="op">}</span>            <span class="co">// [Entry, Exit] for 2-hop</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> Hop <span class="op">{</span> <span class="kw">pub</span> wg<span class="op">:</span> WgPeer<span class="op">,</span> <span class="kw">pub</span> transport<span class="op">:</span> <span class="dt">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> Transport<span class="op">&gt;</span> <span class="op">}</span></span></code></pre></div>
+<p>This section nano-details it. The full type set:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-core/src/hop_chain.rs</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="kw">crate</span><span class="pp">::status::</span>TunnelStatus<span class="op">;</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="kw">crate</span><span class="pp">::wg::</span><span class="op">{</span>WgPeer<span class="op">,</span> WgVerdict<span class="op">,</span> WgError<span class="op">};</span>                 <span class="co">// [01-DP §4]</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">helix_transport::</span><span class="op">{</span>Transport<span class="op">,</span> TransportConfig<span class="op">,</span> TransportError<span class="op">,</span> dial<span class="op">};</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">helix_route::</span>RouteMap<span class="op">;</span>                                  <span class="co">// [01-DP §6.2]</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">bytes::</span><span class="op">{</span>Bytes<span class="op">,</span> BytesMut<span class="op">};</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::net::</span>IpAddr<span class="op">;</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::time::</span><span class="op">{</span>Duration<span class="op">,</span> Instant<span class="op">};</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="co">/// An ordered nested-WireGuard tunnel chain. `hops[0]` is ENTRY (outermost on the wire),</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="co">/// `hops[len-1]` is EXIT (innermost crypto layer, owns the user IP packet). Invariant M2:</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="co">/// every Hop carries a DISTINCT WgPeer (distinct key material).</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> HopChain <span class="op">{</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> hops<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span>Hop<span class="op">&gt;,</span>            <span class="co">// 1 = single hop (degenerate), 2 = Entry/Exit (MVP), ≤ MAX_HOPS</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>    state<span class="op">:</span> HopChainState<span class="op">,</span>          <span class="co">// §5 state machine</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>    cfg<span class="op">:</span> HopChainConfig<span class="op">,</span>           <span class="co">// §7 knobs</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>    scratch<span class="op">:</span> BytesMut<span class="op">,</span>             <span class="co">// reused egress/ingress encryption buffer (no per-packet alloc)</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>    metrics<span class="op">:</span> HopChainMetrics<span class="op">,</span>      <span class="co">// aggregate counters only (I5, no per-packet durable state)</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a><span class="co">/// One leg of the chain. The `wg` session and the `transport` are BOTH specific to this leg.</span></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> Hop <span class="op">{</span></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> idx<span class="op">:</span> <span class="dt">u8</span><span class="op">,</span>                       <span class="co">// position in the chain, 0 = Entry</span></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> role<span class="op">:</span> HopRole<span class="op">,</span>                 <span class="co">// Entry | Intermediate | Exit</span></span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> wg<span class="op">:</span> WgPeer<span class="op">,</span>                    <span class="co">// distinct client↔hop WireGuard session (M2)</span></span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> transport<span class="op">:</span> <span class="dt">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> Transport<span class="op">&gt;,</span> <span class="co">// this leg&#39;s L2 carrier (may differ per leg — D6 §8)</span></span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> overlay<span class="op">:</span> IpAddr<span class="op">,</span>               <span class="co">// this hop gateway&#39;s overlay address (next-inner dst)</span></span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> jurisdiction<span class="op">:</span> Jurisdiction<span class="op">,</span>    <span class="co">// label from the map, surfaced for M6 assertion</span></span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>    health<span class="op">:</span> HopHealth<span class="op">,</span></span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="bu">Clone</span><span class="op">,</span> <span class="bu">Copy</span><span class="op">,</span> <span class="bu">Debug</span><span class="op">,</span> <span class="bu">PartialEq</span><span class="op">,</span> <span class="bu">Eq</span><span class="at">)]</span></span>
+<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">enum</span> HopRole <span class="op">{</span> Entry<span class="op">,</span> Intermediate<span class="op">,</span> Exit <span class="op">}</span></span>
+<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a><span class="co">/// Opaque label assigned by the control plane (doc 02). The data plane never INTERPRETS it</span></span>
+<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a><span class="co">/// beyond equality/inequality for the M6 distinct-jurisdiction surface; it is a string id</span></span>
+<span id="cb6-37"><a href="#cb6-37" aria-hidden="true" tabindex="-1"></a><span class="co">/// (ISO-3166 alpha-2 or operator-defined region tag), NOT a trust assertion (M6, §11.4.6).</span></span>
+<span id="cb6-38"><a href="#cb6-38" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="bu">Clone</span><span class="op">,</span> <span class="bu">Debug</span><span class="op">,</span> <span class="bu">PartialEq</span><span class="op">,</span> <span class="bu">Eq</span><span class="at">)]</span></span>
+<span id="cb6-39"><a href="#cb6-39" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> Jurisdiction(<span class="kw">pub</span> <span class="dt">String</span>)<span class="op">;</span></span>
+<span id="cb6-40"><a href="#cb6-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-41"><a href="#cb6-41" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="bu">Clone</span><span class="op">,</span> <span class="bu">Debug</span><span class="op">,</span> <span class="bu">Default</span><span class="at">)]</span></span>
+<span id="cb6-42"><a href="#cb6-42" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> HopHealth <span class="op">{</span></span>
+<span id="cb6-43"><a href="#cb6-43" aria-hidden="true" tabindex="-1"></a>    rtt_ewma_ms<span class="op">:</span> <span class="dt">Option</span><span class="op">&lt;</span><span class="dt">u32</span><span class="op">&gt;,</span></span>
+<span id="cb6-44"><a href="#cb6-44" aria-hidden="true" tabindex="-1"></a>    last_recv_age_ms<span class="op">:</span> <span class="dt">u64</span><span class="op">,</span></span>
+<span id="cb6-45"><a href="#cb6-45" aria-hidden="true" tabindex="-1"></a>    handshake_ok<span class="op">:</span> <span class="dt">bool</span><span class="op">,</span></span>
+<span id="cb6-46"><a href="#cb6-46" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb6-47"><a href="#cb6-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-48"><a href="#cb6-48" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="bu">Clone</span><span class="op">,</span> <span class="bu">Debug</span><span class="op">,</span> <span class="bu">Default</span><span class="at">)]</span></span>
+<span id="cb6-49"><a href="#cb6-49" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> HopChainMetrics <span class="op">{</span></span>
+<span id="cb6-50"><a href="#cb6-50" aria-hidden="true" tabindex="-1"></a>    chains_established<span class="op">:</span> <span class="dt">u64</span><span class="op">,</span></span>
+<span id="cb6-51"><a href="#cb6-51" aria-hidden="true" tabindex="-1"></a>    chain_teardowns<span class="op">:</span> <span class="dt">u64</span><span class="op">,</span></span>
+<span id="cb6-52"><a href="#cb6-52" aria-hidden="true" tabindex="-1"></a>    egress_datagrams<span class="op">:</span> <span class="dt">u64</span><span class="op">,</span></span>
+<span id="cb6-53"><a href="#cb6-53" aria-hidden="true" tabindex="-1"></a>    ingress_datagrams<span class="op">:</span> <span class="dt">u64</span><span class="op">,</span></span>
+<span id="cb6-54"><a href="#cb6-54" aria-hidden="true" tabindex="-1"></a>    oversize_drops<span class="op">:</span> <span class="dt">u64</span><span class="op">,</span>           <span class="co">// §6 MTU</span></span>
+<span id="cb6-55"><a href="#cb6-55" aria-hidden="true" tabindex="-1"></a>    per_hop_handshake_failures<span class="op">:</span> [<span class="dt">u32</span><span class="op">;</span> <span class="dv">8</span>]<span class="op">,</span> <span class="co">// indexed by hop idx; aggregate, no per-flow state (I5)</span></span>
+<span id="cb6-56"><a href="#cb6-56" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><code>HopChain</code> is owned by the <code>Orchestrator</code>
+[01-DP §5.2] in place of the single
+<code>(WgPeer, Box&lt;dyn Transport&gt;)</code> pair when multi-hop is
+active. A single-hop tunnel is the degenerate
+<code>HopChain { hops: vec![Hop{role: Exit, idx: 0, …}] }</code>, so the
+orchestrator&#39;s two data loops have ONE code path (chain of length 1 or
+N) — this is the key simplification that keeps multi-hop from being a
+second forwarding engine.</p>
+<hr />
+<h2 id="3-the-encapsulation-pipeline-egress--ingress">3. The
+encapsulation pipeline (egress + ingress)</h2>
+<h3 id="31-egress--innermost-first-encryption">3.1 Egress —
+innermost-first encryption</h3>
+<div class="sourceCode" id="cb7"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> HopChain <span class="op">{</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Outbound: a plaintext IP packet from the TUN → the outermost (Entry-leg) datagram,</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// then hand it to hops[0].transport.send(). Innermost (Exit) WG layer applied FIRST.</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Returns Ok(()) on send, or a HopChainError that the orchestrator maps to status.</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> egress(<span class="op">&amp;</span><span class="kw">mut</span> <span class="kw">self</span><span class="op">,</span> ip_pkt<span class="op">:</span> <span class="op">&amp;</span>[<span class="dt">u8</span>]) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">,</span> HopChainError<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>        <span class="co">// ① start with the user IP packet as the innermost plaintext</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> <span class="kw">mut</span> layer<span class="op">:</span> Bytes <span class="op">=</span> <span class="kw">self</span><span class="op">.</span>encrypt_exit_layer(ip_pkt)<span class="op">?;</span>          <span class="co">// WG_exit(IP) = Ed</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>        <span class="co">// ② wrap with each preceding hop, Exit-1 down to Entry (indices len-2 .. 0)</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> i <span class="kw">in</span> (<span class="dv">0</span><span class="op">..</span><span class="kw">self</span><span class="op">.</span>hops<span class="op">.</span>len() <span class="op">-</span> <span class="dv">1</span>)<span class="op">.</span>rev() <span class="op">{</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>            layer <span class="op">=</span> <span class="kw">self</span><span class="op">.</span>encrypt_hop_layer(i<span class="op">,</span> <span class="op">&amp;</span>layer)<span class="op">?;</span>                   <span class="co">// WG_i(layer)</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>        <span class="co">// ③ outermost layer = Ee → Entry-leg transport</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>        <span class="kw">self</span><span class="op">.</span>metrics<span class="op">.</span>egress_datagrams <span class="op">+=</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>        <span class="kw">self</span><span class="op">.</span>hops[<span class="dv">0</span>]<span class="op">.</span>transport</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span>send(layer)</span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span><span class="kw">await</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span>map_err(<span class="op">|</span>e<span class="op">|</span> <span class="pp">HopChainError::</span>Leg <span class="op">{</span> hop<span class="op">:</span> <span class="dv">0</span><span class="op">,</span> src<span class="op">:</span> e<span class="op">.</span>into() <span class="op">}</span>)</span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// WG-encrypt `inner` for hop `i`&#39;s session. `inner` is treated as the IP payload that</span></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// WG_i protects (for i = Exit this is the real user packet; for i &lt; Exit it is the</span></span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// next-inner hop&#39;s ciphertext Ed — opaque to hop i&#39;s session, M3).</span></span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> encrypt_hop_layer(<span class="op">&amp;</span><span class="kw">mut</span> <span class="kw">self</span><span class="op">,</span> i<span class="op">:</span> <span class="dt">usize</span><span class="op">,</span> inner<span class="op">:</span> <span class="op">&amp;</span>[<span class="dt">u8</span>]) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>Bytes<span class="op">,</span> HopChainError<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>        <span class="kw">self</span><span class="op">.</span>scratch<span class="op">.</span>clear()<span class="op">;</span></span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a>        <span class="kw">self</span><span class="op">.</span>scratch<span class="op">.</span>resize(inner<span class="op">.</span>len() <span class="op">+</span> WG_DATAGRAM_OVERHEAD<span class="op">,</span> <span class="dv">0</span>)<span class="op">;</span></span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a>        <span class="cf">match</span> <span class="kw">self</span><span class="op">.</span>hops[i]<span class="op">.</span>wg<span class="op">.</span>handle_tun_out(inner<span class="op">,</span> <span class="op">&amp;</span><span class="kw">mut</span> <span class="kw">self</span><span class="op">.</span>scratch) <span class="op">{</span>   <span class="co">// [01-DP §4]</span></span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a>            <span class="pp">WgVerdict::</span>WriteToTransport(buf) <span class="op">=&gt;</span> <span class="cn">Ok</span>(<span class="pp">Bytes::</span>copy_from_slice(buf))<span class="op">,</span></span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a>            <span class="pp">WgVerdict::</span>Nothing <span class="op">=&gt;</span> <span class="cn">Err</span>(<span class="pp">HopChainError::</span>HopNotReady <span class="op">{</span> hop<span class="op">:</span> i <span class="kw">as</span> <span class="dt">u8</span> <span class="op">}</span>)<span class="op">,</span> <span class="co">// handshake pending</span></span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a>            <span class="pp">WgVerdict::</span><span class="cn">Err</span>(e)  <span class="op">=&gt;</span> <span class="cn">Err</span>(<span class="pp">HopChainError::</span>Wg <span class="op">{</span> hop<span class="op">:</span> i <span class="kw">as</span> <span class="dt">u8</span><span class="op">,</span> src<span class="op">:</span> e <span class="op">}</span>)<span class="op">,</span></span>
+<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a>            <span class="pp">WgVerdict::</span>WriteToTun(_) <span class="op">=&gt;</span> <span class="pp">unreachable!</span>(<span class="st">&quot;tun_out never yields tun_in&quot;</span>)<span class="op">,</span></span>
+<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>inline<span class="at">]</span></span>
+<span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> encrypt_exit_layer(<span class="op">&amp;</span><span class="kw">mut</span> <span class="kw">self</span><span class="op">,</span> ip_pkt<span class="op">:</span> <span class="op">&amp;</span>[<span class="dt">u8</span>]) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>Bytes<span class="op">,</span> HopChainError<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb7-35"><a href="#cb7-35" aria-hidden="true" tabindex="-1"></a>        <span class="kw">self</span><span class="op">.</span>encrypt_hop_layer(<span class="kw">self</span><span class="op">.</span>hops<span class="op">.</span>len() <span class="op">-</span> <span class="dv">1</span><span class="op">,</span> ip_pkt)</span>
+<span id="cb7-36"><a href="#cb7-36" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb7-37"><a href="#cb7-37" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><code>WG_DATAGRAM_OVERHEAD</code> is the per-layer WireGuard
+transport-data overhead: <strong>32 bytes</strong> (4-byte type/reserved
++ 4-byte receiver index + 8-byte counter/nonce + 16-byte Poly1305 tag)
+[01-DP §10 derivation]. Each nesting level adds this, so a 2-hop chain
+pays <strong>2× 32 = 64 bytes</strong> of WG overhead before any
+transport overhead (the MTU consequence is §6).</p>
+<h3 id="32-ingress--outermost-first-decryption-client-side">3.2 Ingress
+— outermost-first decryption (client side)</h3>
+<div class="sourceCode" id="cb8"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> HopChain <span class="op">{</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Inbound on the client: a datagram arrived on the Entry-leg transport (Ee).</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Peel Entry → … → Exit; the Exit layer yields the user IP packet for the TUN.</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Handshake replies on any layer are re-emitted out that hop&#39;s transport (M5 keepalive).</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> ingress(<span class="op">&amp;</span><span class="kw">mut</span> <span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>IngressOutcome<span class="op">,</span> HopChainError<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> outer <span class="op">=</span> <span class="kw">self</span><span class="op">.</span>hops[<span class="dv">0</span>]<span class="op">.</span>transport</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span>recv()<span class="op">.</span><span class="kw">await</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span>map_err(<span class="op">|</span>e<span class="op">|</span> <span class="pp">HopChainError::</span>Leg <span class="op">{</span> hop<span class="op">:</span> <span class="dv">0</span><span class="op">,</span> src<span class="op">:</span> e<span class="op">.</span>into() <span class="op">}</span>)<span class="op">?;</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>        <span class="kw">self</span><span class="op">.</span>metrics<span class="op">.</span>ingress_datagrams <span class="op">+=</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>        <span class="kw">self</span><span class="op">.</span>peel(<span class="dv">0</span><span class="op">,</span> outer)</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Recursively strip layer `i`. WriteToTransport at layer i = a WG handshake/keepalive</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// reply for hop i → send it back out hop i&#39;s transport (does NOT continue peeling).</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> peel(<span class="op">&amp;</span><span class="kw">mut</span> <span class="kw">self</span><span class="op">,</span> i<span class="op">:</span> <span class="dt">usize</span><span class="op">,</span> datagram<span class="op">:</span> Bytes) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>IngressOutcome<span class="op">,</span> HopChainError<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>        <span class="kw">self</span><span class="op">.</span>scratch<span class="op">.</span>clear()<span class="op">;</span></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>        <span class="kw">self</span><span class="op">.</span>scratch<span class="op">.</span>resize(datagram<span class="op">.</span>len()<span class="op">,</span> <span class="dv">0</span>)<span class="op">;</span></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>        <span class="cf">match</span> <span class="kw">self</span><span class="op">.</span>hops[i]<span class="op">.</span>wg<span class="op">.</span>handle_transport_in(<span class="op">&amp;</span>datagram<span class="op">,</span> <span class="op">&amp;</span><span class="kw">mut</span> <span class="kw">self</span><span class="op">.</span>scratch) <span class="op">{</span></span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>            <span class="pp">WgVerdict::</span>WriteToTun(plain) <span class="cf">if</span> i <span class="op">==</span> <span class="kw">self</span><span class="op">.</span>hops<span class="op">.</span>len() <span class="op">-</span> <span class="dv">1</span> <span class="op">=&gt;</span> <span class="op">{</span></span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>                <span class="co">// innermost: this is the real user IP packet</span></span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>                <span class="cn">Ok</span>(<span class="pp">IngressOutcome::</span>ToTun(<span class="pp">Bytes::</span>copy_from_slice(plain)))</span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>            <span class="pp">WgVerdict::</span>WriteToTun(inner) <span class="op">=&gt;</span> <span class="op">{</span></span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>                <span class="co">// an intermediate layer decrypted to the NEXT-inner ciphertext → keep peeling</span></span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a>                <span class="kw">self</span><span class="op">.</span>peel(i <span class="op">+</span> <span class="dv">1</span><span class="op">,</span> <span class="pp">Bytes::</span>copy_from_slice(inner))</span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a>            <span class="pp">WgVerdict::</span>WriteToTransport(reply) <span class="op">=&gt;</span> <span class="op">{</span></span>
+<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a>                <span class="co">// handshake/keepalive reply for hop i → re-send out hop i&#39;s transport</span></span>
+<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a>                <span class="cn">Ok</span>(<span class="pp">IngressOutcome::</span>HopReply <span class="op">{</span> hop<span class="op">:</span> i <span class="kw">as</span> <span class="dt">u8</span><span class="op">,</span> datagram<span class="op">:</span> <span class="pp">Bytes::</span>copy_from_slice(reply) <span class="op">}</span>)</span>
+<span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb8-31"><a href="#cb8-31" aria-hidden="true" tabindex="-1"></a>            <span class="pp">WgVerdict::</span>Nothing <span class="op">=&gt;</span> <span class="cn">Ok</span>(<span class="pp">IngressOutcome::</span>Consumed)<span class="op">,</span>  <span class="co">// e.g. cookie/decoy</span></span>
+<span id="cb8-32"><a href="#cb8-32" aria-hidden="true" tabindex="-1"></a>            <span class="pp">WgVerdict::</span><span class="cn">Err</span>(e)  <span class="op">=&gt;</span> <span class="cn">Err</span>(<span class="pp">HopChainError::</span>Wg <span class="op">{</span> hop<span class="op">:</span> i <span class="kw">as</span> <span class="dt">u8</span><span class="op">,</span> src<span class="op">:</span> e <span class="op">}</span>)<span class="op">,</span></span>
+<span id="cb8-33"><a href="#cb8-33" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb8-34"><a href="#cb8-34" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-35"><a href="#cb8-35" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-36"><a href="#cb8-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-37"><a href="#cb8-37" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">enum</span> IngressOutcome <span class="op">{</span></span>
+<span id="cb8-38"><a href="#cb8-38" aria-hidden="true" tabindex="-1"></a>    ToTun(Bytes)<span class="op">,</span>                                   <span class="co">// deliver to the OS TUN</span></span>
+<span id="cb8-39"><a href="#cb8-39" aria-hidden="true" tabindex="-1"></a>    HopReply <span class="op">{</span> hop<span class="op">:</span> <span class="dt">u8</span><span class="op">,</span> datagram<span class="op">:</span> Bytes <span class="op">},</span>          <span class="co">// re-send out hop&#39;s transport (orchestrator)</span></span>
+<span id="cb8-40"><a href="#cb8-40" aria-hidden="true" tabindex="-1"></a>    Consumed<span class="op">,</span>                                        <span class="co">// handled internally, nothing to forward</span></span>
+<span id="cb8-41"><a href="#cb8-41" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<blockquote>
+<p><strong>Edge case — peel/encrypt asymmetry on intermediate
+hops.</strong> On the <em>client</em>, the user drives
+<code>handle_tun_out</code> (encrypt) for the egress chain and
+<code>handle_transport_in</code> (decrypt) for ingress. The
+<em>gateways</em> (Entry/Intermediate) run a DIFFERENT loop: they
+<code>decrypt</code> the arriving outer layer with their
+<em>server-side</em> <code>WgPeer</code> for the client, then
+<code>forward</code> the resulting inner ciphertext over the next leg
+WITHOUT decrypting it (M3) — they do not own the inner key. The gateway
+forwarding path is specified in §4; <code>peel</code> above is the
+client view.</p>
+</blockquote>
+<h3 id="33-packet-flow-diagram-2-hop-egress">3.3 Packet-flow diagram
+(2-hop egress)</h3>
+<pre class="mermaid"><code>flowchart LR
+    subgraph Client
+      TUN[(TUN: user IP pkt)]
+      WGx[WG-Exit encrypt&lt;br/&gt;K_exit]
+      WGe[WG-Entry encrypt&lt;br/&gt;K_entry]
+      TXe[Entry-leg Transport&lt;br/&gt;e.g. masque-h3]
+    end
+    subgraph EntryGW[Gateway-Entry]
+      RXe[Transport.recv]
+      WGes[WG-Entry decrypt&lt;br/&gt;server side]
+      FWD[forward Ed&lt;br/&gt;NO inner decrypt M3]
+      TXi[Entry↔Exit Transport&lt;br/&gt;e.g. plain-udp]
+    end
+    subgraph ExitGW[Gateway-Exit]
+      RXi[Transport.recv]
+      WGxs[WG-Exit decrypt&lt;br/&gt;server side]
+      OUT[forward to internet&lt;br/&gt;or connector]
+    end
+    TUN --&gt;|IP| WGx --&gt;|Ed = WG_exit IP| WGe --&gt;|Ee = WG_entry Ed| TXe
+    TXe ==&gt;|Ee on wire| RXe --&gt; WGes --&gt;|Ed| FWD --&gt; TXi
+    TXi ==&gt;|Ed on wire| RXi --&gt; WGxs --&gt;|IP| OUT</code></pre>
+<hr />
+<h2 id="4-gateway-entry--intermediate-forwarding-contract">4. Gateway
+(Entry / Intermediate) forwarding contract</h2>
+<blockquote>
+<p><strong>Note.</strong> The gateway <em>role</em> in a hop chain runs
+on the <code>helix-edge</code> binary [01-DP §11.2, D5] using the
+<strong>same</strong> <code>helix-transport</code> +
+<code>helix-wg</code> crates. This section specifies the <em>forwarding
+contract</em> the edge must satisfy to participate in a chain; the edge
+binary&#39;s full spec is doc 01-DP §11.2 / the edge volume. It is included
+here because the contract is the data-plane half of entry/exit
+separation.</p>
+</blockquote>
+<p>An Entry (or any non-Exit) gateway, for a given client chain, holds a
+<strong>server-side <code>WgPeer</code></strong> for the client&#39;s
+per-hop public key. On a datagram arriving from the client-facing
+transport:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-edge: chain-forwarding (one hop&#39;s worth)</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> ChainForwarder <span class="op">{</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    inbound_wg<span class="op">:</span> WgPeer<span class="op">,</span>                 <span class="co">// server side of client↔this-hop WG session</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    inbound_tx<span class="op">:</span> <span class="dt">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> Transport<span class="op">&gt;,</span>     <span class="co">// carrier from the previous node (client or prev hop)</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    next_tx<span class="op">:</span> <span class="dt">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> Transport<span class="op">&gt;,</span>        <span class="co">// carrier to the NEXT node (next hop or Exit)</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">// NO key for any inner layer — M3 enforced structurally (the type holds none)</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> ChainForwarder <span class="op">{</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> pump(<span class="op">&amp;</span><span class="kw">mut</span> <span class="kw">self</span><span class="op">,</span> scratch<span class="op">:</span> <span class="op">&amp;</span><span class="kw">mut</span> [<span class="dt">u8</span>]) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">,</span> ForwardError<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> outer <span class="op">=</span> <span class="kw">self</span><span class="op">.</span>inbound_tx<span class="op">.</span>recv()<span class="op">.</span><span class="kw">await</span><span class="op">?;</span>       <span class="co">// Ee</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>        <span class="cf">match</span> <span class="kw">self</span><span class="op">.</span>inbound_wg<span class="op">.</span>handle_transport_in(<span class="op">&amp;</span>outer<span class="op">,</span> scratch) <span class="op">{</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>            <span class="pp">WgVerdict::</span>WriteToTun(inner_ciphertext) <span class="op">=&gt;</span> <span class="op">{</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>                <span class="co">// `inner_ciphertext` is Ed — STILL WireGuard-encrypted for the Exit session.</span></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>                <span class="co">// M3: this node CANNOT decrypt it; it only forwards toward the next hop.</span></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>                <span class="kw">self</span><span class="op">.</span>next_tx<span class="op">.</span>send(<span class="pp">Bytes::</span>copy_from_slice(inner_ciphertext))<span class="op">.</span><span class="kw">await</span><span class="op">?;</span></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>            <span class="pp">WgVerdict::</span>WriteToTransport(reply) <span class="op">=&gt;</span> <span class="op">{</span></span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>                <span class="kw">self</span><span class="op">.</span>inbound_tx<span class="op">.</span>send(<span class="pp">Bytes::</span>copy_from_slice(reply))<span class="op">.</span><span class="kw">await</span><span class="op">?;</span> <span class="co">// handshake reply</span></span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>            <span class="pp">WgVerdict::</span>Nothing <span class="op">=&gt;</span> <span class="op">{}</span>                       <span class="co">// cookie / decoy / keepalive consumed</span></span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a>            <span class="pp">WgVerdict::</span><span class="cn">Err</span>(e) <span class="op">=&gt;</span> <span class="cf">return</span> <span class="cn">Err</span>(<span class="pp">ForwardError::</span>Wg(e))<span class="op">,</span></span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a>        <span class="cn">Ok</span>(())</span>
+<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><strong>Why the inner layer is opaque to Entry (M3, the security
+crux):</strong> the <code>inbound_wg</code> session decrypts the
+<em>outer</em> WG transport-data message. WireGuard&#39;s
+<code>AllowedIPs</code> for the client peer on the Entry gateway are set
+to <strong>exactly the Exit overlay address</strong> [M4, 01-DP §7]. The
+decrypted &quot;IP packet&quot; Entry recovers is <code>Ed</code> — but
+<code>Ed</code> is itself a WireGuard message, indistinguishable from
+random bytes to anyone without <code>K_exit</code>. Entry forwards it to
+the Exit endpoint over the Entry↔︎Exit transport because the routing map
+says the Exit overlay is reachable via that leg. Entry has no
+<code>K_exit</code> (it was never given one — M2), so it provably cannot
+learn the destination [04_ARCH §3.5]. Symmetrically, the Exit gateway&#39;s
+<code>inbound_wg</code> is the client↔︎Exit server session; it sees
+<code>Ed</code> arriving from the <em>Entry</em> leg, so the source it
+observes is Entry, not the client.</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">enum</span> ForwardError <span class="op">{</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    Transport(<span class="at">#[</span>from<span class="at">]</span> TransportError)<span class="op">,</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    Wg(WgError)<span class="op">,</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    NextLegDown<span class="op">,</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<hr />
+<h2 id="5-hop-chain-state-machine">5. Hop-chain state machine</h2>
+<p>The chain has a single lifecycle that gates egress/ingress and drives
+<code>TunnelStatus</code> [01-DP §5.2]. Egress is permitted only in
+<code>Established</code>; any hop failing transitions the WHOLE chain
+(M5 — no half-tunnel).</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="bu">Clone</span><span class="op">,</span> <span class="bu">Debug</span><span class="op">,</span> <span class="bu">PartialEq</span><span class="op">,</span> <span class="bu">Eq</span><span class="at">)]</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">enum</span> HopChainState <span class="op">{</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    Idle<span class="op">,</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    Dialing <span class="op">{</span> hop<span class="op">:</span> <span class="dt">u8</span> <span class="op">},</span>                 <span class="co">// dial()ing hop `hop`&#39;s transport, Entry→Exit order</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    Handshaking <span class="op">{</span> hop<span class="op">:</span> <span class="dt">u8</span> <span class="op">},</span>             <span class="co">// WG handshake for hop `hop` in flight</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    Established <span class="op">{</span> since<span class="op">:</span> Instant <span class="op">},</span>      <span class="co">// all hops handshook; forwarding live</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>    Rekeying <span class="op">{</span> hop<span class="op">:</span> <span class="dt">u8</span> <span class="op">},</span>                <span class="co">// a hop is mid-rekey (still forwarding on old keys)</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>    TearingDown <span class="op">{</span> reason<span class="op">:</span> TeardownReason <span class="op">},</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>    Failed <span class="op">{</span> hop<span class="op">:</span> <span class="dt">u8</span><span class="op">,</span> reason<span class="op">:</span> TeardownReason <span class="op">},</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="bu">Clone</span><span class="op">,</span> <span class="bu">Debug</span><span class="op">,</span> <span class="bu">PartialEq</span><span class="op">,</span> <span class="bu">Eq</span><span class="at">)]</span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">enum</span> TeardownReason <span class="op">{</span></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>    ClientRequested<span class="op">,</span></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>    HopHandshakeTimeout<span class="op">,</span>     <span class="co">// a hop never completed WG handshake within budget</span></span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>    HopTransportDown<span class="op">,</span>        <span class="co">// a leg&#39;s Transport returned Closed/EndpointBlocked</span></span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>    MapWithdrew<span class="op">,</span>             <span class="co">// control plane removed this chain from the RouteMap</span></span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a>    Oversize<span class="op">,</span>                <span class="co">// §6 unrecoverable MTU violation</span></span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a>    JurisdictionViolation<span class="op">,</span>   <span class="co">// M6: assigned Entry==Exit jurisdiction with strict policy on (§7)</span></span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="51-establishment-order-entry-first-then-inner">5.1 Establishment
+order (Entry-first, then inner)</h3>
+<p>The chain is brought up <strong>Entry-first, innermost-last</strong>:
+the Entry transport + Entry WG handshake must succeed before the Exit
+handshake can traverse it (the Exit handshake packets are themselves
+nested inside the Entry session) [derived from §1 nesting; 04_ARCH
+§3.5].</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> HopChain <span class="op">{</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Build the whole chain from a multi-hop RouteMap (§8). Dials + handshakes Entry→Exit.</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Emits TunnelStatus deltas via the orchestrator&#39;s broadcast (caller wires the channel).</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> establish(</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>        <span class="op">&amp;</span><span class="kw">mut</span> <span class="kw">self</span><span class="op">,</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>        on_status<span class="op">:</span> <span class="op">&amp;</span><span class="kw">mut</span> <span class="kw">dyn</span> <span class="bu">FnMut</span>(TunnelStatus)<span class="op">,</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>    ) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">,</span> HopChainError<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>        on_status(<span class="pp">TunnelStatus::</span>Connecting)<span class="op">;</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> i <span class="kw">in</span> <span class="dv">0</span><span class="op">..</span><span class="kw">self</span><span class="op">.</span>hops<span class="op">.</span>len() <span class="op">{</span></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>            <span class="kw">self</span><span class="op">.</span>state <span class="op">=</span> <span class="pp">HopChainState::</span>Dialing <span class="op">{</span> hop<span class="op">:</span> i <span class="kw">as</span> <span class="dt">u8</span> <span class="op">};</span></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>            <span class="co">// hop 0 dials the real network; hops &gt; 0 &quot;dial&quot; by handshaking THROUGH the</span></span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>            <span class="co">// already-established outer hops (their transport is a virtual leg over the chain).</span></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>            <span class="kw">self</span><span class="op">.</span>dial_hop(i)<span class="op">.</span><span class="kw">await</span></span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>                <span class="op">.</span>map_err(<span class="op">|</span>e<span class="op">|</span> <span class="op">{</span> <span class="kw">self</span><span class="op">.</span>state <span class="op">=</span> <span class="pp">HopChainState::</span>Failed <span class="op">{</span> hop<span class="op">:</span> i <span class="kw">as</span> <span class="dt">u8</span><span class="op">,</span></span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>                    reason<span class="op">:</span> <span class="pp">TeardownReason::</span>HopTransportDown <span class="op">};</span> e <span class="op">}</span>)<span class="op">?;</span></span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>            <span class="kw">self</span><span class="op">.</span>state <span class="op">=</span> <span class="pp">HopChainState::</span>Handshaking <span class="op">{</span> hop<span class="op">:</span> i <span class="kw">as</span> <span class="dt">u8</span> <span class="op">};</span></span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>            on_status(<span class="pp">TunnelStatus::</span>Handshaking)<span class="op">;</span></span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>            <span class="kw">self</span><span class="op">.</span>handshake_hop(i)<span class="op">.</span><span class="kw">await</span></span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a>                <span class="op">.</span>map_err(<span class="op">|</span>e<span class="op">|</span> <span class="op">{</span> <span class="kw">self</span><span class="op">.</span>state <span class="op">=</span> <span class="pp">HopChainState::</span>Failed <span class="op">{</span> hop<span class="op">:</span> i <span class="kw">as</span> <span class="dt">u8</span><span class="op">,</span></span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>                    reason<span class="op">:</span> <span class="pp">TeardownReason::</span>HopHandshakeTimeout <span class="op">};</span> e <span class="op">}</span>)<span class="op">?;</span></span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a>        <span class="kw">self</span><span class="op">.</span>state <span class="op">=</span> <span class="pp">HopChainState::</span>Established <span class="op">{</span> since<span class="op">:</span> <span class="pp">Instant::</span>now() <span class="op">};</span></span>
+<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a>        <span class="kw">self</span><span class="op">.</span>metrics<span class="op">.</span>chains_established <span class="op">+=</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a>        on_status(<span class="pp">TunnelStatus::</span>Connected <span class="op">{</span></span>
+<span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a>            transport<span class="op">:</span> <span class="kw">self</span><span class="op">.</span>entry_kind_label()<span class="op">,</span>            <span class="co">// e.g. &quot;masque-h3→plain-udp&quot;</span></span>
+<span id="cb13-26"><a href="#cb13-26" aria-hidden="true" tabindex="-1"></a>            rtt_ms<span class="op">:</span> <span class="kw">self</span><span class="op">.</span>aggregate_rtt_ms()<span class="op">,</span>               <span class="co">// §10 sum of per-hop RTTs</span></span>
+<span id="cb13-27"><a href="#cb13-27" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb13-28"><a href="#cb13-28" aria-hidden="true" tabindex="-1"></a>        <span class="cn">Ok</span>(())</span>
+<span id="cb13-29"><a href="#cb13-29" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb13-30"><a href="#cb13-30" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><code>entry_kind_label()</code> returns a chain label of the form
+<code>&quot;&lt;entry-kind&gt;→…→&lt;exit-kind&gt;&quot;</code> so the status UX
+shows the full path (e.g. <code>&quot;masque-h3→plain-udp&quot;</code>).
+<code>aggregate_rtt_ms()</code> is the sum of per-hop RTT EWMAs (latency
+is additive across a serial chain — §10).</p>
+<h3 id="52-state-diagram">5.2 State diagram</h3>
+<pre class="mermaid"><code>stateDiagram-v2
+    [*] --&gt; Idle
+    Idle --&gt; Dialing : establish()
+    Dialing --&gt; Handshaking : transport up (hop i)
+    Handshaking --&gt; Dialing : next hop i+1 (i+1 &lt; len)
+    Handshaking --&gt; Established : last hop handshook
+    Dialing --&gt; Failed : transport down / budget exceeded
+    Handshaking --&gt; Failed : WG handshake timeout
+    Established --&gt; Rekeying : a hop rekeys (WG ~120s)
+    Rekeying --&gt; Established : rekey complete
+    Established --&gt; TearingDown : client stop / map withdrew
+    Established --&gt; Failed : any hop transport drops (M5)
+    Failed --&gt; TearingDown : cleanup
+    TearingDown --&gt; Idle : all legs closed
+    Failed --&gt; [*]
+    TearingDown --&gt; [*]</code></pre>
+<blockquote>
+<p><strong>M5 elaboration.</strong> From <code>Established</code>,
+<em>any</em> single hop losing its transport or missing WG keepalive
+past the budget transitions the chain to <code>Failed{hop}</code> and
+then <code>TearingDown</code>. The orchestrator emits
+<code>Down{reason}</code> and (per the ladder policy [01-DP §5.3]) MAY
+re-establish. The chain is NEVER left in a state where some hops forward
+and others are dead — that would leak (e.g. Entry up but Exit dead →
+traffic black-holes at Entry, which is also where the client&#39;s identity
+is known). Atomicity of teardown is a
+<code>CONC</code>/<code>RACE</code> test point (§12).</p>
+</blockquote>
+<hr />
+<h2 id="6-mtu--overhead-budget-for-chains">6. MTU &amp; overhead budget
+for chains</h2>
+<p>Each nesting level adds one WG transport-data header+tag (32 B, §3.1)
+AND the per-leg transport overhead. The <strong>inner WG MTU</strong>
+the client may use is bounded by the <em>outermost</em> leg&#39;s
+<code>effective_mtu()</code> minus the cumulative inner-WG overhead
+[01-DP §10].</p>
+<p>For an N-hop chain with hop transports <code>T₀..T_{n-1}</code> (T₀ =
+Entry leg, the wire-facing one):</p>
+<pre><code>inner_wg_mtu = T₀.effective_mtu()  −  Σ_{i=1..n-1} WG_DATAGRAM_OVERHEAD
+             = T₀.effective_mtu()  −  (n-1) · 32</code></pre>
+<p>Only the Entry leg&#39;s transport overhead applies on the wire (the
+inner legs are encapsulated <em>inside</em> the Entry session, so their
+transport overhead is paid against the inner budget, not the path MTU).
+Worked examples (using [01-DP §10] table values):</p>
+<table>
+<thead>
+<tr>
+<th>Chain</th>
+<th>T₀ (Entry) <code>effective_mtu()</code></th>
+<th>inner-WG overhead (n−1)·32</th>
+<th><code>inner_wg_mtu</code></th>
+<th>Note</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1-hop (single)</td>
+<td>plain-udp 1420</td>
+<td>0</td>
+<td><strong>1420</strong></td>
+<td>baseline [01-DP §10]</td>
+</tr>
+<tr>
+<td>2-hop udp/udp</td>
+<td>plain-udp 1420</td>
+<td>32</td>
+<td><strong>1388</strong></td>
+<td>one extra WG layer</td>
+</tr>
+<tr>
+<td>2-hop masque/udp</td>
+<td>masque-h3 1280</td>
+<td>32</td>
+<td><strong>1248</strong></td>
+<td>obfuscated entry leg</td>
+</tr>
+<tr>
+<td>3-hop masque/udp/udp</td>
+<td>masque-h3 1280</td>
+<td>64</td>
+<td><strong>1216</strong></td>
+<td>approaches IPv6 floor 1280 caution</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb16"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> HopChain <span class="op">{</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// The inner WG MTU the client must clamp the TUN to. Recomputed on chain (re)establish</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// and on any per-leg transport change (ladder escalation on the Entry leg).</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">fn</span> inner_wg_mtu(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">u16</span> <span class="op">{</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> entry <span class="op">=</span> <span class="kw">self</span><span class="op">.</span>hops[<span class="dv">0</span>]<span class="op">.</span>transport<span class="op">.</span>effective_mtu()<span class="op">;</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> inner_overhead <span class="op">=</span> (<span class="kw">self</span><span class="op">.</span>hops<span class="op">.</span>len() <span class="kw">as</span> <span class="dt">u16</span> <span class="op">-</span> <span class="dv">1</span>) <span class="op">*</span> WG_DATAGRAM_OVERHEAD <span class="kw">as</span> <span class="dt">u16</span><span class="op">;</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>        entry<span class="op">.</span>saturating_sub(inner_overhead)<span class="op">.</span>max(MIN_INNER_MTU)   <span class="co">// MIN_INNER_MTU = 1280 floor</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">const</span> WG_DATAGRAM_OVERHEAD<span class="op">:</span> <span class="dt">usize</span> <span class="op">=</span> <span class="dv">32</span><span class="op">;</span>   <span class="co">// [01-DP §10]</span></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">const</span> MIN_INNER_MTU<span class="op">:</span> <span class="dt">u16</span> <span class="op">=</span> <span class="dv">1280</span><span class="op">;</span>          <span class="co">// IPv6 minimum-MTU floor [01-DP §10]</span></span></code></pre></div>
+<p>Rules (extend [01-DP §10] rules 1–3):</p>
+<ol type="1">
+<li>The TUN MTU = <code>min(inner_wg_mtu(), path-MTU-discovered)</code>;
+a chain that would force <code>inner_wg_mtu()</code> below
+<code>MIN_INNER_MTU</code> is <strong>rejected at establish</strong>
+with <code>TeardownReason::Oversize</code> rather than silently clamping
+below the IPv6 floor (a chain that cannot carry a 1280-byte inner packet
+is unusable for IPv6).</li>
+<li><code>TransportError::Oversize</code> bubbling from ANY inner leg
+maps to <code>HopChainError::Leg</code> →
+<code>metrics.oversize_drops += 1</code>; the orchestrator lowers the
+TUN MTU rather than truncating (§11.4.6 — never silently drop
+bytes).</li>
+<li>The 2-hop MASQUE/UDP MTU penalty is <strong>measured, not
+assumed</strong>, in the Phase-2 <code>BENCH</code> gate (record
+MTU/throughput/CPU vs single-hop) [01-DP §10, §12].</li>
+</ol>
+<hr />
+<h2 id="7-configuration-knobs">7. Configuration knobs</h2>
+<div class="sourceCode" id="cb17"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="bu">Clone</span><span class="op">,</span> <span class="bu">Debug</span><span class="at">)]</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> HopChainConfig <span class="op">{</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Hard ceiling on chain length (denial-of-amplification). Default 4 (§1.1).</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> max_hops<span class="op">:</span> <span class="dt">u8</span><span class="op">,</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Per-hop WG handshake budget before the hop is declared failed.</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Default 5 s (WireGuard&#39;s own REKEY_TIMEOUT lineage; UNVERIFIED exact value — tune).</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> hop_handshake_timeout<span class="op">:</span> Duration<span class="op">,</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Keepalive-miss budget on an Established hop before M5 teardown. Default 25 s</span></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// (≈ WG persistent-keepalive 25 s window; [research-pki_pq_nat baseline]).</span></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> hop_keepalive_grace<span class="op">:</span> Duration<span class="op">,</span></span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// If true, refuse a chain whose Entry.jurisdiction == Exit.jurisdiction (M6 strict mode).</span></span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Default true for the privacy &quot;multi-hop&quot; feature; an operator MAY relax for</span></span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// performance-only chaining (e.g. two hops in one region for routing, not anonymity).</span></span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> require_distinct_jurisdiction<span class="op">:</span> <span class="dt">bool</span><span class="op">,</span></span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Whether the orchestrator re-establishes the chain on M5 teardown (vs surfacing Down).</span></span>
+<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Default true (auto-reconnect per the ladder [01-DP §5.3]).</span></span>
+<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> auto_reestablish<span class="op">:</span> <span class="dt">bool</span><span class="op">,</span></span>
+<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb17-19"><a href="#cb17-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-20"><a href="#cb17-20" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> <span class="bu">Default</span> <span class="cf">for</span> HopChainConfig <span class="op">{</span></span>
+<span id="cb17-21"><a href="#cb17-21" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> default() <span class="op">-&gt;</span> <span class="dt">Self</span> <span class="op">{</span></span>
+<span id="cb17-22"><a href="#cb17-22" aria-hidden="true" tabindex="-1"></a>        <span class="dt">Self</span> <span class="op">{</span></span>
+<span id="cb17-23"><a href="#cb17-23" aria-hidden="true" tabindex="-1"></a>            max_hops<span class="op">:</span> <span class="dv">4</span><span class="op">,</span></span>
+<span id="cb17-24"><a href="#cb17-24" aria-hidden="true" tabindex="-1"></a>            hop_handshake_timeout<span class="op">:</span> <span class="pp">Duration::</span>from_secs(<span class="dv">5</span>)<span class="op">,</span></span>
+<span id="cb17-25"><a href="#cb17-25" aria-hidden="true" tabindex="-1"></a>            hop_keepalive_grace<span class="op">:</span> <span class="pp">Duration::</span>from_secs(<span class="dv">25</span>)<span class="op">,</span></span>
+<span id="cb17-26"><a href="#cb17-26" aria-hidden="true" tabindex="-1"></a>            require_distinct_jurisdiction<span class="op">:</span> <span class="cn">true</span><span class="op">,</span></span>
+<span id="cb17-27"><a href="#cb17-27" aria-hidden="true" tabindex="-1"></a>            auto_reestablish<span class="op">:</span> <span class="cn">true</span><span class="op">,</span></span>
+<span id="cb17-28"><a href="#cb17-28" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb17-29"><a href="#cb17-29" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb17-30"><a href="#cb17-30" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><code>require_distinct_jurisdiction</code> is the only place the data
+plane <em>asserts</em> M6: it compares the <code>Jurisdiction</code>
+labels the map supplied. It cannot verify the labels are truthful (M6,
+§11.4.6) — it surfaces a <code>JurisdictionViolation</code> teardown if
+Entry==Exit under strict mode so the control plane&#39;s mis-assignment is
+loud, not silent.</p>
+<hr />
+<h2 id="8-orchestration-via-the-multi-hop-routemap-no-new-wire-protocol">8.
+Orchestration via the multi-hop RouteMap (no new wire protocol)</h2>
+<p>The control plane decides the chain and pushes it via
+<code>WatchNetworkMap</code> (doc 03) as an ordered list of
+<code>PeerRoute</code>s. The data plane consumes it — <strong>no new
+protocol</strong> (M1). The existing
+<code>RouteMap</code>/<code>PeerRoute</code> types [01-DP §6.2] carry a
+chain by adding one field:</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-route/src/map.rs  (extends [01-DP §6.2]; the ONLY multi-hop addition)</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> RouteMap <span class="op">{</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> self_overlay<span class="op">:</span> IpAddr<span class="op">,</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> peers<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span>PeerRoute<span class="op">&gt;,</span>                 <span class="co">// policy-filtered (need-to-know, I6)</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> dns<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span>IpAddr<span class="op">&gt;,</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> hop_chains<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span>HopChainSpec<span class="op">&gt;,</span>         <span class="co">// NEW: ordered chains the client may select</span></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a><span class="co">/// A control-plane-assigned chain. The client materialises a HopChain from one of these.</span></span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> HopChainSpec <span class="op">{</span></span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> chain_id<span class="op">:</span> <span class="dt">u64</span><span class="op">,</span>                         <span class="co">// stable id for status/telemetry (aggregate, I5)</span></span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> label<span class="op">:</span> <span class="dt">String</span><span class="op">,</span>                         <span class="co">// human label e.g. &quot;Entry: SE  Exit: CH&quot;</span></span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> hops<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span>HopSpec<span class="op">&gt;,</span>                    <span class="co">// ordered Entry → Exit</span></span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> HopSpec <span class="op">{</span></span>
+<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> wg_pubkey<span class="op">:</span> [<span class="dt">u8</span><span class="op">;</span> <span class="dv">32</span>]<span class="op">,</span>                   <span class="co">// this hop gateway&#39;s WG public key (M2: distinct)</span></span>
+<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> overlay<span class="op">:</span> IpAddr<span class="op">,</span>                        <span class="co">// this hop&#39;s overlay address</span></span>
+<span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> endpoint_candidates<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span>SocketAddr<span class="op">&gt;,</span>  <span class="co">// for the leg&#39;s Transport.dial() / NAT (§ [01-DP §8])</span></span>
+<span id="cb18-19"><a href="#cb18-19" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> transport<span class="op">:</span> TransportConfig<span class="op">,</span>            <span class="co">// per-leg transport (D6 asymmetric-per-leg [SYNTHESIS §3 D6])</span></span>
+<span id="cb18-20"><a href="#cb18-20" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> jurisdiction<span class="op">:</span> Jurisdiction<span class="op">,</span>            <span class="co">// label for M6</span></span>
+<span id="cb18-21"><a href="#cb18-21" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> allowed_ips<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span>IpNet<span class="op">&gt;,</span>               <span class="co">// what this hop&#39;s session may carry (M4)</span></span>
+<span id="cb18-22"><a href="#cb18-22" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb19"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> HopChain <span class="op">{</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Build (not yet establish) a chain from a map spec. Validates M2 (distinct keys),</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// max_hops, and (strict mode) distinct jurisdictions BEFORE any dial.</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">fn</span> from_spec(spec<span class="op">:</span> <span class="op">&amp;</span>HopChainSpec<span class="op">,</span> cfg<span class="op">:</span> HopChainConfig) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span><span class="dt">Self</span><span class="op">,</span> HopChainError<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> spec<span class="op">.</span>hops<span class="op">.</span>is_empty() <span class="op">||</span> spec<span class="op">.</span>hops<span class="op">.</span>len() <span class="kw">as</span> <span class="dt">u8</span> <span class="op">&gt;</span> cfg<span class="op">.</span>max_hops <span class="op">{</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="cn">Err</span>(<span class="pp">HopChainError::</span>BadChainLength <span class="op">{</span> got<span class="op">:</span> spec<span class="op">.</span>hops<span class="op">.</span>len() <span class="kw">as</span> <span class="dt">u8</span><span class="op">,</span> max<span class="op">:</span> cfg<span class="op">.</span>max_hops <span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>        <span class="co">// M2: every hop pubkey distinct.</span></span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> <span class="kw">mut</span> seen <span class="op">=</span> <span class="pp">std::collections::HashSet::</span>new()<span class="op">;</span></span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> h <span class="kw">in</span> <span class="op">&amp;</span>spec<span class="op">.</span>hops <span class="op">{</span></span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">!</span>seen<span class="op">.</span>insert(h<span class="op">.</span>wg_pubkey) <span class="op">{</span></span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> <span class="cn">Err</span>(<span class="pp">HopChainError::</span>DuplicateHopKey)<span class="op">;</span></span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a>        <span class="co">// M6 strict: Entry.jurisdiction != Exit.jurisdiction.</span></span>
+<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> cfg<span class="op">.</span>require_distinct_jurisdiction <span class="op">&amp;&amp;</span> spec<span class="op">.</span>hops<span class="op">.</span>len() <span class="op">&gt;=</span> <span class="dv">2</span> <span class="op">{</span></span>
+<span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a>            <span class="kw">let</span> entry <span class="op">=</span> <span class="op">&amp;</span>spec<span class="op">.</span>hops<span class="op">.</span>first()<span class="op">.</span>unwrap()<span class="op">.</span>jurisdiction<span class="op">;</span></span>
+<span id="cb19-18"><a href="#cb19-18" aria-hidden="true" tabindex="-1"></a>            <span class="kw">let</span> exit  <span class="op">=</span> <span class="op">&amp;</span>spec<span class="op">.</span>hops<span class="op">.</span>last()<span class="op">.</span>unwrap()<span class="op">.</span>jurisdiction<span class="op">;</span></span>
+<span id="cb19-19"><a href="#cb19-19" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> entry <span class="op">==</span> exit <span class="op">{</span></span>
+<span id="cb19-20"><a href="#cb19-20" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> <span class="cn">Err</span>(<span class="pp">HopChainError::</span>JurisdictionNotDistinct <span class="op">{</span></span>
+<span id="cb19-21"><a href="#cb19-21" aria-hidden="true" tabindex="-1"></a>                    entry<span class="op">:</span> entry<span class="op">.</span>clone()<span class="op">,</span> exit<span class="op">:</span> exit<span class="op">.</span>clone() <span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb19-22"><a href="#cb19-22" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb19-23"><a href="#cb19-23" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb19-24"><a href="#cb19-24" aria-hidden="true" tabindex="-1"></a>        <span class="co">// … construct Hop{} per spec, role = Entry/Intermediate/Exit by position …</span></span>
+<span id="cb19-25"><a href="#cb19-25" aria-hidden="true" tabindex="-1"></a>        <span class="cn">Ok</span>(<span class="co">/* HopChain */</span> unimplemented_placeholder())</span>
+<span id="cb19-26"><a href="#cb19-26" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb19-27"><a href="#cb19-27" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Reconciliation (push, don&#39;t poll) is inherited from [01-DP §6.3]:
+when the map&#39;s <code>hop_chains</code> delta changes (a hop withdrawn, a
+transport re-pinned, an exit rotated for jurisdiction policy), the
+reconciler diffs desired-vs-actual and converges WITHOUT restarting the
+orchestrator — converging the chain in <strong>&lt; 1 s</strong> [01-DP
+§6.3]. A withdrawn chain triggers
+<code>TeardownReason::MapWithdrew</code>. Per-leg transport selection
+(D6 asymmetric-per-leg) is &quot;free&quot;: each <code>HopSpec.transport</code>
+is an independent <code>TransportConfig</code>, so the Entry leg can be
+<code>masque-h3</code> while the Entry↔︎Exit leg is
+<code>plain-udp</code> with NO mechanism change [01-DP §11.3, SYNTHESIS
+§3 D6].</p>
+<h3 id="81-establishment-sequence-diagram-control-plane-orchestrated-2-hop">8.1
+Establishment sequence diagram (control-plane orchestrated, 2-hop)</h3>
+<pre class="mermaid"><code>sequenceDiagram
+    autonumber
+    participant App as Client app
+    participant Orch as Orchestrator
+    participant HC as HopChain
+    participant Entry as Gateway-Entry
+    participant Exit as Gateway-Exit
+    participant Map as Coordinator (WatchNetworkMap, doc 03)
+
+    Map--&gt;&gt;Orch: RouteMap{ hop_chains:[ {Entry SE, Exit CH} ] }
+    App-&gt;&gt;Orch: connect(multi-hop, chain_id=…)
+    Orch-&gt;&gt;HC: from_spec(spec, cfg)  // validates M2/max_hops/M6
+    HC--&gt;&gt;Orch: Ok(chain)
+    Orch-&gt;&gt;HC: establish()
+
+    Note over HC,Entry: hop 0 = Entry (real network)
+    HC-&gt;&gt;Entry: dial(Entry.transport) + WG handshake (K_entry)
+    Entry--&gt;&gt;HC: handshake reply  → Entry session up
+    Orch--&gt;&gt;App: status = Handshaking
+
+    Note over HC,Exit: hop 1 = Exit (handshake nested inside Entry session)
+    HC-&gt;&gt;Entry: WG_entry( WG_exit_handshake_init )   // Ee
+    Entry-&gt;&gt;Exit: forward Ed (no inner decrypt, M3)
+    Exit--&gt;&gt;Entry: WG_exit handshake reply (Ed&#39;)
+    Entry--&gt;&gt;HC: WG_entry(Ed&#39;)  → Exit session up
+    HC--&gt;&gt;Orch: Established (rtt = rtt_entry + rtt_exit)
+    Orch--&gt;&gt;App: status = Connected { transport:&quot;masque-h3→plain-udp&quot;, rtt_ms: 47 }
+
+    Note over HC,Exit: data: every user pkt nested WG_entry(WG_exit(IP)) (§3)</code></pre>
+<hr />
+<h2 id="9-error-taxonomy">9. Error taxonomy</h2>
+<div class="sourceCode" id="cb21"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="pp">thiserror::</span><span class="bu">Error</span><span class="op">,</span> <span class="bu">Debug</span><span class="at">)]</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">enum</span> HopChainError <span class="op">{</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>error<span class="at">(</span><span class="st">&quot;chain length {got} invalid (1..={max})&quot;</span><span class="at">)]</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>    BadChainLength <span class="op">{</span> got<span class="op">:</span> <span class="dt">u8</span><span class="op">,</span> max<span class="op">:</span> <span class="dt">u8</span> <span class="op">},</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>error<span class="at">(</span><span class="st">&quot;duplicate hop key violates per-hop-key invariant M2&quot;</span><span class="at">)]</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>    DuplicateHopKey<span class="op">,</span></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>error<span class="at">(</span><span class="st">&quot;entry and exit share jurisdiction {entry:?}={exit:?} (M6 strict)&quot;</span><span class="at">)]</span></span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>    JurisdictionNotDistinct <span class="op">{</span> entry<span class="op">:</span> Jurisdiction<span class="op">,</span> exit<span class="op">:</span> Jurisdiction <span class="op">},</span></span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>error<span class="at">(</span><span class="st">&quot;hop {hop} not ready (handshake pending)&quot;</span><span class="at">)]</span></span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>    HopNotReady <span class="op">{</span> hop<span class="op">:</span> <span class="dt">u8</span> <span class="op">},</span></span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>error<span class="at">(</span><span class="st">&quot;leg {hop} transport error: {src}&quot;</span><span class="at">)]</span></span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a>    Leg <span class="op">{</span> hop<span class="op">:</span> <span class="dt">u8</span><span class="op">,</span> <span class="at">#[</span>source<span class="at">]</span> src<span class="op">:</span> TransportError <span class="op">},</span></span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>error<span class="at">(</span><span class="st">&quot;hop {hop} wireguard error: {src}&quot;</span><span class="at">)]</span></span>
+<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a>    Wg <span class="op">{</span> hop<span class="op">:</span> <span class="dt">u8</span><span class="op">,</span> <span class="at">#[</span>source<span class="at">]</span> src<span class="op">:</span> WgError <span class="op">},</span></span>
+<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>error<span class="at">(</span><span class="st">&quot;hop {hop} handshake timed out&quot;</span><span class="at">)]</span></span>
+<span id="cb21-16"><a href="#cb21-16" aria-hidden="true" tabindex="-1"></a>    HopHandshakeTimeout <span class="op">{</span> hop<span class="op">:</span> <span class="dt">u8</span> <span class="op">},</span></span>
+<span id="cb21-17"><a href="#cb21-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>error<span class="at">(</span><span class="st">&quot;chain torn down: {0:?}&quot;</span><span class="at">)]</span></span>
+<span id="cb21-18"><a href="#cb21-18" aria-hidden="true" tabindex="-1"></a>    TornDown(TeardownReason)<span class="op">,</span></span>
+<span id="cb21-19"><a href="#cb21-19" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Mapping to <code>TunnelStatus</code> [01-DP §5.2] (the orchestrator
+owns this map):</p>
+<table>
+<thead>
+<tr>
+<th><code>HopChainError</code></th>
+<th><code>TunnelStatus</code> emitted</th>
+<th>Recovery</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Leg{HandshakeFailed}</code> / <code>HopHandshakeTimeout</code>
+during establish</td>
+<td><code>Reconnecting</code> then ladder-escalate that leg</td>
+<td>per-leg ladder [01-DP §5.3]</td>
+</tr>
+<tr>
+<td><code>Leg{Closed/EndpointBlocked}</code> while
+<code>Established</code></td>
+<td><code>Down{reason}</code> (M5 whole-chain)</td>
+<td><code>auto_reestablish</code></td>
+</tr>
+<tr>
+<td><code>JurisdictionNotDistinct</code> / <code>BadChainLength</code> /
+<code>DuplicateHopKey</code></td>
+<td><code>Down{reason}</code> (no auto-retry — config defect)</td>
+<td>surface to control plane / operator</td>
+</tr>
+<tr>
+<td><code>HopNotReady</code> (egress before established)</td>
+<td>drop egress packet, keep state</td>
+<td>retried next packet (no status change)</td>
+</tr>
+</tbody>
+</table>
+<p>Honest-failure rule (§11.4.1): every variant fails for a genuine
+product condition; a chain that <em>appears</em> up but black-holes
+(e.g. Exit silently dead) MUST surface <code>Down</code> within
+<code>hop_keepalive_grace</code>, never report <code>Connected</code>
+while not forwarding (that is the §11.4 PASS-bluff at the multi-hop
+layer).</p>
+<hr />
+<h2 id="10-performance-budget">10. Performance budget</h2>
+<p>Multi-hop trades latency/throughput for unlinkability. Budgets
+(Phase-2 <code>BENCH</code> gate [01-DP §12]):</p>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Single hop</th>
+<th>2-hop target</th>
+<th>Source / rationale</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>RTT</td>
+<td>baseline <code>r₁</code></td>
+<td><code>r₁ + r₂</code> (serial sum)</td>
+<td>latency is additive along a serial chain;
+<code>aggregate_rtt_ms()</code> reports the sum</td>
+</tr>
+<tr>
+<td>Throughput</td>
+<td><code>≥80%</code> bare link (G1) [01-DP §12]</td>
+<td><code>≥</code> single-hop minus the second encrypt/decrypt + extra
+hop transit</td>
+<td>UNVERIFIED exact %, set the gate from the Phase-2 measurement, not a
+literature guess (§11.4.6)</td>
+</tr>
+<tr>
+<td>Client CPU/packet</td>
+<td>1× WG seal+open</td>
+<td><strong>2×</strong> WG seal+open (nested)</td>
+<td>each layer is one ChaCha20-Poly1305 op [01-DP §4]</td>
+</tr>
+<tr>
+<td>Inner MTU</td>
+<td>1420 (udp)</td>
+<td>1388 (udp/udp) … 1248 (masque/udp)</td>
+<td>§6</td>
+</tr>
+<tr>
+<td>Gateway CPU (Entry)</td>
+<td>1× WG open + forward</td>
+<td>unchanged: 1× open + forward (M3 — Entry never touches inner
+crypto)</td>
+<td>§4</td>
+</tr>
+<tr>
+<td>Convergence on map change</td>
+<td>&lt; 1 s [01-DP §6.3]</td>
+<td>&lt; 1 s</td>
+<td>reconciler is delta-driven, not a restart</td>
+</tr>
+</tbody>
+</table>
+<p>Implementation budget rules: (1) the egress/ingress hot path uses the
+reused <code>scratch</code> <code>BytesMut</code> — <strong>no
+per-packet heap allocation</strong> per layer (the
+<code>Bytes::copy_from_slice</code> calls above are the spec&#39;s clarity
+form; the implementation MUST use in-place layering into
+<code>scratch</code> to hit the CPU budget — a
+<code>BENCH</code>/<code>MEM</code> test point §12); (2) per-hop RTT
+EWMA comes from each <code>Transport::health()</code> [01-DP §3.1] — the
+chain does not run its own probes; (3) no per-flow durable state
+anywhere (I5) — only the aggregate <code>HopChainMetrics</code>
+counters.</p>
+<hr />
+<h2 id="11-security-considerations">11. Security considerations</h2>
+<ol type="1">
+<li><strong>Entry/Exit unlinkability is structural, not policy</strong>
+(M3/M4). It survives a <em>malicious</em> Entry: a compromised Entry
+gateway still cannot read <code>Ed</code> (no <code>K_exit</code>, M2)
+and cannot learn the destination. A compromised Exit cannot learn the
+client IP (it sees Entry). Only an adversary controlling BOTH gateways
+(or a global passive observer correlating timing) breaks it — the
+classic multi-hop threat model [04_ARCH §3.5]. The data plane&#39;s job is
+to make single-gateway compromise insufficient; correlation-resistance
+is DAITA&#39;s job [01-DP §9].</li>
+<li><strong>Jurisdiction diversity is an input the data plane cannot
+attest</strong> (M6, §11.4.6). The
+<code>require_distinct_jurisdiction</code> knob makes Entry==Exit
+<em>loud</em> (teardown) but cannot prove the labels are honest. The
+honest boundary MUST be documented to the operator: &quot;the data plane
+chains what the control plane assigns; jurisdiction trust is a
+control-plane + operator responsibility.&quot;</li>
+<li><strong>Per-hop keys never cross hops</strong> (M2). Enrollment
+generates a <em>distinct</em> WG keypair per hop relationship on the
+device; private keys never leave the device [research-pki_pq_nat §1.3,
+01-DP §4]. The control plane only ever holds the per-hop <em>public</em>
+keys.</li>
+<li><strong>No-logging holds per hop</strong> (I5). Each gateway keeps
+only aggregate counters; a hop chain adds no per-connection table. The
+<code>chain_id</code> in telemetry is aggregate (&quot;chain template X
+established N times in region R&quot;), never per-user [01-DP §5.3 telemetry
+rule].</li>
+<li><strong>Kill-switch interaction</strong> (referenced — owned by the
+security doc): an M5 whole-chain teardown MUST trip the kill-switch like
+any tunnel-down event; a half-up chain (forbidden by M5) would be a
+leak. The state machine&#39;s atomic <code>Failed → TearingDown</code> is
+the data-plane guarantee the security doc&#39;s kill-switch relies on.</li>
+<li><strong>Fail-static</strong> (M5/I3): an established chain keeps
+forwarding if the control plane goes away; loss of the control plane
+does not tear down a working chain. Only a <em>data-leg</em> failure
+tears down.</li>
+<li><strong>Amplification / resource bound:</strong>
+<code>max_hops</code> (§7) caps chain length so a malicious map cannot
+request a 1000-hop chain to exhaust client CPU/MTU.
+<code>from_spec</code> rejects over-length chains before any dial.</li>
+<li><strong>Post-quantum is additive per hop</strong> (referenced —
+security doc): the ML-KEM/FIPS-203 PSK [research-pki_pq_nat §2.4] slots
+into each hop&#39;s <code>Tunn</code> preshared-key field independently;
+nesting is unaffected because PQ changes the handshake, not the datagram
+framing [01-DP §4]. A chain MAY mix PQ and classical hops (e.g. PQ on
+the Entry leg only) — UNVERIFIED whether the MVP mandates PQ on all
+hops; default to all-or-the-security-doc&#39;s-call.</li>
+</ol>
+<hr />
+<h2 id="12-test-points-114169-mandatory-test-types">12. Test points
+(§11.4.169 mandatory test types)</h2>
+<p>Every <code>hop_chain.rs</code> workable item declares its required
+test types from the §11.4.169 closed vocabulary [06-WBS §0.4]. Mapping
+for this module:</p>
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>Test point (captured-evidence per §11.4.5/.69/.107)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>UT</code></td>
+<td><code>from_spec</code> validates M2 (duplicate-key →
+<code>DuplicateHopKey</code>), <code>max_hops</code>, M6 strict
+(Entry==Exit → <code>JurisdictionNotDistinct</code>);
+<code>inner_wg_mtu()</code> arithmetic for 1/2/3-hop; encrypt/peel
+layering order (innermost-first egress, outermost-first ingress);
+state-machine transition table (every edge in §5.2).</td>
+</tr>
+<tr>
+<td><code>IT</code></td>
+<td>netns rig [06-WBS §0.4]: real Client + real Entry edge + real Exit
+edge (booted on-demand via containers submodule §11.4.76); 2-hop chain
+established; assert <code>curl</code> from client reaches the Exit-side
+target; assert Entry&#39;s <code>WgPeer.AllowedIPs</code> for the client =
+only the Exit overlay (M4 captured from edge config).</td>
+</tr>
+<tr>
+<td><code>E2E</code></td>
+<td>client overlay namespace → through 2-hop chain →
+<code>curl http://10.10.0.20/</code> succeeds; status trace shows
+<code>Connecting→Handshaking→Connected{transport:&quot;…→…&quot;}</code>.</td>
+</tr>
+<tr>
+<td><code>SEC</code></td>
+<td><strong>the entry/exit-separation proof</strong>:
+<code>tcpdump</code> on the Entry↔︎Exit leg shows only opaque WG
+datagrams (<code>Ed</code>) — assert the destination IP/plaintext is NOT
+recoverable at Entry (M3); <code>tcpdump</code> at Exit shows source =
+Entry, never the client IP (M4); a key-isolation test asserts Entry
+holds no <code>K_exit</code> (M2). DPI/no-plaintext-leak per [06-WBS
+§0.4 SEC].</td>
+</tr>
+<tr>
+<td><code>SC</code></td>
+<td>stress+chaos (§11.4.85): kill the Exit transport mid-transfer →
+assert WHOLE chain tears down (M5, no half-tunnel) and <code>Down</code>
+emitted within <code>hop_keepalive_grace</code>; flap the Entry leg →
+assert atomic teardown, no leaked forwarding.</td>
+</tr>
+<tr>
+<td><code>CONC</code>/<code>RACE</code></td>
+<td>three-loop orchestrator driving a chain under concurrent
+egress/ingress; <code>loom</code>/<code>-race</code> on the atomic
+<code>Established→Failed→TearingDown</code> transition — no torn state
+where some hops forward and others are dead.</td>
+</tr>
+<tr>
+<td><code>FA</code></td>
+<td>full-automation deterministic (§11.4.50): <code>N=3</code> identical
+one-shot runs of establish→transfer→teardown produce identical status
+traces + identical evidence hashes.</td>
+</tr>
+<tr>
+<td><code>BENCH</code></td>
+<td><code>bench.sh</code> 2-hop vs 1-hop: RTT (assert ≈
+<code>r₁+r₂</code>), throughput, client CPU/Gbps (assert ≈ 2× WG ops),
+MTU measured not assumed (§6 row 3), p99 latency CSV [01-DP
+§10/§12].</td>
+</tr>
+<tr>
+<td><code>MEM</code></td>
+<td>RSS sampling of the chain forwarder under sustained transfer (no
+per-packet alloc — §10 budget); the iOS NE memory ceiling (G3 [01-DP
+§13]) bounds the client chain state.</td>
+</tr>
+<tr>
+<td><code>CH</code>/<code>HQA</code></td>
+<td>per-gate Challenge scoring the captured SEC/E2E evidence (entry/exit
+separation proven, not asserted); autonomous HelixQA session against the
+2-hop slice [06-WBS §0.4].</td>
+</tr>
+</tbody>
+</table>
+<p>The ONLY permitted absence of a warranted type is an honest §11.4.3
+SKIP-with-reason (e.g. <code>MEM</code> on a host with no iOS device →
+<code>topology_unsupported</code>), never a silent gap [06-WBS §0.4].
+Four-layer enforcement per §11.4.4(b) applies to every TASK closure.</p>
+<hr />
+<h2 id="13-phase-placement--checklist">13. Phase placement &amp;
+checklist</h2>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Owns</th>
+<th>Phase</th>
+<th>Gate</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>helix-core/src/hop_chain.rs</code> —
+<code>HopChain</code>/<code>Hop</code>/state machine/encapsulation</td>
+<td>nested-WG egress/ingress, establish, MTU</td>
+<td>2</td>
+<td>— (Phase-2 BENCH/SEC)</td>
+</tr>
+<tr>
+<td><code>helix-edge</code> <code>ChainForwarder</code> (§4)</td>
+<td>Entry/Intermediate hop forwarding (M3)</td>
+<td>2</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>helix-route</code> <code>HopChainSpec</code> map field
+(§8)</td>
+<td>chain delivery via <code>WatchNetworkMap</code></td>
+<td>2</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<p>Multi-hop is <strong>Phase 2 (Parity + Reach)</strong> [SYNTHESIS §4,
+01-DP §12]. It is purely additive over the frozen Phase-0 interfaces
+(the <code>Transport</code> trait §[01-DP §3.1], <code>helix-wg</code>
+§[01-DP §4], the <code>TunnelStatus</code> enum §[01-DP §5.2], the
+<code>RouteMap</code> §[01-DP §6.2]) — it adds one struct module and one
+map field, <strong>no new wire protocol</strong> (M1).</p>
+<h3 id="131-anti-bluff-acceptance-evidence-114569107">13.1 Anti-bluff
+acceptance evidence (§11.4.5/.69/.107)</h3>
+<p>The release-blocking captured evidence for multi-hop:</p>
+<ul>
+<li><strong>Entry/exit-separation capture</strong> (the SEC test above):
+packet captures at Entry and at Exit, plus the key-isolation assertion,
+proving M2/M3/M4 — not a config-only PASS.</li>
+<li><strong>Whole-chain teardown trace</strong>: ordered
+<code>TunnelStatus</code> events proving M5 atomicity under the SC fault
+injection.</li>
+<li><strong>2-hop BENCH CSV</strong>: measured RTT/throughput/CPU/MTU vs
+single-hop, so the latency cost is real and quantified, not assumed
+(§11.4.6).</li>
+</ul>
+<hr />
+<p><em>End of Multi-Hop (Entry/Exit Separation) nano-detail
+specification. Pairs with doc 01-DP §11.1 (the section it deepens), doc
+03 (<code>WatchNetworkMap</code> — the live source of the
+<code>HopChainSpec</code> stream at §8), the security volume
+(kill-switch/DNS-leak §11.5, post-quantum PSK §11.8), and doc 02
+(control-plane chain &amp; jurisdiction assignment policy —
+M6).</em></p>
+</body>
+</html>

@@ -1,0 +1,1402 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Design tokens — taxonomy, schema &amp; theming</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Design tokens — taxonomy, schema &amp; theming</h1>
+</header>
+<h1 id="design-tokens--taxonomy-schema--theming">Design tokens —
+taxonomy, schema &amp; theming</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-06-25T12:00:00Z</p>
+<blockquote>
+<p>Master technical specification — Volume 10 (Design System),
+nano-detail deep-dive. This document <strong>owns</strong> the canonical
+<strong>design-token taxonomy</strong> and the <strong>JSON
+source-of-truth schema</strong> for HelixVPN&#39;s own design system: the
+three token tiers (primitive → semantic → component), the naming
+convention, the full token categories (color, typography, spacing,
+radius, elevation/ shadow, motion, z-index, breakpoints) with
+<strong>light + dark value pairs</strong>, the theming-resolution model
+(theme × platform × brand), and the drift / contract rules that keep
+every emitted form (JSON / CSS / Dart / SwiftUI / Compose / ArkTS /
+C-Qt) byte-faithful to this one source.</p>
+<p><strong>SPEC-ONLY.</strong> It describes <em>what the tokens are</em>
+and <em>how they resolve</em> — not the shipping
+<code>helix_design</code> build. The concrete hex values of the color
+tier are defined and contrast-proven in the sibling <a href="color-system.md"><code>color-system.md</code></a>; this document
+defines the <strong>structure</strong> the colors live in (and
+reproduces the load-bearing hexes so the schema samples are valid, never
+placeholder).</p>
+<p><strong>Position.</strong> <code>helix_design</code> is a
+<strong>fully decoupled, reusable submodule</strong>
+(<code>vasic-digital/helix_design</code>, snake_case flat per
+§11.4.28/.29/.74) that configures <strong>OpenDesign</strong> (the
+mandatory token/theme engine, §11.4.162) to emit these tokens. This doc
+owns the <em>token model</em>; the OpenDesign integration mechanics live
+in [<code>opendesign-foundation.md</code>], the multi-form emit in
+[<code>token-export-pipeline.md</code>], the colors in
+[<code>color-system.md</code>], type/icon/ motion detail in
+[<code>typography-iconography-motion.md</code>].</p>
+<p><strong>Boundary with sibling docs.</strong> This doc
+<strong>owns</strong> the schema + tier rules + naming. It
+<strong>consumes</strong>: the 7-variant connection-state vocabulary
+from the FFI surface [<code>v04-client/ffi-surface.md</code> §3.2] (the
+<code>TunnelStatus</code> the component tier&#39;s connection tokens map
+onto); the 3-app / 8-platform matrix from the spine
+[<code>SPECIFICATION.md</code> §3]; the OpenDesign engine contract
+[<code>opendesign-foundation.md</code>].</p>
+<p><strong>Evidence base.</strong> <code>[04_CLIENT §N]</code> =
+<code>final/03-client-core-and-ui.md</code>; <code>[FFI §N]</code> =
+<code>final/v04-client/ffi-surface.md</code>; <code>[SPINE §N]</code> =
+<code>final/SPECIFICATION.md</code>; <code>[COLOR §N]</code> =
+<code>final/v10-design/color-system.md</code>. Claims not grounded in
+the evidence base or in this document&#39;s own original design choices are
+tagged <code>UNVERIFIED</code> per constitution §11.4.6 — never
+fabricated. The token taxonomy itself is <strong>original HelixVPN
+design work</strong> (no external source needed), modeled on the
+well-established primitive/semantic/component three-tier pattern.</p>
+</blockquote>
+<hr />
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#0-why-tokens-and-the-one-source-rule">0. Why tokens, and
+the one-source rule</a></li>
+<li><a href="#1-the-three-tiers">1. The three tiers</a></li>
+<li><a href="#2-naming-convention">2. Naming convention</a></li>
+<li><a href="#3-the-json-source-of-truth-schema">3. The JSON
+source-of-truth schema</a></li>
+<li><a href="#4-a-concrete-valid-token-sample-all-categories-lightdark">4. A
+concrete, valid token sample (all categories, light+dark)</a></li>
+<li><a href="#5-the-theming-resolution-model-theme--platform--brand">5.
+The theming-resolution model (theme × platform × brand)</a></li>
+<li><a href="#6-scales--spacing-radius-elevation-motion-z-index-breakpoints">6.
+Scales — spacing, radius, elevation, motion, z-index,
+breakpoints</a></li>
+<li><a href="#7-component-tokens--referencing-semantic-never-primitive">7.
+Component tokens — referencing semantic, never primitive</a></li>
+<li><a href="#8-the-connection-state-component-tokens-the-ffi-seam">8.
+The connection-state component tokens (the FFI seam)</a></li>
+<li><a href="#9-drift-contract--validation-rules">9. Drift, contract
+&amp; validation rules</a></li>
+<li><a href="#10-surfaced-decisions--cross-doc-contracts">10. Surfaced
+decisions &amp; cross-doc contracts</a></li>
+<li><a href="#sources-verified">Sources verified</a></li>
+</ul>
+<hr />
+<h2 id="0-why-tokens-and-the-one-source-rule">0. Why tokens, and the
+one-source rule</h2>
+<p>A <strong>design token</strong> is a named, platform-neutral key
+bound to a design value (a color, a length, a duration, a font axis).
+HelixVPN ships <strong>three apps</strong> (Client, Console, Connector)
+across <strong>eight platforms</strong> (iOS, macOS, Android, Windows,
+Linux, Web, HarmonyOS, Aurora) from one Flutter UI core [SPINE §3].
+Without a single token source, that surface drifts: the iOS connect
+button greens one way, the Web one another, and the &quot;connected&quot; colour
+stops <em>meaning</em> &quot;connected&quot;.</p>
+<p><strong>The one-source rule.</strong> There is exactly
+<strong>one</strong> authored source of truth — a set of JSON token
+files in <code>helix_design/tokens/**</code> — and
+<strong>every</strong> consumable form (CSS custom properties, Dart
+<code>ThemeData</code>, SwiftUI <code>Color</code>/<code>Font</code>,
+Compose <code>ColorScheme</code>/<code>Typography</code>, ArkTS resource
+maps, C/Qt <code>.qml</code>/header constants) is
+<strong>generated</strong> from it
+([<code>token-export-pipeline.md</code>]). A hand-edited platform theme
+is a <strong>drift defect</strong> (§9), the visual analogue of the
+schema-first zero-drift principle the rest of HelixVPN already enforces
+for proto/OpenAPI [SPINE §4 principle 8].</p>
+<blockquote>
+<p><strong>Honest boundary (§11.4.6).</strong> Tokens guarantee
+<em>consistency and single-sourcing</em> of design values — they do
+<strong>not</strong> by themselves guarantee usability, accessibility,
+or correct layout. Contrast is proven in [<code>color-system.md</code>];
+no-overlap / no-label-overlay layout is a component + visual-regression
+concern ([<code>component-library.md</code>],
+[<code>visual-regression-and-qa.md</code>], §11.4.162). This doc owns
+the values&#39; <em>structure</em>, not their <em>fitness</em>.</p>
+</blockquote>
+<hr />
+<h2 id="1-the-three-tiers">1. The three tiers</h2>
+<p>Tokens resolve through <strong>exactly three tiers</strong>, each
+referencing only the tier below it. This is the load-bearing rule that
+lets a single brand or theme swap ripple correctly through every
+component.</p>
+<table>
+<thead>
+<tr>
+<th>Tier</th>
+<th>Purpose</th>
+<th>References</th>
+<th>May a component use it directly?</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Primitive</strong> (a.k.a. <em>global</em> /
+<em>core</em>)</td>
+<td>The raw palette + raw scale. Theme-agnostic, brand-agnostic. A flat
+dictionary of literal values.</td>
+<td>nothing (literals only)</td>
+<td><strong>No</strong></td>
+<td><code>color.primitive.helix.500 = #3D5AF1</code></td>
+</tr>
+<tr>
+<td><strong>Semantic</strong> (a.k.a. <em>alias</em> /
+<em>system</em>)</td>
+<td>Intent. Names a <em>role</em> (&quot;the default surface&quot;, &quot;primary
+text&quot;, &quot;the danger colour&quot;) and binds it <strong>per theme</strong> to a
+primitive. This is the <strong>only</strong> tier with light/dark
+forks.</td>
+<td>primitive (per theme)</td>
+<td><strong>Discouraged</strong> — allowed for one-off bespoke surfaces,
+but components should prefer a component token</td>
+<td><code>color.semantic.surface.default = {light: helix-neutral.0, dark: helix-neutral.900}</code></td>
+</tr>
+<tr>
+<td><strong>Component</strong></td>
+<td>A specific UI part&#39;s specific slot. Names the exact widget
+property.</td>
+<td><strong>semantic only</strong> (never primitive)</td>
+<td><strong>Yes</strong> — this is what widgets read</td>
+<td><code>comp.connectButton.bg.connected = color.semantic.state.connected.fill</code></td>
+</tr>
+</tbody>
+</table>
+<pre class="mermaid"><code>flowchart TD
+    subgraph P[&quot;TIER 1 — primitive (literals, theme-agnostic)&quot;]
+        P1[&quot;color.primitive.helix.500 = #3D5AF1&quot;]
+        P2[&quot;color.primitive.neutral.0 = #FFFFFF&quot;]
+        P3[&quot;color.primitive.neutral.900 = #151920&quot;]
+        P4[&quot;color.primitive.green.500 = #22C55E&quot;]
+        P5[&quot;space.unit = 4px&quot;]
+    end
+    subgraph S[&quot;TIER 2 — semantic (intent, light/dark fork)&quot;]
+        S1[&quot;color.semantic.surface.default&lt;br/&gt;light→neutral.0 · dark→neutral.900&quot;]
+        S2[&quot;color.semantic.text.primary&lt;br/&gt;light→neutral.900 · dark→neutral.100&quot;]
+        S3[&quot;color.semantic.state.connected.fill&lt;br/&gt;light→green.600 · dark→green.500&quot;]
+        S4[&quot;color.semantic.action.primary&lt;br/&gt;light→helix.600 · dark→helix.500&quot;]
+    end
+    subgraph C[&quot;TIER 3 — component (widget slots, semantic-only refs)&quot;]
+        C1[&quot;comp.connectButton.bg.connected → state.connected.fill&quot;]
+        C2[&quot;comp.statusChip.label → text.onState&quot;]
+        C3[&quot;comp.appBar.surface → surface.default&quot;]
+    end
+    P1 --&gt; S4
+    P2 --&gt; S1
+    P3 --&gt; S1
+    P3 --&gt; S2
+    P4 --&gt; S3
+    S3 --&gt; C1
+    S1 --&gt; C3
+    S2 --&gt; C2
+    P5 -.-&gt;|&quot;non-color scales resolve in 1 hop&lt;br/&gt;(no per-theme fork, §6)&quot;| C</code></pre>
+<blockquote>
+<p><strong>Why component → semantic only (never component →
+primitive).</strong> If <code>comp.connectButton.bg.connected</code>
+pointed straight at <code>green.500</code>, a brand or theme change
+would have to rewrite every component token. Routing through
+<code>state.connected.fill</code> means the theme swap touches
+<strong>one</strong> semantic binding and every component that
+references it updates for free. A component token that references a
+primitive is a <strong>tier violation</strong> caught by the lint in
+§9.</p>
+</blockquote>
+<hr />
+<h2 id="2-naming-convention">2. Naming convention</h2>
+<p>Every token id is a <strong>dot-delimited, lowercase,
+<code>snake</code>-free camelCase-segment</strong> path. The
+<strong>first segment is the category</strong>, the <strong>second is
+the tier</strong>, the rest narrows to the leaf. (camelCase
+<em>within</em> a segment; dots <em>between</em> segments — this
+survives every target language&#39;s identifier rules and the OpenDesign
+engine input.)</p>
+<pre><code>&lt;category&gt;.&lt;tier&gt;.&lt;group&gt;[.&lt;subgroup&gt;...].&lt;leaf&gt;[.&lt;state|variant&gt;]</code></pre>
+<table>
+<thead>
+<tr>
+<th>Part</th>
+<th>Closed/open</th>
+<th>Values</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>category</code></td>
+<td><strong>closed</strong></td>
+<td><code>color</code> · <code>font</code> · <code>space</code> ·
+<code>radius</code> · <code>elevation</code> · <code>motion</code> ·
+<code>z</code> · <code>breakpoint</code> · <code>border</code> ·
+<code>opacity</code> · <code>size</code></td>
+</tr>
+<tr>
+<td><code>tier</code></td>
+<td><strong>closed</strong></td>
+<td><code>primitive</code> · <code>semantic</code> · (component uses the
+<code>comp.</code> root, below)</td>
+</tr>
+<tr>
+<td><code>group</code></td>
+<td>open</td>
+<td>per category (<code>helix</code>, <code>neutral</code>,
+<code>green</code> for color-primitive; <code>surface</code>,
+<code>text</code>, <code>state</code>, <code>action</code>,
+<code>border</code> for color-semantic; …)</td>
+</tr>
+<tr>
+<td><code>leaf</code></td>
+<td>open</td>
+<td>the terminal name (<code>500</code>, <code>default</code>,
+<code>primary</code>, <code>connected</code>)</td>
+</tr>
+<tr>
+<td><code>state/variant</code></td>
+<td>open, optional</td>
+<td><code>hover</code> · <code>pressed</code> · <code>disabled</code> ·
+<code>focus</code> · <code>fill</code> · <code>onFill</code> ·
+<code>subtle</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Component tokens</strong> use a distinct root,
+<code>comp</code>, so a grep cleanly separates the widget tier:</p>
+<pre><code>comp.&lt;componentName&gt;.&lt;slot&gt;[.&lt;state|variant&gt;]</code></pre>
+<h3 id="21-canonical-examples">2.1 Canonical examples</h3>
+<pre><code>color.primitive.helix.500          # raw brand blue           → #3D5AF1
+color.primitive.neutral.0          # raw white                → #FFFFFF
+color.primitive.green.500          # raw connected-green       → #22C55E
+color.semantic.surface.default     # the default surface role  (light/dark)
+color.semantic.text.primary        # primary text role         (light/dark)
+color.semantic.state.connected.fill# the &quot;connected&quot; fill role  (light/dark)
+color.semantic.action.primary      # primary action role       (light/dark)
+comp.connectButton.bg.connected    # the connect button&#39;s bg when Connected
+comp.connectButton.bg.disconnected # …when Disconnected
+comp.statusChip.label              # the status-chip text slot
+comp.exitPicker.row.selected.bg    # selected exit row background
+font.semantic.body.md              # body medium type role
+space.scale.4                      # 4 × base = 16px
+radius.scale.md                    # medium corner radius
+elevation.semantic.menu            # the elevated-menu shadow role
+motion.semantic.connectPulse.dur   # the connecting-pulse duration
+z.semantic.modal                   # modal stacking layer
+breakpoint.scale.md                # the medium responsive breakpoint</code></pre>
+<blockquote>
+<p><strong>Naming invariants (lint-enforced, §9).</strong> (a) every id
+starts with a closed <code>category</code>; (b) every
+non-<code>comp</code> id has a closed <code>tier</code> second segment;
+(c) <code>comp.*</code> ids reference only <code>*.semantic.*</code>
+values; (d) ids are unique across the whole tree; (e) ids never collide
+with a target-language reserved word after the JSON→identifier transform
+(the transform replaces <code>.</code>→<code>_</code>/<code>-</code> per
+form; see [<code>token-export-pipeline.md</code>]).</p>
+</blockquote>
+<hr />
+<h2 id="3-the-json-source-of-truth-schema">3. The JSON source-of-truth
+schema</h2>
+<p>The source is a tree of JSON files (one file per category is the
+recommended layout; the loader merges them). Every <strong>leaf token
+object</strong> has a fixed shape — a
+<strong>Style-Dictionary-class</strong>
+<code>$value</code>/<code>$type</code> envelope extended with HelixVPN&#39;s
+<strong>per-theme fork</strong> for color-and-other-themed
+categories.</p>
+<h3 id="31-the-leaf-token-envelope">3.1 The leaf-token envelope</h3>
+<pre class="jsonc"><code>// the shape of EVERY leaf token (primitive or semantic or component)
+{
+  &quot;$type&quot;: &quot;color&quot;,                 // closed: color|dimension|fontFamily|fontWeight|
+                                    //         number|duration|cubicBezier|shadow|zIndex
+  &quot;$value&quot;: &lt;literal | { &quot;light&quot;: &lt;ref|literal&gt;, &quot;dark&quot;: &lt;ref|literal&gt; } | &lt;ref&gt;&gt;,
+  &quot;$description&quot;: &quot;human-readable intent (REQUIRED on every semantic token)&quot;,
+  &quot;$extensions&quot;: {                  // optional engine/consumer hints
+    &quot;helix.deprecated&quot;: false,
+    &quot;helix.a11yMin&quot;: &quot;AA&quot;,          // contrast floor this token is contractually held to (§COLOR)
+    &quot;helix.platforms&quot;: [&quot;*&quot;]        // or a subset; &quot;*&quot; = all 8
+  }
+}</code></pre>
+<ul>
+<li><strong>Reference syntax</strong> — a <code>$value</code> of the
+form <code>&quot;{color.primitive.helix.500}&quot;</code> is a
+<strong>reference</strong> to another token (curly-brace, dotted path).
+The resolver (OpenDesign / the export pipeline) dereferences it. A
+reference MUST resolve to a token of the <strong>same
+<code>$type</code></strong>.</li>
+<li><strong>Per-theme fork</strong> — only the <strong>themed
+categories</strong> (<code>color</code>, <code>elevation</code>/
+<code>shadow</code>, and the small set of
+<code>border</code>/<code>opacity</code> tokens that differ by theme)
+carry a <code>{ &quot;light&quot;: …, &quot;dark&quot;: … }</code> object in
+<code>$value</code>. <strong>Non-themed categories</strong>
+(<code>space</code>, <code>radius</code>, <code>font</code> metrics,
+<code>motion</code>, <code>z</code>, <code>breakpoint</code>) carry a
+single literal/reference — they are identical across themes (§6).</li>
+<li><strong>Primitive <code>$value</code></strong> is always a
+<strong>literal</strong> (never a reference) — primitives are the leaves
+the references terminate at.</li>
+<li><strong>Semantic <code>$value</code></strong> is the
+<strong>per-theme fork</strong>, each side a <strong>reference to a
+primitive</strong>.</li>
+<li><strong>Component <code>$value</code></strong> is a <strong>single
+reference to a semantic token</strong> (no fork — the fork already
+happened one tier down, so a component token is theme-correct by
+construction).</li>
+</ul>
+<h3 id="32-type-closed-vocabulary--target-form-mapping">3.2
+<code>$type</code> closed vocabulary → target-form mapping</h3>
+<table>
+<thead>
+<tr>
+<th><code>$type</code></th>
+<th>JSON literal form</th>
+<th>CSS</th>
+<th>Dart</th>
+<th>SwiftUI</th>
+<th>Compose</th>
+<th>ArkTS</th>
+<th>C/Qt</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>color</code></td>
+<td><code>&quot;#RRGGBB&quot;</code> / <code>&quot;#RRGGBBAA&quot;</code></td>
+<td><code>--c: #…</code></td>
+<td><code>Color(0xAARRGGBB)</code></td>
+<td><code>Color(red:…)</code></td>
+<td><code>Color(0x…)</code></td>
+<td><code>$rrggbb</code></td>
+<td><code>QColor(&quot;#…&quot;)</code></td>
+</tr>
+<tr>
+<td><code>dimension</code></td>
+<td><code>&quot;16px&quot;</code> / <code>&quot;1.5rem&quot;</code></td>
+<td><code>16px</code></td>
+<td><code>16.0</code> (logical px)</td>
+<td><code>16</code> (pt)</td>
+<td><code>16.dp</code></td>
+<td><code>16vp</code></td>
+<td><code>16</code></td>
+</tr>
+<tr>
+<td><code>fontFamily</code></td>
+<td><code>&quot;Inter&quot;</code></td>
+<td><code>font-family</code></td>
+<td><code>fontFamily</code></td>
+<td><code>Font.custom</code></td>
+<td><code>FontFamily</code></td>
+<td><code>fontFamily</code></td>
+<td><code>QFont</code></td>
+</tr>
+<tr>
+<td><code>fontWeight</code></td>
+<td><code>400</code>/<code>600</code></td>
+<td><code>400</code></td>
+<td><code>FontWeight.w400</code></td>
+<td><code>.regular</code></td>
+<td><code>W400</code></td>
+<td><code>FontWeight.Regular</code></td>
+<td><code>QFont::Normal</code></td>
+</tr>
+<tr>
+<td><code>number</code></td>
+<td><code>1.5</code></td>
+<td>unitless</td>
+<td><code>double</code></td>
+<td><code>CGFloat</code></td>
+<td><code>Float</code></td>
+<td><code>number</code></td>
+<td><code>qreal</code></td>
+</tr>
+<tr>
+<td><code>duration</code></td>
+<td><code>&quot;180ms&quot;</code></td>
+<td><code>180ms</code></td>
+<td><code>Duration(ms:180)</code></td>
+<td><code>0.18</code></td>
+<td><code>180</code></td>
+<td><code>180</code></td>
+<td><code>180</code></td>
+</tr>
+<tr>
+<td><code>cubicBezier</code></td>
+<td><code>[0.2,0,0,1]</code></td>
+<td><code>cubic-bezier(…)</code></td>
+<td><code>Cubic(…)</code></td>
+<td><code>.timingCurve</code></td>
+<td><code>CubicBezierEasing</code></td>
+<td>bezier</td>
+<td><code>QEasingCurve</code></td>
+</tr>
+<tr>
+<td><code>shadow</code></td>
+<td><code>{offsetX,offsetY,blur,spread,color}</code></td>
+<td><code>box-shadow</code></td>
+<td><code>BoxShadow</code></td>
+<td><code>.shadow</code></td>
+<td><code>Modifier.shadow</code></td>
+<td><code>shadow</code></td>
+<td><code>QGraphicsDropShadow</code></td>
+</tr>
+<tr>
+<td><code>zIndex</code></td>
+<td>integer</td>
+<td><code>z-index</code></td>
+<td><code>int</code></td>
+<td><code>zIndex</code></td>
+<td><code>zIndex</code></td>
+<td><code>zIndex</code></td>
+<td>stack order</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong><code>UNVERIFIED</code></strong> — the exact ArkTS
+resource-map key syntax and the C/Qt <code>.qml</code>/header emit
+shapes are pinned by the export-pipeline contract test
+([<code>token-export-pipeline.md</code>] §drift-gate); the column above
+states the <em>intended</em> mapping, frozen there. Marked
+<code>UNVERIFIED</code> until that contract test exists per §11.4.6.</p>
+</blockquote>
+<hr />
+<h2 id="4-a-concrete-valid-token-sample-all-categories-lightdark">4. A
+concrete, valid token sample (all categories, light+dark)</h2>
+<p>The following is a <strong>valid, self-consistent</strong> slice of
+the source tree (not a placeholder) covering every category. Color
+literals match [<code>color-system.md</code>]; non-color scales are
+defined in §6 of this doc.</p>
+<pre class="jsonc"><code>// helix_design/tokens/primitive.json  — TIER 1 (literals, theme-agnostic)
+{
+  &quot;color&quot;: { &quot;primitive&quot;: {
+    &quot;helix&quot;:   { &quot;500&quot;: { &quot;$type&quot;: &quot;color&quot;, &quot;$value&quot;: &quot;#3D5AF1&quot; },
+                 &quot;600&quot;: { &quot;$type&quot;: &quot;color&quot;, &quot;$value&quot;: &quot;#2F47C4&quot; },
+                 &quot;400&quot;: { &quot;$type&quot;: &quot;color&quot;, &quot;$value&quot;: &quot;#6B86FB&quot; } },
+    &quot;neutral&quot;: { &quot;0&quot;:   { &quot;$type&quot;: &quot;color&quot;, &quot;$value&quot;: &quot;#FFFFFF&quot; },
+                 &quot;100&quot;: { &quot;$type&quot;: &quot;color&quot;, &quot;$value&quot;: &quot;#EDEFF3&quot; },
+                 &quot;500&quot;: { &quot;$type&quot;: &quot;color&quot;, &quot;$value&quot;: &quot;#6B7385&quot; },
+                 &quot;600&quot;: { &quot;$type&quot;: &quot;color&quot;, &quot;$value&quot;: &quot;#4B5263&quot; },
+                 &quot;900&quot;: { &quot;$type&quot;: &quot;color&quot;, &quot;$value&quot;: &quot;#151920&quot; } },
+    &quot;green&quot;:   { &quot;500&quot;: { &quot;$type&quot;: &quot;color&quot;, &quot;$value&quot;: &quot;#22C55E&quot; },
+                 &quot;600&quot;: { &quot;$type&quot;: &quot;color&quot;, &quot;$value&quot;: &quot;#15803D&quot; } },
+    &quot;amber&quot;:   { &quot;500&quot;: { &quot;$type&quot;: &quot;color&quot;, &quot;$value&quot;: &quot;#F59E0B&quot; },
+                 &quot;700&quot;: { &quot;$type&quot;: &quot;color&quot;, &quot;$value&quot;: &quot;#B45309&quot; } },
+    &quot;orange&quot;:  { &quot;600&quot;: { &quot;$type&quot;: &quot;color&quot;, &quot;$value&quot;: &quot;#C2410C&quot; } },
+    &quot;red&quot;:     { &quot;600&quot;: { &quot;$type&quot;: &quot;color&quot;, &quot;$value&quot;: &quot;#DC2626&quot; } },
+    &quot;teal&quot;:    { &quot;500&quot;: { &quot;$type&quot;: &quot;color&quot;, &quot;$value&quot;: &quot;#14B8A6&quot; },
+                 &quot;700&quot;: { &quot;$type&quot;: &quot;color&quot;, &quot;$value&quot;: &quot;#0F766E&quot; } }
+  } },
+  &quot;space&quot;:      { &quot;primitive&quot;: { &quot;unit&quot;: { &quot;$type&quot;: &quot;dimension&quot;, &quot;$value&quot;: &quot;4px&quot; } } },
+  &quot;font&quot;: { &quot;primitive&quot;: {
+    &quot;family&quot;:  { &quot;sans&quot;: { &quot;$type&quot;: &quot;fontFamily&quot;, &quot;$value&quot;: &quot;Inter&quot; },
+                 &quot;mono&quot;: { &quot;$type&quot;: &quot;fontFamily&quot;, &quot;$value&quot;: &quot;JetBrains Mono&quot; } },
+    &quot;weight&quot;:  { &quot;regular&quot;: { &quot;$type&quot;: &quot;fontWeight&quot;, &quot;$value&quot;: 400 },
+                 &quot;medium&quot;:  { &quot;$type&quot;: &quot;fontWeight&quot;, &quot;$value&quot;: 500 },
+                 &quot;semibold&quot;:{ &quot;$type&quot;: &quot;fontWeight&quot;, &quot;$value&quot;: 600 } }
+  } }
+}</code></pre>
+<pre class="jsonc"><code>// helix_design/tokens/semantic.json — TIER 2 (intent, light/dark fork)
+{
+  &quot;color&quot;: { &quot;semantic&quot;: {
+    &quot;surface&quot;: {
+      &quot;default&quot;: { &quot;$type&quot;: &quot;color&quot;, &quot;$description&quot;: &quot;the base app surface&quot;,
+        &quot;$value&quot;: { &quot;light&quot;: &quot;{color.primitive.neutral.0}&quot;,
+                    &quot;dark&quot;:  &quot;{color.primitive.neutral.900}&quot; },
+        &quot;$extensions&quot;: { &quot;helix.a11yMin&quot;: &quot;AAA&quot; } },
+      &quot;raised&quot;:  { &quot;$type&quot;: &quot;color&quot;, &quot;$description&quot;: &quot;cards/sheets above the base&quot;,
+        &quot;$value&quot;: { &quot;light&quot;: &quot;#F7F8FA&quot;, &quot;dark&quot;: &quot;#222732&quot; } }
+    },
+    &quot;text&quot;: {
+      &quot;primary&quot;:   { &quot;$type&quot;: &quot;color&quot;, &quot;$description&quot;: &quot;default body/heading text&quot;,
+        &quot;$value&quot;: { &quot;light&quot;: &quot;{color.primitive.neutral.900}&quot;,
+                    &quot;dark&quot;:  &quot;{color.primitive.neutral.100}&quot; },
+        &quot;$extensions&quot;: { &quot;helix.a11yMin&quot;: &quot;AAA&quot; } },
+      &quot;secondary&quot;: { &quot;$type&quot;: &quot;color&quot;, &quot;$description&quot;: &quot;supporting text&quot;,
+        &quot;$value&quot;: { &quot;light&quot;: &quot;{color.primitive.neutral.600}&quot;, &quot;dark&quot;: &quot;#C2C8D4&quot; } },
+      &quot;onState&quot;:   { &quot;$type&quot;: &quot;color&quot;, &quot;$description&quot;: &quot;label drawn ON a filled state colour&quot;,
+        &quot;$value&quot;: { &quot;light&quot;: &quot;#FFFFFF&quot;, &quot;dark&quot;: &quot;#FFFFFF&quot; } }
+    },
+    &quot;action&quot;: {
+      &quot;primary&quot;:   { &quot;$type&quot;: &quot;color&quot;, &quot;$description&quot;: &quot;primary action/brand fill&quot;,
+        &quot;$value&quot;: { &quot;light&quot;: &quot;{color.primitive.helix.600}&quot;,
+                    &quot;dark&quot;:  &quot;{color.primitive.helix.500}&quot; },
+        &quot;$extensions&quot;: { &quot;helix.a11yMin&quot;: &quot;AA&quot; } }
+    },
+    &quot;state&quot;: {
+      &quot;connected&quot;: { &quot;fill&quot;: { &quot;$type&quot;: &quot;color&quot;, &quot;$description&quot;: &quot;the Connected state colour&quot;,
+        &quot;$value&quot;: { &quot;light&quot;: &quot;{color.primitive.green.600}&quot;, &quot;dark&quot;: &quot;{color.primitive.green.500}&quot; } } },
+      &quot;connecting&quot;:{ &quot;fill&quot;: { &quot;$type&quot;: &quot;color&quot;, &quot;$description&quot;: &quot;Connecting/Handshaking/Reconnecting&quot;,
+        &quot;$value&quot;: { &quot;light&quot;: &quot;{color.primitive.amber.700}&quot;, &quot;dark&quot;: &quot;#FBBF24&quot; } } },
+      &quot;danger&quot;:    { &quot;fill&quot;: { &quot;$type&quot;: &quot;color&quot;, &quot;$description&quot;: &quot;Danger (leak/killswitch)&quot;,
+        &quot;$value&quot;: { &quot;light&quot;: &quot;{color.primitive.red.600}&quot;, &quot;dark&quot;: &quot;#F87171&quot; } } }
+    },
+    &quot;border&quot;: {
+      &quot;default&quot;: { &quot;$type&quot;: &quot;color&quot;, &quot;$value&quot;: { &quot;light&quot;: &quot;#DCE0E8&quot;, &quot;dark&quot;: &quot;#353B49&quot; } }
+    }
+  } },
+  &quot;font&quot;: { &quot;semantic&quot;: {
+    &quot;body&quot;:    { &quot;md&quot;: { &quot;$type&quot;: &quot;number&quot;, &quot;$description&quot;: &quot;body medium size (px)&quot;,
+                   &quot;$value&quot;: 14 } },
+    &quot;heading&quot;: { &quot;lg&quot;: { &quot;$type&quot;: &quot;number&quot;, &quot;$value&quot;: 22 } }
+  } }
+}</code></pre>
+<pre class="jsonc"><code>// helix_design/tokens/component.json — TIER 3 (widget slots, semantic-only refs)
+{
+  &quot;comp&quot;: {
+    &quot;connectButton&quot;: {
+      &quot;bg&quot;: {
+        &quot;connected&quot;:    { &quot;$type&quot;: &quot;color&quot;, &quot;$value&quot;: &quot;{color.semantic.state.connected.fill}&quot; },
+        &quot;connecting&quot;:   { &quot;$type&quot;: &quot;color&quot;, &quot;$value&quot;: &quot;{color.semantic.state.connecting.fill}&quot; },
+        &quot;disconnected&quot;: { &quot;$type&quot;: &quot;color&quot;, &quot;$value&quot;: &quot;{color.semantic.action.primary}&quot; },
+        &quot;danger&quot;:       { &quot;$type&quot;: &quot;color&quot;, &quot;$value&quot;: &quot;{color.semantic.state.danger.fill}&quot; }
+      },
+      &quot;label&quot;: { &quot;$type&quot;: &quot;color&quot;, &quot;$value&quot;: &quot;{color.semantic.text.onState}&quot; },
+      &quot;radius&quot;:{ &quot;$type&quot;: &quot;dimension&quot;, &quot;$value&quot;: &quot;{radius.scale.full}&quot; }
+    },
+    &quot;statusChip&quot;: {
+      &quot;label&quot;:  { &quot;$type&quot;: &quot;color&quot;, &quot;$value&quot;: &quot;{color.semantic.text.onState}&quot; },
+      &quot;padX&quot;:   { &quot;$type&quot;: &quot;dimension&quot;, &quot;$value&quot;: &quot;{space.scale.3}&quot; }
+    },
+    &quot;appBar&quot;: { &quot;surface&quot;: { &quot;$type&quot;: &quot;color&quot;, &quot;$value&quot;: &quot;{color.semantic.surface.default}&quot; } }
+  }
+}</code></pre>
+<pre class="jsonc"><code>// helix_design/tokens/scale.json — non-themed scales (single literal, §6)
+{
+  &quot;space&quot;:  { &quot;scale&quot;: { &quot;1&quot;: {&quot;$type&quot;:&quot;dimension&quot;,&quot;$value&quot;:&quot;4px&quot;},  &quot;2&quot;: {&quot;$type&quot;:&quot;dimension&quot;,&quot;$value&quot;:&quot;8px&quot;},
+                         &quot;3&quot;: {&quot;$type&quot;:&quot;dimension&quot;,&quot;$value&quot;:&quot;12px&quot;}, &quot;4&quot;: {&quot;$type&quot;:&quot;dimension&quot;,&quot;$value&quot;:&quot;16px&quot;},
+                         &quot;5&quot;: {&quot;$type&quot;:&quot;dimension&quot;,&quot;$value&quot;:&quot;24px&quot;}, &quot;6&quot;: {&quot;$type&quot;:&quot;dimension&quot;,&quot;$value&quot;:&quot;32px&quot;} } },
+  &quot;radius&quot;: { &quot;scale&quot;: { &quot;sm&quot;: {&quot;$type&quot;:&quot;dimension&quot;,&quot;$value&quot;:&quot;4px&quot;}, &quot;md&quot;: {&quot;$type&quot;:&quot;dimension&quot;,&quot;$value&quot;:&quot;8px&quot;},
+                         &quot;lg&quot;: {&quot;$type&quot;:&quot;dimension&quot;,&quot;$value&quot;:&quot;16px&quot;},&quot;full&quot;:{&quot;$type&quot;:&quot;dimension&quot;,&quot;$value&quot;:&quot;9999px&quot;} } },
+  &quot;elevation&quot;: { &quot;semantic&quot;: {
+     &quot;card&quot;: { &quot;$type&quot;: &quot;shadow&quot;, &quot;$value&quot;: {
+        &quot;light&quot;: { &quot;offsetX&quot;:&quot;0px&quot;,&quot;offsetY&quot;:&quot;1px&quot;,&quot;blur&quot;:&quot;3px&quot;,&quot;spread&quot;:&quot;0px&quot;,&quot;color&quot;:&quot;#1519201A&quot; },
+        &quot;dark&quot;:  { &quot;offsetX&quot;:&quot;0px&quot;,&quot;offsetY&quot;:&quot;1px&quot;,&quot;blur&quot;:&quot;3px&quot;,&quot;spread&quot;:&quot;0px&quot;,&quot;color&quot;:&quot;#00000066&quot; } } },
+     &quot;menu&quot;: { &quot;$type&quot;: &quot;shadow&quot;, &quot;$value&quot;: {
+        &quot;light&quot;: { &quot;offsetX&quot;:&quot;0px&quot;,&quot;offsetY&quot;:&quot;8px&quot;,&quot;blur&quot;:&quot;24px&quot;,&quot;spread&quot;:&quot;-4px&quot;,&quot;color&quot;:&quot;#15192026&quot; },
+        &quot;dark&quot;:  { &quot;offsetX&quot;:&quot;0px&quot;,&quot;offsetY&quot;:&quot;8px&quot;,&quot;blur&quot;:&quot;24px&quot;,&quot;spread&quot;:&quot;-4px&quot;,&quot;color&quot;:&quot;#00000080&quot; } } } } },
+  &quot;motion&quot;: { &quot;semantic&quot;: {
+     &quot;connectPulse&quot;: { &quot;dur&quot;:  {&quot;$type&quot;:&quot;duration&quot;,&quot;$value&quot;:&quot;1200ms&quot;},
+                       &quot;ease&quot;: {&quot;$type&quot;:&quot;cubicBezier&quot;,&quot;$value&quot;:[0.4,0,0.6,1]} },
+     &quot;stateXfade&quot;:   { &quot;dur&quot;:  {&quot;$type&quot;:&quot;duration&quot;,&quot;$value&quot;:&quot;180ms&quot;},
+                       &quot;ease&quot;: {&quot;$type&quot;:&quot;cubicBezier&quot;,&quot;$value&quot;:[0.2,0,0,1]} } } },
+  &quot;z&quot;: { &quot;semantic&quot;: { &quot;base&quot;:{&quot;$type&quot;:&quot;zIndex&quot;,&quot;$value&quot;:0}, &quot;nav&quot;:{&quot;$type&quot;:&quot;zIndex&quot;,&quot;$value&quot;:100},
+                       &quot;overlay&quot;:{&quot;$type&quot;:&quot;zIndex&quot;,&quot;$value&quot;:1000}, &quot;modal&quot;:{&quot;$type&quot;:&quot;zIndex&quot;,&quot;$value&quot;:1100},
+                       &quot;toast&quot;:{&quot;$type&quot;:&quot;zIndex&quot;,&quot;$value&quot;:1200}, &quot;danger&quot;:{&quot;$type&quot;:&quot;zIndex&quot;,&quot;$value&quot;:2000} } },
+  &quot;breakpoint&quot;: { &quot;scale&quot;: { &quot;sm&quot;:{&quot;$type&quot;:&quot;dimension&quot;,&quot;$value&quot;:&quot;360px&quot;},
+                             &quot;md&quot;:{&quot;$type&quot;:&quot;dimension&quot;,&quot;$value&quot;:&quot;600px&quot;},
+                             &quot;lg&quot;:{&quot;$type&quot;:&quot;dimension&quot;,&quot;$value&quot;:&quot;1024px&quot;},
+                             &quot;xl&quot;:{&quot;$type&quot;:&quot;dimension&quot;,&quot;$value&quot;:&quot;1440px&quot;} } }
+}</code></pre>
+<blockquote>
+<p>Every <code>$value</code> above is a real, resolvable value or a real
+reference into the primitive/semantic trees in this same sample —
+<strong>no placeholders, no TODO</strong> (§11.4.6). The 8-hex colors
+(e.g. <code>#1519201A</code>) are <code>#RRGGBBAA</code> — neutral.900
+at ~10 % alpha for the light-card shadow.</p>
+</blockquote>
+<hr />
+<h2 id="5-the-theming-resolution-model-theme--platform--brand">5. The
+theming-resolution model (theme × platform × brand)</h2>
+<p>A token id resolves to a <strong>concrete value</strong> along
+<strong>three axes</strong>. Resolution is deterministic and total
+(every (id, theme, platform, brand) yields exactly one value or a build
+error — never a silent default, §11.4.6).</p>
+<pre class="mermaid"><code>flowchart LR
+    ID[&quot;token id&lt;br/&gt;comp.connectButton.bg.connected&quot;]
+    ID --&gt;|&quot;deref semantic&quot;| SEM[&quot;color.semantic.state.connected.fill&quot;]
+    SEM --&gt;|&quot;× THEME&quot;| TH{theme?}
+    TH --&gt;|light| L[&quot;{green.600} → #15803D&quot;]
+    TH --&gt;|dark| D[&quot;{green.500} → #22C55E&quot;]
+    L --&gt;|&quot;× BRAND&quot;| BR{brand?}
+    D --&gt;|&quot;× BRAND&quot;| BR
+    BR --&gt;|default| OUT1[&quot;value&quot;]
+    BR --&gt;|tenant override| OUT2[&quot;overridden value&quot;]
+    OUT1 --&gt;|&quot;× PLATFORM emit&quot;| EM[&quot;CSS / Dart / Swift / Compose / ArkTS / C-Qt&quot;]
+    OUT2 --&gt; EM</code></pre>
+<h3 id="51-axis-1--theme-light--dark--mandatory-both">5.1 Axis 1 — theme
+(light / dark) — <strong>mandatory both</strong></h3>
+<p>Every <strong>semantic</strong> color/elevation token MUST define
+<strong>both</strong> <code>light</code> and <code>dark</code> (§9 gate
+<code>CM-token-light-dark-complete</code>). A semantic token missing a
+theme side is a build-blocking defect (§11.4.162 mandates light+dark for
+every component). Because components reference semantics, <strong>every
+component token is dual-theme by construction</strong> — no component
+ever declares a theme fork itself.</p>
+<p>The active theme is chosen at runtime by the app (system setting →
+user override → forced-by-context, e.g. <code>Danger</code> never
+changes theme but always paints from the danger semantic). The Flutter
+<code>helix-ui</code> builds <strong>two <code>ThemeData</code></strong>
+(light + dark) from the emitted Dart and hands both to
+<code>MaterialApp(theme:, darkTheme:)</code> [04_CLIENT §7].</p>
+<h3 id="52-axis-2--platform-emit-target--form-not-value">5.2 Axis 2 —
+platform (emit target) — <strong>form, not value</strong></h3>
+<p>Platform does <strong>not</strong> change a token&#39;s <em>value</em>;
+it changes its <em>emitted form</em> (§3.2 table) and, rarely, its
+<em>adaptation</em> (e.g. a platform that lacks a shadow primitive
+renders <code>elevation</code> as a hairline border). A token may opt
+out of a platform via <code>$extensions.helix.platforms</code>; the
+export pipeline omits it from that form&#39;s output. <strong>Platform never
+forks <code>$value</code></strong> — that would re-introduce drift.
+Per-platform <em>look-and-feel</em> adaptation (Material vs Cupertino vs
+desktop vs TV-leanback vs HarmonyOS vs Aurora) is a
+<strong>component-mapping</strong> concern owned by
+[<code>platform-adaptation.md</code>], built <strong>on top of</strong>
+these identical token values.</p>
+<h3 id="53-axis-3--brand-tenant--app-accent--override-map">5.3 Axis 3 —
+brand (tenant / app accent) — <strong>override map</strong></h3>
+<p>The default brand is <strong>HelixVPN</strong> (the
+<code>helix.*</code> ramp). The model supports a <strong>brand-override
+layer</strong>: a thin JSON that re-points a <em>small, closed</em> set
+of semantic tokens (chiefly <code>action.primary</code> and the
+app-accent) to a different primitive ramp, leaving the connection-state
+and feedback semantics <strong>fixed</strong> (state colours MUST stay
+stable across brands — &quot;connected&quot; is always green, a multi-tenant
+Console must not recolour safety semantics). The per-app accent
+differentiation (Client vs Console vs Connector) is one such override
+and is specified in [<code>color-system.md</code> §per-app accent].
+Resolution order: <strong>brand-override (if present) → semantic default
+→ primitive</strong>.</p>
+<blockquote>
+<p><strong>D-DT-1 (surfaced, §10).</strong> The closed set of
+brand-overridable semantic tokens is
+<code>{action.primary, accent.*, surface.brandTint}</code>. Allowing a
+tenant to override <code>state.*</code> or <code>feedback.*</code> is
+<strong>rejected</strong> (safety-colour drift). If a future product
+needs per-tenant state colours, that is a §11.4.66 operator decision,
+not a silent capability.</p>
+</blockquote>
+<hr />
+<h2 id="6-scales--spacing-radius-elevation-motion-z-index-breakpoints">6.
+Scales — spacing, radius, elevation, motion, z-index, breakpoints</h2>
+<p>The non-color scales are <strong>theme-agnostic</strong> (one value,
+no light/dark fork) — except <strong>elevation/shadow</strong>, whose
+<em>color</em> differs by theme (a shadow is darker and more opaque on
+dark surfaces, §4 sample).</p>
+<h3 id="61-spacing--4-pt-base-scale">6.1 Spacing — 4-pt base scale</h3>
+<p><code>space.primitive.unit = 4px</code>. The scale is integer
+multiples; component padding/ gaps reference <strong>scale
+steps</strong>, never raw px.</p>
+<table>
+<thead>
+<tr>
+<th>token</th>
+<th>multiplier</th>
+<th>value</th>
+<th>typical use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>space.scale.0</code></td>
+<td>0</td>
+<td><code>0px</code></td>
+<td>reset</td>
+</tr>
+<tr>
+<td><code>space.scale.1</code></td>
+<td>1×</td>
+<td><code>4px</code></td>
+<td>icon-to-label gap</td>
+</tr>
+<tr>
+<td><code>space.scale.2</code></td>
+<td>2×</td>
+<td><code>8px</code></td>
+<td>tight intra-component</td>
+</tr>
+<tr>
+<td><code>space.scale.3</code></td>
+<td>3×</td>
+<td><code>12px</code></td>
+<td>chip padding</td>
+</tr>
+<tr>
+<td><code>space.scale.4</code></td>
+<td>4×</td>
+<td><code>16px</code></td>
+<td>default content padding</td>
+</tr>
+<tr>
+<td><code>space.scale.5</code></td>
+<td>6×</td>
+<td><code>24px</code></td>
+<td>section gap</td>
+</tr>
+<tr>
+<td><code>space.scale.6</code></td>
+<td>8×</td>
+<td><code>32px</code></td>
+<td>screen margin (phone)</td>
+</tr>
+<tr>
+<td><code>space.scale.7</code></td>
+<td>12×</td>
+<td><code>48px</code></td>
+<td>hero / connect-button ring</td>
+</tr>
+<tr>
+<td><code>space.scale.8</code></td>
+<td>16×</td>
+<td><code>64px</code></td>
+<td>large desktop gutter</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>The 4-pt base is the original HelixVPN choice; it aligns with the 8
+platforms&#39; common density grids (Material 4dp/8dp, Cupertino 8pt) so one
+scale maps cleanly everywhere.</p>
+</blockquote>
+<h3 id="62-radius-scale">6.2 Radius scale</h3>
+<table>
+<thead>
+<tr>
+<th>token</th>
+<th>value</th>
+<th>use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>radius.scale.none</code></td>
+<td><code>0px</code></td>
+<td>data tables</td>
+</tr>
+<tr>
+<td><code>radius.scale.sm</code></td>
+<td><code>4px</code></td>
+<td>inputs, chips</td>
+</tr>
+<tr>
+<td><code>radius.scale.md</code></td>
+<td><code>8px</code></td>
+<td>cards, sheets</td>
+</tr>
+<tr>
+<td><code>radius.scale.lg</code></td>
+<td><code>16px</code></td>
+<td>dialogs, the connect panel</td>
+</tr>
+<tr>
+<td><code>radius.scale.full</code></td>
+<td><code>9999px</code></td>
+<td>the circular ConnectButton, status dots, pills</td>
+</tr>
+</tbody>
+</table>
+<h3 id="63-elevation--shadow-scale-themed-color">6.3 Elevation / shadow
+scale (themed color)</h3>
+<table>
+<thead>
+<tr>
+<th>token</th>
+<th>light shadow</th>
+<th>dark shadow</th>
+<th>use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>elevation.semantic.flat</code></td>
+<td>none</td>
+<td>none</td>
+<td>base surface</td>
+</tr>
+<tr>
+<td><code>elevation.semantic.card</code></td>
+<td><code>0 1px 3px #1519201A</code></td>
+<td><code>0 1px 3px #00000066</code></td>
+<td>cards, list rows</td>
+</tr>
+<tr>
+<td><code>elevation.semantic.menu</code></td>
+<td><code>0 8px 24px #15192026</code></td>
+<td><code>0 8px 24px #00000080</code></td>
+<td>menus, popovers</td>
+</tr>
+<tr>
+<td><code>elevation.semantic.modal</code></td>
+<td><code>0 16px 48px #15192033</code></td>
+<td><code>0 16px 48px #000000A6</code></td>
+<td>dialogs, sheets</td>
+</tr>
+</tbody>
+</table>
+<p>The <strong>shape</strong> (offset/blur/spread) is theme-invariant;
+only the <strong>shadow color + alpha</strong> forks — darker, more
+opaque on dark (a soft light-grey shadow is invisible on a dark
+surface). This is the only non-color category that forks by theme.</p>
+<h3 id="64-motion-tokens">6.4 Motion tokens</h3>
+<table>
+<thead>
+<tr>
+<th>token</th>
+<th>value</th>
+<th>use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>motion.semantic.stateXfade.dur</code></td>
+<td><code>180ms</code></td>
+<td>cross-fade between two <code>TunnelStatus</code> colours</td>
+</tr>
+<tr>
+<td><code>motion.semantic.stateXfade.ease</code></td>
+<td><code>cubic-bezier(0.2,0,0,1)</code></td>
+<td>(decelerate)</td>
+</tr>
+<tr>
+<td><code>motion.semantic.connectPulse.dur</code></td>
+<td><code>1200ms</code></td>
+<td>the <code>Connecting</code>/<code>Reconnecting</code> amber pulse
+loop</td>
+</tr>
+<tr>
+<td><code>motion.semantic.connectPulse.ease</code></td>
+<td><code>cubic-bezier(0.4,0,0.6,1)</code></td>
+<td>(ease-in-out, symmetric loop)</td>
+</tr>
+<tr>
+<td><code>motion.semantic.press.dur</code></td>
+<td><code>100ms</code></td>
+<td>button press scale/ink</td>
+</tr>
+<tr>
+<td><code>motion.semantic.sheet.dur</code></td>
+<td><code>240ms</code></td>
+<td>sheet/dialog enter</td>
+</tr>
+<tr>
+<td><code>motion.semantic.reducedMotion</code></td>
+<td><code>0ms</code></td>
+<td>the value all <code>*.dur</code> collapse to when the OS &quot;reduce
+motion&quot; flag is set (a11y; the <code>Reconnecting</code> &quot;pulse&quot; becomes
+a static amber, never a flash)</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Reduce-motion contract.</strong> When the platform reports
+reduced-motion, the export/runtime substitutes
+<code>motion.semantic.reducedMotion</code> for animation durations. The
+<code>Reconnecting</code> state therefore degrades from <em>pulse</em>
+to <em>static amber</em> — it never strobes (a11y + the §11.4.107
+no-flash discipline).</p>
+</blockquote>
+<h3 id="65-z-index-scale">6.5 Z-index scale</h3>
+<p><code>base 0 → nav 100 → overlay 1000 → modal 1100 → toast 1200 → danger 2000</code>.
+The <strong><code>danger</code> layer (2000) sits above
+everything</strong> so a <code>Danger</code> banner (leak / kill-switch
+tripped) is never occluded by a modal or toast — the safety state always
+wins the stacking order (mirrors the FFI rule that <code>Danger</code>
+overrides all intent [FFI §3.2/§3.3]).</p>
+<h3 id="66-breakpoints">6.6 Breakpoints</h3>
+<table>
+<thead>
+<tr>
+<th>token</th>
+<th>min-width</th>
+<th>layout class</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>breakpoint.scale.sm</code></td>
+<td><code>360px</code></td>
+<td>compact phone</td>
+</tr>
+<tr>
+<td><code>breakpoint.scale.md</code></td>
+<td><code>600px</code></td>
+<td>large phone / small tablet — two-pane begins</td>
+</tr>
+<tr>
+<td><code>breakpoint.scale.lg</code></td>
+<td><code>1024px</code></td>
+<td>tablet / desktop — Console master-detail</td>
+</tr>
+<tr>
+<td><code>breakpoint.scale.xl</code></td>
+<td><code>1440px</code></td>
+<td>wide desktop — Console three-pane</td>
+</tr>
+</tbody>
+</table>
+<p>The Client app is primarily <code>sm</code>/<code>md</code>; the
+Console (web + desktop) uses <code>lg</code>/<code>xl</code>; the same
+tokens serve TV-leanback (treated as <code>xl</code> with larger touch/
+focus targets). Responsive screen specs live in
+[<code>screens-client.md</code>] /
+[<code>screens-console.md</code>].</p>
+<hr />
+<h2 id="7-component-tokens--referencing-semantic-never-primitive">7.
+Component tokens — referencing semantic, never primitive</h2>
+<p>A component token names <strong>one widget&#39;s one slot in one
+state</strong>. It is the only tier widgets read. Example: the
+ConnectButton&#39;s background across its states maps
+<strong>one-to-one</strong> onto the connection-state semantics (the FFI
+seam, §8).</p>
+<pre class="jsonc"><code>&quot;comp&quot;: { &quot;connectButton&quot;: {
+  &quot;bg&quot;: {
+    &quot;disconnected&quot;: { &quot;$value&quot;: &quot;{color.semantic.action.primary}&quot; },     // brand idle
+    &quot;connecting&quot;:   { &quot;$value&quot;: &quot;{color.semantic.state.connecting.fill}&quot; },
+    &quot;handshaking&quot;:  { &quot;$value&quot;: &quot;{color.semantic.state.connecting.fill}&quot; },
+    &quot;connected&quot;:    { &quot;$value&quot;: &quot;{color.semantic.state.connected.fill}&quot; },
+    &quot;reconnecting&quot;: { &quot;$value&quot;: &quot;{color.semantic.state.connecting.fill}&quot; },
+    &quot;down&quot;:         { &quot;$value&quot;: &quot;{color.semantic.state.down.fill}&quot; },
+    &quot;danger&quot;:       { &quot;$value&quot;: &quot;{color.semantic.state.danger.fill}&quot; }
+  },
+  &quot;label&quot;:   { &quot;$value&quot;: &quot;{color.semantic.text.onState}&quot; },             // white on every fill
+  &quot;ring&quot;:    { &quot;$value&quot;: &quot;{color.semantic.state.connected.glow}&quot; },     // the &quot;connected&quot; halo
+  &quot;radius&quot;:  { &quot;$value&quot;: &quot;{radius.scale.full}&quot; },
+  &quot;size&quot;:    { &quot;$value&quot;: &quot;{size.connectButton.diameter}&quot; }
+} }</code></pre>
+<p>The rule restated: <strong>every <code>comp.*</code>
+<code>$value</code> is a single reference into
+<code>*.semantic.*</code></strong> (color/elevation) or into a
+non-themed <code>*.scale.*</code>. A <code>comp.*</code> token that
+references a <code>*.primitive.*</code> value or hard-codes a literal is
+a <strong>tier violation</strong> (§9 lint). This is what makes a brand
+or theme swap a one-tier edit.</p>
+<hr />
+<h2 id="8-the-connection-state-component-tokens-the-ffi-seam">8. The
+connection-state component tokens (the FFI seam)</h2>
+<p>The single most product-specific token group: the connection-state
+colours map <strong>exactly</strong> onto the <strong>7-variant
+<code>ffi::TunnelStatus</code></strong> the UI switches on [FFI §3.2].
+This document owns the <em>token structure</em>;
+[<code>color-system.md</code>] owns the <em>hex values + contrast
+proofs</em>. The mapping is <strong>total</strong> — every one of the
+seven variants has a dedicated semantic + component token, so the UI
+never invents a colour for a state (§11.4.6).</p>
+<table>
+<thead>
+<tr>
+<th><code>ffi::TunnelStatus</code> variant</th>
+<th>semantic token</th>
+<th>component token (ConnectButton bg)</th>
+<th>family</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Disconnected</code></td>
+<td><code>color.semantic.state.disconnected.fill</code></td>
+<td><code>comp.connectButton.bg.disconnected</code> (=
+<code>action.primary</code> brand, idle)</td>
+<td>neutral / brand</td>
+</tr>
+<tr>
+<td><code>Connecting</code></td>
+<td><code>color.semantic.state.connecting.fill</code></td>
+<td><code>comp.connectButton.bg.connecting</code></td>
+<td>amber</td>
+</tr>
+<tr>
+<td><code>Handshaking</code></td>
+<td><code>color.semantic.state.connecting.fill</code> (shared with
+Connecting)</td>
+<td><code>…bg.handshaking</code></td>
+<td>amber</td>
+</tr>
+<tr>
+<td><code>Connected { path:&quot;direct&quot; }</code></td>
+<td><code>color.semantic.state.connected.fill</code></td>
+<td><code>…bg.connected</code></td>
+<td>green (direct sub-shade)</td>
+</tr>
+<tr>
+<td><code>Connected { path:&quot;relay&quot; }</code></td>
+<td><code>color.semantic.state.connectedRelay.fill</code></td>
+<td><code>…bg.connectedRelay</code></td>
+<td>green (relay sub-shade, teal-leaning)</td>
+</tr>
+<tr>
+<td><code>Reconnecting</code></td>
+<td><code>color.semantic.state.connecting.fill</code> (amber,
+<strong>pulsing</strong> via <code>motion.connectPulse</code>)</td>
+<td><code>…bg.reconnecting</code></td>
+<td>amber (animated)</td>
+</tr>
+<tr>
+<td><code>Down { reason }</code></td>
+<td><code>color.semantic.state.down.fill</code></td>
+<td><code>…bg.down</code></td>
+<td>orange</td>
+</tr>
+<tr>
+<td><code>Danger { kind }</code></td>
+<td><code>color.semantic.state.danger.fill</code></td>
+<td><code>…bg.danger</code></td>
+<td>red (z-layer <code>danger</code>, overrides intent)</td>
+</tr>
+</tbody>
+</table>
+<pre class="mermaid"><code>flowchart LR
+    subgraph FFI[&quot;ffi::TunnelStatus (7-variant, FFI §3.2)&quot;]
+        v0[&quot;Disconnected&quot;]; v1[&quot;Connecting&quot;]; v2[&quot;Handshaking&quot;]
+        v3[&quot;Connected{direct}&quot;]; v3r[&quot;Connected{relay}&quot;]; v4[&quot;Reconnecting&quot;]
+        v5[&quot;Down{reason}&quot;]; v6[&quot;Danger{kind}&quot;]
+    end
+    subgraph SEM[&quot;color.semantic.state.*&quot;]
+        s0[&quot;disconnected.fill&quot;]; s1[&quot;connecting.fill&quot;]; s3[&quot;connected.fill&quot;]
+        s3r[&quot;connectedRelay.fill&quot;]; s5[&quot;down.fill&quot;]; s6[&quot;danger.fill&quot;]
+    end
+    v0--&gt;s0; v1--&gt;s1; v2--&gt;s1; v4--&gt;s1
+    v3--&gt;s3; v3r--&gt;s3r; v5--&gt;s5; v6--&gt;s6
+    s1 -. &quot;motion.connectPulse on Reconnecting&quot; .-&gt; s1
+    s6 -. &quot;z.danger 2000 — above all&quot; .-&gt; s6</code></pre>
+<ul>
+<li><strong>Direct vs relay sub-shade.</strong>
+<code>Connected.path</code> is <code>&quot;direct&quot;</code> (P2P) or
+<code>&quot;relay&quot;</code> (DERP-style) [FFI §3.2]. Two distinct
+<em>green</em> semantics (<code>connected.fill</code> vs
+<code>connectedRelay.fill</code>) let the <code>StatusChip</code> show
+the path without changing the &quot;I am protected = green&quot; signal. Hexes in
+[<code>color-system.md</code>].</li>
+<li><strong>Reconnecting = amber pulse, not a new colour.</strong> It
+reuses <code>connecting.fill</code> + <code>motion.connectPulse</code>;
+reduce-motion degrades it to static amber (§6.4).</li>
+<li><strong>Danger overrides intent.</strong> The <code>Danger</code>
+family is red <strong>and</strong> sits on z-layer <code>danger</code>
+(2000) — it can never be hidden, mirroring the FFI projector rule that
+<code>Danger</code> overrides every other state [FFI §3.3].</li>
+</ul>
+<hr />
+<h2 id="9-drift-contract--validation-rules">9. Drift, contract &amp;
+validation rules</h2>
+<p>Tokens are only single-source if <strong>machine-checked</strong>.
+The following gates run in <code>helix_design</code> CI and the
+consuming <code>helix-ui</code> pre-build (paired §1.1 mutation
+each):</p>
+<table>
+<thead>
+<tr>
+<th>Gate</th>
+<th>Asserts</th>
+<th>Mutation that must FAIL it</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>CM-token-tiers-valid</code></td>
+<td>every id starts with a closed <code>category</code>;
+non-<code>comp</code> ids carry a closed <code>tier</code>;
+<code>comp.*</code> ids reference only
+<code>*.semantic.*</code>/<code>*.scale.*</code> (never primitive, never
+literal)</td>
+<td>point a <code>comp.*</code> <code>$value</code> at
+<code>color.primitive.*</code></td>
+</tr>
+<tr>
+<td><code>CM-token-light-dark-complete</code></td>
+<td>every <strong>semantic</strong>
+<code>color</code>/<code>elevation</code> token defines
+<strong>both</strong> <code>light</code> and <code>dark</code></td>
+<td>delete the <code>dark</code> side of
+<code>surface.default</code></td>
+</tr>
+<tr>
+<td><code>CM-token-refs-resolve</code></td>
+<td>every <code>{…}</code> reference resolves to an existing token of
+the <strong>same <code>$type</code></strong></td>
+<td>reference a non-existent / wrong-type token</td>
+</tr>
+<tr>
+<td><code>CM-token-ids-unique</code></td>
+<td>no duplicate id across the whole tree</td>
+<td>duplicate <code>color.primitive.helix.500</code></td>
+</tr>
+<tr>
+<td><code>CM-token-a11y-floor</code></td>
+<td>every token carrying <code>helix.a11yMin</code> meets its floor
+against its paired surface (computed, [COLOR §contrast])</td>
+<td>drop <code>text.primary</code> to a value below its AAA floor</td>
+</tr>
+<tr>
+<td><code>CM-token-no-drift</code></td>
+<td>every emitted form (CSS/Dart/Swift/Compose/ArkTS/C-Qt) re-generates
+byte-identically from the JSON source; a hand-edited emitted file is a
+finding ([<code>token-export-pipeline.md</code>])</td>
+<td>hand-edit <code>helix_tokens.dart</code></td>
+</tr>
+<tr>
+<td><code>CM-token-state-coverage</code></td>
+<td>all <strong>7</strong> <code>ffi::TunnelStatus</code> variants (§8)
+have a semantic + component token</td>
+<td>remove <code>state.danger.fill</code></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>The drift gate is the load-bearing one.</strong> It is the
+visual analogue of HelixVPN&#39;s proto/OpenAPI zero-drift principle [SPINE
+§4.8]: the only way a platform theme can diverge from the source is a
+hand-edit, and the gate catches that hand-edit. Emitted forms are
+<strong>never</strong> authored, only generated
+([<code>token-export-pipeline.md</code>]); exported docs of the token
+reference carry the §11.4.65/.168 visual-validation per
+[<code>visual-regression-and-qa.md</code>].</p>
+</blockquote>
+<hr />
+<h2 id="10-surfaced-decisions--cross-doc-contracts">10. Surfaced
+decisions &amp; cross-doc contracts</h2>
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>Decision / contract</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>D-DT-1</strong></td>
+<td>Closed brand-overridable semantic set =
+<code>{action.primary, accent.*, surface.brandTint}</code>;
+<code>state.*</code>/<code>feedback.*</code> are <strong>NOT</strong>
+brand-overridable (safety-colour stability). Widening requires a
+§11.4.66 operator decision.</td>
+<td>recommended, surfaced</td>
+</tr>
+<tr>
+<td><strong>D-DT-2</strong></td>
+<td>Per-theme fork lives <strong>only</strong> on <code>color</code>,
+<code>elevation</code> (+ a tiny
+<code>border</code>/<code>opacity</code> set). All other categories are
+theme-invariant single values.</td>
+<td>decided</td>
+</tr>
+<tr>
+<td><strong>D-DT-3</strong></td>
+<td>Component tokens reference <strong>semantic only</strong>; the lint
+(<code>CM-token-tiers-valid</code>) enforces it.</td>
+<td>decided</td>
+</tr>
+<tr>
+<td><strong>C-DT-A</strong> (consumes)</td>
+<td>The 7-variant <code>ffi::TunnelStatus</code> vocabulary is owned by
+[FFI §3.2]; §8&#39;s token set MUST stay total over it (gate
+<code>CM-token-state-coverage</code>). A new FFI variant is a contract
+change here.</td>
+<td>contract</td>
+</tr>
+<tr>
+<td><strong>C-DT-B</strong> (provides)</td>
+<td>This schema (§3) is the input contract for
+[<code>token-export-pipeline.md</code>] (the emit) and
+[<code>color-system.md</code>] (the color values + contrast).</td>
+<td>contract</td>
+</tr>
+<tr>
+<td><strong>C-DT-C</strong> (provides)</td>
+<td>The naming convention (§2) is the identifier contract every emitted
+form&#39;s transform must honor.</td>
+<td>contract</td>
+</tr>
+<tr>
+<td><strong>U-DT-1</strong> <code>UNVERIFIED</code></td>
+<td>Exact ArkTS resource-map key syntax + C/Qt emit shapes (§3.2) —
+pinned by the export-pipeline contract test; <code>UNVERIFIED</code>
+until that test exists.</td>
+<td>open</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="sources-verified">Sources verified</h2>
+<ul>
+<li><strong>Token taxonomy, tier model, naming, theming model, scales,
+drift rules</strong> — <strong>NO external source needed — original
+HelixVPN design work</strong>, modeled on the well-established
+primitive→semantic→component three-tier token pattern and the
+Style-Dictionary <code>$value</code>/<code>$type</code> envelope
+convention (engine-neutral; the concrete engine is OpenDesign per
+§11.4.162, integration in [<code>opendesign-foundation.md</code>]).</li>
+<li><strong>7-variant <code>ffi::TunnelStatus</code> vocabulary
+(§8)</strong> — <code>final/v04-client/ffi-surface.md</code> §3.2 (read
+2026-06-25). The token set is held total over it by gate
+<code>CM-token-state-coverage</code>.</li>
+<li><strong>3-app / 8-platform matrix, schema-first zero-drift principle
+(§0, §5)</strong> — <code>final/SPECIFICATION.md</code> §3, §4 (read
+2026-06-25).</li>
+<li><strong>Color hex values reproduced in the JSON samples
+(§4)</strong> — defined + contrast-proven in
+<code>final/v10-design/color-system.md</code> (this doc reproduces only
+the load-bearing subset to keep the samples valid).</li>
+<li><strong>WCAG contrast floors referenced by
+<code>helix.a11yMin</code></strong> — W3C WCAG 2.1 SC 1.4.3 / 1.4.6 and
+the relative-luminance formula
+(<code>https://www.w3.org/TR/WCAG21/#dfn-relative-luminance</code>); the
+arithmetic is performed in [<code>color-system.md</code>].</li>
+<li>Items explicitly marked <code>UNVERIFIED</code> (U-DT-1) are pending
+their named contract test per §11.4.6 — not asserted as fact.</li>
+</ul>
+</body>
+</html>

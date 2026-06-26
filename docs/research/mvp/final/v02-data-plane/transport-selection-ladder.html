@@ -1,0 +1,1683 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Automatic Transport Selection Ladder</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Automatic Transport Selection Ladder</h1>
+</header>
+<h1 id="automatic-transport-selection-ladder">Automatic Transport
+Selection Ladder</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-06-25T00:00:00Z</p>
+<blockquote>
+<p>Master technical specification — Volume 2 (Data Plane), nano-detail
+deep-dive. This document <strong>deepens</strong> the <em>Auto transport
+selection — the escalation ladder</em> section of doc 01 [01-DP §5.3,
+§5.4] into an implementation-ready specification of the ladder state
+machine, its timers, per-network memory, coordinator-pushed regional
+priors, manual override, telemetry, and the byte layouts of every
+persisted/streamed artefact. SPEC-ONLY: it describes <strong>what to
+build</strong>, not the shipping product. Sources cited inline by id —
+<code>[01-DP §N]</code> = doc 01 <code>final/01-data-plane.md</code>;
+<code>[04_ARCH §N]</code> =
+<code>04_VPN_CLD/HelixVPN-Architecture-Refined.md</code>;
+<code>[04_P0]</code>/<code>[04_P2]</code> = Phase-0/Phase-2 refined
+docs; <code>[research-masque]</code>, <code>[research-hysteria2]</code>,
+<code>[research-daita_test]</code> = the cited research digests;
+<code>[SYNTHESIS §N]</code> = the cross-document synthesis. Any claim
+not grounded in the evidence base is marked <code>UNVERIFIED</code> per
+constitution §11.4.6.</p>
+</blockquote>
+<hr />
+<h2 id="0-position-ownership-and-invariants">0. Position, ownership, and
+invariants</h2>
+<h3 id="01-what-this-document-owns">0.1 What this document owns</h3>
+<p>The ladder is the <strong>client-side control logic</strong> that,
+given an ordered list of candidate L2 transports
+(<code>plain-udp → lwo → masque-h3 → shadowsocks → udp-over-tcp</code>,
+with <code>hysteria2</code> and <code>connect-ip</code> as feature-gated
+rungs), picks the one that actually carries WireGuard datagrams to the
+gateway on the current network, and re-picks automatically when a rung
+stops working [01-DP §5.3, §3.1]. It is the code behind
+<code>helix-core/src/ladder.rs</code> [01-DP §12]. It owns:</p>
+<ol type="1">
+<li>The <strong>ladder state machine</strong> + its transition
+timers/budgets (§3, §4).</li>
+<li>The driver that calls <code>helix_transport::dial()</code> and
+reacts to <code>TransportError</code> (§5).</li>
+<li><strong>Per-network memory</strong> — remember-what-worked keyed by
+network fingerprint (§6).</li>
+<li>Consumption of the <strong>coordinator-pushed regional
+prior</strong> <code>TransportPolicy.order</code> (§7).</li>
+<li><strong>Manual override</strong> (<code>pin</code>) — Mullvad&#39;s
+&quot;force this transport&quot; toggle (§8).</li>
+<li><strong>Aggregate, no-per-user telemetry</strong> of escalation
+outcomes (§9, invariant I5).</li>
+</ol>
+<h3 id="02-what-this-document-does-not-own">0.2 What this document does
+NOT own</h3>
+<p>It does <strong>not</strong> define the <code>Transport</code> trait,
+<code>TransportConfig</code>, <code>dial()</code>, or the wire framing
+of any transport — those are frozen contracts in doc 01 [01-DP §3]. It
+does <strong>not</strong> own the <code>WatchNetworkMap</code> protobuf
+that <em>delivers</em> the regional prior — that is doc 03; this
+document specifies only the <strong>shape the ladder consumes</strong>
+and treats the protobuf as the upstream source (§7.1). It does
+<strong>not</strong> own WireGuard crypto (<code>helix-wg</code> [01-DP
+§4]), routing/ACL (<code>helix-route</code> [01-DP §6–§7]), DAITA
+(<code>helix-daita</code> [01-DP §9]), or the FFI surface (doc 05). It
+surfaces <code>TunnelStatus</code> events but does not own the FFI
+bridge that re-emits them.</p>
+<h3 id="03-invariants-this-document-inherits-and-tightens">0.3
+Invariants this document inherits and tightens</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Invariant</th>
+<th>Source</th>
+<th>Ladder-specific tightening</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>I1</td>
+<td>Transport never sees plaintext.</td>
+<td>[01-DP I1]</td>
+<td>The ladder operates on <strong>opaque</strong>
+<code>Box&lt;dyn Transport&gt;</code> handles + health snapshots; it
+never inspects datagram bytes.</td>
+</tr>
+<tr>
+<td>I2</td>
+<td>Unreliable datagrams, never an ordered stream.</td>
+<td>[01-DP I2]</td>
+<td>The ladder&#39;s success criterion is a completed <strong>WG
+handshake</strong> over the rung, not a TCP/QUIC connect — a connected
+carrier with no WG handshake is <strong>not</strong> a successful rung
+(§5.5).</td>
+</tr>
+<tr>
+<td>I5</td>
+<td>No-logging by construction; only aggregate counters.</td>
+<td>[01-DP I5, 04_ARCH §2.7]</td>
+<td>Per-network memory persists a <strong>fingerprint hash + last-good
+rung index</strong>, never the SSID plaintext, never a server endpoint,
+never a timestamped per-connection log (§6.4, §9).</td>
+</tr>
+<tr>
+<td>L-I7</td>
+<td><strong>Automatic with manual override</strong> — Mullvad&#39;s exact
+UX.</td>
+<td>[04_ARCH §3.2, 01-DP §5.3]</td>
+<td><code>pin</code> short-circuits the ladder entirely; auto mode walks
+<code>order</code> with per-rung budgets (§3, §8).</td>
+</tr>
+<tr>
+<td>L-I8</td>
+<td><strong>Escalation is monotonic within one connect attempt</strong>
+— never oscillate up-and-down inside a single attempt; only reset to the
+top on a new attempt or successful reconnect.</td>
+<td>derived from [04_P2 §1.4]</td>
+<td>Prevents thrash; §3.3, §4.4.</td>
+</tr>
+<tr>
+<td>L-I9</td>
+<td><strong>Every PASS carries captured evidence</strong> (the
+escalation event trace IS the evidence).</td>
+<td>[01-DP §12.1, §11.4.5/.69/.107]</td>
+<td>§9, §10.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="1-the-ladder-model-in-one-picture">1. The ladder model in one
+picture</h2>
+<pre class="mermaid"><code>flowchart TD
+    Start([connect requested]) --&gt; Pin{pin set?&lt;br/&gt;manual override}
+    Pin -- yes --&gt; DialPin[dial pinned rung only]
+    DialPin --&gt; PinOk{WG handshake&lt;br/&gt;within budget?}
+    PinOk -- yes --&gt; ConnP[Connected]
+    PinOk -- no --&gt; DownPin[Down: pinned transport failed&lt;br/&gt;NO auto-escalation]
+
+    Pin -- no --&gt; Mem{per-network memory&lt;br/&gt;has last-good rung for&lt;br/&gt;this fingerprint?}
+    Mem -- yes --&gt; Seed[seed cursor at remembered rung]
+    Mem -- no --&gt; Prior{coordinator pushed&lt;br/&gt;a regional prior order?}
+    Prior -- yes --&gt; SeedPrior[cursor = prior.order index 0]
+    Prior -- no --&gt; SeedDef[cursor = default order index 0]
+
+    Seed --&gt; Dial
+    SeedPrior --&gt; Dial
+    SeedDef --&gt; Dial
+
+    Dial[dial rung at cursor] --&gt; Ok{WG handshake&lt;br/&gt;within rung budget?}
+    Ok -- yes --&gt; Remember[store fingerprint -&gt; rung in memory]
+    Remember --&gt; Conn[Connected transport=kind rtt=ms]
+    Ok -- no, budget exceeded --&gt; Next{cursor &lt; last rung?}
+    Next -- yes --&gt; Esc[cursor += 1&lt;br/&gt;emit Reconnecting]
+    Esc --&gt; Dial
+    Next -- no --&gt; Exhausted[all rungs exhausted]
+    Exhausted --&gt; Backoff[global backoff, then restart&lt;br/&gt;at remembered/prior/default top]
+    Backoff --&gt; Dial</code></pre>
+<p>The cursor only ever <strong>advances</strong> within one attempt
+(L-I8). The three seed sources — per-network memory, regional prior,
+default — are tried in that priority order (§2.3). <code>pin</code>
+bypasses all of it (§8).</p>
+<hr />
+<h2 id="2-ordered-rung-taxonomy--the-policy-object">2. Ordered rung
+taxonomy &amp; the policy object</h2>
+<h3 id="21-transportkind--the-ordinal-the-ladder-walks">2.1
+<code>TransportKind</code> — the ordinal the ladder walks</h3>
+<div class="sourceCode" id="cb2"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-core/src/ladder.rs</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co">// The closed set of ladder rungs. Ordinal order is the *default* escalation order</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co">// (cheapest/fastest first → most evasive/most expensive last) [01-DP §5.3, 04_P2 §1.4].</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="bu">Clone</span><span class="op">,</span> <span class="bu">Copy</span><span class="op">,</span> <span class="bu">Debug</span><span class="op">,</span> <span class="bu">PartialEq</span><span class="op">,</span> <span class="bu">Eq</span><span class="op">,</span> <span class="bu">Hash</span><span class="op">,</span> <span class="bu">PartialOrd</span><span class="op">,</span> <span class="bu">Ord</span><span class="at">)]</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>repr<span class="at">(</span><span class="dt">u8</span><span class="at">)]</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">enum</span> TransportKind <span class="op">{</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    PlainUdp    <span class="op">=</span> <span class="dv">0</span><span class="op">,</span>  <span class="co">// baseline, lowest latency/CPU  [01-DP §3.2]</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    Lwo         <span class="op">=</span> <span class="dv">1</span><span class="op">,</span>  <span class="co">// cheap header obfuscation, first escalation rung [01-DP §3.7]</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    MasqueH3    <span class="op">=</span> <span class="dv">2</span><span class="op">,</span>  <span class="co">// CONNECT-UDP / HTTP-3 — primary obfuscation (D1 camp A) [01-DP §3.3]</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    Hysteria2   <span class="op">=</span> <span class="dv">3</span><span class="op">,</span>  <span class="co">// QUIC+Salamander/Gecko, feature=&quot;hysteria2&quot; (D1 camp B) [01-DP §3.8]</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    Shadowsocks <span class="op">=</span> <span class="dv">4</span><span class="op">,</span>  <span class="co">// WG-in-Shadowsocks AEAD over TCP [01-DP §3.5]</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    UdpOverTcp  <span class="op">=</span> <span class="dv">5</span><span class="op">,</span>  <span class="co">// last resort when ALL udp/quic blocked [01-DP §3.6]</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    ConnectIp   <span class="op">=</span> <span class="dv">6</span><span class="op">,</span>  <span class="co">// RFC 9484 IP-over-H3, feature=&quot;connect-ip&quot;, advanced [01-DP §3.4]</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> TransportKind <span class="op">{</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Stable wire/metric label — MUST equal the matching `Transport::kind()` string [01-DP §3].</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> label(<span class="kw">self</span>) <span class="op">-&gt;</span> <span class="op">&amp;</span><span class="ot">&#39;static</span> <span class="dt">str</span> <span class="op">{</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>        <span class="cf">match</span> <span class="kw">self</span> <span class="op">{</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>            <span class="pp">TransportKind::</span>PlainUdp <span class="op">=&gt;</span> <span class="st">&quot;plain-udp&quot;</span><span class="op">,</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>            <span class="pp">TransportKind::</span>Lwo <span class="op">=&gt;</span> <span class="st">&quot;lwo&quot;</span><span class="op">,</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>            <span class="pp">TransportKind::</span>MasqueH3 <span class="op">=&gt;</span> <span class="st">&quot;masque-h3&quot;</span><span class="op">,</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>            <span class="pp">TransportKind::</span>Hysteria2 <span class="op">=&gt;</span> <span class="st">&quot;hysteria2&quot;</span><span class="op">,</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>            <span class="pp">TransportKind::</span>Shadowsocks <span class="op">=&gt;</span> <span class="st">&quot;shadowsocks&quot;</span><span class="op">,</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>            <span class="pp">TransportKind::</span>UdpOverTcp <span class="op">=&gt;</span> <span class="st">&quot;udp-over-tcp&quot;</span><span class="op">,</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>            <span class="pp">TransportKind::</span>ConnectIp <span class="op">=&gt;</span> <span class="st">&quot;connect-ip&quot;</span><span class="op">,</span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Compact persistence/telemetry code (1 byte) — the discriminant.</span></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> code(<span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">u8</span> <span class="op">{</span> <span class="kw">self</span> <span class="kw">as</span> <span class="dt">u8</span> <span class="op">}</span></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">fn</span> from_code(b<span class="op">:</span> <span class="dt">u8</span>) <span class="op">-&gt;</span> <span class="dt">Option</span><span class="op">&lt;</span>TransportKind<span class="op">&gt;</span> <span class="op">{</span> <span class="co">/* match 0..=6 → variant; else None */</span> <span class="op">}</span></span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Carrier requires UDP/QUIC reachability (fails on a hard UDP block) — used by the</span></span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// network-class hint (§6.5) to skip provably-dead rungs early.</span></span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// plain-udp/lwo/masque-h3/hysteria2/connect-ip = true; shadowsocks/udp-over-tcp = false</span></span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// [research-hysteria2 §5(b): &quot;QUIC/Hysteria2/MASQUE-over-H3/WireGuard all fail … need UDP&quot;].</span></span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> needs_udp(<span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">bool</span> <span class="op">{</span></span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a>        <span class="op">!</span><span class="pp">matches!</span>(<span class="kw">self</span><span class="op">,</span> <span class="pp">TransportKind::</span>Shadowsocks <span class="op">|</span> <span class="pp">TransportKind::</span>UdpOverTcp)</span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><strong>Why this ordinal order</strong> (each rung is strictly more
+evasive <em>and</em> more expensive than the prior):
+<code>plain-udp</code> is the ≥80%-bare-link baseline [01-DP §3.2, 04_P0
+§0]; <code>lwo</code> is &quot;near-zero-cost evasion of naive WG
+fingerprinting&quot; [01-DP §3.7]; <code>masque-h3</code> &quot;genuinely
+<em>is</em> HTTP/3 to an HTTP proxy&quot; (strong blend-in) but pays the
+double-crypto/double-CC throughput tax [research-masque §2;
+research-hysteria2 §6]; <code>hysteria2</code> wins raw throughput on
+lossy/throttled links (Brutal CC) but is a non-standard &quot;random noise&quot;
+wire [research-hysteria2 §1, §6]; the two TCP carriers carry the
+head-of-line-blocking penalty and exist purely to keep a tunnel
+<em>possible</em> [01-DP §3.5, §3.6, 04_P2 §1.2].
+<code>connect-ip</code> is last and feature-gated because it loses I1 at
+the gateway [01-DP §3.4].</p>
+<blockquote>
+<p><strong>DECISION D1 dependency.</strong> Where <code>hysteria2</code>
+sits in the default order is contingent on D1 [01-DP §3.8, SYNTHESIS §3
+D1]. This spec places it <em>after</em> <code>masque-h3</code> (adopting
+Camp A: <code>masque-h3</code> primary) and only when
+<code>feature = &quot;hysteria2&quot;</code> is compiled in; if the project later
+resolves D1 to Camp B, the coordinator&#39;s regional prior (§7) re-orders
+it to index 0 for the relevant regions <strong>without a client
+rebuild</strong> — the ladder reads order from policy, not from the enum
+ordinal (§2.2). The enum ordinal is only the <em>fallback default</em>
+when no prior is pushed.</p>
+</blockquote>
+<h3 id="22-transportpolicy--the-per-leg-ladder-configuration">2.2
+<code>TransportPolicy</code> — the per-leg ladder configuration</h3>
+<p>This refines the doc-01 sketch [01-DP §5.3] with the fields the
+ladder actually needs:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-core/src/ladder.rs</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="bu">Clone</span><span class="op">,</span> <span class="bu">Debug</span><span class="at">)]</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> TransportPolicy <span class="op">{</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// The escalation order to walk in auto mode. Source priority (§2.3):</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">///   coordinator regional prior &gt; compiled default. Never empty (validated, §2.4).</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> order<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span>TransportKind<span class="op">&gt;,</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Manual override (Mullvad &quot;force transport X&quot;). When `Some`, the ladder dials ONLY</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// this rung and NEVER auto-escalates (§8). Survives reconnects until the user clears it.</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> pin<span class="op">:</span> <span class="dt">Option</span><span class="op">&lt;</span>TransportKind<span class="op">&gt;,</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Per-rung failure budget before escalating to the next rung (§4).</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> budget<span class="op">:</span> FailureBudget<span class="op">,</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Global backoff applied after the WHOLE order is exhausted, before restarting (§4.3).</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> exhaust_backoff<span class="op">:</span> Backoff<span class="op">,</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Monotonic version of the policy (from the regional-prior delta, §7.1). The ladder</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// adopts a higher-versioned policy mid-session on the next attempt boundary, never</span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// mid-attempt (L-I8). Lower/equal version deltas are ignored (§7.4).</span></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> version<span class="op">:</span> <span class="dt">u64</span><span class="op">,</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Provenance for telemetry + UX (&quot;why is my order what it is&quot;). No per-user data.</span></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> source<span class="op">:</span> PolicySource<span class="op">,</span></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="bu">Clone</span><span class="op">,</span> <span class="bu">Copy</span><span class="op">,</span> <span class="bu">Debug</span><span class="op">,</span> <span class="bu">PartialEq</span><span class="op">,</span> <span class="bu">Eq</span><span class="at">)]</span></span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">enum</span> PolicySource <span class="op">{</span> CompiledDefault<span class="op">,</span> RegionalPrior<span class="op">,</span> OperatorOverride <span class="op">}</span></span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> TransportPolicy <span class="op">{</span></span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// The compiled fallback used when no prior has arrived yet (e.g. first launch, offline).</span></span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Unrestricted-network default: try the fast path first, escalate on failure [01-DP §5.3].</span></span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">fn</span> compiled_default() <span class="op">-&gt;</span> <span class="dt">Self</span> <span class="op">{</span></span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a>        TransportPolicy <span class="op">{</span></span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a>            order<span class="op">:</span> <span class="pp">vec!</span>[</span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a>                <span class="pp">TransportKind::</span>PlainUdp<span class="op">,</span></span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a>                <span class="pp">TransportKind::</span>Lwo<span class="op">,</span></span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a>                <span class="pp">TransportKind::</span>MasqueH3<span class="op">,</span></span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a>                <span class="at">#[</span>cfg<span class="at">(</span>feature <span class="op">=</span> <span class="st">&quot;hysteria2&quot;</span><span class="at">)]</span> <span class="pp">TransportKind::</span>Hysteria2<span class="op">,</span></span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a>                <span class="pp">TransportKind::</span>Shadowsocks<span class="op">,</span></span>
+<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a>                <span class="pp">TransportKind::</span>UdpOverTcp<span class="op">,</span></span>
+<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a>            ]<span class="op">,</span></span>
+<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a>            pin<span class="op">:</span> <span class="cn">None</span><span class="op">,</span></span>
+<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a>            budget<span class="op">:</span> <span class="pp">FailureBudget::</span><span class="kw">default</span>()<span class="op">,</span></span>
+<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a>            exhaust_backoff<span class="op">:</span> <span class="pp">Backoff::</span><span class="kw">default</span>()<span class="op">,</span></span>
+<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a>            version<span class="op">:</span> <span class="dv">0</span><span class="op">,</span></span>
+<span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a>            source<span class="op">:</span> <span class="pp">PolicySource::</span>CompiledDefault<span class="op">,</span></span>
+<span id="cb3-48"><a href="#cb3-48" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb3-49"><a href="#cb3-49" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb3-50"><a href="#cb3-50" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="23-seed-source-priority-which-rung-the-ladder-starts-at">2.3
+Seed-source priority (which rung the ladder STARTS at)</h3>
+<p>For a given connect attempt the <strong>starting cursor</strong> is
+resolved deterministically (no guessing, §11.4.6):</p>
+<pre><code>1. if policy.pin.is_some()            → dial pin ONLY, no ladder           (§8)
+2. else if per-network memory hit     → start cursor at remembered rung    (§6) [01-DP §5.3 step 4]
+       (clamped into policy.order; if remembered rung absent from order → fall through)
+3. else if policy.source == RegionalPrior → start cursor at order[0]       (§7) [01-DP §5.3 step 5]
+4. else                               → start cursor at order[0] (default) (§2.2)</code></pre>
+<p>Per-network memory <strong>out-ranks</strong> the regional prior
+because a remembered success on <em>this exact network</em> is stronger
+evidence than a region-wide statistical prior — the difference between
+&quot;VPN that sometimes connects&quot; and &quot;VPN that just works&quot; [01-DP §5.3 step
+4, 04_P2 §1.4]. The regional prior still governs the <em>order of
+escalation</em> if the remembered rung subsequently fails (§6.3).</p>
+<h3 id="24-policy-validation-fail-loud-never-silent">2.4 Policy
+validation (fail-loud, never silent)</h3>
+<p><code>order</code> MUST be non-empty, contain no duplicate
+<code>TransportKind</code>, and reference only rungs the build actually
+compiled (e.g. <code>Hysteria2</code>/<code>ConnectIp</code> only when
+their feature is enabled). A regional prior that references an
+uncompiled rung is <strong>filtered</strong> (the rung is dropped from
+<code>order</code> with a counted <code>policy_rung_unavailable</code>
+telemetry tick, §9), not rejected wholesale — so a partial-feature
+client still gets a usable subset. An <em>empty-after-filter</em> order
+falls back to <code>compiled_default()</code> (§2.2) and counts
+<code>policy_empty_fallback</code>. Validation runs on every adopted
+policy delta (§7.4).</p>
+<hr />
+<h2 id="3-the-ladder-state-machine">3. The ladder state machine</h2>
+<h3 id="31-states">3.1 States</h3>
+<div class="sourceCode" id="cb5"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-core/src/ladder.rs</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="bu">Clone</span><span class="op">,</span> <span class="bu">Debug</span><span class="at">)]</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">enum</span> LadderState <span class="op">{</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// No attempt in flight; awaiting a `start` command. Cursor undefined.</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    Idle<span class="op">,</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Resolving the seed source (§2.3) and constructing the next TransportConfig.</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    Selecting <span class="op">{</span> cursor<span class="op">:</span> <span class="dt">usize</span><span class="op">,</span> attempt_id<span class="op">:</span> <span class="dt">u64</span> <span class="op">},</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// `dial()` in flight for `order[cursor]`; waiting up to `budget.dial_timeout`.</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    Dialing <span class="op">{</span> cursor<span class="op">:</span> <span class="dt">usize</span><span class="op">,</span> attempt_id<span class="op">:</span> <span class="dt">u64</span><span class="op">,</span> rung_started<span class="op">:</span> Instant<span class="op">,</span> dial_tries<span class="op">:</span> <span class="dt">u8</span> <span class="op">},</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Carrier up; waiting for the WG handshake to complete over it (§5.5),</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// up to `budget.handshake_timeout`.</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    Handshaking <span class="op">{</span> cursor<span class="op">:</span> <span class="dt">usize</span><span class="op">,</span> attempt_id<span class="op">:</span> <span class="dt">u64</span><span class="op">,</span> rung_started<span class="op">:</span> Instant <span class="op">},</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// WG handshake completed → tunnel live. Steady state. Holds the live transport.</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    Connected <span class="op">{</span> cursor<span class="op">:</span> <span class="dt">usize</span><span class="op">,</span> kind<span class="op">:</span> TransportKind<span class="op">,</span> rtt_ms<span class="op">:</span> <span class="dt">u32</span><span class="op">,</span> since<span class="op">:</span> Instant <span class="op">},</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// A rung failed within budget; escalating to `order[cursor+1]` on the same attempt (L-I8).</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>    Escalating <span class="op">{</span> from<span class="op">:</span> <span class="dt">usize</span><span class="op">,</span> to<span class="op">:</span> <span class="dt">usize</span><span class="op">,</span> attempt_id<span class="op">:</span> <span class="dt">u64</span><span class="op">,</span> reason<span class="op">:</span> EscalationReason <span class="op">},</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Entire order exhausted; in `exhaust_backoff` before a fresh attempt (new attempt_id).</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>    Exhausted <span class="op">{</span> attempt_id<span class="op">:</span> <span class="dt">u64</span><span class="op">,</span> until<span class="op">:</span> Instant <span class="op">},</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Connected tunnel lost liveness (no recv past `liveness_grace`); re-running the ladder</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// from the seed source while keeping the old transport for fail-static forwarding (§5.6).</span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>    Reconnecting <span class="op">{</span> prev_kind<span class="op">:</span> TransportKind<span class="op">,</span> attempt_id<span class="op">:</span> <span class="dt">u64</span> <span class="op">},</span></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Terminal-for-now: pinned transport failed (no escalation, §8) OR a non-retryable error.</span></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>    Down <span class="op">{</span> reason<span class="op">:</span> DownReason <span class="op">},</span></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><code>attempt_id</code> is a monotonic <code>u64</code> minted at
+each <em>fresh</em> top-of-ladder entry (start, exhaust-restart,
+reconnect). It scopes per-attempt budgets and lets late
+<code>dial()</code> results from a superseded attempt be discarded (§5.4
+cancel-safety).</p>
+<h3 id="32-ladderstate--tunnelstatus-projection">3.2
+<code>LadderState</code> → <code>TunnelStatus</code> projection</h3>
+<p>The ladder never owns the FFI; it projects its internal state onto
+the doc-01 <code>TunnelStatus</code> broadcast enum [01-DP §5.2] so
+Flutter/metrics/telemetry see a stable surface:</p>
+<table>
+<thead>
+<tr>
+<th><code>LadderState</code></th>
+<th>Emitted <code>TunnelStatus</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Idle</code></td>
+<td>(none / <code>Down{reason:&quot;idle&quot;}</code> on first stop)</td>
+</tr>
+<tr>
+<td><code>Selecting</code>, <code>Dialing</code></td>
+<td><code>Connecting</code></td>
+</tr>
+<tr>
+<td><code>Handshaking</code></td>
+<td><code>Handshaking</code></td>
+</tr>
+<tr>
+<td><code>Connected{kind,rtt_ms,..}</code></td>
+<td><code>Connected { transport: kind.label().into(), rtt_ms }</code></td>
+</tr>
+<tr>
+<td><code>Escalating</code>, <code>Exhausted</code></td>
+<td><code>Reconnecting</code></td>
+</tr>
+<tr>
+<td><code>Reconnecting</code></td>
+<td><code>Reconnecting</code></td>
+</tr>
+<tr>
+<td><code>Down{reason}</code></td>
+<td><code>Down { reason: reason.to_string() }</code></td>
+</tr>
+</tbody>
+</table>
+<p>The <strong>ordered sequence</strong> of these events on one
+escalation is itself the captured-evidence trace the acceptance gate
+checks (§9, §10.4) [01-DP §12.1].</p>
+<h3 id="33-state-diagram">3.3 State diagram</h3>
+<pre class="mermaid"><code>stateDiagram-v2
+    [*] --&gt; Idle
+    Idle --&gt; Selecting : start(auto)
+    Idle --&gt; Dialing : start(pin=K)  %% §8 — pin skips Selecting&#39;s seed logic
+
+    Selecting --&gt; Dialing : cursor resolved (seed source §2.3)
+    Dialing --&gt; Handshaking : carrier up (dial Ok)
+    Dialing --&gt; Dialing : dial retry &lt; budget.dial_max_tries
+    Dialing --&gt; Escalating : DialTimeout/EndpointBlocked, budget exceeded
+    Handshaking --&gt; Connected : WG handshake completes (§5.5)
+    Handshaking --&gt; Escalating : HandshakeFailed/timeout, budget exceeded
+    Escalating --&gt; Selecting : cursor += 1 (to &lt; len)  %% L-I8 monotonic
+    Escalating --&gt; Exhausted : cursor was last rung
+    Exhausted --&gt; Selecting : exhaust_backoff elapsed (new attempt_id)
+
+    Connected --&gt; Reconnecting : liveness lost (last_recv_age &gt; liveness_grace, §5.6)
+    Connected --&gt; Idle : stop()
+    Reconnecting --&gt; Selecting : re-run ladder from seed (new attempt_id)
+
+    Dialing --&gt; Down : pin failed (no escalate, §8)
+    Handshaking --&gt; Down : pin failed (no escalate, §8)
+    Down --&gt; Selecting : manual retry / new start
+    Connected --&gt; Down : stop() with kill-switch engaged</code></pre>
+<p><code>Connected → Reconnecting</code> is the <strong>only</strong>
+downgrade path, and it always re-enters at the seed source
+(memory/prior/default), never mid-cursor — preserving L-I8 across the
+connected→lost boundary.</p>
+<hr />
+<h2 id="4-timers-budgets-and-backoff">4. Timers, budgets, and
+backoff</h2>
+<h3 id="41-failurebudget--per-rung-failure-tolerance">4.1
+<code>FailureBudget</code> — per-rung failure tolerance</h3>
+<p>A rung is abandoned when it exhausts its budget; the budget is
+<strong>per rung, per attempt</strong> [01-DP §5.3, 04_P2 §1.4]. The
+doc-01 sketch <code>{ max_handshakes: u8, window: Duration }</code>
+[01-DP §5.3] is refined to separate the <em>dial</em> phase (is the
+carrier reachable) from the <em>handshake</em> phase (does WG
+complete):</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-core/src/ladder.rs</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="bu">Clone</span><span class="op">,</span> <span class="bu">Copy</span><span class="op">,</span> <span class="bu">Debug</span><span class="at">)]</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> FailureBudget <span class="op">{</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Max wall-clock for a single `dial()` before it counts as one failed try.</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> dial_timeout<span class="op">:</span> Duration<span class="op">,</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Max `dial()` retries on the SAME rung before escalating (handles transient packet loss).</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> dial_max_tries<span class="op">:</span> <span class="dt">u8</span><span class="op">,</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Max wall-clock waiting for the WG handshake to complete after the carrier is up (§5.5).</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> handshake_timeout<span class="op">:</span> Duration<span class="op">,</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Max WG handshake retransmits over an up carrier before escalating.</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> max_handshakes<span class="op">:</span> <span class="dt">u8</span><span class="op">,</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Hard ceiling on total time spent on ONE rung across all its tries before forced escalate.</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> rung_deadline<span class="op">:</span> Duration<span class="op">,</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> <span class="bu">Default</span> <span class="cf">for</span> FailureBudget <span class="op">{</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> default() <span class="op">-&gt;</span> <span class="dt">Self</span> <span class="op">{</span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>        FailureBudget <span class="op">{</span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>            dial_timeout<span class="op">:</span>      <span class="pp">Duration::</span>from_secs(<span class="dv">3</span>)<span class="op">,</span>   <span class="co">// [04_P0 §4.5 bounded dial; tuned in P0]</span></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>            dial_max_tries<span class="op">:</span>    <span class="dv">2</span><span class="op">,</span></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>            handshake_timeout<span class="op">:</span> <span class="pp">Duration::</span>from_secs(<span class="dv">5</span>)<span class="op">,</span>   <span class="co">// ≈ WG handshake retransmit window</span></span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>            max_handshakes<span class="op">:</span>    <span class="dv">3</span><span class="op">,</span></span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>            rung_deadline<span class="op">:</span>     <span class="pp">Duration::</span>from_secs(<span class="dv">10</span>)<span class="op">,</span>  <span class="co">// do not let one rung eat &gt;10s</span></span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<blockquote>
+<p><code>UNVERIFIED</code> (calibration): the concrete millisecond
+values above are <strong>engineering defaults to be calibrated in Phase
+0</strong> against the netns rig [04_P0 §8, research-daita_test
+§5.2–5.3], not values taken from any cited source. Per
+§11.4.6/§11.4.107(13), thresholds MUST be tuned on the project&#39;s own
+fixtures, not hardcoded from literature. The <em>structure</em> (dial vs
+handshake split, per-rung deadline) is the spec; the numbers are the
+tunable surface.</p>
+</blockquote>
+<h3 id="42-per-rung-cost-weighting-smarter-than-uniform-budgets">4.2
+Per-rung cost weighting (smarter than uniform budgets)</h3>
+<p><code>plain-udp</code> should fail <strong>fast</strong> (it is
+either reachable or DPI-blocked within an RTT or two);
+<code>masque-h3</code>/<code>hysteria2</code> deserve a slightly longer
+handshake window because the QUIC handshake itself has more round trips
+and the GFW residual-censorship window (~500 ms to start blocking,
+[research- hysteria2 §5(a)]) means a short-lived QUIC handshake can
+complete inside the uncensored window. The budget is therefore scaled
+per rung:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co">/// Multiplier applied to the base budget per rung. UDP fast-fail; QUIC gets headroom.</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">fn</span> rung_budget(base<span class="op">:</span> FailureBudget<span class="op">,</span> kind<span class="op">:</span> TransportKind) <span class="op">-&gt;</span> FailureBudget <span class="op">{</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> mul <span class="op">=</span> <span class="cf">match</span> kind <span class="op">{</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>        <span class="pp">TransportKind::</span>PlainUdp <span class="op">|</span> <span class="pp">TransportKind::</span>Lwo            <span class="op">=&gt;</span> <span class="dv">0.7</span><span class="op">,</span> <span class="co">// fail fast</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>        <span class="pp">TransportKind::</span>MasqueH3 <span class="op">|</span> <span class="pp">TransportKind::</span>Hysteria2</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>            <span class="op">|</span> <span class="pp">TransportKind::</span>ConnectIp                          <span class="op">=&gt;</span> <span class="dv">1.3</span><span class="op">,</span> <span class="co">// QUIC handshake headroom</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>        <span class="pp">TransportKind::</span>Shadowsocks <span class="op">|</span> <span class="pp">TransportKind::</span>UdpOverTcp  <span class="op">=&gt;</span> <span class="dv">1.0</span><span class="op">,</span> <span class="co">// TCP connect+handshake</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">};</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>    base<span class="op">.</span>scaled(mul)   <span class="co">// scales the three Durations; clamps integers ≥1</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<blockquote>
+<p><code>UNVERIFIED</code> (weights): the 0.7/1.0/1.3 multipliers are
+design heuristics for Phase-0 calibration, not sourced constants. The
+<em>rationale</em> (UDP fast-fail, QUIC headroom for the ~500 ms
+residual- censorship window) is grounded in [research-hysteria2
+§5(a)].</p>
+</blockquote>
+<h3 id="43-backoff--after-the-whole-order-is-exhausted">4.3
+<code>Backoff</code> — after the WHOLE order is exhausted</h3>
+<div class="sourceCode" id="cb9"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="bu">Clone</span><span class="op">,</span> <span class="bu">Copy</span><span class="op">,</span> <span class="bu">Debug</span><span class="at">)]</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> Backoff <span class="op">{</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> initial<span class="op">:</span> Duration<span class="op">,</span>   <span class="co">// first wait after exhausting the order</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> max<span class="op">:</span> Duration<span class="op">,</span>       <span class="co">// ceiling</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> factor<span class="op">:</span> <span class="dt">f32</span><span class="op">,</span>         <span class="co">// exponential factor</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> jitter_frac<span class="op">:</span> <span class="dt">f32</span><span class="op">,</span>    <span class="co">// ± fraction of the computed wait (decorrelates clients, §11.1)</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> <span class="bu">Default</span> <span class="cf">for</span> Backoff <span class="op">{</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> default() <span class="op">-&gt;</span> <span class="dt">Self</span> <span class="op">{</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>        Backoff <span class="op">{</span> initial<span class="op">:</span> <span class="pp">Duration::</span>from_secs(<span class="dv">2</span>)<span class="op">,</span> max<span class="op">:</span> <span class="pp">Duration::</span>from_secs(<span class="dv">60</span>)<span class="op">,</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>                  factor<span class="op">:</span> <span class="dv">2.0</span><span class="op">,</span> jitter_frac<span class="op">:</span> <span class="dv">0.25</span> <span class="op">}</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Exhaust-backoff is <strong>per attempt-cycle</strong>, doubling each
+full-order exhaustion up to <code>max</code>, with
+±<code>jitter_frac</code> so a region-wide outage does not produce a
+synchronized reconnect stampede on the gateway (§11.1). It resets to
+<code>initial</code> on any successful <code>Connected</code>.</p>
+<h3 id="44-timing-budget-worked-example-default-order-hostile-network">4.4
+Timing budget worked example (default order, hostile network)</h3>
+<pre class="mermaid"><code>gantt
+    title Worst-case escalation latency on a DPI network (default budgets, no memory/prior)
+    dateFormat  X
+    axisFormat  %Ss
+    section plain-udp (rung 0, mul 0.7)
+    dial+handshake fail   :0, 7
+    section lwo (rung 1, mul 0.7)
+    dial+handshake fail   :7, 7
+    section masque-h3 (rung 2, mul 1.3)
+    dial+handshake OK     :14, 6
+    section connected
+    Connected masque-h3   :crit, 20, 4</code></pre>
+<p>Worst case to reach <code>masque-h3</code> from cold with no
+memory/prior ≈ <strong>rung0 + rung1 deadlines + masque
+handshake</strong> ≈ 10 s + 10 s + ~6 s under the default
+<code>rung_deadline</code> ceiling. <strong>This is exactly the latency
+per-network memory (§6) and regional priors (§7) exist to eliminate on
+the second connect</strong> [01-DP §5.3 steps 4–5, 04_P2 §1.4]. After
+one success the same network reconnects straight to
+<code>masque-h3</code> (memory hit), and a CN-resolved client starts at
+<code>shadowsocks</code>/<code>masque-h3</code> (prior), never paying
+the 20 s walk.</p>
+<hr />
+<h2 id="5-the-driver-dialing-escalation-and-the-success-criterion">5.
+The driver: dialing, escalation, and the success criterion</h2>
+<h3 id="51-driver-entry-points-signatures">5.1 Driver entry points
+(signatures)</h3>
+<div class="sourceCode" id="cb11"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-core/src/ladder.rs</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> Ladder <span class="op">{</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    policy<span class="op">:</span> TransportPolicy<span class="op">,</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    state<span class="op">:</span> LadderState<span class="op">,</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    memory<span class="op">:</span> Arc<span class="op">&lt;</span>NetworkMemory<span class="op">&gt;,</span>          <span class="co">// §6</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>    status_tx<span class="op">:</span> <span class="pp">broadcast::</span>Sender<span class="op">&lt;</span>TunnelStatus<span class="op">&gt;,</span>  <span class="co">// [01-DP §5.2]</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>    telemetry<span class="op">:</span> TelemetrySink<span class="op">,</span>            <span class="co">// §9</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>    next_attempt_id<span class="op">:</span> <span class="dt">u64</span><span class="op">,</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> Ladder <span class="op">{</span></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Begin a connect attempt on the current network. Resolves the seed source (§2.3),</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// then drives the state machine to `Connected` or `Down`/`Exhausted-loop`.</span></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// `fp` is the current network fingerprint (§6.1). Cancel-safe: dropping the future</span></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// closes the in-flight transport.</span></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> connect(<span class="op">&amp;</span><span class="kw">mut</span> <span class="kw">self</span><span class="op">,</span> fp<span class="op">:</span> NetworkFingerprint) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">,</span> LadderError<span class="op">&gt;;</span></span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Replace the active policy (e.g. a regional-prior delta arrived, §7). Adopted at the</span></span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// next attempt boundary if `new.version &gt; self.policy.version` (§7.4); never mid-attempt.</span></span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">fn</span> update_policy(<span class="op">&amp;</span><span class="kw">mut</span> <span class="kw">self</span><span class="op">,</span> new<span class="op">:</span> TransportPolicy)<span class="op">;</span></span>
+<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// User pinned/cleared a transport (Mullvad force-mode, §8). Triggers an immediate</span></span>
+<span id="cb11-23"><a href="#cb11-23" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// reconnect using the new pin on the next attempt boundary.</span></span>
+<span id="cb11-24"><a href="#cb11-24" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">fn</span> set_pin(<span class="op">&amp;</span><span class="kw">mut</span> <span class="kw">self</span><span class="op">,</span> pin<span class="op">:</span> <span class="dt">Option</span><span class="op">&lt;</span>TransportKind<span class="op">&gt;</span>)<span class="op">;</span></span>
+<span id="cb11-25"><a href="#cb11-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-26"><a href="#cb11-26" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Called by the orchestrator when liveness is lost on the connected transport (§5.6).</span></span>
+<span id="cb11-27"><a href="#cb11-27" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">fn</span> on_liveness_lost(<span class="op">&amp;</span><span class="kw">mut</span> <span class="kw">self</span>)<span class="op">;</span></span>
+<span id="cb11-28"><a href="#cb11-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-29"><a href="#cb11-29" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Current projected status (also pushed on the broadcast).</span></span>
+<span id="cb11-30"><a href="#cb11-30" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">fn</span> status(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> TunnelStatus<span class="op">;</span></span>
+<span id="cb11-31"><a href="#cb11-31" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="52-mapping-transportconfig-from-transportkind--routemap">5.2
+Mapping <code>TransportConfig</code> from <code>TransportKind</code> +
+<code>RouteMap</code></h3>
+<p>The ladder holds <code>TransportKind</code>s; <code>dial()</code>
+needs a fully-resolved <code>TransportConfig</code> [01-DP §3.1]. The
+concrete endpoint, SNI, PSK, and method come from the
+<code>RouteMap</code>/<code>PeerRoute</code> pushed by the coordinator
+(doc 03) [01-DP §6.2]:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co">/// Resolve a dialable config for `kind` toward the current gateway, pulling endpoint/secret</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="co">/// material from the live RouteMap. Returns None if the build lacks the rung&#39;s feature or the</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="co">/// map lacks required material (→ skip rung, count `rung_unresolvable`, §9).</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> resolve_config(kind<span class="op">:</span> TransportKind<span class="op">,</span> gw<span class="op">:</span> <span class="op">&amp;</span>GatewayEndpoint<span class="op">,</span> rm<span class="op">:</span> <span class="op">&amp;</span>RouteMap)</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">-&gt;</span> <span class="dt">Option</span><span class="op">&lt;</span>TransportConfig<span class="op">&gt;;</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="co">// e.g. MasqueH3 → TransportConfig::MasqueH3{ url: gw.h3_url, sni: gw.sni,</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="co">//                                            bind, congestion: Congestion::Bbr }  [01-DP §3.3]</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="co">//      Shadowsocks → needs gw.ss_psk + method; if absent → None (skip rung)</span></span></code></pre></div>
+<p><code>congestion</code> defaults to <code>Bbr</code> for the
+mobile/lossy obfuscated rungs (the Hysteria &quot;Brutal&quot; lineage tuning that
+sustains goodput under loss [01-DP §3.3, research-hysteria2 §1]) and
+<code>Cubic</code> for the unrestricted baseline.</p>
+<h3 id="53-the-escalation-algorithm-pseudocode-normative">5.3 The
+escalation algorithm (pseudocode, normative)</h3>
+<pre><code>fn run_attempt(seed_cursor, attempt_id):
+    cursor = seed_cursor
+    loop:
+        kind = policy.order[cursor]
+        cfg  = resolve_config(kind, gw, route_map)
+        if cfg is None:                      # uncompiled feature / missing secret
+            telemetry.tick(rung_unresolvable, kind); goto escalate_or_exhaust
+        budget = rung_budget(policy.budget, kind)
+        emit Connecting
+        match dial_with_budget(cfg, budget, attempt_id):   # §5.4
+            CarrierUp(transport):
+                emit Handshaking
+                match await_wg_handshake(transport, budget, attempt_id):   # §5.5
+                    Ok(rtt):
+                        memory.remember(fp, kind, policy.version)          # §6.2
+                        telemetry.success(kind, escalations = cursor - seed_cursor, region_tag)  # §9
+                        emit Connected{ kind, rtt }
+                        return Connected(transport)
+                    Err(reason):                       # HandshakeFailed/timeout
+                        transport.close().await
+                        # fall through to escalate
+            Err(reason):                               # DialTimeout/EndpointBlocked
+                # fall through to escalate
+        escalate_or_exhaust:
+        if policy.pin.is_some():                       # §8 — pinned, never escalate
+            emit Down{ reason = PinnedTransportFailed(kind) }; return Down
+        if cursor + 1 &lt; policy.order.len():
+            emit Reconnecting; telemetry.tick(escalated_from, kind)
+            cursor += 1                                 # L-I8 monotonic advance
+            continue
+        else:
+            return Exhausted                            # → exhaust_backoff, new attempt (§4.3)</code></pre>
+<h3 id="54-cancel-safety--superseded-attempts">5.4 Cancel-safety &amp;
+superseded attempts</h3>
+<p><code>dial()</code> is cancel-safe [01-DP §3.1]; the driver wraps
+each rung in <code>tokio::time::timeout</code> and a
+<code>select!</code> against an <code>attempt_epoch</code> watch
+channel. When
+<code>set_pin</code>/<code>update_policy</code>/<code>on_liveness_lost</code>
+mints a new <code>attempt_id</code>, the epoch bumps, every in-flight
+<code>dial()</code>/<code>await_wg_handshake</code> future is dropped
+(closing its half-open transport), and any straggler result tagged with
+a stale <code>attempt_id</code> is <strong>discarded</strong> —
+preventing a late success on an abandoned rung from clobbering a newer
+attempt (a §11.4.84-class residue at the runtime layer). This is the
+analogue of Mullvad&#39;s &quot;client now randomly selects one of several
+in-addresses per connection attempt&quot; robustness [research-masque §2],
+applied to per-rung attempts.</p>
+<h3 id="55-the-success-criterion-is-the-wg-handshake-not-the-carrier-i2">5.5
+The success criterion is the WG handshake, NOT the carrier (I2)</h3>
+<p>A connected <code>Transport</code> only means <em>bytes can
+flow</em>; the rung is &quot;working&quot; <strong>only</strong> when a WireGuard
+handshake completes over it (<code>helix-wg</code> emits its first
+decrypted/keepalive verdict) [01-DP §4, I2]. This is load-bearing for
+DPI realism: a DPI box may let the QUIC/TLS <em>carrier</em> connect (so
+it can fingerprint inside) yet drop the WG datagrams — a carrier-only
+success would be a PASS-bluff at the ladder layer [§11.4.107 liveness;
+research-masque §5(d) active probing]. The handshake-complete signal
+crosses from <code>helix-wg</code> to the ladder via a oneshot the
+orchestrator wires:</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co">/// Resolves when `helix-wg` reports the WG handshake completed over `t`, or errors on timeout.</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="kw">async</span> <span class="kw">fn</span> await_wg_handshake(t<span class="op">:</span> <span class="op">&amp;</span><span class="kw">dyn</span> Transport<span class="op">,</span> b<span class="op">:</span> FailureBudget<span class="op">,</span> epoch<span class="op">:</span> <span class="dt">u64</span>)</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span><span class="dt">u32</span> <span class="co">/*rtt_ms*/</span><span class="op">,</span> EscalationReason<span class="op">&gt;;</span></span></code></pre></div>
+<p><code>rtt_ms</code> reported on success is the WG-handshake RTT (from
+<code>Transport::health().rtt_ewma_ms</code> [01-DP §3.1]), surfaced in
+<code>Connected{rtt_ms}</code>.</p>
+<h3 id="56-liveness-loss-on-a-connected-tunnel-downgrade-trigger">5.6
+Liveness loss on a Connected tunnel (downgrade trigger)</h3>
+<p>While <code>Connected</code>, the orchestrator samples
+<code>Transport::health()</code> [01-DP §3.1]. If
+<code>last_recv_age_ms &gt; liveness_grace</code> (default 15 s; ≥ WG
+persistent-keepalive interval so a quiet but alive tunnel is not falsely
+downgraded), the ladder transitions
+<code>Connected → Reconnecting</code> and re-runs from the seed source.
+<strong>Fail-static</strong>: the <em>previous</em> transport keeps
+forwarding any traffic WG still encrypts until the new rung is
+<code>Connected</code>, honoring I3 (control/liveness churn never
+black-holes an existing tunnel) [01-DP I3]. <code>liveness_grace</code>
+is calibrated against <code>tc netem</code> loss profiles in Phase 0 so
+transient loss does not trigger needless re-ladders [research-daita_test
+§5.2].</p>
+<hr />
+<h2 id="6-per-network-memory--remember-what-worked-per-network">6.
+Per-network memory — remember what worked per network</h2>
+<blockquote>
+<p>&quot;On success, <strong>remember the working transport
+per-network</strong> (SSID / gateway fingerprint) so reconnects on the
+same hostile network skip straight to what worked — the difference
+between &#39;VPN that sometimes connects&#39; and &#39;VPN that just works&#39;&quot; [01-DP
+§5.3 step 4, 04_P2 §1.4].</p>
+</blockquote>
+<h3 id="61-the-network-fingerprint-privacy-preserving-key">6.1 The
+network fingerprint (privacy-preserving key)</h3>
+<p>The memory key MUST NOT store the SSID plaintext, BSSID, or gateway
+endpoint (I5, §11.4.10) — those are identifying. The key is a
+<strong>keyed hash</strong> of stable network identifiers, so the
+on-disk cache reveals nothing about <em>which</em> networks the user
+joins:</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-core/src/netmem.rs</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="co">/// Opaque, non-reversible network identity. 16 bytes = BLAKE2s-128 over the network signals,</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="co">/// keyed by a device-local secret so two devices on the same SSID produce different keys</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="co">/// (defeats cross-device correlation of the cache file). [I5; §11.4.10]</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="bu">Clone</span><span class="op">,</span> <span class="bu">Copy</span><span class="op">,</span> <span class="bu">PartialEq</span><span class="op">,</span> <span class="bu">Eq</span><span class="op">,</span> <span class="bu">Hash</span><span class="at">)]</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> NetworkFingerprint([<span class="dt">u8</span><span class="op">;</span> <span class="dv">16</span>])<span class="op">;</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> NetworkSignals<span class="op">&lt;</span><span class="ot">&#39;a</span><span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> ssid<span class="op">:</span>           <span class="dt">Option</span><span class="op">&lt;&amp;</span><span class="ot">&#39;a</span> <span class="dt">str</span><span class="op">&gt;,</span>   <span class="co">// wifi SSID if available (hashed, never stored raw)</span></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> gateway_mac<span class="op">:</span>    <span class="dt">Option</span><span class="op">&lt;</span>[<span class="dt">u8</span><span class="op">;</span> <span class="dv">6</span>]<span class="op">&gt;,</span>   <span class="co">// L2 default-gw MAC (best stable LAN identifier)</span></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> local_subnet<span class="op">:</span>   <span class="dt">Option</span><span class="op">&lt;</span>IpNet<span class="op">&gt;,</span>     <span class="co">// e.g. 192.168.1.0/24</span></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> connection_type<span class="op">:</span> ConnType<span class="op">,</span>         <span class="co">// Wifi | Ethernet | Cellular | Unknown</span></span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> NetworkFingerprint <span class="op">{</span></span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// fp = BLAKE2s-128( device_secret || ssid? || gateway_mac? || subnet? || conntype )</span></span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Cellular networks (no stable LAN id) fold the carrier/conntype only → coarse but stable.</span></span>
+<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">fn</span> derive(sig<span class="op">:</span> <span class="op">&amp;</span>NetworkSignals<span class="op">,</span> device_secret<span class="op">:</span> <span class="op">&amp;</span>[<span class="dt">u8</span><span class="op">;</span> <span class="dv">32</span>]) <span class="op">-&gt;</span> NetworkFingerprint<span class="op">;</span></span>
+<span id="cb15-19"><a href="#cb15-19" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb15-20"><a href="#cb15-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-21"><a href="#cb15-21" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="bu">Clone</span><span class="op">,</span> <span class="bu">Copy</span><span class="op">,</span> <span class="bu">PartialEq</span><span class="op">,</span> <span class="bu">Eq</span><span class="at">)]</span> <span class="kw">pub</span> <span class="kw">enum</span> ConnType <span class="op">{</span> Wifi<span class="op">,</span> Ethernet<span class="op">,</span> Cellular<span class="op">,</span> Unknown <span class="op">}</span></span></code></pre></div>
+<blockquote>
+<p><code>UNVERIFIED</code> (algorithm choice): BLAKE2s-128 +
+device-keying is a spec design choice consistent with WireGuard&#39;s own
+BLAKE2s usage [01-DP §4] and the I5/§11.4.10 privacy constraint; no
+cited source prescribes the exact fingerprint construction. Mullvad&#39;s
+internal per-network-memory representation is not public — treat this
+layout as HelixVPN&#39;s own design, not a parity reproduction.</p>
+</blockquote>
+<h3 id="62-the-memory-store-signatures">6.2 The memory store
+(signatures)</h3>
+<div class="sourceCode" id="cb16"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-core/src/netmem.rs</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> NetworkMemory <span class="op">{</span> <span class="co">/* in-mem LRU + atomic-write persistence (§6.4) */</span> <span class="op">}</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> NetworkMemory <span class="op">{</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Record that `kind` succeeded on `fp` under policy `policy_version`.</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Idempotent; updates `last_good` + bumps `success_count`, refreshes `last_seen_epoch_day`.</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">fn</span> remember(<span class="op">&amp;</span><span class="kw">self</span><span class="op">,</span> fp<span class="op">:</span> NetworkFingerprint<span class="op">,</span> kind<span class="op">:</span> TransportKind<span class="op">,</span> policy_version<span class="op">:</span> <span class="dt">u64</span>)<span class="op">;</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Look up the remembered starting rung for `fp`, if any AND not stale (§6.5).</span></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Returns the rung to seed the cursor at (§2.3 step 2). None ⇒ fall through to prior/default.</span></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">fn</span> recall(<span class="op">&amp;</span><span class="kw">self</span><span class="op">,</span> fp<span class="op">:</span> NetworkFingerprint<span class="op">,</span> now_epoch_day<span class="op">:</span> <span class="dt">u32</span>) <span class="op">-&gt;</span> <span class="dt">Option</span><span class="op">&lt;</span>TransportKind<span class="op">&gt;;</span></span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// On repeated failure of the remembered rung, demote it so next time we don&#39;t re-pay it</span></span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// (§6.3). After `demote_threshold` consecutive failures the entry is cleared.</span></span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">fn</span> demote(<span class="op">&amp;</span><span class="kw">self</span><span class="op">,</span> fp<span class="op">:</span> NetworkFingerprint<span class="op">,</span> failed<span class="op">:</span> TransportKind)<span class="op">;</span></span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Persist the in-mem map to disk atomically (write-temp+rename). Called debounced (§6.4).</span></span>
+<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">fn</span> flush(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="pp">std::io::</span><span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">&gt;;</span></span>
+<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="63-rememberdemote-lifecycle">6.3 Remember/demote lifecycle</h3>
+<pre class="mermaid"><code>flowchart LR
+    A[rung K succeeds on fp] --&gt; B[remember fp -&gt; K&lt;br/&gt;success_count++&lt;br/&gt;fail_streak = 0]
+    C[next connect on fp] --&gt; D{recall fp}
+    D -- hit K, fresh --&gt; E[seed cursor at K]
+    E --&gt; F{K succeeds?}
+    F -- yes --&gt; B
+    F -- no --&gt; G[demote fp,K&lt;br/&gt;fail_streak++]
+    G --&gt; H{fail_streak &gt;= demote_threshold?}
+    H -- no --&gt; I[escalate from K per policy.order&lt;br/&gt;L-I8]
+    H -- yes --&gt; J[clear entry for fp]
+    J --&gt; K2[next connect re-runs full order from prior/default]
+    D -- miss/stale --&gt; K2</code></pre>
+<p>Crucially, after a memory hit the ladder still <strong>escalates
+upward from the remembered rung</strong> if it fails (it does not reset
+to <code>order[0]</code>) — the remembered rung was the <em>minimum</em>
+that worked, so a network that got worse only needs to climb further,
+not restart from the bottom [01-DP §5.3 step 4].</p>
+<h3 id="64-on-disk-byte-format-the-persisted-cache">6.4 On-disk byte
+format (the persisted cache)</h3>
+<p>The cache is a small, fixed-layout binary file at the platform config
+dir (<code>$XDG_CONFIG_HOME/helixvpn/netmem.bin</code> on Linux;
+analogous per-platform), <code>chmod 600</code>, listed in
+<code>.gitignore</code> with <code>recall()</code> itself as the
+§11.4.77 &quot;regenerate by re-learning&quot; mechanism (it is a pure cache —
+losing it costs one slow connect, never correctness):</p>
+<pre><code>netmem.bin  (little-endian, append-tolerant, atomically rewritten via temp+rename)
+┌────────────────────────────────────────────────────────────────────────┐
+│ Header (16 bytes)                                                        │
+│   magic        u32  = 0x484C4E4D (&quot;HLNM&quot;)                                │
+│   format_ver   u16  = 1                                                  │
+│   reserved     u16  = 0                                                  │
+│   entry_count  u32                                                       │
+│   crc32        u32  (over all entries; mismatch ⇒ discard whole file)    │
+├────────────────────────────────────────────────────────────────────────┤
+│ Entry[entry_count]  (24 bytes each)                                      │
+│   fingerprint  [u8;16]   BLAKE2s-128 network key (§6.1)                  │
+│   last_good    u8        TransportKind::code() (§2.1)                    │
+│   fail_streak  u8        consecutive failures of last_good               │
+│   success_cnt  u16       capped at u16::MAX                              │
+│   last_seen    u32       days since unix epoch (coarse → no fine timing) │
+└────────────────────────────────────────────────────────────────────────┘</code></pre>
+<p><strong>No plaintext SSID, no endpoint, no per-connection
+timestamp</strong> — only the irreversible fingerprint, a 1-byte rung,
+and a day-granularity recency (coarse enough not to be a behavioral log,
+satisfying I5 [01-DP I5, §11.4.10]). Total size for 256 remembered
+networks ≈ 16 + 256×24 ≈ 6.1 KiB. Writes are debounced (≤1 flush / 5 s)
+and atomic (temp file + <code>rename</code>) so a crash mid-write never
+corrupts the cache (the CRC + magic gate discards a torn file and
+re-learns).</p>
+<h3 id="65-staleness-eviction-and-the-network-class-fast-skip">6.5
+Staleness, eviction, and the network-class fast-skip</h3>
+<ul>
+<li><strong>Staleness:</strong> <code>recall()</code> ignores entries
+older than <code>memory_ttl_days</code> (default 30) — a transport that
+worked a month ago on a network whose DPI policy has since changed is
+weak evidence; re-learn.</li>
+<li><strong>Eviction:</strong> LRU by <code>last_seen</code>, capped at
+<code>max_entries</code> (default 256) — bounded disk + bounded
+cross-network correlation surface.</li>
+<li><strong>Network-class fast-skip:</strong> if the current network has
+<em>already</em> demonstrated a hard UDP block (any UDP/QUIC rung failed
+with <code>EndpointBlocked</code> this session), the ladder may skip the
+remaining <code>needs_udp()==true</code> rungs and jump to
+<code>shadowsocks</code>/<code>udp-over-tcp</code> — because
+&quot;QUIC/Hysteria2/ MASQUE-over-H3/WireGuard all fail [on a hard UDP
+block]&quot; [research-hysteria2 §5(b)]. This is a <em>within-attempt</em>
+optimization (still monotonic, L-I8): once UDP is proven dead, climbing
+through three more UDP rungs is wasted latency.</li>
+</ul>
+<hr />
+<h2 id="7-coordinator-pushed-regional-priors">7. Coordinator-pushed
+regional priors</h2>
+<blockquote>
+<p>&quot;The coordinator may push a <strong>regional prior</strong> (e.g.
+clients from CN-resolved IPs start at <code>shadowsocks</code>) via
+<code>TransportPolicy.order</code>, so users in censored regions do not
+pay the escalation latency every time&quot; [01-DP §5.3 step 5, 04_P2
+§1.4].</p>
+</blockquote>
+<h3 id="71-source-a-transport_prior-field-on-the-networkmap-doc-03-owns-the-protobuf">7.1
+Source: a <code>transport_prior</code> field on the NetworkMap (doc 03
+owns the protobuf)</h3>
+<p>The regional prior rides the <strong>existing</strong>
+<code>WatchNetworkMap</code> server-stream [01-DP §6.2, SYNTHESIS §2] —
+no new channel (push, don&#39;t poll; reconcile, don&#39;t restart [01-DP §6.3,
+04_ARCH §4.4]). This document specifies only the <strong>shape the
+ladder consumes</strong>; doc 03 owns the wire protobuf:</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-route/src/map.rs — additive field the reconciler surfaces to the ladder</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> RouteMap <span class="op">{</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">// … existing fields [01-DP §6.2] …</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> transport_prior<span class="op">:</span> <span class="dt">Option</span><span class="op">&lt;</span>TransportPrior<span class="op">&gt;,</span>   <span class="co">// pushed regional prior; None ⇒ use default</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a><span class="co">/// The coordinator&#39;s recommended ladder for THIS client on THIS network leg.</span></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> TransportPrior <span class="op">{</span></span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> order<span class="op">:</span>    <span class="dt">Vec</span><span class="op">&lt;</span>TransportKind<span class="op">&gt;,</span>   <span class="co">// recommended escalation order (e.g. [shadowsocks, masque-h3, udp-over-tcp] for CN)</span></span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> version<span class="op">:</span>  <span class="dt">u64</span><span class="op">,</span>                  <span class="co">// monotonic; ladder ignores ≤ current (§7.4)</span></span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> leg<span class="op">:</span>      LegId<span class="op">,</span>                <span class="co">// user↔gateway vs gateway↔connector (per-leg, D6 §11.3 of doc 01)</span></span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> reason<span class="op">:</span>   PriorReason<span class="op">,</span>          <span class="co">// why (for UX + telemetry; NOT per-user data)</span></span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">enum</span> LegId <span class="op">{</span> UserToGateway<span class="op">,</span> GatewayToConnector <span class="op">}</span></span>
+<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">enum</span> PriorReason <span class="op">{</span> GeoCensored<span class="op">,</span> OperatorPolicy<span class="op">,</span> DefaultUnrestricted<span class="op">,</span> LearnedAggregate <span class="op">}</span></span></code></pre></div>
+<p>The coordinator derives the prior <strong>server-side</strong> from
+the client&#39;s <em>resolved source region</em> (it already terminates the
+connection, so it sees the source IP&#39;s geo without the client reporting
+it) and from the <strong>aggregate</strong> censorship-evasion telemetry
+(§9) — &quot;transport X succeeded after N escalations in region R&quot; feeds
+back into the prior for region R, closing the loop [01-DP §5.3 step 6,
+04_ARCH §9]. No per-user history is consulted; the prior is a
+region-wide statistic.</p>
+<h3 id="72-worked-regional-prior-table-illustrative-coordinator-configurable">7.2
+Worked regional-prior table (illustrative,
+coordinator-configurable)</h3>
+<table>
+<thead>
+<tr>
+<th>Resolved region / condition</th>
+<th>Pushed <code>order</code></th>
+<th>Rationale (sourced)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Unrestricted</td>
+<td><code>[plain-udp, lwo, masque-h3, …]</code> (= default)</td>
+<td>fast path first [01-DP §5.3]</td>
+</tr>
+<tr>
+<td>CN (GFW QUIC-SNI block)</td>
+<td><code>[masque-h3, shadowsocks, udp-over-tcp]</code> or
+<code>[hysteria2, …]</code></td>
+<td>GFW blocks QUIC by SNI but MASQUE survives iff the H3 proxy SNI is
+unblocked; Salamander/Gecko-obfuscated QUIC survives by hiding SNI
+[research-hysteria2 §5(a), §6]</td>
+</tr>
+<tr>
+<td>Hard-UDP-block region/corp</td>
+<td><code>[shadowsocks, udp-over-tcp]</code></td>
+<td>&quot;QUIC/…/WireGuard all fail … need UDP&quot; [research-hysteria2
+§5(b)]</td>
+</tr>
+<tr>
+<td>Operator override</td>
+<td>exactly as configured</td>
+<td>OperatorPolicy</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><code>UNVERIFIED</code> (specific orders): the <em>exact</em>
+per-region orders are coordinator policy data, tuned by operators
+against live conditions and the §9 aggregate feedback — they are
+<strong>not</strong> fixed by this spec. The table illustrates the
+mapping logic grounded in the cited censorship-regime research; the
+values are examples, not normative constants.</p>
+</blockquote>
+<h3 id="73-prior-vs-memory-vs-default--combined-decision">7.3 Prior vs
+memory vs default — combined decision</h3>
+<pre class="mermaid"><code>flowchart TD
+    S([connect on network fp]) --&gt; P{pin set?}
+    P -- yes --&gt; PIN[dial pin only §8]
+    P -- no --&gt; M{memory.recall fp&lt;br/&gt;fresh hit?}
+    M -- yes --&gt; SM[seed cursor at remembered rung&lt;br/&gt;escalate within current order]
+    M -- no --&gt; R{RouteMap.transport_prior&lt;br/&gt;present &amp; version&gt;current?}
+    R -- yes --&gt; SR[adopt prior.order&lt;br/&gt;seed cursor 0&lt;br/&gt;source=RegionalPrior]
+    R -- no --&gt; SD[default order&lt;br/&gt;seed cursor 0&lt;br/&gt;source=CompiledDefault]
+    SM --&gt; GO[run_attempt]
+    SR --&gt; GO
+    SD --&gt; GO</code></pre>
+<p>Note the <strong>order</strong> that a memory hit escalates within is
+still the <em>currently adopted</em> policy order (prior-or-default) —
+memory chooses the <em>start rung</em>, the prior/default chooses the
+<em>escalation sequence above it</em> (§6.3). This composes cleanly: a
+CN client whose memory says &quot;shadowsocks worked&quot; seeds at shadowsocks
+but, if that fails, climbs <code>udp-over-tcp</code> per the CN prior,
+never wandering back to plain-udp.</p>
+<h3 id="74-reconcile-semantics-push-dont-poll-no-restart">7.4 Reconcile
+semantics (push-don&#39;t-poll, no restart)</h3>
+<p>The ladder adopts a new prior via <code>update_policy()</code> (§5.1)
+<strong>only</strong> when
+<code>new.version &gt; self.policy.version</code> (monotonic;
+stale/replayed deltas ignored — the §11.4.116 &quot;snapshot reporting a
+lower version is a contradiction&quot; discipline). Adoption takes effect at
+the <strong>next attempt boundary</strong> (L-I8), never mid-attempt; a
+prior arriving while <code>Connected</code> does <strong>not</strong>
+tear down a working tunnel — it is staged and applied on the next
+<code>Reconnecting</code>/manual reconnect. Convergence target inherited
+from the control plane: a pushed prior reflected on the client in
+<strong>&lt; 1 second</strong> of the delta arriving [04_ARCH §4.4,
+01-DP §6.3].</p>
+<hr />
+<h2 id="8-manual-override-pin--mullvad-force-mode-parity">8. Manual
+override (<code>pin</code>) — Mullvad force-mode parity</h2>
+<p>Mullvad lets the user <strong>force</strong> a transport
+(&quot;<code>mullvad obfuscation set mode quic</code>&quot;) [research-masque §2,
+research-hysteria2 §2]; HelixVPN mirrors this with
+<code>TransportPolicy.pin</code> [01-DP §5.3]:</p>
+<ul>
+<li><code>set_pin(Some(kind))</code> → the ladder dials
+<strong>only</strong> <code>kind</code>, with the rung budget, and on
+failure goes straight to
+<code>Down{ PinnedTransportFailed(kind) }</code> — <strong>no
+auto-escalation</strong> (the user asked for exactly this transport;
+silently using a different one would violate their explicit intent and
+could be a privacy regression, e.g. falling back from an obfuscated rung
+onto plain-udp on a monitored network). The UX surfaces the failure and
+the option to clear the pin.</li>
+<li><code>set_pin(None)</code> → return to auto (ladder + memory +
+prior).</li>
+<li>A pin is honored on <strong>every</strong> reconnect until cleared
+(it is policy, not per-attempt state).</li>
+<li><code>pin</code> does <strong>not</strong> write per-network memory
+on success (a forced choice is not evidence about what the network
+<em>requires</em>, only about what the user <em>preferred</em>) — so
+clearing the pin later falls back to genuine learned/prior behavior, not
+a memory entry biased by the override. (Telemetry still counts a pinned
+success under <code>source=OperatorOverride</code>, §9.)</li>
+</ul>
+<div class="sourceCode" id="cb21"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="bu">Clone</span><span class="op">,</span> <span class="bu">Debug</span><span class="at">)]</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">enum</span> DownReason <span class="op">{</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>    PinnedTransportFailed(TransportKind)<span class="op">,</span>  <span class="co">// §8 — no escalation by design</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>    AllRungsExhausted<span class="op">,</span>                     <span class="co">// every rung failed; in exhaust-backoff loop</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>    NoRouteMap<span class="op">,</span>                            <span class="co">// map not yet received (control plane bootstrap)</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>    KillSwitchEngaged<span class="op">,</span>                     <span class="co">// fail-closed: egress blocked, tunnel intentionally down</span></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>    NonRetryable(<span class="dt">String</span>)<span class="op">,</span>                  <span class="co">// config/build error (e.g. uncompiled pinned feature)</span></span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<hr />
+<h2 id="9-telemetry--aggregate-only-no-per-user-data-i5">9. Telemetry —
+aggregate only, no per-user data (I5)</h2>
+<blockquote>
+<p>&quot;Telemetry records <strong>only</strong> &#39;transport X succeeded after
+N escalations in region R&#39; (aggregate, no per-user data, I5) → feeds the
+Censorship-Evasion Success dashboard&quot; [01-DP §5.3 step 6, 04_ARCH
+§9].</p>
+</blockquote>
+<div class="sourceCode" id="cb22"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-core/src/ladder_telemetry.rs</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="co">/// A single aggregate-safe outcome. Emitted at most once per connect attempt. Contains NO</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="co">/// fingerprint, NO endpoint, NO timestamp finer than the day, NO SSID — only counters + coarse tags.</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="bu">Clone</span><span class="op">,</span> <span class="bu">Debug</span><span class="at">)]</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> LadderOutcome <span class="op">{</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> winning_kind<span class="op">:</span>  <span class="dt">Option</span><span class="op">&lt;</span>TransportKind<span class="op">&gt;,</span>  <span class="co">// None ⇒ exhausted (no rung worked)</span></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> escalations<span class="op">:</span>   <span class="dt">u8</span><span class="op">,</span>                      <span class="co">// rungs climbed before success (cursor - seed)</span></span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> region_tag<span class="op">:</span>    RegionTag<span class="op">,</span>              <span class="co">// coarse, k-anonymized bucket (e.g. &quot;CN&quot;,&quot;EU&quot;,&quot;XX&quot;)</span></span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> policy_source<span class="op">:</span> PolicySource<span class="op">,</span>           <span class="co">// default / regional-prior / operator-override</span></span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> udp_blocked<span class="op">:</span>   <span class="dt">bool</span><span class="op">,</span>                    <span class="co">// did any needs_udp rung hit EndpointBlocked?</span></span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">trait</span> TelemetrySink<span class="op">:</span> <span class="bu">Send</span> <span class="op">+</span> <span class="bu">Sync</span> <span class="op">{</span></span>
+<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> record(<span class="op">&amp;</span><span class="kw">self</span><span class="op">,</span> o<span class="op">:</span> LadderOutcome)<span class="op">;</span>            <span class="co">// batched, sampled, sent to control plane</span></span>
+<span id="cb22-14"><a href="#cb22-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> tick(<span class="op">&amp;</span><span class="kw">self</span><span class="op">,</span> counter<span class="op">:</span> <span class="op">&amp;</span><span class="ot">&#39;static</span> <span class="dt">str</span><span class="op">,</span> kind<span class="op">:</span> TransportKind)<span class="op">;</span>  <span class="co">// e.g. &quot;rung_unresolvable&quot;</span></span>
+<span id="cb22-15"><a href="#cb22-15" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Hard constraints (CI-enforced per [01-DP I5, SYNTHESIS §7] — &quot;CI
+schema-lint fails build if any durable connection/traffic/packet table
+appears&quot;):</p>
+<ul>
+<li><code>region_tag</code> is a <strong>k-anonymized coarse
+bucket</strong> (country/region class), never a city/ASN/IP; a bucket
+with <code>&lt; k</code> clients in the window is reported as
+<code>XX</code> (no-region). <code>UNVERIFIED</code>: the concrete
+<code>k</code> is an operator privacy parameter, not a sourced
+constant.</li>
+<li>No <code>LadderOutcome</code> field may be joined to a device id,
+user id, or fingerprint at the sink.</li>
+<li>The escalation <strong>event trace</strong>
+(<code>TunnelStatus</code> sequence) is captured
+<strong>locally</strong> as anti-bluff evidence (§10.4) and is NOT
+shipped — only the post-hoc aggregate <code>LadderOutcome</code>
+is.</li>
+</ul>
+<hr />
+<h2 id="10-edge-cases-security-performance-and-test-points">10. Edge
+cases, security, performance, and test points</h2>
+<h3 id="101-error--ladder-action-taxonomy">10.1 Error → ladder-action
+taxonomy</h3>
+<p>The doc-01 <code>TransportError</code> [01-DP §3.1, error.rs] maps to
+ladder actions as follows:</p>
+<table>
+<thead>
+<tr>
+<th><code>TransportError</code></th>
+<th>Phase</th>
+<th>Ladder action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>DialTimeout</code></td>
+<td>dial</td>
+<td>retry on same rung up to <code>dial_max_tries</code>; then
+escalate</td>
+</tr>
+<tr>
+<td><code>HandshakeFailed(_)</code></td>
+<td>dial/WG</td>
+<td>escalate (carrier or WG handshake refused)</td>
+</tr>
+<tr>
+<td><code>EndpointBlocked</code></td>
+<td>dial</td>
+<td>escalate <strong>and</strong> set session <code>udp_blocked</code>
+if <code>needs_udp()</code> (enables §6.5 fast-skip)</td>
+</tr>
+<tr>
+<td><code>Oversize(_)</code></td>
+<td>runtime</td>
+<td>NOT an escalation trigger — lower inner WG MTU [01-DP §10]; ladder
+stays put</td>
+</tr>
+<tr>
+<td><code>Closed</code></td>
+<td>runtime (connected)</td>
+<td>treat as liveness-lost → <code>Reconnecting</code> (§5.6)</td>
+</tr>
+<tr>
+<td><code>Io(_)</code></td>
+<td>any</td>
+<td>transient: retry within <code>dial_max_tries</code>; persistent →
+escalate</td>
+</tr>
+<tr>
+<td><code>Quic(_)</code></td>
+<td>dial/runtime (QUIC rungs)</td>
+<td>escalate (QUIC handshake/transport error)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="102-enumerated-edge-cases-each-is-a-test-point-104">10.2
+Enumerated edge cases (each is a test point, §10.4)</h3>
+<ol type="1">
+<li><strong>Carrier connects but WG never handshakes</strong> (DPI lets
+QUIC through to fingerprint, drops WG) → <code>Handshaking</code> times
+out → escalate; NOT a false success (§5.5) [research-masque §5(d)].</li>
+<li><strong>Remembered rung now blocked</strong> → demote, climb from
+it, clear after <code>demote_threshold</code> (§6.3).</li>
+<li><strong>Prior references an uncompiled rung</strong>
+(<code>hysteria2</code> without the feature) → filter it, count
+<code>policy_rung_unavailable</code>, continue with the subset
+(§2.4).</li>
+<li><strong>Hard UDP block mid-order</strong> → after first
+<code>EndpointBlocked</code> on a UDP rung, fast-skip remaining UDP
+rungs to the TCP carriers (§6.5) [research-hysteria2 §5(b)].</li>
+<li><strong>Policy delta arrives while <code>Connected</code></strong> →
+staged, applied at next attempt boundary, tunnel not torn down (§7.4,
+L-I8).</li>
+<li><strong>Network changes mid-session</strong> (roam Wi-Fi → cellular)
+→ fingerprint changes → orchestrator triggers
+<code>on_liveness_lost</code> → re-ladder under the new
+<code>fp</code>&#39;s memory/class (§6.1, WG roaming latches the new path
+[01-DP §8.2]).</li>
+<li><strong>All rungs exhausted</strong> → exhaust-backoff with jitter,
+restart from seed (§4.3); never a tight spin loop (host-safety §12,
+§11.1).</li>
+<li><strong>Pinned-feature missing at runtime</strong> →
+<code>Down{ NonRetryable }</code>, not a silent fallback (§8).</li>
+<li><strong>Torn <code>netmem.bin</code></strong> → CRC/magic mismatch
+discards file, re-learns; never a crash, never corrupt recall
+(§6.4).</li>
+<li><strong>Stale superseded <code>dial()</code> result</strong> →
+discarded by <code>attempt_id</code> epoch (§5.4).</li>
+</ol>
+<h3 id="103-security-considerations">10.3 Security considerations</h3>
+<ul>
+<li><strong>No privacy regression on override/escalation.</strong> The
+ladder MUST NOT silently downgrade from an obfuscated rung to a
+less-evasive one <em>while a pin is set</em> (§8); in auto mode,
+escalation only ever moves toward <em>more</em> evasive rungs
+(monotonic, L-I8) — it never falls <em>back</em> to plain-udp within an
+attempt once an obfuscated rung is reached.</li>
+<li><strong>Fingerprint cache is non-identifying.</strong> Device-keyed
+BLAKE2s-128, no SSID/endpoint/fine-timing (§6.1, §6.4) — the cache file
+leaks nothing about which networks the user joins, even if exfiltrated
+(§11.4.10).</li>
+<li><strong>Telemetry cannot deanonymize.</strong> Coarse k-anonymized
+region bucket, no device join key, schema-lint forbids durable
+per-connection rows (§9, [SYNTHESIS §7]).</li>
+<li><strong>DPI-realism is a probe, not an assumption.</strong> The
+success criterion is the WG handshake over the carrier (§5.5); the
+wire-fingerprint of the <em>carrier</em> (e.g. masque-h3 classifies as
+HTTP/3 with no WG signature via <code>tshark</code>) is verified by the
+SEC test, not assumed [01-DP §12.1 G2, research-masque §5].</li>
+<li><strong>GFW residual-censorship awareness.</strong> Budgets give
+QUIC rungs handshake headroom because the GFW&#39;s QUIC block is
+<em>residual</em> (≈500 ms to start, 3-min block) so a fast QUIC
+handshake can complete in the uncensored window [research-hysteria2
+§5(a)]; the ladder must not abandon a QUIC rung before that window has
+had a fair chance (§4.2).</li>
+<li><strong>No-guessing on cause.</strong> A rung failure is classified
+from the concrete <code>TransportError</code> (§10.1), never reported as
+&quot;probably blocked&quot; — <code>EndpointBlocked</code> vs
+<code>DialTimeout</code> vs <code>HandshakeFailed</code> are distinct,
+captured facts (§11.4.6).</li>
+</ul>
+<h3 id="104-performance-budget">10.4 Performance budget</h3>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Target</th>
+<th>Source / rationale</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Memory-hit reconnect (warm)</td>
+<td>seed straight to last-good rung; <strong>0 wasted
+escalations</strong></td>
+<td>the entire point of §6 [04_P2 §1.4]</td>
+</tr>
+<tr>
+<td>Prior-seeded first connect (censored region)</td>
+<td>start at the region&#39;s working rung; <strong>0–1 escalations</strong>
+typical</td>
+<td>§7 [01-DP §5.3 step 5]</td>
+</tr>
+<tr>
+<td>Cold worst-case (no memory/prior, DPI net)</td>
+<td>bounded by <code>Σ rung_deadline</code> to the working rung (≈20 s
+to masque-h3, §4.4)</td>
+<td>§4.4</td>
+</tr>
+<tr>
+<td>Ladder CPU overhead</td>
+<td>negligible vs transport crypto; the ladder is control logic, not a
+data path</td>
+<td>the data path is <code>helix-wg</code>+transport [01-DP §3,§4]</td>
+</tr>
+<tr>
+<td><code>netmem.bin</code> size</td>
+<td>≤ ~6 KiB for 256 networks; ≤1 flush/5 s debounced</td>
+<td>§6.4</td>
+</tr>
+<tr>
+<td>Exhaust-backoff</td>
+<td>exponential 2 s→60 s ±25% jitter; <strong>no tight
+spin</strong></td>
+<td>§4.3, §11.1 host-safety</td>
+</tr>
+</tbody>
+</table>
+<p>The MASQUE throughput tax itself (&quot;computationally very expensive …
+affects throughput&quot; [research- masque §2]) is a
+<strong>transport</strong> budget owned by doc 01 §10/§11; the ladder
+only <em>chooses</em> the rung, so its job is to spend the cheapest rung
+that works — which is precisely why the default order is cheapest-first
+and memory/prior exist to avoid over-escalating.</p>
+<h3 id="105-test-points-tied-to-114169-closed-test-type-vocabulary">10.5
+Test points (tied to §11.4.169 closed test-type vocabulary)</h3>
+<p>Using the §11.4.169 code map [06-P0 §0.4]: <code>UT</code> unit,
+<code>IT</code> integration, <code>E2E</code>, <code>FA</code>
+full-automation/deterministic, <code>SEC</code> security,
+<code>SC</code> stress+chaos, <code>CONC</code> concurrency,
+<code>RACE</code> race/deadlock, <code>BENCH</code> performance,
+<code>CH</code> Challenges, <code>HQA</code> HelixQA. Every PASS carries
+captured evidence per §11.4.5/.69/.107 — for the ladder the evidence is
+the <strong>ordered <code>TunnelStatus</code> event trace</strong>
+[01-DP §12.1].</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test</th>
+<th>Type(s)</th>
+<th>Evidence captured</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>T1</td>
+<td>Escalation order walked on repeated <code>HandshakeFailed</code>
+(mock transports)</td>
+<td><code>UT</code>,<code>CONC</code></td>
+<td>ordered <code>TunnelStatus</code> trace
+<code>Connecting→Reconnecting…→Connected{masque-h3}</code></td>
+</tr>
+<tr>
+<td>T2</td>
+<td>Carrier-up-but-WG-never-handshakes → escalate, not false success
+(§5.5)</td>
+<td><code>UT</code>,<code>SEC</code></td>
+<td>trace shows <code>Handshaking</code>→<code>Reconnecting</code>,
+never <code>Connected</code> on the dead rung</td>
+</tr>
+<tr>
+<td>T3</td>
+<td>Per-network memory: 2nd connect on same <code>fp</code> seeds at
+last-good rung, 0 escalations (§6)</td>
+<td><code>IT</code>,<code>E2E</code>,<code>FA</code></td>
+<td>two traces; 2nd has <code>escalations=0</code>; netns rig
+[research-daita_test §5.1]</td>
+</tr>
+<tr>
+<td>T4</td>
+<td>Regional prior pushed → CN-tagged client starts at prior
+<code>order[0]</code> (§7)</td>
+<td><code>IT</code>,<code>E2E</code></td>
+<td>RouteMap delta + trace showing seed at prior rung</td>
+</tr>
+<tr>
+<td>T5</td>
+<td>Pin forces rung, no escalation on failure (§8)</td>
+<td><code>UT</code>,<code>SEC</code></td>
+<td>trace ends <code>Down{PinnedTransportFailed}</code>, no other rung
+dialed</td>
+</tr>
+<tr>
+<td>T6</td>
+<td>Hard-UDP-block fast-skip to TCP carriers (§6.5) over
+<code>nft drop udp</code></td>
+<td><code>IT</code>,<code>SEC</code></td>
+<td>nftables UDP-drop + trace skips udp rungs [research-daita_test
+§5.4]</td>
+</tr>
+<tr>
+<td>T7</td>
+<td>Deterministic: T1/T3 produce <strong>identical</strong> traces over
+N=3 runs (§11.4.50)</td>
+<td><code>FA</code></td>
+<td>three byte-identical evidence hashes</td>
+</tr>
+<tr>
+<td>T8</td>
+<td>Cancel-safety: pin/policy change mid-dial discards stale result
+(§5.4)</td>
+<td><code>RACE</code>,<code>CONC</code></td>
+<td><code>loom</code>/<code>-race</code>; no stale
+<code>Connected</code> after epoch bump</td>
+</tr>
+<tr>
+<td>T9</td>
+<td><code>netmem.bin</code> torn-write recovery + atomic flush
+(§6.4)</td>
+<td><code>SC</code></td>
+<td>kill mid-flush; next boot recalls cleanly OR discards torn file</td>
+</tr>
+<tr>
+<td>T10</td>
+<td>Exhaust-backoff bounded, jittered, no spin loop (§4.3)</td>
+<td><code>SC</code>,<code>BENCH</code></td>
+<td>timer trace; CPU sample stays flat during backoff</td>
+</tr>
+<tr>
+<td>T11</td>
+<td>End-to-end escalation through a real DPI-sim slice to a live
+edge</td>
+<td><code>E2E</code>,<code>CH</code>,<code>HQA</code></td>
+<td>edge+connector booted via containers submodule [01-DP §12.1 G2]</td>
+</tr>
+<tr>
+<td>T12</td>
+<td>Paired §1.1 mutation: break <code>await_wg_handshake</code> to
+accept carrier-only → T2 MUST fail</td>
+<td><code>UT</code> (meta)</td>
+<td>mutation makes the gate FAIL (proves the gate is real)</td>
+</tr>
+</tbody>
+</table>
+<p>Per §11.4.169 the only permitted absence of a warranted type is an
+honest §11.4.3 SKIP-with-reason (e.g. <code>MEM</code> on a host with no
+iOS device → <code>topology_unsupported</code>), never a silent gap.</p>
+<hr />
+<h2 id="11-how-this-mirrors-mullvads-ux">11. How this mirrors Mullvad&#39;s
+UX</h2>
+<table>
+<thead>
+<tr>
+<th>Mullvad behavior (cited)</th>
+<th>HelixVPN ladder mechanism</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Auto-tries QUIC obfuscation <strong>after a few failed normal
+connection attempts</strong> [research-masque §2, research-hysteria2
+§2]</td>
+<td>Default <code>order</code> puts <code>masque-h3</code> after
+<code>plain-udp</code>/<code>lwo</code>; the failure budget (§4) is the
+&quot;few failed attempts&quot; before escalation</td>
+</tr>
+<tr>
+<td>User can <strong>force</strong> a transport
+(<code>mullvad obfuscation set mode quic</code>) [research-masque
+§2]</td>
+<td><code>TransportPolicy.pin</code> — dials only that rung, no
+auto-escalation (§8)</td>
+</tr>
+<tr>
+<td>Client <strong>randomly selects one of several in-addresses per
+connection attempt</strong> for robustness [research-masque §2]</td>
+<td><code>attempt_id</code> epoching + per-attempt re-resolution from
+<code>RouteMap.endpoint_candidates</code> (§5.4); endpoint selection is
+doc-01&#39;s NAT-traversal field [01-DP §6.2, §8]</td>
+</tr>
+<tr>
+<td>Positioned for &quot;restrictive networks that allow web traffic only&quot;
+[research-masque §2]</td>
+<td>Regional prior seeds censored-region clients straight at the
+web-blending rung (§7); never pays the cold-walk</td>
+</tr>
+<tr>
+<td>Throughput cost acknowledged, &quot;use only when needed&quot;
+[research-masque §2]</td>
+<td>Cheapest-rung-first order + per-network memory ensures the expensive
+obfuscation is used <strong>only</strong> where it is actually required
+(§2.1, §6, §10.4)</td>
+</tr>
+<tr>
+<td>Server-pushed defense selection (DAITA v2 negotiated model)
+[research-daita_test §4]</td>
+<td>Same control-plane push pattern: the coordinator pushes the prior as
+NetworkMap data, no client rebuild (§7.1, §7.4)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="111-host-session-safety-note-constitution-12">11.1
+Host-session-safety note (constitution §12)</h3>
+<p>The exhaust-backoff (§4.3) with jitter, the debounced cache flush
+(§6.4), and the bounded per-rung deadlines (§4.1) jointly guarantee the
+ladder is a <strong>low, bounded</strong> CPU/IO load even under a total
+regional outage — no tight reconnect spin, no unbounded disk churn, no
+memory growth (LRU-capped cache §6.5). This satisfies §12 host-safety
+and the §12.6 ≤60% memory ceiling for the client process.</p>
+<hr />
+<h2 id="12-frozen-contract-surface--cross-document-seams">12.
+Frozen-contract surface &amp; cross-document seams</h2>
+<table>
+<thead>
+<tr>
+<th>Artefact</th>
+<th>Owner</th>
+<th>This doc&#39;s relation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Transport</code> trait, <code>TransportConfig</code>,
+<code>dial()</code>, <code>TransportError</code></td>
+<td>doc 01 §3 (frozen)</td>
+<td>consumed verbatim; never modified</td>
+</tr>
+<tr>
+<td><code>TunnelStatus</code> broadcast enum</td>
+<td>doc 01 §5.2 (frozen)</td>
+<td>projected onto (§3.2)</td>
+</tr>
+<tr>
+<td><code>RouteMap</code> / <code>PeerRoute</code> /
+<code>endpoint_candidates</code></td>
+<td>doc 01 §6.2 (frozen)</td>
+<td>source of resolved configs (§5.2) + regional prior (§7.1)</td>
+</tr>
+<tr>
+<td><code>WatchNetworkMap</code> protobuf delivering
+<code>transport_prior</code></td>
+<td><strong>doc 03</strong></td>
+<td>this doc specifies only the <em>shape consumed</em>; doc 03 owns the
+wire</td>
+</tr>
+<tr>
+<td>Per-leg <code>TransportPolicy</code> (D6 asymmetric topology)</td>
+<td>doc 01 §11.3</td>
+<td><code>LegId</code> on the prior (§7.1) makes per-leg ladders
+free</td>
+</tr>
+<tr>
+<td>FFI re-emission of <code>TunnelStatus</code> + pin command</td>
+<td>doc 05</td>
+<td>out of scope; surfaced via §3.2 / §5.1</td>
+</tr>
+<tr>
+<td>§11.4.169 test-type vocabulary</td>
+<td>doc 06/07/10</td>
+<td>§10.5 cites the closed-set codes</td>
+</tr>
+</tbody>
+</table>
+<p>New types introduced <strong>by this document</strong> (additive to
+doc 01, not modifications): <code>TransportKind</code>,
+<code>TransportPolicy</code> (refined), <code>FailureBudget</code>,
+<code>Backoff</code>, <code>LadderState</code>,
+<code>EscalationReason</code>, <code>DownReason</code>,
+<code>NetworkFingerprint</code>, <code>NetworkSignals</code>,
+<code>NetworkMemory</code>, <code>TransportPrior</code>,
+<code>LegId</code>, <code>PriorReason</code>,
+<code>LadderOutcome</code>, <code>RegionTag</code>,
+<code>PolicySource</code>, <code>TelemetrySink</code>, and the
+<code>Ladder</code> driver. All live in
+<code>helix-core/src/ladder.rs</code>,
+<code>helix-core/src/netmem.rs</code>, and
+<code>helix-core/src/ladder_telemetry.rs</code> [01-DP §2, §12]; the
+<code>transport_prior</code> field is additive on
+<code>helix-route/src/map.rs</code>.</p>
+<hr />
+<p><em>End of nano-detail specification — Automatic Transport Selection
+Ladder (Volume 2, Data Plane). Deepens [01-DP §5.3, §5.4]. Pair with doc
+03 (<code>WatchNetworkMap</code> — the live source of the
+<code>transport_prior</code> seam §7.1) and doc 01 (the frozen
+<code>Transport</code>/<code>TunnelStatus</code>/<code>RouteMap</code>
+contracts). Every <code>UNVERIFIED</code> mark flags a value/structure
+that is HelixVPN design rather than a sourced fact, per constitution
+§11.4.6 — those are the calibration surfaces Phase 0 resolves with
+captured evidence, not guesses to ship.</em></p>
+</body>
+</html>

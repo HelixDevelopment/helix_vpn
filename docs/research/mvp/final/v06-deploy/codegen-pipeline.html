@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Codegen Pipeline (zero-drift contract)</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Codegen Pipeline (zero-drift contract)</h1>
+</header>
+<h1 id="codegen-pipeline-zero-drift-contract">Codegen Pipeline
+(zero-drift contract)</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-06-25T12:00:00Z</p>
+<blockquote>
+<p>Master technical specification — Volume 6 (Deployment, Tooling &amp;
+Operations), nano-detail document. Scope: the <strong>schema-first code
+generation pipeline</strong> — <code>buf</code> → Go/Dart/Rust from the
+canonical <code>.proto</code>, OpenAPI → Dart/TS/Go from the canonical
+REST spec, the zero-drift guarantee (generated code is regenerated +
+diff-gated), the codegen gates wired into the local pre-build (§11.4.156
+— NO server CI), and concrete <code>buf.gen.yaml</code> /
+<code>Makefile</code> / drift-check sketches. This deepens [05-overview
+§4] and operationalizes the codegen seams declared in [protobuf-spec §6]
+and [svc-api §12]. It is a SPEC: configs and skeletons are illustrative
+of the contract, not the shipping implementation (2–3 refinement passes
+follow).</p>
+<p>Evidence cited inline by id: <strong>[05_OV §N]</strong> =
+<code>05-repo-layout-tooling-and-helix-ecosystem.md</code>;
+<strong>[PROTO §N]</strong> =
+<code>v03-control-plane/protobuf-spec.md</code>; <strong>[API
+§N]</strong> = <code>v03-control-plane/svc-api.md</code>;
+<strong>[04_ARCH §4.2]</strong> = schema-generated clients, no drift;
+<strong>[04_P1 §8]</strong> = codegen (buf + OpenAPI);
+<strong>[research-go_cp]</strong> = the Go control-plane research
+digest. Unproven facts are marked <strong>UNVERIFIED</strong> per
+§11.4.6 — never fabricated. The proto package is
+<code>helix.coordinator.v1</code>, unified across the spec set [PROTO
+§0.2].</p>
+</blockquote>
+<hr />
+<h2 id="0-what-this-document-owns-and-does-not">0. What this document
+owns (and does not)</h2>
+<p>This document owns the <strong>codegen mechanics</strong>: the two
+generator families (<code>buf</code> for protobuf, OpenAPI generators
+for REST), their config files, the offline-reproducibility decision, the
+<code>make gen</code> / <code>verify-gen</code> contract, the
+breaking-change gates (<code>buf breaking</code> +
+<code>oasdiff</code>), the track-vs-gitignore decision for generated
+code, and how the gates wire into the local pre-build sweep
+(§11.4.110/.156).</p>
+<p>It does <strong>not</strong> own: the <code>.proto</code>
+field-by-field semantics (canonical in [PROTO §1]); the REST route table
+/ request schemas (canonical in [API §3/§4]); the FFI bridge surface
+(Volume 4 <code>ffi-surface.md</code>); the repo layout that places
+<code>helix-proto/</code> (that is <a href="repo-layout-and-decoupling.md"><code>repo-layout-and-decoupling.md</code></a>).
+Those are referenced, never redefined.</p>
+<hr />
+<h2 id="1-why-schema-first-the-anti-drift-thesis">1. Why schema-first:
+the anti-drift thesis</h2>
+<p>The single most important anti-drift mechanism in HelixVPN is that
+<strong>all</strong> Go/Dart/Rust/TS clients are <em>generated</em> from
+one canonical schema; hand-written clients are
+<strong>forbidden</strong> so the four codebases cannot drift apart
+[04_ARCH §4.2, 04_P1 §8, PROTO §6]. The contract has two canonical
+sources, each generating its language family:</p>
+<pre class="mermaid"><code>flowchart LR
+  P[&quot;proto/helix/coordinator/v1/*.proto&lt;br/&gt;(agent plane — canonical [PROTO §1])&quot;]
+  O[&quot;openapi/helix-rest.v1.yaml&lt;br/&gt;(app plane — canonical [API §3/§4])&quot;]
+  P --&gt;|buf generate| GO[&quot;Go server stubs (connect-go)&quot;]
+  P --&gt;|buf generate| DART[&quot;Dart agent client&quot;]
+  P --&gt;|buf generate| RUST[&quot;Rust edge/connector client (prost+tonic)&quot;]
+  P --&gt;|buf lint + buf breaking| G1[&quot;GATE: wire-incompat → pre-build FAIL&quot;]
+  O --&gt;|oapi-codegen| GOAPI[&quot;Go Gin server stubs&quot;]
+  O --&gt;|openapi-generator / swagger_dart| DARTAPP[&quot;Dart app REST client&quot;]
+  O --&gt;|openapi-typescript| TS[&quot;TS Console client&quot;]
+  O --&gt;|oasdiff| G2[&quot;GATE: breaking REST change → FAIL&quot;]
+  G1 --&gt; PB[&quot;pre-build §11.4.110/.156&quot;]
+  G2 --&gt; PB
+  classDef s fill:#ff9d0022,stroke:#ff9d00;
+  class P,O s;</code></pre>
+<p>The guarantee is <strong>mechanical, not aspirational</strong>:
+regenerate, then <code>git diff --exit-code</code> the generated tree —
+a stale committed (or stale gitignored-but-required) client FAILs the
+gate (§11.4.108 runtime-signature). This document specifies exactly that
+machinery.</p>
+<hr />
+<h2 id="2-buf-for-protobuf-agent-plane">2. <code>buf</code> for protobuf
+(agent plane)</h2>
+<p>The single <code>Coordinator</code> service <code>.proto</code> lives
+in <code>helix-proto</code>
+(<code>proto/helix/coordinator/v1/coordinator.proto</code>) and
+generates <strong>three</strong> language stubs over
+<strong>Connect</strong> (gRPC + gRPC-Web + Connect on one listener) so
+native agents and a future WASM Console use the same generated stubs
+[PROTO §2/§6, 04_P1 §3].</p>
+<h3 id="21-bufyaml-module--lint--breaking">2.1 <code>buf.yaml</code>
+(module + lint + breaking)</h3>
+<div class="sourceCode" id="cb2"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># helix-proto/buf.yaml</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">version</span><span class="kw">:</span><span class="at"> v2</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="fu">modules</span><span class="kw">:</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">path</span><span class="kw">:</span><span class="at"> proto</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="fu">lint</span><span class="kw">:</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">use</span><span class="kw">:</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> STANDARD</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">except</span><span class="kw">:</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> PACKAGE_VERSION_SUFFIX</span><span class="co">   # we use helix.coordinator.v1 (suffix present) — documented exception [PROTO §6.1]</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="fu">breaking</span><span class="kw">:</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">use</span><span class="kw">:</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> FILE</span><span class="co">                     # field-number/type changes within v1 are breaking → gate (§5) [PROTO §6.1]</span></span></code></pre></div>
+<h3 id="22-bufgenyaml-three-language-outputs">2.2
+<code>buf.gen.yaml</code> (three language outputs)</h3>
+<p>Connect is the binding so ONE service serves native agents over
+HTTP/2 AND browser clients over gRPC-Web [04_P1 §3, PROTO §6.2]:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># helix-proto/buf.gen.yaml — remote-plugin convenience form</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">version</span><span class="kw">:</span><span class="at"> v2</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="fu">plugins</span><span class="kw">:</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co">  # ---- Go (server) ----</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">remote</span><span class="kw">:</span><span class="at"> buf.build/protocolbuffers/go</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">out</span><span class="kw">:</span><span class="at"> gen</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">opt</span><span class="kw">:</span><span class="at"> paths=source_relative</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">remote</span><span class="kw">:</span><span class="at"> buf.build/connectrpc/go</span><span class="co">              # Connect Go handlers/clients</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">out</span><span class="kw">:</span><span class="at"> gen</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">opt</span><span class="kw">:</span><span class="at"> paths=source_relative</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">remote</span><span class="kw">:</span><span class="at"> buf.build/bufbuild/protovalidate-go</span><span class="co">  # buf.validate field constraints [API §5.3]</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">out</span><span class="kw">:</span><span class="at"> gen</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">opt</span><span class="kw">:</span><span class="at"> paths=source_relative</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="co">  # ---- Dart (client core boundary) ----</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">remote</span><span class="kw">:</span><span class="at"> buf.build/protocolbuffers/dart</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">out</span><span class="kw">:</span><span class="at"> gen/dart</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">remote</span><span class="kw">:</span><span class="at"> buf.build/connectrpc/dart</span><span class="co">            # connect-dart client (UNVERIFIED plugin coord, §2.4)</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">out</span><span class="kw">:</span><span class="at"> gen/dart</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a><span class="co">  # ---- Rust (edge / connector) ----</span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">remote</span><span class="kw">:</span><span class="at"> buf.build/community/neoeinstein-prost</span><span class="co">   # prost messages</span></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">out</span><span class="kw">:</span><span class="at"> gen/rust/src</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">remote</span><span class="kw">:</span><span class="at"> buf.build/community/neoeinstein-tonic</span><span class="co">   # tonic service stubs</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">out</span><span class="kw">:</span><span class="at"> gen/rust/src</span></span></code></pre></div>
+<h3 id="23-protovalidate-constraints-travel-with-the-schema">2.3
+protovalidate constraints travel with the schema</h3>
+<p>Field constraints (<code>wg_pubkey</code> exactly 32 bytes,
+<code>enroll_token</code> min length, <code>kind</code> defined-only)
+live in the <code>.proto</code> via <code>buf.validate</code> and are
+enforced by a <code>validateInterceptor</code> server-side [API §5.3];
+they generate into all three languages, so the same constraint cannot
+drift between client and server. Example, overlaid on the canonical
+messages [PROTO §1]:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode protobuf"><code class="sourceCode protobuf"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="st">&quot;buf/validate/validate.proto&quot;</span>;</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="kw">message</span> EnrollRequest {</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">string</span>     enroll_token <span class="op">=</span> <span class="dv">1</span> [(buf.validate.field).<span class="dt">string</span>.min_len <span class="op">=</span> <span class="dv">16</span>];</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">bytes</span>      wg_pubkey    <span class="op">=</span> <span class="dv">2</span> [(buf.validate.field).<span class="dt">bytes</span>.len <span class="op">=</span> <span class="dv">32</span>];   <span class="co">// exactly 32B Curve25519 (C6)</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">string</span>     os           <span class="op">=</span> <span class="dv">3</span> [(buf.validate.field).<span class="dt">string</span>.max_len <span class="op">=</span> <span class="dv">32</span>];</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">string</span>     name         <span class="op">=</span> <span class="dv">4</span> [(buf.validate.field).<span class="dt">string</span>.max_len <span class="op">=</span> <span class="dv">128</span>];</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  DeviceKind kind         <span class="op">=</span> <span class="dv">5</span> [(buf.validate.field).<span class="kw">enum</span>.defined_only <span class="op">=</span> <span class="kw">true</span>];</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="24-unverified-plugin-coordinates">2.4 UNVERIFIED plugin
+coordinates</h3>
+<p>The remote plugin coordinates/versions above are the
+<strong>conventional</strong> buf plugin names; the
+<strong>pinned</strong> versions are chosen at implementation time and
+recorded in <code>buf.gen.yaml</code> + <code>buf.lock</code> then —
+they are not asserted here as fixed [PROTO §6.2]. The
+<code>connectrpc/dart</code> plugin coordinate in particular is
+<strong>UNVERIFIED</strong> (the Dart Connect ecosystem moved during the
+spec window); the fallback is plain <code>protocolbuffers/dart</code>
+messages + a thin hand-checked-but- generated transport shim, which
+keeps the message types generated even if the service stub is not.</p>
+<hr />
+<h2 id="3-openapi-for-rest-app-plane">3. OpenAPI for REST (app
+plane)</h2>
+<p>The app-facing REST surface is the canonical
+<code>openapi/helix-rest.v1.yaml</code> [API §4/§12]. Three generated
+consumers, zero hand-written app clients:</p>
+<table>
+<thead>
+<tr>
+<th>Target</th>
+<th>Generator</th>
+<th>Consumes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Go server stubs (Gin)</td>
+<td><code>oapi-codegen</code></td>
+<td><code>helix-go/internal/api</code> handler signatures +
+request/response models</td>
+</tr>
+<tr>
+<td>Dart app REST client</td>
+<td><code>openapi-generator</code> (or
+<code>swagger_dart_code_generator</code>)</td>
+<td>the three Flutter apps (Access/Connector/Console)</td>
+</tr>
+<tr>
+<td>TS Console client</td>
+<td><code>openapi-typescript</code></td>
+<td>the Console Web build</td>
+</tr>
+</tbody>
+</table>
+<h3 id="31-spec-first-vs-code-first-decision">3.1 Spec-first vs
+code-first (decision)</h3>
+<blockquote>
+<p><strong>Decision D-OPENAPI-AUTHORING.</strong> The OpenAPI spec is
+authored <strong>spec-first</strong> (hand-authored contract, handlers
+validated against it), NOT generated from handler annotations
+(code-first). Rationale [API §12.2, research-go_cp §1]: Gin is the thin
+edge; authoring the contract first lets the TS/Dart app clients generate
+from a stable surface, and a request-validation middleware
+(<code>kin-openapi</code>) then asserts every request/response conforms
+— a drift between handler and spec FAILs a test.
+<strong>UNVERIFIED</strong> until the validation middleware is wired
+whether the MVP enforces response-conformance as well as
+request-conformance; the lean path enforces request-conformance
+first.</p>
+</blockquote>
+<p><code>oapi-codegen</code> config (server stubs) is referenced from
+the <code>Makefile</code> (§5):</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># helix-go/internal/api/oapi.cfg.yaml (illustrative)</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">package</span><span class="kw">:</span><span class="at"> api</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="fu">generate</span><span class="kw">:</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">gin-server</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">models</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">embedded-spec</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span><span class="co">        # embed the spec so /v1 self-describes; never re-authored at runtime</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="fu">output</span><span class="kw">:</span><span class="at"> internal/api/oapi_gen.go</span></span></code></pre></div>
+<h3 id="32-the-rest-breaking-change-gate">3.2 The REST breaking-change
+gate</h3>
+<p><code>oasdiff</code> compares the working
+<code>helix-rest.v1.yaml</code> against the last released git ref; a
+breaking REST change (removed route, narrowed type, required-field
+addition) FAILs the gate [API §12]. This is the REST analogue of
+<code>buf breaking</code> (§5).</p>
+<hr />
+<h2 id="4-track-or-gitignore-the-generated-code-the-11477-decision">4.
+Track or gitignore the generated code? (the §11.4.77 decision)</h2>
+<blockquote>
+<p><strong>Decision D-CODEGEN-TRACK.</strong> Generated clients are
+<strong>gitignored</strong>, with <code>make gen</code> as the §11.4.77
+regeneration mechanism (NOT committed). Rationale: the schema is the
+single source of truth (§11.4.93 spirit applied to code); a committed
+generated tree is a second copy that can rot and doubles review noise;
+<code>make gen</code> from a clean clone reproduces it
+deterministically. The gitignore entry carries a
+<code>.gitignore-meta/&lt;slug&gt;.yaml</code> declaring the mechanism
+(§11.4.77), and <code>scripts/setup.sh</code> runs
+<code>make gen-tools &amp;&amp; make gen</code> post-clone so a fresh
+checkout builds.</p>
+</blockquote>
+<p>This <strong>refines</strong> the overview, which kept generated code
+gitignored (<code>helix-proto/gen/</code> is gitignored [05_OV §2]) —
+this document makes that the binding decision and pins the §11.4.77
+mechanism. The trade-off: a fresh clone cannot <code>go build</code>
+until <code>make gen</code> runs once; the post-clone bootstrap
+(<code>scripts/setup.sh</code>) closes that gap, and the §11.4.77
+meta-file makes the regeneration mechanism auditable.</p>
+<p><strong>UNVERIFIED:</strong> [svc-api §12.1] notes &quot;generated
+Go/Dart/Rust stubs are committed (regeneratable) so the three codebases
+cannot drift&quot; — i.e. the <em>control-plane</em> doc leaned
+track-committed. This is a <strong>visible reconciliation</strong>
+(§11.4.35): the binding Volume-6 decision is <strong>gitignore +
+regenerate</strong> (D-CODEGEN-TRACK), with the drift gate (§6)
+providing the no-drift guarantee that committing was meant to provide.
+Either choice satisfies §11.4.108 (the runtime signature is &quot;regenerate
+→ diff is empty&quot;); gitignore + the §11.4.77 mechanism is chosen for the
+smaller review surface. The reconciliation is recorded so the two docs
+do not silently disagree.</p>
+<hr />
+<h2 id="5-the-breaking-change-gates-frozen-wire--frozen-rest">5. The
+breaking-change gates (frozen wire + frozen REST)</h2>
+<p>Two gates make the contract frozen-by-machine, run in the local
+pre-build sweep (§11.4.156 — NO server CI; enforcement is the local
+pre-build + git hooks, §11.4.75):</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># agent plane (buf)</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="ex">buf</span> lint                                     <span class="co"># STANDARD rules</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="ex">buf</span> breaking <span class="at">--against</span> <span class="st">&#39;.git#branch=main&#39;</span>    <span class="co"># field renumber / type-change / reused-number → FAIL</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="ex">buf</span> generate <span class="at">--template</span> buf.gen.local.yaml   <span class="co"># emits gen/ (Go), gen/dart, gen/rust</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="co"># app plane (OpenAPI)</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="ex">oasdiff</span> breaking helix-rest.v1.yaml@main helix-rest.v1.yaml  <span class="co"># breaking REST change → FAIL</span></span></code></pre></div>
+<p><code>buf breaking</code> is the mechanical enforcement that the
+[PROTO §1.1] field-number registry stays frozen: any commit renumbering
+a <code>v1</code> field, changing a field type, or reusing a removed
+number FAILs the gate. Paired §1.1 mutation: a branch that renames
+<code>Peer.allowed_ips</code> field number 3 → 7 MUST make
+<code>buf breaking</code> FAIL; reverting MUST make it pass [PROTO
+§6.3].</p>
+<hr />
+<h2 id="6-the-make-gen--verify-gen-contract-the-drift-gate">6. The
+<code>make gen</code> / <code>verify-gen</code> contract (the drift
+gate)</h2>
+<h3 id="61-offline-reproducibility-the-11477-belt">6.1 Offline
+reproducibility (the §11.4.77 belt)</h3>
+<blockquote>
+<p><strong>Decision D-CODEGEN-NET.</strong> <code>buf</code> remote
+plugins need network. Per §11.4.77 the regeneration mechanism MUST work
+from a clean clone. <strong>Recommended:</strong> vendor
+<code>protoc-gen-*</code> plugins as pinned local binaries under
+<code>tools/</code> (Go via <code>tools.go</code> +
+<code>go install</code>, Rust via <code>cargo install --locked</code>)
+so <code>make gen</code> runs <strong>offline</strong> after a one-time
+<code>make gen-tools</code>;
+<code>buf generate --template buf.gen.local.yaml</code> points at the
+local binaries. The remote-plugin form (§2.2) stays as the convenience
+path [05_OV §4.1].</p>
+</blockquote>
+<div class="sourceCode" id="cb7"><pre class="sourceCode makefile"><code class="sourceCode makefile"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Makefile — codegen targets (§11.4.156 NO CI)</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="dv">gen-tools:</span><span class="dt">               </span><span class="co">## one-time: install pinned local protoc-gen-* + oapi-codegen + openapi gens</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="er">    </span>go install github.com/bufbuild/buf/cmd/buf@&lt;pin&gt;</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    go install github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen@&lt;pin&gt;</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    cargo install --locked protoc-gen-prost protoc-gen-tonic</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    <span class="co"># dart/ts generators per their pinned versions</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="dv">gen:</span><span class="dt"> gen-proto gen-openapi gen-ffi          </span><span class="co">## regenerate ALL clients from schema (run before build)</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="dv">gen-proto:</span><span class="dt">   </span><span class="ch">;</span> buf generate --template buf.gen.local.yaml</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="dv">gen-openapi:</span><span class="dt"> </span><span class="ch">;</span> oapi-codegen -config helix-go/internal/api/oapi.cfg.yaml openapi/helix-rest.v1.yaml <span class="ch">\</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>                &amp;&amp; openapi-generator generate -i openapi/helix-rest.v1.yaml -g dart -o helix-ui/packages/helix_api_client <span class="ch">\</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>                &amp;&amp; npx openapi-typescript openapi/helix-rest.v1.yaml -o helix-ui/packages/app_console/src/gen/api.ts</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a><span class="dv">gen-ffi:</span><span class="dt">     </span><span class="ch">;</span> cd helix-core/crates/helix-ffi &amp;&amp; flutter_rust_bridge_codegen generate</span></code></pre></div>
+<p><code>&lt;pin&gt;</code> placeholders are resolved to exact versions
+at implementation time and recorded in <code>buf.lock</code> +
+<code>go.mod</code> + <code>Cargo.lock</code> — they are not asserted as
+fixed here (<strong>UNVERIFIED</strong> exact versions, per
+§11.4.6).</p>
+<h3 id="62-verify-gen--the-drift-gate-itself">6.2
+<code>verify-gen</code> — the drift gate itself</h3>
+<div class="sourceCode" id="cb8"><pre class="sourceCode makefile"><code class="sourceCode makefile"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="dv">verify-gen:</span><span class="dt"> gen                              </span><span class="co">## §11.4.108 artifact check: regen MUST be a no-op</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="er">    </span><span class="ch">@</span><span class="fu">git diff --exit-code helix-proto/gen helix-ui/packages/helix_core_ffi helix-ui/packages/helix_api_client </span><span class="ch">\</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="fu">     || { echo </span><span class="st">&quot;GENERATED CLIENTS STALE — run make gen and commit the schema change&quot;</span><span class="fu">; exit 1; }</span></span></code></pre></div>
+<p><code>verify-gen</code> is the <strong>drift gate</strong> (the local
+equivalent of a CI check, run in the pre-commit hook per §11.4.75):
+regenerate, then assert the tree is byte-identical. Because generated
+code is gitignored (D-CODEGEN-TRACK), <code>verify-gen</code> runs
+against a freshly-generated tree and asserts the generation is
+<strong>deterministic</strong> (two runs identical) AND that the schema
+→ code mapping has no manual edits creeping in via the
+FFI/<code>oapi</code> hand-config. This is the schema-first guarantee
+made mechanical [05_OV §4.3].</p>
+<h3 id="63-the-full-gate-wiring-into-pre-build-114110">6.3 The full gate
+wiring into pre-build (§11.4.110)</h3>
+<pre class="mermaid"><code>flowchart TD
+  EDIT[edit .proto OR openapi.yaml] --&gt; PC[pre-commit hook §11.4.75]
+  PC --&gt; L1[buf lint]
+  PC --&gt; L2[buf breaking vs main]
+  PC --&gt; L3[oasdiff breaking vs main]
+  L1 --&gt; GEN[make gen]
+  L2 --&gt; GEN
+  L3 --&gt; GEN
+  GEN --&gt; VG[verify-gen: git diff --exit-code]
+  VG --&gt;|clean| OK[commit allowed]
+  VG --&gt;|drift| FAIL[BLOCK commit — regen + re-stage]
+  OK --&gt; PBV[pre-build verification §11.4.110 READY-FOR-BUILD]</code></pre>
+<p>The pre-build READY-FOR-BUILD verdict (§11.4.110) refuses to start
+the main build unless <code>buf lint</code>, <code>buf breaking</code>,
+<code>oasdiff</code>, and <code>verify-gen</code> are all green —
+codegen drift is a build-blocker, not a warning.</p>
+<hr />
+<h2 id="7-cross-language-round-trip-proof-no-stub-drift">7.
+Cross-language round-trip proof (no-stub-drift)</h2>
+<p>The strongest anti-bluff for &quot;the stubs actually interoperate&quot; is a
+<strong>cross-language round-trip</strong>: a generated Rust
+<code>tonic</code> client and the generated Go <code>connect-go</code>
+server complete one real <code>WatchNetworkMap</code> exchange [PROTO §7
+T18]. This catches a class of drift that <code>verify-gen</code> cannot
+— a generation that is internally consistent in each language but
+semantically divergent across languages (e.g. a <code>oneof</code>
+mapped differently).</p>
+<pre class="mermaid"><code>sequenceDiagram
+  participant RS as Rust tonic client (gen/rust)
+  participant GO as Go connect-go server (gen/go)
+  RS-&gt;&gt;GO: WatchNetworkMap(WatchRequest{device_id, known_version=0})
+  GO--&gt;&gt;RS: MapUpdate{version=42, snapshot}
+  Note over RS,GO: assert decoded snapshot fields == sent server-side state&lt;br/&gt;(prevents stub drift; captured transcript)</code></pre>
+<p>A Dart client variant proves the third language. Infra
+(Postgres+Redis) is booted on demand via
+<code>vasic-digital/containers</code> (§11.4.76), never ad-hoc
+<code>docker run</code> [PROTO §7].</p>
+<hr />
+<h2 id="8-test-points-114169-comprehensive-test-type-coverage">8. Test
+points (§11.4.169 comprehensive test-type coverage)</h2>
+<p>Each row is implementation-ready; every PASS cites captured evidence
+(§11.4.5/.69/.107) — a green test that does not exercise the generated
+code is a §11.4 PASS-bluff.</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test type (§11.4.169)</th>
+<th>Target</th>
+<th>Concrete assertion + evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>C1</td>
+<td>unit</td>
+<td>generator determinism</td>
+<td><code>make gen</code> twice → byte-identical output (hash compare);
+evidence under <code>docs/qa/&lt;run-id&gt;/</code></td>
+</tr>
+<tr>
+<td>C2</td>
+<td>unit</td>
+<td>protovalidate constraints generated</td>
+<td>the generated Go/Dart/Rust validators reject a 31/33-byte
+<code>wg_pubkey</code> (§2.3)</td>
+</tr>
+<tr>
+<td>C3</td>
+<td>contract / compat</td>
+<td><code>buf breaking</code> freeze (§5)</td>
+<td>renumber <code>Peer.allowed_ips</code> 3 → 7 →
+<code>buf breaking</code> FAILs; revert → passes (paired §1.1)</td>
+</tr>
+<tr>
+<td>C4</td>
+<td>contract / compat</td>
+<td><code>oasdiff</code> REST freeze (§5)</td>
+<td>remove a <code>/v1</code> route from the spec → <code>oasdiff</code>
+FAILs</td>
+</tr>
+<tr>
+<td>C5</td>
+<td>contract / no-drift</td>
+<td><code>verify-gen</code> (§6.2)</td>
+<td>hand-edit a generated stub → <code>verify-gen</code>
+<code>git diff</code> FAILs; regen restores</td>
+</tr>
+<tr>
+<td>C6</td>
+<td>integration</td>
+<td>cross-lang round-trip (§7)</td>
+<td>Rust tonic client ↔︎ Go connect-go server complete
+<code>WatchNetworkMap</code>; captured transcript</td>
+</tr>
+<tr>
+<td>C7</td>
+<td>integration</td>
+<td>OpenAPI ↔︎ handler conformance (§3.1)</td>
+<td><code>kin-openapi</code> middleware: a request violating the spec →
+rejected; a handler diverging from spec → test FAIL</td>
+</tr>
+<tr>
+<td>C8</td>
+<td>offline-repro</td>
+<td><code>make gen</code> from clean clone, network off (§6.1)</td>
+<td>container clone with no network →
+<code>make gen-tools &amp;&amp; make gen</code> exits 0; transcript
+captured</td>
+</tr>
+<tr>
+<td>C9</td>
+<td>meta-test (§1.1)</td>
+<td>every gate has a paired mutation</td>
+<td>renumber field / hand-edit stub / remove route / inject volatile
+codegen → each makes its gate FAIL</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="9-phase-2-forward-seams-additive-no-v1-break">9. Phase-2 forward
+seams (additive, no v1 break)</h2>
+<p>Codegen seams permit Phase-2 growth without a v1 break [PROTO §8, API
+§14]: new <code>.proto</code> fields (new field numbers,
+<code>buf breaking</code> stays green) regenerate into all three
+languages; new REST routes added spec-first regenerate the app clients;
+a WASM Console gains the same generated Connect stubs (gRPC-Web already
+supported [API §5.1]); the PQ pre-shared-key field is a
+<code>buf</code>-additive field on
+<code>EnrollResponse</code>/<code>Peer</code>. Each is additive because
+v1 drew the field-number registry [PROTO §1.1] with room and froze it
+under <code>buf breaking</code> (§5).</p>
+<hr />
+<h2 id="sources-verified">Sources verified</h2>
+<ul>
+<li><code>05-repo-layout-tooling-and-helix-ecosystem.md</code> §4
+(schema-first codegen — buf + OpenAPI, the
+<code>make gen</code>/<code>verify-gen</code> contract, D-CODEGEN-NET
+offline reproducibility) — <code>[05_OV]</code>.</li>
+<li><code>v03-control-plane/protobuf-spec.md</code> §1 (canonical
+<code>.proto</code> + field-number registry), §2 (Connect binding), §6
+(buf pipeline + breaking gate), §7 (test points incl. T18 cross-lang),
+§8 (forward seams) — <code>[PROTO]</code>.</li>
+<li><code>v03-control-plane/svc-api.md</code> §4 (REST schemas), §5.3
+(protovalidate), §12 (schema-first no-drift gates — buf + OpenAPI +
+oasdiff + git-diff runtime signature), §14 (forward seams) —
+<code>[API]</code>.</li>
+<li><code>04_VPN_CLD/HelixVPN-Architecture-Refined.md</code> §4.2
+(schema-generated clients, no drift),
+<code>HelixVPN-Phase1-MVP.md</code> §8 (codegen),
+<code>02-control-plane.md</code> / research-go_cp §1–§2 (Gin thin edge,
+connect-go, protovalidate, single-server) —
+<code>[04_ARCH] [04_P1] [research-go_cp]</code>.</li>
+<li>Constitution anchors: §11.4.77 (regeneration mechanism for
+gitignored content), §11.4.108 (runtime-signature: regen-diff-empty),
+§11.4.110 (READY-FOR-BUILD pre-build verdict), §11.4.156 (no active CI —
+local pre-build enforcement), §11.4.76 (containers submodule for test
+infra), §11.4.35 (visible reconciliation — D-CODEGEN-TRACK vs the
+control-plane doc&#39;s track-committed note), §11.4.6 (no-guessing —
+UNVERIFIED plugin/version marks), §11.4.169 (test-type coverage), §1.1
+(paired meta-test mutations).</li>
+</ul>
+</body>
+</html>

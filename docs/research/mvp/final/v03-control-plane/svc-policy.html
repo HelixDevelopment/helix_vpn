@@ -1,0 +1,1572 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>policy service + compiler</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">policy service + compiler</h1>
+</header>
+<h1 id="policy-service--compiler">policy service + compiler</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-06-25T00:00:00Z</p>
+<blockquote>
+<p>Master technical specification — Volume 3 (Control Plane, Go),
+nano-detail document <strong>svc-policy</strong>. Deepens
+[02-control-plane.md §7] (policy model &amp; compiler) into an
+implementation-ready contract: the declarative Tailscale-ACL-flavored
+model, the pure versioned compile algorithm, the two compiled artifacts
+(coarse <code>AllowedIPs</code> + port-level verdict map), need-to-know
+visibility, fail-closed dry-run validation, and instant
+monotonic-version rollback. SPEC ONLY — describe the implementation, do
+not build it. Sources cited inline by id: [04_P1] =
+HelixVPN-Phase1-MVP.md, [04_ARCH §N] = HelixVPN-Architecture-Refined.md,
+[research-go_cp] = 02-control-plane.md, [SYNTHESIS §N]. Unproven facts
+are marked <strong>UNVERIFIED</strong> per constitution §11.4.6 — never
+fabricated.</p>
+</blockquote>
+<hr />
+<h2 id="0-position-ownership-and-the-invariants-this-document-obeys">0.
+Position, ownership, and the invariants this document obeys</h2>
+<p>The <code>policy</code> package (<code>internal/policy/</code>) is
+the <strong>access-control brain</strong> of the control plane: it turns
+the declarative &quot;who may reach what&quot; ACL document into compiled,
+per-device, need-to-know reachability that the <code>coordinator</code>
+(§6 of [research-go_cp]) streams to edges. It is a <strong>pure,
+deterministic, versioned compiler</strong> plus a thin transactional
+service wrapper [04_P1 §7, research-go_cp §7].</p>
+<p>This document owns: the source-document schema (§2), the compiled
+in-memory artifacts (§3), the compile algorithm (§4),
+validation/fail-closed semantics (§5), activation + instant rollback
+(§6), the event + protobuf surface the compiler feeds (§7), the error
+taxonomy (§8), authz (§9), edge cases (§10), the convergence-budget
+contribution to the &lt;1 s SLO (§11), and the §11.4.169 comprehensive
+test-type coverage (§12).</p>
+<p>It does <strong>not</strong> own: the in-memory topology graph or
+stream fan-out (<code>coordinator</code>, [research-go_cp §6]); the
+protobuf wire-evolution byte semantics (doc 03
+<code>WatchNetworkMap</code> contract); the edge enforcement of the
+verdict map (Rust data plane, doc 01); IPAM/<code>4via6</code> address
+allocation (<code>ipam</code>, [research-go_cp §3]) — the compiler
+<em>consumes</em> <code>4via6</code> site mappings, it does not assign
+them.</p>
+<h3 id="01-governing-invariants-every-clause-below-obeys-these">0.1
+Governing invariants (every clause below obeys these)</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Invariant</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>P1</td>
+<td><strong>Default-deny, need-to-know.</strong> A device appears in
+another device&#39;s map only if a compiled <code>accept</code> rule grants
+the edge. No <code>deny</code> verbs in the MVP model — absence is
+denial.</td>
+<td>[04_ARCH §3.4/§7, 04_P1 §7, C4 of research-go_cp]</td>
+</tr>
+<tr>
+<td>P2</td>
+<td><strong>Pure + deterministic.</strong>
+<code>Compile(tenant, spec, graph)</code> is a pure function of its
+inputs; identical inputs ⇒ byte-identical <code>CompiledPolicy</code>.
+No clock, no RNG, no map-iteration-order leakage.</td>
+<td>[04_P1 §7.2, research-go_cp §7.2]</td>
+</tr>
+<tr>
+<td>P3</td>
+<td><strong>Two artifacts.</strong> WG <code>AllowedIPs</code> is
+CIDR-only (not port-aware), so compile emits BOTH a coarse per-peer
+<code>AllowedIPs[][]</code> AND a fine port-level <code>Verdicts</code>
+map enforced at the edge.</td>
+<td>[04_P1 §7.2, research-go_cp §7.2]</td>
+</tr>
+<tr>
+<td>P4</td>
+<td><strong>Fail-closed.</strong> <code>policy.update</code>
+dry-run-compiles first; only a clean compile may persist/activate. A
+compile error rejects the change; it never silently degrades to
+allow-all or to the prior policy.</td>
+<td>[04_P1 §7.3, research-go_cp §7.3]</td>
+</tr>
+<tr>
+<td>P5</td>
+<td><strong>Monotonic version + instant rollback.</strong>
+<code>policies.version</code> is monotonic per tenant; at most one
+<code>active</code>. Rollback = re-activate an older version (no
+recompile needed — every version reproduces its artifact from
+<code>spec</code>).</td>
+<td>[04_P1 §7.4, research-go_cp §2.2/§7.4]</td>
+</tr>
+<tr>
+<td>P6</td>
+<td><strong>Tenant-scoped at the database.</strong> Every DB touch runs
+through <code>store.WithTenant</code> under RLS
+<code>FORCE ROW LEVEL SECURITY</code>; the compiler reads
+<code>registry</code>/<code>pki</code> through interfaces, never their
+stores (R1/R4 of [research-go_cp §1.2]).</td>
+<td>[research-go_cp §1.2/§2.3, C8]</td>
+</tr>
+<tr>
+<td>P7</td>
+<td><strong>Cross-checked against advertised reality.</strong> A
+<code>dst</code> host CIDR not covered by any
+<code>advertised_prefixes</code> row fails the dry-run (P4); overlapping
+advertised CIDRs emit <code>route.conflict.detected</code>
+(non-blocking, resolved by <code>4via6</code>).</td>
+<td>[04_P1 §7.3, research-go_cp §5.3/§7.3]</td>
+</tr>
+<tr>
+<td>P8</td>
+<td><strong>Privacy-preserving identity resolution.</strong>
+<code>group</code> members are resolved by
+<code>user</code>→<code>device</code> join; an anonymous (no-email) user
+still resolves by its synthetic identity, never requiring PII (C6).</td>
+<td>[04_P1 §6.1, research-go_cp §9.1]</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="1-package-surface-go-signatures--the-seam">1. Package surface
+(Go signatures — the seam)</h2>
+<p><code>internal/policy/</code> exposes exactly the interface the rest
+of the monolith depends on [research-go_cp §1.3]. The package splits
+into <code>parse.go</code> (spec → typed AST), <code>resolve.go</code>
+(groups/hosts → ids/CIDRs), <code>compile.go</code> (the pure core),
+<code>validate.go</code> (dry-run gate), <code>activate.go</code>
+(transactional flip), and <code>iface.go</code> (the public surface
+below).</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/policy/iface.go</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">package</span> policy</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="op">(</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;context&quot;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;net/netip&quot;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;github.com/google/uuid&quot;</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="co">// Compiler is pure + deterministic (P2). Compile is dry-run safe (no writes, no events).</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Compiler <span class="kw">interface</span> <span class="op">{</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Parse validates the jsonb document into a typed Spec; returns a *SpecError list on</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    <span class="co">// any structural fault. Pure.</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    Parse<span class="op">(</span>raw <span class="op">[]</span><span class="dt">byte</span><span class="op">)</span> <span class="op">(</span>Spec<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Compile resolves + compiles a Spec against a frozen TopologySnapshot into the two</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    <span class="co">// artifacts (P3). Pure: identical (spec, snap) ⇒ byte-identical CompiledPolicy (P2).</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Returns non-fatal advisories (route conflicts) alongside the result.</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>    Compile<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> t uuid<span class="op">.</span>UUID<span class="op">,</span> spec Spec<span class="op">,</span> snap TopologySnapshot<span class="op">)</span> <span class="op">(</span>CompiledPolicy<span class="op">,</span> <span class="op">[]</span>Advisory<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a><span class="co">// PolicyService is the transactional wrapper: it owns persistence, the dry-run gate (P4),</span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a><span class="co">// activation, rollback, and event emission (R3). NOT pure — it touches the store + bus.</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> PolicyService <span class="kw">interface</span> <span class="op">{</span></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Validate dry-run-compiles raw against the current topology; never persists. Used by</span></span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>    <span class="co">// `helixvpnctl policy apply --dry-run` and by Update before insert.</span></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>    Validate<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> t uuid<span class="op">.</span>UUID<span class="op">,</span> raw <span class="op">[]</span><span class="dt">byte</span><span class="op">)</span> <span class="op">(</span>DryRunReport<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Update parses+dry-run-compiles, and ONLY on a clean compile inserts a new</span></span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>    <span class="co">// monotonic policies row (active=false) and emits policy.updated. Fail-closed (P4).</span></span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>    Update<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> t uuid<span class="op">.</span>UUID<span class="op">,</span> raw <span class="op">[]</span><span class="dt">byte</span><span class="op">,</span> actor <span class="dt">string</span><span class="op">)</span> <span class="op">(</span>Version<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Compile materializes the compiled artifact for an inserted version, stamps</span></span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>    <span class="co">// compiled_at, caches it, and emits policy.compiled. Idempotent per version.</span></span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a>    Compile<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> t uuid<span class="op">.</span>UUID<span class="op">,</span> v Version<span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Activate atomically flips active to v (clearing the prior active) and emits</span></span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a>    <span class="co">// policy.compiled so the coordinator recomputes + pushes (P5).</span></span>
+<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a>    Activate<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> t uuid<span class="op">.</span>UUID<span class="op">,</span> v Version<span class="op">,</span> actor <span class="dt">string</span><span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Rollback is sugar over Activate(t, olderVersion) — no recompile (P5).</span></span>
+<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a>    Rollback<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> t uuid<span class="op">.</span>UUID<span class="op">,</span> to Version<span class="op">,</span> actor <span class="dt">string</span><span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Compiled returns the cached compiled artifact for a version (coordinator hydrate path).</span></span>
+<span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a>    Compiled<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> t uuid<span class="op">.</span>UUID<span class="op">,</span> v Version<span class="op">)</span> <span class="op">(</span>CompiledPolicy<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Version <span class="dt">int64</span></span>
+<span id="cb1-50"><a href="#cb1-50" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-51"><a href="#cb1-51" aria-hidden="true" tabindex="-1"></a><span class="co">// Advisory = non-fatal compile finding (P7). Surfaced to Console, never blocks compile.</span></span>
+<span id="cb1-52"><a href="#cb1-52" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Advisory <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb1-53"><a href="#cb1-53" aria-hidden="true" tabindex="-1"></a>    Kind    AdvisoryKind <span class="co">// ADVISORY_ROUTE_CONFLICT | ADVISORY_UNREACHABLE_RULE | ...</span></span>
+<span id="cb1-54"><a href="#cb1-54" aria-hidden="true" tabindex="-1"></a>    Message <span class="dt">string</span></span>
+<span id="cb1-55"><a href="#cb1-55" aria-hidden="true" tabindex="-1"></a>    Refs    <span class="op">[]</span><span class="dt">string</span> <span class="co">// connector ids / cidrs / rule indexes implicated</span></span>
+<span id="cb1-56"><a href="#cb1-56" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-57"><a href="#cb1-57" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> AdvisoryKind <span class="dt">string</span></span>
+<span id="cb1-58"><a href="#cb1-58" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-59"><a href="#cb1-59" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> <span class="op">(</span></span>
+<span id="cb1-60"><a href="#cb1-60" aria-hidden="true" tabindex="-1"></a>    AdvisoryRouteConflict   AdvisoryKind <span class="op">=</span> <span class="st">&quot;route.conflict&quot;</span></span>
+<span id="cb1-61"><a href="#cb1-61" aria-hidden="true" tabindex="-1"></a>    AdvisoryUnreachableRule AdvisoryKind <span class="op">=</span> <span class="st">&quot;rule.unreachable&quot;</span> <span class="co">// rule whose src resolves to ∅</span></span>
+<span id="cb1-62"><a href="#cb1-62" aria-hidden="true" tabindex="-1"></a>    AdvisoryShadowedRule    AdvisoryKind <span class="op">=</span> <span class="st">&quot;rule.shadowed&quot;</span>    <span class="co">// fully subsumed by an earlier rule</span></span>
+<span id="cb1-63"><a href="#cb1-63" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div>
+<h3 id="11-the-topologysnapshot-input-why-compile-is-pure">1.1 The
+<code>TopologySnapshot</code> input (why Compile is pure)</h3>
+<p><code>Compile</code> must be a pure function (P2), but groups/hosts
+resolve against live topology (users, devices, group membership,
+advertised prefixes). The service therefore <strong>freezes</strong> a
+read-consistent snapshot inside one <code>WithTenant</code> transaction
+and passes it as a value — the compiler never reaches the store. This is
+the seam that makes the compiler unit-testable with table fixtures and
+makes determinism a property test (§12).</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/policy/snapshot.go</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> DeviceID <span class="op">=</span> uuid<span class="op">.</span>UUID</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> TopologySnapshot <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">// identity → device resolution (P8). UserKey is email OR oidc_sub OR the synthetic</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">// &quot;device:&quot; + device_id form used for anonymous, group-less direct grants.</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    UsersByKey  <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span>uuid<span class="op">.</span>UUID       <span class="co">// &quot;alice@corp&quot;|&quot;oidc:sub&quot;|&quot;device:&lt;uuid&gt;&quot; -&gt; user_id</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    DevicesByUser <span class="kw">map</span><span class="op">[</span>uuid<span class="op">.</span>UUID<span class="op">][]</span>DeviceID  <span class="co">// user_id -&gt; its devices</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    GroupMembers <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">][]</span>DeviceID      <span class="co">// &quot;group:admins&quot; -&gt; device ids (pre-joined)</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    Devices      <span class="kw">map</span><span class="op">[</span>DeviceID<span class="op">]</span>DeviceMeta    <span class="co">// every non-revoked device in tenant</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    <span class="co">// advertised reality (P7): connector_id -&gt; enabled CIDRs; and a reverse index</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    <span class="co">// covering CIDR -&gt; connector(s) for host resolution + conflict detection.</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    ConnPrefixes <span class="kw">map</span><span class="op">[</span>DeviceID<span class="op">][]</span>netip<span class="op">.</span>Prefix</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    PrefixOwners <span class="op">[]</span>PrefixOwner <span class="co">// sorted; supports longest-prefix + overlap scan</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    GatewayID    DeviceID      <span class="co">// the exit/relay node (exitNodes target)</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    SnapAt       <span class="dt">int64</span>         <span class="co">// unix-nanos; recorded for evidence, NOT used in compile (P2)</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> DeviceMeta <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>    ID         DeviceID</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>    Kind       DeviceKind <span class="co">// CLIENT | CONNECTOR</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>    WGPubKey   <span class="op">[</span><span class="dv">32</span><span class="op">]</span><span class="dt">byte</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>    OverlayIP  netip<span class="op">.</span>Addr</span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>    Revoked    <span class="dt">bool</span>       <span class="co">// belt-and-suspenders; revoked never enters visible[] (P1)</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> PrefixOwner <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>    CIDR        netip<span class="op">.</span>Prefix</span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>    ConnectorID DeviceID</span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>    Site        <span class="dt">uint16</span> <span class="co">// 4via6 site-id (assigned by ipam); compiler emits, does not assign</span></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> DeviceKind <span class="dt">uint8</span></span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> <span class="op">(</span></span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>    DeviceKindClient    DeviceKind <span class="op">=</span> <span class="dv">1</span></span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a>    DeviceKindConnector DeviceKind <span class="op">=</span> <span class="dv">2</span></span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div>
+<blockquote>
+<p><code>SnapAt</code> is recorded for captured-evidence/audit only and
+<strong>must not</strong> influence the compiled bytes (P2) — a unit
+test asserts two compiles of the same <code>(spec, snap)</code> with
+different <code>SnapAt</code> produce byte-identical
+<code>CompiledPolicy</code> (§12, determinism property).</p>
+</blockquote>
+<hr />
+<h2 id="2-source-document--the-declarative-acl-model-policiesspec-jsonb">2.
+Source document — the declarative ACL model (<code>policies.spec</code>
+jsonb)</h2>
+<p>The operator authors a Tailscale-ACL-flavored JSON document; it is
+stored verbatim in <code>policies.spec jsonb</code> [04_P1 §7.1,
+research-go_cp §7.1]. Comments (<code>//</code>) are accepted on ingest
+(JSONC) and stripped before storage so <code>spec</code> is canonical
+RFC-8259 JSON.</p>
+<h3 id="21-worked-source-example-the-running-example-for-this-whole-document">2.1
+Worked source example (the running example for this whole document)</h3>
+<pre class="jsonc"><code>{
+  &quot;schemaVersion&quot;: 1,
+  &quot;groups&quot;: {
+    &quot;group:admins&quot;:      [&quot;alice@corp&quot;, &quot;bob@corp&quot;],
+    &quot;group:contractors&quot;: [&quot;carol@ext&quot;]
+  },
+  &quot;hosts&quot;: {
+    &quot;warehouse-cams&quot;: &quot;10.10.0.0/24&quot;,      // served by connector A
+    &quot;office-lan&quot;:     &quot;192.168.50.0/24&quot;    // served by connector B
+  },
+  &quot;acls&quot;: [
+    { &quot;action&quot;: &quot;accept&quot;, &quot;src&quot;: [&quot;group:admins&quot;],      &quot;dst&quot;: [&quot;*:*&quot;] },
+    { &quot;action&quot;: &quot;accept&quot;, &quot;src&quot;: [&quot;group:contractors&quot;], &quot;dst&quot;: [&quot;warehouse-cams:554,80&quot;] }
+  ],
+  &quot;exitNodes&quot;: [&quot;group:admins&quot;]            // who may use the gateway as a full-tunnel exit
+}</code></pre>
+<h3 id="22-typed-ast-the-parse-target">2.2 Typed AST (the parse
+target)</h3>
+<div class="sourceCode" id="cb4"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/policy/spec.go</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Spec <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    SchemaVersion <span class="dt">int</span>                  <span class="st">`json:&quot;schemaVersion&quot;`</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    Groups        <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">][]</span><span class="dt">string</span>  <span class="st">`json:&quot;groups&quot;`</span>    <span class="co">// &quot;group:NAME&quot; -&gt; member keys</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    Hosts         <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="dt">string</span>    <span class="st">`json:&quot;hosts&quot;`</span>     <span class="co">// &quot;alias&quot; -&gt; CIDR string</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    ACLs          <span class="op">[]</span>Rule               <span class="st">`json:&quot;acls&quot;`</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    ExitNodes     <span class="op">[]</span><span class="dt">string</span>             <span class="st">`json:&quot;exitNodes&quot;`</span> <span class="co">// selectors permitted to full-tunnel</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Rule <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    Action <span class="dt">string</span>   <span class="st">`json:&quot;action&quot;`</span> <span class="co">// CLOSED SET: only &quot;accept&quot; in MVP (P1)</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>    Src    <span class="op">[]</span><span class="dt">string</span> <span class="st">`json:&quot;src&quot;`</span>    <span class="co">// selectors: &quot;group:X&quot; | &quot;user@dom&quot; | &quot;*&quot;</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>    Dst    <span class="op">[]</span><span class="dt">string</span> <span class="st">`json:&quot;dst&quot;`</span>    <span class="co">// &quot;host:ports&quot; | &quot;cidr:ports&quot; | &quot;*:*&quot; | &quot;&lt;deviceSel&gt;:ports&quot;</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a><span class="co">// A Dst token parses to this. Ports empty =&gt; all ports.</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> DstTarget <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>    Raw      <span class="dt">string</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>    HostName <span class="dt">string</span>       <span class="co">// non-empty if a hosts[] alias</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>    CIDR     netip<span class="op">.</span>Prefix <span class="co">// resolved (host alias OR literal CIDR OR &quot;*&quot;=0.0.0.0/0 + ::/0)</span></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>    Wildcard <span class="dt">bool</span>         <span class="co">// &quot;*&quot; destination</span></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>    Ports    <span class="op">[]</span>PortRange  <span class="co">// empty =&gt; ALL_PORTS</span></span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> PortRange <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>    Proto Proto  <span class="co">// TCP|UDP|ANY (MVP: ANY unless &quot;tcp:&quot;/&quot;udp:&quot; prefix; default ANY)</span></span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>    Lo    <span class="dt">uint16</span> <span class="co">// inclusive</span></span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a>    Hi    <span class="dt">uint16</span> <span class="co">// inclusive (==Lo for a single port)</span></span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Proto <span class="dt">uint8</span></span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> <span class="op">(</span></span>
+<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a>    ProtoAny Proto <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a>    ProtoTCP Proto <span class="op">=</span> <span class="dv">6</span>  <span class="co">// matches IANA protocol number (edge nft uses it directly)</span></span>
+<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a>    ProtoUDP Proto <span class="op">=</span> <span class="dv">17</span></span>
+<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div>
+<h3 id="23-grammar-closed-set-validated-at-parse">2.3 Grammar
+(closed-set, validated at parse)</h3>
+<table>
+<thead>
+<tr>
+<th>Element</th>
+<th>Accepted form</th>
+<th>Rejected → error</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>action</code></td>
+<td>exactly <code>&quot;accept&quot;</code></td>
+<td>any other verb ⇒ <code>ERR_UNSUPPORTED_ACTION</code> (no
+<code>deny</code>/<code>drop</code> in MVP; default-deny makes them
+redundant, P1)</td>
+</tr>
+<tr>
+<td>group name</td>
+<td><code>group:[a-z0-9_-]+</code></td>
+<td>missing <code>group:</code> prefix ⇒
+<code>ERR_BAD_GROUP_NAME</code></td>
+</tr>
+<tr>
+<td>member key</td>
+<td><code>email</code> | <code>oidc:&lt;sub&gt;</code> |
+<code>device:&lt;uuid&gt;</code> | nested <code>group:X</code></td>
+<td>unknown shape ⇒ <code>ERR_BAD_MEMBER_KEY</code></td>
+</tr>
+<tr>
+<td>host alias</td>
+<td><code>[a-z0-9_-]+</code> mapping to a parseable CIDR</td>
+<td>bad CIDR ⇒ <code>ERR_BAD_HOST_CIDR</code></td>
+</tr>
+<tr>
+<td><code>src</code> token</td>
+<td><code>group:X</code> | member key | <code>*</code></td>
+<td>unresolvable ⇒ <code>ERR_UNKNOWN_SRC</code></td>
+</tr>
+<tr>
+<td><code>dst</code> token</td>
+<td><code>&lt;host&gt;:&lt;ports&gt;</code> |
+<code>&lt;cidr&gt;:&lt;ports&gt;</code> | <code>*:*</code></td>
+<td>missing <code>:</code> ⇒ <code>ERR_BAD_DST_FORMAT</code></td>
+</tr>
+<tr>
+<td>ports</td>
+<td><code>*</code> | <code>N</code> | <code>N-M</code> | comma list |
+<code>tcp:N</code>/<code>udp:N</code></td>
+<td>non-numeric / <code>Lo&gt;Hi</code> ⇒
+<code>ERR_BAD_PORT_SPEC</code></td>
+</tr>
+<tr>
+<td><code>exitNodes</code> entry</td>
+<td><code>group:X</code> | member key</td>
+<td>resolves to a connector ⇒ <code>ERR_EXIT_IS_CONNECTOR</code></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Nested groups</strong> (a <code>group:X</code> member of
+<code>group:Y</code>) resolve transitively with cycle detection; a
+membership cycle ⇒ <code>ERR_GROUP_CYCLE</code> (§8).
+<strong>UNVERIFIED:</strong> the source docs [04_P1 §7.1] show only flat
+groups; nested-group support is a forward-compatible superset this spec
+defines — flag it as a design decision, not an inherited fact.</p>
+</blockquote>
+<hr />
+<h2 id="3-the-compiled-artifacts-compiledpolicy--what-coordinator-consumes">3.
+The compiled artifacts (<code>CompiledPolicy</code> — what coordinator
+consumes)</h2>
+<div class="sourceCode" id="cb5"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/policy/compiled.go — the two-artifact output (P3). Returned by Compile and</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="co">// cached per (tenant, version). coordinator.buildMap reads it directly [research-go_cp §6.2].</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> CompiledPolicy <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    Version   Version</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    SpecHash  <span class="op">[</span><span class="dv">32</span><span class="op">]</span><span class="dt">byte</span> <span class="co">// sha256 of canonical spec — ties artifact to source (audit + dedup)</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ARTIFACT 1 — need-to-know visibility (P1): src device -&gt; reachable peer-device set.</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    VisibleTo <span class="kw">map</span><span class="op">[</span>DeviceID<span class="op">]</span><span class="kw">map</span><span class="op">[</span>DeviceID<span class="op">]</span><span class="kw">struct</span><span class="op">{}</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ARTIFACT 1b — coarse WG AllowedIPs (CIDR-only, P3): src -&gt; peer -&gt; CIDRs.</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    AllowedIPs <span class="kw">map</span><span class="op">[</span>DeviceID<span class="op">]</span><span class="kw">map</span><span class="op">[</span>DeviceID<span class="op">][]</span>netip<span class="op">.</span>Prefix</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ARTIFACT 2 — fine port-level verdict map (P3): src -&gt; peer -&gt; port rules. Edge</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    <span class="co">// enforces via nftables/eBPF (doc 01). A peer present in AllowedIPs but with an</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>    <span class="co">// empty Verdicts entry means &quot;all ports&quot; (the coarse rule already gates it).</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>    Verdicts <span class="kw">map</span><span class="op">[</span>DeviceID<span class="op">]</span><span class="kw">map</span><span class="op">[</span>DeviceID<span class="op">][]</span>PortRule</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 4via6 routes for colliding IPv4 LANs (D4): src -&gt; peer(connector) -&gt; mappings.</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>    Via6 <span class="kw">map</span><span class="op">[</span>DeviceID<span class="op">]</span><span class="kw">map</span><span class="op">[</span>DeviceID<span class="op">][]</span>Via6Route</span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>    <span class="co">// exit-node grants: device ids permitted to full-tunnel through the gateway.</span></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>    ExitNodes <span class="kw">map</span><span class="op">[</span>DeviceID<span class="op">]</span><span class="kw">struct</span><span class="op">{}</span></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> PortRule <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>    DstCIDR netip<span class="op">.</span>Prefix</span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>    Proto   Proto</span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>    Lo<span class="op">,</span> Hi  <span class="dt">uint16</span></span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Via6Route <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a>    IPv4CIDR  netip<span class="op">.</span>Prefix</span>
+<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a>    Via6Prefix netip<span class="op">.</span>Prefix <span class="co">// fd7a:helix:&lt;rand&gt;:&lt;site-id&gt;::/96 (ipam-assigned site)</span></span>
+<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="31-canonical-determinism-rules-so-spechash-and-the-artifact-are-stable-p2">3.1
+Canonical determinism rules (so <code>SpecHash</code> and the artifact
+are stable, P2)</h3>
+<ol type="1">
+<li><strong>Canonical spec hash:</strong>
+<code>SpecHash = sha256(canonicalJSON(spec))</code> where
+<code>canonicalJSON</code> sorts object keys, strips
+comments/whitespace, normalizes CIDR text, and sorts every string array.
+Two semantically-identical specs hash identically.</li>
+<li><strong>Deterministic maps → deterministic bytes:</strong> all
+output maps are serialized for the determinism property test through a
+<code>canonicalEncode</code> that sorts device-id keys and sorts each
+<code>[]netip.Prefix</code> / <code>[]PortRule</code> slice by
+<code>(addr,bits,proto,lo,hi)</code>. Go map iteration order is
+non-deterministic, so <strong>the compiler MUST never range a map to
+build output order</strong>; it ranges a pre-sorted key slice. A
+<code>go vet</code>-style custom lint flags <code>range someMap</code>
+inside <code>compile.go</code> (§12 meta-test).</li>
+<li><strong>No ambient inputs:</strong> no <code>time.Now</code>, no
+<code>rand</code>, no environment reads inside
+<code>Compile</code>.</li>
+</ol>
+<hr />
+<h2 id="4-the-compile-algorithm-pure-core">4. The compile algorithm
+(pure core)</h2>
+<h3 id="41-pseudocode-the-authoritative-algorithm">4.1 Pseudocode (the
+authoritative algorithm)</h3>
+<pre><code>compile(tenant, spec, snap) -&gt; (CompiledPolicy, []Advisory, error):
+  adv := []
+  # ── phase 1: resolve selectors ───────────────────────────────────────────
+  groupSet := resolveGroups(spec.groups, snap)        # transitive, cycle-checked → device-id sets
+  hostCIDR := {}                                       # alias -&gt; netip.Prefix
+  for alias, cidr in spec.hosts:
+      p := parsePrefix(cidr)                            # ERR_BAD_HOST_CIDR on fault
+      if not coveredByAdvertised(p, snap):             # P7 cross-check
+          return _, _, ERR_HOST_NOT_ADVERTISED(alias, p)
+      hostCIDR[alias] = p
+  # ── phase 2: per-device rule application (default-deny base, P1) ──────────
+  out := CompiledPolicy{ all maps empty }
+  devOrder := sortedDeviceIDs(snap.Devices)            # deterministic iteration (P2)
+  for d in devOrder where not snap.Devices[d].Revoked: # revoked never gets visibility (P1)
+      for ri, rule in spec.acls:                        # rules in author order (precedence)
+          srcSet := resolveSrc(rule.src, groupSet, snap)
+          if d not in srcSet: continue
+          if srcSet == ∅: adv += unreachableRule(ri); continue
+          for dstTok in rule.dst:
+              dt := parseDst(dstTok, hostCIDR)           # ERR_BAD_DST_* on fault
+              targets := expandDst(dt, snap)             # → set of (peerDeviceID, cidr, site)
+              for (peer, cidr, site) in targets:
+                  if peer == d: continue                 # no self-edge
+                  if snap.Devices[peer].Revoked: continue
+                  out.VisibleTo[d].add(peer)              # ARTIFACT 1 (P1)
+                  out.AllowedIPs[d][peer].add(cidr)       # ARTIFACT 1b (coarse, P3)
+                  if dt.Ports not ALL:
+                      out.Verdicts[d][peer].add(portRules(cidr, dt.Ports))  # ARTIFACT 2
+                  if site != 0:
+                      out.Via6[d][peer].add(via6(cidr, site, snap))         # D4
+  # ── phase 3: exit nodes ───────────────────────────────────────────────────
+  for sel in spec.exitNodes:
+      for dev in resolveSrc([sel], groupSet, snap):
+          if snap.Devices[dev].Kind == CONNECTOR: return _,_, ERR_EXIT_IS_CONNECTOR(dev)
+          out.ExitNodes.add(dev)                          # may full-tunnel via gateway
+  # ── phase 4: advisories (non-fatal, P7) ──────────────────────────────────
+  adv += detectRouteConflicts(snap.PrefixOwners)          # overlapping advertised CIDRs
+  adv += dedupAndSortAllSlices(&amp;out)                      # canonical order (P2/§3.1)
+  out.SpecHash = sha256(canonicalJSON(spec))
+  return out, adv, nil</code></pre>
+<h3 id="42-expanddst--the-destination-resolver-the-heart">4.2
+<code>expandDst</code> — the destination resolver (the heart)</h3>
+<p><code>expandDst(dt, snap)</code> maps one parsed <code>dst</code>
+token to the concrete set of peer devices + CIDRs the source may
+reach:</p>
+<ul>
+<li><strong><code>*:*</code> (wildcard):</strong> every non-revoked peer
+device in the tenant the rule&#39;s src is not (each peer&#39;s overlay CIDR),
+PLUS every connector&#39;s advertised prefixes, PLUS the gateway exit
+(<code>0.0.0.0/0</code> + <code>::/0</code>). This is the
+<code>group:admins → *:*</code> &quot;reach everything&quot; grant.</li>
+<li><strong><code>&lt;host&gt;:ports</code>:</strong> look the alias up
+in <code>hostCIDR</code>; the target is the <strong>connector(s) serving
+that CIDR</strong> (<code>snap.PrefixOwners</code> longest-prefix
+match). The peer device id is the connector&#39;s <code>device_id</code>;
+the CIDR is the host CIDR (or its covered sub-CIDR); the
+<code>site</code> is the connector&#39;s <code>4via6</code> site-id (drives
+<code>Via6</code>, D4).</li>
+<li><strong><code>&lt;cidr&gt;:ports</code>:</strong> identical to host
+but the CIDR is literal; still must be covered by an advertised prefix
+(P7) or it is unreachable → compile error at the dry-run gate (§5).</li>
+<li><strong><code>&lt;deviceSelector&gt;:ports</code></strong> (a
+<code>group:X</code> or member key used as a destination, e.g.
+client-to-client): the target peer device set is
+<code>resolveSrc([sel],…)</code>; the CIDR is each target device&#39;s
+overlay <code>/128</code>. <strong>UNVERIFIED:</strong> the source
+example uses only CIDR/host destinations; device-as-destination is a
+defined superset for client↔︎client policy — flag as design, not
+inherited.</li>
+</ul>
+<h3 id="43-worked-example-output-running-example-from-21">4.3 Worked
+example output (running example from §2.1)</h3>
+<p>Given tenant devices — <code>alice-laptop</code>,
+<code>bob-laptop</code> (admins&#39; devices), <code>carol-laptop</code>
+(contractor), <code>conn-A</code> (connector serving
+<code>10.10.0.0/24</code>, site-id 1), <code>conn-B</code> (connector
+serving <code>192.168.50.0/24</code>, site-id 2), gateway
+<code>gw</code> — the compiler emits:</p>
+<pre class="mermaid"><code>flowchart LR
+  subgraph admins[&quot;group:admins → *:*&quot;]
+    AL[alice-laptop]
+    BL[bob-laptop]
+  end
+  CL[carol-laptop]
+  subgraph conns[&quot;connectors&quot;]
+    CA[&quot;conn-A 10.10.0.0/24 site1&quot;]
+    CB[&quot;conn-B 192.168.50.0/24 site2&quot;]
+  end
+  GW[(gateway exit)]
+
+  AL --&gt;|&quot;AllowedIPs 10.10.0.0/24 + via6 site1&quot;| CA
+  AL --&gt;|&quot;AllowedIPs 192.168.50.0/24 + via6 site2&quot;| CB
+  AL --&gt;|&quot;0.0.0.0/0 ::/0 exit&quot;| GW
+  BL --&gt; CA
+  BL --&gt; CB
+  BL --&gt; GW
+  CL --&gt;|&quot;AllowedIPs 10.10.0.0/24 ; Verdicts tcp 554,80 ; via6 site1&quot;| CA
+  CL -. &quot;DENIED (default-deny): no rule grants office-lan or exit&quot; .-&gt; CB</code></pre>
+<p>Concrete artifact for <code>carol-laptop</code> (the precise,
+port-restricted grant):</p>
+<pre class="text"><code>VisibleTo[carol-laptop]            = { conn-A }
+AllowedIPs[carol-laptop][conn-A]   = [ 10.10.0.0/24 ]
+Verdicts[carol-laptop][conn-A]     = [ {10.10.0.0/24, ANY, 554, 554}, {10.10.0.0/24, ANY, 80, 80} ]
+Via6[carol-laptop][conn-A]         = [ {10.10.0.0/24, fd7a:helix:rrrr:0001::/96} ]
+ExitNodes                          = { alice-laptop, bob-laptop }   # carol absent → no exit
+# carol-laptop has NO entry for conn-B or office-lan → default-deny (P1)</code></pre>
+<p><code>alice-laptop</code>/<code>bob-laptop</code> get
+<code>AllowedIPs</code>
+<code>[10.10.0.0/24, 192.168.50.0/24, 0.0.0.0/0, ::/0]</code> toward the
+relevant peers, <strong>empty <code>Verdicts</code></strong> (all ports,
+coarse rule suffices, P3), and membership in <code>ExitNodes</code>.</p>
+<hr />
+<h2 id="5-validation--fail-closed-dry-run-p4">5. Validation —
+fail-closed dry-run (P4)</h2>
+<p><code>PolicyService.Update</code> and
+<code>helixvpnctl policy apply</code> both route through
+<code>Validate</code>, which dry-run-compiles against a frozen snapshot
+and rejects on any <strong>blocking</strong> finding. Only a clean
+dry-run may persist (<code>Update</code>) [04_P1 §7.3, research-go_cp
+§7.3].</p>
+<h3 id="51-blocking-vs-advisory-taxonomy">5.1 Blocking vs. advisory
+taxonomy</h3>
+<table>
+<thead>
+<tr>
+<th>Finding</th>
+<th>Class</th>
+<th>Behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>unknown group/host/member selector</td>
+<td><strong>BLOCKING</strong></td>
+<td>reject; <code>ERR_UNKNOWN_*</code></td>
+</tr>
+<tr>
+<td><code>dst</code> CIDR not covered by any
+<code>advertised_prefixes</code></td>
+<td><strong>BLOCKING</strong> (P7)</td>
+<td>reject; <code>ERR_HOST_NOT_ADVERTISED</code></td>
+</tr>
+<tr>
+<td>rule that would grant a <strong>revoked</strong> device (as src or
+dst)</td>
+<td><strong>BLOCKING</strong></td>
+<td>reject; <code>ERR_GRANTS_REVOKED</code></td>
+</tr>
+<tr>
+<td><code>exitNodes</code> entry resolving to a connector</td>
+<td><strong>BLOCKING</strong></td>
+<td>reject; <code>ERR_EXIT_IS_CONNECTOR</code></td>
+</tr>
+<tr>
+<td>unsupported <code>action</code> (≠ <code>accept</code>)</td>
+<td><strong>BLOCKING</strong></td>
+<td>reject; <code>ERR_UNSUPPORTED_ACTION</code></td>
+</tr>
+<tr>
+<td>group membership cycle</td>
+<td><strong>BLOCKING</strong></td>
+<td>reject; <code>ERR_GROUP_CYCLE</code></td>
+</tr>
+<tr>
+<td>schemaVersion unknown/future</td>
+<td><strong>BLOCKING</strong></td>
+<td>reject; <code>ERR_SCHEMA_VERSION</code></td>
+</tr>
+<tr>
+<td>overlapping advertised CIDRs (two connectors)</td>
+<td><strong>ADVISORY</strong></td>
+<td>compile succeeds; emit <code>route.conflict.detected</code>; surface
+in Console; resolved by <code>4via6</code> or operator choice
+[research-go_cp §5.3]</td>
+</tr>
+<tr>
+<td>rule whose <code>src</code> resolves to ∅ (no devices)</td>
+<td><strong>ADVISORY</strong></td>
+<td><code>rule.unreachable</code></td>
+</tr>
+<tr>
+<td>rule fully shadowed by an earlier rule</td>
+<td><strong>ADVISORY</strong></td>
+<td><code>rule.shadowed</code></td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb9"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/policy/validate.go</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> DryRunReport <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    OK         <span class="dt">bool</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    SpecHash   <span class="op">[</span><span class="dv">32</span><span class="op">]</span><span class="dt">byte</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    Blocking   <span class="op">[]</span>SpecError  <span class="co">// empty iff OK</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    Advisories <span class="op">[]</span>Advisory   <span class="co">// surfaced even when OK</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>    Stats      DryRunStats  <span class="co">// devices affected, peers granted, ports opened (Console preview)</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> DryRunStats <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>    DevicesAffected <span class="dt">int</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>    EdgesGranted    <span class="dt">int</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>    ExitNodes       <span class="dt">int</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<blockquote>
+<p><strong>Fail-closed proof obligation:</strong> a §1.1 paired mutation
+makes <code>Validate</code> return <code>OK:true</code> for a spec
+referencing an unadvertised CIDR; the test asserts <code>Update</code>
+then <strong>refuses</strong> to insert. If the mutation slips through
+(insert happens), the gate FAILs — this is the runtime signature
+(§11.4.108) that P4 is live, not merely promised (§12).</p>
+</blockquote>
+<h3 id="52-validation-state--what-is-read-when-it-can-be-stale">5.2
+Validation state — what is read, when it can be stale</h3>
+<p><code>Validate</code> freezes the topology snapshot inside its own
+<code>WithTenant</code> tx; the compile is pure against that frozen
+view. A device revoked <strong>after</strong> the dry-run but
+<strong>before</strong> activation is caught at activation time by
+re-checking the active compile against current revocations (§6.3) and by
+the coordinator&#39;s belt-and-suspenders revoked-stream refusal
+([research-go_cp §6.3]). This is the honest race window (§10.3), not a
+bluff: the system narrows it to &lt;1 s, it does not claim zero.</p>
+<hr />
+<h2 id="6-activation-versioning--instant-rollback-p5">6. Activation,
+versioning &amp; instant rollback (P5)</h2>
+<h3 id="61-version-lifecycle-state-machine">6.1 Version lifecycle state
+machine</h3>
+<pre class="mermaid"><code>stateDiagram-v2
+    [*] --&gt; Draft: Update(raw) dry-run OK → INSERT version N (active=false)
+    Draft --&gt; Compiled: Compile(N) → materialize artifact, stamp compiled_at, emit policy.compiled
+    Compiled --&gt; Active: Activate(N) → atomic flip (one active per tenant)
+    Active --&gt; Superseded: Activate(M&gt;N) → N.active=false
+    Superseded --&gt; Active: Rollback(to=N) → re-activate (no recompile, P5)
+    Active --&gt; Active: (idempotent re-activate = no-op)
+    Draft --&gt; Rejected: dry-run FAIL (fail-closed, P4) → no row inserted
+    Rejected --&gt; [*]</code></pre>
+<h3 id="62-ddl-the-service-relies-on-from-research-go_cp-22-restated-for-self-containment">6.2
+DDL the service relies on (from [research-go_cp §2.2], restated for
+self-containment)</h3>
+<div class="sourceCode" id="cb11"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> policies (</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">id</span>           uuid <span class="kw">PRIMARY</span> <span class="kw">KEY</span> <span class="kw">DEFAULT</span> gen_random_uuid(),</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  tenant_id    uuid <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">REFERENCES</span> tenants(<span class="kw">id</span>) <span class="kw">ON</span> <span class="kw">DELETE</span> <span class="kw">CASCADE</span>,</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  spec         jsonb <span class="kw">NOT</span> <span class="kw">NULL</span>,            <span class="co">-- canonical ACL document (§2)</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>  spec_hash    bytea <span class="kw">NOT</span> <span class="kw">NULL</span>,            <span class="co">-- sha256(canonicalJSON(spec)) — dedup + audit (§3.1)</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>  version      bigint <span class="kw">NOT</span> <span class="kw">NULL</span>,           <span class="co">-- monotonic per tenant (P5)</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>  active       <span class="dt">boolean</span> <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> <span class="kw">false</span>,</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>  compiled_at  timestamptz,              <span class="co">-- NULL until Compile(N) materializes the artifact</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>  created_at   timestamptz <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> now(),</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>  created_by   text <span class="kw">NOT</span> <span class="kw">NULL</span>,            <span class="co">-- actor (audit + §11.4.104 attribution)</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>  <span class="kw">UNIQUE</span> (tenant_id, version)</span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a><span class="co">-- at most one active policy per tenant; instant rollback = re-activate an older version (P5)</span></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">UNIQUE</span> <span class="kw">INDEX</span> one_active_policy_per_tenant <span class="kw">ON</span> policies (tenant_id) <span class="kw">WHERE</span> active;</span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a><span class="co">-- compiled-artifact cache (so rollback/coordinator-hydrate need not recompile). The artifact</span></span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a><span class="co">-- is reproducible from spec, so this table is a SPEED cache, NOT a source of truth — it is</span></span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a><span class="co">-- rebuildable and therefore safe to truncate (constitution §11.4.77 regen = re-run Compile).</span></span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> compiled_policies (</span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a>  tenant_id   uuid <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">REFERENCES</span> tenants(<span class="kw">id</span>) <span class="kw">ON</span> <span class="kw">DELETE</span> <span class="kw">CASCADE</span>,</span>
+<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a>  version     bigint <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a>  spec_hash   bytea <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb11-23"><a href="#cb11-23" aria-hidden="true" tabindex="-1"></a>  artifact    bytea <span class="kw">NOT</span> <span class="kw">NULL</span>,            <span class="co">-- canonicalEncode(CompiledPolicy) (§3.1)</span></span>
+<span id="cb11-24"><a href="#cb11-24" aria-hidden="true" tabindex="-1"></a>  built_at    timestamptz <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> now(),</span>
+<span id="cb11-25"><a href="#cb11-25" aria-hidden="true" tabindex="-1"></a>  <span class="kw">PRIMARY</span> <span class="kw">KEY</span> (tenant_id, version),</span>
+<span id="cb11-26"><a href="#cb11-26" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FOREIGN</span> <span class="kw">KEY</span> (tenant_id, version) <span class="kw">REFERENCES</span> policies (tenant_id, version) <span class="kw">ON</span> <span class="kw">DELETE</span> <span class="kw">CASCADE</span></span>
+<span id="cb11-27"><a href="#cb11-27" aria-hidden="true" tabindex="-1"></a>);</span></code></pre></div>
+<p>The monotonic version is allocated
+<code>SELECT coalesce(max(version),0)+1 FROM policies WHERE tenant_id=$1</code>
+<strong>inside the insert tx</strong> (the RLS tx serializes concurrent
+updates per tenant, so no two versions collide; the
+<code>UNIQUE(tenant_id, version)</code> is the backstop).</p>
+<h3 id="63-atomic-activation--rollback-go">6.3 Atomic activation +
+rollback (Go)</h3>
+<div class="sourceCode" id="cb12"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/policy/activate.go — atomic flip; prior version stays compiled for instant</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="co">// rollback (P5). Emits on the bus (R3) so the coordinator recomputes + pushes.</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>p <span class="op">*</span>policyService<span class="op">)</span> Activate<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> t uuid<span class="op">.</span>UUID<span class="op">,</span> v Version<span class="op">,</span> actor <span class="dt">string</span><span class="op">)</span> <span class="dt">error</span> <span class="op">{</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> p<span class="op">.</span>store<span class="op">.</span>WithTenant<span class="op">(</span>ctx<span class="op">,</span> t<span class="op">,</span> <span class="kw">func</span><span class="op">(</span>q <span class="op">*</span>db<span class="op">.</span>Queries<span class="op">)</span> <span class="dt">error</span> <span class="op">{</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>        <span class="co">// 0. guard: the version must exist AND be compiled (artifact present).</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>        row<span class="op">,</span> err <span class="op">:=</span> q<span class="op">.</span>GetPolicyVersion<span class="op">(</span>ctx<span class="op">,</span> db<span class="op">.</span>GetPolicyVersionParams<span class="op">{</span>TenantID<span class="op">:</span> t<span class="op">,</span> Version<span class="op">:</span> <span class="dt">int64</span><span class="op">(</span>v<span class="op">)})</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> errNotFound<span class="op">(</span>ErrVersionNotFound<span class="op">,</span> v<span class="op">)</span> <span class="co">// ERR_VERSION_NOT_FOUND</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">!</span>row<span class="op">.</span>CompiledAt<span class="op">.</span>Valid <span class="op">{</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> ErrNotCompiled <span class="co">// ERR_NOT_COMPILED — must Compile(v) first (fail-closed, P4)</span></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>        <span class="co">// 0b. re-check the active compile against CURRENT revocations (§5.2 race window).</span></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> bad <span class="op">:=</span> p<span class="op">.</span>revokedGrantsAfter<span class="op">(</span>ctx<span class="op">,</span> q<span class="op">,</span> t<span class="op">,</span> v<span class="op">);</span> <span class="bu">len</span><span class="op">(</span>bad<span class="op">)</span> <span class="op">&gt;</span> <span class="dv">0</span> <span class="op">{</span></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> ErrGrantsRevoked<span class="op">(</span>bad<span class="op">)</span> <span class="co">// ERR_GRANTS_REVOKED — a device revoked since dry-run</span></span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>        <span class="co">// 1. atomic flip: clear prior active, set v active (partial unique index guarantees one).</span></span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> err <span class="op">:=</span> q<span class="op">.</span>DeactivateAllPolicies<span class="op">(</span>ctx<span class="op">,</span> t<span class="op">);</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> err</span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> err <span class="op">:=</span> q<span class="op">.</span>ActivatePolicyVersion<span class="op">(</span>ctx<span class="op">,</span> db<span class="op">.</span>ActivateParams<span class="op">{</span>TenantID<span class="op">:</span> t<span class="op">,</span> Version<span class="op">:</span> <span class="dt">int64</span><span class="op">(</span>v<span class="op">)});</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> err <span class="co">// unique-violation here ⇒ a concurrent activate; caller retries (idempotent)</span></span>
+<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb12-24"><a href="#cb12-24" aria-hidden="true" tabindex="-1"></a>        <span class="co">// 2. audit (control action only — never traffic, C3).</span></span>
+<span id="cb12-25"><a href="#cb12-25" aria-hidden="true" tabindex="-1"></a>        _ <span class="op">=</span> q<span class="op">.</span>InsertAudit<span class="op">(</span>ctx<span class="op">,</span> db<span class="op">.</span>AuditParams<span class="op">{</span>TenantID<span class="op">:</span> t<span class="op">,</span> Actor<span class="op">:</span> actor<span class="op">,</span></span>
+<span id="cb12-26"><a href="#cb12-26" aria-hidden="true" tabindex="-1"></a>            Action<span class="op">:</span> <span class="st">&quot;policy.activate&quot;</span><span class="op">,</span> Target<span class="op">:</span> fmt<span class="op">.</span>Sprintf<span class="op">(</span><span class="st">&quot;v%d&quot;</span><span class="op">,</span> v<span class="op">)})</span></span>
+<span id="cb12-27"><a href="#cb12-27" aria-hidden="true" tabindex="-1"></a>        <span class="co">// 3. R3: emit on the bus so the coordinator recomputes + pushes minimal deltas.</span></span>
+<span id="cb12-28"><a href="#cb12-28" aria-hidden="true" tabindex="-1"></a>        _<span class="op">,</span> err <span class="op">=</span> p<span class="op">.</span>bus<span class="op">.</span>Publish<span class="op">(</span>ctx<span class="op">,</span> <span class="st">&quot;events:policy&quot;</span><span class="op">,</span></span>
+<span id="cb12-29"><a href="#cb12-29" aria-hidden="true" tabindex="-1"></a>            events<span class="op">.</span>New<span class="op">(</span><span class="st">&quot;policy.compiled&quot;</span><span class="op">,</span> t<span class="op">,</span> actor<span class="op">,</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="dt">any</span><span class="op">{</span><span class="st">&quot;version&quot;</span><span class="op">:</span> <span class="dt">int64</span><span class="op">(</span>v<span class="op">)}))</span></span>
+<span id="cb12-30"><a href="#cb12-30" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> err</span>
+<span id="cb12-31"><a href="#cb12-31" aria-hidden="true" tabindex="-1"></a>    <span class="op">})</span></span>
+<span id="cb12-32"><a href="#cb12-32" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb12-33"><a href="#cb12-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-34"><a href="#cb12-34" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>p <span class="op">*</span>policyService<span class="op">)</span> Rollback<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> t uuid<span class="op">.</span>UUID<span class="op">,</span> to Version<span class="op">,</span> actor <span class="dt">string</span><span class="op">)</span> <span class="dt">error</span> <span class="op">{</span></span>
+<span id="cb12-35"><a href="#cb12-35" aria-hidden="true" tabindex="-1"></a>    <span class="co">// instant: no recompile — the older version&#39;s artifact is cached/reproducible (P5).</span></span>
+<span id="cb12-36"><a href="#cb12-36" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> p<span class="op">.</span>Activate<span class="op">(</span>ctx<span class="op">,</span> t<span class="op">,</span> to<span class="op">,</span> actor<span class="op">)</span></span>
+<span id="cb12-37"><a href="#cb12-37" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><strong>Why rollback is instant (P5):</strong> every version&#39;s
+<code>CompiledPolicy</code> is reproducible from its <code>spec</code>
+(pure compile, P2) and cached in <code>compiled_policies</code>.
+Re-activating version N flips the index and emits
+<code>policy.compiled{version:N}</code>; the coordinator diffs its
+current served version against N and pushes the (small) delta — no
+recompile, no rebuild [04_P1 §7.4].</p>
+<hr />
+<h2 id="7-the-event--protobuf-surface-the-compiler-feeds">7. The event +
+protobuf surface the compiler feeds</h2>
+<h3 id="71-events-emittedconsumed-envelope-per-research-go_cp-52">7.1
+Events emitted/consumed (envelope per [research-go_cp §5.2])</h3>
+<p>The policy service is the <strong>producer</strong> on
+<code>events:policy</code> and a consumer for the
+<code>connector.prefixes.changed</code> recompile trigger.</p>
+<table>
+<thead>
+<tr>
+<th>Direction</th>
+<th>Type</th>
+<th>Payload</th>
+<th>Trigger / reaction</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>emit</td>
+<td><code>policy.updated</code></td>
+<td><code>{version}</code></td>
+<td>a clean dry-run inserted version N (active=false)</td>
+</tr>
+<tr>
+<td>emit</td>
+<td><code>policy.compiled</code></td>
+<td><code>{version}</code></td>
+<td><code>Compile(N)</code> materialized the artifact, OR
+<code>Activate/Rollback(N)</code> flipped active — coordinator
+recomputes tenant visibility + pushes deltas</td>
+</tr>
+<tr>
+<td>emit</td>
+<td><code>route.conflict.detected</code></td>
+<td><code>{cidr, connector_ids[]}</code></td>
+<td>dry-run advisory P7 (overlapping advertised CIDRs)</td>
+</tr>
+<tr>
+<td>consume</td>
+<td><code>connector.prefixes.changed</code></td>
+<td><code>{connector_id, cidrs[]}</code></td>
+<td>recompile the <strong>active</strong> version against new prefixes;
+if a previously-resolvable host CIDR is now unadvertised, emit
+<code>route.conflict.detected</code> (does NOT auto-deactivate —
+fail-static, C1)</td>
+</tr>
+<tr>
+<td>consume</td>
+<td><code>device.revoked</code></td>
+<td><code>{device_id}</code></td>
+<td>drop the device from the served compiled view immediately
+(coordinator removes peer); next activation re-validates (§6.3)</td>
+</tr>
+</tbody>
+</table>
+<p>Canonical envelope (bus-agnostic, [research-go_cp §5.2]):</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="st">&quot;&lt;redis-stream-id&gt;&quot;</span><span class="fu">,</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;policy.compiled&quot;</span><span class="fu">,</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;tenant_id&quot;</span><span class="fu">:</span> <span class="st">&quot;8f3c…&quot;</span><span class="fu">,</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;ts&quot;</span><span class="fu">:</span> <span class="st">&quot;2026-06-25T00:00:00Z&quot;</span><span class="fu">,</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;actor&quot;</span><span class="fu">:</span> <span class="st">&quot;alice@corp&quot;</span><span class="fu">,</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;payload&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;version&quot;</span><span class="fu">:</span> <span class="dv">7</span> <span class="fu">},</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;trace_id&quot;</span><span class="fu">:</span> <span class="st">&quot;01J…&quot;</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<h3 id="72-protobuf-the-artifact-projects-into-helixcoordinatorv1">7.2
+Protobuf the artifact projects into
+(<code>helix.coordinator.v1</code>)</h3>
+<p>The compiler does not own the wire contract, but its artifact
+projects 1:1 into the <code>coordinator.v1</code> <code>Peer</code>
+message the coordinator streams [research-go_cp §4, package
+<code>helix.coordinator.v1</code>]. Restated for the policy↔︎coordinator
+boundary:</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode protobuf"><code class="sourceCode protobuf"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co">// proto/helix/coordinator/v1/coordinator.proto — package helix.coordinator.v1 (canonical, unified set)</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="kw">message</span> Peer {</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">string</span>             device_id   <span class="op">=</span> <span class="dv">1</span>;</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">bytes</span>              wg_pubkey   <span class="op">=</span> <span class="dv">2</span>;</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">repeated</span> <span class="dt">string</span>    allowed_ips <span class="op">=</span> <span class="dv">3</span>;  <span class="co">// from CompiledPolicy.AllowedIPs[self][peer] (P3 coarse)</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">string</span>             endpoint    <span class="op">=</span> <span class="dv">4</span>;  <span class="co">// gateway relay in MVP</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">bool</span>               is_connector <span class="op">=</span> <span class="dv">5</span>;</span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>  <span class="kw">repeated</span> Via6Route via6        <span class="op">=</span> <span class="dv">6</span>;  <span class="co">// from CompiledPolicy.Via6[self][peer] (D4)</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>  <span class="kw">repeated</span> PortRule  verdicts    <span class="op">=</span> <span class="dv">7</span>;  <span class="co">// from CompiledPolicy.Verdicts[self][peer] (P3 fine)</span></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a><span class="kw">message</span> PortRule { <span class="dt">string</span> dst_cidr <span class="op">=</span> <span class="dv">1</span>; <span class="dt">uint32</span> proto <span class="op">=</span> <span class="dv">2</span>; <span class="dt">uint32</span> lo <span class="op">=</span> <span class="dv">3</span>; <span class="dt">uint32</span> hi <span class="op">=</span> <span class="dv">4</span>; }</span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a><span class="kw">message</span> Via6Route { <span class="dt">string</span> ipv4_cidr <span class="op">=</span> <span class="dv">1</span>; <span class="dt">string</span> via6_prefix <span class="op">=</span> <span class="dv">2</span>; }</span></code></pre></div>
+<blockquote>
+<p><code>verdicts</code> (field 7) is the policy-fed addition to the
+[research-go_cp §4] <code>Peer</code> message; field numbers ≥7 are
+reserved so adding it is backward-compatible (doc 03 owns the wire
+evolution rules). The edge applies <code>allowed_ips</code> as the WG
+<code>AllowedIPs</code> and <code>verdicts</code> as the nftables/eBPF
+port filter (doc 01).</p>
+</blockquote>
+<hr />
+<h2 id="8-error-taxonomy-the-closed-set">8. Error taxonomy (the closed
+set)</h2>
+<div class="sourceCode" id="cb15"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/policy/errors.go — every compile/validate/activate fault maps to ONE coded error.</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> SpecError <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    Code   ErrCode</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    RuleIx <span class="dt">int</span>      <span class="co">// -1 if not rule-scoped</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>    Token  <span class="dt">string</span>   <span class="co">// the offending selector/cidr/port</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>    Msg    <span class="dt">string</span>   <span class="co">// human, no PII (C6); safe to log</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> ErrCode <span class="dt">string</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> <span class="op">(</span></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ── parse / structural (BLOCKING) ──</span></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>    ErrSchemaVersion    ErrCode <span class="op">=</span> <span class="st">&quot;ERR_SCHEMA_VERSION&quot;</span>     <span class="co">// unknown/future schemaVersion</span></span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>    ErrUnsupportedAction ErrCode <span class="op">=</span> <span class="st">&quot;ERR_UNSUPPORTED_ACTION&quot;</span> <span class="co">// action != &quot;accept&quot; (P1)</span></span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>    ErrBadGroupName     ErrCode <span class="op">=</span> <span class="st">&quot;ERR_BAD_GROUP_NAME&quot;</span></span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>    ErrBadMemberKey     ErrCode <span class="op">=</span> <span class="st">&quot;ERR_BAD_MEMBER_KEY&quot;</span></span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a>    ErrBadHostCIDR      ErrCode <span class="op">=</span> <span class="st">&quot;ERR_BAD_HOST_CIDR&quot;</span></span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a>    ErrBadDstFormat     ErrCode <span class="op">=</span> <span class="st">&quot;ERR_BAD_DST_FORMAT&quot;</span></span>
+<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a>    ErrBadPortSpec      ErrCode <span class="op">=</span> <span class="st">&quot;ERR_BAD_PORT_SPEC&quot;</span>      <span class="co">// non-numeric or Lo&gt;Hi</span></span>
+<span id="cb15-19"><a href="#cb15-19" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ── resolution (BLOCKING) ──</span></span>
+<span id="cb15-20"><a href="#cb15-20" aria-hidden="true" tabindex="-1"></a>    ErrUnknownSrc       ErrCode <span class="op">=</span> <span class="st">&quot;ERR_UNKNOWN_SRC&quot;</span></span>
+<span id="cb15-21"><a href="#cb15-21" aria-hidden="true" tabindex="-1"></a>    ErrUnknownHost      ErrCode <span class="op">=</span> <span class="st">&quot;ERR_UNKNOWN_HOST&quot;</span></span>
+<span id="cb15-22"><a href="#cb15-22" aria-hidden="true" tabindex="-1"></a>    ErrGroupCycle       ErrCode <span class="op">=</span> <span class="st">&quot;ERR_GROUP_CYCLE&quot;</span>        <span class="co">// nested-group membership cycle</span></span>
+<span id="cb15-23"><a href="#cb15-23" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ── semantic / fail-closed (BLOCKING, P4/P7) ──</span></span>
+<span id="cb15-24"><a href="#cb15-24" aria-hidden="true" tabindex="-1"></a>    ErrHostNotAdvertised ErrCode <span class="op">=</span> <span class="st">&quot;ERR_HOST_NOT_ADVERTISED&quot;</span> <span class="co">// dst CIDR not in advertised_prefixes</span></span>
+<span id="cb15-25"><a href="#cb15-25" aria-hidden="true" tabindex="-1"></a>    ErrGrantsRevoked    ErrCode <span class="op">=</span> <span class="st">&quot;ERR_GRANTS_REVOKED&quot;</span>      <span class="co">// rule grants a revoked device</span></span>
+<span id="cb15-26"><a href="#cb15-26" aria-hidden="true" tabindex="-1"></a>    ErrExitIsConnector  ErrCode <span class="op">=</span> <span class="st">&quot;ERR_EXIT_IS_CONNECTOR&quot;</span>   <span class="co">// exitNodes entry resolves to connector</span></span>
+<span id="cb15-27"><a href="#cb15-27" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ── lifecycle (BLOCKING) ──</span></span>
+<span id="cb15-28"><a href="#cb15-28" aria-hidden="true" tabindex="-1"></a>    ErrVersionNotFound  ErrCode <span class="op">=</span> <span class="st">&quot;ERR_VERSION_NOT_FOUND&quot;</span></span>
+<span id="cb15-29"><a href="#cb15-29" aria-hidden="true" tabindex="-1"></a>    ErrNotCompiled      ErrCode <span class="op">=</span> <span class="st">&quot;ERR_NOT_COMPILED&quot;</span>        <span class="co">// Activate before Compile</span></span>
+<span id="cb15-30"><a href="#cb15-30" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div>
+<p>Mapping to API/RPC status (§9): all <code>ERR_*</code>
+parse/resolution/semantic faults → HTTP
+<code>422 Unprocessable Entity</code> (REST) / Connect
+<code>InvalidArgument</code>; <code>ERR_VERSION_NOT_FOUND</code> →
+<code>404</code> / <code>NotFound</code>; <code>ERR_NOT_COMPILED</code>
+→ <code>409 Conflict</code> / <code>FailedPrecondition</code>. The error
+body carries the <code>[]SpecError</code> array so the Console
+highlights the exact <code>RuleIx</code>/<code>Token</code> — never a
+bare &quot;invalid policy&quot; (anti-bluff, the operator must see <em>what</em>
+failed).</p>
+<hr />
+<h2 id="9-authz--who-may-touch-policy-rbac--rls-backstop">9. Authz — who
+may touch policy (RBAC + RLS backstop)</h2>
+<p>Policy mutation is the highest-privilege control action; it composes
+[research-go_cp §8.1] RBAC with the RLS database floor (C8).</p>
+<table>
+<thead>
+<tr>
+<th>Operation</th>
+<th>REST route</th>
+<th>admin</th>
+<th>operator</th>
+<th>member</th>
+<th>enforcement</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>dry-run validate</td>
+<td><code>POST /v1/policies:validate</code></td>
+<td>✓</td>
+<td>✓</td>
+<td>✗</td>
+<td><code>requireRole(&quot;admin&quot;,&quot;operator&quot;)</code></td>
+</tr>
+<tr>
+<td>create version</td>
+<td><code>POST /v1/policies</code></td>
+<td>✓</td>
+<td>✓</td>
+<td>✗</td>
+<td>RBAC + <code>WithTenant</code> insert</td>
+</tr>
+<tr>
+<td>compile version</td>
+<td>(implicit on create /
+<code>POST /v1/policies/{v}:compile</code>)</td>
+<td>✓</td>
+<td>✓</td>
+<td>✗</td>
+<td>RBAC</td>
+</tr>
+<tr>
+<td>activate / rollback</td>
+<td><code>POST /v1/policies/{v}/activate</code></td>
+<td>✓</td>
+<td>✓</td>
+<td>✗</td>
+<td>RBAC + atomic flip (§6.3)</td>
+</tr>
+<tr>
+<td>read versions / compiled preview</td>
+<td><code>GET /v1/policies</code>,
+<code>GET /v1/policies/{v}</code></td>
+<td>✓</td>
+<td>✓</td>
+<td>✓ (own tenant)</td>
+<td>RLS scope</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>RLS is the floor:</strong> even if RBAC middleware is
+misconfigured, every handler runs its DB work through
+<code>WithTenant(ctx.TenantID, …)</code> under
+<code>FORCE ROW LEVEL SECURITY</code> as the non-superuser
+<code>helix_app</code> role — a member cannot read another tenant&#39;s
+policy even with a crafted query (C8, [research-go_cp §2.3]).</li>
+<li><strong>Actor attribution:</strong> <code>created_by</code>/audit
+<code>actor</code> is the canonical participant handle (constitution
+§11.4.104); anonymous-mode operators resolve to their synthetic handle,
+never PII (C6/P8).</li>
+<li><strong>Agents never write policy:</strong> the
+<code>Coordinator</code> RPC surface (<code>WatchNetworkMap</code> etc.)
+is read-only w.r.t. policy — devices receive compiled maps, they cannot
+author specs.</li>
+</ul>
+<hr />
+<h2 id="10-edge-cases-each-with-the-defined-behavior--no-guessing-1146">10.
+Edge cases (each with the defined behavior — no guessing, §11.4.6)</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Edge case</th>
+<th>Defined behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>E1</td>
+<td>Empty <code>acls</code> (only groups/hosts)</td>
+<td>Compiles to all-empty visibility → <strong>everyone denied
+everything</strong> (default-deny floor, P1). Valid, not an error.</td>
+</tr>
+<tr>
+<td>E2</td>
+<td><code>*:*</code> for a non-admin via a group</td>
+<td>Honored — wildcard expands per §4.2; the operator chose to grant
+broad reach. No implicit narrowing.</td>
+</tr>
+<tr>
+<td>E3</td>
+<td>Overlapping advertised CIDRs (conn-A &amp; conn-B both
+<code>10.0.0.0/24</code>)</td>
+<td><strong>Advisory</strong> <code>route.conflict.detected</code> (P7);
+compile succeeds; <code>4via6</code> site-ids disambiguate at the data
+path; Console surfaces the conflict for operator choice.</td>
+</tr>
+<tr>
+<td>E4</td>
+<td><code>dst</code> CIDR is a sub-range of an advertised prefix
+(<code>10.10.0.128/25</code> ⊂ <code>10.10.0.0/24</code>)</td>
+<td>Allowed — longest-prefix coverage check passes;
+<code>AllowedIPs</code> carries the narrower <code>/25</code>; the
+connector still routes it.</td>
+</tr>
+<tr>
+<td>E5</td>
+<td>Device revoked between dry-run and activate</td>
+<td>Caught at activate (<code>revokedGrantsAfter</code> re-check, §6.3)
+→ <code>ERR_GRANTS_REVOKED</code>; never streams to a revoked device
+(coordinator belt-and-suspenders). Honest &lt;1 s race window
+(§5.2).</td>
+</tr>
+<tr>
+<td>E6</td>
+<td>A user in two groups with conflicting reach</td>
+<td>Union — <code>accept</code> rules are additive (no <code>deny</code>
+to subtract, P1). The broader grant wins; documented, not
+surprising.</td>
+</tr>
+<tr>
+<td>E7</td>
+<td><code>exitNodes</code> references a group containing a
+connector</td>
+<td><strong>BLOCKING</strong> <code>ERR_EXIT_IS_CONNECTOR</code> —
+connectors are not exits (a connector full-tunneling the gateway is
+nonsensical).</td>
+</tr>
+<tr>
+<td>E8</td>
+<td>Duplicate identical rules</td>
+<td>Idempotent — <code>dedupAndSortAllSlices</code> collapses them;
+<code>rule.shadowed</code> advisory if fully subsumed.</td>
+</tr>
+<tr>
+<td>E9</td>
+<td>Spec references a host alias never used in any acl</td>
+<td>Allowed (unused alias is harmless); no advisory (operator may stage
+it). An <em>acl</em> referencing an unknown alias is
+<code>ERR_UNKNOWN_HOST</code> (blocking).</td>
+</tr>
+<tr>
+<td>E10</td>
+<td>Massive tenant (10k devices, 1k rules)</td>
+<td>Compile is O(devices × matching-rules × dst-targets); the §11 budget
+caps it at <strong>&lt;200 ms</strong> (benchmark gate). Output maps
+pre-sized from snapshot counts to avoid rehash churn.</td>
+</tr>
+<tr>
+<td>E11</td>
+<td><code>connector.prefixes.changed</code> removes a CIDR a live policy
+granted</td>
+<td>Active version recompiled; the now-unadvertised CIDR drops from
+<code>AllowedIPs</code> → coordinator pushes a peer-removal delta; emits
+<code>route.conflict.detected</code>. Existing tunnels fail-static until
+the delta lands (C1). Policy is <strong>not</strong>
+auto-deactivated.</td>
+</tr>
+<tr>
+<td>E12</td>
+<td>Nested-group cycle (<code>A∈B</code>, <code>B∈A</code>)</td>
+<td><strong>BLOCKING</strong> <code>ERR_GROUP_CYCLE</code> (DFS cycle
+detection in <code>resolveGroups</code>).</td>
+</tr>
+</tbody>
+</table>
+<h3 id="103-the-honest-convergence-race-boundary-1146">10.3 The honest
+convergence-race boundary (§11.4.6)</h3>
+<p>The compiler + service guarantee <strong>eventual</strong> per-edge
+correctness within the &lt;1 s SLO (§11), <strong>not</strong> a
+globally-atomic instant across all edges. Between <code>Activate</code>
+and the last edge&#39;s delta apply there is a sub-second window in which
+different edges enforce different versions. This is stated as a FACT,
+not hidden: the MVP target is p99 &lt;1 s, the floor is fail-static (old
+tunnels keep forwarding under the old policy until the delta lands, C1)
+— never a fail-open gap. <strong>UNVERIFIED:</strong> the exact p99
+under 10k concurrent streams is a measured number the §12 soak test
+produces; this document states the <em>target</em>, not a measured
+result.</p>
+<hr />
+<h2 id="11-convergence-slo--the-policy-services-budget-contribution-1-s">11.
+Convergence SLO — the policy service&#39;s budget contribution (&lt;1
+s)</h2>
+<p>The end-to-end &quot;policy edit → enforced on all affected edges &lt; 1
+s, no restart&quot; promise [04_ARCH, 04_P1 §10] decomposes; the policy
+service owns the first two segments:</p>
+<pre class="mermaid"><code>sequenceDiagram
+    autonumber
+    participant Admin as Console (admin)
+    participant API as api (Gin)
+    participant Pol as policy svc
+    participant PG as Postgres (RLS)
+    participant Bus as Redis Streams
+    participant Coord as coordinator
+    participant Edge as Rust edge
+    Admin-&gt;&gt;API: POST /v1/policies (new spec)
+    API-&gt;&gt;Pol: Validate → Compile(dry-run)  [fail-closed, P4]
+    Pol-&gt;&gt;PG: INSERT policies(version N) + compiled_policies  [WithTenant]
+    Admin-&gt;&gt;API: POST /v1/policies/{N}/activate
+    API-&gt;&gt;Pol: Activate(N)  [atomic flip, §6.3]
+    Pol-&gt;&gt;PG: deactivate-all + activate N  (one tx)
+    Pol-&gt;&gt;Bus: XADD events:policy {policy.compiled, N}
+    Bus--&gt;&gt;Coord: XReadGroup(coordinator) delivers
+    Coord--&gt;&gt;Coord: recompute minimal affected set [§6.4 research-go_cp]
+    loop each affected open stream
+        Coord-&gt;&gt;Edge: stream.Send(MapDelta) upsert/remove + verdicts
+    end
+    Edge--&gt;&gt;Edge: reconcile WG peers + nftables/eBPF verdict map
+    Note over Admin,Edge: target p99 &lt; 1s event→enforced, ZERO restarts</code></pre>
+<table>
+<thead>
+<tr>
+<th>Budget segment</th>
+<th>Owner</th>
+<th>Target</th>
+<th>Measured by</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>dry-run compile (1k devices)</td>
+<td>policy</td>
+<td><strong>&lt; 200 ms</strong></td>
+<td><code>policy_compile_seconds</code> histogram + benchmark gate</td>
+</tr>
+<tr>
+<td>activate flip + emit (tx + XADD)</td>
+<td>policy</td>
+<td><strong>&lt; 20 ms</strong></td>
+<td><code>policy_activate_seconds</code> histogram</td>
+</tr>
+<tr>
+<td>event → delta-on-wire</td>
+<td>coordinator</td>
+<td>&lt; 1 s p99 (whole budget)</td>
+<td><code>helix_reconcile_seconds</code> [research-go_cp §10.2]</td>
+</tr>
+<tr>
+<td>delta → edge enforced</td>
+<td>edge (doc 01)</td>
+<td>included in the &lt;1 s</td>
+<td>revoke-to-WG-peer-removed timer</td>
+</tr>
+</tbody>
+</table>
+<p>Metrics the policy package exports (Prometheus, [research-go_cp
+§10.2] family): <code>policy_compile_seconds{tenant}</code>,
+<code>policy_activate_seconds{tenant}</code>,
+<code>policy_compile_errors_total{code}</code>,
+<code>policy_route_conflicts_total{tenant}</code>,
+<code>policy_active_version{tenant}</code> (gauge — supports rollback
+observability).</p>
+<hr />
+<h2 id="12-test-type-coverage-constitution-114169--comprehensive-anti-bluff">12.
+Test-type coverage (constitution §11.4.169 — comprehensive,
+anti-bluff)</h2>
+<p>§11.4.169 mandates comprehensive test-type coverage; every type below
+has a concrete, captured-evidence test point [04_P1 §10, research-go_cp
+§10.3, §11.4.27/§11.4.5/§11.4.69/§1.1].</p>
+<table>
+<thead>
+<tr>
+<th>Test type</th>
+<th>Concrete test point</th>
+<th>Captured evidence (§11.4.69)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Unit</strong></td>
+<td><code>Compile(runningExample)</code> → assert exact
+<code>CompiledPolicy</code> for <code>carol-laptop</code> (§4.3):
+<code>VisibleTo={conn-A}</code>, <code>Verdicts</code> tcp 554+80 only,
+<code>ExitNodes</code> excludes carol.</td>
+<td>golden <code>compiled.json</code> byte-compare</td>
+</tr>
+<tr>
+<td><strong>Unit — determinism (P2)</strong></td>
+<td>compile same <code>(spec,snap)</code> twice with different
+<code>SnapAt</code> → <code>canonicalEncode</code> outputs
+byte-identical; property test over 1000 random specs.</td>
+<td>hash-equality log per iter</td>
+</tr>
+<tr>
+<td><strong>Unit — purity lint (§3.1)</strong></td>
+<td>custom analyzer asserts no
+<code>time.Now</code>/<code>rand</code>/bare <code>range map</code>
+inside <code>compile.go</code>.</td>
+<td>analyzer report</td>
+</tr>
+<tr>
+<td><strong>Unit — error taxonomy</strong></td>
+<td>table-driven: each <code>ERR_*</code> (§8) reproduced by a crafted
+spec; assert exact <code>Code</code>+<code>RuleIx</code>.</td>
+<td>per-code assertion table</td>
+</tr>
+<tr>
+<td><strong>Integration (real PG+Redis via
+<code>vasic-digital/containers</code> §11.4.76)</strong></td>
+<td>drive
+enroll→advertise→<code>POST /v1/policies</code>→<code>activate</code>→consume
+<code>policy.compiled</code>→assert coordinator pushed carol the
+port-restricted delta and <strong>denied</strong> office-lan.</td>
+<td>event stream + delta capture</td>
+</tr>
+<tr>
+<td><strong>Integration — fail-closed (P4)</strong></td>
+<td>spec citing unadvertised <code>172.16.0.0/24</code> →
+<code>Update</code> returns 422 <code>ERR_HOST_NOT_ADVERTISED</code>;
+assert NO <code>policies</code> row inserted.</td>
+<td>DB row-count before/after</td>
+</tr>
+<tr>
+<td><strong>Integration — instant rollback (P5)</strong></td>
+<td>activate v2 (broken-but-valid), then <code>Rollback(v1)</code>;
+assert active flips, no recompile call (spy), coordinator re-pushes v1
+delta.</td>
+<td><code>policy_active_version</code> gauge trace</td>
+</tr>
+<tr>
+<td><strong>RLS (C8)</strong></td>
+<td>as <code>helix_app</code>, tenant-A session cannot read tenant-B
+<code>policies</code> even with crafted <code>WHERE</code>;
+<code>FORCE ROW LEVEL SECURITY</code> on.</td>
+<td>denied-query capture</td>
+</tr>
+<tr>
+<td><strong>E2E / full-automation (§11.4.98)</strong></td>
+<td>self-host from zero → enroll connector+client → policy grant →
+client reaches authorized LAN host + <strong>denied</strong>
+unauthorized → edit policy → reflected &lt;1 s no restart.</td>
+<td>recorded transcript <code>docs/qa/&lt;run-id&gt;/</code></td>
+</tr>
+<tr>
+<td><strong>Security</strong></td>
+<td>a member-role token attempting
+<code>POST /v1/policies/{v}/activate</code> → 403; an agent RPC
+attempting to author policy → rejected.</td>
+<td>authz-denial capture</td>
+</tr>
+<tr>
+<td><strong>Stress (§11.4.85)</strong></td>
+<td>10k-device / 1k-rule compile ×100 iters → p95 &lt; 200 ms (E10/§11
+budget); 10 concurrent <code>Update</code> per tenant → monotonic
+versions, no collision.</td>
+<td><code>latency.json</code> distribution</td>
+</tr>
+<tr>
+<td><strong>Chaos (§11.4.85)</strong></td>
+<td>SIGKILL the service mid-<code>Activate</code> (after deactivate,
+before activate) → recovery restores a single active (partial unique
+index + tx rollback); replay a duplicated <code>policy.compiled</code> →
+idempotent (no double-push).</td>
+<td><code>recovery_trace.log</code></td>
+</tr>
+<tr>
+<td><strong>Performance/benchmark</strong></td>
+<td><code>BenchmarkCompile1kDevices</code> &lt; 200 ms;
+<code>BenchmarkActivate</code> &lt; 20 ms — wired to §11 SLO gate.</td>
+<td>benchmark output</td>
+</tr>
+<tr>
+<td><strong>Meta-test (§1.1 paired mutation)</strong></td>
+<td>(a) strip the §5 dry-run gate → fail-closed integration test must
+FAIL; (b) make <code>Compile</code> range a map for output order →
+determinism test must FAIL; (c) drop the revoked-grant check → E5 test
+must FAIL. Each mutation FAILs its gate, restore PASSes.</td>
+<td>mutate→FAIL→restore→PASS log</td>
+</tr>
+<tr>
+<td><strong>Challenge (HelixQA, §11.4.27)</strong></td>
+<td><code>CME-POLICY-001</code>: drives the running example end-to-end,
+scores PASS only on captured proof carol reaches
+<code>10.10.0.0/24:554</code> AND is denied
+<code>192.168.50.0/24</code>.</td>
+<td>challenge <code>result.json</code></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>Anti-bluff floor: a policy &quot;PASS&quot; is valid only with captured
+evidence that an authorized edge <strong>and</strong> an unauthorized
+edge behaved correctly — a green compile is necessary, never sufficient
+(the §0.1 covenant). The §1.1 mutations are the runtime signatures
+(§11.4.108) that P1/P2/P4/E5 are live, not promised.</p>
+</blockquote>
+<hr />
+<h2 id="13-phase--task-mapping-workable-items-11493">13. Phase → task
+mapping (workable items, §11.4.93)</h2>
+<p>Restates the [research-go_cp §13] CP-T6 leaf into nano-detail work
+items, risk-descending (§11.4.132 — fail-closed validation + determinism
+first, they are the irreversible floor):</p>
+<ul>
+<li><strong>CP-T6.1</strong> spec parser + typed AST (§2.2/§2.3) +
+grammar errors (§8).</li>
+<li><strong>CP-T6.2</strong> <code>resolve.go</code>: groups (transitive
++ cycle, E12) + hosts + advertised cross-check (P7).</li>
+<li><strong>CP-T6.3</strong> <code>compile.go</code>: two-artifact pure
+core (§4) + canonical determinism (§3.1) + purity lint.</li>
+<li><strong>CP-T6.4</strong> <code>validate.go</code>: fail-closed
+dry-run gate (§5) + blocking/advisory taxonomy.</li>
+<li><strong>CP-T6.5</strong> <code>activate.go</code>: monotonic version
++ atomic flip + instant rollback (§6) + compiled cache DDL.</li>
+<li><strong>CP-T6.6</strong> event emit/consume wiring (§7.1) +
+<code>coordinator.v1.Peer.verdicts</code> projection (§7.2).</li>
+<li><strong>CP-T6.7</strong> metrics (§11) + the §12 full test-type
+matrix + <code>CME-POLICY-001</code> Challenge.</li>
+</ul>
+<hr />
+<h3 id="sources">Sources</h3>
+<p>[04_P1] HelixVPN-Phase1-MVP.md §§5–7, §10–11 (ACL model, compile
+algorithm, two artifacts, fail-closed validation, instant rollback, test
+strategy, MVP DoD) · [04_ARCH] HelixVPN-Architecture-Refined.md §3.4
+(multi-network routing/policy, default-deny,
+<code>AllowedIPs</code>+nftables/eBPF verdict map, ULA /48 + 4via6), §7
+(zero-trust, no-logging) · [research-go_cp] 02-control-plane.md §1.3
+(Compiler interface), §2.2/§2.3 (policies DDL + RLS), §4
+(<code>helix.coordinator.v1</code> proto), §5 (events), §6 (coordinator
+consumption), §7 (policy model &amp; compiler), §10 (SLOs + test
+strategy) · [SYNTHESIS] §§2–4, §7, §9 (stack floor, key decisions D3/D4,
+security invariants, constitution bindings). UNVERIFIED items (nested
+groups, device-as-destination, measured p99) flagged inline per
+§11.4.6.</p>
+</body>
+</html>

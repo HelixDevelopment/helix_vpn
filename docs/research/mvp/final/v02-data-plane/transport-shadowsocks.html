@@ -1,0 +1,1253 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Shadowsocks-Wrap Transport</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Shadowsocks-Wrap Transport</h1>
+</header>
+<h1 id="shadowsocks-wrap-transport">Shadowsocks-Wrap Transport</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-06-25T00:00:00Z</p>
+<blockquote>
+<p>Volume 2 (Data Plane) nano-detail specification — deepens the
+<strong>Shadowsocks-Wrap Transport</strong> section of [01-data-plane
+§3.5]. SPEC ONLY: this document describes the
+<code>helix-transport/src/shadowsocks.rs</code> implementation to be
+built; it is not the shipping code. Source evidence cited inline by id:
+[01-DP §N] = <code>final/01-data-plane.md</code>; [04_ARCH §N] =
+<code>04_VPN_CLD/HelixVPN-Architecture-Refined.md</code>; [04_P2 §N] =
+Phase-2 refined doc; [SYNTHESIS §N]; [research-hysteria2 §N].
+Wire-format byte layouts that are standard Shadowsocks/SIP protocol
+knowledge but <strong>not</strong> present in the HelixVPN evidence base
+are flagged <code>UNVERIFIED</code> per constitution §11.4.6 and MUST be
+confirmed against the <code>shadowsocks-rust</code> source before
+implementation.</p>
+</blockquote>
+<hr />
+<h2 id="0-position-purpose-and-what-this-transport-owns">0. Position,
+purpose, and what this transport owns</h2>
+<p><code>shadowsocks</code> is one of the <strong>N pluggable L2
+carriers</strong> implementing the <code>Transport</code> trait [01-DP
+§3.1]. It wraps already-encrypted WireGuard datagrams inside a
+<strong>Shadowsocks AEAD byte-stream over a single TCP
+connection</strong>, so that on the wire the flow looks like random /
+TLS-ish encrypted TCP — the canonical evasion for <strong>China-style
+DPI regimes where even QUIC is throttled or SNI-filtered</strong>
+[04_ARCH §3.2, §3.5; 04_P2 §1.1; research-hysteria2 §5a].</p>
+<h3 id="01-why-this-transport-exists-threat-it-answers">0.1 Why this
+transport exists (threat it answers)</h3>
+<p>The QUIC-primary path (<code>masque-h3</code>) is the headline
+obfuscation [01-DP §3.3], but it <strong>fails in two regimes</strong>
+that Shadowsocks-wrap is specifically the answer to:</p>
+<table>
+<thead>
+<tr>
+<th>Regime</th>
+<th><code>masque-h3</code> outcome</th>
+<th><code>shadowsocks</code> outcome</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GFW SNI-based QUIC censorship (blocking QUIC by SNI since
+~2024-04)</td>
+<td>blocked unless the H3 proxy SNI is unblocked/fronted</td>
+<td>survives — no QUIC, no SNI on the wire</td>
+<td>[research-hysteria2 §5a, §6]</td>
+</tr>
+<tr>
+<td>Hard UDP block / UDP throttling (corporate + China domestic)</td>
+<td>fails (needs UDP)</td>
+<td>survives — rides TCP</td>
+<td>[research-hysteria2 §5b]</td>
+</tr>
+<tr>
+<td>Active-probing of suspicious TCP endpoints</td>
+<td>n/a</td>
+<td>mitigated by AEAD + auth (no response to an unauthenticated
+prober)</td>
+<td>[research-hysteria2 §5d]</td>
+</tr>
+</tbody>
+</table>
+<p>It is therefore the <strong>second-to-last rung</strong> of the
+escalation ladder: above <code>masque-h3</code> (tried when QUIC is
+blocked) and above <code>udp-over-tcp</code> (the absolute last resort)
+[01-DP §5.3].</p>
+<h3 id="02-invariants-this-transport-must-preserve">0.2 Invariants this
+transport MUST preserve</h3>
+<p>Inherited from the data-plane non-negotiable invariants [01-DP
+§0.1]:</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Invariant as it binds <code>shadowsocks</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>I1</td>
+<td>The transport carries only already-encrypted WG datagrams; the
+Shadowsocks AEAD layer <strong>never sees plaintext</strong> and the WG
+keys are <strong>never</strong> the Shadowsocks keys (separate secret,
+§3).</td>
+</tr>
+<tr>
+<td>I2</td>
+<td>The carrier conceptually transports <strong>discrete WG
+datagrams</strong>, never an application byte stream. Because the L1
+substrate is TCP (ordered, reliable), datagram boundaries MUST be
+reconstructed by an explicit length-prefix framing (§4) — TCP&#39;s stream
+nature is hidden behind a datagram API; head-of-line blocking is the
+accepted cost (§7).</td>
+</tr>
+<tr>
+<td>I4</td>
+<td>One crate, three consumers: the same <code>shadowsocks.rs</code>
+obfuscates on the client and de-obfuscates on the edge [01-DP §I4].</td>
+</tr>
+<tr>
+<td>I5</td>
+<td>No-logging: only aggregate counters (bytes, frame count,
+AEAD-failure count); never per-connection durable state.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="03-out-of-scope">0.3 Out of scope</h3>
+<p>WG crypto (§4 of [01-DP]); the ladder <em>policy</em> that selects
+this transport (specified in [01-DP §5.3], consumed here); DAITA
+placement (above WG, below transport — orthogonal, [01-DP §9]); the
+control-plane delivery of the pre-shared Shadowsocks password (doc 02/03
+— this doc consumes it as <code>SecretBytes</code>). The
+<code>udp-over-tcp</code> sibling rung is [01-DP §3.6].</p>
+<hr />
+<h2 id="1-layering--encapsulation-where-the-bytes-go">1. Layering &amp;
+encapsulation (where the bytes go)</h2>
+<pre class="mermaid"><code>flowchart TD
+    A[&quot;L4 application packet&quot;] --&gt; B[&quot;L3 WireGuard encrypt (Noise IK, ChaCha20-Poly1305)&quot;]
+    B --&gt; C[&quot;L2.5 DAITA (optional pad/cover) — orthogonal&quot;]
+    C --&gt; D[&quot;WG datagram = Bytes (opaque, already encrypted) — I1&quot;]
+    D --&gt; E[&quot;Shadowsocks frame: 2-byte length prefix + WG datagram&quot;]
+    E --&gt; F[&quot;Shadowsocks AEAD seal (chacha20-poly1305 / aes-256-gcm)&quot;]
+    F --&gt; G[&quot;TCP segment to gateway:port (looks like random/TLS-ish TCP)&quot;]
+    G --&gt; H[&quot;L1 IP to gateway public endpoint&quot;]
+    H -.-&gt;|edge mirror, reverse| I[&quot;EDGE: TCP recv → AEAD open → deframe → WG datagram → WG fast path&quot;]</code></pre>
+<p>The Shadowsocks AEAD layer sits <strong>strictly between</strong> the
+WG-datagram producer (the orchestrator&#39;s <code>send</code>) and the TCP
+socket. It adds exactly two things on top of the opaque WG bytes: (a) a
+<strong>2-byte length prefix</strong> so discrete datagrams survive the
+byte stream (§4), and (b) <strong>AEAD confidentiality + integrity + a
+per-record nonce chain</strong> so DPI sees only high-entropy bytes
+[04_ARCH §3.5; 04_P2 §1.1; 01-DP §3.5].</p>
+<hr />
+<h2 id="2-public-surface--trait-impl-config-ciphers">2. Public surface —
+trait impl, config, ciphers</h2>
+<h3 id="21-transport-impl-signature">2.1 <code>Transport</code> impl
+signature</h3>
+<p><code>ShadowsocksTransport</code> implements the frozen
+<code>Transport</code> trait [01-DP §3.1] unchanged — the orchestrator
+cannot tell it apart from <code>plain_udp</code> or
+<code>masque-h3</code> at the API level (that is the whole point of the
+trait, I4).</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-transport/src/shadowsocks.rs</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">async_trait::</span>async_trait<span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">bytes::</span><span class="op">{</span>Bytes<span class="op">,</span> BytesMut<span class="op">};</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">tokio::net::</span>TcpStream<span class="op">;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">tokio::sync::</span>Mutex<span class="op">;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::net::</span>SocketAddr<span class="op">;</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="co">/// WG datagrams wrapped in a Shadowsocks AEAD byte-stream over a single TCP connection.</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="co">/// China-style-DPI evasion rung of the ladder [01-DP §3.5]. NEVER sees plaintext (I1).</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> ShadowsocksTransport <span class="op">{</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Send half — AEAD-sealing writer over the TCP write half. Mutex because `Transport::send`</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// takes `&amp;self` but the AEAD nonce counter + TCP write half are single-owner (§4.4).</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    tx<span class="op">:</span> Mutex<span class="op">&lt;</span>SsWriter<span class="op">&gt;,</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Recv half — AEAD-opening reader over the TCP read half + a reassembly buffer (§4.5).</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    rx<span class="op">:</span> Mutex<span class="op">&lt;</span>SsReader<span class="op">&gt;,</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    peer<span class="op">:</span> SocketAddr<span class="op">,</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    method<span class="op">:</span> SsMethod<span class="op">,</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    health<span class="op">:</span> HealthCell<span class="op">,</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Aggregate counters only (I5): frames sent/recv, bytes, aead_open_failures.</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>    counters<span class="op">:</span> SsCounters<span class="op">,</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>async_trait<span class="at">]</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> Transport <span class="cf">for</span> ShadowsocksTransport <span class="op">{</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>    <span class="kw">async</span> <span class="kw">fn</span> send(<span class="op">&amp;</span><span class="kw">self</span><span class="op">,</span> datagram<span class="op">:</span> Bytes) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">,</span> TransportError<span class="op">&gt;;</span>   <span class="co">// §4.4</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>    <span class="kw">async</span> <span class="kw">fn</span> recv(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>Bytes<span class="op">,</span> TransportError<span class="op">&gt;;</span>                 <span class="co">// §4.5</span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> kind(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="op">&amp;</span><span class="ot">&#39;static</span> <span class="dt">str</span> <span class="op">{</span> <span class="st">&quot;shadowsocks&quot;</span> <span class="op">}</span></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> effective_mtu(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">u16</span> <span class="op">{</span> SS_EFFECTIVE_MTU <span class="op">}</span>                    <span class="co">// 1380 (§6)</span></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> health(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> TransportHealth <span class="op">{</span> <span class="kw">self</span><span class="op">.</span>health<span class="op">.</span>snapshot() <span class="op">}</span></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>    <span class="kw">async</span> <span class="kw">fn</span> close(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">,</span> TransportError<span class="op">&gt;;</span>                   <span class="co">// §5.4 (FIN the TCP carrier)</span></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="22-config-variant-already-in-the-frozen-transportconfig-enum">2.2
+Config variant (already in the frozen <code>TransportConfig</code>
+enum)</h3>
+<p>The <code>Shadowsocks</code> variant is part of the frozen
+<code>TransportConfig</code> enum [01-DP §3.1]; this doc specifies its
+semantics, it does <strong>not</strong> add a field.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// (reproduced from helix-transport/src/lib.rs [01-DP §3.1] — frozen contract)</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="pp">TransportConfig::</span>Shadowsocks <span class="op">{</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    peer<span class="op">:</span>   SocketAddr<span class="op">,</span>   <span class="co">// gateway TCP endpoint, e.g. gw:443/tcp or gw:8388/tcp (§9 port choice)</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    method<span class="op">:</span> SsMethod<span class="op">,</span>     <span class="co">// AEAD cipher selection (§2.3)</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    psk<span class="op">:</span>    SecretBytes<span class="op">,</span>  <span class="co">// pre-shared Shadowsocks password — SEPARATE from WG keys (I1, §3)</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="bu">Clone</span><span class="op">,</span> <span class="bu">Copy</span><span class="op">,</span> <span class="bu">Debug</span><span class="op">,</span> <span class="bu">PartialEq</span><span class="op">,</span> <span class="bu">Eq</span><span class="at">)]</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">enum</span> SsMethod <span class="op">{</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    Chacha20Poly1305<span class="op">,</span>   <span class="co">// SIP004 AEAD &quot;chacha20-ietf-poly1305&quot; — default (§2.3)</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    Aes256Gcm<span class="op">,</span>          <span class="co">// SIP004 AEAD &quot;aes-256-gcm&quot; — AES-NI hosts (§2.3)</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><code>peer</code>, <code>method</code>, and <code>psk</code> are
+resolved from the <code>NetworkMap</code> pushed by the coordinator (doc
+03); they are never compiled in [01-DP §3.1]. <code>SecretBytes</code>
+is a zeroize-on-drop wrapper (§3.3).</p>
+<h3 id="23-cipher-choice--which-aead-and-why">2.3 Cipher choice — which
+AEAD, and why</h3>
+<p>Two SIP004 AEAD methods are offered [01-DP §3.5
+<code>SsMethod</code>]; both are reused from the
+<code>shadowsocks-rust</code> crypto primitives rather than
+re-implemented [04_P2 §1.1].</p>
+<table>
+<thead>
+<tr>
+<th><code>SsMethod</code></th>
+<th>Primitive</th>
+<th>Tag</th>
+<th>Nonce</th>
+<th>When the ladder/config picks it</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Chacha20Poly1305</code> (<strong>default</strong>)</td>
+<td>ChaCha20-Poly1305 (IETF)</td>
+<td>16 B</td>
+<td>12 B (LE counter, §4.3)</td>
+<td>Default. Constant-time in software; best on ARM / non-AES-NI mobile.
+Same AEAD family WG itself uses, so no new primitive class on the
+device.</td>
+</tr>
+<tr>
+<td><code>Aes256Gcm</code></td>
+<td>AES-256-GCM</td>
+<td>16 B</td>
+<td>12 B (LE counter, §4.3)</td>
+<td>Hosts with AES-NI / ARMv8 crypto extensions where hardware AES beats
+ChaCha. Selected by config when the gateway advertises it for that
+region.</td>
+</tr>
+</tbody>
+</table>
+<p>Both use a <strong>32-byte master key</strong> derived from the
+<code>psk</code> (§3.1) and a <strong>per-direction random salt</strong>
+at connection start (§4.1). Tag length is 16 bytes; nonce is a 12-byte
+little-endian counter incremented once per AEAD record (§4.3).
+<code>UNVERIFIED (SIP004 byte sizes — standard Shadowsocks AEAD spec, not in HelixVPN evidence base; confirm against shadowsocks-rust </code>crypto<code> module before implementing).</code></p>
+<p><strong>Hardening option (Phase 2):</strong> the SIP022 &quot;AEAD-2022&quot;
+edition (BLAKE3-keyed, fixed 32/16-byte PSK, per-session subkey,
+built-in replay window) is materially more probe-resistant than SIP004.
+It is <strong>not</strong> the default because the frozen
+<code>SsMethod</code> enum names SIP004 ciphers; adding
+<code>Aead2022Blake3Chacha20Poly1305</code> is a tracked Phase-2 work
+item, not an MVP requirement.
+<code>UNVERIFIED (SIP022 design — external Shadowsocks-2022 spec, not in HelixVPN evidence base).</code></p>
+<hr />
+<h2 id="3-key-schedule--secret-handling">3. Key schedule &amp; secret
+handling</h2>
+<h3 id="31-master-key-derivation-sip004-path">3.1 Master key derivation
+(SIP004 path)</h3>
+<div class="sourceCode" id="cb4"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">/// Derive the 32-byte AEAD master key from the user PSK.</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co">/// SIP004 uses the legacy Shadowsocks &quot;EVP_BytesToKey&quot; (MD5-chain) KDF over the password</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co">/// to produce the cipher key length (32 B for both offered methods).</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> ss_master_key(psk<span class="op">:</span> <span class="op">&amp;</span>SecretBytes<span class="op">,</span> key_len<span class="op">:</span> <span class="dt">usize</span>) <span class="op">-&gt;</span> SecretBytes<span class="op">;</span> <span class="co">// key_len = 32</span></span></code></pre></div>
+<p><code>UNVERIFIED (EVP_BytesToKey MD5-chain KDF — this is the SIP004 master-key derivation in the Shadowsocks ecosystem, NOT in the HelixVPN evidence base. It is a known-weak KDF; §11 records the recommendation to move to SIP022 BLAKE3 PSK in Phase 2. Confirm the exact </code>shadowsocks-rust<code> KDF call before implementing.)</code></p>
+<h3 id="32-per-connection-subkey-the-actual-aead-key">3.2 Per-connection
+subkey (the actual AEAD key)</h3>
+<p>Each TCP connection generates a fresh random <strong>salt</strong>
+per direction; the per-direction <strong>subkey</strong> that actually
+seals/opens records is derived by <strong>HKDF-SHA1</strong> over
+<code>(master_key, salt, info=&quot;ss-subkey&quot;)</code> [SIP004
+convention].</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> ss_subkey(master_key<span class="op">:</span> <span class="op">&amp;</span>SecretBytes<span class="op">,</span> salt<span class="op">:</span> <span class="op">&amp;</span>[<span class="dt">u8</span>]) <span class="op">-&gt;</span> SecretBytes<span class="op">;</span> <span class="co">// HKDF-SHA1, 32-byte out</span></span></code></pre></div>
+<p><code>UNVERIFIED (HKDF-SHA1 + &quot;ss-subkey&quot; info string — SIP004 spec, not in HelixVPN evidence base; confirm against shadowsocks-rust.)</code>
+This per-connection salt is what makes two connections with the same
+<code>psk</code> produce unrelated wire bytes — required to resist the
+GFW&#39;s packet-size / correlation heuristics [research-hysteria2 §5d].</p>
+<h3 id="33-secret-lifetime">3.3 Secret lifetime</h3>
+<ul>
+<li><code>psk: SecretBytes</code> and every derived key are wrapped in a
+<code>Zeroize</code>-on-drop container; no key material is ever logged
+(I5) or written to durable storage.</li>
+<li>The orchestrator MUST drop <code>ShadowsocksTransport</code> (and
+thus the keys) on <code>close()</code> and on ladder de-selection; keys
+do not outlive the TCP connection.</li>
+<li>The Shadowsocks <code>psk</code> is <strong>categorically
+distinct</strong> from the WG private key (I1): a leak of the
+<code>psk</code> exposes only the obfuscation layer, never WG
+confidentiality. Credential handling follows constitution §11.4.10
+(never git-tracked, <code>chmod 600</code>, rotation on suspected
+leak).</li>
+</ul>
+<hr />
+<h2 id="4-wire-format--framing-state-machine-the-nano-detail-core">4.
+Wire format &amp; framing state machine (the nano-detail core)</h2>
+<h3 id="41-connection-open-wire-layout-per-direction-once">4.1
+Connection-open wire layout (per direction, once)</h3>
+<pre><code>┌───────────────────────────────────────────────────────────────────────┐
+│ DIRECTION HEADER (sent once, first bytes on the TCP stream, per side)   │
+├───────────────────────────────────────────────────────────────────────┤
+│  salt[salt_len]   (random, plaintext on the wire; salt_len == key_len)  │
+└───────────────────────────────────────────────────────────────────────┘
+   then a sequence of AEAD records (§4.2) for the life of the connection</code></pre>
+<p><code>salt_len = 32</code> for both offered methods. The salt is sent
+<strong>in the clear</strong> (it is an input to the receiver&#39;s subkey
+derivation, not a secret).
+<code>UNVERIFIED (salt-first SIP004 framing — Shadowsocks AEAD spec, not in HelixVPN evidence base.)</code></p>
+<h3 id="42-per-datagram-record-layout-sip004-aead">4.2 Per-datagram
+record layout (SIP004 AEAD)</h3>
+<p>Each WG datagram becomes <strong>exactly one logical Shadowsocks
+&quot;chunk&quot;</strong>, encoded as two AEAD records — a length record then a
+payload record:</p>
+<pre><code>┌──────────────────────────────────────────────────────────────────────────────┐
+│ LENGTH RECORD                                                                  │
+│   ciphertext: AEAD_seal(subkey, nonce_n,   plaintext = u16_be(payload_len))    │  2 B plaintext
+│   tag:        16 B                                                             │  → 2 + 16 = 18 B
+├──────────────────────────────────────────────────────────────────────────────┤
+│ PAYLOAD RECORD                                                                 │
+│   ciphertext: AEAD_seal(subkey, nonce_n+1, plaintext = WG_datagram[payload_len])│  payload_len B
+│   tag:        16 B                                                             │  → payload_len + 16 B
+└──────────────────────────────────────────────────────────────────────────────┘</code></pre>
+<ul>
+<li><code>payload_len</code> = the WG datagram length, encoded
+<strong>big-endian u16</strong>. SIP004 caps a single chunk payload at
+<strong>0x3FFF (16383) bytes</strong>; WG datagrams (≤ ~1420 B over
+IPv4) are always far below this cap, so a WG datagram is <strong>never
+split across chunks</strong> — preserving I2&#39;s 1-datagram ↔︎ 1-frame
+mapping.</li>
+<li>The two records consume <strong>two consecutive nonces</strong>
+(<code>nonce_n</code>, <code>nonce_n+1</code>) from the per-direction
+counter (§4.3). The 16-byte tag on the <strong>length</strong> record is
+what makes the length itself unforgeable (a DPI box cannot inject a fake
+length to desync the stream).</li>
+</ul>
+<p><code>UNVERIFIED (0x3FFF chunk cap + 2-byte BE length + double-record framing — SIP004 AEAD wire spec, not in HelixVPN evidence base; confirm against shadowsocks-rust before implementing. The 2-byte length prefix + AEAD-tag overhead IS grounded in [01-DP §3.5, §10].)</code></p>
+<h3 id="43-nonce-discipline">4.3 Nonce discipline</h3>
+<div class="sourceCode" id="cb8"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co">/// Per-direction 12-byte little-endian counter, incremented by 1 after EACH AEAD record</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="co">/// (so a datagram consumes two increments: one for the length record, one for the payload).</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> AeadNonce([<span class="dt">u8</span><span class="op">;</span> <span class="dv">12</span>])<span class="op">;</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> AeadNonce <span class="op">{</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> zero() <span class="op">-&gt;</span> <span class="dt">Self</span> <span class="op">{</span> <span class="dt">Self</span>([<span class="dv">0u8</span><span class="op">;</span> <span class="dv">12</span>]) <span class="op">}</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> next(<span class="op">&amp;</span><span class="kw">mut</span> <span class="kw">self</span>) <span class="op">-&gt;</span> [<span class="dt">u8</span><span class="op">;</span> <span class="dv">12</span>] <span class="op">{</span> <span class="kw">let</span> n <span class="op">=</span> <span class="kw">self</span><span class="op">.</span><span class="dv">0</span><span class="op">;</span> le_increment(<span class="op">&amp;</span><span class="kw">mut</span> <span class="kw">self</span><span class="op">.</span><span class="dv">0</span>)<span class="op">;</span> n <span class="op">}</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Rules:</p>
+<ol type="1">
+<li>Send and receive maintain <strong>independent</strong> counters
+(send counter on <code>SsWriter</code>, recv counter on
+<code>SsReader</code>).</li>
+<li>The counter starts at <strong>0</strong> for the first record after
+the salt and is <strong>never reset</strong> within a connection; nonce
+reuse is a fatal AEAD violation → close the connection.</li>
+<li>On counter exhaustion (2^96 records — unreachable in practice) the
+connection MUST be torn down and re-dialled rather than wrap.</li>
+</ol>
+<p><code>UNVERIFIED (LE 12-byte per-record counter starting at 0 — SIP004 nonce convention, not in HelixVPN evidence base.)</code></p>
+<h3 id="44-send-algorithm">4.4 <code>send</code> algorithm</h3>
+<div class="sourceCode" id="cb9"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">async</span> <span class="kw">fn</span> send(<span class="op">&amp;</span><span class="kw">self</span><span class="op">,</span> datagram<span class="op">:</span> Bytes) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">,</span> TransportError<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> datagram<span class="op">.</span>len() <span class="op">&gt;</span> SS_MAX_FRAME <span class="op">{</span> <span class="cf">return</span> <span class="cn">Err</span>(<span class="pp">TransportError::</span>Oversize(datagram<span class="op">.</span>len()))<span class="op">;</span> <span class="op">}</span> <span class="co">// §6</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> w <span class="op">=</span> <span class="kw">self</span><span class="op">.</span>tx<span class="op">.</span>lock()<span class="op">.</span><span class="kw">await</span><span class="op">;</span>               <span class="co">// serialize writers (single nonce chain)</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 1. length record</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> len_pt <span class="op">=</span> (datagram<span class="op">.</span>len() <span class="kw">as</span> <span class="dt">u16</span>)<span class="op">.</span>to_be_bytes()<span class="op">;</span>           <span class="co">// 2 B BE</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> len_ct <span class="op">=</span> w<span class="op">.</span>seal(<span class="op">&amp;</span>len_pt)<span class="op">?;</span>                                <span class="co">// AEAD record (2 + 16 B)</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 2. payload record</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> pay_ct <span class="op">=</span> w<span class="op">.</span>seal(<span class="op">&amp;</span>datagram)<span class="op">?;</span>                             <span class="co">// AEAD record (n + 16 B)</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 3. one write (or vectored write) — never interleave with another datagram&#39;s records</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>    w<span class="op">.</span>tcp<span class="op">.</span>write_all_vectored(<span class="op">&amp;</span>[<span class="op">&amp;</span>len_ct<span class="op">,</span> <span class="op">&amp;</span>pay_ct])<span class="op">.</span><span class="kw">await</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span>map_err(<span class="pp">TransportError::</span>Io)<span class="op">?;</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">self</span><span class="op">.</span>counters<span class="op">.</span>inc_sent(datagram<span class="op">.</span>len())<span class="op">;</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>    <span class="cn">Ok</span>(())</span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><strong>Atomicity requirement:</strong> the length record and its
+payload record MUST hit the socket as one indivisible unit relative to
+other <code>send</code> calls (the <code>Mutex&lt;SsWriter&gt;</code>
+guarantees this). Interleaving two datagrams&#39; records would desync the
+receiver&#39;s nonce chain (§8 E3).</p>
+<h3 id="45-recv-algorithm--reassembly-state-machine">4.5
+<code>recv</code> algorithm + reassembly state machine</h3>
+<p>Because TCP delivers a byte stream, <code>recv</code> runs a small
+state machine that buffers partial records until a whole length-record
+then a whole payload-record are available:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> RxState <span class="op">{</span> NeedSalt<span class="op">,</span> NeedLen<span class="op">,</span> NeedPayload <span class="op">{</span> payload_len<span class="op">:</span> <span class="dt">usize</span> <span class="op">}</span> <span class="op">}</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="kw">async</span> <span class="kw">fn</span> recv(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>Bytes<span class="op">,</span> TransportError<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> r <span class="op">=</span> <span class="kw">self</span><span class="op">.</span>rx<span class="op">.</span>lock()<span class="op">.</span><span class="kw">await</span><span class="op">;</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">loop</span> <span class="op">{</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">match</span> r<span class="op">.</span>state <span class="op">{</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>            <span class="pp">RxState::</span>NeedSalt <span class="op">=&gt;</span> <span class="op">{</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>                r<span class="op">.</span>fill_at_least(SALT_LEN)<span class="op">.</span><span class="kw">await</span><span class="op">?;</span>            <span class="co">// read 32-byte salt</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>                r<span class="op">.</span>derive_subkey_from_salt()<span class="op">;</span>                 <span class="co">// §3.2 (recv subkey)</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>                r<span class="op">.</span>state <span class="op">=</span> <span class="pp">RxState::</span>NeedLen<span class="op">;</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>            <span class="pp">RxState::</span>NeedLen <span class="op">=&gt;</span> <span class="op">{</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>                r<span class="op">.</span>fill_at_least(<span class="dv">2</span> <span class="op">+</span> TAG_LEN)<span class="op">.</span><span class="kw">await</span><span class="op">?;</span>         <span class="co">// 18-byte length record</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>                <span class="kw">let</span> len <span class="op">=</span> r<span class="op">.</span>open_len_record()<span class="op">?;</span>              <span class="co">// AEAD open → u16 BE, advance nonce</span></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> len <span class="op">==</span> <span class="dv">0</span> <span class="op">||</span> len <span class="op">&gt;</span> SS_MAX_FRAME <span class="op">{</span> <span class="cf">return</span> <span class="cn">Err</span>(<span class="pp">TransportError::</span>HandshakeFailed(<span class="st">&quot;bad ss frame len&quot;</span><span class="op">.</span>into()))<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>                r<span class="op">.</span>state <span class="op">=</span> <span class="pp">RxState::</span>NeedPayload <span class="op">{</span> payload_len<span class="op">:</span> len <span class="op">};</span></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>            <span class="pp">RxState::</span>NeedPayload <span class="op">{</span> payload_len <span class="op">}</span> <span class="op">=&gt;</span> <span class="op">{</span></span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>                r<span class="op">.</span>fill_at_least(payload_len <span class="op">+</span> TAG_LEN)<span class="op">.</span><span class="kw">await</span><span class="op">?;</span> <span class="co">// payload record</span></span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>                <span class="kw">let</span> wg <span class="op">=</span> r<span class="op">.</span>open_payload_record(payload_len)<span class="op">?;</span>  <span class="co">// AEAD open → WG datagram, advance nonce</span></span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>                r<span class="op">.</span>state <span class="op">=</span> <span class="pp">RxState::</span>NeedLen<span class="op">;</span>                     <span class="co">// ready for next datagram</span></span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a>                <span class="kw">self</span><span class="op">.</span>health<span class="op">.</span>mark_recv()<span class="op">;</span></span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a>                <span class="kw">self</span><span class="op">.</span>counters<span class="op">.</span>inc_recv(wg<span class="op">.</span>len())<span class="op">;</span></span>
+<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> <span class="cn">Ok</span>(wg)<span class="op">;</span>                                 <span class="co">// exactly one WG datagram (I2)</span></span>
+<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb10-27"><a href="#cb10-27" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-28"><a href="#cb10-28" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<pre class="mermaid"><code>stateDiagram-v2
+    [*] --&gt; NeedSalt
+    NeedSalt --&gt; NeedLen : read 32B salt → derive recv subkey
+    NeedLen --&gt; NeedLen : &lt; 18B buffered (TCP partial) → await more
+    NeedLen --&gt; NeedPayload : AEAD-open length record OK (advance nonce)
+    NeedLen --&gt; Failed : AEAD tag invalid / len==0 / len&gt;MAX
+    NeedPayload --&gt; NeedPayload : &lt; payload_len+16B buffered → await more
+    NeedPayload --&gt; NeedLen : AEAD-open payload OK → emit WG datagram (advance nonce)
+    NeedPayload --&gt; Failed : AEAD tag invalid
+    Failed --&gt; [*] : TransportError::HandshakeFailed → ladder escalates</code></pre>
+<p><code>fill_at_least(n)</code> reads from the TCP socket into the
+reassembly buffer until ≥ <code>n</code> bytes are buffered; on EOF
+before <code>n</code> it returns <code>TransportError::Closed</code>.
+The state machine is <strong>cancel-safe</strong> (an awaited
+<code>recv</code> dropped inside a <code>select!</code> leaves
+<code>RxState</code> + buffer intact) [01-DP §3.1 cancel-safe
+requirement].</p>
+<hr />
+<h2 id="5-dial--connection-lifecycle-state-machine">5. Dial / connection
+lifecycle state machine</h2>
+<h3 id="51-dial-for-the-shadowsocks-variant">5.1 <code>dial()</code> for
+the Shadowsocks variant</h3>
+<div class="sourceCode" id="cb12"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co">// dispatched from helix-transport::dial() [01-DP §3.1] for TransportConfig::Shadowsocks</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="kw">async</span> <span class="kw">fn</span> dial_shadowsocks(</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    peer<span class="op">:</span> SocketAddr<span class="op">,</span> method<span class="op">:</span> SsMethod<span class="op">,</span> psk<span class="op">:</span> SecretBytes<span class="op">,</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span><span class="dt">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> Transport<span class="op">&gt;,</span> TransportError<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 1. TCP connect within the ladder&#39;s bounded dial timeout (§5.3 budget)</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> tcp <span class="op">=</span> <span class="pp">tokio::time::</span>timeout(DIAL_TIMEOUT<span class="op">,</span> <span class="pp">TcpStream::</span>connect(peer))</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span><span class="kw">await</span><span class="op">.</span>map_err(<span class="op">|</span>_<span class="op">|</span> <span class="pp">TransportError::</span>DialTimeout)<span class="op">?</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span>map_err(<span class="pp">TransportError::</span>Io)<span class="op">?;</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>    tcp<span class="op">.</span>set_nodelay(<span class="cn">true</span>)<span class="op">.</span>map_err(<span class="pp">TransportError::</span>Io)<span class="op">?;</span>          <span class="co">// §7 latency: disable Nagle</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> (rh<span class="op">,</span> wh) <span class="op">=</span> tcp<span class="op">.</span>into_split()<span class="op">;</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 2. derive master key, generate per-direction send salt</span></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> mk <span class="op">=</span> ss_master_key(<span class="op">&amp;</span>psk<span class="op">,</span> <span class="dv">32</span>)<span class="op">;</span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> send_salt <span class="op">=</span> random_salt(SALT_LEN)<span class="op">;</span></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> writer <span class="op">=</span> <span class="pp">SsWriter::</span>new(wh<span class="op">,</span> ss_subkey(<span class="op">&amp;</span>mk<span class="op">,</span> <span class="op">&amp;</span>send_salt)<span class="op">,</span> <span class="pp">AeadNonce::</span>zero()<span class="op">,</span> method)<span class="op">;</span></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 3. emit our salt (plaintext) as the FIRST bytes on the stream</span></span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>    writer<span class="op">.</span>write_salt(<span class="op">&amp;</span>send_salt)<span class="op">.</span><span class="kw">await</span><span class="op">?;</span>                        <span class="co">// §4.1</span></span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 4. reader starts in NeedSalt — peer&#39;s salt arrives lazily on first recv (§4.5)</span></span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> reader <span class="op">=</span> <span class="pp">SsReader::</span>new(rh<span class="op">,</span> mk<span class="op">.</span>clone()<span class="op">,</span> method)<span class="op">;</span>          <span class="co">// recv subkey derived on first salt byte-run</span></span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a>    <span class="cn">Ok</span>(<span class="dt">Box</span><span class="pp">::</span>new(ShadowsocksTransport <span class="op">{</span> tx<span class="op">:</span> <span class="pp">Mutex::</span>new(writer)<span class="op">,</span> rx<span class="op">:</span> <span class="pp">Mutex::</span>new(reader)<span class="op">,</span> <span class="co">/* … */</span> <span class="op">}</span>))</span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><strong>Key point — there is no application-level Shadowsocks
+handshake to wait on.</strong> Unlike <code>masque-h3</code> (a
+CONNECT-UDP request/200 round trip [01-DP §3.3]), the Shadowsocks AEAD
+layer is <strong>connectionless at the obfuscation layer</strong>: once
+the TCP connection is up and our salt is flushed, the carrier is &quot;live&quot;
+and the <strong>first real liveness signal is the WG handshake
+completing through it</strong> [04_ARCH §3.5]. <code>dial()</code>
+returning <code>Ok</code> therefore means &quot;TCP + salt sent&quot;, not &quot;peer
+reachable&quot;; the orchestrator&#39;s WG handshake over this transport is the
+actual end-to-end proof, and a WG-handshake timeout maps to a ladder
+escalation (§8 E5).</p>
+<h3 id="52-connection-state-machine-carrier-lifecycle">5.2 Connection
+state machine (carrier lifecycle)</h3>
+<pre class="mermaid"><code>stateDiagram-v2
+    [*] --&gt; TcpConnecting
+    TcpConnecting --&gt; SaltSent : TCP up, set_nodelay, write send-salt
+    TcpConnecting --&gt; DialFailed : timeout / RST → TransportError::DialTimeout|Io
+    SaltSent --&gt; Live : first WG datagram sealed &amp; recv&#39;d (carrier proven by WG handshake)
+    SaltSent --&gt; Dead : WG handshake budget exceeded → ladder escalates
+    Live --&gt; Live : send/recv WG datagrams (§4.4/§4.5)
+    Live --&gt; Dead : AEAD-open failure / TCP RST / FIN (peer closed)
+    Live --&gt; Closed : Transport::close() (graceful FIN)
+    DialFailed --&gt; [*]
+    Dead --&gt; [*]
+    Closed --&gt; [*]</code></pre>
+<h3 id="53-dial-timeout--ladder-budget">5.3 Dial-timeout &amp; ladder
+budget</h3>
+<p><code>dial_shadowsocks</code> returns within
+<code>DIAL_TIMEOUT</code> (the ladder&#39;s bounded per-rung budget,
+<code>FailureBudget { max_handshakes, window }</code> [01-DP §5.3]). A
+<code>DialTimeout</code>/<code>Io(RST)</code> at TCP connect, or a
+WG-handshake budget overrun after the carrier is live, escalates the
+ladder to the <strong>next rung (<code>udp-over-tcp</code>)</strong>
+[01-DP §5.3]. On success the orchestrator emits
+<code>TunnelStatus::Connected { transport: &quot;shadowsocks&quot;, rtt_ms }</code>
+[01-DP §5.2] and the ladder <strong>remembers <code>shadowsocks</code>
+per-network</strong> (SSID / gateway fingerprint) so a reconnect on the
+same hostile network skips straight to it [01-DP §5.3 step 4].</p>
+<h3 id="54-close">5.4 <code>close()</code></h3>
+<div class="sourceCode" id="cb14"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="kw">async</span> <span class="kw">fn</span> close(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">,</span> TransportError<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> w <span class="op">=</span> <span class="kw">self</span><span class="op">.</span>tx<span class="op">.</span>lock()<span class="op">.</span><span class="kw">await</span><span class="op">;</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> _ <span class="op">=</span> w<span class="op">.</span>tcp<span class="op">.</span>shutdown()<span class="op">.</span><span class="kw">await</span><span class="op">;</span>   <span class="co">// graceful FIN; idempotent — second call is a no-op</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    <span class="cn">Ok</span>(())</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Idempotent per the trait contract [01-DP §3.1]. Keys zeroize on
+<code>ShadowsocksTransport</code> drop (§3.3). No half-open lingering: a
+FIN is sent; an unacked peer is reaped by TCP keepalive / the OS.</p>
+<hr />
+<h2 id="6-mtu--overhead-budget">6. MTU &amp; overhead budget</h2>
+<div class="sourceCode" id="cb15"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">const</span> SS_EFFECTIVE_MTU<span class="op">:</span> <span class="dt">u16</span> <span class="op">=</span> <span class="dv">1380</span><span class="op">;</span> <span class="co">// [01-DP §10]</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">const</span> TAG_LEN<span class="op">:</span> <span class="dt">usize</span>       <span class="op">=</span> <span class="dv">16</span><span class="op">;</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">const</span> SALT_LEN<span class="op">:</span> <span class="dt">usize</span>       <span class="op">=</span> <span class="dv">32</span><span class="op">;</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">const</span> SS_MAX_FRAME<span class="op">:</span> <span class="dt">usize</span>   <span class="op">=</span> <span class="dv">0x3FFF</span><span class="op">;</span> <span class="co">// SIP004 chunk cap (UNVERIFIED, §4.2)</span></span></code></pre></div>
+<p><code>effective_mtu()</code> reports <strong>1380</strong> [01-DP
+§10]: derived as
+<code>TCP MSS (~1460 over IPv4) − 2-byte length prefix − AEAD tag</code>,
+left conservative to leave room for the per-datagram framing overhead
+[01-DP §3.5, §10]. Per-WG-datagram on-wire overhead:</p>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Bytes</th>
+<th>Note</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>TCP/IP headers</td>
+<td>40 (IPv4) / 60 (IPv6)</td>
+<td>per TCP segment, amortised across coalesced datagrams</td>
+</tr>
+<tr>
+<td>salt</td>
+<td>32</td>
+<td><strong>once per connection</strong>, not per datagram</td>
+</tr>
+<tr>
+<td>length record (2 B len + tag)</td>
+<td>18</td>
+<td>per datagram</td>
+</tr>
+<tr>
+<td>payload record tag</td>
+<td>16</td>
+<td>per datagram</td>
+</tr>
+<tr>
+<td><strong>per-datagram AEAD/framing total</strong></td>
+<td><strong>34</strong></td>
+<td>(18 + 16); independent of TCP/IP</td>
+</tr>
+</tbody>
+</table>
+<p>Rules (inherited [01-DP §10]): the inner WG MTU =
+<code>min(SS_EFFECTIVE_MTU, path-MTU-discovered)</code>; DAITA padding
+(if active) is added after WG-encrypt and counts against the transport
+budget, not the inner MTU; an oversize WG datagram (&gt;
+<code>SS_MAX_FRAME</code>) is a hard
+<code>TransportError::Oversize</code> — never silently truncated. The
+exact 1380 value is <strong>measured in Phase 2 bring-up</strong>, not
+assumed [01-DP §10, §12.1].</p>
+<hr />
+<h2 id="7-performance-cost-vs-the-udp-transports">7. Performance cost vs
+the UDP transports</h2>
+<p>Shadowsocks-wrap rides <strong>TCP</strong>, so it inherits TCP
+semantics the UDP/QUIC transports do not [01-DP §3.5; 04_ARCH §3.5;
+04_P2 §1.1]:</p>
+<table>
+<thead>
+<tr>
+<th>Axis</th>
+<th><code>plain-udp</code></th>
+<th><code>masque-h3</code> (QUIC)</th>
+<th><code>shadowsocks</code> (this doc)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Substrate</td>
+<td>UDP datagrams</td>
+<td>QUIC DATAGRAM frames (unreliable, RFC 9221)</td>
+<td><strong>single TCP byte-stream</strong></td>
+</tr>
+<tr>
+<td>Head-of-line blocking</td>
+<td>none</td>
+<td>none (QUIC datagrams independent)</td>
+<td><strong>yes</strong> — one lost/late TCP segment stalls every WG
+datagram behind it (§8 E2)</td>
+</tr>
+<tr>
+<td>TCP-over-TCP meltdown</td>
+<td>n/a</td>
+<td>n/a</td>
+<td><strong>risk</strong> — WG over TCP carrying TCP app traffic can
+double-retransmit under loss; mitigated only by being last-resort, not
+default</td>
+</tr>
+<tr>
+<td>Loss behaviour</td>
+<td>WG drops, recovers</td>
+<td>QUIC recovers, WG loss-tolerant</td>
+<td>TCP retransmits + reorders → latency spikes, no goodput collapse but
+jittery</td>
+</tr>
+<tr>
+<td>CPU cost</td>
+<td>lowest</td>
+<td>QUIC + H3 framing</td>
+<td>AEAD seal/open per datagram + TCP stack (moderate [04_ARCH §3.5
+&quot;moderate&quot;])</td>
+</tr>
+<tr>
+<td>Nagle</td>
+<td>n/a</td>
+<td>n/a</td>
+<td><strong>disabled</strong> (<code>TCP_NODELAY</code>, §5.1) to avoid
+40 ms coalescing latency</td>
+</tr>
+<tr>
+<td>Goodput @ 5% loss</td>
+<td>baseline</td>
+<td>beats UoT strawman [01-DP §3.3]</td>
+<td>below QUIC; acceptable because it is the <em>survival</em> rung, not
+the <em>fast</em> rung</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Design stance</strong> [01-DP §3.5, §5.3]: the ladder prefers
+<code>shadowsocks</code> <strong>only when UDP and QUIC are
+blocked</strong>. Its job is to keep a tunnel <em>possible</em> under
+China-style DPI, not to be fast; the head-of-line-blocking +
+TCP-over-TCP penalties are the accepted cost of surviving a regime where
+the faster transports do not connect at all [research-hysteria2 §5a,
+§6]. It sits <strong>above</strong> <code>udp-over-tcp</code> on the
+ladder because the AEAD wrap gives genuine &quot;looks-random&quot; camouflage
+that bare length-prefixed <code>udp-over-tcp</code> lacks [01-DP
+§3.6].</p>
+<hr />
+<h2 id="8-error-taxonomy--edge-cases">8. Error taxonomy &amp; edge
+cases</h2>
+<p>All errors surface through the frozen <code>TransportError</code>
+enum [01-DP §error.rs]; no new variants.</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Edge case</th>
+<th>Detection</th>
+<th>Mapped error / action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>E1</td>
+<td>TCP connect refused / reset / timeout at dial</td>
+<td><code>connect()</code> err / <code>DIAL_TIMEOUT</code> elapsed</td>
+<td><code>DialTimeout</code> / <code>Io</code> → ladder escalates to
+<code>udp-over-tcp</code></td>
+</tr>
+<tr>
+<td>E2</td>
+<td>TCP segment loss/reorder mid-stream (HOL block)</td>
+<td>OS TCP stalls <code>recv</code></td>
+<td><strong>not an error</strong> — <code>recv</code> blocks until
+reassembly completes; surfaces as latency, accounted in §7</td>
+</tr>
+<tr>
+<td>E3</td>
+<td>Nonce desync (two datagrams&#39; records interleaved)</td>
+<td>impossible by construction (<code>Mutex&lt;SsWriter&gt;</code>
+atomic write, §4.4)</td>
+<td>prevented; if ever observed → fatal <code>HandshakeFailed</code>,
+close + re-dial</td>
+</tr>
+<tr>
+<td>E4</td>
+<td>AEAD tag verification failure on recv (corruption / active tamper /
+wrong psk)</td>
+<td><code>open_*_record</code> returns AEAD error</td>
+<td><code>HandshakeFailed(&quot;ss aead open&quot;)</code> → close + escalate;
+counter <code>aead_open_failures++</code></td>
+</tr>
+<tr>
+<td>E5</td>
+<td>WG handshake never completes over a live carrier (silent drop /
+fake-accept by middlebox)</td>
+<td>orchestrator WG-handshake budget overrun</td>
+<td>escalate ladder (carrier &quot;Dead&quot;, §5.2); the WG handshake is the real
+liveness oracle (§5.1)</td>
+</tr>
+<tr>
+<td>E6</td>
+<td>Oversize WG datagram (&gt; <code>SS_MAX_FRAME</code>)</td>
+<td>length check in <code>send</code> (§4.4)</td>
+<td><code>Oversize(len)</code> → orchestrator lowers inner MTU /
+L3-fragments [01-DP §10]</td>
+</tr>
+<tr>
+<td>E7</td>
+<td>Bad decrypted length (0 or &gt; MAX) on recv</td>
+<td>check after length-record open (§4.5)</td>
+<td><code>HandshakeFailed(&quot;bad ss frame len&quot;)</code> → close (a
+tamper/desync signal)</td>
+</tr>
+<tr>
+<td>E8</td>
+<td>Peer FIN / half-close mid-stream</td>
+<td><code>fill_at_least</code> hits EOF</td>
+<td><code>Closed</code> → orchestrator reconnects (ladder remembers
+<code>shadowsocks</code> for this network)</td>
+</tr>
+<tr>
+<td>E9</td>
+<td>Salt never arrives (peer sends no bytes)</td>
+<td><code>recv</code> blocks in <code>NeedSalt</code> past WG-handshake
+budget</td>
+<td>orchestrator-side timeout → E5 path</td>
+</tr>
+<tr>
+<td>E10</td>
+<td>Active prober connects, sends junk</td>
+<td>AEAD open fails on first record (no valid salt+subkey)</td>
+<td>server side returns nothing useful → prober learns nothing
+[research-hysteria2 §5d]; client side: E4</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Anti-bluff (§11.4.1):</strong> every error path MUST fail
+only for a genuine carrier/product defect. A script-internal panic
+(buffer underflow, nonce-counter overflow handled by §4.3 rule 3) is a
+defect to fix at source, never a FAIL-bluff.</p>
+<hr />
+<h2 id="9-security-considerations">9. Security considerations</h2>
+<ol type="1">
+<li><strong>Separate trust domain (I1).</strong> The Shadowsocks
+<code>psk</code> protects only the obfuscation envelope. WG
+confidentiality/integrity is independent and unchanged; a
+<code>psk</code> compromise downgrades the wire to &quot;visibly WG-shaped
+TCP&quot; but never decrypts user traffic. This layering is why
+Shadowsocks-wrap is safe to use even though SIP004&#39;s KDF is weak
+(§3.1).</li>
+<li><strong>Active-probing resistance</strong> [research-hysteria2 §5d].
+The GFW passively flags suspicious TCP endpoints (partly by packet-size
+distribution) then <strong>actively probes</strong> the server. The
+AEAD-from-the-first-record design means an unauthenticated prober that
+sends arbitrary bytes gets an AEAD-open failure and <strong>no protocol
+response</strong> — the server returns nothing useful (E10). To
+strengthen this, the edge SHOULD (a) randomise/avoid distinctive
+response timing, and (b) on AEAD failure behave like a generic
+closed/decoy service (mirror of the <code>masque-h3</code> edge decoy
+[01-DP §3.3]).
+<code>UNVERIFIED (edge decoy-on-probe behaviour for the SS port — design recommendation; the masque decoy IS grounded [01-DP §3.3], its SS analogue is not separately attested in the evidence base).</code></li>
+<li><strong>Packet-size fingerprinting.</strong> SIP004&#39;s per-connection
+random salt + AEAD high-entropy output defeat static signatures, but
+constant 18-byte length records can leak a cadence. The Phase-2 SIP022
+migration (§11) and optional DAITA padding [01-DP §9] address residual
+size/timing leakage; do not claim size-unfingerprintability for SIP004
+alone (§11.4.6).</li>
+<li><strong>Replay.</strong> SIP004 has no built-in replay window across
+connections; the per-connection nonce chain prevents intra-connection
+replay, but a recorded-and-replayed whole connection is only stopped by
+WG&#39;s own handshake anti-replay (the inner layer). Note this honestly;
+SIP022 adds a replay filter.</li>
+<li><strong>No-logging (I5).</strong> Only aggregate counters (§2.1
+<code>SsCounters</code>); never per-connection or per-datagram durable
+records. AEAD-failure counts are aggregate, not keyed to a peer.</li>
+<li><strong>Key zeroization (§3.3).</strong> All key material is
+<code>Zeroize</code>-on-drop; the <code>psk</code> is never logged
+(constitution §11.4.10) and never crosses the FFI boundary as plaintext
+(doc 05).</li>
+</ol>
+<hr />
+<h2 id="10-config-knobs-consumed-from-the-networkmap">10. Config knobs
+(consumed from the NetworkMap)</h2>
+<table>
+<thead>
+<tr>
+<th>Knob</th>
+<th>Type</th>
+<th>Source</th>
+<th>Default</th>
+<th>Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>peer</code></td>
+<td><code>SocketAddr</code></td>
+<td>NetworkMap</td>
+<td>—</td>
+<td>gateway TCP endpoint (§9 port: 443/tcp to blend with HTTPS, or a
+dedicated SS port)</td>
+</tr>
+<tr>
+<td><code>method</code></td>
+<td><code>SsMethod</code></td>
+<td>NetworkMap</td>
+<td><code>Chacha20Poly1305</code></td>
+<td>AEAD cipher (§2.3)</td>
+</tr>
+<tr>
+<td><code>psk</code></td>
+<td><code>SecretBytes</code></td>
+<td>NetworkMap (per-tenant secret)</td>
+<td>—</td>
+<td>obfuscation password (§3)</td>
+</tr>
+<tr>
+<td>ladder rung index</td>
+<td>derived</td>
+<td><code>TransportPolicy.order</code> [01-DP §5.3]</td>
+<td>after <code>masque-h3</code>, before <code>udp-over-tcp</code></td>
+<td>when the ladder reaches this transport</td>
+</tr>
+<tr>
+<td>regional prior</td>
+<td><code>TransportPolicy.order</code> push</td>
+<td>coordinator [01-DP §5.3 step 5]</td>
+<td>CN-resolved clients MAY start at <code>shadowsocks</code></td>
+<td>skip escalation latency in censored regions</td>
+</tr>
+<tr>
+<td><code>DIAL_TIMEOUT</code></td>
+<td><code>Duration</code></td>
+<td>ladder <code>FailureBudget</code> [01-DP §5.3]</td>
+<td>bounded</td>
+<td>TCP-connect + carrier-up budget before escalation</td>
+</tr>
+<tr>
+<td><code>TCP_NODELAY</code></td>
+<td><code>bool</code></td>
+<td>fixed</td>
+<td><code>true</code> (§5.1)</td>
+<td>disable Nagle for latency</td>
+</tr>
+</tbody>
+</table>
+<p>No knob is compiled in; all are resolved from the coordinator-pushed
+map [01-DP §3.1, §6.2].</p>
+<hr />
+<h2 id="11-phasing--evolution">11. Phasing &amp; evolution</h2>
+<table>
+<thead>
+<tr>
+<th>Phase</th>
+<th>Deliverable</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>lwo</code> ships first; <code>shadowsocks</code> scaffolded
+behind the ladder but <code>udp-over-tcp</code>/<code>shadowsocks</code>
+are tagged <strong>Phase 2</strong></td>
+<td>[01-DP §12 file-by-file]</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Full <code>shadowsocks.rs</code> (SIP004 AEAD, both methods), ladder
+integration, per-network memory, regional priors</td>
+<td>[01-DP §12; 04_P2 §1.1]</td>
+</tr>
+<tr>
+<td>2+</td>
+<td>SIP022 &quot;AEAD-2022&quot; method (BLAKE3 PSK, replay window) as a hardening
+<code>SsMethod</code> addition; DAITA padding interplay</td>
+<td>§2.3, §9; <code>UNVERIFIED (SIP022 — external spec)</code></td>
+</tr>
+</tbody>
+</table>
+<p>The <code>Transport</code> trait,
+<code>TransportConfig::Shadowsocks</code> variant, and
+<code>SsMethod</code> enum are <strong>frozen contracts</strong> [01-DP
+§3.1, §12 closing note]; only the <code>shadowsocks.rs</code> body
+evolves.</p>
+<hr />
+<h2 id="12-test-points--114169-comprehensive-test-type-coverage">12.
+Test points — §11.4.169 comprehensive test-type coverage</h2>
+<p>Every PASS cites rock-solid captured <strong>physical</strong>
+evidence (§11.4.5/.69/.107); the only permitted absence is an honest
+§11.4.3 SKIP-with-reason, never a silent gap (§11.4.169). The closed
+enumerated set, instantiated for this transport:</p>
+<table>
+<thead>
+<tr>
+<th>Test type (§11.4.169)</th>
+<th>Concrete test point for <code>shadowsocks</code></th>
+<th>Captured evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>unit</strong></td>
+<td>framing round-trip (<code>send</code>→<code>recv</code> over an
+in-memory duplex): 1-datagram = 1-frame (I2); nonce monotonicity;
+length-record AEAD detects a flipped length byte (E7);
+<code>Oversize</code> boundary at <code>SS_MAX_FRAME</code> (E6);
+cancel-safety of <code>recv</code> in <code>select!</code>; salt-first
+ordering (§4.1). Mocks permitted <strong>only here</strong>
+(§11.4.27).</td>
+<td>test logs + assertion traces</td>
+</tr>
+<tr>
+<td><strong>integration</strong> (real System, infra via containers
+submodule §11.4.76)</td>
+<td>real <code>shadowsocks-rust</code>-derived crypto against a real
+<code>helix-edge</code> over a real TCP socket in a Linux netns; WG
+handshake completes end-to-end through the carrier (§5.1).</td>
+<td>pcap of the netns link + WG handshake success log</td>
+</tr>
+<tr>
+<td><strong>e2e</strong></td>
+<td>client→gateway→connector LAN-host reachability with
+<code>shadowsocks</code> pinned; <code>ping</code>/<code>curl</code> to
+an advertised LAN host succeeds.</td>
+<td><code>tshark</code> capture + reachability log</td>
+</tr>
+<tr>
+<td><strong>full-automation</strong> (§11.4.25/.52/.98, deterministic
+§11.4.50)</td>
+<td>the <strong>headline DPI test</strong>: <code>nft</code> block all
+UDP <strong>and</strong> QUIC on :443; assert the ladder auto-escalates
+plain-udp→lwo→masque-h3→<strong>shadowsocks</strong> and the tunnel
+survives; <code>tshark</code> shows high-entropy TCP with <strong>no WG
+signature, no QUIC, no SNI</strong>; N=3 identical runs (§11.4.50).</td>
+<td>ordered <code>TunnelStatus</code> event trace + wire capture, ×3
+identical</td>
+</tr>
+<tr>
+<td><strong>Challenges</strong> (challenges submodule §11.4.27(B))</td>
+<td>a Challenge bank entry that drives the DPI-block scenario and scores
+PASS only on positive captured wire evidence.</td>
+<td>Challenge <code>result.json</code> + evidence path</td>
+</tr>
+<tr>
+<td><strong>HelixQA</strong> (helix_qa submodule)</td>
+<td>written test-bank entry exercising the carrier under an autonomous
+QA session.</td>
+<td>HelixQA session artefacts</td>
+</tr>
+<tr>
+<td><strong>DDoS / load-flood</strong></td>
+<td>flood the SS TCP port with junk/half-open connections; assert the
+edge does not leak resources, active-probers get no useful response
+(E10), legitimate carriers stay up.</td>
+<td>connection-count + latency telemetry under flood</td>
+</tr>
+<tr>
+<td><strong>security</strong> (§11.4.10 + security submodule)</td>
+<td>active-probing emulation (send junk → expect AEAD-fail, no protocol
+response, decoy behaviour, §9.2); wrong-<code>psk</code> rejection (E4);
+<code>psk</code> never logged / never git-tracked (§11.4.10).</td>
+<td>prober transcript + log-scan proof</td>
+</tr>
+<tr>
+<td><strong>stress + chaos</strong> (§11.4.85)</td>
+<td>sustained N≥100-iteration send/recv with
+<code>tc netem loss 5% reorder</code>; mid-stream TCP RST injection (E8)
+→ clean reconnect; corrupt one AEAD tag mid-stream (E4) → connection
+closed not desynced.</td>
+<td>per-iteration latency/goodput JSON + recovery trace</td>
+</tr>
+<tr>
+<td><strong>concurrency / atomicity</strong></td>
+<td>many concurrent <code>send</code> calls assert the
+<code>Mutex&lt;SsWriter&gt;</code> keeps each datagram&#39;s two records
+contiguous (no interleave, E3).</td>
+<td>interleave-detector log over K parallel senders</td>
+</tr>
+<tr>
+<td><strong>race-condition / deadlock</strong></td>
+<td>concurrent <code>send</code>/<code>recv</code>/<code>close</code>
+under loom-style or stress scheduling; assert no deadlock between
+<code>tx</code>/<code>rx</code> mutexes, <code>close</code> idempotent
+during in-flight <code>recv</code>.</td>
+<td>scheduler/stress run report</td>
+</tr>
+<tr>
+<td><strong>memory</strong></td>
+<td>long-lived connection: assert the reassembly buffer
+(<code>SsReader</code>) does not grow unbounded under a
+slow/partial-segment peer; keys zeroize on drop (§3.3).</td>
+<td>RSS/heap trace + zeroize assertion</td>
+</tr>
+<tr>
+<td><strong>benchmarking / performance</strong></td>
+<td>measure goodput + CPU/Gbps + p99 latency vs <code>plain-udp</code>
+baseline and <code>masque-h3</code>; quantify the HOL-blocking penalty
+(§7); confirm <code>effective_mtu()=1380</code> is measured not assumed
+(§6).</td>
+<td><code>bench.sh</code> CSV (throughput @ 1/10/100 clients, CPU/Gbps,
+p99)</td>
+</tr>
+</tbody>
+</table>
+<p>Four-layer §11.4.4(b) enforcement: pre-build gate (framing unit tests
++ <code>sh -n</code>/<code>cargo check</code>)</p>
+<ul>
+<li>post-build (integration in netns) + runtime (full-automation DPI
+escalation) + paired §1.1 meta-test mutation (e.g. strip the
+length-record AEAD tag check → the E7 unit test MUST FAIL). Coverage
+ledger row per §11.4.25/.52:
+<code>shadowsocks × {invariant-1..6} × status</code>.</li>
+</ul>
+<hr />
+<h2 id="13-cross-references">13. Cross-references</h2>
+<ul>
+<li><code>Transport</code> trait / <code>dial()</code> ladder /
+<code>TransportError</code> — [01-DP §3.1]</li>
+<li><code>masque-h3</code> (the QUIC primary this transport backstops) —
+[01-DP §3.3]</li>
+<li><code>udp-over-tcp</code> (the rung below) — [01-DP §3.6]</li>
+<li>escalation ladder &amp; per-network memory — [01-DP §5.3, §5.4]</li>
+<li>MTU/overhead budget — [01-DP §10]</li>
+<li>China GFW / active-probing / Shadowsocks evasion facts —
+[research-hysteria2 §5a, §5b, §5d, §6]</li>
+<li>AEAD-2022 / Phantun udp2tcp alternatives surveyed —
+[research-hysteria2 §3, §5b]</li>
+</ul>
+<p><em>End of Shadowsocks-Wrap Transport nano-detail specification
+(Volume 2, Data Plane). All wire-format byte layouts flagged
+<code>UNVERIFIED</code> are standard Shadowsocks SIP004 protocol facts
+absent from the HelixVPN evidence base and MUST be confirmed against
+<code>shadowsocks-rust</code> before implementation, per
+§11.4.6.</em></p>
+</body>
+</html>

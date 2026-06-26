@@ -1,7 +1,7 @@
 # Post-Quantum Handshake (PQ-derived PSK, hybrid never PQ-only)
 
-**Revision:** 1
-**Last modified:** 2026-06-25T12:00:00Z
+**Revision:** 2
+**Last modified:** 2026-06-26T12:00:00Z
 
 > Master technical specification — Volume 5 (Security & Privacy), nano-detail spec.
 > Deepens invariant **S10** and §9 of [04-sec] (`04-security-privacy-pki.md`): the
@@ -134,7 +134,12 @@ page is explicit: *"When pre-shared key mode is not in use, the pre-shared key v
 below is assumed to be an all-zero string of 32 bytes"* [research-wg §6] — i.e. the PSK slot
 **always exists**; it is simply all-zero when unused. In the Noise_IKpsk2 variant the PSK is
 mixed into the chaining key during response generation:
-`temp = HMAC(responder.chaining_key, preshared_key)` [research-wg §6, wg-core §4.2].
+`temp = HMAC(responder.chaining_key, preshared_key)` [research-wg §6].
+
+> **Reconciled (§11.4.35, 2026-06-26):** this key-schedule formula is cited to `[research-wg §6]`
+> only; the prior dual-citation to `wireguard-core.md §4.2` is dropped because wg-core §4.2 marks
+> its key-schedule transcription **UNVERIFIED** — the authoritative source for the PSK mix-in is the
+> WireGuard protocol research §6.
 
 The PSK enters the **symmetric** key schedule (BLAKE2s/HMAC chaining), *downstream of* the
 X25519 ECDH. The cryptographic consequence is the whole reason this works:

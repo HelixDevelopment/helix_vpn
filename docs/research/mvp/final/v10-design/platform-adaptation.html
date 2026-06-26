@@ -1,0 +1,1578 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Platform adaptation — one design language across eight platforms</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Platform adaptation — one design language across eight
+platforms</h1>
+</header>
+<h1 id="platform-adaptation--one-design-language-across-eight-platforms">Platform
+adaptation — one design language across eight platforms</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-06-25T12:00:00Z</p>
+<blockquote>
+<p>Master technical specification — Volume 10 (Design System),
+nano-detail deep-dive. This document <strong>owns</strong> how
+HelixVPN&#39;s <strong>one</strong> <code>helix_design</code> design system
+adapts to each of the <strong>eight</strong> supported platforms —
+<strong>iOS, macOS, Android, Windows, Linux, Web, HarmonyOS,
+Aurora</strong> — from a <strong>single Flutter codebase</strong>
+(<code>helix-ui</code>) plus the per-platform native tunnel shims. For
+every platform it pins: the <strong>design-language posture</strong>
+(Material 3 on the Flutter app, with the native-shim surface following
+each OS&#39;s own HIG / Material / HarmonyDesign / Silica); <strong>which
+token-export form binds</strong> there
+([<code>token-export-pipeline.md</code>]); the <strong>navigation
+idiom</strong>; <strong>system theme (light / dark / auto)
+integration</strong>; <strong>safe-areas / notches / insets / density /
+input model</strong> (touch / mouse / remote); <strong>per-platform
+component substitution</strong>; <strong>capability gating</strong> (the
+Console-web build has no tunnel core); and the <strong>per-platform
+accessibility API</strong> the Flutter <code>Semantics</code> tree maps
+onto (VoiceOver / TalkBack / Narrator / Orca / …).</p>
+<p><strong>SPEC-ONLY.</strong> It describes <em>how the design system
+meets each platform</em> — not the shipping <code>helix_design</code> /
+<code>helix-ui</code> build. The <strong>token model</strong> (tiers,
+schema, theming axes) is owned by [<code>design-tokens.md</code>]; the
+<strong>per-target emit forms</strong> (CSS / Dart / SwiftUI / Compose /
+ArkTS / C-Qt) by [<code>token-export-pipeline.md</code>]; the
+<strong>component catalog</strong> (anatomy, states, a11y baseline, the
+no-overlap guarantee) by [<code>component-library.md</code>]; the
+<strong>type / icon / motion</strong> families + the per-platform font
+strategy by [<code>typography-iconography-motion.md</code>]; the
+<strong>colours + contrast</strong> by [<code>color-system.md</code>];
+the <strong>Flutter app shell / capability gating / flavor
+model</strong> by [<code>v04-client/helix-ui-flutter.md</code>]; the
+<strong>per-platform tunnel shim bodies</strong> by the shim docs
+([<code>v04-client/shim-apple.md</code>],
+[<code>shim-android.md</code>], [<code>shim-windows.md</code>],
+[<code>shim-linux.md</code>], [<code>shim-harmonyos.md</code>],
+[<code>shim-aurora.md</code>]); the <strong>Web Console</strong> by
+[<code>v04-client/web-console.md</code>]. This document is
+<strong>original HelixVPN design work</strong>, layered on each
+framework&#39;s documented conventions.</p>
+<p><strong>Boundary with sibling docs.</strong> Owns: the
+platform-adaptation posture, the platform × adaptation matrix, the
+per-OS system-theme / navigation / safe-area / input / a11y mapping, the
+token→theme→platform binding, the brand-consistency-vs-native-feel
+decision. Consumes: the seven export forms + the light/dark theme-split
+[<code>token-export-pipeline.md</code> §3–§4]; the
+width-not-<code>Platform.isX</code> <code>AdaptiveScaffold</code> rule +
+the flavor/capability model [<code>helix-ui-flutter.md</code> §2.1, §5];
+the system-font-on-native-shims decision (D-TYPE-1)
+[<code>typography-iconography-motion.md</code> §2.2]; the no-overlap /
+no-label-overlay guarantee + the a11y baseline
+[<code>component-library.md</code> §1.3, §1.5]; the per-platform shim
+surface (SwiftUI / Compose / ArkTS / Qt / named pipe) [the shim docs];
+the no-system-tunnel-in-a-browser structural fact
+[<code>web-console.md</code> §1].</p>
+<p><strong>Evidence base.</strong> <code>[TEP §N]</code> =
+<code>final/v10-design/token-export-pipeline.md</code>;
+<code>[CL §N]</code> =
+<code>final/v10-design/component-library.md</code>; <code>[DT §N]</code>
+= <code>final/v10-design/design-tokens.md</code>; <code>[TIM §N]</code>
+= <code>final/v10-design/typography-iconography-motion.md</code>;
+<code>[COLOR §N]</code> = <code>final/v10-design/color-system.md</code>;
+<code>[UIF §N]</code> =
+<code>final/v04-client/helix-ui-flutter.md</code>;
+<code>[APPLE §N]</code> = <code>final/v04-client/shim-apple.md</code>;
+<code>[ANDROID §N]</code> =
+<code>final/v04-client/shim-android.md</code>; <code>[WIN §N]</code> =
+<code>final/v04-client/shim-windows.md</code>; <code>[LINUX §N]</code> =
+<code>final/v04-client/shim-linux.md</code>; <code>[OHOS §N]</code> =
+<code>final/v04-client/shim-harmonyos.md</code>;
+<code>[AURORA §N]</code> = <code>final/v04-client/shim-aurora.md</code>;
+<code>[WEB §N]</code> = <code>final/v04-client/web-console.md</code>;
+<code>[SPINE §N]</code> = <code>final/SPECIFICATION.md</code>. Claims
+not grounded in the evidence base or in this document&#39;s own original
+design choices are tagged <code>UNVERIFIED</code> per constitution
+§11.4.6 — never fabricated. HarmonyOS (HarmonyDesign / ArkUI theming)
+and Aurora (Sailfish Silica-Qt) platform specifics are tagged
+<code>UNVERIFIED</code> where they depend on an SDK-version-specific
+fact this document cannot assert; they are pinned + re-verified per
+§11.4.99 before the corresponding surface ships.</p>
+</blockquote>
+<hr />
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#0-position--the-core-adaptation-principle">0. Position
+&amp; the core adaptation principle</a></li>
+<li><a href="#1-the-adaptation-model--what-is-shared-what-adapts">1. The
+adaptation model — what is shared, what adapts</a></li>
+<li><a href="#2-ios">2. iOS</a></li>
+<li><a href="#3-macos">3. macOS</a></li>
+<li><a href="#4-android">4. Android</a></li>
+<li><a href="#5-windows">5. Windows</a></li>
+<li><a href="#6-linux">6. Linux</a></li>
+<li><a href="#7-web-console">7. Web (Console)</a></li>
+<li><a href="#8-harmonyos">8. HarmonyOS</a></li>
+<li><a href="#9-aurora">9. Aurora</a></li>
+<li><a href="#10-the-platform--adaptation-matrix">10. The platform ×
+adaptation matrix</a></li>
+<li><a href="#11-system-theme-light--dark--auto-integration-per-os">11.
+System theme (light / dark / auto) integration per OS</a></li>
+<li><a href="#12-navigation-idioms--responsive-breakpoints">12.
+Navigation idioms &amp; responsive breakpoints</a></li>
+<li><a href="#13-input-model-density--the-tv-leanback-focus-model">13.
+Input model, density &amp; the TV-leanback focus model</a></li>
+<li><a href="#14-safe-areas-notches--insets">14. Safe-areas, notches
+&amp; insets</a></li>
+<li><a href="#15-capability-gating-per-platform">15. Capability gating
+per platform</a></li>
+<li><a href="#16-accessibility-apis-per-platform">16. Accessibility APIs
+per platform</a></li>
+<li><a href="#17-the-token--theme--platform-binding">17. The token →
+theme → platform binding</a></li>
+<li><a href="#18-surfaced-decisions--cross-doc-contracts">18. Surfaced
+decisions &amp; cross-doc contracts</a></li>
+<li><a href="#sources-verified">Sources verified</a></li>
+</ul>
+<hr />
+<h2 id="0-position--the-core-adaptation-principle">0. Position &amp; the
+core adaptation principle</h2>
+<p>HelixVPN ships <strong>three apps</strong> (Client / &quot;Access&quot;,
+Console, Connector) across <strong>eight platforms</strong> from
+<strong>one Flutter UI core</strong> (<code>helix-ui</code>) plus a thin
+native <strong>tunnel shim</strong> per OS [SPINE §3, UIF §0]. The
+design system is <strong>one</strong> decoupled submodule
+(<code>vasic-digital/helix_design</code>, §11.4.28/.29/.74) that
+configures <strong>OpenDesign</strong> (the mandatory token/theme
+engine, §11.4.162) and emits its tokens into <strong>seven</strong>
+consumable forms [TEP §0].</p>
+<p>The central adaptation principle — and the load-bearing design
+decision of this document — is:</p>
+<blockquote>
+<p><strong>D-PA-1 (decided). One brand design language, adapted at the
+seams; not a wholesale per-OS reskin.</strong> HelixVPN renders
+<strong>its own</strong> brand design language (a Material-3-foundation
+system via Flutter, OpenDesign-token-driven)
+<strong>consistently</strong> on the Flutter app across all eight
+platforms. It does <strong>NOT</strong> swap to a fully native control
+set (Cupertino-everywhere on iOS, WinUI-everywhere on Windows). The
+reason is stated verbatim in [TIM §2.1]: a system-font / native-control
+strategy would make &quot;the <em>connected</em> label … a different shape
+per OS, a brand-consistency leak&quot; — and the connection-state palette +
+glyph <strong>must mean the same thing</strong> on every platform
+([COLOR §3], [CL §2]) so the user&#39;s &quot;am I protected?&quot; answer is
+identical everywhere. Adaptation therefore happens at the
+<strong>seams</strong> — navigation idiom, system-theme wiring,
+safe-areas/insets, input model, the per-platform <strong>token-export
+form</strong> that binds the palette, and the <strong>native-shim
+surface</strong> (which <em>does</em> follow each OS&#39;s own HIG /
+Material / HarmonyDesign / Silica because it is genuinely native code) —
+<strong>not</strong> by reskinning the shared component catalog. Option
+B (full per-OS native control set) is rejected for the brand-consistency
+reason above; the honest tradeoff is recorded in §18.</p>
+</blockquote>
+<p>This is consistent with [UIF §2.1]&#39;s <code>AdaptiveScaffold</code>
+rule: the shell branches on <strong>width</strong>, <em>never</em> on
+<code>Platform.isX</code> — &quot;a resized desktop window behaves like a
+phone; web just works.&quot; Platform identity drives <em>system
+integration</em>, not <em>which widgets exist</em>.</p>
+<pre class="mermaid"><code>flowchart TB
+    subgraph ONE[&quot;ONE design language (shared, all 8 platforms)&quot;]
+      TOK[&quot;helix_design tokens (one JSON source) [DT]&quot;]
+      COMP[&quot;component catalog: ConnectButton · StatusChip · ExitPicker · … [CL]&quot;]
+      TYPE[&quot;bundled Inter / JetBrains Mono in the Flutter app [TIM §2.1]&quot;]
+    end
+    subgraph SEAMS[&quot;ADAPTS at the seams (per platform)&quot;]
+      NAV[&quot;navigation idiom (bottom-nav / rail / multi-pane) — by WIDTH [UIF §2.1]&quot;]
+      THEME[&quot;system light/dark/auto wiring (per-OS mechanism, §11)&quot;]
+      INSET[&quot;safe-areas / notches / insets / density / input (§13, §14)&quot;]
+      BIND[&quot;token-export FORM that binds the palette (§17, [TEP §4])&quot;]
+      SHIM[&quot;native-shim surface — follows the OS&#39;s OWN HIG/Material/HarmonyDesign/Silica&quot;]
+      A11Y[&quot;a11y tree → VoiceOver / TalkBack / Narrator / Orca / … (§16)&quot;]
+    end
+    ONE --&gt; SEAMS
+    classDef one fill:#eef,stroke:#3D5AF1;
+    class ONE one</code></pre>
+<p><strong>Two kinds of surface per platform.</strong> Every platform
+has (a) the <strong>Flutter app surface</strong> (where the user spends
+~all their time — full brand design language, bundled font, the shared
+catalog), and (b) optionally a <strong>native-shim surface</strong> (a
+tiny OS-native config/status UI living in the tunnel extension/service —
+system font per D-TYPE-1 [TIM §2.2], native controls). The two carry the
+<strong>same palette</strong> (the colour token export reaches both [TEP
+§4]) but the native-shim surface follows the OS&#39;s own design language
+because it is genuinely native code.</p>
+<hr />
+<h2 id="1-the-adaptation-model--what-is-shared-what-adapts">1. The
+adaptation model — what is shared, what adapts</h2>
+<table>
+<thead>
+<tr>
+<th>Concern</th>
+<th>Shared (one design language)</th>
+<th>Adapts per platform</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Colour palette + connection-state meaning</td>
+<td><strong>yes</strong> — one token source [COLOR §3], light+dark</td>
+<td>the <strong>export form</strong> that carries it (CSS / Dart /
+SwiftUI / Compose / ArkTS / C-Qt) [TEP §4]</td>
+</tr>
+<tr>
+<td>Components (ConnectButton, StatusChip, …)</td>
+<td><strong>yes</strong> — one catalog [CL §0]</td>
+<td>native-shim surface uses native controls
+(SwiftUI/Compose/ArkUI/Qt)</td>
+</tr>
+<tr>
+<td>Type ramp + bundled brand font</td>
+<td><strong>yes</strong> in the Flutter app [TIM §1]</td>
+<td>native shims use the <strong>system font</strong> (D-TYPE-1)</td>
+</tr>
+<tr>
+<td>Navigation structure</td>
+<td>the responsive <code>AdaptiveScaffold</code> rule [UIF §2.1]</td>
+<td>bottom-nav vs rail vs multi-pane resolved by <strong>width</strong>,
+plus per-OS back/affordance idioms</td>
+</tr>
+<tr>
+<td>Light / dark</td>
+<td><strong>mandatory both</strong> ([TEP]
+<code>DS-LIGHT-DARK-COMPLETE</code>)</td>
+<td>the per-OS <strong>auto / system-theme</strong> wiring mechanism
+(§11)</td>
+</tr>
+<tr>
+<td>Motion + reduced-motion</td>
+<td>one motion-token set [TIM §6]</td>
+<td>honoured via each OS&#39;s reduce-motion signal (§11, §13)</td>
+</tr>
+<tr>
+<td>Accessibility semantics</td>
+<td>one Flutter <code>Semantics</code> tree [CL §1.3]</td>
+<td>maps to the OS a11y API (VoiceOver / TalkBack / Narrator / Orca)
+(§16)</td>
+</tr>
+<tr>
+<td>Tunnel capability</td>
+<td>the <code>TunnelStatus</code>-driven UI</td>
+<td><strong>absent on Web</strong> (NoCore) [WEB §3]; present on the
+other 7</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Honest boundary (§11.4.6).</strong> &quot;One design language&quot;
+guarantees brand + meaning consistency; it does <strong>not</strong>
+mean pixel-identical rendering — each platform&#39;s compositor,
+text-shaper, density, and safe-area geometry differ, and the
+visual-regression suite captures a <strong>per-platform,
+per-theme</strong> golden, not one universal golden
+([<code>visual-regression-and-qa.md</code>], §11.4.162/.168).</p>
+</blockquote>
+<hr />
+<h2 id="2-ios">2. iOS</h2>
+<p><strong>Design-language posture.</strong> Flutter app surface = the
+HelixVPN brand design language (Material-3-foundation, brand-font
+bundled). HelixVPN deliberately does <strong>not</strong> reskin to
+Cupertino controls (D-PA-1) — the <code>ConnectButton</code> /
+<code>StatusChip</code> are the shared catalog [CL §2, §3]. iOS HIG
+conventions that <strong>are</strong> honoured without changing the
+control set: the system back-swipe gesture, bottom safe-area respect,
+large-title-style screen headers via <code>headline.lg</code> [TIM
+§1.1], the home-indicator inset, and Dynamic-Type-equivalent scaling
+(the type ramp scales with the OS text-size setting where Flutter
+exposes it — <code>UNVERIFIED</code> exact Flutter↔︎Dynamic-Type binding,
+pinned per §11.4.99).</p>
+<p><strong>Token binding form.</strong> SwiftUI form [TEP §4.3] —
+<code>HelixTokens.swift</code> + <code>.xcassets</code>
+<strong>asset-catalog colorsets</strong> (one colorset per themed
+colour, light + dark appearance). This is the load-bearing iOS theme
+carrier: a colorset holds both appearances and is resolved by
+<code>@Environment(\.colorScheme)</code> <strong>automatically</strong>
+by the OS, so the <strong>native-shim surface</strong> (the
+<code>NEPacketTunnelProvider</code> config UI, SwiftUI [APPLE §1]) gets
+correct light/dark with zero runtime branching. The <strong>Flutter
+app</strong> consumes the Dart <code>ThemeData</code> form [TEP §4.2]
+(<code>helixLight()</code> / <code>helixDark()</code>), not the Swift
+form — the Swift export is for the SwiftUI shim surface only.</p>
+<p><strong>Navigation idiom.</strong> Compact width (phone) → bottom
+navigation + single pane [UIF §2.1]; the Client home is the
+<code>ConnectButton</code> hero [CL §2]. iPad (medium / expanded) →
+NavigationRail / multi-pane via the same width rule.</p>
+<p><strong>System theme (light/dark/auto).</strong> Flutter
+<code>MaterialApp(themeMode: system)</code> + the SwiftUI shim&#39;s
+asset-catalog auto-resolution; both follow the iOS Appearance setting
+and switch live on toggle. Light + dark are both first-class ([TEP]
+<code>DS-LIGHT-DARK-COMPLETE</code>).</p>
+<p><strong>Safe-areas / notches / insets.</strong> Notch / Dynamic
+Island / home-indicator respected via Flutter <code>SafeArea</code> +
+<code>MediaQuery.viewPadding</code>; the <code>ConnectButton</code> hero
+never renders under the status bar or the home indicator (the [CL §1.5]
+no-overlap guarantee extended to device cutouts). Keyboard insets via
+<code>MediaQuery.viewInsets</code>.</p>
+<p><strong>Density / input.</strong> Touch-first; ≥44×44 pt hit targets
+are already the [CL §1.3] floor (Apple HIG&#39;s own minimum). No
+mouse/remote on iPhone; iPad supports pointer (hover states from [CL
+§1.2] apply when a trackpad is attached).</p>
+<p><strong>Component substitution.</strong> None at the control level
+(D-PA-1) — the toggle is the shared <code>ShieldToggle</code> [CL §5],
+not <code>UISwitch</code>. The <strong>only</strong> native-control
+surface is the SwiftUI NE-config shim, which uses native SwiftUI
+<code>Toggle</code>/<code>Label</code> because it is native code [APPLE
+§2].</p>
+<p><strong>Native-shim surface.</strong> SwiftUI, system font (SF Pro /
+SF Mono) per D-TYPE-1 [TIM §2.2]; same palette via the asset-catalog
+colorsets [TEP §4.3]. Tiny surface (a toggle + a status line) — the iOS
+NE memory ceiling [APPLE §6] forbids bundling the brand font into the
+extension.</p>
+<p><strong>Accessibility API.</strong> Flutter <code>Semantics</code> →
+<strong>VoiceOver</strong>; the stateful <code>ConnectButton</code> name
+(&quot;Connected, direct path, 28 milliseconds&quot;) is read on change via a
+polite live-region, <code>Danger</code> via an assertive announcement
+[CL §2 a11y]. Dynamic-Type-equivalent text scaling honoured.</p>
+<hr />
+<h2 id="3-macos">3. macOS</h2>
+<p><strong>Design-language posture.</strong> Same brand design language
+as iOS, <strong>desktop-class</strong>. HelixVPN does not adopt
+AppKit/SwiftUI native controls for the Flutter surface (D-PA-1); it
+honours macOS conventions that do not require a control swap: window
+chrome / traffic-light inset, menu-bar integration (a status-item /
+menu-bar VPN toggle is a natural macOS affordance —
+<code>UNVERIFIED</code> whether MVP ships a menu-bar extra; surfaced
+§18), keyboard-first navigation, and pointer hover states [CL §1.2].</p>
+<p><strong>Token binding form.</strong> SwiftUI form [TEP §4.3] for the
+native (System Extension) shim surface; Dart <code>ThemeData</code> for
+the Flutter app. macOS does <strong>not</strong> share the iOS NE memory
+ceiling [APPLE §6.5], so the desktop shim surface is not
+size-constrained.</p>
+<p><strong>Navigation idiom.</strong> Expanded width → extended
+NavigationRail + multi-pane [UIF §2.1] (macOS windows are large);
+resizing the window down reflows to rail/bottom-nav by the same width
+rule.</p>
+<p><strong>System theme.</strong> <code>themeMode: system</code> + the
+asset-catalog auto-resolution follow the macOS Appearance (Light / Dark
+/ Auto) setting; the macOS &quot;graphite/accent&quot; tint is
+<strong>not</strong> adopted for the brand accent (the connection-state
+palette is brand-fixed [COLOR §3]).</p>
+<p><strong>Safe-areas / insets.</strong> No notch on most Macs (notebook
+camera-housing menubar inset handled by the OS); window title-bar inset
+respected. Keyboard insets are N/A (desktop).</p>
+<p><strong>Density / input.</strong> Pointer + keyboard first: focus
+rings always visible ([CL §1.2] <code>focusRing</code>), full keyboard
+navigation, a <code>⌘K</code> command palette on the Console [WEB
+§5.1]/[UIF]. <code>≥44 px</code> hit targets still apply (pointer
+precision does not relax the a11y floor, but
+<code>sm</code>/<code>md</code> densities [CL §1.6] are appropriate for
+dense desktop tables).</p>
+<p><strong>Component substitution.</strong> None at the control level.
+The native shim surface (if a separate System-Extension config window
+exists) is SwiftUI/AppKit-native.</p>
+<p><strong>Native-shim surface.</strong> SwiftUI, system font [TIM
+§2.2]; same palette [TEP §4.3]. Desktop-class memory.</p>
+<p><strong>Accessibility API.</strong> Flutter <code>Semantics</code> →
+<strong>VoiceOver</strong> (macOS); full keyboard navigation + focus
+order [CL §1.3]; macOS &quot;Increase contrast&quot; / &quot;Reduce motion&quot;
+accessibility settings honoured (reduce-motion degrades the connect
+pulse to a static ring [CL §2, TIM §8]).</p>
+<hr />
+<h2 id="4-android">4. Android</h2>
+<p><strong>Design-language posture.</strong> Flutter renders
+<strong>Material 3</strong> natively here — the brand design language
+<em>is</em> a Material-3-foundation system [UIF §2.1], so Android is the
+most &quot;native-feeling&quot; of the eight without any reskin:
+<code>ThemeData(useMaterial3: true)</code> + the generated
+<code>lightColorScheme()</code> / <code>darkColorScheme()</code> [TEP
+§4.4]. The system <strong>back button / gesture</strong> and
+predictive-back are honoured by Flutter&#39;s navigator. Material&#39;s
+edge-to-edge + dynamic-color (Material You) is <strong>not</strong>
+adopted for the brand accent (the connection-state palette is
+brand-fixed [COLOR §3]); the M3 <code>primary/surface/error</code> slots
+carry the brand + error mapping while the connection-state colours are
+exposed as <code>HelixColors</code> tokens the <code>StatusChip</code> /
+<code>ConnectButton</code> read directly [TEP §4.4].</p>
+<p><strong>Token binding form.</strong> Jetpack <strong>Compose</strong>
+form [TEP §4.4] — <code>HelixTokens.kt</code> + M3
+<code>lightColorScheme</code>/<code>darkColorScheme</code> — for the
+<strong>native-shim surfaces</strong> (the quick-settings
+<strong>tile</strong> and the <code>VpnService</code> foreground-service
+<strong>notification</strong> [ANDROID §7]). The Flutter app uses the
+Dart <code>ThemeData</code> form [TEP §4.2].</p>
+<p><strong>Navigation idiom.</strong> Compact →
+<code>BottomNavigationBar</code>; medium → NavigationRail; expanded
+(foldables / tablets / Chromebooks) → extended rail / multi-pane, all by
+width [UIF §2.1]. The foreground-service notification (an Android
+requirement to survive background-kill [ANDROID §7]) reflects
+<code>TunnelStatus</code> text (&quot;Protected · masque-h3 · 23 ms&quot;)
+[ANDROID §8.3].</p>
+<p><strong>System theme.</strong> <code>themeMode: system</code> follows
+the Android Dark-theme setting; Compose shim surfaces follow
+<code>isSystemInDarkTheme()</code>; light + dark mandatory.</p>
+<p><strong>Safe-areas / insets.</strong> Display cutouts / gesture-nav
+inset / status + nav bars via Flutter <code>SafeArea</code> +
+<code>MediaQuery</code>; edge-to-edge handled so content never sits
+under the system bars (no-overlap [CL §1.5]). IME insets via
+<code>viewInsets</code>.</p>
+<p><strong>Density / input.</strong> Touch-first; foldable + Chromebook
+(mouse/keyboard) supported via the width rule + hover states [CL §1.2].
+<strong>Android TV</strong> is the platform where the
+<strong>TV-leanback focus model</strong> applies (§13): D-pad focus
+traversal, <code>xl</code> component size + a larger focus ring [CL
+§1.6]. <code>UNVERIFIED</code> whether Android TV is an MVP target vs
+Phase-2 — the leanback design is specified but the ship-gating is [SPINE
+§3]-dependent; marked here, not assumed.</p>
+<p><strong>Component substitution.</strong> None at the control level —
+the shared <code>ShieldToggle</code> [CL §5], not a raw
+<code>Switch</code>. The native quick-settings tile is a Compose-native
+<code>Tile</code> because it is OS-native code [ANDROID §7].</p>
+<p><strong>Native-shim surface.</strong> Compose, system font (Roboto)
+per D-TYPE-1 [TIM §2.2]; same palette via the generated M3
+<code>ColorScheme</code> [TEP §4.4]. The quick-settings tile + the
+persistent notification.</p>
+<p><strong>Accessibility API.</strong> Flutter <code>Semantics</code> →
+<strong>TalkBack</strong>; the stateful ConnectButton name + live-region
+announcements [CL §2]; TV-leanback focus order is deterministic and
+D-pad-navigable (§13).</p>
+<hr />
+<h2 id="5-windows">5. Windows</h2>
+<p><strong>Design-language posture.</strong> Flutter app surface = the
+brand design language (Material-3-foundation), <strong>not</strong>
+WinUI/Fluent controls (D-PA-1). Windows conventions honoured without a
+control swap: window chrome / title-bar, keyboard-first + pointer hover,
+system tray affordance (a tray icon + connect toggle is a natural
+Windows VPN idiom — <code>UNVERIFIED</code> whether MVP ships a tray
+integration; surfaced §18), and the Mica/acrylic backdrop is
+<strong>not</strong> adopted (the brand surface tokens are fixed [COLOR
+§2]).</p>
+<p><strong>Token binding form.</strong> The Flutter app uses the Dart
+<code>ThemeData</code> form [TEP §4.2]. <strong>Windows has no
+Flutter-bundled native-shim UI surface in the design sense</strong> —
+the privileged tunnel core runs in a <strong>SYSTEM service</strong>
+(<code>HelixTunnelSvc</code>, C#/Rust) the unprivileged Flutter app
+talks to over a <strong>named pipe</strong>
+(<code>\\.\pipe\helixvpn</code>); the Dart <code>TunnelPlatform</code>
+impl is <code>WindowsPipeTunnelPlatform</code>, not the default
+MethodChannel [UIF §4.4, WIN]. The service has <strong>no UI</strong> —
+there is no SwiftUI/Compose-class shim surface to theme; all user-facing
+UI is the Flutter app. (<code>UNVERIFIED</code> exact service↔︎app
+theme-handoff details — pinned against [WIN] before that surface
+ships.)</p>
+<p><strong>Navigation idiom.</strong> Expanded width (desktop windows
+are large) → extended NavigationRail / multi-pane [UIF §2.1]; reflows to
+rail/bottom-nav on resize.</p>
+<p><strong>System theme.</strong> <code>themeMode: system</code> follows
+the Windows &quot;Choose your mode&quot; (Light / Dark) setting + the
+high-contrast themes; the Windows <strong>accent colour</strong> is
+<strong>not</strong> adopted for the brand accent (connection-state
+palette is brand-fixed [COLOR §3]). Light + dark mandatory; the
+CSS/Compose/Swift forms are not used on Windows — only Dart
+<code>ThemeData</code>.</p>
+<p><strong>Safe-areas / insets.</strong> No device notches; window-edge
++ title-bar insets only. Keyboard insets N/A (desktop).</p>
+<p><strong>Density / input.</strong> Pointer + keyboard first — focus
+rings, <code>⌘</code>/<code>Ctrl</code>-K palette (Console), full
+keyboard nav; <code>sm</code>/<code>md</code> densities for dense tables
+[CL §1.6].</p>
+<p><strong>Component substitution.</strong> None at the control
+level.</p>
+<p><strong>Native-shim surface.</strong> None in the themed sense
+(headless SYSTEM service); same palette is irrelevant to the service (no
+UI). All UI is brand-design-language Flutter.</p>
+<p><strong>Accessibility API.</strong> Flutter <code>Semantics</code> →
+<strong>Narrator</strong> (UI Automation); keyboard focus order +
+visible focus rings [CL §1.3]; Windows &quot;Show animations&quot; / high-contrast
+honoured (reduce-motion → static states [TIM §8]).</p>
+<hr />
+<h2 id="6-linux">6. Linux</h2>
+<p><strong>Design-language posture.</strong> Flutter app surface = the
+brand design language, <strong>not</strong> GTK/libadwaita or Qt native
+controls (D-PA-1). Linux desktops are diverse (GNOME / KDE / others);
+HelixVPN renders the <strong>same</strong> brand system regardless of DE
+rather than chasing per-DE theming — which keeps the connection-state
+meaning identical and avoids a per-DE matrix the project cannot fully
+verify (<code>UNVERIFIED</code> per-DE theme-integration depth — beyond
+following the freedesktop dark-mode preference, see below).</p>
+<p><strong>Token binding form.</strong> Dart <code>ThemeData</code> [TEP
+§4.2] for the Flutter app. The Linux tunnel shim is a native helper
+(wireguard/tun via a privileged path [LINUX]) with <strong>no themed UI
+surface</strong> — all UI is the Flutter app.</p>
+<p><strong>Navigation idiom.</strong> Expanded → extended NavigationRail
+/ multi-pane [UIF §2.1]; width-reflow.</p>
+<p><strong>System theme.</strong> <code>themeMode: system</code> follows
+the freedesktop / XDG dark-mode preference
+(<code>org.freedesktop.appearance color-scheme</code>) where the desktop
+exposes it and Flutter surfaces it (<code>UNVERIFIED</code> exact
+Flutter-Linux dark-preference binding across DEs — pinned per §11.4.99;
+the safe default is a manual light/dark toggle in HelixVPN settings so
+the user is never stuck on the wrong theme). Light + dark mandatory.</p>
+<p><strong>Safe-areas / insets.</strong> No device notches; window-edge
+insets only.</p>
+<p><strong>Density / input.</strong> Pointer + keyboard first — focus
+rings, palette, full keyboard nav, dense-table densities [CL §1.6].</p>
+<p><strong>Component substitution.</strong> None at the control
+level.</p>
+<p><strong>Native-shim surface.</strong> None in the themed sense
+(headless privileged tunnel helper [LINUX]); all UI is
+brand-design-language Flutter.</p>
+<p><strong>Accessibility API.</strong> Flutter <code>Semantics</code> →
+<strong>Orca</strong> (AT-SPI / ATK); keyboard focus order + visible
+focus rings [CL §1.3]; reduce-motion honoured where the DE exposes the
+preference (<code>UNVERIFIED</code> per-DE reduce-motion signal — manual
+setting fallback, never a silent ignore §11.4.6).</p>
+<hr />
+<h2 id="7-web-console">7. Web (Console)</h2>
+<p><strong>Design-language posture.</strong> The Web flavor is the
+<strong>Console only</strong> — the admin app [WEB §0]; <strong>Access
+and Connector do not build to Web</strong> because a browser cannot open
+a system TUN ([WEB §1], §11.4.112 structural fact). It renders the
+<strong>same</strong> brand design language as the desktop Console build
+(one Flutter web app, CanvasKit default / <code>--wasm</code> for heavy
+tables [WEB §2.4]) — never Electron, never a webview-wrap [WEB §9]. The
+Console is admin-dense (tables, policy editor, topology) so it leans
+desktop conventions (pointer + keyboard,
+<code>⌘K</code>/<code>Ctrl-K</code> palette).</p>
+<p><strong>Token binding form.</strong> <strong>CSS custom
+properties</strong> [TEP §4.1] — <code>dist/css/helix.css</code> with
+<code>:root</code> (light) + <code>[data-theme=&quot;dark&quot;]</code> (dark) + a
+<code>@media (prefers-color-scheme: dark)</code> block so OS dark works
+without an explicit attribute. This is the <strong>only</strong>
+platform where the CSS export is the theme carrier (every other platform
+uses the Dart <code>ThemeData</code> form for the Flutter app). The
+Flutter web build also carries the Dart <code>ThemeData</code> form for
+its own widgets; the <code>helix.css</code> is for web chrome /
+<code>@font-face</code> self-hosting [TIM §2.2].</p>
+<p><strong>Navigation idiom.</strong> Width-responsive [WEB §5]: compact
+(&lt;600) → bottom-nav + single pane; medium (600–1024) → NavigationRail
++ master/detail; expanded (&gt;1024) → extended rail + multi-pane (list
+| detail | live events). Path-based clean URLs + route-level deferred
+loading of heavy admin modules [WEB §2.4]. WS/SSE-driven live data
+(push, never poll) with a &quot;reconnecting… last updated HH:MM:SS&quot; honesty
+banner [WEB §7.3].</p>
+<p><strong>System theme.</strong> <code>prefers-color-scheme</code> via
+the <code>@media</code> block in <code>helix.css</code> [TEP §4.1] +
+Flutter <code>themeMode: system</code>; an explicit
+<code>data-theme</code> attribute overrides for a manual toggle. Light +
+dark mandatory; admins skew dark [WEB §5.3].</p>
+<p><strong>Safe-areas / insets.</strong> Browser viewport — no device
+cutouts (mobile-web uses the browser&#39;s own chrome insets); responsive
+reflow handles small viewports.</p>
+<p><strong>Density / input.</strong> Pointer + keyboard first (the most
+desktop-like platform): focus rings, <code>⌘K</code>/<code>Ctrl-K</code>
+command palette, full keyboard nav [WEB §5.1].</p>
+<p><strong>Component substitution.</strong> None — the same shared
+catalog. The <strong><code>StatusChip</code></strong> is reused
+<strong>only</strong> by the optional browser-scoped WASM-proxy chip
+(Phase 3), driven by a <strong>distinct</strong>
+<code>ProxyStatus</code> type (never <code>TunnelStatus</code>) with
+explicit &quot;this tab only — not a device VPN&quot; honesty copy [WEB
+§8.4/§8.5]. There is <strong>no <code>ConnectButton</code></strong> on
+Web (no tunnel capability — tree-shaken [WEB §4]).</p>
+<p><strong>Capability gating.</strong> <code>Capability.admin</code>
+only — <strong>no <code>Capability.tunnel</code></strong>, so
+<code>helixCoreProvider</code> resolves to <code>NoCore</code> and every
+tunnel widget (<code>ConnectButton</code>, <code>ShieldToggle</code>,
+<code>ExitPicker</code>) is tree-shaken out [WEB §4]; the
+<code>CM-WEB-NO-CORE-FFI</code> build gate asserts zero
+<code>helix_core_ffi</code>/<code>dart:ffi</code> in the web graph [WEB
+§2.3].</p>
+<p><strong>Native-shim surface.</strong> None (browser sandbox). The
+optional in-page <strong>WASM MASQUE proxy</strong> is page-scoped, not
+a system VPN [WEB §8].</p>
+<p><strong>Accessibility API.</strong> Flutter web emits
+<strong>ARIA</strong> roles (the [CL §1.3] roles map to DOM ARIA); state
+announced not colour-only [WEB §5.3]; the topology graph ships a
+<code>treegrid</code> non-visual fallback alongside the visual canvas
+[CL §9].</p>
+<hr />
+<h2 id="8-harmonyos">8. HarmonyOS</h2>
+<p><strong>Design-language posture.</strong> Flutter app surface = the
+brand design language via the <strong>OpenHarmony Flutter SIG
+fork</strong> (<code>flutter-ohos</code>, pinned per fork [UIF §1.4]) —
+the same shared catalog [CL]. HelixVPN does <strong>not</strong> reskin
+to HarmonyDesign / ArkUI native components for the Flutter surface
+(D-PA-1). HarmonyDesign / ArkUI conventions are honoured
+<strong>only</strong> on the <strong>native-shim surface</strong> (the
+<code>VpnExtensionAbility</code>, ArkTS/ArkUI [UIF §4.4, OHOS]) — its
+toggle + status line use native ArkUI components because that surface is
+genuinely ArkTS code. <code>UNVERIFIED</code>: the precise HarmonyDesign
+navigation / component conventions the ArkUI shim should follow are
+HarmonyOS-SDK-version-dependent and are pinned + re-verified per
+§11.4.99 against the live HarmonyOS docs before the ArkTS surface ships
+— <strong>not</strong> asserted here (§11.4.6).</p>
+<p><strong>Token binding form.</strong> <strong>ArkTS</strong> form [TEP
+§4.5] — <code>helix_tokens.ets</code> + the HarmonyOS resource qualifier
+tree (<code>resources/base/element/color.json</code> = light,
+<code>resources/dark/element/color.json</code> = dark; the OS resolves
+the qualifier by system theme). <code>UNVERIFIED</code> (U-EXP-1 [TEP
+§4.5]): the exact <code>$r(&#39;app.color.…&#39;)</code> resolver key form + the
+<code>resources/dark/</code> qualifier directory name are
+SDK-version-dependent — pinned per §11.4.99 before the ArkTS exporter
+ships. The <strong>Flutter app</strong> uses the Dart
+<code>ThemeData</code> form [TEP §4.2] (the Flutter SIG fork renders
+Dart themes); the ArkTS form is for the ArkUI shim surface only.</p>
+<p><strong>Navigation idiom.</strong> Width-responsive
+<code>AdaptiveScaffold</code> on the Flutter surface [UIF §2.1]; the
+native ArkUI shim follows HarmonyDesign navigation
+(<code>UNVERIFIED</code> specifics, §11.4.99).</p>
+<p><strong>System theme.</strong> The ArkTS
+<code>resources/{base,dark}</code> qualifier tree resolves light/dark by
+the HarmonyOS system theme automatically [TEP §4.5]; the Flutter app
+uses <code>themeMode: system</code>. Light + dark mandatory.
+<code>UNVERIFIED</code>: the exact HarmonyOS dark-theme system signal
+Flutter surfaces — pinned per §11.4.99.</p>
+<p><strong>Safe-areas / insets.</strong> HarmonyOS device cutouts /
+system bars handled via Flutter <code>SafeArea</code> +
+<code>MediaQuery</code> on the Flutter surface (<code>UNVERIFIED</code>
+SIG-fork inset parity with mainline — pinned per §11.4.99); the ArkUI
+shim uses native ArkUI safe-area APIs.</p>
+<p><strong>Density / input.</strong> Touch-first (phones / tablets); the
+brand font is bundled in the Flutter app, the ArkUI shim uses the system
+font (HarmonyOS Sans) per D-TYPE-1 [TIM §2.2].</p>
+<p><strong>Component substitution.</strong> None on the Flutter surface;
+the native ArkUI shim uses native ArkUI controls (it is ArkTS code)
+[OHOS].</p>
+<p><strong>Native-shim surface.</strong> ArkTS / ArkUI
+<code>VpnExtensionAbility</code>, system font [TIM §2.2]; same palette
+via the <code>resources/{base,dark}</code> qualifier export [TEP
+§4.5].</p>
+<p><strong>Accessibility API.</strong> Flutter <code>Semantics</code> →
+the HarmonyOS accessibility tree (<code>UNVERIFIED</code> exact
+HarmonyOS screen-reader / a11y service name + the SIG-fork
+<code>Semantics</code> mapping — pinned per §11.4.99; the [CL §1.3]
+semantic roles are emitted regardless, never colour-only).</p>
+<hr />
+<h2 id="9-aurora">9. Aurora</h2>
+<p><strong>Design-language posture.</strong> Flutter app surface = the
+brand design language via the <strong>OMP <code>flutter-aurora</code>
+fork</strong> (pinned per fork [UIF §1.4]) — the same shared catalog
+[CL]. HelixVPN does <strong>not</strong> reskin to Sailfish
+<strong>Silica</strong> (the Aurora/ Sailfish Qt component set) for the
+Flutter surface (D-PA-1). Silica-Qt conventions are honoured
+<strong>only</strong> on the <strong>native-shim surface</strong> (the
+Qt/C++ tunnel backend&#39;s config UI, if present [UIF §4.4, AURORA])
+because that is genuinely Qt code. <code>UNVERIFIED</code>: the precise
+Silica navigation / gesture conventions (Sailfish&#39;s pulley-menu / cover
+idioms) the Qt shim should follow are Aurora-SDK-version-dependent and
+are pinned + re-verified per §11.4.99 before that surface ships —
+<strong>not</strong> asserted here (§11.4.6). Aurora is the
+<strong>ru-market</strong> platform (<code>ru</code> is a first-tier
+locale [UIF §2.5]), so localized connection-state legibility matters
+most here.</p>
+<p><strong>Token binding form.</strong> <strong>C / Qt</strong> form
+[TEP §4.6] — <code>helix_tokens.h</code> (<code>#define</code>
+constants) + <code>Theme.qml</code> (a QML singleton exposing a
+<code>light</code>/<code>dark</code> property set, switched by a
+<code>dark</code> property) — for the Qt/C++ shim surface.
+<code>UNVERIFIED</code> (U-EXP-2 [TEP §4.6]): the exact QML singleton
+registration (<code>qmldir</code> / <code>.qrc</code> / module-import
+form) is Aurora-Qt-version-dependent — pinned per §11.4.99 before the
+C/Qt exporter ships. The <strong>Flutter app</strong> uses the Dart
+<code>ThemeData</code> form [TEP §4.2] (the Aurora Flutter fork renders
+Dart themes); the C/Qt form is for the Qt shim surface only.</p>
+<p><strong>Navigation idiom.</strong> Width-responsive
+<code>AdaptiveScaffold</code> on the Flutter surface [UIF §2.1]; the
+native Qt/Silica shim follows Sailfish navigation
+(<code>UNVERIFIED</code> pulley-menu / cover specifics, §11.4.99).</p>
+<p><strong>System theme.</strong> The QML <code>Theme.qml</code>
+singleton&#39;s <code>dark</code> property switches the Qt-shim light/dark
+set [TEP §4.6]; the Flutter app uses <code>themeMode: system</code>.
+Sailfish&#39;s <strong>ambience</strong> system (user-chosen accent +
+light/dark) is <strong>not</strong> adopted for the brand accent (the
+connection-state palette is brand-fixed [COLOR §3]);
+<code>UNVERIFIED</code> whether the Aurora ambience light/dark signal
+drives <code>Theme.qml.dark</code> automatically vs a manual toggle —
+pinned per §11.4.99. Light + dark mandatory.</p>
+<p><strong>Safe-areas / insets.</strong> Aurora device geometry handled
+via the Flutter fork&#39;s <code>SafeArea</code>/<code>MediaQuery</code>
+(<code>UNVERIFIED</code> fork inset parity — pinned per §11.4.99) on the
+Flutter surface; the Qt shim uses native Qt safe-area handling.</p>
+<p><strong>Density / input.</strong> Touch-first; brand font bundled in
+the Flutter app, the Qt shim uses the system font per D-TYPE-1 [TIM
+§2.2].</p>
+<p><strong>Component substitution.</strong> None on the Flutter surface;
+the native Qt shim uses native Silica-Qt controls [AURORA].</p>
+<p><strong>Native-shim surface.</strong> Qt / C++ (Silica), system font
+[TIM §2.2]; same palette via the <code>helix_tokens.h</code> +
+<code>Theme.qml</code> export [TEP §4.6].</p>
+<p><strong>Accessibility API.</strong> Flutter <code>Semantics</code> →
+the Aurora/Qt accessibility tree (<code>UNVERIFIED</code> exact Aurora
+screen-reader + the Qt-shim <code>QAccessible</code> mapping — pinned
+per §11.4.99; the [CL §1.3] semantic roles are emitted regardless, never
+colour-only). Localized state strings (<code>ru</code>) are first-class
+[UIF §2.5].</p>
+<hr />
+<h2 id="10-the-platform--adaptation-matrix">10. The platform ×
+adaptation matrix</h2>
+<table>
+<thead>
+<tr>
+<th>Platform</th>
+<th>Flutter-app design language</th>
+<th>Token-export form (shim surface)</th>
+<th>Nav idiom (by width)</th>
+<th>System-theme mechanism</th>
+<th>Native-shim surface</th>
+<th>Input</th>
+<th>A11y API</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>iOS</strong></td>
+<td>brand (M3-foundation), bundled font</td>
+<td>SwiftUI <code>.xcassets</code> colorsets [TEP §4.3]</td>
+<td>bottom-nav / rail (iPad)</td>
+<td><code>colorScheme</code> auto + <code>themeMode:system</code></td>
+<td>SwiftUI NE-config (system font)</td>
+<td>touch (+pointer iPad)</td>
+<td>VoiceOver</td>
+</tr>
+<tr>
+<td><strong>macOS</strong></td>
+<td>brand, desktop-class</td>
+<td>SwiftUI colorsets [TEP §4.3]</td>
+<td>extended rail / multi-pane</td>
+<td><code>colorScheme</code> auto + <code>themeMode:system</code></td>
+<td>SwiftUI/AppKit (system font)</td>
+<td>pointer + keyboard</td>
+<td>VoiceOver</td>
+</tr>
+<tr>
+<td><strong>Android</strong></td>
+<td>brand = <strong>M3 native</strong> [UIF §2.1]</td>
+<td>Compose M3 <code>ColorScheme</code> [TEP §4.4]</td>
+<td>bottom-nav → rail → multi-pane</td>
+<td><code>isSystemInDarkTheme()</code> +
+<code>themeMode:system</code></td>
+<td>Compose tile + notif (system font)</td>
+<td>touch (+ TV D-pad, §13)</td>
+<td>TalkBack</td>
+</tr>
+<tr>
+<td><strong>Windows</strong></td>
+<td>brand</td>
+<td>Dart <code>ThemeData</code> (no themed shim) [TEP §4.2]</td>
+<td>extended rail / multi-pane</td>
+<td><code>themeMode:system</code> (Win mode)</td>
+<td>none (SYSTEM service, no UI) [WIN]</td>
+<td>pointer + keyboard</td>
+<td>Narrator</td>
+</tr>
+<tr>
+<td><strong>Linux</strong></td>
+<td>brand (DE-agnostic)</td>
+<td>Dart <code>ThemeData</code> (no themed shim) [TEP §4.2]</td>
+<td>extended rail / multi-pane</td>
+<td>XDG <code>color-scheme</code> + <code>themeMode:system</code>
+<code>UNVERIFIED</code></td>
+<td>none (privileged helper) [LINUX]</td>
+<td>pointer + keyboard</td>
+<td>Orca (AT-SPI)</td>
+</tr>
+<tr>
+<td><strong>Web</strong></td>
+<td>brand (Console only)</td>
+<td><strong>CSS</strong>
+<code>:root</code>/<code>[data-theme]</code>/<code>@media</code> [TEP
+§4.1]</td>
+<td>bottom-nav → rail → multi-pane</td>
+<td><code>prefers-color-scheme</code> + <code>data-theme</code></td>
+<td>none (browser sandbox)</td>
+<td>pointer + keyboard</td>
+<td>ARIA</td>
+</tr>
+<tr>
+<td><strong>HarmonyOS</strong></td>
+<td>brand (SIG fork)</td>
+<td><strong>ArkTS</strong> <code>resources/{base,dark}</code> [TEP §4.5]
+<code>UNVERIFIED</code></td>
+<td><code>AdaptiveScaffold</code> by width</td>
+<td>resource qualifier auto <code>UNVERIFIED</code></td>
+<td>ArkTS/ArkUI ability (system font)</td>
+<td>touch</td>
+<td>HarmonyOS a11y <code>UNVERIFIED</code></td>
+</tr>
+<tr>
+<td><strong>Aurora</strong></td>
+<td>brand (OMP fork)</td>
+<td><strong>C/Qt</strong> <code>.h</code> + <code>Theme.qml</code> [TEP
+§4.6] <code>UNVERIFIED</code></td>
+<td><code>AdaptiveScaffold</code> by width</td>
+<td>QML <code>Theme.qml.dark</code> <code>UNVERIFIED</code></td>
+<td>Qt/Silica backend (system font)</td>
+<td>touch</td>
+<td>Qt/Aurora a11y <code>UNVERIFIED</code></td>
+</tr>
+</tbody>
+</table>
+<p>Every row ships <strong>light + dark</strong> ([TEP]
+<code>DS-LIGHT-DARK-COMPLETE</code>) and a per-platform / per-theme
+golden in the visual-regression suite (§11.4.162/.168,
+[<code>visual-regression-and-qa.md</code>]). Web is the only row with
+<strong>no tunnel capability</strong> (NoCore [WEB §4]).</p>
+<hr />
+<h2 id="11-system-theme-light--dark--auto-integration-per-os">11. System
+theme (light / dark / auto) integration per OS</h2>
+<p>Light <strong>and</strong> dark are mandatory on every platform — a
+target emitting one theme fails the [TEP]
+<code>DS-LIGHT-DARK-COMPLETE</code> gate. The <strong>mechanism</strong>
+that picks the OS theme differs per platform; the
+<strong>values</strong> are the same token source [DT §5.1], theme-split
+into a light table + a dark table at export [TEP §3.2].</p>
+<table>
+<thead>
+<tr>
+<th>Platform</th>
+<th>Auto/system-theme signal</th>
+<th>Carrier form</th>
+<th>Manual override</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>iOS / macOS</td>
+<td>OS Appearance → <code>@Environment(\.colorScheme)</code> (shim) +
+<code>themeMode:system</code> (Flutter)</td>
+<td>asset-catalog colorset (both appearances) [TEP §4.3]</td>
+<td>in-app light/dark toggle (Flutter <code>themeMode</code>)</td>
+</tr>
+<tr>
+<td>Android / HarmonyOS</td>
+<td>Dark-theme setting → <code>isSystemInDarkTheme()</code> / resource
+qualifier + <code>themeMode:system</code></td>
+<td>Compose <code>ColorScheme</code> [TEP §4.4] / ArkTS
+<code>resources/dark</code> [TEP §4.5]</td>
+<td>in-app toggle</td>
+</tr>
+<tr>
+<td>Windows</td>
+<td>&quot;Choose your mode&quot; + high-contrast →
+<code>themeMode:system</code></td>
+<td>Dart <code>ThemeData</code> [TEP §4.2]</td>
+<td>in-app toggle</td>
+</tr>
+<tr>
+<td>Linux</td>
+<td>XDG <code>org.freedesktop.appearance color-scheme</code>
+<code>UNVERIFIED</code> → <code>themeMode:system</code></td>
+<td>Dart <code>ThemeData</code> [TEP §4.2]</td>
+<td>in-app toggle (the safe default when the DE signal is
+unavailable)</td>
+</tr>
+<tr>
+<td>Web</td>
+<td><code>prefers-color-scheme</code> (<code>@media</code>) +
+<code>data-theme</code> attribute</td>
+<td>CSS custom properties [TEP §4.1]</td>
+<td><code>data-theme=&quot;light|dark&quot;</code> toggle</td>
+</tr>
+<tr>
+<td>Aurora</td>
+<td>ambience light/dark <code>UNVERIFIED</code> →
+<code>Theme.qml.dark</code></td>
+<td>C/Qt <code>Theme.qml</code> singleton [TEP §4.6]</td>
+<td>in-app toggle</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Honesty (§11.4.6).</strong> Where the OS auto-theme signal is
+<code>UNVERIFIED</code> (Linux XDG, HarmonyOS qualifier, Aurora
+ambience), the <strong>safe default is a manual in-app light/dark
+toggle</strong> so the user is never stranded on the wrong theme — the
+auto binding is added once verified per §11.4.99, never guessed.</p>
+</blockquote>
+<p>System dark-mode interplay with the connection-state palette: on
+<strong>dark</strong> the <code>ConnectButton</code> ring glow renders
+brighter (the <code>.500</code> state stops) and the
+<code>connected</code> glow has higher alpha so the halo reads on
+<code>#151920</code> [CL §2]; the white on-state label stays white in
+both themes (proven AA on the coloured fill, [COLOR §4.3]).
+Reduce-motion (an OS accessibility setting on every platform) degrades
+the <code>Connecting</code>/<code>Reconnecting</code> pulse to a static
+ring via <code>motion.semantic.reducedMotion</code> [TIM §8, CL
+§1.3].</p>
+<hr />
+<h2 id="12-navigation-idioms--responsive-breakpoints">12. Navigation
+idioms &amp; responsive breakpoints</h2>
+<p>The navigation structure is resolved by <strong>width, not
+<code>Platform.isX</code></strong> — the single
+<code>AdaptiveScaffold</code> rule [UIF §2.1, WEB §5] — so the same
+build behaves correctly on a phone, a resized desktop window, a
+foldable, and the web:</p>
+<pre><code>compact  (&lt; 600 px)    → BottomNavigationBar · single pane
+medium   (600–1024 px) → NavigationRail · master/detail
+expanded (&gt; 1024 px)   → extended NavigationRail · multi-pane (list | detail | live)</code></pre>
+<p>Per-platform navigation idioms layered on top of the width rule:</p>
+<table>
+<thead>
+<tr>
+<th>Platform</th>
+<th>Layered idiom</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>iOS</td>
+<td>system back-swipe; large-title-style headers
+(<code>headline.lg</code>); bottom-nav on phone</td>
+</tr>
+<tr>
+<td>macOS / Windows / Linux</td>
+<td>window chrome; menu/tray affordance <code>UNVERIFIED</code> (§18);
+<code>⌘K</code>/<code>Ctrl-K</code> palette (Console); extended
+rail</td>
+</tr>
+<tr>
+<td>Android</td>
+<td>system back / predictive-back; foreground-service notification
+mirrors status [ANDROID §8.3]; foldable multi-pane</td>
+</tr>
+<tr>
+<td>Web</td>
+<td>path-based clean URLs; route-level deferred loading; WS/SSE live
+panes with staleness banner [WEB §5/§7.3]</td>
+</tr>
+<tr>
+<td>HarmonyOS</td>
+<td>HarmonyDesign navigation on the ArkUI shim <code>UNVERIFIED</code>
+(§11.4.99)</td>
+</tr>
+<tr>
+<td>Aurora</td>
+<td>Sailfish pulley-menu / cover idioms on the Qt shim
+<code>UNVERIFIED</code> (§11.4.99)</td>
+</tr>
+</tbody>
+</table>
+<p>The Client home is always the <code>ConnectButton</code> hero [CL
+§2]; the Console is the admin shell (Tenants · Devices · Networks ·
+Policy · Audit · Topology) [WEB §5.1]; the Connector is the appliance
+dashboard (the headless Connector entrypoint has no UI at all [UIF
+§5.4]).</p>
+<hr />
+<h2 id="13-input-model-density--the-tv-leanback-focus-model">13. Input
+model, density &amp; the TV-leanback focus model</h2>
+<table>
+<thead>
+<tr>
+<th>Input model</th>
+<th>Platforms</th>
+<th>Design consequence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Touch</strong></td>
+<td>iOS (iPhone), Android (phone/tablet), HarmonyOS, Aurora, iPad (no
+pointer)</td>
+<td>≥44×44 px hit targets (the [CL §1.3] floor);
+<code>md</code>/<code>lg</code> densities [CL §1.6]</td>
+</tr>
+<tr>
+<td><strong>Pointer + keyboard</strong></td>
+<td>macOS, Windows, Linux, Web; iPad w/ trackpad; Chromebook</td>
+<td>always-visible focus rings [CL §1.2]; <code>⌘K</code> palette;
+<code>sm</code>/<code>md</code> dense tables; hover states</td>
+</tr>
+<tr>
+<td><strong>Remote (D-pad)</strong></td>
+<td>TV-leanback (Android TV <code>UNVERIFIED</code> MVP-gating)</td>
+<td><code>xl</code> component size + a <strong>larger focus
+ring</strong> [CL §1.6]; deterministic D-pad focus order</td>
+</tr>
+</tbody>
+</table>
+<p><strong>The TV-leanback focus model.</strong> Where HelixVPN runs on
+a 10-foot TV surface (the leanback context [SPINE §3]), the design
+adapts: components use the <code>xl</code> size (56 px min height [CL
+§1.6]), the focus ring is enlarged so it reads across the room, and
+focus traversal is <strong>D-pad-driven</strong> with a deterministic,
+predictable order (no mouse, no touch) — the [CL §1.2] focus model with
+a TV-scaled ring. This is the one place the <strong>size token</strong>
+(<code>xl</code>) and the focus affordance change by platform context
+rather than by width. <code>UNVERIFIED</code>: which of the eight
+platforms actually ships a TV-leanback surface in MVP (Android TV is the
+natural candidate) vs Phase-2 — the leanback design is specified but the
+ship-gating is [SPINE §3]-dependent; marked, not assumed (§11.4.6).</p>
+<p>Density never relaxes the a11y floor: a visually-<code>sm</code> 32
+px control still keeps a 44 px transparent tap area centred on its glyph
+[CL §1.6]; pointer precision on desktop allows denser tables but the
+focus ring + keyboard path remain.</p>
+<hr />
+<h2 id="14-safe-areas-notches--insets">14. Safe-areas, notches &amp;
+insets</h2>
+<p>Handled uniformly on the <strong>Flutter surface</strong> via
+<code>SafeArea</code> + <code>MediaQuery</code>
+(<code>viewPadding</code> for cutouts/bars, <code>viewInsets</code> for
+the keyboard) so the [CL §1.5] no-overlap / no-label-overlay guarantee
+extends to device geometry — the <code>ConnectButton</code> hero never
+renders under a status bar, notch, home indicator, or IME.</p>
+<table>
+<thead>
+<tr>
+<th>Platform</th>
+<th>Insets handled</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>iOS</td>
+<td>notch / Dynamic Island / home-indicator / status bar / keyboard</td>
+</tr>
+<tr>
+<td>Android</td>
+<td>display cutouts / gesture-nav bar / status + nav bars / IME
+(edge-to-edge)</td>
+</tr>
+<tr>
+<td>HarmonyOS</td>
+<td>device cutouts / system bars / IME (<code>UNVERIFIED</code> SIG-fork
+parity — §11.4.99)</td>
+</tr>
+<tr>
+<td>Aurora</td>
+<td>device geometry / system bars (<code>UNVERIFIED</code> fork parity —
+§11.4.99)</td>
+</tr>
+<tr>
+<td>macOS / Windows / Linux</td>
+<td>window-edge + title-bar insets; no device cutouts; keyboard N/A</td>
+</tr>
+<tr>
+<td>Web</td>
+<td>browser viewport; mobile-web browser-chrome insets; responsive
+reflow</td>
+</tr>
+</tbody>
+</table>
+<p>The native-shim surfaces (SwiftUI / Compose / ArkUI / Qt) use their
+<strong>own</strong> native safe-area APIs because they are native code
+— the Flutter <code>SafeArea</code> applies only to the Flutter
+surface.</p>
+<hr />
+<h2 id="15-capability-gating-per-platform">15. Capability gating per
+platform</h2>
+<p>Capability gating ([UIF §5.3]) decides which features compile into a
+flavor; it is also the mechanism that lets <strong>Web omit the tunnel
+core</strong> entirely.</p>
+<table>
+<thead>
+<tr>
+<th>Capability</th>
+<th>iOS</th>
+<th>macOS</th>
+<th>Android</th>
+<th>Windows</th>
+<th>Linux</th>
+<th>Web</th>
+<th>HarmonyOS</th>
+<th>Aurora</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>tunnel</code> (ConnectButton, ShieldToggle, ExitPicker,
+core_ffi)</td>
+<td>●</td>
+<td>●</td>
+<td>●</td>
+<td>●</td>
+<td>●</td>
+<td>— (NoCore)</td>
+<td>●</td>
+<td>●</td>
+</tr>
+<tr>
+<td><code>account</code> (Access)</td>
+<td>●</td>
+<td>●</td>
+<td>●</td>
+<td>●</td>
+<td>●</td>
+<td>—</td>
+<td>●</td>
+<td>●</td>
+</tr>
+<tr>
+<td><code>admin</code> (Console screens)</td>
+<td>(Console build)</td>
+<td>●</td>
+<td>(Console build)</td>
+<td>●</td>
+<td>●</td>
+<td>●</td>
+<td>(Console build)</td>
+<td>(Console build)</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>The <strong>Web</strong> column is the load-bearing exception:
+<code>Capability.tunnel</code> is <strong>absent</strong>, so
+<code>helixCoreProvider</code> = <code>NoCore</code>, every tunnel
+widget is tree-shaken, and the <code>CM-WEB-NO-CORE-FFI</code> gate
+asserts no <code>dart:ffi</code> reaches the web bundle [WEB §2.3/§4].
+On the other seven platforms the tunnel capability is present and the
+<code>ConnectButton</code> is the hero. Console builds to desktop on
+macOS/Windows/Linux too (admin from a workstation), and to Web;
+Access/Connector build to the seven native platforms but
+<strong>not</strong> Web [WEB §0].</p>
+</blockquote>
+<hr />
+<h2 id="16-accessibility-apis-per-platform">16. Accessibility APIs per
+platform</h2>
+<p>One Flutter <code>Semantics</code> tree [CL §1.3] (roles, names,
+focus order, live-regions) maps to each OS&#39;s accessibility API. The
+semantic content is identical across platforms — only the OS-side
+service differs:</p>
+<table>
+<thead>
+<tr>
+<th>Platform</th>
+<th>A11y service</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>iOS / macOS</td>
+<td><strong>VoiceOver</strong></td>
+<td>stateful ConnectButton name read on change (polite);
+<code>Danger</code> assertive [CL §2]</td>
+</tr>
+<tr>
+<td>Android</td>
+<td><strong>TalkBack</strong></td>
+<td>same live-region pattern; TV-leanback D-pad focus order (§13)</td>
+</tr>
+<tr>
+<td>Windows</td>
+<td><strong>Narrator</strong> (UI Automation)</td>
+<td>keyboard focus order + visible rings [CL §1.3]</td>
+</tr>
+<tr>
+<td>Linux</td>
+<td><strong>Orca</strong> (AT-SPI / ATK)</td>
+<td>keyboard nav; reduce-motion via DE preference
+<code>UNVERIFIED</code></td>
+</tr>
+<tr>
+<td>Web</td>
+<td><strong>ARIA</strong> (DOM roles)</td>
+<td>the [CL §1.3] roles → ARIA; topology graph <code>treegrid</code>
+fallback [CL §9]</td>
+</tr>
+<tr>
+<td>HarmonyOS</td>
+<td>HarmonyOS a11y tree <code>UNVERIFIED</code></td>
+<td>SIG-fork <code>Semantics</code> mapping pinned per §11.4.99</td>
+</tr>
+<tr>
+<td>Aurora</td>
+<td>Qt/Aurora a11y (<code>QAccessible</code>)
+<code>UNVERIFIED</code></td>
+<td>localized (<code>ru</code>) state strings first-class [UIF
+§2.5]</td>
+</tr>
+</tbody>
+</table>
+<p>Cross-cutting a11y guarantees that hold on <strong>every</strong>
+platform [CL §1.3]: explicit roles + non-empty accessible names; ≥44 px
+hit targets; AA-normal 4.5 / AA-large 3.0 / non-text 3.0 contrast proven
+in both themes [COLOR §4]; reduce-motion → static end-state [TIM §8];
+<strong>colour-independence</strong> — every coloured state also carries
+a glyph + text, so the <code>Connected</code> vs
+<code>Not protected</code> distinction survives for a colour-blind user
+without the green/red [COLOR §0, CL §1.3]. This is itself a §11.4.162
+mandate (no element overlaps a label) verified per platform/theme by the
+visual-regression golden.</p>
+<hr />
+<h2 id="17-the-token--theme--platform-binding">17. The token → theme →
+platform binding</h2>
+<pre class="mermaid"><code>flowchart TB
+    SRC[&quot;helix_design tokens/** (one JSON source, light+dark) [DT]&quot;]
+    SRC --&gt; SPLIT[&quot;theme-split → light table + dark table [TEP §3.2]&quot;]
+    SPLIT --&gt; FMT[&quot;per-target format (Style-Dictionary-class) [TEP §3.3]&quot;]
+
+    FMT --&gt; DART[&quot;Dart ThemeData + ThemeExtension [TEP §4.2]&quot;]
+    FMT --&gt; CSS[&quot;CSS :root / [data-theme] / @media [TEP §4.1]&quot;]
+    FMT --&gt; SWIFT[&quot;SwiftUI .xcassets colorsets [TEP §4.3]&quot;]
+    FMT --&gt; COMPOSE[&quot;Compose M3 ColorScheme [TEP §4.4]&quot;]
+    FMT --&gt; ARKTS[&quot;ArkTS resources/{base,dark} [TEP §4.5]&quot;]
+    FMT --&gt; CQT[&quot;C/Qt helix_tokens.h + Theme.qml [TEP §4.6]&quot;]
+
+    DART --&gt; FLUTTER[&quot;Flutter app surface (ALL 8 platforms, brand design language)&quot;]
+    CSS --&gt; WEBROW[&quot;Web Console chrome + @font-face&quot;]
+    SWIFT --&gt; IOSMAC[&quot;iOS / macOS native-shim (SwiftUI, system font)&quot;]
+    COMPOSE --&gt; ANDROW[&quot;Android tile + notif (Compose, system font)&quot;]
+    ARKTS --&gt; OHOSROW[&quot;HarmonyOS ArkUI ability (system font) UNVERIFIED&quot;]
+    CQT --&gt; AURROW[&quot;Aurora Qt/Silica backend (system font) UNVERIFIED&quot;]
+
+    FLUTTER --&gt; IOSP[&quot;iOS&quot;] &amp; MACP[&quot;macOS&quot;] &amp; ANDP[&quot;Android&quot;] &amp; WINP[&quot;Windows&quot;] &amp; LINP[&quot;Linux&quot;] &amp; WEBP[&quot;Web (Console)&quot;] &amp; OHOSP[&quot;HarmonyOS&quot;] &amp; AURP[&quot;Aurora&quot;]
+
+    classDef u fill:#fff3cd,stroke:#b8860b;
+    class OHOSROW,AURROW u</code></pre>
+<p>The <strong>Flutter app surface</strong> on every platform binds the
+<strong>Dart <code>ThemeData</code></strong> form [TEP §4.2] — one
+consistent brand design language. The <strong>other five forms</strong>
+bind the <strong>native-shim surface</strong> of their platform (SwiftUI
+colorsets on Apple, Compose on Android, ArkTS on HarmonyOS, C/Qt on
+Aurora) and the <strong>CSS</strong> form binds web chrome. All six
+forms are generated from the <strong>same</strong> JSON source, so the
+palette is byte-faithful across every platform (the [TEP §5] drift gate
+proves no platform theme diverges from source).</p>
+<hr />
+<h2 id="18-surfaced-decisions--cross-doc-contracts">18. Surfaced
+decisions &amp; cross-doc contracts</h2>
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>Decision / contract</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>D-PA-1</strong></td>
+<td><strong>One brand design language adapted at the seams, not a per-OS
+native control reskin.</strong> Flutter app = the shared catalog on all
+8 platforms (brand-consistency: the connect label must not differ in
+shape per OS [TIM §2.1]); native-shim surfaces follow each OS&#39;s own
+HIG/Material/HarmonyDesign/Silica because they are native code. Option B
+(full per-OS native control set) rejected for brand consistency.</td>
+<td>decided</td>
+</tr>
+<tr>
+<td><strong>D-PA-2</strong></td>
+<td><strong>Token-export form per surface</strong> — Flutter app = Dart
+<code>ThemeData</code>; iOS/macOS shim = SwiftUI colorsets; Android shim
+= Compose M3; HarmonyOS shim = ArkTS resources; Aurora shim = C/Qt; Web
+chrome = CSS [TEP §4].</td>
+<td>decided (per §17)</td>
+</tr>
+<tr>
+<td><strong>D-PA-3</strong></td>
+<td><strong>Theme is system-driven by default with a manual in-app
+override</strong> on every platform; where the OS auto-signal is
+<code>UNVERIFIED</code> (Linux XDG / HarmonyOS qualifier / Aurora
+ambience), the manual toggle is the safe default until the auto binding
+is verified per §11.4.99.</td>
+<td>decided (§11)</td>
+</tr>
+<tr>
+<td><strong>D-PA-4</strong> <code>UNVERIFIED</code></td>
+<td><strong>TV-leanback surface</strong> — <code>xl</code> size +
+enlarged D-pad focus ring [CL §1.6]; which platform ships it in MVP
+(Android TV candidate) vs Phase-2 is [SPINE §3]-dependent — pinned, not
+assumed.</td>
+<td>open</td>
+</tr>
+<tr>
+<td><strong>D-PA-5</strong> <code>UNVERIFIED</code></td>
+<td><strong>Desktop menu-bar / system-tray affordance</strong> (macOS
+menu-bar extra, Windows tray, Linux indicator) — a natural VPN idiom;
+whether MVP ships it is surfaced, not silently decided (§11.4.66).</td>
+<td>open</td>
+</tr>
+<tr>
+<td><strong>C-PA-A</strong> (consumes)</td>
+<td>The seven export forms + the light/dark theme-split + the drift gate
+[TEP §3–§5] — this doc maps each form to its platform surface; a new
+form is a new platform binding here.</td>
+<td>contract</td>
+</tr>
+<tr>
+<td><strong>C-PA-B</strong> (consumes)</td>
+<td>The width-not-<code>Platform.isX</code>
+<code>AdaptiveScaffold</code> rule + the flavor/capability model [UIF
+§2.1, §5] — navigation + capability gating are resolved by
+width/capability, not OS identity.</td>
+<td>contract</td>
+</tr>
+<tr>
+<td><strong>C-PA-C</strong> (consumes)</td>
+<td>D-TYPE-1 (native shims use the <strong>system font</strong>, the
+Flutter app the bundled brand font) [TIM §2.2] — this doc applies it per
+platform.</td>
+<td>contract</td>
+</tr>
+<tr>
+<td><strong>C-PA-D</strong> (consumes)</td>
+<td>The no-system-tunnel-in-a-browser structural fact + the Console-only
+Web build + NoCore [WEB §1/§4] — the Web row&#39;s capability gating.</td>
+<td>contract</td>
+</tr>
+<tr>
+<td><strong>U-PA-1</strong> <code>UNVERIFIED</code></td>
+<td>HarmonyOS HarmonyDesign / ArkUI navigation + a11y + dark-signal
+specifics — pinned + re-verified per §11.4.99 before the ArkTS surface
+ships (composes [TEP] U-EXP-1).</td>
+<td>open</td>
+</tr>
+<tr>
+<td><strong>U-PA-2</strong> <code>UNVERIFIED</code></td>
+<td>Aurora Sailfish-Silica navigation (pulley/cover) + ambience
+dark-signal + a11y specifics — pinned per §11.4.99 before the C/Qt
+surface ships (composes [TEP] U-EXP-2/U-EXP-3).</td>
+<td>open</td>
+</tr>
+<tr>
+<td><strong>U-PA-3</strong> <code>UNVERIFIED</code></td>
+<td>Linux per-DE dark-preference + reduce-motion signal depth
+(GNOME/KDE/…) — manual toggle fallback until verified per §11.4.99.</td>
+<td>open</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="sources-verified">Sources verified</h2>
+<ul>
+<li><strong>The platform-adaptation posture (one brand design language
+adapted at the seams; the per-platform navigation / system-theme /
+safe-area / input / a11y mapping; the platform × adaptation matrix; the
+token→theme→platform binding)</strong> — <strong>NO external source
+needed — original HelixVPN design work</strong>, layered on each
+framework&#39;s documented conventions (Flutter
+<code>AdaptiveScaffold</code> / <code>Semantics</code> /
+<code>SafeArea</code> / <code>themeMode</code>; SwiftUI asset-catalog
+colorsets; Compose Material 3 <code>ColorScheme</code>; HarmonyOS
+resource qualifiers; Qt QML; CSS <code>prefers-color-scheme</code>; the
+platform a11y services VoiceOver / TalkBack / Narrator / Orca / ARIA).
+The per-platform idioms are each framework&#39;s documented conventions; the
+<em>adaptation model</em> (what is shared vs what adapts, and D-PA-1) is
+HelixVPN&#39;s own design.</li>
+<li><strong>The seven token-export forms + the light/dark theme-split +
+the drift gate + every per-target output sample, and the
+<code>UNVERIFIED</code> markers U-EXP-1 (ArkTS resolver), U-EXP-2 (QML
+registration), U-EXP-3 (OpenDesign dark convention)</strong> —
+<code>final/v10-design/token-export-pipeline.md</code> §3/§4/§5/§9
+(sibling, this wave, read 2026-06-25). Each platform&#39;s binding form
+(§17, the matrix §10) is reproduced from that document.</li>
+<li><strong>The component catalog (ConnectButton/StatusChip states, the
+a11y baseline, the no-overlap / no-label-overlay guarantee, the
+<code>sm</code>/<code>md</code>/<code>lg</code>/<code>xl</code> size set
++ TV-leanback <code>xl</code>, the universal interaction/focus
+model)</strong> — <code>final/v10-design/component-library.md</code>
+§0/§1.2/§1.3/§1.5/§1.6/§2/§3/§9 (sibling, read 2026-06-25).</li>
+<li><strong>The type ramp + the per-platform font strategy (D-TYPE-1
+native-shim system font; bundled Inter/JetBrains Mono in the Flutter
+app; the system-font fallback chain) + reduced-motion</strong> —
+<code>final/v10-design/typography-iconography-motion.md</code>
+§1/§2.1/§2.2/§8 (sibling, read 2026-06-25).</li>
+<li><strong>The token model (tiers, theming axes, light+dark fork) + the
+colour roles / connection-state palette / contrast proofs</strong> —
+<code>final/v10-design/design-tokens.md</code> §1/§5 +
+<code>final/v10-design/color-system.md</code> §0/§2/§3/§4 (siblings,
+read 2026-06-25; load-bearing hexes reproduced via the export-pipeline
+samples).</li>
+<li><strong>The Flutter app shell (the
+width-not-<code>Platform.isX</code> <code>AdaptiveScaffold</code> rule,
+the flavor/capability model, <code>runHelixApp</code>, the per-platform
+native-shim signatures incl. Windows named-pipe
+<code>WindowsPipeTunnelPlatform</code> and Web
+<code>NoTunnelPlatform</code>, the OHOS/Aurora SIG-fork pins, the
+first-tier locales en/ru/zh-Hans)</strong> —
+<code>final/v04-client/helix-ui-flutter.md</code> §1.4/§2.1/§2.5/§4.4/§5
+(sibling, read 2026-06-25).</li>
+<li><strong>The per-platform tunnel-shim surfaces (iOS/macOS SwiftUI NE
+config + the iOS NE memory ceiling vs desktop-class macOS; Android
+Compose tile + foreground-service notification + TV/foldable input;
+HarmonyOS ArkTS <code>VpnExtensionAbility</code>; Aurora Qt/C++ backend;
+Windows SYSTEM-service named pipe)</strong> —
+<code>final/v04-client/shim-apple.md</code> §1/§6/§6.5,
+<code>final/v04-client/shim-android.md</code> §7/§8.3 (read 2026-06-25);
+<code>shim-windows.md</code>, <code>shim-linux.md</code>,
+<code>shim-harmonyos.md</code>, <code>shim-aurora.md</code> referenced
+by filename for the per-OS native surface (their UI-surface specifics
+that are SDK-version-dependent are marked <code>UNVERIFIED</code> here,
+not asserted).</li>
+<li><strong>The Web Console (Console-only Web build, no system TUN
+structural fact, NoCore, CanvasKit/Wasm renderer, width breakpoints,
+OS-dark via <code>prefers-color-scheme</code>, ARIA a11y, the
+browser-scoped WASM proxy chip with distinct
+<code>ProxyStatus</code>)</strong> —
+<code>final/v04-client/web-console.md</code> §0/§1/§2.4/§4/§5/§7.3/§8
+(sibling, read 2026-06-25).</li>
+<li><strong>Constitution clauses</strong> §11.4.6 (no-guessing — every
+<code>UNVERIFIED</code> marked, none fabricated), §11.4.66 (decisions
+surfaced as options, never silently resolved), §11.4.99 (latest-source
+cross-reference — the HarmonyOS/Aurora/Linux platform specifics are
+pinned + re-verified before the surface ships), §11.4.112 (structural
+impossibility — browser has no system TUN), §11.4.162 (OpenDesign UI
+design-system mandate, light+dark every component, no-overlap,
+visual-regression), §11.4.168 (exported-doc visual validation) —
+constitution submodule text embedded in this repo&#39;s
+<code>constitution/CLAUDE.md</code>, accessed 2026-06-25.</li>
+<li>Items explicitly marked <code>UNVERIFIED</code> (HarmonyOS
+HarmonyDesign/ArkUI navigation + a11y + dark-signal U-PA-1; Aurora
+Silica navigation + ambience + a11y U-PA-2; Linux per-DE dark +
+reduce-motion U-PA-3; TV-leanback MVP-gating D-PA-4; desktop menu/tray
+affordance D-PA-5) are pending their §11.4.99 verification pass — not
+asserted as fact (§11.4.6).</li>
+</ul>
+</body>
+</html>

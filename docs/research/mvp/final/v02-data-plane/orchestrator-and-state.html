@@ -1,0 +1,1748 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>helix-core Orchestrator &amp; State Machine</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">helix-core Orchestrator &amp; State Machine</h1>
+</header>
+<h1 id="helix-core-orchestrator--state-machine">helix-core Orchestrator
+&amp; State Machine</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-06-25T00:00:00Z</p>
+<blockquote>
+<p>Master technical specification — Volume 2 (Data Plane), nano-detail
+deep-dive. This document <strong>deepens</strong> the <em>Orchestrator,
+status stream, and auto transport selection</em> section of doc 01
+[01-DP §5.1, §5.2] into an implementation-ready specification of the
+<code>crates/helix-core</code> orchestrator: its three async loops, the
+<code>tokio::broadcast</code> status stream, network-map reconciliation,
+the reconnection backoff state machine, the kill-switch + DNS coupling,
+and the <code>--mode=connector</code> posture that shares the same core.
+SPEC-ONLY: it describes <strong>what to build</strong>, not the shipping
+product. Sources cited inline by id — <code>[01-DP §N]</code> = doc 01
+<code>final/01-data-plane.md</code>; <code>[04_ARCH §N]</code> =
+<code>04_VPN_CLD/HelixVPN-Architecture-Refined.md</code>;
+<code>[04_P0 §N]</code> =
+<code>04_VPN_CLD/HelixVPN-Phase0-Spike.md</code>;
+<code>[04_P2 §N]</code> = Phase-2 refined doc;
+<code>[SYNTHESIS §N]</code> = the cross-document synthesis;
+<code>[01-LAD §N]</code> =
+<code>v02-data-plane/transport-selection-ladder.md</code>;
+<code>[research-masque]</code> = the cited research digests. Any claim
+not grounded in the evidence base is marked <code>UNVERIFIED</code> per
+constitution §11.4.6.</p>
+</blockquote>
+<hr />
+<h2 id="0-position-ownership-and-invariants">0. Position, ownership, and
+invariants</h2>
+<h3 id="01-what-this-document-owns">0.1 What this document owns</h3>
+<p>The orchestrator (<code>crates/helix-core</code>, file
+<code>helix-core/src/orchestrator.rs</code> [01-DP §12]) is the
+<strong>conductor</strong> of the data plane on every role. It owns the
+wiring that turns the four frozen Phase-0 contracts — the
+<code>Transport</code> trait [01-DP §3.1], <code>helix-wg</code>&#39;s
+<code>WgPeer</code> [01-DP §4], the <code>RouteMap</code> reconciler
+input [01-DP §6.2], and the <code>TunnelStatus</code> broadcast enum
+[01-DP §5.2] — into a running tunnel, and it re-converges them without a
+process restart as state changes [04_ARCH §4.4, 04_P0 §4.5/§10].
+Concretely it owns:</p>
+<ol type="1">
+<li>The <strong>three async loops</strong> —
+<code>tun → wg → (daita) → transport</code>,
+<code>transport → wg → tun</code>, <code>timer tick</code> — and the
+<code>tokio::select!</code> driver that multiplexes them (§2, §3).</li>
+<li>The <strong><code>tokio::sync::broadcast</code> status
+stream</strong> that surfaces
+<code>Connecting | Handshaking | Connected{transport,rtt} | Reconnecting | Down{reason}</code>
+to the FFI, the ladder, and aggregate metrics (§4) [01-DP §5.2, 04_P0
+§4.5].</li>
+<li>The <strong>orchestrator state machine</strong> that decides which
+<code>TunnelStatus</code> is current and gates every side effect
+(kill-switch open/close, DNS apply/revert, ladder kick) (§5).</li>
+<li><strong>Network-map reconciliation</strong> — diff desired-vs-actual
+<code>RouteMap</code>, converge peers / routes / transport policy / DNS,
+no restart, <code>&lt; 1 s</code> convergence (§6) [04_ARCH §4.4].</li>
+<li>The <strong>reconnection backoff state machine</strong> — jittered
+exponential re-dial with roam detection, feeding the ladder (§7) [04_P2
+§1.4, 04_P0 §8].</li>
+<li>The <strong>kill-switch + DNS coupling</strong> — OS firewall +
+tunnel-DNS side effects driven by the core state machine, never
+hand-edited (§8) [04_ARCH §5.6 table, §7].</li>
+<li>The <strong>connector posture</strong>
+(<code>--mode=connector</code>) — the same core with a forwarding/NAT
+routing posture instead of default-route capture (§9) [04_P0 §4.5].</li>
+</ol>
+<h3 id="02-what-this-document-does-not-own">0.2 What this document does
+NOT own</h3>
+<ul>
+<li>The <code>Transport</code> trait, <code>TransportConfig</code>,
+<code>dial()</code>, per-transport wire framing — frozen in doc 01
+[01-DP §3]; the orchestrator consumes opaque
+<code>Box&lt;dyn Transport&gt;</code> handles.</li>
+<li>The <strong>ladder selection algorithm</strong> (which rung,
+per-network memory, regional prior, manual <code>pin</code>) — owned by
+<code>helix-core/src/ladder.rs</code> and specified in [01-LAD]. This
+document owns the <em>driver</em> that asks the ladder for the next
+transport and reacts to its outcome; it treats
+<code>ladder::select()</code> / <code>ladder::escalate()</code> as
+upstream calls (§7.4).</li>
+<li>WireGuard crypto (<code>helix-wg</code> <code>Tunn</code> state
+machine) [01-DP §4]; routing/ACL compilation (<code>helix-route</code>)
+[01-DP §6–§7]; DAITA shaping (<code>helix-daita</code>) [01-DP §9] — the
+orchestrator drives their hooks but does not define them.</li>
+<li>The <code>WatchNetworkMap</code> protobuf that <em>delivers</em> the
+<code>RouteMap</code> (doc 03); the orchestrator consumes the map&#39;s
+<em>shape</em> and treats a file-watch on <code>map.json</code> as the
+Phase-0 stand-in for the stream [04_P0 §10].</li>
+<li>The FFI bridge that re-emits <code>TunnelStatus</code> to Dart (doc
+05); this document owns the broadcast <em>sender</em>, not the FFI
+<em>receiver</em>.</li>
+</ul>
+<h3 id="03-invariants-this-document-inherits-and-tightens">0.3
+Invariants this document inherits and tightens</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Invariant</th>
+<th>Source</th>
+<th>Orchestrator-specific tightening</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>I1</td>
+<td>Transport never sees plaintext.</td>
+<td>[01-DP I1]</td>
+<td>Loop A hands WG-encrypted bytes to <code>Transport::send</code>;
+loop B hands <code>Transport::recv</code> bytes to <code>WgPeer</code>.
+The orchestrator never logs nor inspects either side&#39;s payload (§3,
+§10).</td>
+</tr>
+<tr>
+<td>I2</td>
+<td>Unreliable datagrams, never an ordered stream.</td>
+<td>[01-DP I2]</td>
+<td>The loops carry one datagram per iteration; a dropped recv is not
+retried at the orchestrator layer — WG owns loss semantics.</td>
+</tr>
+<tr>
+<td>I3</td>
+<td>Control plane never in the packet path; fail-static.</td>
+<td>[01-DP I3, 04_ARCH §2.1]</td>
+<td>If the reconcile source (stream / file-watch) dies, the existing
+loops keep forwarding; reconciliation is a <strong>side</strong> task,
+never on the hot path (§6.5).</td>
+</tr>
+<tr>
+<td>I5</td>
+<td>No-logging by construction; aggregate counters only.</td>
+<td>[01-DP I5]</td>
+<td>The status stream carries ephemeral state, never durable
+per-connection records; the only persisted artefact is the ladder&#39;s
+per-network memory hash (§4.5, §10) [01-LAD §6.4].</td>
+</tr>
+<tr>
+<td>O-I10</td>
+<td><strong>Single state authority</strong> — exactly one
+<code>OrchState</code> is current; every <code>TunnelStatus</code>
+emission and every kill-switch / DNS side effect is a function of an
+<code>OrchState</code> transition, never an ad-hoc emit.</td>
+<td>derived from [01-DP §5.2]</td>
+<td>§5; prevents UI flicker and firewall races.</td>
+</tr>
+<tr>
+<td>O-I11</td>
+<td><strong>Kill-switch fails closed</strong> — on any transition
+<em>into</em> <code>Reconnecting</code>/<code>Down</code>, the firewall
+stays/goes closed until a <code>Connected</code> transition re-opens it;
+a crash leaves the closed rules installed.</td>
+<td>[04_ARCH §5.6 &quot;no leaks if tunnel drops&quot;, §7]</td>
+<td>§8.2, §8.5.</td>
+</tr>
+<tr>
+<td>O-I12</td>
+<td><strong>Reconcile is declarative + restart-free</strong> — a map
+delta mutates live peer/route/policy state in place; the process is
+never restarted to apply a change.</td>
+<td>[04_ARCH §4.4, 04_P0 §10]</td>
+<td>§6.</td>
+</tr>
+<tr>
+<td>O-I13</td>
+<td><strong>Connector and client run the identical core</strong> — only
+the routing posture differs, selected by one flag; no forked loop
+bodies.</td>
+<td>[04_P0 §4.5, 01-DP I4]</td>
+<td>§9.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="1-the-orchestrator-at-a-glance">1. The orchestrator at a
+glance</h2>
+<pre class="mermaid"><code>flowchart TB
+    subgraph Core[&quot;helix-core orchestrator (one process, one Tokio runtime)&quot;]
+        direction TB
+        TUN[&quot;helix-tun&lt;br/&gt;TUN fd (client) /&lt;br/&gt;veth+NAT (connector)&quot;]
+        WG[&quot;helix-wg&lt;br/&gt;WgPeer: Tunn state machine&quot;]
+        DAITA[&quot;helix-daita&lt;br/&gt;(optional L2.5 shaping)&quot;]
+        TX[&quot;active Box&amp;lt;dyn Transport&amp;gt;&lt;br/&gt;plain-udp / masque-h3 / …&quot;]
+        LADDER[&quot;ladder.rs&lt;br/&gt;TransportPolicy + memory&quot;]
+        RECON[&quot;reconciler&lt;br/&gt;RouteMap diff/converge&quot;]
+        KS[&quot;kill-switch + DNS&lt;br/&gt;OS firewall side effects&quot;]
+        SM[&quot;OrchState machine&lt;br/&gt;+ broadcast&amp;lt;TunnelStatus&amp;gt;&quot;]
+    end
+
+    TUN -- &quot;loop A: plaintext IP pkt&quot; --&gt; WG
+    WG -- &quot;encrypted dg&quot; --&gt; DAITA
+    DAITA -- &quot;padded dg + cover&quot; --&gt; TX
+    TX -- &quot;loop B: encrypted dg&quot; --&gt; WG
+    WG -- &quot;plaintext IP pkt&quot; --&gt; TUN
+    SM -- &quot;tick (loop C)&quot; --&gt; WG
+    SM -- &quot;on fail → re-dial&quot; --&gt; LADDER
+    LADDER -- &quot;next Box&amp;lt;dyn Transport&amp;gt;&quot; --&gt; TX
+    RECON -- &quot;apply peer/route/policy/dns delta&quot; --&gt; WG
+    RECON -- &quot;transport policy delta&quot; --&gt; LADDER
+    SM -- &quot;Connected → open / Down → close&quot; --&gt; KS
+    SM == &quot;TunnelStatus events&quot; ==&gt; FFI[[&quot;FFI → Flutter (doc 05)&quot;]]
+    SM == &quot;aggregate counters&quot; ==&gt; METRICS[[&quot;metrics (I5, no per-conn)&quot;]]</code></pre>
+<p>Three data-moving loops, one control state machine, two side-effect
+sinks (FFI + metrics), two control inputs (ladder outcomes, reconcile
+deltas), and one OS-effect sink (kill-switch/DNS). Everything below is
+the nano-detail of these eight boxes.</p>
+<hr />
+<h2 id="2-top-level-types--lifecycle">2. Top-level types &amp;
+lifecycle</h2>
+<h3 id="21-orchestrator-struct-and-construction">2.1
+<code>Orchestrator</code> struct and construction</h3>
+<div class="sourceCode" id="cb2"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-core/src/orchestrator.rs</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::sync::</span>Arc<span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::net::</span>IpAddr<span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">tokio::sync::</span><span class="op">{</span>broadcast<span class="op">,</span> mpsc<span class="op">,</span> watch<span class="op">,</span> Mutex<span class="op">};</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">tokio_util::sync::</span>CancellationToken<span class="op">;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">bytes::</span>Bytes<span class="op">;</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">helix_transport::</span><span class="op">{</span>Transport<span class="op">,</span> TransportConfig<span class="op">,</span> TransportError<span class="op">,</span> dial<span class="op">};</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">helix_wg::</span><span class="op">{</span>WgPeer<span class="op">,</span> WgVerdict<span class="op">};</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">helix_tun::</span>TunDevice<span class="op">;</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">helix_route::</span><span class="op">{</span>RouteMap<span class="op">,</span> CompiledPolicy<span class="op">};</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="co">/// Run-role selected once at startup; the rest of the core is identical (O-I13).</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="bu">Clone</span><span class="op">,</span> <span class="bu">Copy</span><span class="op">,</span> <span class="bu">Debug</span><span class="op">,</span> <span class="bu">PartialEq</span><span class="op">,</span> <span class="bu">Eq</span><span class="at">)]</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">enum</span> Mode <span class="op">{</span> Client<span class="op">,</span> Connector <span class="op">}</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="co">/// All construction inputs. Resolved from CLI flags + the first RouteMap snapshot.</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> OrchestratorConfig <span class="op">{</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> mode<span class="op">:</span> Mode<span class="op">,</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> tun<span class="op">:</span> TunSpec<span class="op">,</span>                    <span class="co">// client: create/inject fd; connector: forward iface + NAT</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> initial_map<span class="op">:</span> RouteMap<span class="op">,</span>           <span class="co">// first snapshot (doc 03) or static map.json (Phase 0)</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> transport_policy<span class="op">:</span> TransportPolicy<span class="op">,</span><span class="co">// ladder order/pin/budget [01-LAD §3]</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> kill_switch<span class="op">:</span> KillSwitchConfig<span class="op">,</span>   <span class="co">// §8</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> dns<span class="op">:</span> DnsConfig<span class="op">,</span>                  <span class="co">// §8.3</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> tunables<span class="op">:</span> Tunables<span class="op">,</span>              <span class="co">// §11</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a><span class="co">/// The live orchestrator. Owns the broadcast sender; loops hold `Arc&lt;OrchShared&gt;`.</span></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> Orchestrator <span class="op">{</span></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>    shared<span class="op">:</span> Arc<span class="op">&lt;</span>OrchShared<span class="op">&gt;,</span></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>    cancel<span class="op">:</span> CancellationToken<span class="op">,</span>           <span class="co">// cooperative shutdown of all loops (§2.4)</span></span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>    join<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span><span class="pp">tokio::task::</span>JoinHandle<span class="op">&lt;</span>()<span class="op">&gt;&gt;,</span></span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a><span class="co">/// Shared state every loop reads; mutated only via the state machine (O-I10) and reconciler.</span></span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> OrchShared <span class="op">{</span></span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> mode<span class="op">:</span> Mode<span class="op">,</span></span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> status_tx<span class="op">:</span> <span class="pp">broadcast::</span>Sender<span class="op">&lt;</span>TunnelStatus<span class="op">&gt;,</span>     <span class="co">// §4</span></span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> state<span class="op">:</span> Mutex<span class="op">&lt;</span>StateCell<span class="op">&gt;,</span>                         <span class="co">// OrchState authority (§5)</span></span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> active_tx<span class="op">:</span> Mutex<span class="op">&lt;</span><span class="dt">Option</span><span class="op">&lt;</span>Arc<span class="op">&lt;</span><span class="kw">dyn</span> Transport<span class="op">&gt;&gt;&gt;,</span>    <span class="co">// current rung; swapped by re-dial (§7)</span></span>
+<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> wg<span class="op">:</span> Mutex<span class="op">&lt;</span>WgRegistry<span class="op">&gt;,</span>                            <span class="co">// peers keyed by pubkey (§6.3)</span></span>
+<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> tun<span class="op">:</span> TunDevice<span class="op">,</span></span>
+<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> daita<span class="op">:</span> Mutex<span class="op">&lt;</span><span class="dt">Option</span><span class="op">&lt;</span><span class="pp">helix_daita::</span>Daita<span class="op">&gt;&gt;,</span>        <span class="co">// None unless opted in [01-DP §9]</span></span>
+<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> policy<span class="op">:</span> Mutex<span class="op">&lt;</span>CompiledPolicy<span class="op">&gt;,</span>                    <span class="co">// connector/edge verdict map (§9.3)</span></span>
+<span id="cb2-45"><a href="#cb2-45" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> counters<span class="op">:</span> Counters<span class="op">,</span>                               <span class="co">// aggregate only (I5)</span></span>
+<span id="cb2-46"><a href="#cb2-46" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-47"><a href="#cb2-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-48"><a href="#cb2-48" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> Orchestrator <span class="op">{</span></span>
+<span id="cb2-49"><a href="#cb2-49" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Build, install the kill-switch in its *armed-closed-until-connected* posture (§8.2),</span></span>
+<span id="cb2-50"><a href="#cb2-50" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// spawn the three loops + reconciler + ladder driver, and emit `Connecting`.</span></span>
+<span id="cb2-51"><a href="#cb2-51" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> start(cfg<span class="op">:</span> OrchestratorConfig) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span><span class="dt">Self</span><span class="op">,</span> OrchestratorError<span class="op">&gt;</span> <span class="op">{</span> <span class="co">/* … */</span> <span class="op">}</span></span>
+<span id="cb2-52"><a href="#cb2-52" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-53"><a href="#cb2-53" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Subscribe to the live status stream (FFI, metrics, tests all use this) [01-DP §5.2].</span></span>
+<span id="cb2-54"><a href="#cb2-54" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">fn</span> subscribe(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="pp">broadcast::</span>Receiver<span class="op">&lt;</span>TunnelStatus<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb2-55"><a href="#cb2-55" aria-hidden="true" tabindex="-1"></a>        <span class="kw">self</span><span class="op">.</span>shared<span class="op">.</span>status_tx<span class="op">.</span>subscribe()</span>
+<span id="cb2-56"><a href="#cb2-56" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb2-57"><a href="#cb2-57" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-58"><a href="#cb2-58" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Push a new desired-state map (Phase 1: from the WatchNetworkMap stream; Phase 0:</span></span>
+<span id="cb2-59"><a href="#cb2-59" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// from the file-watch). Triggers reconciliation (§6).</span></span>
+<span id="cb2-60"><a href="#cb2-60" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> apply_map(<span class="op">&amp;</span><span class="kw">self</span><span class="op">,</span> map<span class="op">:</span> RouteMap) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">,</span> OrchestratorError<span class="op">&gt;</span> <span class="op">{</span> <span class="co">/* … */</span> <span class="op">}</span></span>
+<span id="cb2-61"><a href="#cb2-61" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-62"><a href="#cb2-62" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// User action: pin a transport (manual override) — re-arms the ladder (§7.4) [01-LAD §8].</span></span>
+<span id="cb2-63"><a href="#cb2-63" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> set_pin(<span class="op">&amp;</span><span class="kw">self</span><span class="op">,</span> pin<span class="op">:</span> <span class="dt">Option</span><span class="op">&lt;</span>TransportKind<span class="op">&gt;</span>) <span class="op">{</span> <span class="co">/* … */</span> <span class="op">}</span></span>
+<span id="cb2-64"><a href="#cb2-64" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-65"><a href="#cb2-65" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Graceful stop: cancel loops, FIN the transport, revert kill-switch+DNS, emit Down (§2.4).</span></span>
+<span id="cb2-66"><a href="#cb2-66" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> stop(<span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">,</span> OrchestratorError<span class="op">&gt;</span> <span class="op">{</span> <span class="co">/* … */</span> <span class="op">}</span></span>
+<span id="cb2-67"><a href="#cb2-67" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><code>active_tx</code> is <code>Arc&lt;dyn Transport&gt;</code> (not
+<code>Box</code>) so loop A and loop B share <strong>one</strong> handle
+and a re-dial can atomically swap it under the mutex without tearing
+either loop (§7.3). The <code>Transport</code> trait&#39;s
+<code>send</code>/<code>recv</code> take <code>&amp;self</code> [01-DP
+§3.1], so <code>Arc&lt;dyn Transport&gt;</code> is the correct shared
+ownership.</p>
+<h3 id="22-spawn-topology">2.2 Spawn topology</h3>
+<pre class="mermaid"><code>flowchart LR
+    start[&quot;Orchestrator::start()&quot;] --&gt; sm[&quot;spawn state-machine driver&lt;br/&gt;(owns OrchState, emits TunnelStatus)&quot;]
+    start --&gt; la[&quot;spawn LOOP A&lt;br/&gt;tun→wg→daita→tx&quot;]
+    start --&gt; lb[&quot;spawn LOOP B&lt;br/&gt;tx→wg→tun&quot;]
+    start --&gt; lc[&quot;spawn LOOP C&lt;br/&gt;timer tick (100–250 ms)&quot;]
+    start --&gt; rec[&quot;spawn reconciler&lt;br/&gt;(map deltas; side task, I3)&quot;]
+    start --&gt; drv[&quot;spawn re-dial driver&lt;br/&gt;(ladder + backoff, §7)&quot;]
+    sm -. CancellationToken .- la
+    sm -. CancellationToken .- lb
+    sm -. CancellationToken .- lc
+    sm -. CancellationToken .- rec
+    sm -. CancellationToken .- drv</code></pre>
+<p>Six tasks. The state-machine driver is the single writer of
+<code>OrchState</code>; every other task <em>requests</em> a transition
+by sending an <code>OrchEvent</code> on an <code>mpsc</code> channel the
+driver owns (§5.3), so O-I10 holds without lock contention on the hot
+loops.</p>
+<h3 id="23-internal-control-channels">2.3 Internal control channels</h3>
+<div class="sourceCode" id="cb4"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">/// Loops and the reconciler never mutate OrchState directly — they post events.</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">enum</span> OrchEvent <span class="op">{</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    HandshakeStarted<span class="op">,</span>                        <span class="co">// loop B saw first inbound after dial</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    HandshakeComplete <span class="op">{</span> rtt_ms<span class="op">:</span> <span class="dt">u32</span> <span class="op">},</span>       <span class="co">// WG session established (§5.4)</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    TransportError(TransportError)<span class="op">,</span>          <span class="co">// loop A/B carrier failed</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    PeerTimeout <span class="op">{</span> pubkey<span class="op">:</span> [<span class="dt">u8</span><span class="op">;</span> <span class="dv">32</span>] <span class="op">},</span>        <span class="co">// tick: no recv within keepalive window</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    MapApplied <span class="op">{</span> changed<span class="op">:</span> MapDelta <span class="op">},</span>        <span class="co">// reconciler converged (§6)</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    RoamDetected <span class="op">{</span> new_local<span class="op">:</span> IpAddr <span class="op">},</span>      <span class="co">// local iface changed (§7.5)</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    PinChanged(<span class="dt">Option</span><span class="op">&lt;</span>TransportKind<span class="op">&gt;</span>)<span class="op">,</span>       <span class="co">// user manual override</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    Stop<span class="op">,</span>                                    <span class="co">// graceful shutdown</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> StateCell <span class="op">{</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> state<span class="op">:</span> OrchState<span class="op">,</span>                     <span class="co">// §5.1</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> since<span class="op">:</span> <span class="pp">tokio::time::</span>Instant<span class="op">,</span>          <span class="co">// dwell time for budgets/metrics</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> backoff<span class="op">:</span> Backoff<span class="op">,</span>                     <span class="co">// §7.2</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> event_tx<span class="op">:</span> <span class="pp">mpsc::</span>Sender<span class="op">&lt;</span>OrchEvent<span class="op">&gt;,</span>    <span class="co">// loops clone this</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="24-cancellation--shutdown-ordering">2.4 Cancellation &amp;
+shutdown ordering</h3>
+<p><code>stop()</code> cancels the <code>CancellationToken</code>. Every
+loop&#39;s <code>tokio::select!</code> includes a
+<code>_ = self.cancel.cancelled() =&gt; break</code> arm (§3.4), so all
+three drain on the next iteration. Shutdown order is
+<strong>strict</strong> to honour O-I11 (no leak window during
+teardown):</p>
+<ol type="1">
+<li>Transition <code>OrchState → ShuttingDown</code> (suppresses
+re-dial; ladder driver exits).</li>
+<li><code>active_tx.close()</code> (FIN the QUIC/TCP carrier
+idempotently) [01-DP §3.1].</li>
+<li><strong>Keep</strong> the kill-switch closed; revert DNS to system
+resolvers (§8.4).</li>
+<li>Cancel loops A/B/C/reconciler; <code>join</code> all handles with a
+bounded timeout (<code>Tunables.shutdown_grace</code>, default 2
+s).</li>
+<li>On user-initiated stop only: revert the kill-switch to <em>off</em>
+(open) — the user asked to disconnect, so traffic flows on the underlay
+again (§8.6). On crash/abnormal exit the closed rules are left installed
+(O-I11).</li>
+<li>Emit <code>Down { reason: &quot;stopped&quot; }</code> last.</li>
+</ol>
+<hr />
+<h2 id="3-the-three-loops-nano-detail">3. The three loops
+(nano-detail)</h2>
+<p>The orchestrator runs three loops [04_P0 §4.5, 01-DP §5.1]. Each is a
+single <code>tokio::task</code> with an internal
+<code>loop { tokio::select! { … } }</code>. The bodies are cancel-safe:
+<code>Transport::recv</code> and <code>TunDevice::recv</code> are
+documented cancel-safe [01-DP §3.1], and <code>WgPeer</code> calls are
+synchronous CPU work between awaits.</p>
+<h3 id="31-loop-a--outbound-tun--wg--daita--transport">3.1 Loop A —
+outbound: <code>tun → wg → (daita) → transport</code></h3>
+<div class="sourceCode" id="cb5"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">async</span> <span class="kw">fn</span> loop_a(shared<span class="op">:</span> Arc<span class="op">&lt;</span>OrchShared<span class="op">&gt;,</span> cancel<span class="op">:</span> CancellationToken) <span class="op">{</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> scratch <span class="op">=</span> <span class="pp">vec!</span>[<span class="dv">0u8</span><span class="op">;</span> <span class="dv">65535</span>]<span class="op">;</span>           <span class="co">// reused encrypt buffer; no per-pkt alloc</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">loop</span> <span class="op">{</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>        <span class="pp">tokio::select!</span> <span class="op">{</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>            biased<span class="op">;</span>                                 <span class="co">// cancel checked first</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>            _ <span class="op">=</span> cancel<span class="op">.</span>cancelled() <span class="op">=&gt;</span> <span class="cf">break</span><span class="op">,</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>            pkt <span class="op">=</span> shared<span class="op">.</span>tun<span class="op">.</span>recv() <span class="op">=&gt;</span> <span class="op">{</span>            <span class="co">// plaintext IP packet from the OS (client)</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>                <span class="kw">let</span> ip_pkt <span class="op">=</span> <span class="cf">match</span> pkt <span class="op">{</span> <span class="cn">Ok</span>(p) <span class="op">=&gt;</span> p<span class="op">,</span> <span class="cn">Err</span>(_) <span class="op">=&gt;</span> <span class="cf">continue</span> <span class="op">};</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>                <span class="co">// 1. WG encrypt (helix-wg owns the Tunn state machine) [01-DP §4]</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>                <span class="kw">let</span> <span class="kw">mut</span> wg <span class="op">=</span> shared<span class="op">.</span>wg<span class="op">.</span>lock()<span class="op">.</span><span class="kw">await</span><span class="op">;</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>                <span class="kw">let</span> verdict <span class="op">=</span> wg<span class="op">.</span>peer_for_dst(<span class="op">&amp;</span>ip_pkt)              <span class="co">// route by AllowedIPs (I6)</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>                                <span class="op">.</span>map(<span class="op">|</span>p<span class="op">|</span> p<span class="op">.</span>handle_tun_out(<span class="op">&amp;</span>ip_pkt<span class="op">,</span> <span class="op">&amp;</span><span class="kw">mut</span> scratch))<span class="op">;</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>                <span class="kw">let</span> enc<span class="op">:</span> <span class="op">&amp;</span>[<span class="dt">u8</span>] <span class="op">=</span> <span class="cf">match</span> verdict <span class="op">{</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>                    <span class="cn">Some</span>(<span class="pp">WgVerdict::</span>WriteToTransport(b)) <span class="op">=&gt;</span> b<span class="op">,</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>                    <span class="cn">Some</span>(<span class="pp">WgVerdict::</span>Nothing) <span class="op">|</span> <span class="cn">None</span> <span class="op">=&gt;</span> <span class="cf">continue</span><span class="op">,</span>    <span class="co">// no session yet / no route</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>                    <span class="cn">Some</span>(<span class="pp">WgVerdict::</span>WriteToTun(_)) <span class="op">=&gt;</span> <span class="cf">continue</span><span class="op">,</span>     <span class="co">// impossible here</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>                    <span class="cn">Some</span>(<span class="pp">WgVerdict::</span><span class="cn">Err</span>(_)) <span class="op">=&gt;</span> <span class="op">{</span> shared<span class="op">.</span>counters<span class="op">.</span>wg_enc_err<span class="op">.</span>inc()<span class="op">;</span> <span class="cf">continue</span> <span class="op">}</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>                <span class="op">};</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>                <span class="kw">let</span> <span class="kw">mut</span> dg <span class="op">=</span> <span class="pp">Bytes::</span>copy_from_slice(enc)<span class="op">;</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>                drop(wg)<span class="op">;</span>                                            <span class="co">// release before await</span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>                <span class="co">// 2. DAITA shaping (optional, above WG / below transport) [01-DP §9]</span></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> <span class="kw">let</span> <span class="cn">Some</span>(d) <span class="op">=</span> shared<span class="op">.</span>daita<span class="op">.</span>lock()<span class="op">.</span><span class="kw">await</span><span class="op">.</span>as_mut() <span class="op">{</span></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">for</span> act <span class="kw">in</span> d<span class="op">.</span>on_packet(<span class="op">&amp;</span><span class="kw">mut</span> dg<span class="op">,</span> <span class="pp">tokio::time::Instant::</span>now()) <span class="op">{</span></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>                        <span class="cf">if</span> <span class="kw">let</span> <span class="pp">ScheduledAction::</span>SendNow(cover) <span class="op">=</span> act <span class="op">{</span> <span class="kw">let</span> _ <span class="op">=</span> send_dg(<span class="op">&amp;</span>shared<span class="op">,</span> cover)<span class="op">.</span><span class="kw">await</span><span class="op">;</span> <span class="op">}</span></span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>                    <span class="op">}</span></span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>                <span class="op">}</span></span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>                <span class="co">// 3. hand to the active transport (I1: opaque encrypted bytes)</span></span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> <span class="kw">let</span> <span class="cn">Err</span>(e) <span class="op">=</span> send_dg(<span class="op">&amp;</span>shared<span class="op">,</span> dg)<span class="op">.</span><span class="kw">await</span> <span class="op">{</span> post_err(<span class="op">&amp;</span>shared<span class="op">,</span> e)<span class="op">.</span><span class="kw">await</span><span class="op">;</span> <span class="op">}</span></span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a><span class="co">/// Single send path; swaps cleanly if a re-dial replaced active_tx mid-flight (§7.3).</span></span>
+<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a><span class="kw">async</span> <span class="kw">fn</span> send_dg(shared<span class="op">:</span> <span class="op">&amp;</span>OrchShared<span class="op">,</span> dg<span class="op">:</span> Bytes) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">,</span> TransportError<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> tx <span class="op">=</span> shared<span class="op">.</span>active_tx<span class="op">.</span>lock()<span class="op">.</span><span class="kw">await</span><span class="op">.</span>clone()                  <span class="co">// Arc clone; cheap</span></span>
+<span id="cb5-37"><a href="#cb5-37" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span>ok_or(<span class="pp">TransportError::</span>Closed)<span class="op">?;</span></span>
+<span id="cb5-38"><a href="#cb5-38" aria-hidden="true" tabindex="-1"></a>    <span class="cf">match</span> tx<span class="op">.</span>send(dg)<span class="op">.</span><span class="kw">await</span> <span class="op">{</span></span>
+<span id="cb5-39"><a href="#cb5-39" aria-hidden="true" tabindex="-1"></a>        <span class="cn">Err</span>(<span class="pp">TransportError::</span>Oversize(n)) <span class="op">=&gt;</span> <span class="op">{</span> shared<span class="op">.</span>counters<span class="op">.</span>oversize<span class="op">.</span>inc()<span class="op">;</span></span>
+<span id="cb5-40"><a href="#cb5-40" aria-hidden="true" tabindex="-1"></a>            <span class="cn">Err</span>(<span class="pp">TransportError::</span>Oversize(n)) <span class="op">}</span>                      <span class="co">// §6.6 MTU edge → caller lowers MTU</span></span>
+<span id="cb5-41"><a href="#cb5-41" aria-hidden="true" tabindex="-1"></a>        other <span class="op">=&gt;</span> other<span class="op">,</span></span>
+<span id="cb5-42"><a href="#cb5-42" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-43"><a href="#cb5-43" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Key points: (1) the <code>wg</code> mutex is <strong>released
+before</strong> any <code>.await</code> so loop B can run while loop A
+is in DAITA/transport — no cross-loop deadlock (§12 cross-feature
+analysis); (2) a WG-encrypt that yields <code>Nothing</code> (handshake
+not yet complete) silently drops the user packet — WG will buffer the
+handshake-trigger internally and the app&#39;s TCP/QUIC will retransmit; (3)
+<code>Oversize</code> is propagated, never silently truncated (I2)
+[01-DP §10].</p>
+<h3 id="32-loop-b--inbound-transport--wg--tun">3.2 Loop B — inbound:
+<code>transport → wg → tun</code></h3>
+<div class="sourceCode" id="cb6"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">async</span> <span class="kw">fn</span> loop_b(shared<span class="op">:</span> Arc<span class="op">&lt;</span>OrchShared<span class="op">&gt;,</span> cancel<span class="op">:</span> CancellationToken) <span class="op">{</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> scratch <span class="op">=</span> <span class="pp">vec!</span>[<span class="dv">0u8</span><span class="op">;</span> <span class="dv">65535</span>]<span class="op">;</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">loop</span> <span class="op">{</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> tx <span class="op">=</span> <span class="cf">match</span> shared<span class="op">.</span>active_tx<span class="op">.</span>lock()<span class="op">.</span><span class="kw">await</span><span class="op">.</span>clone() <span class="op">{</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>            <span class="cn">Some</span>(t) <span class="op">=&gt;</span> t<span class="op">,</span> <span class="cn">None</span> <span class="op">=&gt;</span> <span class="op">{</span> <span class="pp">tokio::time::</span>sleep(IDLE_BACKOFF)<span class="op">.</span><span class="kw">await</span><span class="op">;</span> <span class="cf">continue</span> <span class="op">}</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>        <span class="op">};</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>        <span class="pp">tokio::select!</span> <span class="op">{</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>            biased<span class="op">;</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>            _ <span class="op">=</span> cancel<span class="op">.</span>cancelled() <span class="op">=&gt;</span> <span class="cf">break</span><span class="op">,</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>            r <span class="op">=</span> tx<span class="op">.</span>recv() <span class="op">=&gt;</span> <span class="op">{</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>                <span class="kw">let</span> dg <span class="op">=</span> <span class="cf">match</span> r <span class="op">{</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>                    <span class="cn">Ok</span>(b) <span class="op">=&gt;</span> b<span class="op">,</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>                    <span class="cn">Err</span>(e) <span class="op">=&gt;</span> <span class="op">{</span> post_err(<span class="op">&amp;</span>shared<span class="op">,</span> e)<span class="op">.</span><span class="kw">await</span><span class="op">;</span>          <span class="co">// §5/§7 drive re-dial</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>                                <span class="pp">tokio::time::</span>sleep(IDLE_BACKOFF)<span class="op">.</span><span class="kw">await</span><span class="op">;</span> <span class="cf">continue</span> <span class="op">}</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>                <span class="op">};</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>                <span class="kw">let</span> <span class="kw">mut</span> wg <span class="op">=</span> shared<span class="op">.</span>wg<span class="op">.</span>lock()<span class="op">.</span><span class="kw">await</span><span class="op">;</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>                <span class="cf">match</span> wg<span class="op">.</span>handle_transport_in(<span class="op">&amp;</span>dg<span class="op">,</span> <span class="op">&amp;</span><span class="kw">mut</span> scratch) <span class="op">{</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>                    <span class="pp">WgVerdict::</span>WriteToTun(plain) <span class="op">=&gt;</span> <span class="op">{</span>                 <span class="co">// decrypted IP packet</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>                        <span class="co">// connector: forward into served CIDR + NAT (§9.2); client: write TUN</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>                        <span class="cf">match</span> shared<span class="op">.</span>mode <span class="op">{</span></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>                            <span class="pp">Mode::</span>Client    <span class="op">=&gt;</span> <span class="op">{</span> <span class="kw">let</span> _ <span class="op">=</span> shared<span class="op">.</span>tun<span class="op">.</span>send(plain)<span class="op">.</span><span class="kw">await</span><span class="op">;</span> <span class="op">}</span></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>                            <span class="pp">Mode::</span>Connector <span class="op">=&gt;</span> <span class="op">{</span> forward_into_lan(<span class="op">&amp;</span>shared<span class="op">,</span> plain)<span class="op">.</span><span class="kw">await</span><span class="op">;</span> <span class="op">}</span></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>                        <span class="op">}</span></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>                    <span class="op">}</span></span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>                    <span class="pp">WgVerdict::</span>WriteToTransport(reply) <span class="op">=&gt;</span> <span class="op">{</span>            <span class="co">// handshake reply → send back</span></span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>                        <span class="kw">let</span> b <span class="op">=</span> <span class="pp">Bytes::</span>copy_from_slice(reply)<span class="op">;</span> drop(wg)<span class="op">;</span></span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>                        <span class="kw">let</span> _ <span class="op">=</span> tx<span class="op">.</span>send(b)<span class="op">.</span><span class="kw">await</span><span class="op">;</span></span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>                        post_event(<span class="op">&amp;</span>shared<span class="op">,</span> <span class="pp">OrchEvent::</span>HandshakeStarted)<span class="op">.</span><span class="kw">await</span><span class="op">;</span></span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>                    <span class="op">}</span></span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>                    <span class="pp">WgVerdict::</span>Nothing <span class="op">=&gt;</span> <span class="op">{</span> <span class="co">/* keepalive / dupe */</span> <span class="op">}</span></span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a>                    <span class="pp">WgVerdict::</span><span class="cn">Err</span>(_) <span class="op">=&gt;</span> shared<span class="op">.</span>counters<span class="op">.</span>wg_dec_err<span class="op">.</span>inc()<span class="op">,</span></span>
+<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a>                <span class="op">}</span></span>
+<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Loop B is where <strong>handshake progress</strong> is observed: the
+first inbound datagram after a dial posts <code>HandshakeStarted</code>
+(→ <code>Handshaking</code>), and <code>helix-wg</code> reporting an
+established session (via <code>WgPeer::session_established()</code>
+polled in loop C, §3.3) posts <code>HandshakeComplete{rtt}</code> (→
+<code>Connected</code>). The transport carrier connecting is
+<strong>not</strong> &quot;connected&quot; — the WG handshake is (I2 tightening,
+mirrors [01-LAD I2]).</p>
+<h3 id="33-loop-c--timer-tick-tick--keepalive--rekey--liveness">3.3 Loop
+C — timer tick: <code>tick → keepalive / rekey / liveness</code></h3>
+<div class="sourceCode" id="cb7"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">async</span> <span class="kw">fn</span> loop_c(shared<span class="op">:</span> Arc<span class="op">&lt;</span>OrchShared<span class="op">&gt;,</span> cancel<span class="op">:</span> CancellationToken) <span class="op">{</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> scratch <span class="op">=</span> <span class="pp">vec!</span>[<span class="dv">0u8</span><span class="op">;</span> <span class="dv">4096</span>]<span class="op">;</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> iv <span class="op">=</span> <span class="pp">tokio::time::</span>interval(shared_tick_period())<span class="op">;</span>     <span class="co">// 100–250 ms [01-DP §4]</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    iv<span class="op">.</span>set_missed_tick_behavior(<span class="pp">tokio::time::MissedTickBehavior::</span>Skip)<span class="op">;</span> <span class="co">// no burst after stall</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">loop</span> <span class="op">{</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>        <span class="pp">tokio::select!</span> <span class="op">{</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>            biased<span class="op">;</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>            _ <span class="op">=</span> cancel<span class="op">.</span>cancelled() <span class="op">=&gt;</span> <span class="cf">break</span><span class="op">,</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>            _ <span class="op">=</span> iv<span class="op">.</span>tick() <span class="op">=&gt;</span> <span class="op">{</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>                <span class="kw">let</span> <span class="kw">mut</span> wg <span class="op">=</span> shared<span class="op">.</span>wg<span class="op">.</span>lock()<span class="op">.</span><span class="kw">await</span><span class="op">;</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>                <span class="cf">for</span> peer <span class="kw">in</span> wg<span class="op">.</span>iter_mut() <span class="op">{</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">match</span> peer<span class="op">.</span>tick(<span class="op">&amp;</span><span class="kw">mut</span> scratch) <span class="op">{</span>                  <span class="co">// emits keepalive/rekey [01-DP §4]</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>                        <span class="pp">WgVerdict::</span>WriteToTransport(b) <span class="op">=&gt;</span> <span class="op">{</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>                            <span class="kw">let</span> dg <span class="op">=</span> <span class="pp">Bytes::</span>copy_from_slice(b)<span class="op">;</span> drop_then_send(<span class="op">&amp;</span>shared<span class="op">,</span> dg)<span class="op">;</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>                        <span class="op">}</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>                        _ <span class="op">=&gt;</span> <span class="op">{}</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>                    <span class="op">}</span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>                    <span class="co">// liveness: WG passive-keepalive is 10 s; declare a peer stale if no</span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>                    <span class="co">// authenticated recv within keepalive_timeout (§7.1, default 25 s — WG&#39;s</span></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>                    <span class="co">// REKEY-after-no-recv heuristic). UNVERIFIED exact value → see §11 Tunables.</span></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">if</span> peer<span class="op">.</span>last_recv_age() <span class="op">&gt;</span> shared<span class="op">.</span>tunables<span class="op">.</span>keepalive_timeout <span class="op">{</span></span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>                        post_event(<span class="op">&amp;</span>shared<span class="op">,</span> <span class="pp">OrchEvent::</span>PeerTimeout <span class="op">{</span> pubkey<span class="op">:</span> peer<span class="op">.</span>pubkey() <span class="op">}</span>)<span class="op">.</span><span class="kw">await</span><span class="op">;</span></span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>                    <span class="op">}</span></span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">if</span> peer<span class="op">.</span>session_just_established() <span class="op">{</span></span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a>                        post_event(<span class="op">&amp;</span>shared<span class="op">,</span> <span class="pp">OrchEvent::</span>HandshakeComplete <span class="op">{</span> rtt_ms<span class="op">:</span> peer<span class="op">.</span>rtt_ms() <span class="op">}</span>)<span class="op">.</span><span class="kw">await</span><span class="op">;</span></span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a>                    <span class="op">}</span></span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a>                <span class="op">}</span></span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>The 100–250 ms cadence is the [01-DP §4] guidance;
+<code>MissedTickBehavior::Skip</code> prevents a tick storm after the
+runtime was starved (host-safety adjacent to §12.6).
+<code>PeerTimeout</code> is the trigger that moves a healthy
+<code>Connected</code> tunnel into <code>Reconnecting</code> (§5.4,
+§7.1).</p>
+<h3 id="34-why-three-loops-and-not-one-select">3.4 Why three loops and
+not one <code>select!</code></h3>
+<p>Splitting into three tasks (rather than one
+mega-<code>select!</code>) gives: independent backpressure (a slow TUN
+write cannot stall inbound decrypt); per-loop cancel-safety reasoning;
+and the ability for loop B to <code>sleep(IDLE_BACKOFF)</code> while
+<code>active_tx</code> is <code>None</code> during a re-dial without
+blocking loop A&#39;s drain. The cost is the shared mutexes; they are held
+only across synchronous <code>helix-wg</code> calls (microseconds),
+never across <code>.await</code>, so contention is bounded (§13
+performance budget). <code>IDLE_BACKOFF</code> is a short fixed
+<code>10 ms</code> poll while disconnected — <strong>not</strong> the
+reconnection backoff of §7 (that governs <em>re-dial attempts</em>, this
+governs the busy-wait while a re-dial is in flight).</p>
+<hr />
+<h2 id="4-the-status-stream-tokiobroadcast">4. The status stream
+(<code>tokio::broadcast</code>)</h2>
+<h3 id="41-the-enum-frozen-contract-mirrored-across-the-ffi">4.1 The
+enum (frozen contract, mirrored across the FFI)</h3>
+<div class="sourceCode" id="cb8"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-core/src/status.rs  (mirrored across the FFI boundary, doc 05) [01-DP §5.2, 04_P0 §4.5]</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="bu">Clone</span><span class="op">,</span> <span class="bu">Debug</span><span class="op">,</span> <span class="bu">PartialEq</span><span class="op">,</span> <span class="bu">Eq</span><span class="at">)]</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">enum</span> TunnelStatus <span class="op">{</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    Connecting<span class="op">,</span>                                   <span class="co">// dialling the first/seeded rung</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    Handshaking<span class="op">,</span>                                  <span class="co">// carrier up, WG handshake in flight</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    Connected <span class="op">{</span> transport<span class="op">:</span> <span class="dt">String</span><span class="op">,</span> rtt_ms<span class="op">:</span> <span class="dt">u32</span> <span class="op">},</span> <span class="co">// e.g. (&quot;masque-h3&quot;, 23)</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    Reconnecting<span class="op">,</span>                                 <span class="co">// a working tunnel dropped; re-dialling</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>    Down <span class="op">{</span> reason<span class="op">:</span> <span class="dt">String</span> <span class="op">},</span>                      <span class="co">// terminal for this attempt; see §4.4 reasons</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><code>Connected.transport</code> is the
+<code>Transport::kind()</code> string [01-DP §3.1]
+(<code>&quot;plain-udp&quot;</code>, <code>&quot;masque-h3&quot;</code>, …) so the UI shows
+<em>which</em> rung won [01-LAD §5.4]. <code>rtt_ms</code> is the
+WG-handshake RTT EWMA from <code>TransportHealth.rtt_ewma_ms</code>
+[01-DP §3.1], refreshed on each <code>Connected</code> re-emit
+(§4.3).</p>
+<h3 id="42-channel-construction--capacity">4.2 Channel construction
+&amp; capacity</h3>
+<div class="sourceCode" id="cb9"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co">// capacity sized for: FFI receiver + metrics receiver + ladder/test receivers, with slack.</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> STATUS_CHANNEL_CAP<span class="op">:</span> <span class="dt">usize</span> <span class="op">=</span> <span class="dv">64</span><span class="op">;</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> (status_tx<span class="op">,</span> _rx0) <span class="op">=</span> <span class="pp">broadcast::channel::</span><span class="op">&lt;</span>TunnelStatus<span class="op">&gt;</span>(STATUS_CHANNEL_CAP)<span class="op">;</span></span></code></pre></div>
+<p><code>tokio::sync::broadcast</code> is a <strong>bounded
+ring</strong> [01-DP §5.2]: each receiver has an independent read
+cursor; a slow receiver that falls <code>STATUS_CHANNEL_CAP</code>
+behind gets a <code>RecvError::Lagged(n)</code> on its next
+<code>recv()</code> and is fast-forwarded to the oldest retained value.
+This is acceptable for a <em>status</em> stream (the receiver only ever
+needs the <strong>latest</strong> state), but the FFI/UI receiver MUST
+treat <code>Lagged</code> as &quot;re-read latest&quot;, never as an error (§4.6
+receiver contract). Status is <strong>edge-coalesced</strong> (§4.3):
+emissions are rare (state changes), so 64 slots is generous; lag only
+happens if a receiver is wedged.</p>
+<h3 id="43-emit-discipline--coalesce-never-spam">4.3 Emit discipline —
+coalesce, never spam</h3>
+<p>Rule (O-I10): the <strong>only</strong> code that calls
+<code>status_tx.send(...)</code> is the state-machine driver, exactly
+once per <code>OrchState</code> transition, <strong>after</strong> the
+side effects of that transition have been applied (kill-switch/DNS
+first, then emit — so a UI that reacts to <code>Connected</code> can
+trust the firewall is already open). Re-emitting the <em>same</em>
+logical state is suppressed except for <code>Connected</code>, which is
+re-emitted when <code>rtt_ms</code> changes by more than
+<code>Tunables.rtt_emit_delta_ms</code> (default 5 ms) so the UI&#39;s
+latency chip updates without flicker. <code>Reconnecting</code> is
+emitted once per drop, not once per failed re-dial (§7.3).</p>
+<h3 id="44-downreason-closed-ish-vocabulary">4.4
+<code>Down.reason</code> closed-ish vocabulary</h3>
+<p><code>Down.reason</code> is a human/machine string; the orchestrator
+uses a <strong>stable prefix</strong> so tests and metrics can classify
+without parsing prose (§11.4.6 no-guessing):</p>
+<table>
+<thead>
+<tr>
+<th><code>reason</code> value</th>
+<th>Meaning</th>
+<th>Emitted from</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>&quot;stopped&quot;</code></td>
+<td>user/graceful stop</td>
+<td>§2.4</td>
+</tr>
+<tr>
+<td><code>&quot;pinned-transport-failed&quot;</code></td>
+<td>manual <code>pin</code> rung failed; no auto-escalate</td>
+<td>[01-LAD §8], §5.4</td>
+</tr>
+<tr>
+<td><code>&quot;ladder-exhausted&quot;</code></td>
+<td>every rung in <code>order</code> failed its budget</td>
+<td>§7.4</td>
+</tr>
+<tr>
+<td><code>&quot;auth-failed&quot;</code></td>
+<td>WG handshake rejected (revoked/bad key)</td>
+<td>§5.4, §8.5</td>
+</tr>
+<tr>
+<td><code>&quot;no-route&quot;</code></td>
+<td>RouteMap has no peer for the requested destination</td>
+<td>§6.4</td>
+</tr>
+<tr>
+<td><code>&quot;host-fatal&quot;</code></td>
+<td>TUN open / firewall-apply failed at startup</td>
+<td>§8.2</td>
+</tr>
+</tbody>
+</table>
+<p><code>Reconnecting</code> (not <code>Down</code>) is the state while
+<em>any</em> rung remains untried within budget; <code>Down</code> is
+reached only when the attempt is genuinely terminal (O-I10, §5.4).</p>
+<h3 id="45-what-the-stream-must-not-carry-i5">4.5 What the stream MUST
+NOT carry (I5)</h3>
+<p>No per-packet, per-flow, per-peer-endpoint, or
+timestamped-per-connection record ever crosses the broadcast.
+<code>Connected.transport</code> is a <em>kind</em> label, not an
+endpoint; <code>rtt_ms</code> is an aggregate EWMA. Durable telemetry
+derived from the stream is <strong>aggregate only</strong>: &quot;transport X
+succeeded after N escalations in region R&quot; [01-DP §5.3 step 6, 01-LAD
+§9] — never the SSID, never the gateway IP. This is the data-plane half
+of &quot;no-logging as code&quot; [SYNTHESIS §7].</p>
+<h3 id="46-receiver-contract-ffi--metrics--tests">4.6 Receiver contract
+(FFI / metrics / tests)</h3>
+<div class="sourceCode" id="cb10"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Reference consumer loop (doc 05 FFI + the test harness both follow this).</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> <span class="kw">mut</span> rx <span class="op">=</span> orch<span class="op">.</span>subscribe()<span class="op">;</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="cf">loop</span> <span class="op">{</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">match</span> rx<span class="op">.</span>recv()<span class="op">.</span><span class="kw">await</span> <span class="op">{</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>        <span class="cn">Ok</span>(s)                         <span class="op">=&gt;</span> ui_apply(s)<span class="op">,</span>                 <span class="co">// render latest</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>        <span class="cn">Err</span>(<span class="pp">broadcast::error::RecvError::</span>Lagged(_)) <span class="op">=&gt;</span> <span class="cf">continue</span><span class="op">,</span>      <span class="co">// skip-to-latest, NOT an error</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>        <span class="cn">Err</span>(<span class="pp">broadcast::error::RecvError::</span>Closed)    <span class="op">=&gt;</span> <span class="cf">break</span><span class="op">,</span>         <span class="co">// orchestrator gone</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<hr />
+<h2 id="5-the-orchestrator-state-machine">5. The orchestrator state
+machine</h2>
+<h3 id="51-states">5.1 States</h3>
+<div class="sourceCode" id="cb11"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="bu">Clone</span><span class="op">,</span> <span class="bu">Debug</span><span class="op">,</span> <span class="bu">PartialEq</span><span class="op">,</span> <span class="bu">Eq</span><span class="at">)]</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">enum</span> OrchState <span class="op">{</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    Idle<span class="op">,</span>                      <span class="co">// constructed, not started (pre-start only)</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    Connecting<span class="op">,</span>                <span class="co">// dialling a rung (carrier handshake in flight)</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    Handshaking<span class="op">,</span>               <span class="co">// carrier up; WG Noise IK handshake in flight</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>    Connected <span class="op">{</span> kind<span class="op">:</span> TransportKind<span class="op">,</span> rtt_ms<span class="op">:</span> <span class="dt">u32</span> <span class="op">},</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>    Reconnecting <span class="op">{</span> since_drop<span class="op">:</span> <span class="pp">tokio::time::</span>Instant <span class="op">},</span> <span class="co">// re-dialling within budget</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>    ShuttingDown<span class="op">,</span>              <span class="co">// graceful teardown in progress (§2.4)</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>    Down <span class="op">{</span> reason<span class="op">:</span> DownReason <span class="op">},</span><span class="co">// terminal for this attempt</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><code>OrchState</code> is the internal authority;
+<code>TunnelStatus</code> (§4.1) is its FFI-facing projection
+(<code>Idle</code>/<code>ShuttingDown</code> have no public projection —
+they map to <code>Connecting</code>/<code>Down</code> respectively at
+the FFI). The split keeps internal bookkeeping (e.g.
+<code>since_drop</code>) off the wire.</p>
+<h3 id="52-state-diagram">5.2 State diagram</h3>
+<pre class="mermaid"><code>stateDiagram-v2
+    [*] --&gt; Idle
+    Idle --&gt; Connecting : start() / arm kill-switch CLOSED (§8.2)
+
+    Connecting --&gt; Handshaking : carrier up (loop B: HandshakeStarted)
+    Connecting --&gt; Reconnecting : TransportError / dial-timeout (budget left)
+    Connecting --&gt; Down : ladder-exhausted OR pinned-transport-failed
+
+    Handshaking --&gt; Connected : HandshakeComplete{rtt} / OPEN kill-switch + apply tunnel DNS (§8)
+    Handshaking --&gt; Reconnecting : TransportError OR handshake-timeout (budget left)
+    Handshaking --&gt; Down : auth-failed (WG reject) — NO retry (§5.4)
+
+    Connected --&gt; Reconnecting : PeerTimeout OR TransportError / CLOSE kill-switch (O-I11)
+    Connected --&gt; Connected : rtt drift &gt; delta (re-emit, §4.3) ; MapApplied (reconcile, §6)
+    Connected --&gt; ShuttingDown : Stop
+
+    Reconnecting --&gt; Connecting : backoff elapsed → re-dial next rung (§7)
+    Reconnecting --&gt; Connected : re-dial succeeded (roam fast-path, §7.5)
+    Reconnecting --&gt; Down : ladder-exhausted AND backoff-cap reached (§7.4)
+    Reconnecting --&gt; ShuttingDown : Stop
+
+    Connecting --&gt; ShuttingDown : Stop
+    Handshaking --&gt; ShuttingDown : Stop
+    ShuttingDown --&gt; Down : teardown complete (§2.4) / DNS reverted, kill-switch per §8.6
+    Down --&gt; [*]
+    Down --&gt; Connecting : start() again (new attempt; reset ladder to top, L-I8 [01-LAD])</code></pre>
+<h3 id="53-driver-task-single-writer-of-orchstate">5.3 Driver task
+(single writer of <code>OrchState</code>)</h3>
+<div class="sourceCode" id="cb13"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">async</span> <span class="kw">fn</span> state_driver(shared<span class="op">:</span> Arc<span class="op">&lt;</span>OrchShared<span class="op">&gt;,</span> <span class="kw">mut</span> ev<span class="op">:</span> <span class="pp">mpsc::</span>Receiver<span class="op">&lt;</span>OrchEvent<span class="op">&gt;,</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>                      cancel<span class="op">:</span> CancellationToken) <span class="op">{</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="kw">let</span> <span class="cn">Some</span>(event) <span class="op">=</span> <span class="pp">tokio::select!</span> <span class="op">{</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>        _ <span class="op">=</span> cancel<span class="op">.</span>cancelled() <span class="op">=&gt;</span> <span class="cn">None</span><span class="op">,</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>        e <span class="op">=</span> ev<span class="op">.</span>recv()          <span class="op">=&gt;</span> e<span class="op">,</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> <span class="op">{</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> <span class="kw">mut</span> cell <span class="op">=</span> shared<span class="op">.</span>state<span class="op">.</span>lock()<span class="op">.</span><span class="kw">await</span><span class="op">;</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> next <span class="op">=</span> transition(<span class="op">&amp;</span>cell<span class="op">.</span>state<span class="op">,</span> <span class="op">&amp;</span>event<span class="op">,</span> <span class="op">&amp;</span>shared)<span class="op">.</span><span class="kw">await</span><span class="op">;</span> <span class="co">// pure-ish decision (§5.4)</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="kw">let</span> <span class="cn">Some</span>(ns) <span class="op">=</span> next <span class="op">{</span></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>            apply_side_effects(<span class="op">&amp;</span>cell<span class="op">.</span>state<span class="op">,</span> <span class="op">&amp;</span>ns<span class="op">,</span> <span class="op">&amp;</span>shared)<span class="op">.</span><span class="kw">await</span><span class="op">;</span>    <span class="co">// kill-switch/DNS FIRST (§4.3)</span></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>            cell<span class="op">.</span>since <span class="op">=</span> <span class="pp">tokio::time::Instant::</span>now()<span class="op">;</span></span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>            cell<span class="op">.</span>state <span class="op">=</span> ns<span class="op">.</span>clone()<span class="op">;</span></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>            emit_status(<span class="op">&amp;</span>shared<span class="op">,</span> <span class="op">&amp;</span>ns)<span class="op">.</span><span class="kw">await</span><span class="op">;</span>                        <span class="co">// THEN emit (O-I10)</span></span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><code>transition()</code> is the table of §5.2 encoded as a
+<code>match (&amp;state, &amp;event)</code>; it returns
+<code>Option&lt;OrchState&gt;</code> (<code>None</code> = ignore the
+event in this state, e.g. a stray <code>HandshakeComplete</code> while
+already <code>Connected</code>). <code>apply_side_effects()</code> is
+where O-I11 (kill-switch) and §8 (DNS) live, ordered before the emit so
+the FFI never observes <code>Connected</code> before the firewall
+opened.</p>
+<h3 id="54-decision-details-the-non-obvious-transitions">5.4 Decision
+details (the non-obvious transitions)</h3>
+<ul>
+<li><strong><code>Handshaking → Down{auth-failed}</code> is
+terminal-without-retry.</strong> A WG handshake that is
+<em>cryptographically rejected</em> (peer revoked, key rotated,
+<code>device.revoked</code> propagated [04_ARCH §4.4]) will fail
+identically on every rung — escalating the ladder is pointless and would
+mask a real revocation. <code>helix-wg</code> distinguishes &quot;no reply&quot;
+(network/DPI → retry/ escalate) from &quot;handshake rejected&quot; (auth →
+<code>Down</code>). UNVERIFIED: boringtun&#39;s public API for surfacing an
+<em>explicit</em> reject vs a silent timeout — if unavailable, the
+orchestrator treats a handshake that never completes within
+<code>handshake_timeout</code> as the <em>escalate</em> class and can
+only infer auth-failure from the control plane (doc 02) signalling a
+revoke; recorded as a follow-up forensic item per §11.4.6.</li>
+<li><strong><code>Connected → Reconnecting</code> on
+<code>PeerTimeout</code>.</strong> A live tunnel that goes silent
+(carrier still &quot;up&quot; but WG sees no authenticated recv past
+<code>keepalive_timeout</code>) is the roam / NAT-rebind / silent-drop
+case [04_P0 §8 &quot;flap the client iface; recovery &lt; 3 s&quot;]. The
+kill-switch closes immediately (O-I11) so no traffic leaks during the
+gap.</li>
+<li><strong><code>Reconnecting</code> budget.</strong> Each re-dial
+consults the ladder (§7.4); <code>Reconnecting → Down</code> only when
+the ladder reports exhaustion <em>and</em> the backoff cap is hit (§7.2)
+— never on a single failure (avoids premature <code>Down</code>).</li>
+</ul>
+<hr />
+<h2 id="6-network-map-reconciliation">6. Network-map reconciliation</h2>
+<h3 id="61-the-reconciler-contract">6.1 The reconciler contract</h3>
+<p>Agents are <strong>declarative reconcilers</strong> [04_ARCH §4.4,
+04_P0 §10]: they diff a <em>desired</em> <code>RouteMap</code> (pushed
+by the coordinator via <code>WatchNetworkMap</code>, doc 03; a
+file-watch on <code>map.json</code> in Phase 0) against <em>actual</em>
+live state and converge — bring peers up/down, switch transport policy,
+update routes, update DNS — <strong>without restarting</strong> (O-I12).
+Convergence target: a change reflected on all affected state in
+<strong>&lt; 1 s</strong> [04_ARCH §4.4].</p>
+<h3 id="62-routemap-the-desired-state-frozen-shape-01-dp-62">6.2
+<code>RouteMap</code> (the desired state, frozen shape) [01-DP
+§6.2]</h3>
+<div class="sourceCode" id="cb14"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> RouteMap <span class="op">{</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> self_overlay<span class="op">:</span> IpAddr<span class="op">,</span>                  <span class="co">// this node&#39;s overlay IP (ULA /48, D4)</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> peers<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span>PeerRoute<span class="op">&gt;,</span>                 <span class="co">// already policy-filtered (need-to-know, I6)</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> dns<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span>IpAddr<span class="op">&gt;,</span>                       <span class="co">// tunnel DNS servers (§8.3)</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> transport_policy<span class="op">:</span> TransportPolicy<span class="op">,</span>     <span class="co">// per-leg ladder order/pin/budget [01-LAD §7]</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> daita<span class="op">:</span> <span class="dt">Option</span><span class="op">&lt;</span>DaitaMachines<span class="op">&gt;,</span>          <span class="co">// optional shaping config (data, not code) [01-DP §9]</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> PeerRoute <span class="op">{</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> wg_pubkey<span class="op">:</span> [<span class="dt">u8</span><span class="op">;</span> <span class="dv">32</span>]<span class="op">,</span></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> endpoint_candidates<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span>SocketAddr<span class="op">&gt;,</span>  <span class="co">// §8 NAT traversal (Phase 2)</span></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> allowed_ips<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span>IpNet<span class="op">&gt;,</span>               <span class="co">// overlay prefixes this peer is next hop for</span></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> via_connector<span class="op">:</span> <span class="dt">Option</span><span class="op">&lt;</span>SiteId<span class="op">&gt;,</span>         <span class="co">// 4via6 site disambiguation [01-DP §6.1]</span></span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="63-diff-algorithm">6.3 Diff algorithm</h3>
+<div class="sourceCode" id="cb15"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co">/// Pure diff: what changed between actual (live WgRegistry/policy/dns) and desired (new map).</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> MapDelta <span class="op">{</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> peers_added<span class="op">:</span>   <span class="dt">Vec</span><span class="op">&lt;</span>PeerRoute<span class="op">&gt;,</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> peers_removed<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span>[<span class="dt">u8</span><span class="op">;</span> <span class="dv">32</span>]<span class="op">&gt;,</span>          <span class="co">// pubkeys to tear down (revocation path)</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> peers_changed<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span>PeerRoute<span class="op">&gt;,</span>         <span class="co">// allowed_ips / endpoint changed</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> dns_changed<span class="op">:</span>   <span class="dt">bool</span><span class="op">,</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> policy_changed<span class="op">:</span> <span class="dt">bool</span><span class="op">,</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> transport_policy_changed<span class="op">:</span> <span class="dt">bool</span><span class="op">,</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> diff(actual<span class="op">:</span> <span class="op">&amp;</span>WgRegistry<span class="op">,</span> dns<span class="op">:</span> <span class="op">&amp;</span>[IpAddr]<span class="op">,</span> pol<span class="op">:</span> <span class="op">&amp;</span>CompiledPolicy<span class="op">,</span> desired<span class="op">:</span> <span class="op">&amp;</span>RouteMap) <span class="op">-&gt;</span> MapDelta <span class="op">{</span></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>    <span class="co">// keyed by wg_pubkey; O(n) set difference on a sorted pubkey index</span></span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>    <span class="co">/* … */</span></span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="64-apply-converge--restart-free">6.4 Apply (converge) —
+restart-free</h3>
+<pre class="mermaid"><code>flowchart TD
+    push[&quot;map delta arrives&lt;br/&gt;(stream event / file-watch)&quot;] --&gt; diff[&quot;diff desired vs actual&quot;]
+    diff --&gt; add[&quot;peers_added → WgRegistry.insert(Tunn)&lt;br/&gt;+ AllowedIPs route&quot;]
+    diff --&gt; rm[&quot;peers_removed → WgRegistry.remove&lt;br/&gt;+ DROP route (revoke &amp;lt; 1s) [04_ARCH §4.4]&quot;]
+    diff --&gt; chg[&quot;peers_changed → update AllowedIPs&lt;br/&gt;in place (no session reset if key same)&quot;]
+    diff --&gt; dns[&quot;dns_changed → re-apply tunnel DNS (§8.3)&quot;]
+    diff --&gt; pol[&quot;policy_changed → reinstall verdict map (§9.3)&quot;]
+    diff --&gt; tpol[&quot;transport_policy_changed → push to ladder&lt;br/&gt;(takes effect next re-dial, §7.4)&quot;]
+    add --&gt; done[&quot;post MapApplied{delta}; OrchState unchanged&lt;br/&gt;(O-I12, no restart)&quot;]
+    rm --&gt; done
+    chg --&gt; done
+    dns --&gt; done
+    pol --&gt; done
+    tpol --&gt; done</code></pre>
+<p>A <code>peers_removed</code> entry whose pubkey is the
+<strong>active</strong> peer (the gateway you are tunnelled through) is
+the revocation-of-self case: tear the session, close the kill-switch,
+emit <code>Down{reason:&quot;auth-failed&quot;}</code> (§5.4). A
+<code>peers_changed</code> that only touches <code>allowed_ips</code>
+updates the routing map <strong>without</strong> resetting the WG
+session (the key is unchanged) — this is the &quot;policy edit &lt; 1 s, no
+restart&quot; MVP gate (AC5) [04_P1 §11.2].</p>
+<h3 id="65-reconcile-is-a-side-task-i3-fail-static">6.5 Reconcile is a
+side task (I3 fail-static)</h3>
+<p>The reconciler runs as its own <code>tokio::task</code>; if its
+<strong>source</strong> dies (stream disconnect, file-watch error), the
+three loops keep forwarding on the last-applied map (fail-static
+[04_ARCH §2.1]). The reconciler reconnects to the stream with its own
+backoff (independent of §7&#39;s data-plane backoff) and re-applies a fresh
+snapshot on reconnect. A reconcile failure never tears the tunnel.</p>
+<h3 id="66-mtu-coupling-on-transport-change">6.6 MTU coupling on
+transport change</h3>
+<p>When <code>transport_policy_changed</code> causes the ladder to later
+swap the active transport (§7.3), the inner WG MTU is recomputed:
+<code>inner_mtu = min(active.effective_mtu(), path_mtu)</code> [01-DP
+§10]. The orchestrator pushes the new MTU into <code>helix-tun</code>
+and into each <code>WgPeer</code>&#39;s fragmentation threshold. An
+in-flight <code>Oversize</code> error (§3.1) during the swap window
+triggers an immediate MTU lower rather than a silent drop (I2).</p>
+<hr />
+<h2 id="7-reconnection-backoff-state-machine">7. Reconnection backoff
+state machine</h2>
+<h3 id="71-triggers-into-reconnect">7.1 Triggers into reconnect</h3>
+<p>A reconnect begins on any of: <code>TransportError</code> from loop
+A/B (carrier died), <code>PeerTimeout</code> from loop C (silent WG
+drop), or <code>RoamDetected</code> (local iface changed — §7.5). All
+three post events that move <code>Connected → Reconnecting</code>
+(§5.4). Target recovery time is <strong>&lt; 3 s</strong> for an
+interface flap / roam [04_P0 §8].</p>
+<h3 id="72-the-backoff-struct-jittered-exponential-capped">7.2 The
+backoff struct (jittered exponential, capped)</h3>
+<div class="sourceCode" id="cb17"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> Backoff <span class="op">{</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>    base<span class="op">:</span> Duration<span class="op">,</span>        <span class="co">// first re-dial delay</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>    cap<span class="op">:</span>  Duration<span class="op">,</span>        <span class="co">// ceiling</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>    factor<span class="op">:</span> <span class="dt">f64</span><span class="op">,</span>           <span class="co">// multiplier per failed attempt</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>    jitter<span class="op">:</span> <span class="dt">f64</span><span class="op">,</span>           <span class="co">// 0.0..=1.0 fraction of full jitter (decorrelated)</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>    attempt<span class="op">:</span> <span class="dt">u32</span><span class="op">,</span>          <span class="co">// resets to 0 on Connected</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>    rng<span class="op">:</span> SmallRng<span class="op">,</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> Backoff <span class="op">{</span></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Decorrelated jitter (AWS-style): next ∈ [base, min(cap, prev*factor)] then jitter.</span></span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> next_delay(<span class="op">&amp;</span><span class="kw">mut</span> <span class="kw">self</span>) <span class="op">-&gt;</span> Duration <span class="op">{</span> <span class="co">/* … */</span> <span class="op">}</span></span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> reset(<span class="op">&amp;</span><span class="kw">mut</span> <span class="kw">self</span>) <span class="op">{</span> <span class="kw">self</span><span class="op">.</span>attempt <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> <span class="op">}</span></span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Recommended Tunables (derived, calibrated in Phase 0 against the
+<code>&lt; 3 s</code> roam gate — values are the <em>spec
+recommendation</em>, not measured; §11.4.6): <code>base = 250 ms</code>,
+<code>cap = 30 s</code>, <code>factor = 2.0</code>,
+<code>jitter = 1.0</code> (full decorrelated jitter to avoid
+thundering-herd re-dials when a gateway restarts and many clients
+reconnect together). The <strong>first</strong> re-dial after a drop is
+near-immediate (<code>base</code>) so a transient blip recovers well
+under 3 s; only a persistently dead network climbs toward the 30 s
+cap.</p>
+<h3 id="73-re-dial-driver--atomic-transport-swap">7.3 Re-dial driver +
+atomic transport swap</h3>
+<pre class="mermaid"><code>sequenceDiagram
+    autonumber
+    participant SM as State driver
+    participant BK as Backoff
+    participant LD as Ladder (§7.4)
+    participant TX as dial() (helix-transport)
+    participant Sh as OrchShared.active_tx
+
+    Note over SM: Connected → Reconnecting (drop)
+    SM-&gt;&gt;Sh: active_tx = None  (loop B idles, loop A send→Closed)
+    SM--&gt;&gt;SM: emit Reconnecting (once, §4.3)
+    SM-&gt;&gt;BK: next_delay()
+    BK--&gt;&gt;SM: d = 250 ms (attempt 0)
+    SM-&gt;&gt;SM: sleep(d)  [interruptible by Stop / RoamDetected]
+    SM-&gt;&gt;LD: next_rung()  (same network → memory may keep current rung)
+    LD--&gt;&gt;SM: TransportConfig (rung)
+    SM-&gt;&gt;TX: dial(cfg)  [bounded dial timeout]
+    alt dial Ok
+        TX--&gt;&gt;SM: Box&lt;dyn Transport&gt;
+        SM-&gt;&gt;Sh: active_tx = Some(Arc::from(tx))   (atomic swap; loops resume)
+        SM--&gt;&gt;SM: → Handshaking (WG handshake over new carrier)
+        Note over SM: on HandshakeComplete → Connected; BK.reset()
+    else dial Err / budget exceeded
+        TX--&gt;&gt;SM: Err
+        SM-&gt;&gt;LD: escalate()  (advance rung)
+        SM-&gt;&gt;BK: next_delay()  (grow)
+        Note over SM: stay Reconnecting; loop until ladder-exhausted+cap → Down
+    end</code></pre>
+<p>The swap is <strong>atomic</strong> under <code>active_tx</code>&#39;s
+mutex: loop A&#39;s <code>send_dg</code> (§3.1) and loop B&#39;s per-iteration
+<code>active_tx.lock().await.clone()</code> (§3.2) always see either the
+old or the new <code>Arc</code>, never a torn handle. While
+<code>active_tx == None</code>, loop A&#39;s sends return
+<code>Closed</code> (the user&#39;s app retransmits) and loop B idles on
+<code>IDLE_BACKOFF</code>.</p>
+<h3 id="74-ladder-coupling-this-doc-drives-01-lad-decides">7.4 Ladder
+coupling (this doc drives, [01-LAD] decides)</h3>
+<p>The re-dial driver calls <code>ladder::next_rung()</code> /
+<code>ladder::escalate()</code> [01-LAD §5]; the ladder owns
+<em>which</em> rung (per-network memory, regional prior,
+<code>pin</code>). The orchestrator owns <em>when</em> to re-dial
+(backoff timing) and <em>whether</em> the attempt is terminal.
+<code>ladder-exhausted</code> (every rung in <code>order</code> failed
+its budget) + backoff cap reached ⇒ <code>Down{ladder-exhausted}</code>
+(§5.4). A <code>pin</code>ned transport that fails ⇒
+<code>Down{pinned-transport-failed}</code> with <strong>no</strong>
+escalation (L-I7 [01-LAD §8]).</p>
+<h3 id="75-roam-detection-fast-path">7.5 Roam detection (fast-path)</h3>
+<div class="sourceCode" id="cb19"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co">// A platform iface watcher (netlink on Linux; NWPathMonitor/ConnectivityManager on mobile via</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="co">// the shim, doc 06) posts RoamDetected{new_local} when the device&#39;s primary address changes.</span></span></code></pre></div>
+<p>On <code>RoamDetected</code> the orchestrator
+<strong>interrupts</strong> any in-flight backoff sleep and re-dials
+<em>immediately</em> at the remembered-good rung for the <em>new</em>
+network fingerprint [01-LAD §6], because WireGuard&#39;s roaming will
+re-latch onto the new source address as soon as a handshake completes
+[01-DP §8.2]. This is the difference between a 30 s backoff-climb and
+the <code>&lt; 3 s</code> roam recovery gate. <code>RoamDetected</code>
+resets <code>Backoff.attempt = 0</code>.</p>
+<hr />
+<h2 id="8-kill-switch--dns-coupling">8. Kill-switch + DNS coupling</h2>
+<h3 id="81-principle">8.1 Principle</h3>
+<p>The kill-switch and DNS-leak protection are <strong>owned by the core
+state machine</strong>, not hand-edited firewall rules [04_ARCH §5.6
+carry-forward note, §7]. Every open/close and every DNS apply/revert is
+a side effect of an <code>OrchState</code> transition (O-I10, §5.3), so
+there is no window where the UI shows &quot;connected&quot; but the firewall is
+open, or &quot;disconnected&quot; while DNS still points at the tunnel.</p>
+<h3 id="82-kill-switch-posture--arming">8.2 Kill-switch posture &amp;
+arming</h3>
+<div class="sourceCode" id="cb20"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> KillSwitchConfig <span class="op">{</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> mode<span class="op">:</span> KillSwitchMode<span class="op">,</span>                 <span class="co">// Strict | Permissive | Off</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> allow_lan<span class="op">:</span> <span class="dt">bool</span><span class="op">,</span>                      <span class="co">// permit RFC1918 LAN even when closed (printers etc.)</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> allow_gateway_endpoints<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span>IpNet<span class="op">&gt;,</span>  <span class="co">// the gateway IPs the transport must reach (MUST stay open)</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">enum</span> KillSwitchMode <span class="op">{</span></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>    Strict<span class="op">,</span>      <span class="co">// closed unless Connected; arm-closed at start (no leak before first connect)</span></span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>    Permissive<span class="op">,</span>  <span class="co">// closed only after a first successful Connected (then on every drop)</span></span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>    Off<span class="op">,</span>         <span class="co">// never installs firewall rules</span></span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>On <code>Idle → Connecting</code> (<code>start()</code>),
+<code>Strict</code> mode installs the <strong>closed</strong> ruleset
+<em>immediately</em> — default-drop all egress except (a) the
+<code>allow_gateway_endpoints</code> (so the transport can reach
+<code>:443</code>), (b) DHCP/ND for link bring-up, (c) optionally
+<code>allow_lan</code>. This is &quot;no leaks before the first handshake
+even completes&quot;. <code>Permissive</code> waits until the first
+<code>Connected</code> before it will ever close (so a never-connecting
+client on a captive-portal network isn&#39;t bricked). A firewall-apply
+failure at start ⇒ <code>Down{host-fatal}</code> (§4.4) — never proceed
+with a believed-but-unverified kill-switch (§11.4.6).</p>
+<h3 id="83-dns-coupling">8.3 DNS coupling</h3>
+<div class="sourceCode" id="cb21"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> DnsConfig <span class="op">{</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> servers<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span>IpAddr<span class="op">&gt;,</span>     <span class="co">// tunnel DNS (from RouteMap.dns, §6.2)</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> block_plaintext_53<span class="op">:</span> <span class="dt">bool</span><span class="op">,</span> <span class="co">// drop off-tunnel :53 (UDP+TCP) when Connected (leak guard)</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> apply<span class="op">:</span> DnsApplyMethod<span class="op">,</span>    <span class="co">// resolvconf | systemd-resolved | /etc/resolv.conf | shim (doc 06)</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>On <code>Handshaking → Connected</code>: set tunnel DNS
+(<code>RouteMap.dns</code>) via the platform method, and (if
+<code>block_plaintext_53</code>) install firewall rules dropping any
+<code>:53</code> egress that is <strong>not</strong> to the tunnel DNS
+over the tunnel — closing the classic DNS-leak [04_ARCH §5.6 &quot;force
+tunnel DNS; blocks plaintext :53 off-tunnel&quot;]. On
+<code>Connected → Reconnecting</code>/<code>Down</code>: the DNS-leak
+block <strong>stays</strong> (closed-fails-safe) until either reconnect
+re-applies tunnel DNS or a user-stop reverts to system resolvers
+(§8.6).</p>
+<h3 id="84-coupling-table-the-side-effect-matrix">8.4 Coupling table
+(the side-effect matrix)</h3>
+<table>
+<thead>
+<tr>
+<th>Transition</th>
+<th>Kill-switch</th>
+<th>DNS</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Idle → Connecting</code> (Strict)</td>
+<td>install <strong>closed</strong> (allow gw endpoints only)</td>
+<td>leave system DNS</td>
+<td>§8.2</td>
+</tr>
+<tr>
+<td><code>Handshaking → Connected</code></td>
+<td><strong>open</strong> (allow all egress via tunnel)</td>
+<td>apply tunnel DNS + block off-tunnel :53</td>
+<td>[04_ARCH §5.6]</td>
+</tr>
+<tr>
+<td><code>Connected → Reconnecting</code></td>
+<td><strong>close</strong> (O-I11)</td>
+<td>keep tunnel-DNS block (fail-closed)</td>
+<td>§8.1</td>
+</tr>
+<tr>
+<td><code>* → Down{reason≠stopped}</code></td>
+<td><strong>stay closed</strong></td>
+<td>keep block</td>
+<td>O-I11</td>
+</tr>
+<tr>
+<td><code>ShuttingDown → Down{stopped}</code> (user)</td>
+<td>revert to <strong>off</strong> (open)</td>
+<td>revert to system DNS</td>
+<td>§8.6</td>
+</tr>
+<tr>
+<td>crash / panic</td>
+<td>closed rules <strong>remain</strong> installed</td>
+<td>block <strong>remains</strong></td>
+<td>O-I11</td>
+</tr>
+</tbody>
+</table>
+<h3 id="85-auth-failed-is-closed-and-terminal">8.5
+<code>auth-failed</code> is closed-and-terminal</h3>
+<p>A revoked device (<code>auth-failed</code>, §5.4) reaches
+<code>Down</code> with the kill-switch <strong>closed</strong> and DNS
+<strong>blocked</strong> — a revoked client cannot leak traffic onto the
+underlay by virtue of being revoked. Recovery requires explicit user
+action (re-enroll) which goes through <code>start()</code> again.</p>
+<h3 id="86-the-only-open-path">8.6 The only open path</h3>
+<p>The kill-switch is reverted to <em>open</em> on <strong>exactly
+one</strong> path: a user-initiated graceful stop (<code>Stop</code> →
+<code>ShuttingDown</code> → <code>Down{stopped}</code>, §2.4 step 5).
+Every other terminal — crash, <code>ladder-exhausted</code>,
+<code>auth-failed</code>, <code>host-fatal</code> — leaves it closed
+(O-I11). This is the literal &quot;no leaks if the tunnel drops&quot; guarantee
+[04_ARCH §5.6].</p>
+<h3 id="87-kill-switch--dns-state-sub-machine">8.7 Kill-switch + DNS
+state sub-machine</h3>
+<pre class="mermaid"><code>stateDiagram-v2
+    [*] --&gt; Open
+    Open --&gt; Closed : Idle→Connecting (Strict) — arm before first handshake
+    Closed --&gt; OpenTunnel : Handshaking→Connected — egress via tunnel + tunnel DNS + block :53
+    OpenTunnel --&gt; Closed : Connected→Reconnecting/Down (drop) — O-I11, keep DNS block
+    Closed --&gt; OpenTunnel : re-dial succeeded (Reconnecting→Connected)
+    Closed --&gt; Open : user Stop only (§8.6) — revert system DNS
+    OpenTunnel --&gt; Open : user Stop only (§8.6)
+    Closed --&gt; Closed : crash (rules persist)</code></pre>
+<hr />
+<h2 id="9-connector-mode---modeconnector">9. Connector mode
+(<code>--mode=connector</code>)</h2>
+<h3 id="91-same-core-different-posture-o-i13">9.1 Same core, different
+posture (O-I13)</h3>
+<p>The connector is the <strong>same</strong> <code>Orchestrator</code>
+with <code>Mode::Connector</code> [04_P0 §4.5, 01-DP §5.1]. The three
+loops, the status stream, reconciliation, backoff, and the transport
+layer are <strong>byte-for-byte identical</strong> to the client (I4).
+Only two things differ:</p>
+<pre><code>client:    [app traffic] → TUN → WG encrypt → [DAITA] → Transport ──▶ gateway
+connector: gateway ──▶ Transport → WG decrypt → forward into served CIDR (and reverse)</code></pre>
+<ul>
+<li>The connector does <strong>not</strong> capture the device default
+route; instead it (a) advertises its served CIDRs (e.g.
+<code>10.10.0.0/24</code>) in its <code>RouteMap</code>, and (b)
+NATs/forwards decapsulated packets into the LAN interface and back
+[04_P0 §4.5, 01-DP §5.1].</li>
+<li>The connector is <strong>outbound-only</strong> — it dials the
+gateway; it never listens for inbound connections (the founding
+no-port-forward constraint [SYNTHESIS §1]).</li>
+</ul>
+<h3 id="92-forwarding--nat-loop-b-branch">9.2 Forwarding &amp; NAT (loop
+B branch)</h3>
+<p><code>loop_b</code>&#39;s <code>WriteToTun</code> branch (§3.2)
+dispatches on <code>mode</code>: <code>Client</code> writes the TUN;
+<code>Connector</code> calls <code>forward_into_lan</code>:</p>
+<div class="sourceCode" id="cb24"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="kw">async</span> <span class="kw">fn</span> forward_into_lan(shared<span class="op">:</span> <span class="op">&amp;</span>OrchShared<span class="op">,</span> plain<span class="op">:</span> Bytes) <span class="op">{</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 1. ACL gate: the decapsulated packet&#39;s (src,dst,proto,port) must match the compiled</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">//    verdict map (default-deny, I6) [01-DP §7] BEFORE it touches the LAN.</span></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> shared<span class="op">.</span>policy<span class="op">.</span>lock()<span class="op">.</span><span class="kw">await</span><span class="op">.</span>verdict(<span class="op">&amp;</span>plain) <span class="op">!=</span> <span class="pp">Verdict::</span>Allow <span class="op">{</span></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>        shared<span class="op">.</span>counters<span class="op">.</span>policy_drop<span class="op">.</span>inc()<span class="op">;</span> <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 2. SNAT into the served CIDR and emit on the LAN iface (Linux: the veth/eth handle).</span></span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>    shared<span class="op">.</span>tun<span class="op">.</span>forward_lan(plain)<span class="op">.</span><span class="kw">await</span><span class="op">;</span>  <span class="co">// helix-tun owns the masquerade + reverse mapping</span></span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>The <strong>reverse</strong> path (LAN host → connector → gateway →
+client) enters via the LAN iface, is matched to the originating WG
+session, WG-encrypted (loop A&#39;s <code>peer_for_dst</code> selects the
+gateway peer), and shipped back over the transport. The connector
+therefore runs loop A driven by the <strong>LAN iface</strong> rather
+than a TUN; <code>TunSpec</code> abstracts both
+(<code>TunDevice::recv</code> yields the next inbound packet regardless
+of source) so loop A&#39;s body is unchanged (O-I13).</p>
+<h3 id="93-verdict-map-on-the-connector">9.3 Verdict map on the
+connector</h3>
+<p>The connector installs the <strong>compiled policy</strong>
+(<code>CompiledPolicy</code>, [01-DP §7]) as an nftables/eBPF verdict
+map and re-installs it on a <code>policy_changed</code> reconcile delta
+(§6.4) in <code>&lt; 1 s</code>, no restart [04_ARCH §4.4].
+Default-deny, fail-closed: if the compiled policy is absent/stale, drop
+(I6). This is the &quot;split-horizon / microsegmentation by default&quot;
+property [01-DP §7].</p>
+<h3 id="94-status-semantics-on-the-connector">9.4 Status semantics on
+the connector</h3>
+<p>The connector emits the <strong>same</strong>
+<code>TunnelStatus</code> stream (its tunnel to the gateway is what
+<code>Connected{transport,rtt}</code> describes). The Connector Flutter
+flavor (doc 05) subscribes to it exactly as the Access app does — the
+FFI/UI code is shared (O-I13). <code>Down</code> on a connector means
+&quot;the connector lost its gateway tunnel&quot;; the kill-switch posture is
+typically <code>Off</code> on a connector (it is a network appliance,
+not a privacy client) — <code>KillSwitchMode</code> is a config knob
+(§8.2, §11), not hardcoded.</p>
+<hr />
+<h2 id="10-error-taxonomy">10. Error taxonomy</h2>
+<div class="sourceCode" id="cb25"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-core/src/error.rs</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="pp">thiserror::</span><span class="bu">Error</span><span class="op">,</span> <span class="bu">Debug</span><span class="at">)]</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">enum</span> OrchestratorError <span class="op">{</span></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>error<span class="at">(</span><span class="st">&quot;tun open/inject failed: {0}&quot;</span><span class="at">)]</span>       TunOpen(<span class="dt">String</span>)<span class="op">,</span>       <span class="co">// → Down{host-fatal}</span></span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>error<span class="at">(</span><span class="st">&quot;kill-switch apply failed: {0}&quot;</span><span class="at">)]</span>     KillSwitch(<span class="dt">String</span>)<span class="op">,</span>    <span class="co">// → Down{host-fatal} (§8.2)</span></span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>error<span class="at">(</span><span class="st">&quot;dns apply failed: {0}&quot;</span><span class="at">)]</span>             Dns(<span class="dt">String</span>)<span class="op">,</span>           <span class="co">// → Down{host-fatal}</span></span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>error<span class="at">(</span><span class="st">&quot;transport: {0}&quot;</span><span class="at">)]</span>                    Transport(<span class="at">#[</span>from<span class="at">]</span> TransportError)<span class="op">,</span> <span class="co">// → re-dial/escalate</span></span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>error<span class="at">(</span><span class="st">&quot;wg: {0}&quot;</span><span class="at">)]</span>                           Wg(<span class="dt">String</span>)<span class="op">,</span>            <span class="co">// enc/dec error (counter, non-fatal)</span></span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>error<span class="at">(</span><span class="st">&quot;map reconcile: {0}&quot;</span><span class="at">)]</span>                Reconcile(<span class="dt">String</span>)<span class="op">,</span>     <span class="co">// side task; never tears tunnel (§6.5)</span></span>
+<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>error<span class="at">(</span><span class="st">&quot;ladder exhausted&quot;</span><span class="at">)]</span>                  LadderExhausted<span class="op">,</span>       <span class="co">// → Down{ladder-exhausted}</span></span>
+<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>error<span class="at">(</span><span class="st">&quot;pinned transport failed&quot;</span><span class="at">)]</span>           PinFailed<span class="op">,</span>             <span class="co">// → Down{pinned-transport-failed}</span></span>
+<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>error<span class="at">(</span><span class="st">&quot;shutdown timeout&quot;</span><span class="at">)]</span>                  ShutdownTimeout<span class="op">,</span>       <span class="co">// join exceeded grace (§2.4)</span></span>
+<span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Classification (drives §5.4):
+<code>TunOpen</code>/<code>KillSwitch</code>/<code>Dns</code> are
+<strong>host-fatal</strong> at startup (the core refuses to run a tunnel
+it cannot leak-protect). <code>Transport</code> errors map to the
+re-dial/escalate path (§7). <code>Wg</code> enc/dec errors are
+per-packet, counted, never fatal (a single malformed datagram does not
+tear the tunnel). <code>Reconcile</code> errors are side-task-only (I3).
+<code>TransportError</code> variants map to ladder behaviour exactly as
+[01-DP §3.1 / 01-LAD §5]:
+<code>DialTimeout</code>/<code>HandshakeFailed</code>/<code>EndpointBlocked</code>
+→ escalate; <code>Closed</code> → re-dial same rung;
+<code>Oversize</code> → lower MTU (§6.6).</p>
+<hr />
+<h2 id="11-config-knobs-tunables">11. Config knobs
+(<code>Tunables</code>)</h2>
+<div class="sourceCode" id="cb26"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> Tunables <span class="op">{</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">// --- loops ---</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> tick_period<span class="op">:</span> Duration<span class="op">,</span>            <span class="co">// loop C cadence;        default 200 ms  [01-DP §4]</span></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> idle_poll<span class="op">:</span> Duration<span class="op">,</span>              <span class="co">// loop B busy-wait when active_tx None;  default 10 ms</span></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">// --- handshake / liveness ---</span></span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> handshake_timeout<span class="op">:</span> Duration<span class="op">,</span>      <span class="co">// Handshaking→Reconnecting; default 5 s  (derived)</span></span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> keepalive_timeout<span class="op">:</span> Duration<span class="op">,</span>      <span class="co">// PeerTimeout threshold;   default 25 s  (WG REKEY heuristic, UNVERIFIED exact)</span></span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">// --- backoff (§7.2) ---</span></span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> backoff_base<span class="op">:</span> Duration<span class="op">,</span>           <span class="co">// default 250 ms</span></span>
+<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> backoff_cap<span class="op">:</span> Duration<span class="op">,</span>            <span class="co">// default 30 s</span></span>
+<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> backoff_factor<span class="op">:</span> <span class="dt">f64</span><span class="op">,</span>              <span class="co">// default 2.0</span></span>
+<span id="cb26-12"><a href="#cb26-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> backoff_jitter<span class="op">:</span> <span class="dt">f64</span><span class="op">,</span>              <span class="co">// default 1.0 (full decorrelated)</span></span>
+<span id="cb26-13"><a href="#cb26-13" aria-hidden="true" tabindex="-1"></a>    <span class="co">// --- status (§4.3) ---</span></span>
+<span id="cb26-14"><a href="#cb26-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> rtt_emit_delta_ms<span class="op">:</span> <span class="dt">u32</span><span class="op">,</span>           <span class="co">// re-emit Connected if rtt drifts &gt;; default 5 ms</span></span>
+<span id="cb26-15"><a href="#cb26-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> status_channel_cap<span class="op">:</span> <span class="dt">usize</span><span class="op">,</span>        <span class="co">// broadcast ring; default 64</span></span>
+<span id="cb26-16"><a href="#cb26-16" aria-hidden="true" tabindex="-1"></a>    <span class="co">// --- shutdown (§2.4) ---</span></span>
+<span id="cb26-17"><a href="#cb26-17" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> shutdown_grace<span class="op">:</span> Duration<span class="op">,</span>         <span class="co">// join timeout; default 2 s</span></span>
+<span id="cb26-18"><a href="#cb26-18" aria-hidden="true" tabindex="-1"></a>    <span class="co">// --- reconcile (§6.5) ---</span></span>
+<span id="cb26-19"><a href="#cb26-19" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> reconcile_reconnect_base<span class="op">:</span> Duration<span class="op">,</span> <span class="co">// stream re-subscribe backoff; default 1 s</span></span>
+<span id="cb26-20"><a href="#cb26-20" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Every numeric default above tagged &quot;derived&quot; is the <strong>spec
+recommendation</strong>, to be calibrated against the Phase-0 gates (G1
+throughput, <code>&lt; 3 s</code> roam, <code>&lt; 1 s</code> reconcile)
+with captured benchmark evidence before being frozen (§11.4.6 — a number
+is a guess until measured) [04_P0 §8].
+<code>keepalive_timeout = 25 s</code> mirrors WireGuard&#39;s
+REKEY-after-no-recv window but the exact boringtun-surfaced value is
+<code>UNVERIFIED</code> and is a Phase-0 measurement item.</p>
+<hr />
+<h2 id="12-edge-cases-each-maps-to-a-test-point-14">12. Edge cases (each
+maps to a test point, §14)</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Edge case</th>
+<th>Required behaviour</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>E1</td>
+<td>TUN delivers a packet before any WG session exists</td>
+<td>loop A <code>WgVerdict::Nothing</code> → silent drop; app
+retransmits; no crash (§3.1).</td>
+</tr>
+<tr>
+<td>E2</td>
+<td><code>active_tx</code> swapped mid-<code>send</code> (re-dial races
+loop A)</td>
+<td>atomic <code>Arc</code> swap; old or new handle, never torn
+(§7.3).</td>
+</tr>
+<tr>
+<td>E3</td>
+<td>broadcast receiver wedged &gt; 64 events behind</td>
+<td><code>Lagged</code> returned; receiver skips-to-latest; orchestrator
+unaffected (§4.2/§4.6).</td>
+</tr>
+<tr>
+<td>E4</td>
+<td>Reconcile source dies while <code>Connected</code></td>
+<td>loops keep forwarding (fail-static I3); reconciler re-subscribes
+with backoff (§6.5).</td>
+</tr>
+<tr>
+<td>E5</td>
+<td>Revoke (<code>peers_removed</code> includes active gateway)</td>
+<td>tear session, close kill-switch, <code>Down{auth-failed}</code>;
+revoke effective &lt; 1 s (§6.4).</td>
+</tr>
+<tr>
+<td>E6</td>
+<td>Roam (Wi-Fi→cellular) mid-<code>Connected</code></td>
+<td><code>RoamDetected</code> interrupts backoff, immediate re-dial at
+remembered rung, <code>&lt; 3 s</code> recovery (§7.5).</td>
+</tr>
+<tr>
+<td>E7</td>
+<td>All rungs fail their budget</td>
+<td><code>Reconnecting→Down{ladder-exhausted}</code> only after backoff
+cap; kill-switch stays closed (§7.4, O-I11).</td>
+</tr>
+<tr>
+<td>E8</td>
+<td>Pinned transport fails</td>
+<td><code>Down{pinned-transport-failed}</code>, NO escalation (§7.4,
+L-I7).</td>
+</tr>
+<tr>
+<td>E9</td>
+<td><code>Oversize</code> on transport swap (smaller MTU)</td>
+<td>lower inner WG MTU, do not truncate (§6.6, I2).</td>
+</tr>
+<tr>
+<td>E10</td>
+<td>Process panic in a loop</td>
+<td>other loops + kill-switch unaffected (closed rules persist O-I11);
+supervisor restarts core (<code>start()</code> resets ladder,
+L-I8).</td>
+</tr>
+<tr>
+<td>E11</td>
+<td>Connector packet fails the verdict map</td>
+<td><code>forward_into_lan</code> drops + counts; never reaches LAN
+(§9.2, I6).</td>
+</tr>
+<tr>
+<td>E12</td>
+<td><code>tick</code> after runtime starvation</td>
+<td><code>MissedTickBehavior::Skip</code> — one catch-up tick, no storm
+(§3.3, §12.6 host-safety).</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="13-security--performance">13. Security &amp; performance</h2>
+<h3 id="131-security-considerations">13.1 Security considerations</h3>
+<ul>
+<li><strong>No plaintext on the status path (I1/I5).</strong>
+<code>TunnelStatus</code> carries only a transport <em>kind</em> label +
+aggregate RTT; never endpoints, SSIDs, packets, or per-connection
+timestamps (§4.5). A code-review gate (§11.4.142) must reject any
+<code>status_tx.send</code> payload that embeds an endpoint or per-flow
+datum.</li>
+<li><strong>Fail-closed everywhere (O-I11).</strong> Crash, exhaustion,
+revoke, and host-fatal all leave the kill-switch closed and DNS blocked
+(§8.4); only a deliberate user-stop opens it (§8.6).</li>
+<li><strong>Default-deny on the connector (I6).</strong> Decapsulated
+packets pass the verdict map <em>before</em> the LAN (§9.2); a
+stale/absent policy drops (fail-closed) [01-DP §7].</li>
+<li><strong>Single state authority (O-I10).</strong> One writer of
+<code>OrchState</code> → no firewall race, no &quot;connected-but-leaking&quot;
+window (§5.3). This is the structural defence against the classic VPN
+kill-switch TOCTOU bug.</li>
+<li><strong>Revocation latency (SEC).</strong>
+<code>device.revoked</code> → verdict-map drop / session tear in
+<strong>&lt; 1 s</strong>, no restart (§6.4) [04_ARCH §4.4, SYNTHESIS
+§7].</li>
+<li><strong>Host-session safety (constitution §12).</strong> Loop C uses
+<code>MissedTickBehavior::Skip</code> and the loops never spin-busy
+except the bounded <code>idle_poll</code>; no unbounded memory growth
+(the broadcast ring is fixed, peers are bounded by the map). Reconcile
+and re-dial backoffs are capped so a flapping gateway cannot induce a
+CPU storm.</li>
+</ul>
+<h3 id="132-performance-budget">13.2 Performance budget</h3>
+<table>
+<thead>
+<tr>
+<th>Budget</th>
+<th>Target</th>
+<th>Source / rationale</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Through-tunnel throughput (plain-udp)</td>
+<td>≥ 80% bare link</td>
+<td>G1 gate [04_P0 §8] — orchestrator overhead (mutex + loop dispatch)
+must be negligible vs WG crypto.</td>
+</tr>
+<tr>
+<td>Roam / iface-flap recovery</td>
+<td>&lt; 3 s</td>
+<td>[04_P0 §8] → §7.5 immediate re-dial.</td>
+</tr>
+<tr>
+<td>Reconcile convergence (map delta → applied)</td>
+<td>&lt; 1 s (p99)</td>
+<td>[04_ARCH §4.4] → §6 in-place apply.</td>
+</tr>
+<tr>
+<td>Status emit latency (transition → broadcast)</td>
+<td>&lt; 1 ms (UNVERIFIED, measure)</td>
+<td>side effects then emit (§4.3); dominated by the firewall syscall,
+not the channel.</td>
+</tr>
+<tr>
+<td>Per-packet orchestrator overhead</td>
+<td>bounded, no per-packet alloc</td>
+<td>reused <code>scratch</code> buffers (§3.1/§3.2/§3.3);
+<code>Bytes</code> ref-count, not copy, on the hot path.</td>
+</tr>
+<tr>
+<td>Mutex hold time (wg/active_tx)</td>
+<td>µs-scale; never across <code>.await</code></td>
+<td>§3.4 — synchronous helix-wg calls only.</td>
+</tr>
+<tr>
+<td>Memory</td>
+<td>bounded by <code>peers × Tunn</code> + fixed channels</td>
+<td>I5/§12 host-safety; no per-connection durable state.</td>
+</tr>
+</tbody>
+</table>
+<p>Each &quot;UNVERIFIED&quot; / &quot;measure&quot; budget is a Phase-0 benchmark item with
+captured CSV evidence before it is treated as fact (§11.4.6) [04_P0
+§8].</p>
+<hr />
+<h2 id="14-test-points-114169">14. Test points (§11.4.169)</h2>
+<p>Per §11.4.169 every workable item declares its required test types
+from the §11.4.27 / [07-WBS §1] closed vocabulary; every PASS cites
+rock-solid captured evidence (§11.4.5/.69/.107), never config-only. The
+escalation/reconnect <strong>event trace</strong> on the
+<code>TunnelStatus</code> stream IS the captured evidence for the
+state-machine claims (O-I13 analogue of [01-LAD I9]).</p>
+<table>
+<thead>
+<tr>
+<th>Test id</th>
+<th>§11.4.169 types</th>
+<th>What it proves</th>
+<th>Rig / captured evidence</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>OS-1</td>
+<td><code>UNIT</code></td>
+<td><code>transition()</code> table is total + correct: every
+(state,event) pair → expected
+<code>OrchState</code>/<code>None</code></td>
+<td>table-driven unit test over the §5.2 matrix; mocks allowed (unit
+only, §11.4.27)</td>
+<td>§5</td>
+</tr>
+<tr>
+<td>OS-2</td>
+<td><code>UNIT</code></td>
+<td><code>diff()</code> produces the exact <code>MapDelta</code> for
+added/removed/changed peers + dns/policy flags</td>
+<td>golden desired/actual <code>RouteMap</code> pairs</td>
+<td>§6.3</td>
+</tr>
+<tr>
+<td>OS-3</td>
+<td><code>UNIT</code></td>
+<td><code>Backoff::next_delay()</code> is monotonic-capped + jittered
+within <code>[base, cap]</code>; <code>reset()</code> zeroes</td>
+<td>property test, fixed RNG seed (deterministic, §11.4.50)</td>
+<td>§7.2</td>
+</tr>
+<tr>
+<td>OS-4</td>
+<td><code>INT</code></td>
+<td>three loops move real WG datagrams tun↔︎transport on the netns rig;
+<code>curl</code> reaches LAN host</td>
+<td>netns + boringtun + plain-udp; <code>tcpdump</code> + curl 200</td>
+<td>[04_P0 §3/§8], §3</td>
+</tr>
+<tr>
+<td>OS-5</td>
+<td><code>E2E</code>+<code>REC</code></td>
+<td>full status arc
+<code>Connecting→Handshaking→Connected{plain-udp,rtt}</code> driven only
+by the core stream</td>
+<td>Flutter-Linux toggle (G5); window-scoped MP4 + vision verdict
+(§11.4.159)</td>
+<td>[04_P0 §9], §4</td>
+</tr>
+<tr>
+<td>OS-6</td>
+<td><code>E2E</code>+<code>FA</code></td>
+<td>kill-switch closes on drop — <strong>no plaintext egress</strong>
+while <code>Reconnecting</code>/<code>Down</code></td>
+<td>block gateway mid-<code>Connected</code>; <code>tcpdump</code>
+underlay shows ZERO leaked app packets</td>
+<td>AC7 [04_P1 §11.2], §8</td>
+</tr>
+<tr>
+<td>OS-7</td>
+<td><code>SEC</code></td>
+<td>DNS-leak guard: off-tunnel <code>:53</code> dropped when
+<code>Connected</code>; system DNS restored on user-stop</td>
+<td><code>dig @off-tunnel-resolver</code> blocked; capture; revert
+verified</td>
+<td>[04_ARCH §5.6], §8.3</td>
+</tr>
+<tr>
+<td>OS-8</td>
+<td><code>E2E</code></td>
+<td>reconcile restart-free: edit <code>map.json</code> → peer reachable,
+no process restart, <code>OrchState</code> unchanged</td>
+<td>file-watch delta; <code>curl</code> newly-reachable host; pid
+unchanged (G6)</td>
+<td>[04_P0 §10], §6</td>
+</tr>
+<tr>
+<td>OS-9</td>
+<td><code>E2E</code>+<code>PERF</code></td>
+<td>revoke &lt; 1 s: remove active peer → session torn,
+<code>Down{auth-failed}</code>, kill-switch closed</td>
+<td>timestamped status trace; &lt; 1 s revoke→drop</td>
+<td>AC6 [04_P1 §11.2], §6.4</td>
+</tr>
+<tr>
+<td>OS-10</td>
+<td><code>CHAOS</code></td>
+<td>roam recovery &lt; 3 s: flap the client iface →
+<code>RoamDetected</code> → re-dial → <code>Connected</code></td>
+<td>netns iface flap; status trace timing; recovery &lt; 3 s</td>
+<td>[04_P0 §8], §7.5</td>
+</tr>
+<tr>
+<td>OS-11</td>
+<td><code>CHAOS</code></td>
+<td>mid-<code>send</code> transport swap + reconcile-source SIGKILL:
+loops keep forwarding (fail-static)</td>
+<td>kill the file-watch task; traffic continues; reconciler
+re-subscribes</td>
+<td>I3, §6.5</td>
+</tr>
+<tr>
+<td>OS-12</td>
+<td><code>STRESS</code></td>
+<td>sustained re-dial churn (gateway flap N×) does not leak, deadlock,
+or grow memory unbounded</td>
+<td>≥100 flap iters; RSS bounded; no leaked packet; no deadlock</td>
+<td>§11.4.85, §7</td>
+</tr>
+<tr>
+<td>OS-13</td>
+<td><code>INT</code></td>
+<td>connector posture: gateway→connector→LAN forward + reverse path,
+ACL-gated (default-deny)</td>
+<td>netns LAN; allowed host reachable, unauthorized DROPPED +
+counted</td>
+<td>§9, [04_P0 §4.5]</td>
+</tr>
+<tr>
+<td>OS-14</td>
+<td><code>BENCH</code></td>
+<td>orchestrator overhead: through-tunnel throughput ≥ 80% bare link
+(plain-udp)</td>
+<td><code>iperf3</code> via <code>bench.sh</code>; CSV</td>
+<td>G1 [04_P0 §8], §13.2</td>
+</tr>
+<tr>
+<td>OS-15</td>
+<td><code>CHAL</code></td>
+<td>a <code>helix_qa</code>/<code>challenges</code> bank entry scores
+PASS only on the captured status-arc + leak-free capture</td>
+<td>HelixQA autonomous session, evidence-gated (§11.4.27/.107)</td>
+<td>[SYNTHESIS §8]</td>
+</tr>
+</tbody>
+</table>
+<p>Each meta-test ships a paired §1.1 mutation (e.g. flip
+<code>apply_side_effects</code> to emit <code>Connected</code>
+<em>before</em> opening the kill-switch → OS-6 must FAIL; weaken the
+verdict gate in §9.2 → OS-13 must FAIL) so the gates provably cannot
+bluff [04_P0 §8, §11.4.5].</p>
+<hr />
+<h2 id="15-what-is-explicitly-out-of-scope-here">15. What is explicitly
+out of scope here</h2>
+<p>The ladder <em>selection algorithm</em> (per-network memory, regional
+prior, manual <code>pin</code> internals — [01-LAD]); the
+<code>Transport</code> trait + per-transport framing [01-DP §3];
+WireGuard crypto + <code>Tunn</code> timers [01-DP §4];
+<code>helix-route</code> ACL→verdict-map compilation [01-DP §6–§7];
+DAITA machines [01-DP §9]; the <code>WatchNetworkMap</code> protobuf
+that delivers the map (doc 03); the FFI bridge that re-emits
+<code>TunnelStatus</code> to Dart (doc 05); platform iface-watchers +
+TUN-fd handoff beyond the <code>TunSpec</code> contract (doc 06). This
+document specifies only the <strong>orchestrator</strong> — the
+conductor that wires those frozen contracts into a running, leak-safe,
+self-converging tunnel on all three roles.</p>
+<hr />
+<p><em>End of nano-detail specification — Volume 2 (Data Plane),
+<code>orchestrator-and-state.md</code>. Pairs with
+<code>transport-selection-ladder.md</code> (the §7.4 ladder this
+orchestrator drives), <code>transport-trait.md</code> (the §3
+<code>Transport</code> contract), <code>wireguard-core.md</code> (the
+§3/§4 <code>WgPeer</code> it pumps), and
+<code>routing-and-addressing.md</code> (the §6
+<code>RouteMap</code>/verdict map it reconciles). The
+<code>Orchestrator</code> struct (§2.1), the <code>TunnelStatus</code>
+enum (§4.1), the <code>OrchState</code> machine (§5), and the
+<code>Mode::Connector</code> posture (§9) are the frozen Phase-0
+surviving contracts [04_P0 §14]; their implementations may evolve, their
+shapes may not.</em></p>
+</body>
+</html>

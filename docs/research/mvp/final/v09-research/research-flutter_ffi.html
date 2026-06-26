@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>RESEARCH flutter_ffi</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">RESEARCH flutter_ffi</h1>
+</header>
+<h1 id="research-flutter_ffi">RESEARCH flutter_ffi</h1>
+<p>Scope: driving a Rust VPN core from Flutter for a Mullvad-parity
+self-hosted VPN app. Covers flutter_rust_bridge (frb) v2 vs UniFFI,
+Rust→Dart event streaming, per-platform Rust staticlib/cdylib, Flutter
+on Aurora OS and HarmonyOS NEXT, and Riverpod for a VPN status stream.
+All versions/dates verified 2026-06-25.</p>
+<hr />
+<h2 id="1-rustdart-bridge-flutter_rust_bridge-frb-v2--recommended">1.
+Rust↔︎Dart bridge: flutter_rust_bridge (frb) v2 — RECOMMENDED</h2>
+<p><strong>Latest stable: flutter_rust_bridge 2.12.0</strong> (Dart pub
+package, published ~April 2026; prerelease 2.13.0-beta.2 also on pub).
+docs.rs crate also at 2.12.0. It is an official <strong>Flutter
+Favorite</strong> (first batch of 7 at the program reboot).</p>
+<p>frb is a <strong>codegen</strong> binding generator
+(<code>flutter_rust_bridge_codegen generate</code>): you write plain
+Rust, annotate, and it emits the Dart FFI glue + a Rust wrapper.</p>
+<h3 id="v2-capabilities-relevant-to-a-vpn-core">V2 capabilities relevant
+to a VPN core</h3>
+<ul>
+<li><strong>Arbitrary Rust/Dart types</strong> without manual
+(de)serialization, even non-Clone / non-serializable types — opaque
+object handles (<code>RustOpaque</code>) cross the bridge.</li>
+<li><strong>Async Rust (<code>async fn</code>)</strong> supported in
+addition to sync-Rust / async-Dart / sync-Dart. A long-running tunnel
+supervisor <code>async fn</code> is a natural fit.</li>
+<li><strong>Rust→Dart calls</strong>: Rust can call Dart functions (new
+in V2; previously only Dart→Rust), useful for callbacks (e.g. ask Dart
+to (re)acquire a VPN permission).</li>
+<li><strong>Traits as base classes + trait objects</strong>.</li>
+<li><strong>New SSE codec</strong> (serialize/deserialize) — &quot;several
+times faster&quot; than the prior codec under some workloads; deadlock-free
+auto-locking; improved streams.</li>
+</ul>
+<h3 id="streaming-events-rust--dart-the-vpn-status-channel">Streaming
+events Rust → Dart (the VPN-status channel)</h3>
+<p>frb <strong>explicitly supports <code>StreamSink</code></strong>:
+&quot;Allow StreamSink at any argument&quot; and &quot;Support stream (iterator)&quot;.
+Pattern: a Rust function takes a <code>StreamSink&lt;T&gt;</code>
+argument; Dart receives a <code>Stream&lt;T&gt;</code> it can
+<code>listen()</code>/expose. This is the canonical way to push
+continuous tunnel-state / handshake / bytes-transferred events from a
+long-lived Rust task to Dart (the long-standing frb issue #347
+&quot;long-lived Rust code that sends data continuously back to Dart&quot; is
+solved by StreamSink). This <code>Stream&lt;T&gt;</code> is exactly what
+you feed a Riverpod StreamProvider.</p>
+<h3 id="caveat">Caveat</h3>
+<ul>
+<li>Codegen step in the build pipeline (run <code>frb generate</code> on
+Rust API change; commit or regenerate generated Dart/Rust). Bridge crate
+version MUST match the <code>flutter_rust_bridge</code> Dart dep
+version.</li>
+</ul>
+<h2 id="2-alternative-uniffi-mozilla--uniffi-dart--not-production-ready-for-dart">2.
+Alternative: UniFFI (Mozilla) + uniffi-dart — NOT production-ready for
+Dart</h2>
+<ul>
+<li><strong>uniffi-rs</strong> is Mozilla&#39;s multi-language bindings
+generator; first-party targets are <strong>Kotlin, Swift, Python,
+Ruby</strong> (3rd-party C# and Go). Dart is NOT a first-party
+target.</li>
+<li><strong>uniffi-dart / uniffi-rs-dart</strong> (NiallBunting) is the
+community Dart binding. Its own README states it is <strong>a work in
+progress and &quot;should not be trusted&quot;</strong>, with incomplete
+foreign-callback and data-type support.</li>
+<li>Verdict (§11.4.6, no-guessing): for a Flutter VPN client,
+<strong>frb v2 is the mature/recommended path</strong>; UniFFI-Dart is
+experimental. UniFFI remains the right call only if the SAME Rust core
+must also serve native Kotlin/Swift surfaces (e.g. a HarmonyOS ArkTS or
+platform-channel layer) where UniFFI&#39;s first-party Kotlin/Swift output
+is wanted — then you may run frb for Dart AND UniFFI for Kotlin/Swift
+from one core. (Note Mullvad&#39;s own app uses a Rust daemon talking over
+gRPC/IPC rather than in-process FFI — an architecture worth weighing vs
+in-process frb.)</li>
+</ul>
+<h2 id="3-per-platform-rust-library-packaging-staticlib--cdylib">3.
+Per-platform Rust library packaging (staticlib / cdylib)</h2>
+<p>Standard Rust-for-Flutter packaging (frb scaffolds most of this via
+<code>flutter_rust_bridge_codegen create</code> / <code>cargo-ndk</code>
+/ cargo-xcode tooling):</p>
+<ul>
+<li><strong>Android</strong>: <code>crate-type = [&quot;cdylib&quot;]</code> →
+<code>lib&lt;name&gt;.so</code> per ABI (arm64-v8a, armeabi-v7a,
+x86_64), built with <code>cargo-ndk</code>, bundled in
+<code>jniLibs</code>.</li>
+<li><strong>iOS / macOS</strong>: <code>staticlib</code> (or
+<code>cdylib</code>) → <code>.a</code>/<code>.dylib</code>, linked as an
+xcframework; iOS prefers static linkage.</li>
+<li><strong>Linux / Windows desktop</strong>: <code>cdylib</code> →
+<code>.so</code> / <code>.dll</code> loaded via Dart FFI
+<code>DynamicLibrary</code>.</li>
+<li>A VPN tunnel typically needs a platform extension process (Android
+<code>VpnService</code>, iOS/macOS <code>NEPacketTunnelProvider</code>
+Network Extension); the Rust core (e.g. a WireGuard/boringtun-style data
+path) is linked into that extension as a staticlib/cdylib and the FFI
+control surface is exposed to the Flutter UI process — frb bridges the
+UI/control side.</li>
+</ul>
+<h2 id="4-flutter-on-aurora-os-omprussiaflutter--current-state">4.
+Flutter on Aurora OS (omprussia/flutter) — current state</h2>
+<ul>
+<li>Source: <strong>gitlab.com/omprussia/flutter</strong> (group), with
+<strong>flutter</strong> (SDK fork) and
+<strong>flutter-embedder</strong> subprojects, plus a
+<code>flutter-community-plugins</code> group (Aurora-specific plugin
+forks: pickers_aurora, qr_code_scanner_aurora,
+flutter_libserialport_aurora, etc.).</li>
+<li><strong>flutter-embedder</strong> is the Aurora OS runtime/embedder
+for Flutter apps.</li>
+<li><strong>Active in 2025</strong>: a &quot;Flutter CLI Implementation for
+Aurora OS&quot; talk at Mobius 2025 (Autumn) covered extending the Flutter
+CLI to build/install apps and manage Aurora devices — i.e. the toolchain
+is maturing but is a SEPARATE fork, not upstream Flutter.</li>
+<li>Implication for the VPN app: Aurora is a SECOND-class/forked target.
+Plugins must have Aurora variants (the <code>*_aurora</code> pattern).
+FFI to a Rust <code>.so</code> is feasible (Aurora is Linux/Qt-based),
+but every platform plugin (VPN permission, packet tunnel) needs an
+Aurora-specific implementation — budget this as bespoke work, with
+honest SKIP where the embedder lacks a needed API.</li>
+</ul>
+<h2 id="5-flutter-on-harmonyos-next-openharmony-sig-flutter_flutter--current-state">5.
+Flutter on HarmonyOS NEXT (OpenHarmony-SIG flutter_flutter) — current
+state</h2>
+<ul>
+<li>Source: <strong>gitee.com/openharmony-sig/flutter_flutter</strong>
+(the SDK/CLI wrapper), with a <code>dev</code> branch; the engine is the
+<strong>Flutter OHOS branch</strong>. This is the Huawei/OpenHarmony-SIG
+maintained port enabling Flutter apps on HarmonyOS / OpenHarmony via the
+<code>ohos</code> device channel.</li>
+<li><strong>Versions (2025)</strong>: the port has tracked specific
+Flutter baselines — commonly cited: <strong>Flutter OHOS 3.22.x</strong>
+(and earlier 3.13.9+/3.7.12 custom builds) atop <strong>HarmonyOS SDK
+5.0.0(12)</strong> / OpenHarmony <strong>API 10-12</strong>. The Flutter
+Engine is recompiled for OHOS as the renderer; apps build to
+<code>.hap</code>.</li>
+<li><strong>Plugin adaptation required</strong>: upstream plugins need
+OHOS variants (ArkTS/native bridge). Active community work through 2025
+(plugin adaptation, native interaction, &quot;existing Flutter project →
+HarmonyOS&quot; guides).</li>
+<li>Implication for the VPN app: HarmonyOS NEXT is a
+maintained-but-forked target on a lagging Flutter baseline. Rust
+<code>.so</code> via FFI is feasible (OHOS is Linux-kernel-based), but
+the VPN tunnel needs HarmonyOS&#39;s own VPN extension API (ArkTS
+<code>vpnExtension</code>/<code>VpnExtensionAbility</code>) bridged to
+the Rust core — bespoke per-platform plugin work; honest SKIP where the
+SIG port lacks the API.</li>
+</ul>
+<h2 id="6-riverpod-for-the-vpn-status-stream">6. Riverpod for the VPN
+status stream</h2>
+<ul>
+<li><strong>Latest: flutter_riverpod 3.3.2</strong> (pub, published
+~June 2026); <strong>Riverpod 3.0</strong> released <strong>September
+2025</strong> is the current major line. Flutter Favorite.</li>
+<li><strong>StreamProvider</strong> is the idiomatic wrapper for a
+continuous status stream: same behavior as FutureProvider but produces a
+<code>Stream</code> value; &quot;for continuous streams of data (like
+WebSockets or Firebase)&quot; — here, the frb
+<code>Stream&lt;VpnState&gt;</code>.</li>
+<li><strong>Riverpod 3.0 behavior to know</strong>:
+<ul>
+<li><code>StreamProvider</code> now <strong>pauses its
+<code>StreamSubscription</code> when not actively listened</strong>
+(resource-saving; relevant — a paused subscription means the Rust side
+may stop being polled when no widget listens).</li>
+<li><code>Stream/FutureProvider.overrideWithValue</code> was
+<strong>added back</strong> (useful for tests feeding a fake VPN-state
+stream → anti-bluff §11.4.27 unit fakes).</li>
+<li>Use <strong><code>.autoDispose</code></strong> (or codegen
+<code>@riverpod</code> which is autoDispose by default) for the status
+stream so the underlying Rust StreamSink/subscription is torn down when
+no UI listens; a non-autoDispose StreamProvider &quot;is almost never
+destroyed.&quot;</li>
+</ul></li>
+<li>Recommended shape: Rust
+<code>tunnel_events(sink: StreamSink&lt;VpnState&gt;)</code> → Dart
+<code>Stream&lt;VpnState&gt;</code> →
+<code>@riverpod</code>/<code>StreamProvider.autoDispose</code> → UI
+<code>ref.watch</code>.</li>
+</ul>
+<h2 id="7-synthesis--recommendations-for-the-spec">7. Synthesis /
+recommendations for the spec</h2>
+<ol type="1">
+<li><strong>Bridge</strong>: flutter_rust_bridge <strong>2.12.0</strong>
+(codegen, StreamSink for events) is the primary recommendation; pin
+Dart-dep version == bridge-crate version.</li>
+<li><strong>UniFFI</strong> only if a non-Dart native surface
+(Kotlin/Swift/HarmonyOS ArkTS) must share the SAME Rust core;
+uniffi-dart itself is not production-ready.</li>
+<li><strong>Packaging</strong>: cdylib (Android/Linux/Windows) +
+staticlib/xcframework (iOS/macOS); Rust data path linked into the OS VPN
+extension process.</li>
+<li><strong>State</strong>: Riverpod 3.x
+<code>StreamProvider.autoDispose</code> over the frb event stream;
+account for 3.0 pause-when-unlistened semantics.</li>
+<li><strong>Aurora OS &amp; HarmonyOS NEXT</strong>: forked Flutter
+ports (omprussia/flutter, openharmony-sig/flutter_flutter), both
+2025-active but lagging upstream and requiring bespoke per-platform VPN
+plugins — treat as second-tier targets with honest SKIP-with-reason
+(§11.4.3) where the embedder/SIG port lacks a needed VPN/permission API;
+do NOT assume parity with Android/iOS.</li>
+</ol>
+<h2 id="sources-verified">Sources verified</h2>
+<ul>
+<li><a href="https://pub.dev/packages/flutter_rust_bridge">https://pub.dev/packages/flutter_rust_bridge</a>
+— accessed 2026-06-25 (v2.12.0, StreamSink support, SDK
+constraints)</li>
+<li><a href="https://cjycode.com/flutter_rust_bridge/guides/miscellaneous/whats-new">https://cjycode.com/flutter_rust_bridge/guides/miscellaneous/whats-new</a>
+— accessed 2026-06-25 (V2 features: SSE codec, async fn, traits,
+Rust→Dart calls)</li>
+<li><a href="https://github.com/fzyzcjy/flutter_rust_bridge">https://github.com/fzyzcjy/flutter_rust_bridge</a>
+— accessed 2026-06-25 (Flutter Favorite, StreamSink/stream support,
+arbitrary types)</li>
+<li><a href="https://github.com/fzyzcjy/flutter_rust_bridge/issues/347">https://github.com/fzyzcjy/flutter_rust_bridge/issues/347</a>
+— accessed 2026-06-25 (long-lived Rust → continuous data to Dart via
+StreamSink)</li>
+<li><a href="https://docs.rs/crate/flutter_rust_bridge/latest">https://docs.rs/crate/flutter_rust_bridge/latest</a>
+— accessed 2026-06-25 (crate 2.12.0)</li>
+<li><a href="https://github.com/mozilla/uniffi-rs">https://github.com/mozilla/uniffi-rs</a>
+— accessed 2026-06-25 (first-party Kotlin/Swift/Python/Ruby; 3rd-party
+C#/Go; no first-party Dart)</li>
+<li><a href="https://github.com/NiallBunting/uniffi-rs-dart">https://github.com/NiallBunting/uniffi-rs-dart</a>
+— accessed 2026-06-25 (Dart binding WIP, &quot;should not be trusted&quot;,
+incomplete callbacks/types)</li>
+<li><a href="https://mozilla.github.io/uniffi-rs/">https://mozilla.github.io/uniffi-rs/</a>
+— accessed 2026-06-25 (UniFFI user guide, supported languages)</li>
+<li><a href="https://gitlab.com/omprussia/flutter">https://gitlab.com/omprussia/flutter</a>
+— accessed 2026-06-25 (Aurora OS Flutter SDK fork + embedder + community
+plugins)</li>
+<li><a href="https://gitlab.com/omprussia/flutter/flutter-embedder">https://gitlab.com/omprussia/flutter/flutter-embedder</a>
+— accessed 2026-06-25 (Aurora OS Flutter embedder/runtime)</li>
+<li><a href="https://mobiusconf.com/en/talks/26ff8152fa8e4038b85335c874c0b083/">https://mobiusconf.com/en/talks/26ff8152fa8e4038b85335c874c0b083/</a>
+— accessed 2026-06-25 (Flutter CLI for Aurora OS, Mobius 2025
+Autumn)</li>
+<li><a href="https://www.harmony-developers.com/p/flutter-app-development-hongmeng">https://www.harmony-developers.com/p/flutter-app-development-hongmeng</a>
+— accessed 2026-06-25 (Flutter OHOS 3.13.9+, HarmonyOS SDK 5.0.0(12),
+OpenHarmony API 10)</li>
+<li><a href="https://dev.to/flfljh/setting-up-flutter-development-environment-for-harmonyos-hik">https://dev.to/flfljh/setting-up-flutter-development-environment-for-harmonyos-hik</a>
+— accessed 2026-06-25 (gitee openharmony-sig/flutter_flutter dev branch,
+Flutter 3.22 / 3.7.12 OHOS builds)</li>
+<li><a href="https://riverpod.dev/docs/whats_new">https://riverpod.dev/docs/whats_new</a>
+— accessed 2026-06-25 (Riverpod 3.0 Sept 2025; StreamProvider
+pause-when-unlistened; overrideWithValue re-added)</li>
+<li><a href="https://pub.dev/packages/flutter_riverpod">https://pub.dev/packages/flutter_riverpod</a>
+— accessed 2026-06-25 (flutter_riverpod 3.3.2, 3.x current)</li>
+<li><a href="https://pub.dev/documentation/riverpod/latest/riverpod/StreamProvider-class.html">https://pub.dev/documentation/riverpod/latest/riverpod/StreamProvider-class.html</a>
+— accessed 2026-06-25 (StreamProvider for continuous streams;
+autoDispose guidance)</li>
+</ul>
+</body>
+</html>

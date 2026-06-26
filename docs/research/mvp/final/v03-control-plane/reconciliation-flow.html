@@ -1,0 +1,1447 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>End-to-End Reconciliation Flow</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">End-to-End Reconciliation Flow</h1>
+</header>
+<h1 id="end-to-end-reconciliation-flow">End-to-End Reconciliation
+Flow</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-06-25T00:00:00Z</p>
+<blockquote>
+<p>Master technical specification — Volume 3 (Control Plane, Go),
+nano-detail deepening of <a href="../02-control-plane.md"><code>02-control-plane.md</code></a> §10
+(<em>End-to-end reconciliation, the &lt;1 s promise</em>). This document
+specifies the <strong>signature flow</strong> of HelixVPN: the path a
+policy change travels from an admin keystroke
+(<code>helixvpnctl policy apply</code>) to enforced state on every
+affected edge, with a measured convergence target of
+<strong>event→enforced p99 &lt; 1 s, zero restarts</strong>. SPEC-ONLY —
+it describes the implementation; it does not build the product. Source
+evidence cited inline by id: [04_P1] =
+<code>HelixVPN-Phase1-MVP.md</code>, [04_ARCH] =
+<code>HelixVPN-Architecture-Refined.md</code>, [research-go_cp] =
+<code>02-control-plane.md</code>, [SYNTHESIS] = the cross-document
+synthesis. Unproven claims are marked <strong>UNVERIFIED</strong>
+(constitution §11.4.6); nothing is fabricated.</p>
+</blockquote>
+<hr />
+<h2 id="0-scope-position-and-the-canonical-names-this-flow-uses">0.
+Scope, position, and the canonical names this flow uses</h2>
+<h3 id="01-what-this-document-owns">0.1 What this document owns</h3>
+<p><code>02-control-plane.md</code> §10 gives the reconciliation
+sequence at <em>overview</em> altitude. This document gives the
+<strong>implementation-ready</strong> version: every hop&#39;s concrete Go
+signature, SQL, event envelope, state machine, error code, authz check,
+edge case, the latency budget that backs the &lt;1 s SLO, and the test
+points that prove each invariant under constitution §11.4.169 (mandatory
+comprehensive test-type coverage).</p>
+<p>It owns <strong>only the reconciliation path</strong>. Adjacent
+concerns are owned elsewhere and merely referenced here: the policy
+<em>compiler internals</em> ([research-go_cp] §7), the
+<code>Coordinator</code> <em>wire byte-evolution</em> (Volume 3
+<code>WatchNetworkMap</code> contract doc), the Rust <em>edge
+enforcement</em> (Volume 1 data plane), and the <em>client core
+reconcile</em> of WG peers (Volume 1 routing layer). Where this flow
+hands off to those, the hand-off contract is specified; their internals
+are not.</p>
+<h3 id="02-the-signature-flow-in-one-line-04_p1-10-research-go_cp-101">0.2
+The signature flow in one line [04_P1 §10, research-go_cp §10.1]</h3>
+<pre><code>helixvpnctl policy apply
+  → REST POST /v1/policies (dry-run compile, fail-closed)
+  → persist policies row version N (WithTenant tx)
+  → emit policy.updated{N}
+  → policy svc consumes → authoritative compile(N) → persist compiled marker → emit policy.compiled{N}
+  → coordinator consumes policy.compiled{N} → recompute tenant visibility (minimal affected set)
+  → per affected open WatchNetworkMap stream: compute MapDelta → stream.Send
+  → client/connector cores reconcile (add/remove WG peers, update AllowedIPs)
+  → edge updates peer set + nftables/eBPF verdict map → enforcement live
+  ── elapsed event→enforced: target p99 &lt; 1 s, ZERO restarts ──</code></pre>
+<h3 id="03-canonical-names-cross-checked-unified-across-the-volume-3-set">0.3
+Canonical names (cross-checked, unified across the Volume-3 set)</h3>
+<table>
+<thead>
+<tr>
+<th>Concern</th>
+<th>Canonical value</th>
+<th>Note</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>protobuf package</td>
+<td><code>helix.coordinator.v1</code></td>
+<td>unified across the Volume-3 proto set; the <code>.proto</code> path
+is <code>proto/helix/coordinator/v1/coordinator.proto</code>, the Go
+import alias <code>coordinatorv1</code> [research-go_cp §4]</td>
+</tr>
+<tr>
+<td>RPC</td>
+<td><code>Coordinator.WatchNetworkMap</code></td>
+<td>the spine; snapshot-then-deltas server stream [04_P1 §3]</td>
+</tr>
+<tr>
+<td>compiled artifact type</td>
+<td><code>policy.CompiledPolicy</code></td>
+<td><code>{Version, SpecHash, VisibleTo, AllowedIPs, Verdicts, Via6, ExitNodes}</code>
+— canonical defn owned by <code>svc-policy.md §3</code> [research-go_cp
+§1.3]</td>
+</tr>
+<tr>
+<td>event streams</td>
+<td><code>events:policy</code>, <code>events:routes</code>,
+<code>events:devices</code></td>
+<td>Redis Streams, consumer group <code>coordinator</code>
+[research-go_cp §5.1]</td>
+</tr>
+<tr>
+<td>convergence metric</td>
+<td><code>helix_reconcile_seconds</code></td>
+<td>histogram, event-receive → <code>stream.Send</code> [research-go_cp
+§10.2]</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="1-the-full-reconciliation-sequence-nano-detail-mermaid">1. The
+full reconciliation sequence (nano-detail Mermaid)</h2>
+<pre class="mermaid"><code>sequenceDiagram
+    autonumber
+    actor Admin as Operator
+    participant CLI as helixvpnctl
+    participant API as api (Gin)
+    participant Pol as policy svc
+    participant PG as Postgres (RLS)
+    participant Bus as Redis Streams
+    participant Coord as coordinator
+    participant Stream as WatchNetworkMap stream
+    participant Core as client/connector core
+    participant Edge as Rust edge
+
+    Admin-&gt;&gt;CLI: helixvpnctl policy apply -f acl.json --activate
+    CLI-&gt;&gt;API: POST /v1/policies {spec, activate:true} (OIDC/API-token)
+    API-&gt;&gt;API: authn() + rbac(admin|operator)
+    API-&gt;&gt;Pol: Compile(dryRun=true, spec)
+    Pol--&gt;&gt;API: CompiledPolicy OR CompileError (fail-closed §7.3)
+    alt dry-run FAILS
+        API--&gt;&gt;CLI: 422 policy_invalid {violations[]}
+        CLI--&gt;&gt;Admin: non-zero exit, print violations
+    else dry-run OK
+        API-&gt;&gt;PG: WithTenant tx: INSERT policies(version=N, spec, active=false)
+        opt activate=true
+            API-&gt;&gt;PG: same tx: deactivate all + activate N (partial-unique-index)
+        end
+        API-&gt;&gt;Bus: same logical UoW: XADD events:policy {policy.updated, N}
+        API--&gt;&gt;CLI: 201 {version:N, active:true}
+        CLI--&gt;&gt;Admin: exit 0 &quot;policy v N applied&quot;
+    end
+
+    Bus--&gt;&gt;Pol: XReadGroup(group=policy-compiler) delivers policy.updated{N}
+    Pol-&gt;&gt;PG: load spec(N) + graph inputs (groups, devices, advertised_prefixes)
+    Pol-&gt;&gt;Pol: compile(N) — pure, deterministic
+    Pol-&gt;&gt;PG: WithTenant tx: UPDATE policies SET compiled_at=now() WHERE version=N
+    Pol-&gt;&gt;Bus: XADD events:policy {policy.compiled, N}
+    Pol-&gt;&gt;Bus: XACK events:policy policy.updated{N}
+
+    Bus--&gt;&gt;Coord: XReadGroup(group=coordinator) delivers policy.compiled{N}
+    Coord-&gt;&gt;Coord: hydrate active spec(N) -&gt; CompiledPolicy Vnew
+    Coord-&gt;&gt;Coord: diff Vprev vs Vnew -&gt; affectedDevices (minimal set §6.4)
+    loop each affected device d with an OPEN stream
+        Coord-&gt;&gt;Coord: buildDelta(d, Vprev, Vnew) -&gt; MapDelta
+        Coord-&gt;&gt;Stream: enqueue (bounded per-stream queue)
+        Stream-&gt;&gt;Core: stream.Send(MapUpdate{version:N, delta})
+        Core-&gt;&gt;Core: reconcile: upsert/remove WG peers, set AllowedIPs
+        Core-&gt;&gt;Edge: program peer set + verdict map (WG + nftables/eBPF)
+        Edge--&gt;&gt;Core: applied (peer count, verdict-map gen)
+    end
+    Coord-&gt;&gt;Bus: XACK events:policy policy.compiled{N}
+    Coord-&gt;&gt;API: (WS/SSE) policy.activated{version:N, devices_updated:k}
+    API--&gt;&gt;Admin: live Console event &quot;policy v N active; k devices updated&quot;
+    Note over Admin,Edge: helix_reconcile_seconds observed event→Send; edge timer event→enforced; p99 &lt; 1 s</code></pre>
+<hr />
+<h2 id="2-stage-a--helixvpnctl-policy-apply-the-cli-entry">2. Stage A —
+<code>helixvpnctl policy apply</code> (the CLI entry)</h2>
+<h3 id="21-command-contract-cobra-research-go_cp-11-13-cp-t91">2.1
+Command contract (Cobra) [research-go_cp §1.1, §13 CP-T9.1]</h3>
+<div class="sourceCode" id="cb3"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// cmd/helixvpnctl/policy_apply.go</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co">//</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co">//   helixvpnctl policy apply -f acl.json [--activate] [--tenant &lt;uuid&gt;] [--dry-run] [--wait]</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co">//</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co">// -f / --file     path to the declarative ACL JSON (§7.1 spec); &quot;-&quot; reads stdin.</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="co">// --activate      flip the new version active in the same request (default: false → create-only).</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="co">// --dry-run       send the spec with X-Helix-Dry-Run: true; server compiles + validates,</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="co">//                 persists NOTHING, returns the would-be version + any violations. Exit 0 iff clean.</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="co">// --wait          after a 201, poll GET /v1/policies/{N} until active=true AND compiled_at!=null</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="co">//                 (server-side reconcile confirmation), or fail after --wait-timeout (default 5s).</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="co">// --tenant        admin-cross-tenant only; ignored for a tenant-scoped token (§8 authz).</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> applyOpts <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    File     <span class="dt">string</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    Activate <span class="dt">bool</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>    DryRun   <span class="dt">bool</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>    Wait     <span class="dt">bool</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>    Timeout  time<span class="op">.</span>Duration <span class="co">// default 5s</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li>The CLI is a <strong>thin REST client of the generated OpenAPI app
+client</strong> [research-go_cp §8] — it holds no compile logic; the
+authoritative dry-run runs server-side (§3.2) so a stale CLI binary
+cannot pass a spec the server would reject.</li>
+<li><code>--wait</code> exists so a human / script knows reconciliation
+reached durable activation; it polls the REST surface, NOT the agent
+stream (the CLI is not an agent). Convergence on the <em>edges</em> is
+observed via <code>helix_reconcile_seconds</code> (§9), not the
+CLI.</li>
+<li>Exit codes: <code>0</code> success; <code>1</code> transport/auth
+error; <code>2</code> <code>422 policy_invalid</code> (violations
+printed); <code>3</code> <code>--wait</code> timeout (created but not
+confirmed active within timeout).</li>
+</ul>
+<h3 id="22-what-the-cli-sends">2.2 What the CLI sends</h3>
+<pre><code>POST /v1/policies HTTP/2
+Authorization: Bearer &lt;api-token|oidc-session&gt;
+Content-Type: application/json
+X-Helix-Dry-Run: &lt;true|absent&gt;
+Idempotency-Key: &lt;uuid v4 per invocation&gt;     # §3.4 — replay-safe create
+
+{ &quot;spec&quot;: { ...ACL document... }, &quot;activate&quot;: true }</code></pre>
+<hr />
+<h2 id="3-stage-b--post-v1policies-authz--dry-run--persist--emit">3.
+Stage B — <code>POST /v1/policies</code>: authz → dry-run → persist →
+emit</h2>
+<h3 id="31-handler-signature-and-middleware-chain-research-go_cp-81">3.1
+Handler signature and middleware chain [research-go_cp §8.1]</h3>
+<div class="sourceCode" id="cb5"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/api/policy_handler.go</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="co">//</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Middleware order (fail-closed at each step):</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co">//   authn()  -&gt; validates OIDC session / API token -&gt; ctx{userID, tenantID, role}</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="co">//   rbac()   -&gt; requireRole(&quot;admin&quot;,&quot;operator&quot;) for this route group</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="co">//   handler  -&gt; CreatePolicy</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>h <span class="op">*</span>PolicyHandler<span class="op">)</span> CreatePolicy<span class="op">(</span>c <span class="op">*</span>gin<span class="op">.</span>Context<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    in<span class="op">,</span> err <span class="op">:=</span> bindCreatePolicy<span class="op">(</span>c<span class="op">)</span>            <span class="co">// 400 policy_malformed on bad JSON / schema</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span> abort<span class="op">(</span>c<span class="op">,</span> <span class="dv">400</span><span class="op">,</span> <span class="st">&quot;policy_malformed&quot;</span><span class="op">,</span> err<span class="op">);</span> <span class="cf">return</span> <span class="op">}</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    tenant <span class="op">:=</span> mustTenant<span class="op">(</span>c<span class="op">)</span>                    <span class="co">// from authn(); never from request body</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    dryRun <span class="op">:=</span> c<span class="op">.</span>GetHeader<span class="op">(</span><span class="st">&quot;X-Helix-Dry-Run&quot;</span><span class="op">)</span> <span class="op">==</span> <span class="st">&quot;true&quot;</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    idemKey <span class="op">:=</span> c<span class="op">.</span>GetHeader<span class="op">(</span><span class="st">&quot;Idempotency-Key&quot;</span><span class="op">)</span>  <span class="co">// §3.4</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 1. DRY-RUN COMPILE (always, even for a real create) — fail-closed §3.2</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>    compiled<span class="op">,</span> verr <span class="op">:=</span> h<span class="op">.</span>policy<span class="op">.</span>Compile<span class="op">(</span>c<span class="op">,</span> tenant<span class="op">,</span> in<span class="op">.</span>Spec<span class="op">)</span> <span class="co">// pure, no writes</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> verr <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>        abort<span class="op">(</span>c<span class="op">,</span> <span class="dv">422</span><span class="op">,</span> <span class="st">&quot;policy_invalid&quot;</span><span class="op">,</span> verr<span class="op">)</span>  <span class="co">// violations[] in body; nothing persisted</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> dryRun <span class="op">{</span></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>        c<span class="op">.</span>JSON<span class="op">(</span><span class="dv">200</span><span class="op">,</span> dryRunResult<span class="op">{</span>WouldBeVersion<span class="op">:</span> h<span class="op">.</span>nextVersion<span class="op">(</span>c<span class="op">,</span> tenant<span class="op">),</span> Compiled<span class="op">:</span> summarize<span class="op">(</span>compiled<span class="op">)})</span></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 2. PERSIST + (optional) ACTIVATE + EMIT — one logical unit of work (R3)</span></span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>    out<span class="op">,</span> err <span class="op">:=</span> h<span class="op">.</span>persistAndEmit<span class="op">(</span>c<span class="op">,</span> tenant<span class="op">,</span> in<span class="op">,</span> idemKey<span class="op">)</span></span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span> abortFromErr<span class="op">(</span>c<span class="op">,</span> err<span class="op">);</span> <span class="cf">return</span> <span class="op">}</span> <span class="co">// §7 error taxonomy</span></span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>    c<span class="op">.</span>JSON<span class="op">(</span><span class="dv">201</span><span class="op">,</span> out<span class="op">)</span>                                <span class="co">// {version:N, active:bool}</span></span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="32-dry-run-compile--fail-closed-gate-04_p1-73-research-go_cp-73">3.2
+Dry-run compile = fail-closed gate [04_P1 §7.3, research-go_cp
+§7.3]</h3>
+<p>The dry-run runs the <strong>same pure
+<code>Compiler.Compile</code></strong> that the policy svc will run
+authoritatively (§4). It REJECTS and persists nothing on any of:</p>
+<table>
+<thead>
+<tr>
+<th>Rejection</th>
+<th>Error code</th>
+<th>Detail surfaced</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>unknown <code>group:</code> / <code>host:</code> referenced</td>
+<td><code>policy_unknown_ref</code></td>
+<td>the dangling name</td>
+</tr>
+<tr>
+<td><code>dst</code> CIDR not covered by any
+<code>advertised_prefixes</code> row</td>
+<td><code>policy_unrouted_dst</code></td>
+<td>the CIDR + nearest connector</td>
+</tr>
+<tr>
+<td>rule grants a <strong>revoked</strong> device
+(<code>devices.revoked_at</code> set)</td>
+<td><code>policy_grants_revoked</code></td>
+<td>device_id</td>
+</tr>
+<tr>
+<td><code>exitNodes</code> entry resolves to a
+<code>kind=connector</code> (connectors are not exits)</td>
+<td><code>policy_invalid_exit</code></td>
+<td>the offending node</td>
+</tr>
+<tr>
+<td>JSON schema / <code>action</code> enum violation</td>
+<td><code>policy_malformed</code></td>
+<td>JSON pointer to the field</td>
+</tr>
+</tbody>
+</table>
+<p>A <code>route.conflict.detected</code> (two connectors advertising
+overlapping CIDRs) does <strong>not</strong> block the compile — it is
+surfaced (Console + <code>events:routes</code>) and resolved by
+<code>4via6</code> site disambiguation (D4) or operator choice
+[research-go_cp §7.3]. The dry-run is <strong>pure</strong> — the
+constitution-mandated property test asserts <code>Compile(spec)</code>
+produces a byte-identical <code>CompiledPolicy</code> on repeated calls
+(determinism, §10 test point T-UNIT-1).</p>
+<h3 id="33-persist--activate--emit-one-transaction-r3-research-go_cp-23-74">3.3
+Persist + activate + emit (one transaction, R3) [research-go_cp §2.3,
+§7.4]</h3>
+<div class="sourceCode" id="cb6"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/api/policy_handler.go (cont.)</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>h <span class="op">*</span>PolicyHandler<span class="op">)</span> persistAndEmit<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> t uuid<span class="op">.</span>UUID<span class="op">,</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    in CreatePolicyIn<span class="op">,</span> idemKey <span class="dt">string</span><span class="op">)</span> <span class="op">(</span>CreatePolicyOut<span class="op">,</span> <span class="dt">error</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">var</span> out CreatePolicyOut</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    err <span class="op">:=</span> h<span class="op">.</span>store<span class="op">.</span>WithTenant<span class="op">(</span>ctx<span class="op">,</span> t<span class="op">,</span> <span class="kw">func</span><span class="op">(</span>q <span class="op">*</span>db<span class="op">.</span>Queries<span class="op">)</span> <span class="dt">error</span> <span class="op">{</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>        <span class="co">// idempotent create: if this Idempotency-Key already produced a version, return it (§3.4)</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> v<span class="op">,</span> ok<span class="op">,</span> _ <span class="op">:=</span> q<span class="op">.</span>PolicyByIdemKey<span class="op">(</span>ctx<span class="op">,</span> db<span class="op">.</span>IdemParams<span class="op">{</span>t<span class="op">,</span> idemKey<span class="op">});</span> ok <span class="op">{</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>            out <span class="op">=</span> CreatePolicyOut<span class="op">{</span>Version<span class="op">:</span> v<span class="op">.</span>Version<span class="op">,</span> Active<span class="op">:</span> v<span class="op">.</span>Active<span class="op">}</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> errAlreadyApplied <span class="co">// sentinel -&gt; handler returns 201 with the prior result</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>        n<span class="op">,</span> err <span class="op">:=</span> q<span class="op">.</span>NextPolicyVersion<span class="op">(</span>ctx<span class="op">,</span> t<span class="op">)</span>               <span class="co">// monotonic per tenant (§3.5)</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span> <span class="cf">return</span> err <span class="op">}</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> err <span class="op">:=</span> q<span class="op">.</span>InsertPolicy<span class="op">(</span>ctx<span class="op">,</span> db<span class="op">.</span>InsertPolicyParams<span class="op">{</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>            TenantID<span class="op">:</span> t<span class="op">,</span> Version<span class="op">:</span> n<span class="op">,</span> Spec<span class="op">:</span> in<span class="op">.</span>Spec<span class="op">,</span> Active<span class="op">:</span> <span class="ot">false</span><span class="op">,</span> IdemKey<span class="op">:</span> idemKey<span class="op">,</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>        <span class="op">});</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span> <span class="cf">return</span> err <span class="op">}</span>                        <span class="co">// UNIQUE(tenant,version) guards races</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> in<span class="op">.</span>Activate <span class="op">{</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> err <span class="op">:=</span> q<span class="op">.</span>DeactivateAllPolicies<span class="op">(</span>ctx<span class="op">,</span> t<span class="op">);</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span> <span class="cf">return</span> err <span class="op">}</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> err <span class="op">:=</span> q<span class="op">.</span>ActivatePolicyVersion<span class="op">(</span>ctx<span class="op">,</span> db<span class="op">.</span>ActivateParams<span class="op">{</span>t<span class="op">,</span> n<span class="op">});</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> err                                   <span class="co">// partial-unique-index = atomic flip</span></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>        <span class="co">// emit INSIDE the tx&#39;s logical UoW: XADD after Commit would risk lost-event on crash;</span></span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>        <span class="co">// we stage the envelope and publish in an after-commit hook bound to this tx (§3.6).</span></span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>        h<span class="op">.</span>stageEvent<span class="op">(</span>ctx<span class="op">,</span> events<span class="op">.</span>New<span class="op">(</span><span class="st">&quot;policy.updated&quot;</span><span class="op">,</span> t<span class="op">,</span> actor<span class="op">(</span>ctx<span class="op">),</span></span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>            <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="dt">any</span><span class="op">{</span><span class="st">&quot;version&quot;</span><span class="op">:</span> n<span class="op">,</span> <span class="st">&quot;activate&quot;</span><span class="op">:</span> in<span class="op">.</span>Activate<span class="op">}))</span></span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>        out <span class="op">=</span> CreatePolicyOut<span class="op">{</span>Version<span class="op">:</span> n<span class="op">,</span> Active<span class="op">:</span> in<span class="op">.</span>Activate<span class="op">}</span></span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="ot">nil</span></span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>    <span class="op">})</span></span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> errors<span class="op">.</span>Is<span class="op">(</span>err<span class="op">,</span> errAlreadyApplied<span class="op">)</span> <span class="op">{</span> <span class="cf">return</span> out<span class="op">,</span> <span class="ot">nil</span> <span class="op">}</span></span>
+<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> out<span class="op">,</span> err</span>
+<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="34-create-idempotency-cli-replay-safe">3.4 Create idempotency
+(CLI replay-safe)</h3>
+<p><code>Idempotency-Key</code> (CLI uuid-v4 per invocation, §2.2) is
+stored on the <code>policies</code> row. A retried <code>POST</code>
+with the same key returns the <strong>same</strong>
+<code>{version:N}</code> and emits no second event — so a network retry
+of <code>policy apply</code> never creates a duplicate version. This
+composes with the deeper <strong>event-level idempotency</strong> (§8)
+but is distinct: this guards the <em>create</em>; §8 guards the
+<em>reconcile reaction</em>.</p>
+<h3 id="35-monotonic-per-tenant-version-nextpolicyversion">3.5 Monotonic
+per-tenant version (<code>NextPolicyVersion</code>)</h3>
+<div class="sourceCode" id="cb7"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- internal/store/queries/policy.sql  (sqlc)</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- NextPolicyVersion: monotonic, gap-free per tenant, race-safe under concurrent POSTs.</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="co">-- The FOR UPDATE on the tenant&#39;s max row + UNIQUE(tenant,version) make two concurrent</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co">-- creates serialise (one gets N, the other N+1) rather than collide.</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="co">-- name: NextPolicyVersion :one</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="fu">COALESCE</span>(<span class="fu">MAX</span>(version), <span class="dv">0</span>) <span class="op">+</span> <span class="dv">1</span> <span class="kw">AS</span> next_version</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> policies <span class="kw">WHERE</span> tenant_id <span class="op">=</span> $<span class="dv">1</span> <span class="cf">FOR</span> <span class="kw">UPDATE</span>;</span></code></pre></div>
+<h3 id="36-after-commit-publish-hook-no-lost-event-no-phantom-event">3.6
+After-commit publish hook (no lost event, no phantom event)</h3>
+<p>The <code>policy.updated</code> envelope is <strong>staged</strong>
+inside the tx and <strong>published</strong> by a hook fired only after
+<code>tx.Commit</code> succeeds (research-go_cp R3 &quot;same logical unit of
+work&quot;). Two failure windows are handled honestly:</p>
+<ul>
+<li><strong>Commit OK, XADD fails</strong> → the hook retries with
+bounded backoff; if still failing it writes the envelope to a durable
+<code>outbox</code> row scanned by a sweeper (the transactional-outbox
+pattern). <strong>UNVERIFIED:</strong> the <code>outbox</code> table is
+named here as the recommended mechanism;
+<code>02-control-plane.md</code> does not yet specify an outbox table —
+it is a §11.4.6-honest design addition for this flow, to be ratified as
+a workable item (§11). Without it, a crash between commit and XADD
+silently drops the reconcile trigger.</li>
+<li><strong>Commit fails</strong> → nothing is staged-published; the
+version never existed; CLI gets <code>5xx</code> and may retry under the
+same <code>Idempotency-Key</code> (§3.4).</li>
+</ul>
+<hr />
+<h2 id="4-stage-cd--policy-svc-authoritative-compile--policycompiledn">4.
+Stage C/D — policy svc: authoritative compile →
+<code>policy.compiled{N}</code></h2>
+<h3 id="41-why-a-second-compile-and-why-it-is-safe">4.1 Why a second
+compile (and why it is safe)</h3>
+<p>The POST-time compile is a <strong>dry-run validator</strong>
+(ephemeral, fail-closed). The durable, authoritative compile happens
+when the <strong>policy svc</strong> consumes
+<code>policy.updated{N}</code>. The compiler is <strong>pure +
+deterministic</strong> [04_P1 §7.2, research-go_cp §7.2], so the dry-run
+artifact and the authoritative artifact are byte-identical for the same
+spec + graph snapshot — the second compile cannot diverge from the
+validated one (guarded by determinism property test T-UNIT-1). The split
+exists so that (a) the REST path returns fast (validate-only) and (b)
+the compile-of-record is event-sourced and replay-safe.</p>
+<h3 id="42-consumer-loop-research-go_cp-54">4.2 Consumer loop
+[research-go_cp §5.4]</h3>
+<div class="sourceCode" id="cb8"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/policy/compiler_consumer.go — consumer group &quot;policy-compiler&quot;</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>p <span class="op">*</span>PolicyService<span class="op">)</span> runCompiler<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">)</span> <span class="dt">error</span> <span class="op">{</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> env <span class="op">:=</span> <span class="kw">range</span> p<span class="op">.</span>bus<span class="op">.</span>SubscribeChan<span class="op">(</span>ctx<span class="op">,</span> <span class="st">&quot;policy-compiler&quot;</span><span class="op">,</span> p<span class="op">.</span>hostID<span class="op">,</span> <span class="st">&quot;events:policy&quot;</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> env<span class="op">.</span>Type <span class="op">!=</span> <span class="st">&quot;policy.updated&quot;</span> <span class="op">{</span> _ <span class="op">=</span> p<span class="op">.</span>bus<span class="op">.</span>Ack<span class="op">(</span>ctx<span class="op">,</span> env<span class="op">);</span> <span class="cf">continue</span> <span class="op">}</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>        n <span class="op">:=</span> env<span class="op">.</span>Payload<span class="op">[</span><span class="st">&quot;version&quot;</span><span class="op">].(</span><span class="dt">int64</span><span class="op">)</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> err <span class="op">:=</span> p<span class="op">.</span>compileAndMark<span class="op">(</span>ctx<span class="op">,</span> env<span class="op">.</span>TenantID<span class="op">,</span> n<span class="op">);</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>            <span class="co">// do NOT Ack: XAUTOCLAIM re-delivers; after K attempts -&gt; events:policy:dlq (§7.4)</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>            p<span class="op">.</span>metrics<span class="op">.</span>compileErr<span class="op">.</span>Inc<span class="op">();</span> <span class="cf">continue</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>        _<span class="op">,</span> _ <span class="op">=</span> p<span class="op">.</span>bus<span class="op">.</span>Publish<span class="op">(</span>ctx<span class="op">,</span> <span class="st">&quot;events:policy&quot;</span><span class="op">,</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>            events<span class="op">.</span>New<span class="op">(</span><span class="st">&quot;policy.compiled&quot;</span><span class="op">,</span> env<span class="op">.</span>TenantID<span class="op">,</span> <span class="st">&quot;system&quot;</span><span class="op">,</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="dt">any</span><span class="op">{</span><span class="st">&quot;version&quot;</span><span class="op">:</span> n<span class="op">}))</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>        _ <span class="op">=</span> p<span class="op">.</span>bus<span class="op">.</span>Ack<span class="op">(</span>ctx<span class="op">,</span> env<span class="op">)</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> ctx<span class="op">.</span>Err<span class="op">()</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>p <span class="op">*</span>PolicyService<span class="op">)</span> compileAndMark<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> t uuid<span class="op">.</span>UUID<span class="op">,</span> n <span class="dt">int64</span><span class="op">)</span> <span class="dt">error</span> <span class="op">{</span></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> p<span class="op">.</span>store<span class="op">.</span>WithTenant<span class="op">(</span>ctx<span class="op">,</span> t<span class="op">,</span> <span class="kw">func</span><span class="op">(</span>q <span class="op">*</span>db<span class="op">.</span>Queries<span class="op">)</span> <span class="dt">error</span> <span class="op">{</span></span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>        spec<span class="op">,</span> err <span class="op">:=</span> q<span class="op">.</span>PolicySpec<span class="op">(</span>ctx<span class="op">,</span> db<span class="op">.</span>SpecParams<span class="op">{</span>t<span class="op">,</span> n<span class="op">});</span> <span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span> <span class="cf">return</span> err <span class="op">}</span></span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> _<span class="op">,</span> err <span class="op">:=</span> p<span class="op">.</span>compiler<span class="op">.</span>Compile<span class="op">(</span>ctx<span class="op">,</span> t<span class="op">,</span> spec<span class="op">);</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> fmt<span class="op">.</span>Errorf<span class="op">(</span><span class="st">&quot;authoritative compile v%d: %w&quot;</span><span class="op">,</span> n<span class="op">,</span> err<span class="op">)</span> <span class="co">// should be impossible post dry-run</span></span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> q<span class="op">.</span>MarkCompiled<span class="op">(</span>ctx<span class="op">,</span> db<span class="op">.</span>MarkCompiledParams<span class="op">{</span>t<span class="op">,</span> n<span class="op">})</span> <span class="co">// SET compiled_at=now() WHERE version=n</span></span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>    <span class="op">})</span></span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="43-policycompiledn-envelope-research-go_cp-52">4.3
+<code>policy.compiled{N}</code> envelope [research-go_cp §5.2]</h3>
+<div class="sourceCode" id="cb9"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;id&quot;</span><span class="fu">:</span>        <span class="st">&quot;&lt;redis-stream-id&gt;&quot;</span><span class="fu">,</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;type&quot;</span><span class="fu">:</span>      <span class="st">&quot;policy.compiled&quot;</span><span class="fu">,</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;tenant_id&quot;</span><span class="fu">:</span> <span class="st">&quot;5f3e...uuid&quot;</span><span class="fu">,</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;ts&quot;</span><span class="fu">:</span>        <span class="st">&quot;2026-06-25T12:00:00.123Z&quot;</span><span class="fu">,</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;actor&quot;</span><span class="fu">:</span>     <span class="st">&quot;system&quot;</span><span class="fu">,</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;payload&quot;</span><span class="fu">:</span>   <span class="fu">{</span> <span class="dt">&quot;version&quot;</span><span class="fu">:</span> <span class="dv">42</span> <span class="fu">},</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;trace_id&quot;</span><span class="fu">:</span>  <span class="st">&quot;01J...ULID&quot;</span>        <span class="er">//</span> <span class="er">copied</span> <span class="er">from</span> <span class="er">the</span> <span class="er">originating</span> <span class="er">policy.updated</span> <span class="er">for</span> <span class="er">end-to-end</span> <span class="er">tracing</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>The payload carries <strong>only</strong> <code>version</code> —
+never the compiled artifact. The coordinator recomputes the artifact
+itself from its hydrated graph + the now-active spec (§5), keeping the
+event tiny and the coordinator the single owner of the in-mem graph
+(R2).</p>
+<hr />
+<h2 id="5-stage-ef--coordinator-recompute-visibility--mapdelta--send">5.
+Stage E/F — coordinator: recompute visibility → MapDelta → Send</h2>
+<h3 id="51-coordinator-consume--recompute-research-go_cp-61-64">5.1
+Coordinator consume + recompute [research-go_cp §6.1, §6.4]</h3>
+<div class="sourceCode" id="cb10"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/coordinator/apply.go — consumer group &quot;coordinator&quot;</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>c <span class="op">*</span>Coordinator<span class="op">)</span> onPolicyCompiled<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> t uuid<span class="op">.</span>UUID<span class="op">,</span> n <span class="dt">int64</span><span class="op">)</span> <span class="dt">error</span> <span class="op">{</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    g <span class="op">:=</span> c<span class="op">.</span>graph<span class="op">(</span>t<span class="op">)</span>                              <span class="co">// in-mem per-tenant graph (hydrated on boot + events)</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    spec<span class="op">,</span> err <span class="op">:=</span> c<span class="op">.</span>loadActiveSpec<span class="op">(</span>ctx<span class="op">,</span> t<span class="op">)</span>        <span class="co">// the version flagged active (== n on the happy path)</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span> <span class="cf">return</span> err <span class="op">}</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>    vprev <span class="op">:=</span> g<span class="op">.</span>Compiled<span class="op">()</span>                        <span class="co">// CompiledPolicy currently applied (may be nil on first)</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>    vnew<span class="op">,</span> err <span class="op">:=</span> c<span class="op">.</span>compiler<span class="op">.</span>Compile<span class="op">(</span>ctx<span class="op">,</span> t<span class="op">,</span> spec<span class="op">)</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span> <span class="cf">return</span> err <span class="op">}</span>                 <span class="co">// do NOT Ack -&gt; redeliver (§7.4)</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>    affected <span class="op">:=</span> diffAffected<span class="op">(</span>vprev<span class="op">,</span> vnew<span class="op">)</span>        <span class="co">// minimal set, §5.3</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>    g<span class="op">.</span>SetCompiled<span class="op">(</span>vnew<span class="op">)</span>                           <span class="co">// graph now authoritative at version n</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> _<span class="op">,</span> devID <span class="op">:=</span> <span class="kw">range</span> affected <span class="op">{</span></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>        sub<span class="op">,</span> open <span class="op">:=</span> c<span class="op">.</span>streams<span class="op">.</span>Get<span class="op">(</span>t<span class="op">,</span> devID<span class="op">)</span>     <span class="co">// is there an OPEN WatchNetworkMap stream?</span></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">!</span>open <span class="op">{</span> <span class="cf">continue</span> <span class="op">}</span>                    <span class="co">// offline device picks it up via snapshot on reconnect</span></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>        delta <span class="op">:=</span> buildDelta<span class="op">(</span>devID<span class="op">,</span> vprev<span class="op">,</span> vnew<span class="op">,</span> g<span class="op">)</span></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> delta<span class="op">.</span>Empty<span class="op">()</span> <span class="op">{</span> <span class="cf">continue</span> <span class="op">}</span>            <span class="co">// idempotent no-op (§8)</span></span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">!</span>sub<span class="op">.</span>Enqueue<span class="op">(</span>MapUpdate<span class="op">{</span>Version<span class="op">:</span> <span class="dt">uint64</span><span class="op">(</span>n<span class="op">),</span> Delta<span class="op">:</span> delta<span class="op">})</span> <span class="op">{</span></span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>            sub<span class="op">.</span>DropForResync<span class="op">()</span>                  <span class="co">// bounded queue full -&gt; force reconnect-with-snapshot (§6.4)</span></span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="ot">nil</span> <span class="co">// Ack only after the full affected set is enqueued (at-least-once + idempotent §8)</span></span>
+<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="52-builddelta--the-diff-that-becomes-the-wire-mapdelta-research-go_cp-4-62">5.2
+<code>buildDelta</code> — the diff that becomes the wire
+<code>MapDelta</code> [research-go_cp §4, §6.2]</h3>
+<div class="sourceCode" id="cb11"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/coordinator/delta.go</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="co">//</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="co">// buildDelta produces the minimal MapDelta moving device d from Vprev to Vnew.</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="co">//   upsert_peers   = peers newly visible OR whose AllowedIPs/Verdicts/via6/endpoint changed</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="co">//   remove_peer_ids = peers d could see before and may NOT see now (need-to-know revocation, C4)</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="co">//   transport/dns  = present ONLY if changed for d</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> buildDelta<span class="op">(</span>d DeviceID<span class="op">,</span> vprev<span class="op">,</span> vnew <span class="op">*</span>CompiledPolicy<span class="op">,</span> g <span class="op">*</span>Graph<span class="op">)</span> MapDelta <span class="op">{</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>    prev <span class="op">:=</span> visibleSet<span class="op">(</span>vprev<span class="op">,</span> d<span class="op">)</span>                  <span class="co">// map[DeviceID]struct{}, empty if vprev==nil</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>    next <span class="op">:=</span> visibleSet<span class="op">(</span>vnew<span class="op">,</span> d<span class="op">)</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">var</span> del MapDelta</span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> p <span class="op">:=</span> <span class="kw">range</span> prev <span class="op">{</span>                          <span class="co">// removed</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> _<span class="op">,</span> still <span class="op">:=</span> next<span class="op">[</span>p<span class="op">];</span> <span class="op">!</span>still <span class="op">{</span> del<span class="op">.</span>RemovePeerIDs <span class="op">=</span> <span class="bu">append</span><span class="op">(</span>del<span class="op">.</span>RemovePeerIDs<span class="op">,</span> <span class="dt">string</span><span class="op">(</span>p<span class="op">))</span> <span class="op">}</span></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> p <span class="op">:=</span> <span class="kw">range</span> next <span class="op">{</span>                          <span class="co">// added or changed</span></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> _<span class="op">,</span> had <span class="op">:=</span> prev<span class="op">[</span>p<span class="op">];</span> <span class="op">!</span>had <span class="op">||</span> peerChanged<span class="op">(</span>vprev<span class="op">,</span> vnew<span class="op">,</span> d<span class="op">,</span> p<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>            del<span class="op">.</span>UpsertPeers <span class="op">=</span> <span class="bu">append</span><span class="op">(</span>del<span class="op">.</span>UpsertPeers<span class="op">,</span> g<span class="op">.</span>PeerWire<span class="op">(</span>d<span class="op">,</span> p<span class="op">,</span> vnew<span class="op">))</span> <span class="co">// builds proto Peer (§5.4)</span></span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> transportChanged<span class="op">(</span>vprev<span class="op">,</span> vnew<span class="op">,</span> d<span class="op">)</span> <span class="op">{</span> del<span class="op">.</span>Transport <span class="op">=</span> g<span class="op">.</span>TransportPolicy<span class="op">(</span>d<span class="op">)</span> <span class="op">}</span></span>
+<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> dnsChanged<span class="op">(</span>vprev<span class="op">,</span> vnew<span class="op">,</span> d<span class="op">)</span>       <span class="op">{</span> del<span class="op">.</span>Dns <span class="op">=</span> g<span class="op">.</span>Dns<span class="op">(</span>d<span class="op">)</span> <span class="op">}</span></span>
+<span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> del</span>
+<span id="cb11-23"><a href="#cb11-23" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb11-24"><a href="#cb11-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-25"><a href="#cb11-25" aria-hidden="true" tabindex="-1"></a><span class="co">// peerChanged compares the compiled edge attributes that the wire Peer carries.</span></span>
+<span id="cb11-26"><a href="#cb11-26" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> peerChanged<span class="op">(</span>vprev<span class="op">,</span> vnew <span class="op">*</span>CompiledPolicy<span class="op">,</span> d<span class="op">,</span> p DeviceID<span class="op">)</span> <span class="dt">bool</span> <span class="op">{</span></span>
+<span id="cb11-27"><a href="#cb11-27" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">!</span>cidrsEqual<span class="op">(</span>vprev<span class="op">.</span>AllowedIPs<span class="op">[</span>d<span class="op">][</span>p<span class="op">],</span> vnew<span class="op">.</span>AllowedIPs<span class="op">[</span>d<span class="op">][</span>p<span class="op">])</span> <span class="op">||</span></span>
+<span id="cb11-28"><a href="#cb11-28" aria-hidden="true" tabindex="-1"></a>           <span class="op">!</span>verdictsEqual<span class="op">(</span>vprev<span class="op">.</span>Verdicts<span class="op">[</span>d<span class="op">][</span>p<span class="op">],</span> vnew<span class="op">.</span>Verdicts<span class="op">[</span>d<span class="op">][</span>p<span class="op">])</span> <span class="op">||</span></span>
+<span id="cb11-29"><a href="#cb11-29" aria-hidden="true" tabindex="-1"></a>           <span class="op">!</span>via6Equal<span class="op">(</span>vprev<span class="op">,</span> vnew<span class="op">,</span> d<span class="op">,</span> p<span class="op">)</span></span>
+<span id="cb11-30"><a href="#cb11-30" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="53-diffaffected--the-minimal-affected-set-never-broadcast-04_p1-44-research-go_cp-64">5.3
+<code>diffAffected</code> — the minimal affected set (never broadcast)
+[04_P1 §4.4, research-go_cp §6.4]</h3>
+<div class="sourceCode" id="cb12"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/coordinator/affected.go</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="co">// A device d is affected by Vprev-&gt;Vnew iff ANY of:</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="co">//   (a) its visible peer set changed,</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="co">//   (b) any peer it still sees changed AllowedIPs/Verdicts/via6,</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="co">//   (c) its own transport policy or DNS config changed,</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="co">//   (d) it became newly visible-to / removed-from some other device&#39;s set (so a peer of d</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="co">//       must learn d&#39;s add/remove — handled by computing the union over both directions).</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="co">// Returns a de-duplicated, sorted slice so the fan-out order is deterministic (test T-UNIT-3).</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> diffAffected<span class="op">(</span>vprev<span class="op">,</span> vnew <span class="op">*</span>CompiledPolicy<span class="op">)</span> <span class="op">[]</span>DeviceID <span class="op">{</span> <span class="co">/* set algebra over the two maps */</span> <span class="op">}</span></span></code></pre></div>
+<p>A <code>policy.compiled</code> event may affect the <strong>whole
+tenant</strong> (a broad rule change) or <strong>one device</strong> (a
+single grant). A <code>connector.prefixes.changed</code> event (a
+sibling reconcile trigger on <code>events:routes</code>) touches only
+nodes whose policy grants that connector — the same
+<code>diffAffected</code> machinery, seeded from a smaller delta.
+<strong>Compute the minimal set; never resync everyone on a small
+change</strong> is the load-bearing rule that keeps fan-out O(affected),
+not O(tenant).</p>
+<h3 id="54-the-wire-mapdelta-proto-package-helixcoordinatorv1-research-go_cp-4">5.4
+The wire <code>MapDelta</code> (proto, package
+<code>helix.coordinator.v1</code>) [research-go_cp §4]</h3>
+<div class="sourceCode" id="cb13"><pre class="sourceCode protobuf"><code class="sourceCode protobuf"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co">// proto/helix/coordinator/v1/coordinator.proto  (package helix.coordinator.v1)</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="kw">message</span> MapUpdate {</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">uint64</span> version <span class="op">=</span> <span class="dv">1</span>;                 <span class="co">// == policies.version N this update converges the node to</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">oneof</span> body {</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>    NetworkMap snapshot  <span class="op">=</span> <span class="dv">2</span>;         <span class="co">// full (reconnect / first stream / dropped-for-resync)</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>    MapDelta   delta     <span class="op">=</span> <span class="dv">3</span>;         <span class="co">// incremental (the reconcile path of this document)</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>    KeepAlive  keepalive <span class="op">=</span> <span class="dv">4</span>;</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a><span class="kw">message</span> MapDelta {</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>  <span class="kw">repeated</span> Peer   upsert_peers    <span class="op">=</span> <span class="dv">1</span>; <span class="co">// already policy-filtered: only peers d may reach (C4)</span></span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>  <span class="kw">repeated</span> <span class="dt">string</span> remove_peer_ids <span class="op">=</span> <span class="dv">2</span>; <span class="co">// need-to-know revocation: d must forget these</span></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>  TransportPolicy transport       <span class="op">=</span> <span class="dv">3</span>; <span class="co">// present only if changed</span></span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>  DnsConfig       dns             <span class="op">=</span> <span class="dv">4</span>; <span class="co">// present only if changed</span></span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a><span class="kw">message</span> Peer {</span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>  <span class="dt">string</span>             device_id    <span class="op">=</span> <span class="dv">1</span>;</span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>  <span class="dt">bytes</span>              wg_pubkey    <span class="op">=</span> <span class="dv">2</span>;  <span class="co">// 32B Curve25519 public key (C6: never the private)</span></span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a>  <span class="kw">repeated</span> <span class="dt">string</span>    allowed_ips  <span class="op">=</span> <span class="dv">3</span>;  <span class="co">// coarse WG AllowedIPs (CIDR only)</span></span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>  <span class="dt">string</span>             endpoint     <span class="op">=</span> <span class="dv">4</span>;  <span class="co">// gateway relay in MVP (hub-and-spoke); direct in P2</span></span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a>  <span class="dt">bool</span>               is_connector <span class="op">=</span> <span class="dv">5</span>;</span>
+<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a>  <span class="kw">repeated</span> Via6Route via6         <span class="op">=</span> <span class="dv">6</span>;  <span class="co">// 4via6 mappings for colliding IPv4 LANs (D4)</span></span>
+<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>The fine <strong>port-level verdict map</strong> is NOT on the WG
+<code>Peer</code> (WG <code>AllowedIPs</code> is CIDR-only). It travels
+in the <code>Peer</code>&#39;s compiled-verdict extension consumed by the
+edge&#39;s nftables/eBPF layer; the canonical carrier field is specified in
+the Volume-3 <code>WatchNetworkMap</code> contract doc.
+<strong>UNVERIFIED:</strong> the exact proto field for the port-verdict
+map is not fixed in <code>02-control-plane.md</code> §4 (which shows
+<code>allowed_ips</code> only); this flow assumes the verdict map rides
+alongside the <code>Peer</code> and defers its byte layout to the
+contract doc — it MUST NOT be inferred as absent.</p>
+<h3 id="55-stream-send--version-bookkeeping-research-go_cp-63">5.5
+Stream send + version bookkeeping [research-go_cp §6.3]</h3>
+<div class="sourceCode" id="cb14"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/coordinator/watch.go — the open-stream side; sub.C receives queued MapUpdates</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="cf">case</span> d <span class="op">:=</span> <span class="op">&lt;-</span>sub<span class="op">.</span>C<span class="op">:</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> err <span class="op">:=</span> stream<span class="op">.</span>Send<span class="op">(</span>d<span class="op">);</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span> <span class="cf">return</span> err <span class="op">}</span> <span class="co">// send error -&gt; stream closes -&gt; presence offline</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    c<span class="op">.</span>metrics<span class="op">.</span>reconcileSeconds<span class="op">.</span>Observe<span class="op">(</span>time<span class="op">.</span>Since<span class="op">(</span>d<span class="op">.</span>recvAt<span class="op">).</span>Seconds<span class="op">())</span> <span class="co">// event-receive -&gt; on-wire</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    sub<span class="op">.</span>lastSentVersion <span class="op">=</span> d<span class="op">.</span>Version</span></code></pre></div>
+<p>Each stream tracks <code>lastSentVersion</code>; a delta is sent only
+if it advances the node past its last seen version, and the
+snapshot/resume branch on (re)connect uses
+<code>WatchRequest.known_version</code> so a reconnect resumes from a
+version rather than full-resyncing [research-go_cp §6.3].</p>
+<hr />
+<h2 id="6-stage-gh--core-reconcile--edge-enforcement-hand-off-contracts">6.
+Stage G/H — core reconcile + edge enforcement (hand-off contracts)</h2>
+<p>This flow&#39;s responsibility ends at <code>stream.Send</code>; the
+<strong>measured SLO continues to the edge</strong>, so the hand-off
+contract is specified (internals are Volume 1).</p>
+<h3 id="61-clientconnector-core-reconcile-volume-1-routing-layer-04_p1-10">6.1
+Client/connector core reconcile (Volume 1 routing layer) [04_P1
+§10]</h3>
+<p>On receiving <code>MapUpdate{delta}</code> the core MUST,
+<strong>idempotently</strong>:</p>
+<ol type="1">
+<li>For each <code>upsert_peers[p]</code>:
+<code>wg set &lt;iface&gt; peer &lt;p.wg_pubkey&gt; allowed-ips &lt;p.allowed_ips...&gt; endpoint &lt;p.endpoint&gt;</code>
+(add or update; re-applying identical state is a kernel no-op).</li>
+<li>For each <code>remove_peer_ids[p]</code>:
+<code>wg set &lt;iface&gt; peer &lt;p&gt; remove</code>.</li>
+<li>If <code>transport</code> present: update the transport escalation
+ladder (no tunnel teardown — order only).</li>
+<li>If <code>dns</code> present: update resolver/search (driven by core
+state machine, no restart).</li>
+<li>Advance the core&#39;s
+<code>appliedVersion = MapUpdate.version</code>.</li>
+</ol>
+<p>No step restarts the tunnel or the process (the
+<strong>zero-restarts</strong> invariant) — a peer add/remove and an
+<code>AllowedIPs</code> change are live <code>wg set</code>
+operations.</p>
+<h3 id="62-edge-enforcement-rust-edge-volume-1-04_p1-10-research-go_cp-101">6.2
+Edge enforcement (Rust edge, Volume 1) [04_P1 §10, research-go_cp
+§10.1]</h3>
+<p>The edge applies (a) the WG <strong>peer set</strong>
+(kernel/boringtun) and (b) the <strong>nftables/eBPF verdict
+map</strong> (the port-level fine grain WG can&#39;t express). The edge
+emits a <code>revoke→enforced</code> / <code>apply→enforced</code> timer
+that is the terminal point of the <code>helix_reconcile_seconds</code>
+SLO chain (§9). The edge is <strong>fail-static</strong> (C1): if
+control is down, existing tunnels keep forwarding; reconciliation only
+<em>changes</em> state, it is never in the packet path.</p>
+<hr />
+<h2 id="7-policy-version--per-stream-reconcile-state-machines--error-taxonomy">7.
+Policy version &amp; per-stream reconcile state machines + error
+taxonomy</h2>
+<h3 id="71-policy-version-lifecycle-state-machine">7.1 Policy version
+lifecycle (state machine)</h3>
+<pre class="mermaid"><code>stateDiagram-v2
+    [*] --&gt; DryRunOK: Compile(spec) clean (§3.2)
+    DryRunOK --&gt; Persisted: INSERT policies(version=N, active=false)
+    Persisted --&gt; Active: activate (deactivate-all + activate N, atomic §3.3)
+    Persisted --&gt; [*]: create-only (never activated)
+    Active --&gt; Compiled: policy svc compileAndMark -&gt; compiled_at set
+    Compiled --&gt; Converging: coordinator emits MapDeltas to affected streams
+    Converging --&gt; Enforced: edges apply peer set + verdict map (p99 &lt; 1s)
+    Active --&gt; Superseded: a later version M activated (this row active=false)
+    Superseded --&gt; Active: rollback Activate(N) — instant, no recompile (§7.4 reproducible artifact)
+    Enforced --&gt; [*]</code></pre>
+<h3 id="72-per-stream-reconcile-state-machine">7.2 Per-stream reconcile
+state machine</h3>
+<pre class="mermaid"><code>stateDiagram-v2
+    [*] --&gt; Authenticating: WatchNetworkMap opened (mTLS device cert §8.2)
+    Authenticating --&gt; Rejected: cert revoked/expired -&gt; PermissionDenied
+    Authenticating --&gt; Snapshotting: known_version==0 OR &gt; current
+    Authenticating --&gt; CatchUp: 0 &lt; known_version &lt;= current
+    Snapshotting --&gt; Live: snapshot sent
+    CatchUp --&gt; Live: deltas-since(known_version) sent
+    Live --&gt; Live: MapDelta enqueued+sent (this document&#39;s path)
+    Live --&gt; KeepAlive: 20s ticker, no state churn
+    KeepAlive --&gt; Live
+    Live --&gt; DroppedForResync: bounded send-queue full (slow consumer, back-pressure)
+    DroppedForResync --&gt; [*]: stream closed -&gt; client reconnects with known_version
+    Live --&gt; Closed: ctx done / send error / device.revoked force-close
+    Rejected --&gt; [*]
+    Closed --&gt; [*]</code></pre>
+<h3 id="73-error-taxonomy-per-hop-fail-closed">7.3 Error taxonomy (per
+hop, fail-closed)</h3>
+<table>
+<thead>
+<tr>
+<th>Hop</th>
+<th>Condition</th>
+<th>Surfaced as</th>
+<th>Recovery</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CLI</td>
+<td>transport/auth failure</td>
+<td>exit <code>1</code></td>
+<td>retry under same <code>Idempotency-Key</code> (§3.4)</td>
+</tr>
+<tr>
+<td>REST authn</td>
+<td>bad/expired token</td>
+<td><code>401 unauthorized</code></td>
+<td>re-auth</td>
+</tr>
+<tr>
+<td>REST rbac</td>
+<td>role &lt; operator</td>
+<td><code>403 forbidden</code></td>
+<td>none (authz denied)</td>
+</tr>
+<tr>
+<td>REST bind</td>
+<td>bad JSON / schema</td>
+<td><code>400 policy_malformed</code></td>
+<td>fix spec</td>
+</tr>
+<tr>
+<td>dry-run</td>
+<td>§3.2 validation fail</td>
+<td><code>422 policy_invalid {violations[]}</code></td>
+<td>fix spec; nothing persisted</td>
+</tr>
+<tr>
+<td>persist</td>
+<td><code>UNIQUE(tenant,version)</code> race</td>
+<td>retried internally (<code>NextPolicyVersion FOR UPDATE</code>)</td>
+<td>transparent</td>
+</tr>
+<tr>
+<td>persist</td>
+<td>commit fail</td>
+<td><code>500</code></td>
+<td>CLI retries (idempotent)</td>
+</tr>
+<tr>
+<td>publish</td>
+<td>commit OK, XADD fail</td>
+<td>outbox + sweeper (§3.6, UNVERIFIED table)</td>
+<td>event re-published, no double create</td>
+</tr>
+<tr>
+<td>policy svc</td>
+<td>authoritative compile fail</td>
+<td>NOT-Ack → redeliver → <code>events:policy:dlq</code> after K
+attempts + <code>helix_events_dlq_total</code>++</td>
+<td>alert; (should be impossible post dry-run)</td>
+</tr>
+<tr>
+<td>coordinator</td>
+<td>recompute fail</td>
+<td>NOT-Ack → redeliver (idempotent §8)</td>
+<td>self-heals on next delivery</td>
+</tr>
+<tr>
+<td>coordinator</td>
+<td>per-stream queue full</td>
+<td><code>DropForResync</code> → stream closed</td>
+<td>client reconnects-with-snapshot</td>
+</tr>
+<tr>
+<td>stream send</td>
+<td>network/ctx error</td>
+<td>stream closes, presence→offline</td>
+<td>client reconnects; resume via <code>known_version</code></td>
+</tr>
+<tr>
+<td>edge</td>
+<td>apply fail</td>
+<td>edge stays fail-static (C1)</td>
+<td>next delta re-applies idempotently</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="8-idempotency-model-deltas-from-current-graph-state-replays-harmless">8.
+Idempotency model (deltas from current graph state, replays
+harmless)</h2>
+<p>The reconciliation path is <strong>idempotent at three
+layers</strong>, so at-least-once event delivery (Redis Streams) is
+correct without exactly-once machinery [04_P1 §5, research-go_cp
+§5.4]:</p>
+<ol type="1">
+<li><strong>Compute-from-current-state.</strong> Both
+<code>policy svc</code> (authoritative compile) and
+<code>coordinator</code> (<code>onPolicyCompiled</code>) recompute the
+<em>entire</em> <code>CompiledPolicy</code> from the durable spec + the
+in-mem graph — they do <strong>not</strong> apply incremental mutations
+from event payloads. A redelivered <code>policy.compiled{N}</code>
+recomputes the <strong>same</strong> <code>Vnew</code>; if the graph is
+already at <code>Vnew</code>, <code>diffAffected(Vnew, Vnew) == ∅</code>
+and <code>buildDelta</code> returns <code>Empty()</code> for every
+stream → <code>stream.Send</code> is skipped → a no-op. There is no
+accumulation, no double-add.</li>
+<li><strong>Delta-against-last-sent.</strong> Each stream&#39;s
+<code>buildDelta</code> is computed against that stream&#39;s
+actually-applied <code>Vprev</code>/<code>lastSentVersion</code>, so a
+replay that arrives after the node already converged produces an empty
+delta; a replay that arrives mid-flight produces exactly the remaining
+diff.</li>
+<li><strong>Edge-apply idempotence.</strong>
+<code>wg set peer ... allowed-ips ...</code> and verdict-map programming
+are declarative-set operations: re-applying identical desired state is a
+kernel no-op (§6.1/§6.2).</li>
+</ol>
+<p><strong>Out-of-order safety.</strong> If
+<code>policy.compiled{N}</code> and <code>{N+1}</code> are delivered out
+of order, the coordinator&#39;s <code>loadActiveSpec</code> always reads the
+<strong>currently active</strong> version (single active per tenant,
+partial-unique index), so it converges to the latest active spec
+regardless of event order; an obsolete <code>{N}</code> after
+<code>{N+1}</code> is active recomputes to <code>Vnew(N+1)</code> (a
+no-op if already applied). The <code>MapUpdate.version</code> lets the
+client reject a delta that would move it <em>backward</em> past its
+<code>appliedVersion</code> (monotonic-version guard, test
+T-UNIT-4).</p>
+<p><strong>Create-level idempotency</strong>
+(<code>Idempotency-Key</code>, §3.4) is the orthogonal guard at the REST
+tier: it prevents a <em>duplicate version</em> from a retried POST.
+Reconcile-level idempotency (this section) prevents <em>duplicate
+effects</em> from a redelivered event. Both are required.</p>
+<hr />
+<h2 id="9-the-1-s-convergence-slo--budget-instrumentation-acceptance">9.
+The &lt;1 s convergence SLO — budget, instrumentation, acceptance</h2>
+<h3 id="91-slo-definitions-04_p1-113-research-go_cp-102">9.1 SLO
+definitions [04_P1 §11.3, research-go_cp §10.2]</h3>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Target</th>
+<th>Measured from → to</th>
+<th>Instrument</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>event → delta-on-wire</td>
+<td><strong>p99 &lt; 1 s</strong></td>
+<td>coordinator event-receive → <code>stream.Send</code></td>
+<td>histogram <code>helix_reconcile_seconds</code></td>
+</tr>
+<tr>
+<td>policy apply → edge enforced</td>
+<td><strong>p99 &lt; 1 s</strong></td>
+<td><code>policy.compiled</code> receive → edge
+<code>apply→enforced</code> timer</td>
+<td>edge timer + trace join on <code>trace_id</code></td>
+</tr>
+<tr>
+<td>device revoke → edge enforced</td>
+<td><strong>&lt; 1 s</strong></td>
+<td><code>device.revoked</code> → WG-peer-removed on edge</td>
+<td>edge revoke timer</td>
+</tr>
+<tr>
+<td>enroll → first NetworkMap</td>
+<td>&lt; 2 s</td>
+<td><code>Enroll</code> → first snapshot on stream</td>
+<td>API histogram</td>
+</tr>
+<tr>
+<td>policy compile (1k devices)</td>
+<td>&lt; 200 ms</td>
+<td><code>Compile</code> entry → return</td>
+<td>compiler benchmark</td>
+</tr>
+<tr>
+<td>coordinator memory @ 10k streams</td>
+<td>bounded, slope≈0 / 24 h</td>
+<td>soak</td>
+<td><code>process_resident_memory_bytes</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="92-latency-budget-decomposition-design-target">9.2 Latency
+budget decomposition (design target)</h3>
+<p><strong>UNVERIFIED — these per-hop sub-budgets are a design
+allocation, not a measured result.</strong> The source docs assert the
+<strong>p99 &lt; 1 s end-to-end</strong> target [04_P1 §11.3] but do not
+publish a per-hop breakdown; the allocation below is this spec&#39;s
+proposed budget, to be <em>validated</em> by T-INT-1 / T-SOAK-1 captured
+evidence (§10), never asserted as fact before measurement (§11.4.6):</p>
+<table>
+<thead>
+<tr>
+<th>Hop</th>
+<th>Proposed budget</th>
+<th>Rationale</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>XADD <code>policy.updated</code> → policy-svc XReadGroup</td>
+<td>≤ 50 ms</td>
+<td>Redis Streams <code>Block</code> consume, local</td>
+</tr>
+<tr>
+<td>authoritative compile (1k devices)</td>
+<td>≤ 200 ms</td>
+<td>matches the compile SLO</td>
+</tr>
+<tr>
+<td>XADD <code>policy.compiled</code> → coordinator XReadGroup</td>
+<td>≤ 50 ms</td>
+<td>same bus</td>
+</tr>
+<tr>
+<td>recompute + diffAffected + buildDelta (per tenant)</td>
+<td>≤ 150 ms</td>
+<td>in-mem set algebra</td>
+</tr>
+<tr>
+<td>fan-out enqueue + <code>stream.Send</code> (per affected
+stream)</td>
+<td>≤ 200 ms</td>
+<td>bounded queue; back-pressure on slow consumers</td>
+</tr>
+<tr>
+<td>core reconcile + edge apply</td>
+<td>≤ 300 ms</td>
+<td><code>wg set</code> + verdict-map program</td>
+</tr>
+<tr>
+<td><strong>end-to-end p99</strong></td>
+<td><strong>≤ 950 ms</strong></td>
+<td>leaves ~50 ms slack under the 1 s ceiling</td>
+</tr>
+</tbody>
+</table>
+<h3 id="93-acceptance-anti-bluff-captured-evidence-research-go_cp-103-11469107">9.3
+Acceptance (anti-bluff, captured-evidence) [research-go_cp §10.3,
+§11.4.69/.107]</h3>
+<p>A reconcile run PASSes only with <strong>captured physical
+evidence</strong>: the <code>helix_reconcile_seconds</code> p99 sample,
+the edge <code>apply→enforced</code> timer value, the
+<em>before/after</em> <code>wg show</code> peer-set diff on the edge,
+and the nftables/eBPF verdict-map generation bump — joined on
+<code>trace_id</code>. A green test with no captured delta-on-wire +
+edge-applied artifact is a §11.4 PASS-bluff and is rejected.</p>
+<hr />
+<h2 id="10-authz-at-each-hop-defense-in-depth">10. Authz at each hop
+(defense in depth)</h2>
+<table>
+<thead>
+<tr>
+<th>Hop</th>
+<th>Principal</th>
+<th>Check</th>
+<th>Backstop</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>POST /v1/policies</code></td>
+<td>user/API-token</td>
+<td><code>rbac(admin|operator)</code> [research-go_cp §8.1]</td>
+<td>RLS <code>tenant_isolation</code> (C8)</td>
+</tr>
+<tr>
+<td>persist/activate</td>
+<td>server (helix_app role)</td>
+<td><code>WithTenant</code> SET LOCAL <code>app.tenant_id</code></td>
+<td><code>FORCE ROW LEVEL SECURITY</code> even for owner</td>
+</tr>
+<tr>
+<td><code>policy.updated</code>/<code>.compiled</code> consume</td>
+<td>service consumers</td>
+<td>tenant_id from envelope drives <code>WithTenant</code></td>
+<td>RLS on every query</td>
+</tr>
+<tr>
+<td><code>WatchNetworkMap</code> open</td>
+<td>device</td>
+<td>short-lived <strong>mTLS device cert</strong> →
+<code>device_certs</code> → <code>devices</code>; reject if
+revoked/expired (§8.2)</td>
+<td>revoked device&#39;s open stream force-closed within SLO</td>
+</tr>
+<tr>
+<td>delta content</td>
+<td>—</td>
+<td>peers already <strong>policy-filtered</strong> (need-to-know, C4) —
+a node never receives a peer it may not reach</td>
+<td>compile is the only source of <code>VisibleTo</code></td>
+</tr>
+</tbody>
+</table>
+<p>A revoked device (<code>device.revoked</code> event) is (a) removed
+from every relevant map via remove-peer delta, (b) its open
+<code>WatchNetworkMap</code> stream force-closed, (c) its cert marked
+revoked — within the convergence SLO [research-go_cp §9.3]. Revocation
+reuses this exact reconcile path with a <code>remove_peer_ids</code>
+delta.</p>
+<hr />
+<h2 id="11-edge-cases-enumerated-each-with-the-defined-behavior">11.
+Edge cases (enumerated, each with the defined behavior)</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Edge case</th>
+<th>Defined behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>E1</td>
+<td>device offline when <code>policy.compiled</code> fires</td>
+<td>no open stream → skipped in fan-out; converges via full
+<strong>snapshot</strong> on next <code>WatchNetworkMap</code> connect
+(<code>known_version</code> resume) [§5.1]</td>
+</tr>
+<tr>
+<td>E2</td>
+<td>event redelivered (at-least-once)</td>
+<td>empty delta → no-op (idempotency §8)</td>
+</tr>
+<tr>
+<td>E3</td>
+<td>two <code>policy apply</code> race to create</td>
+<td><code>NextPolicyVersion FOR UPDATE</code> +
+<code>UNIQUE(tenant,version)</code> serialise → N and N+1, no collision
+[§3.5]</td>
+</tr>
+<tr>
+<td>E4</td>
+<td><code>policy.compiled{N}</code> arrives after {N+1} active</td>
+<td><code>loadActiveSpec</code> reads active version → converges to
+latest; stale {N} recomputes to a no-op [§8]</td>
+</tr>
+<tr>
+<td>E5</td>
+<td>slow consumer fills bounded send queue</td>
+<td><code>DropForResync</code> → stream closed → client
+reconnects-with-snapshot (back-pressure, not memory growth) [§5.1,
+research-go_cp §6.4]</td>
+</tr>
+<tr>
+<td>E6</td>
+<td>commit OK but XADD fails</td>
+<td>transactional outbox + sweeper re-publishes (UNVERIFIED table §3.6);
+no lost reconcile, no double create</td>
+</tr>
+<tr>
+<td>E7</td>
+<td>authoritative compile fails post dry-run</td>
+<td>NOT-Ack → redeliver → DLQ after K attempts + alert; indicates a
+graph mutation between dry-run and compile (e.g. a device revoked in
+between) — the redeliver recompiles against the now-current graph
+[§4.2]</td>
+</tr>
+<tr>
+<td>E8</td>
+<td>rollback to older version</td>
+<td><code>Activate(N_old)</code> → instant, no recompile (artifact
+reproducible from spec); emits <code>policy.compiled{N_old}</code>; same
+reconcile path [§7.1, research-go_cp §7.4]</td>
+</tr>
+<tr>
+<td>E9</td>
+<td>dry-run clean but graph changed before activate (a granted device
+revoked)</td>
+<td>activate-time + compile-time re-checks
+<code>policy_grants_revoked</code>; a now-revoked grant is dropped from
+<code>Vnew</code> (the device simply isn&#39;t visible), not an error</td>
+</tr>
+<tr>
+<td>E10</td>
+<td>client applies delta that would move it backward</td>
+<td>client rejects via
+<code>MapUpdate.version &lt;= appliedVersion</code> monotonic guard
+(§8)</td>
+</tr>
+<tr>
+<td>E11</td>
+<td>partial fan-out then coordinator crash</td>
+<td>event NOT-Acked (Ack only after full affected set enqueued §5.1) →
+reclaimed by <code>XAUTOCLAIM</code> → full set recomputed idempotently
+(composes §11.4.147 no-work-loss) [research-go_cp §5.4]</td>
+</tr>
+<tr>
+<td>E12</td>
+<td><code>connector.prefixes.changed</code> overlaps a policy apply</td>
+<td>both are reconcile triggers feeding the same
+<code>diffAffected</code>; coordinator processes serially per tenant
+graph lock → converges to the union; route-conflict surfaced, not
+silently merged</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="12-test-points-constitution-114169-mandatory-test-type-coverage">12.
+Test points (constitution §11.4.169 mandatory test-type coverage)</h2>
+<p>Every PASS cites rock-solid captured <strong>physical</strong>
+evidence (§11.4.5/.69/.107); the only permitted absence is an honest
+§11.4.3 SKIP-with-reason, never a silent gap. Four-layer §11.4.4(b) per
+item.</p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>§11.4.169 type</th>
+<th>What it asserts</th>
+<th>Evidence artifact</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>T-UNIT-1</td>
+<td>unit</td>
+<td><code>Compile(spec)</code> deterministic — byte-identical
+<code>CompiledPolicy</code> over N runs (dry-run ≡ authoritative
+§4.1)</td>
+<td>hash equality log</td>
+</tr>
+<tr>
+<td>T-UNIT-2</td>
+<td>unit</td>
+<td><code>buildDelta</code> minimality — <code>Vprev→Vnew</code> yields
+exactly the add/remove/changed set, no extra peers</td>
+<td>table-driven golden delta</td>
+</tr>
+<tr>
+<td>T-UNIT-3</td>
+<td>unit</td>
+<td><code>diffAffected</code> deterministic order + completeness (covers
+directions §5.3)</td>
+<td>sorted affected-set fixture</td>
+</tr>
+<tr>
+<td>T-UNIT-4</td>
+<td>unit</td>
+<td>client monotonic-version guard rejects backward delta (E10)</td>
+<td>rejected-delta assertion</td>
+</tr>
+<tr>
+<td>T-UNIT-5</td>
+<td>concurrency/atomicity</td>
+<td><code>NextPolicyVersion FOR UPDATE</code> + <code>UNIQUE</code> → no
+duplicate version under K concurrent creates (E3)</td>
+<td>race log, 0 collisions</td>
+</tr>
+<tr>
+<td>T-STORE-1</td>
+<td>security</td>
+<td>RLS: tenant A cannot read B&#39;s
+<code>policies</code>/<code>devices</code> even with crafted query under
+<code>FORCE ROW LEVEL SECURITY</code> as <code>helix_app</code></td>
+<td>denied-query capture</td>
+</tr>
+<tr>
+<td>T-INT-1</td>
+<td>integration (real System, containers §11.4.76)</td>
+<td>enroll→advertise→<code>policy apply</code>→delta-on-wire: assert
+MapDelta content + edge <code>wg show</code> peer-set diff + verdict-map
+bump</td>
+<td>captured delta + edge diff</td>
+</tr>
+<tr>
+<td>T-INT-2</td>
+<td>integration</td>
+<td>event idempotency — replay <code>policy.compiled{N}</code> 3× →
+empty delta, no peer churn (E2/§8)</td>
+<td>peer-set unchanged capture</td>
+</tr>
+<tr>
+<td>T-INT-3</td>
+<td>integration</td>
+<td>DLQ path — force authoritative compile fail →
+<code>events:policy:dlq</code> entry +
+<code>helix_events_dlq_total</code>++ (E7)</td>
+<td>DLQ entry + metric</td>
+</tr>
+<tr>
+<td>T-E2E-1</td>
+<td>e2e</td>
+<td>netns rig fed by real control plane: <code>policy apply</code> →
+authorized host reachable, unauthorized denied, &lt; 1 s converge</td>
+<td>tcpdump reach/deny + timer</td>
+</tr>
+<tr>
+<td>T-FA-1</td>
+<td>full-automation (§11.4.25/.52/.98, deterministic §11.4.50)</td>
+<td>self-driving <code>policy apply</code>→reconcile→assert, re-runnable
+<code>-count=3</code> identical</td>
+<td>run-transcript + p99</td>
+</tr>
+<tr>
+<td>T-CHAL-1</td>
+<td>Challenges (challenges submodule §11.4.27(B))</td>
+<td>drive enroll→policy→delta, score PASS only on captured &lt; 1 s
+SLO</td>
+<td>challenge result.json</td>
+</tr>
+<tr>
+<td>T-HQA-1</td>
+<td>HelixQA (helix_qa submodule)</td>
+<td>reconcile test-bank + autonomous QA session over the flow</td>
+<td>HelixQA session evidence</td>
+</tr>
+<tr>
+<td>T-RACE-1</td>
+<td>race-condition/deadlock</td>
+<td><code>go test -race</code> over coordinator fan-out + per-tenant
+graph lock (E11/E12)</td>
+<td>race-detector clean</td>
+</tr>
+<tr>
+<td>T-PERF-1</td>
+<td>benchmarking/performance</td>
+<td>compile(1k devices) &lt; 200 ms; recompute+fanout p99 budget
+(§9.2)</td>
+<td>benchmark histogram</td>
+</tr>
+<tr>
+<td>T-LOAD-1</td>
+<td>DDoS/load-flood</td>
+<td>flap <code>policy apply</code> at high rate; assert no unbounded
+queue, back-pressure drops to resync (E5)</td>
+<td>queue-depth + drop counter</td>
+</tr>
+<tr>
+<td>T-STRESS-1</td>
+<td>stress+chaos (§11.4.85)</td>
+<td>kill coordinator mid-fan-out → <code>XAUTOCLAIM</code> reclaim →
+full convergence (E11)</td>
+<td>recovery trace</td>
+</tr>
+<tr>
+<td>T-SOAK-1</td>
+<td>memory</td>
+<td>10k streams, 24 h policy flap;
+<code>process_resident_memory_bytes</code> slope ≈ 0</td>
+<td>RSS slope plot</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="13-cross-references--sources">13. Cross-references &amp;
+sources</h2>
+<p>This document deepens [research-go_cp §10] and composes with:
+[research-go_cp §4] (the <code>Coordinator</code> proto /
+<code>MapDelta</code>), §5 (Redis Streams envelope + DLQ), §6
+(coordinator delta loop), §7 (policy compiler + activate/rollback), §8
+(REST + agent authz), §9 (enrollment + revoke).</p>
+<p><strong>Sources.</strong> [04_P1] <code>HelixVPN-Phase1-MVP.md</code>
+§3 (agent contract), §4 (coordinator), §5 (events + idempotency), §7
+(policy compiler), §10 (reconciliation signature flow), §11
+(testing/SLOs/DoD) · [04_ARCH]
+<code>HelixVPN-Architecture-Refined.md</code> §2–§3 (control/data
+separation, push-don&#39;t-poll, ULA /48 + 4via6), §7 (no-logging,
+default-deny) · [research-go_cp] <code>02-control-plane.md</code>
+(canonical DDL/RLS, proto, coordinator, events, policy, API, SLOs) ·
+[SYNTHESIS] §§1–9 (stack floor, key decisions D3/D4, ecosystem +
+constitution bindings). Constitution: §11.4.169 (mandatory test-type
+coverage), §11.4.5/.69/.107 (captured-evidence anti-bluff), §11.4.6
+(no-guessing — UNVERIFIED markers), §11.4.76 (containers submodule for
+integration infra), §11.4.147 (no-work-loss, E11), §11.4.27
+(Challenges/HelixQA).</p>
+</body>
+</html>

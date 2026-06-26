@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>RESEARCH go_cp</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">RESEARCH go_cp</h1>
+</header>
+<h1 id="research-go_cp">RESEARCH go_cp</h1>
+<p>Go control-plane stack for a Mullvad-parity self-hosted VPN. Latest
+authoritative versions + best practices, as of
+<strong>2026-06-25</strong> (access date for every source below). Per
+§11.4.99/§11.4.150: every claim is cited; latest official docs/releases
+preferred over training memory.</p>
+<hr />
+<h2 id="1-gin--rest-surface">1. Gin — REST surface</h2>
+<p><strong>Latest: Gin <code>v1.12.0</code> (2025-02-28).</strong>
+v1.11.0 (2024-09-20) added HTTP/3 (quic-go), runtime-swappable custom
+JSON codec, and array form-binding; v1.12.0 added
+<code>encoding.UnmarshalText</code> in uri/query binding and Protobuf
+content negotiation. Source: <a href="https://github.com/gin-gonic/gin/releases">https://github.com/gin-gonic/gin/releases</a></p>
+<p>Best practice:</p>
+<ul>
+<li>Gin is the thin <strong>REST/JSON edge</strong> (auth callbacks,
+health, admin, webhooks). Keep the typed RPC surface (mobile/desktop
+clients, server-streaming) on Connect-RPC (§2) — do NOT duplicate
+business logic across both. Mount Connect handlers and Gin on the
+<strong>same <code>http.Server</code></strong> via a top-level mux:
+Connect handlers are plain <code>http.Handler</code>s, so route
+<code>/grpc.*</code> / <code>/&lt;package&gt;.&lt;Service&gt;/</code> to
+the Connect mux and everything else to Gin. (<a href="https://connectrpc.com/docs/go/getting-started/">https://connectrpc.com/docs/go/getting-started/</a>)</li>
+<li>Use <code>gin.New()</code> + explicit middleware (Recovery,
+structured logger, request-ID), NOT <code>gin.Default()</code> in
+production. Bind+validate with <code>ShouldBindJSON</code> and the
+built-in <code>binding</code> (go-playground/validator) tags.</li>
+<li>Gin&#39;s own perf is rarely the bottleneck for a control plane; the DB
+round-trips (§3) and Redis (§5) dominate. (<a href="https://gin-gonic.com/">https://gin-gonic.com/</a>)</li>
+</ul>
+<hr />
+<h2 id="2-connect-rpc-connectrpcconnect-go--buf--typed-rpc--server-streaming">2.
+Connect-RPC (connectrpc/connect-go) + buf — typed RPC /
+server-streaming</h2>
+<p><strong>Latest: <code>connectrpc.com/connect</code>
+<code>v1.20.0</code></strong> (bumps minimum Go to 1.25; v1.19.0 moved
+to Go 1.24 + Edition 2024 support; supports the <strong>two most recent
+Go majors</strong> only). Stable, semver, no breaking changes in the 1.x
+line. Sources: <a href="https://github.com/connectrpc/connect-go/releases">https://github.com/connectrpc/connect-go/releases</a>
+; <a href="https://pkg.go.dev/connectrpc.com/connect">https://pkg.go.dev/connectrpc.com/connect</a></p>
+<p>Why Connect for a VPN control plane:</p>
+<ul>
+<li><strong>One handler speaks three protocols simultaneously</strong> —
+gRPC, gRPC-Web, and the Connect protocol — with NO Envoy/translating
+proxy. Native binary gRPC-Web means browser/admin frontends talk to the
+server directly. (<a href="https://connectrpc.com/docs/go/grpc-compatibility/">https://connectrpc.com/docs/go/grpc-compatibility/</a>
+; <a href="https://connectrpc.com/docs/multi-protocol/">https://connectrpc.com/docs/multi-protocol/</a>
+— gRPC-Web without Envoy)</li>
+<li><strong>Server-streaming</strong> (the relevant mode for VPN: push
+device/peer/relay-list updates, live tunnel status, account events). All
+streaming subtypes (client/server/bidi) work across all three protocols.
+Caveat: in every protocol a streaming response is always <strong>HTTP
+200 OK</strong> even on error — errors are encoded in trailers /
+end-of-body, never the HTTP status; design clients to read the trailer
+status, not the response code. Bidi streaming needs HTTP/2 end-to-end.
+(<a href="https://connectrpc.com/docs/go/streaming/">https://connectrpc.com/docs/go/streaming/</a>)</li>
+<li>Connect unary calls are also plain <code>POST</code> (and optional
+GET for idempotent side-effect-free methods) — debuggable with
+<code>curl</code>, cacheable. (<a href="https://connectrpc.com/docs/protocol/">https://connectrpc.com/docs/protocol/</a>)</li>
+</ul>
+<p>Codegen with <strong>buf</strong> (modern protoc replacement):</p>
+<ul>
+<li><code>buf.yaml</code> (module config) + <code>buf.gen.yaml</code>
+(plugins). Generate with <code>protoc-gen-go</code> +
+<code>protoc-gen-connect-go</code>. <code>buf lint</code> +
+<code>buf breaking</code> (against a git ref or the BSR) in CI catch
+wire-incompatible schema drift before it ships. (<a href="https://connectrpc.com/docs/go/getting-started/">https://connectrpc.com/docs/go/getting-started/</a>
+; <a href="https://buf.build/blog/connect-a-better-grpc">https://buf.build/blog/connect-a-better-grpc</a>)</li>
+<li>Pair with <strong>protovalidate</strong> (now <code>v1.0</code>,
+production-stable) via the <code>connectrpc/validate-go</code>
+interceptor for declarative request validation in the proto schema
+(<code>buf.validate</code> field constraints) instead of hand-written Go
+checks — validation lives next to the contract. (<a href="https://github.com/connectrpc/validate-go">https://github.com/connectrpc/validate-go</a>
+; <a href="https://github.com/bufbuild/protovalidate-go/releases">https://github.com/bufbuild/protovalidate-go/releases</a>)</li>
+</ul>
+<hr />
+<h2 id="3-sqlc--typed-sql-not-an-orm">3. sqlc — typed SQL (NOT an
+ORM)</h2>
+<p><strong>Latest: <code>sqlc</code> <code>v1.31.1</code>
+(2026-04-22).</strong> (Stable docs line is 1.31.x; v1.27.0 introduced
+managed/local DB support for schema verification.) Sources: <a href="https://github.com/sqlc-dev/sqlc/releases">https://github.com/sqlc-dev/sqlc/releases</a>
+; <a href="https://docs.sqlc.dev/en/stable/">https://docs.sqlc.dev/en/stable/</a></p>
+<p>Best practice (Postgres + pgx):</p>
+<ul>
+<li><code>sqlc.yaml</code> <strong>version <code>&quot;2&quot;</code></strong>,
+<code>engine: postgresql</code>, <code>sql_package: &quot;pgx/v5&quot;</code>,
+separate <code>schema:</code> (DDL / migration dir) and
+<code>queries:</code> dirs. SQL is the source of truth — write
+<code>-- name: GetDevice :one</code> annotated queries, sqlc generates
+typed Go. (<a href="https://docs.sqlc.dev/en/stable/guides/using-go-and-pgx.html">https://docs.sqlc.dev/en/stable/guides/using-go-and-pgx.html</a>)</li>
+<li>With <code>pgx/v5</code> the generated code uses <strong>pgx native
+types</strong> (e.g. <code>pgtype.Timestamptz</code>,
+<code>pgtype.UUID</code>) directly instead of <code>database/sql</code>
+<code>Null*</code> wrappers — cleaner null-handling. Type inference:
+<code>int</code>→<code>int32</code>,
+<code>bigint</code>→<code>int64</code>,
+<code>varchar</code>→<code>string</code>,
+<code>timestamptz</code>→<code>time.Time</code>; nullable columns become
+pointer/<code>pgtype</code> automatically. (<a href="https://docs.sqlc.dev/en/latest/reference/datatypes.html">https://docs.sqlc.dev/en/latest/reference/datatypes.html</a>)</li>
+<li>Use <code>overrides</code> in sqlc.yaml to map custom domains/enums
+to Go types (e.g. a <code>uuid</code> →
+<code>github.com/google/uuid.UUID</code>, or a tenant enum to a typed
+constant). (<a href="https://docs.sqlc.dev/en/latest/howto/overrides.html">https://docs.sqlc.dev/en/latest/howto/overrides.html</a>)</li>
+<li>sqlc generates <code>Querier</code> interfaces → trivial to mock at
+the unit-test layer while integration tests hit a real Postgres
+(§11.4.27 no-fakes-beyond-unit). Run sqlc in CI with the managed-DB
+feature so a schema/query mismatch fails the build, not prod.</li>
+</ul>
+<p>Driver: <strong><code>jackc/pgx/v5</code> <code>v5.10.0</code>
+(2026-06-03)</strong> — use the <code>pgxpool</code> connection pool; it
+is the de-facto Postgres driver and what sqlc&#39;s recommended path
+targets. Source: <a href="https://pkg.go.dev/github.com/jackc/pgx/v5">https://pkg.go.dev/github.com/jackc/pgx/v5</a></p>
+<hr />
+<h2 id="4-postgres-row-level-security--multi-tenant-isolation">4.
+Postgres Row-Level Security — multi-tenant isolation</h2>
+<p>Pattern (the canonical, audited 2025-2026 best practice for
+shared-schema multi-tenancy):</p>
+<ol type="1">
+<li><strong>App connects as a non-owner, non-superuser role WITHOUT
+<code>BYPASSRLS</code>.</strong> If the app role ever owns a table, add
+<code>ALTER TABLE t FORCE ROW LEVEL SECURITY</code> (table owners bypass
+RLS by default). Reserve <code>BYPASSRLS</code> strictly for the
+<strong>migration role</strong>, never admin/app. Give admins an
+explicit admin policy, not <code>BYPASSRLS</code>.</li>
+<li><strong>Per-transaction tenant context via
+<code>SET LOCAL</code></strong> —
+<code>SET LOCAL app.current_tenant = &#39;&lt;id&gt;&#39;</code> at the start of
+every transaction; the policy reads
+<code>current_setting(&#39;app.current_tenant&#39;, true)</code> (the
+<code>true</code> = missing_ok avoids errors when unset).
+<strong><code>SET LOCAL</code> is load-bearing</strong>: plain
+<code>SET</code> persists for the whole pooled connection&#39;s life, so the
+next request on that pooled conn inherits the previous tenant&#39;s context
+— the #1 way teams silently break isolation. Always
+<code>SET LOCAL</code>, always inside an explicit transaction (it
+auto-resets at COMMIT/ROLLBACK).</li>
+<li><strong>Write BOTH <code>USING</code> and
+<code>WITH CHECK</code></strong> explicitly on each policy.
+<code>USING</code> alone covers SELECT/UPDATE-visibility but Postgres
+does NOT auto-apply it as <code>WITH CHECK</code> on INSERT — so a
+tenant could insert rows for a tenant they can&#39;t read. Spell out
+both.</li>
+<li><strong>Index <code>tenant_id</code> as the leading column</strong>
+of every composite index. Without it RLS is ~2 orders of magnitude
+slower; with proper composite indexes, RLS shows no measurable
+degradation vs app-layer filtering even at ~500 concurrent conns. The
+bottleneck is always missing indexes, never the policy evaluation.</li>
+</ol>
+<p>Composition note for a VPN control plane: the tenant here may be the
+<strong>account</strong> (or organization). Bind the RLS
+<code>SET LOCAL</code> to the authenticated account claim from the
+Connect/Gin auth interceptor, inside the same <code>pgx.Tx</code> the
+sqlc queries run in — wire it as a single
+<code>WithTenantTx(ctx, accountID, fn)</code> helper so no code path can
+run a query without first setting the context.</p>
+<p>Sources:</p>
+<ul>
+<li><a href="https://queryplane.com/blog/postgres-row-level-security-in-practice/">https://queryplane.com/blog/postgres-row-level-security-in-practice/</a></li>
+<li><a href="https://ricofritzsche.me/mastering-postgresql-row-level-security-rls-for-rock-solid-multi-tenancy/">https://ricofritzsche.me/mastering-postgresql-row-level-security-rls-for-rock-solid-multi-tenancy/</a></li>
+<li><a href="https://aws.amazon.com/blogs/database/multi-tenant-data-isolation-with-postgresql-row-level-security/">https://aws.amazon.com/blogs/database/multi-tenant-data-isolation-with-postgresql-row-level-security/</a></li>
+<li><a href="https://www.bytebase.com/reference/postgres/how-to/postgres-row-level-security/">https://www.bytebase.com/reference/postgres/how-to/postgres-row-level-security/</a></li>
+</ul>
+<hr />
+<h2 id="5-redis-streams--consumer-groups--xautoclaim-dead-letter">5.
+Redis Streams — consumer groups + XAUTOCLAIM dead-letter</h2>
+<p>Use Redis Streams as the durable work/event bus (device-provisioning
+jobs, relay health fan-out, async account events). Consumer-group + PEL
+pattern:</p>
+<ul>
+<li><strong>Each worker reads with
+<code>XREADGROUP GROUP &lt;grp&gt; &lt;consumer&gt; COUNT n BLOCK &lt;ms&gt; STREAMS &lt;key&gt; &gt;</code></strong>
+and <code>XACK</code>s on success. Unacked messages stay in the
+<strong>Pending Entries List (PEL)</strong> for that consumer.</li>
+<li><strong>Recover dead/slow peers with
+<code>XAUTOCLAIM &lt;key&gt; &lt;grp&gt; &lt;consumer&gt; &lt;min-idle-time&gt; &lt;start&gt;</code></strong>
+— atomically scans for PEL entries idle ≥ <code>min-idle-time</code>
+(commonly ~60 000 ms) and transfers ownership to the calling healthy
+consumer. Preferred over manual
+<code>XPENDING</code>+<code>XCLAIM</code> loops (single command,
+cursor-paged). Production loop: <strong>first <code>XAUTOCLAIM</code>
+stalled work, then <code>XREADGROUP &gt;</code> for new
+work.</strong></li>
+<li><strong>Dead-letter the poison messages.</strong>
+<code>XAUTOCLAIM</code>/<code>XPENDING</code> expose the per-message
+<strong>delivery count</strong>; when it exceeds a retry cap (e.g. 5),
+<code>XADD</code> the payload to a separate <code>&lt;key&gt;:dlq</code>
+stream + <code>XACK</code> it off the main PEL so it stops being
+redelivered. The DLQ stream is then inspectable/replayable. Track
+<code>delivery_count</code> + first-seen ts in the DLQ entry for
+forensics.</li>
+<li><strong>Redis 8.4+ shortcut:</strong>
+<code>XREADGROUP ... CLAIM &lt;min-idle-time&gt;</code> folds the
+reclaim step into the read (single-shot reliable consumers), so you can
+do retry-caps / poison-routing / stuck-detection without the separate
+<code>XAUTOCLAIM</code> call. Use it if you can pin Redis ≥ 8.4;
+otherwise the <code>XAUTOCLAIM</code>-then-<code>XREADGROUP</code>
+two-step is the portable form.</li>
+<li>Periodically trim with <code>XADD ... MAXLEN ~ N</code> or
+<code>XTRIM MINID</code> so the stream doesn&#39;t grow unbounded; the DLQ
+retention should outlive the main stream for audit.</li>
+</ul>
+<p>Sources:</p>
+<ul>
+<li><a href="https://redis.io/tutorials/redis-backed-job-queue-for-background-workers/">https://redis.io/tutorials/redis-backed-job-queue-for-background-workers/</a></li>
+<li><a href="https://redis.io/docs/latest/commands/xclaim/">https://redis.io/docs/latest/commands/xclaim/</a></li>
+<li><a href="https://oneuptime.com/blog/post/2026-01-21-redis-dead-letter-queue/view">https://oneuptime.com/blog/post/2026-01-21-redis-dead-letter-queue/view</a></li>
+<li><a href="https://oneuptime.com/blog/post/2026-03-31-redis-handle-consumer-failures-streams/view">https://oneuptime.com/blog/post/2026-03-31-redis-handle-consumer-failures-streams/view</a></li>
+<li><a href="https://redis.io/blog/single-shot-reliable-consumers-with-xreadgroup-claim-in-redis-84/">https://redis.io/blog/single-shot-reliable-consumers-with-xreadgroup-claim-in-redis-84/</a>
+(Redis 8.4 CLAIM)</li>
+</ul>
+<p>Go client: use <code>redis/go-redis/v9</code> (has
+<code>XAutoClaim</code>, <code>XReadGroup</code>, <code>XAck</code>,
+<code>XAdd</code> with MAXLEN). (<a href="https://redis.io/docs/latest/develop/use-cases/streaming/">https://redis.io/docs/latest/develop/use-cases/streaming/</a>)</p>
+<hr />
+<h2 id="6-migrations--goose-vs-atlas">6. Migrations — goose vs
+Atlas</h2>
+<p><strong>goose — <code>v3.27.1</code> (2026-04-24).</strong>
+Lightweight, no DSL: numbered SQL files (<code>-- +goose Up</code> /
+<code>Down</code>) OR Go migration funcs. Tracks state only via a
+version table; <strong>no drift detection, no auto-planning</strong> —
+you hand-write every up/down. Best when the team wants explicit,
+minimal, reviewable SQL with zero abstraction. Sources: <a href="https://github.com/pressly/goose/releases">https://github.com/pressly/goose/releases</a>
+; <a href="https://volomn.com/blog/database-migration-using-atlas-and-goose">https://volomn.com/blog/database-migration-using-atlas-and-goose</a></p>
+<p><strong>Atlas.</strong> Declarative, Terraform-like: you describe the
+<strong>desired schema</strong> (HCL/SQL), Atlas builds a graph of DB
+entities, <strong>auto-plans</strong> the migration SQL to reach it, and
+versions it. Runs migrations in a transaction with an advisory lock (one
+migration at a time, order/integrity enforced) and <strong>detects
+drift</strong> between declared schema and live DB. Best when you want
+declarative schema management + strong CI/CD + drift safety. Sources: <a href="https://atlasgo.io/blog/2022/12/01/picking-database-migration-tool">https://atlasgo.io/blog/2022/12/01/picking-database-migration-tool</a>
+; <a href="https://codelit.io/blog/database-migration-tools-comparison">https://codelit.io/blog/database-migration-tools-comparison</a></p>
+<p><strong>Recommendation for this stack:</strong> the schema is also
+sqlc&#39;s <code>schema:</code> source of truth, and RLS policies (§4) are
+first-class DDL that MUST be reviewed line-by-line — <strong>goose&#39;s
+explicit hand-written SQL is the safer default here</strong> (you want
+to read the exact <code>CREATE POLICY ... USING ... WITH CHECK</code>
+and <code>FORCE ROW LEVEL SECURITY</code> in the diff, not have a
+planner emit it). Atlas is the upgrade path if/when declarative drift
+detection across many tables becomes worth the planner abstraction;
+Atlas can <strong>import an existing goose project</strong> (<a href="https://atlasgo.io/guides/migration-tools/goose-import">https://atlasgo.io/guides/migration-tools/goose-import</a>),
+so starting on goose does not lock you out of Atlas later. Either way:
+migration role runs with <code>BYPASSRLS</code>; app role never does
+(§4).</p>
+<hr />
+<h2 id="7-integration--composition-notes">7. Integration / composition
+notes</h2>
+<ul>
+<li><strong>Single server, two surfaces:</strong> mount Gin (REST edge)
++ Connect handlers (typed RPC + server-streaming) on one
+<code>http.Server</code> (HTTP/2 h2c or TLS-ALPN so gRPC
+<ul>
+<li>bidi streaming work). Auth interceptor (Connect) / middleware (Gin)
+resolves the account → sets the RLS <code>SET LOCAL</code> tenant inside
+the <code>pgx.Tx</code>.</li>
+</ul></li>
+<li><strong>Data path:</strong> Connect/Gin → <code>WithTenantTx</code>
+(sets <code>app.current_tenant</code>) → sqlc <code>Querier</code> over
+<code>pgxpool</code> → RLS-enforced Postgres. No query escapes the
+tenant context.</li>
+<li><strong>Async path:</strong> control-plane writes a job/event →
+Redis Stream → worker pool
+(<code>XREADGROUP</code>+<code>XAUTOCLAIM</code>+DLQ) → effects (relay
+config push, email, etc.).</li>
+<li><strong>Schema lifecycle:</strong> goose migrations are the one DDL
+source; sqlc reads the same <code>schema/</code> dir so generated Go
+always matches the migrated DB; CI runs goose-up against an ephemeral
+Postgres + sqlc verify so schema/query/code drift fails the build.</li>
+</ul>
+<hr />
+<h2 id="sources-verified">Sources verified</h2>
+<ul>
+<li><a href="https://github.com/gin-gonic/gin/releases">https://github.com/gin-gonic/gin/releases</a>
+— accessed 2026-06-25 (Gin v1.12.0 / v1.11.0)</li>
+<li><a href="https://gin-gonic.com/">https://gin-gonic.com/</a> —
+accessed 2026-06-25</li>
+<li><a href="https://github.com/connectrpc/connect-go/releases">https://github.com/connectrpc/connect-go/releases</a>
+— accessed 2026-06-25 (connect-go v1.20.0 / v1.19.0)</li>
+<li><a href="https://pkg.go.dev/connectrpc.com/connect">https://pkg.go.dev/connectrpc.com/connect</a>
+— accessed 2026-06-25</li>
+<li><a href="https://connectrpc.com/docs/go/grpc-compatibility/">https://connectrpc.com/docs/go/grpc-compatibility/</a>
+— accessed 2026-06-25</li>
+<li><a href="https://connectrpc.com/docs/go/streaming/">https://connectrpc.com/docs/go/streaming/</a>
+— accessed 2026-06-25</li>
+<li><a href="https://connectrpc.com/docs/go/getting-started/">https://connectrpc.com/docs/go/getting-started/</a>
+— accessed 2026-06-25</li>
+<li><a href="https://connectrpc.com/docs/protocol/">https://connectrpc.com/docs/protocol/</a>
+— accessed 2026-06-25</li>
+<li><a href="https://buf.build/blog/connect-a-better-grpc">https://buf.build/blog/connect-a-better-grpc</a>
+— accessed 2026-06-25</li>
+<li><a href="https://github.com/connectrpc/validate-go">https://github.com/connectrpc/validate-go</a>
+— accessed 2026-06-25</li>
+<li><a href="https://github.com/bufbuild/protovalidate-go/releases">https://github.com/bufbuild/protovalidate-go/releases</a>
+— accessed 2026-06-25</li>
+<li><a href="https://github.com/sqlc-dev/sqlc/releases">https://github.com/sqlc-dev/sqlc/releases</a>
+— accessed 2026-06-25 (sqlc v1.31.1)</li>
+<li><a href="https://docs.sqlc.dev/en/stable/guides/using-go-and-pgx.html">https://docs.sqlc.dev/en/stable/guides/using-go-and-pgx.html</a>
+— accessed 2026-06-25</li>
+<li><a href="https://docs.sqlc.dev/en/latest/reference/datatypes.html">https://docs.sqlc.dev/en/latest/reference/datatypes.html</a>
+— accessed 2026-06-25</li>
+<li><a href="https://docs.sqlc.dev/en/latest/howto/overrides.html">https://docs.sqlc.dev/en/latest/howto/overrides.html</a>
+— accessed 2026-06-25</li>
+<li><a href="https://pkg.go.dev/github.com/jackc/pgx/v5">https://pkg.go.dev/github.com/jackc/pgx/v5</a>
+— accessed 2026-06-25 (pgx v5.10.0)</li>
+<li><a href="https://queryplane.com/blog/postgres-row-level-security-in-practice/">https://queryplane.com/blog/postgres-row-level-security-in-practice/</a>
+— accessed 2026-06-25</li>
+<li><a href="https://ricofritzsche.me/mastering-postgresql-row-level-security-rls-for-rock-solid-multi-tenancy/">https://ricofritzsche.me/mastering-postgresql-row-level-security-rls-for-rock-solid-multi-tenancy/</a>
+— accessed 2026-06-25</li>
+<li><a href="https://aws.amazon.com/blogs/database/multi-tenant-data-isolation-with-postgresql-row-level-security/">https://aws.amazon.com/blogs/database/multi-tenant-data-isolation-with-postgresql-row-level-security/</a>
+— accessed 2026-06-25</li>
+<li><a href="https://www.bytebase.com/reference/postgres/how-to/postgres-row-level-security/">https://www.bytebase.com/reference/postgres/how-to/postgres-row-level-security/</a>
+— accessed 2026-06-25</li>
+<li><a href="https://redis.io/tutorials/redis-backed-job-queue-for-background-workers/">https://redis.io/tutorials/redis-backed-job-queue-for-background-workers/</a>
+— accessed 2026-06-25</li>
+<li><a href="https://redis.io/docs/latest/commands/xclaim/">https://redis.io/docs/latest/commands/xclaim/</a>
+— accessed 2026-06-25</li>
+<li><a href="https://oneuptime.com/blog/post/2026-01-21-redis-dead-letter-queue/view">https://oneuptime.com/blog/post/2026-01-21-redis-dead-letter-queue/view</a>
+— accessed 2026-06-25</li>
+<li><a href="https://oneuptime.com/blog/post/2026-03-31-redis-handle-consumer-failures-streams/view">https://oneuptime.com/blog/post/2026-03-31-redis-handle-consumer-failures-streams/view</a>
+— accessed 2026-06-25</li>
+<li><a href="https://redis.io/blog/single-shot-reliable-consumers-with-xreadgroup-claim-in-redis-84/">https://redis.io/blog/single-shot-reliable-consumers-with-xreadgroup-claim-in-redis-84/</a>
+— accessed 2026-06-25</li>
+<li><a href="https://redis.io/docs/latest/develop/use-cases/streaming/">https://redis.io/docs/latest/develop/use-cases/streaming/</a>
+— accessed 2026-06-25</li>
+<li><a href="https://github.com/pressly/goose/releases">https://github.com/pressly/goose/releases</a>
+— accessed 2026-06-25 (goose v3.27.1)</li>
+<li><a href="https://volomn.com/blog/database-migration-using-atlas-and-goose">https://volomn.com/blog/database-migration-using-atlas-and-goose</a>
+— accessed 2026-06-25</li>
+<li><a href="https://atlasgo.io/blog/2022/12/01/picking-database-migration-tool">https://atlasgo.io/blog/2022/12/01/picking-database-migration-tool</a>
+— accessed 2026-06-25</li>
+<li><a href="https://codelit.io/blog/database-migration-tools-comparison">https://codelit.io/blog/database-migration-tools-comparison</a>
+— accessed 2026-06-25</li>
+<li><a href="https://atlasgo.io/guides/migration-tools/goose-import">https://atlasgo.io/guides/migration-tools/goose-import</a>
+— accessed 2026-06-25</li>
+</ul>
+</body>
+</html>

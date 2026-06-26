@@ -1,0 +1,1524 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Visual-regression &amp; design-system QA — the gate wall every UI change crosses</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Visual-regression &amp; design-system QA — the gate
+wall every UI change crosses</h1>
+</header>
+<h1 id="visual-regression--design-system-qa--the-gate-wall-every-ui-change-crosses">Visual-regression
+&amp; design-system QA — the gate wall every UI change crosses</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-06-25T12:00:00Z</p>
+<blockquote>
+<p>Master technical specification — Volume 10 (Design System),
+nano-detail deep-dive. This document <strong>owns</strong> the
+<strong>quality-assurance machinery</strong> that makes the design
+system&#39;s promises mechanical rather than aspirational: the
+<strong>golden-screenshot visual-regression suite</strong> (every
+component × state × theme(light/dark) × form-factor); the
+<strong>no-overlap / no-label-overlay</strong> automated occlusion check
+(§11.4.162); the <strong>token-drift gate</strong> (generated output ==
+a fresh regenerate, §11.4.108-class, with a paired §1.1 mutation); the
+<strong>accessibility automated battery</strong> (contrast computed from
+tokens with golden-good/golden-bad self-validation per §11.4.107(10),
+focus order, ≥44 px hit target, screen-reader-label presence,
+reduce-motion no-flash); the <strong>§11.4.168 exported-design-doc
+visual validation</strong> (render the design docs&#39; diagrams, confirm no
+raw Mermaid/markup leaks); the <strong>local CI-equivalent gate
+wiring</strong> (§11.4.156 — local only, no remote CI); the
+<strong>coverage matrix</strong>; and the <strong>change-flow</strong>
+that takes a design edit through every gate before merge.</p>
+<p><strong>SPEC-ONLY.</strong> It describes <em>the QA contract</em> —
+the suites, the analyzers, the gates, the captured-evidence forms — not
+the shipping <code>helix_design</code>/<code>helix_ui</code> test code.
+Concrete component <strong>slots/states</strong> are owned by
+[<code>component-library.md</code>]; colour <strong>hexes + computed
+contrast ratios</strong> by [<code>color-system.md</code>]; the
+<strong>token model</strong> by [<code>design-tokens.md</code>]; the
+<strong>emit pipeline + the source-side drift gate</strong> by
+[<code>token-export-pipeline.md</code>]; the <strong>screen
+inventory</strong> by
+[<code>screens-client.md</code>]/[<code>screens-console.md</code>]/
+[<code>screens-connector.md</code>]. This document is <strong>original
+HelixVPN design work</strong> (the QA architecture is owned here,
+layered on the well-established golden-test / visual-regression pattern,
+cited in Sources).</p>
+<p><strong>Boundary with sibling docs.</strong> Owns: the
+visual-regression suite design, the occlusion analyzer, the a11y
+battery, the §11.4.168 doc-validation, the local gate wiring, the
+coverage matrix, the change-flow, <strong>and every <code>CM-*</code> /
+<code>DS-*</code> gate named here</strong> (the sibling docs reference
+these gates by id — <code>CM-component-inventory</code>,
+<code>CM-hit-target-44</code>, the per-theme golden suite,
+<code>DS-I5</code> — and this document is their canonical definition).
+Consumes: the component catalog + state sets
+[<code>component-library.md</code> §0–§11]; the contrast ratios + the
+no-overlay colour rule [<code>color-system.md</code> §4, §5]; the token
+<code>$value</code>/<code>$type</code> + naming
+[<code>design-tokens.md</code> §2, §3]; the source-side
+<code>DS-DRIFT</code> byte gate this document&#39;s
+<code>DS-TOKEN-DRIFT</code> triggers visual-regression off
+[<code>token-export-pipeline.md</code> §5].</p>
+<p><strong>Evidence base.</strong> <code>[CL §N]</code> =
+<code>final/v10-design/component-library.md</code>;
+<code>[COLOR §N]</code> = <code>final/v10-design/color-system.md</code>;
+<code>[DT §N]</code> = <code>final/v10-design/design-tokens.md</code>;
+<code>[EXP §N]</code> =
+<code>final/v10-design/token-export-pipeline.md</code>;
+<code>[SCR-C §N]</code> =
+<code>final/v10-design/screens-client.md</code>; <code>[SPINE §N]</code>
+= <code>final/SPECIFICATION.md</code>. Every contrast number reproduced
+here is reproduced <strong>from</strong> [COLOR §4]&#39;s computed proofs
+(not re-guessed, §11.4.6). Claims not grounded in the evidence base or
+in this document&#39;s own original QA design are tagged
+<code>UNVERIFIED</code> per constitution §11.4.6 — never fabricated. The
+<strong>exact</strong> snapshot-tool API shapes and CI-determinism flags
+are pinned by the suite&#39;s own first run and tagged
+<code>UNVERIFIED</code> until that run exists.</p>
+</blockquote>
+<hr />
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#0-the-qa-pipeline-at-a-glance--the-gate-ledger">0. The QA
+pipeline at a glance + the gate ledger</a></li>
+<li><a href="#1-the-golden-screenshot-visual-regression-suite">1. The
+golden-screenshot visual-regression suite</a>
+<ul>
+<li><a href="#11-the-snapshot-matrix">1.1 The snapshot matrix</a></li>
+<li><a href="#12-tooling-per-platform-decision">1.2 Tooling per platform
+(decision)</a></li>
+<li><a href="#13-perceptual-vs-pixel-diff--tolerance">1.3 Perceptual vs
+pixel diff + tolerance</a></li>
+<li><a href="#14-render-determinism-fonts-anti-aliasing-time">1.4 Render
+determinism (fonts, anti-aliasing, time)</a></li>
+<li><a href="#15-a-concrete-golden-test">1.5 A concrete golden
+test</a></li>
+<li><a href="#16-coverage-completeness-gate">1.6 Coverage completeness
+gate</a></li>
+</ul></li>
+<li><a href="#2-the-no-overlap--no-label-overlay-check-1114162">2. The
+no-overlap / no-label-overlay check (§11.4.162)</a></li>
+<li><a href="#3-the-token-drift-gate-visual-side">3. The token-drift
+gate (visual side)</a></li>
+<li><a href="#4-the-accessibility-automated-battery">4. The
+accessibility automated battery</a>
+<ul>
+<li><a href="#41-contrast-from-tokens-self-validated">4.1 Contrast from
+tokens (self-validated)</a></li>
+<li><a href="#42-focus-order">4.2 Focus order</a></li>
+<li><a href="#43-hit-target-44-px">4.3 Hit-target ≥44 px</a></li>
+<li><a href="#44-screen-reader-label-presence">4.4 Screen-reader label
+presence</a></li>
+<li><a href="#45-reduce-motion-no-flash">4.5 Reduce-motion
+no-flash</a></li>
+</ul></li>
+<li><a href="#5-self-validated-analyzers-1114107-10">5. Self-validated
+analyzers (§11.4.107(10))</a></li>
+<li><a href="#6-11468-exported-design-doc-visual-validation">6.
+§11.4.168 exported-design-doc visual validation</a></li>
+<li><a href="#7-the-local-ci-equivalent-gate-wiring-1114156">7. The
+local CI-equivalent gate wiring (§11.4.156)</a></li>
+<li><a href="#8-the-coverage-matrix">8. The coverage matrix</a></li>
+<li><a href="#9-how-a-design-change-flows-through-the-gates">9. How a
+design change flows through the gates</a></li>
+<li><a href="#10-the-full-qa-pipeline-diagram">10. The full QA pipeline
+diagram</a></li>
+<li><a href="#11-surfaced-decisions--cross-doc-contracts">11. Surfaced
+decisions &amp; cross-doc contracts</a></li>
+<li><a href="#sources-verified">Sources verified</a></li>
+</ul>
+<hr />
+<h2 id="0-the-qa-pipeline-at-a-glance--the-gate-ledger">0. The QA
+pipeline at a glance + the gate ledger</h2>
+<p>The design system makes hard promises — <em>every component ships
+light + dark</em> ([CL §1.4]); <em>elements never overlap or overlay
+labels</em> (§11.4.162, [CL §1.5]); <em>every coloured surface clears
+its WCAG floor</em> ([COLOR §4]); <em>no platform token drifts from
+source</em> ([EXP §5]). This document is the <strong>wall of automated
+gates</strong> that turns each promise into a build failure when
+violated. A promise with no gate is a §11.4 PASS-bluff at the
+design-system layer; this document closes that gap.</p>
+<p>The closed gate ledger (every gate has a paired §1.1 mutation in its
+section):</p>
+<table>
+<thead>
+<tr>
+<th>Gate id</th>
+<th>Asserts</th>
+<th>Captured evidence (§11.4.69)</th>
+<th>§1.1 mutation that MUST FAIL it</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>DS-GOLDEN-MATCH</code></td>
+<td>each rendered component/screen matches its committed golden within
+tolerance</td>
+<td><code>qa/golden/&lt;key&gt;.png</code> +
+<code>qa/diff/&lt;key&gt;.png</code></td>
+<td>shift one token hex in the rendered widget → diff exceeds tolerance
+→ FAIL</td>
+</tr>
+<tr>
+<td><code>CM-component-inventory</code></td>
+<td>every <code>comp.*</code> root in [CL §0] has a catalog row
+<strong>and</strong> a golden set</td>
+<td><code>qa/coverage/inventory.json</code></td>
+<td>add a <code>comp.*</code> token with no [CL §0] row → FAIL</td>
+</tr>
+<tr>
+<td><code>DS-GOLDEN-COVERAGE</code></td>
+<td>every (component × load-bearing state × theme × form-factor) cell
+has a golden</td>
+<td><code>qa/coverage/golden_matrix.json</code></td>
+<td>delete the <code>dark</code>/<code>tv</code> golden of one component
+→ cell empty → FAIL</td>
+</tr>
+<tr>
+<td><code>CM-NO-LABEL-OVERLAY</code></td>
+<td>no text bounding-box intersects a sibling; no label sits under a
+translucent wash (§11.4.162, [CL §1.5])</td>
+<td><code>qa/occlusion/&lt;key&gt;.json</code></td>
+<td>overlap two labels in a fixture → intersection found → FAIL</td>
+</tr>
+<tr>
+<td><code>CM-hit-target-44</code></td>
+<td>every interactive target&#39;s hit box ≥ 44 × 44 px ([CL §1.3])</td>
+<td><code>qa/a11y/hit_targets.json</code></td>
+<td>shrink a control&#39;s tap box to 40 px → FAIL</td>
+</tr>
+<tr>
+<td><code>DS-TOKEN-DRIFT</code></td>
+<td>a token change re-runs visual-regression (DS-I5, consumes [EXP §5]
+<code>DS-DRIFT</code>)</td>
+<td><code>qa/drift/visual_rerun.json</code></td>
+<td>bump a token but skip the golden re-bless → goldens diverge →
+FAIL</td>
+</tr>
+<tr>
+<td><code>DS-A11Y-CONTRAST</code></td>
+<td>every text/non-text pair computed from tokens clears its WCAG floor
+([COLOR §4])</td>
+<td><code>qa/a11y/contrast_report.json</code></td>
+<td>drop a text token to a sub-4.5 value → FAIL</td>
+</tr>
+<tr>
+<td><code>DS-A11Y-FOCUS-ORDER</code></td>
+<td>tab order follows reading order; modals trap; <code>Esc</code>
+closes ([CL §1.3])</td>
+<td><code>qa/a11y/focus_order/&lt;screen&gt;.json</code></td>
+<td>reorder a field&#39;s <code>tabindex</code> out of reading order →
+FAIL</td>
+</tr>
+<tr>
+<td><code>DS-A11Y-LABEL-PRESENT</code></td>
+<td>every interactive element has a non-empty accessible name ([CL
+§1.3])</td>
+<td><code>qa/a11y/semantics_tree/&lt;key&gt;.json</code></td>
+<td>strip a <code>semanticLabel</code> from an icon-only button →
+FAIL</td>
+</tr>
+<tr>
+<td><code>DS-A11Y-NO-FLASH</code></td>
+<td>looping animation degrades to static under reduce-motion; nothing
+strobes (§11.4.107)</td>
+<td><code>qa/a11y/motion/&lt;key&gt;.json</code> + frame hashes</td>
+<td>leave the connect pulse running under reduce-motion → FAIL</td>
+</tr>
+<tr>
+<td><code>DS-ANALYZER-SELF-VALIDATED</code></td>
+<td>every analyzer PASSes its golden-good fixture and FAILs its
+golden-bad (§11.4.107(10))</td>
+<td><code>qa/selfcheck/&lt;analyzer&gt;.json</code></td>
+<td>make an analyzer accept its golden-bad fixture → self-check
+FAIL</td>
+</tr>
+<tr>
+<td><code>CM-EXPORTED-DOC-VISUALLY-VALIDATED</code></td>
+<td>rendered design-doc <code>.pdf</code>/<code>.html</code> carry
+content, no raw Mermaid as body text, diagrams rasterised
+(§11.4.168)</td>
+<td><code>qa/docs/&lt;doc&gt;.validation.json</code></td>
+<td>ship a doc PDF with raw <code>flowchart TD …</code> as text →
+FAIL</td>
+</tr>
+<tr>
+<td><code>CM-LOCAL-GATE-WIRED</code></td>
+<td>the whole battery runs at the local pre-commit/pre-build seam,
+<strong>no remote CI</strong> (§11.4.156)</td>
+<td><code>qa/wiring/local_gate.json</code></td>
+<td>add a <code>.github/workflows/*.yml</code> that runs these →
+FAIL</td>
+</tr>
+</tbody>
+</table>
+<pre class="mermaid"><code>flowchart LR
+    edit[&quot;design change&lt;br/&gt;(token / component / screen / doc)&quot;]
+    edit --&gt; render[&quot;render fixtures (light + dark, 4 form-factors)&quot;]
+    render --&gt; g1[&quot;DS-GOLDEN-MATCH + DS-GOLDEN-COVERAGE&quot;]
+    render --&gt; g2[&quot;CM-NO-LABEL-OVERLAY + CM-hit-target-44&quot;]
+    render --&gt; g3[&quot;DS-A11Y-* battery (contrast/focus/label/motion)&quot;]
+    edit --&gt; g4[&quot;DS-TOKEN-DRIFT (consumes EXP §5 DS-DRIFT)&quot;]
+    edit --&gt; g5[&quot;CM-EXPORTED-DOC-VISUALLY-VALIDATED (§11.4.168)&quot;]
+    g1 &amp; g2 &amp; g3 &amp; g4 &amp; g5 --&gt; self[&quot;DS-ANALYZER-SELF-VALIDATED (§11.4.107(10))&quot;]
+    self --&gt; wire[&quot;CM-LOCAL-GATE-WIRED (§11.4.156 local only)&quot;]
+    wire --&gt; gate{all GO?}
+    gate --&gt;|no| iterate[&quot;fix → re-render → re-validate (§11.4.134 iterate-to-GO)&quot;]
+    gate --&gt;|yes| merge[&quot;merge&quot;]</code></pre>
+<hr />
+<h2 id="1-the-golden-screenshot-visual-regression-suite">1. The
+golden-screenshot visual-regression suite</h2>
+<h3 id="11-the-snapshot-matrix">1.1 The snapshot matrix</h3>
+<p>The suite renders every catalog component ([CL §0]) and every named
+screen ([SCR-C §1]) as a deterministic image and byte/perceptually
+compares it against a committed <strong>golden</strong>. The matrix
+axes:</p>
+<table>
+<thead>
+<tr>
+<th>Axis</th>
+<th>Values</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Component / screen</strong></td>
+<td>every <code>comp.*</code> root [CL §0] + every screen [SCR-C
+§1]</td>
+<td>the catalog is the source-of-truth</td>
+</tr>
+<tr>
+<td><strong>State</strong></td>
+<td>each component&#39;s load-bearing states [CL §2–§11] (e.g.
+ConnectButton&#39;s 7 <code>ffi::TunnelStatus</code> × {default, hover,
+pressed, focus, disabled})</td>
+<td>per-component state set</td>
+</tr>
+<tr>
+<td><strong>Theme</strong></td>
+<td><code>light</code> <strong>and</strong> <code>dark</code> —
+<strong>both mandatory</strong> ([CL §1.4])</td>
+<td>a one-theme golden FAILs <code>DS-GOLDEN-COVERAGE</code></td>
+</tr>
+<tr>
+<td><strong>Form-factor</strong></td>
+<td><code>phone</code> (360 dp) · <code>tablet</code> (768 dp) ·
+<code>desktop</code> (1280 dp) · <code>tv</code> (1920 dp leanback)</td>
+<td>[SCR-C §3] <code>AdaptiveScaffold</code> breakpoints</td>
+</tr>
+</tbody>
+</table>
+<p>The golden <strong>key</strong> is deterministic:
+<code>&lt;component&gt;__&lt;state&gt;__&lt;theme&gt;__&lt;formfactor&gt;</code>
+(e.g. <code>connectButton__connected_direct__dark__phone</code>). The
+committed golden lives at <code>qa/golden/&lt;key&gt;.png</code>; a
+fresh render writes <code>qa/render/&lt;key&gt;.png</code>; the diff
+(when non-empty) writes <code>qa/diff/&lt;key&gt;.png</code> — the three
+files are the captured evidence (§11.4.69) for
+<code>DS-GOLDEN-MATCH</code>.</p>
+<blockquote>
+<p><strong>Combinatorial honesty (§11.4.6).</strong> The full
+cross-product is large (≈30 components × ~6 states × 2 themes × 4
+form-factors). The suite does <strong>not</strong> render every cell for
+every component — it renders the <strong>load-bearing</strong> state set
+per component (the states each [CL] section marks load-bearing) and the
+<strong>full</strong> theme × form-factor cross for each of those.
+<code>DS-GOLDEN-COVERAGE</code> (§1.6) asserts the declared cells exist;
+it does <strong>not</strong> claim the cross-product is exhaustive (that
+would be a coverage bluff). Un-rendered states are listed as honest gaps
+in the §8 matrix, never silently implied covered.</p>
+</blockquote>
+<h3 id="12-tooling-per-platform-decision">1.2 Tooling per platform
+(decision)</h3>
+<p>The three apps span Flutter (Client/Console/Connector UI), web
+(Console), and the small native shims ([EXP §4.3/§4.4]). The suite uses
+each platform&#39;s idiomatic deterministic snapshot harness:</p>
+<blockquote>
+<p><strong>D-QA-1 (open, §11) — snapshot harnesses.</strong> Surfaced,
+not silently chosen (§11.4.6):</p>
+<table>
+<thead>
+<tr>
+<th>Surface</th>
+<th>Lean</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Flutter (the bulk — every <code>comp.*</code>)</td>
+<td><strong><code>alchemist</code></strong> golden tests</td>
+<td>CI-deterministic by design (disables real font loading / shadows
+that flake <code>flutter test --update-goldens</code>); renders a widget
+under a fixed <code>MediaQuery</code> (size +
+<code>devicePixelRatio</code> + <code>platformBrightness</code>) so
+theme × form-factor is a parameter, not a device</td>
+</tr>
+<tr>
+<td>Web (Console chrome)</td>
+<td><strong>Playwright</strong> <code>toHaveScreenshot</code></td>
+<td>renders the real <code>helix.css</code> ([EXP §4.1]) in a headless
+Chromium at fixed viewport; <code>prefers-color-scheme</code> toggled
+for dark</td>
+</tr>
+<tr>
+<td>iOS/Android native shim</td>
+<td>reference snapshot (XCUITest / Espresso-screenshot)</td>
+<td>the shim surface is tiny ([EXP §4.3]); <code>UNVERIFIED</code> until
+the shim test target exists</td>
+</tr>
+</tbody>
+</table>
+<p>Lean: <strong><code>alchemist</code> for Flutter + Playwright for
+web</strong>; native shim snapshot <code>UNVERIFIED</code> (its surface
+is a single status row). The harness is a <strong>build-time dev
+dependency</strong> ([EXP §2.2]), never a runtime app dependency. Pinned
++ ratified at the Volume-10 review per §11.4.99; the <em>gate
+contract</em> (a golden exists, matches within tolerance, both themes,
+four form-factors) holds regardless of which harness fills the role.</p>
+</blockquote>
+<h3 id="13-perceptual-vs-pixel-diff--tolerance">1.3 Perceptual vs pixel
+diff + tolerance</h3>
+<p>Pure pixel-equality is too brittle for cross-host rendering
+(sub-pixel anti-aliasing, GPU vs software raster differ by ±1 LSB on
+edges). The suite uses a <strong>two-stage</strong> comparator:</p>
+<ol type="1">
+<li><strong>Fast pixel pre-filter</strong> — if the fresh render is
+byte-identical to the golden, PASS immediately (zero-cost, the common
+case on the same host).</li>
+<li><strong>Perceptual diff on mismatch</strong> — when bytes differ,
+run a perceptual comparator (an SSIM-/<code>pixelmatch</code>-class
+anti-aliased-aware diff) and PASS only if the <strong>fraction of
+perceptually-different pixels</strong> is below a calibrated tolerance
+<code>τ</code>.</li>
+</ol>
+<p><code>τ</code> is <strong>calibrated on the project&#39;s own goldens,
+not hardcoded from literature</strong> (§11.4.6 / §11.4.107(13)): the
+suite renders the same fixture twice on the reference host, measures the
+floor noise, and sets <code>τ</code> a margin above it. Default band:
+<code>τ ≈ 0.1 %</code> of pixels for component goldens, looser only
+where a documented font-hinting difference forces it (cited per golden,
+never blanket). A diff <strong>above</strong> <code>τ</code> writes
+<code>qa/diff/&lt;key&gt;.png</code> (the heat-map of changed pixels)
+and FAILs <code>DS-GOLDEN-MATCH</code> — that PNG is the captured
+evidence an operator inspects.</p>
+<blockquote>
+<p><strong>Why perceptual, not &quot;looks the same to me&quot;
+(§11.4.6).</strong> &quot;The reviewer eyeballed it&quot; is not a gate. The
+perceptual fraction vs a calibrated <code>τ</code> is a reproducible
+number; the diff heat-map is the captured artefact. A golden re-bless
+(<code>--update-goldens</code>) is a <strong>reviewed,
+intentional</strong> act recorded in the change&#39;s §11.4.142 review —
+never an automatic &quot;accept whatever rendered&quot;.</p>
+</blockquote>
+<h3 id="14-render-determinism-fonts-anti-aliasing-time">1.4 Render
+determinism (fonts, anti-aliasing, time)</h3>
+<p>A flaky golden is a §11.4.1 FAIL-bluff (the gate fails for a
+non-product reason). The suite pins every non-determinism source:</p>
+<ul>
+<li><strong>Fonts</strong> — the Inter/JetBrains-Mono families are
+loaded from the <strong>bundled</strong> font files into the test
+font-manager (never the host&#39;s system font), so the glyph raster is
+identical on every host. <code>alchemist</code>&#39;s font-loading shim does
+this for Flutter; Playwright pins a bundled font +
+<code>--font-render-hinting=none</code>.</li>
+<li><strong>Anti-aliasing / shadows</strong> — elevation shadows ([DT
+§6.3]) are a known flake source; the test theme renders shadows
+deterministically (fixed blur, no platform shadow) so the
+<code>dark</code>-theme elevation does not jitter the diff.</li>
+<li><strong>Time / animation</strong> — animated components ([CL §1.2]
+<code>motion.*</code>) are pumped to a <strong>fixed frame</strong>
+(<code>connectPulse</code> captured at t=0 and t=600 ms, the two golden
+frames, [DT §6.4]); the suite never snapshots a free-running
+animation.</li>
+<li><strong><code>devicePixelRatio</code></strong> — fixed per
+form-factor (phone 3.0, tablet 2.0, desktop 1.0, tv 1.0) so the golden
+is resolution-stable.</li>
+</ul>
+<h3 id="15-a-concrete-golden-test">1.5 A concrete golden test</h3>
+<p>A real <code>alchemist</code> golden test for the ConnectButton&#39;s
+<code>Connected{direct}</code> state in <strong>both</strong> themes at
+the phone form-factor (the hero control, [CL §2]). No placeholders, no
+TODO (§11.4.6):</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode dart"><code class="sourceCode dart"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// qa/golden/connect_button_golden_test.dart</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="st">&#39;package:alchemist/alchemist.dart&#39;</span>;</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="st">&#39;package:flutter/material.dart&#39;</span>;</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="st">&#39;package:flutter_test/flutter_test.dart&#39;</span>;</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="st">&#39;package:helix_design/helix_design.dart&#39;</span>; <span class="co">// HelixTokens, ConnectButton</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> main() <span class="op">{</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="co">// one row per (state) × column per (theme); form-factor fixed per file</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  goldenTest(</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;ConnectButton — all states, light + dark (phone 360dp)&#39;</span><span class="op">,</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    fileName<span class="op">:</span> <span class="st">&#39;connectButton__phone&#39;</span><span class="op">,</span>           <span class="co">// → qa/golden/connectButton__phone.png</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    pumpBeforeTest<span class="op">:</span> precacheImages<span class="op">,</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    builder<span class="op">:</span> () <span class="op">=&gt;</span> GoldenTestGroup(</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>      columns<span class="op">:</span> <span class="dv">2</span><span class="op">,</span>                                 <span class="co">// light | dark</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>      children<span class="op">:</span> [</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> (<span class="at">final</span> theme <span class="kw">in</span> [helixLight()<span class="op">,</span> helixDark()])</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>          <span class="cf">for</span> (<span class="at">final</span> status <span class="kw">in</span> TunnelStatus<span class="op">.</span>values)  <span class="co">// all 7 FFI variants [CL §2]</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>            GoldenTestScenario(</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>              name<span class="op">:</span> <span class="st">&#39;${status.name}/${theme.brightness.name}&#39;</span><span class="op">,</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>              child<span class="op">:</span> MediaQuery(</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>                data<span class="op">:</span> <span class="at">const</span> MediaQueryData(size<span class="op">:</span> Size(<span class="dv">360</span><span class="op">,</span> <span class="dv">780</span>)<span class="op">,</span> devicePixelRatio<span class="op">:</span> <span class="fl">3.0</span>)<span class="op">,</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>                child<span class="op">:</span> Theme(</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>                  data<span class="op">:</span> theme<span class="op">,</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>                  child<span class="op">:</span> ConnectButton(status<span class="op">:</span> status<span class="op">,</span> onTap<span class="op">:</span> () <span class="op">{}</span>)<span class="op">,</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>                )<span class="op">,</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>              )<span class="op">,</span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>            )<span class="op">,</span></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>      ]<span class="op">,</span></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>    )<span class="op">,</span></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>  );</span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<blockquote>
+<p>The dark column proves [CL §2]&#39;s &quot;ring glow brighter on dark&quot; + the
+white label on every coloured fill (AA-proven both themes, [COLOR
+§4.3]). The seven rows are the seven <code>ffi::TunnelStatus</code>
+variants — the golden is the captured proof every variant renders, not
+just the happy <code>Connected</code> path.</p>
+</blockquote>
+<h3 id="16-coverage-completeness-gate">1.6 Coverage completeness
+gate</h3>
+<p><code>DS-GOLDEN-COVERAGE</code> + <code>CM-component-inventory</code>
+are the two completeness gates the sibling docs reference:</p>
+<ul>
+<li><strong><code>CM-component-inventory</code></strong> ([CL §0]
+references it) — walks the <code>comp.*</code> token roots in the
+emitted <code>dist/json/tokens.json</code> ([EXP §4]) and asserts
+<strong>each</strong> has (a) a row in the [CL §0] catalog table
+<strong>and</strong> (b) at least one golden key. A <code>comp.*</code>
+token with no catalog row, or a catalog row with no golden, FAILs.</li>
+<li><strong><code>DS-GOLDEN-COVERAGE</code></strong> — for every catalog
+row, asserts the declared load-bearing-state × {light, dark} × {phone,
+tablet, desktop, tv} cells each have a
+<code>qa/golden/&lt;key&gt;.png</code>. A missing <code>dark</code> or
+<code>tv</code> golden FAILs — this is the mechanical enforcement of [CL
+§1.4]&#39;s &quot;every component ships light + dark&quot;.</li>
+</ul>
+<p><strong>Paired §1.1 mutations.</strong> (a) add a
+<code>comp.newThing.*</code> token to <code>tokens/**</code> but no [CL
+§0] row → <code>CM-component-inventory</code> FAILs. (b) delete
+<code>qa/golden/connectButton__connected_direct__dark__phone.png</code>
+→ <code>DS-GOLDEN-COVERAGE</code> reports an empty cell → FAILs.</p>
+<hr />
+<h2 id="2-the-no-overlap--no-label-overlay-check-114162">2. The
+no-overlap / no-label-overlay check (§11.4.162)</h2>
+<p>§11.4.162: &quot;elements MUST NOT overlap or overlay labels.&quot; [CL §1.5]
+guarantees this <strong>structurally</strong> (layout); this section is
+the <strong>automated proof</strong> that the guarantee holds in the
+rendered output — the gate <code>CM-NO-LABEL-OVERLAY</code> the sibling
+docs reference.</p>
+<h3 id="21-what-it-computes">2.1 What it computes</h3>
+<p>For each rendered golden the suite extracts the <strong>render tree&#39;s
+bounding boxes</strong> (Flutter exposes the <code>RenderObject</code>
+geometry; web reads <code>getBoundingClientRect()</code> per element;
+both are captured to <code>qa/occlusion/&lt;key&gt;.json</code>). The
+occlusion analyzer asserts:</p>
+<ol type="1">
+<li><strong>No text-box intersection.</strong> For every pair of
+<em>text</em> slots (<code>label</code>, <code>supporting</code>,
+<code>subLabel</code>, badges), their axis-aligned bounding boxes do
+<strong>not</strong> intersect (a positive-area intersection = a label
+overlapping a label = FAIL, the exact §11.4.162 prohibition).</li>
+<li><strong>No label under a translucent wash.</strong> A text box is
+never covered by a sibling with <code>0 &lt; opacity &lt; 1</code>
+painted above it in z-order (the [COLOR §5.2] &quot;overlays use an opaque
+surface + a scrim, never a translucent wash over content&quot; rule).
+Floating parts (tooltip/menu/dialog) must sit on an
+<strong>opaque</strong> <code>surface.*</code> above an
+<code>overlay.scrim</code> — the analyzer checks the covering layer&#39;s
+resolved alpha.</li>
+<li><strong>Minimum gaps.</strong> Adjacent interactive/coloured boxes
+keep ≥ <code>space.scale.2</code> (8 px); icon-to-label ≥
+<code>space.scale.1</code> (4 px) ([CL §1.5]). A gap below the floor
+FAILs (boxes that touch are an overlap-in-waiting).</li>
+<li><strong>Truncation, not overflow.</strong> A text box never exceeds
+its grid/flex cell&#39;s intrinsic width (overflow that bleeds into a
+neighbour FAILs); the [CL §1.5] contract is ellipsis + tooltip, proven
+by the box staying inside its cell.</li>
+</ol>
+<h3 id="22-the-captured-evidence-form">2.2 The captured-evidence
+form</h3>
+<div class="sourceCode" id="cb3"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="er">//</span> <span class="er">qa/occlusion/serverListItem__default__light__desktop.json</span>  <span class="er">(PASS</span> <span class="er">sample)</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;key&quot;</span><span class="fu">:</span> <span class="st">&quot;serverListItem__default__light__desktop&quot;</span><span class="fu">,</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;boxes&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span> <span class="dt">&quot;slot&quot;</span><span class="fu">:</span> <span class="st">&quot;leading&quot;</span><span class="fu">,</span>      <span class="dt">&quot;rect&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="dv">12</span><span class="ot">,</span> <span class="dv">14</span><span class="ot">,</span> <span class="dv">36</span><span class="ot">,</span> <span class="dv">38</span><span class="ot">]</span> <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span> <span class="dt">&quot;slot&quot;</span><span class="fu">:</span> <span class="st">&quot;label&quot;</span><span class="fu">,</span>        <span class="dt">&quot;rect&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="dv">48</span><span class="ot">,</span> <span class="dv">12</span><span class="ot">,</span> <span class="dv">300</span><span class="ot">,</span> <span class="dv">32</span><span class="ot">]</span><span class="fu">,</span> <span class="dt">&quot;text&quot;</span><span class="fu">:</span> <span class="st">&quot;Sweden · Stockholm&quot;</span> <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span> <span class="dt">&quot;slot&quot;</span><span class="fu">:</span> <span class="st">&quot;supporting&quot;</span><span class="fu">,</span>   <span class="dt">&quot;rect&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="dv">48</span><span class="ot">,</span> <span class="dv">34</span><span class="ot">,</span> <span class="dv">300</span><span class="ot">,</span> <span class="dv">50</span><span class="ot">]</span><span class="fu">,</span> <span class="dt">&quot;text&quot;</span><span class="fu">:</span> <span class="st">&quot;privacy exit&quot;</span> <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span> <span class="dt">&quot;slot&quot;</span><span class="fu">:</span> <span class="st">&quot;rtt&quot;</span><span class="fu">,</span>          <span class="dt">&quot;rect&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="dv">520</span><span class="ot">,</span> <span class="dv">14</span><span class="ot">,</span> <span class="dv">580</span><span class="ot">,</span> <span class="dv">38</span><span class="ot">]</span><span class="fu">,</span> <span class="dt">&quot;text&quot;</span><span class="fu">:</span> <span class="st">&quot;24 ms&quot;</span> <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span> <span class="dt">&quot;slot&quot;</span><span class="fu">:</span> <span class="st">&quot;favourite&quot;</span><span class="fu">,</span>    <span class="dt">&quot;rect&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="dv">600</span><span class="ot">,</span> <span class="dv">8</span><span class="ot">,</span>  <span class="dv">644</span><span class="ot">,</span> <span class="dv">52</span><span class="ot">]</span> <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span> <span class="dt">&quot;slot&quot;</span><span class="fu">:</span> <span class="st">&quot;selectedMark&quot;</span><span class="fu">,</span> <span class="dt">&quot;rect&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="dv">656</span><span class="ot">,</span> <span class="dv">14</span><span class="ot">,</span> <span class="dv">680</span><span class="ot">,</span> <span class="dv">38</span><span class="ot">]</span> <span class="fu">}</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;text_box_intersections&quot;</span><span class="fu">:</span> <span class="ot">[]</span><span class="fu">,</span>            <span class="er">//</span> <span class="er">←</span> <span class="er">empty</span> <span class="er">⇒</span> <span class="er">no</span> <span class="er">label</span> <span class="er">overlays</span> <span class="er">a</span> <span class="er">label</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;translucent_over_text&quot;</span><span class="fu">:</span> <span class="ot">[]</span><span class="fu">,</span>             <span class="er">//</span> <span class="er">←</span> <span class="er">empty</span> <span class="er">⇒</span> <span class="er">no</span> <span class="er">wash</span> <span class="er">over</span> <span class="er">a</span> <span class="er">label</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;min_gap_px&quot;</span><span class="fu">:</span> <span class="dv">12</span><span class="fu">,</span> <span class="dt">&quot;gap_floor_px&quot;</span><span class="fu">:</span> <span class="dv">8</span><span class="fu">,</span>     <span class="er">//</span> <span class="er">←</span> <span class="er">12</span> <span class="er">≥</span> <span class="er">8</span> <span class="er">⇒</span> <span class="er">OK</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;overflow_violations&quot;</span><span class="fu">:</span> <span class="ot">[]</span><span class="fu">,</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;verdict&quot;</span><span class="fu">:</span> <span class="st">&quot;PASS&quot;</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>A non-empty <code>text_box_intersections</code>, or a
+<code>min_gap_px</code> below the floor, or any
+<code>translucent_over_text</code> entry, sets
+<code>verdict: &quot;FAIL&quot;</code> and the offending pair is named — the
+operator sees <em>which two slots</em> collided, never a bare red.</p>
+<h3 id="23-the-ocr-cross-check-pixel-side">2.3 The OCR cross-check
+(pixel-side)</h3>
+<p>Geometry catches structural overlap; a <strong>pixel</strong> OCR
+pass catches the case where two glyphs <em>visually</em> smear even with
+non-intersecting boxes (e.g. a descender of one line touching the next).
+The suite OCRs the golden&#39;s text regions with a per-word confidence
+floor + ROI (§11.4.107(12)) and asserts every expected label string is
+read back <strong>legibly</strong> (confidence ≥ floor) and
+<strong>once</strong> (a doubled read in one ROI signals an overlay).
+Calibrated on the project&#39;s own goldens, not a hardcoded threshold
+(§11.4.6).</p>
+<p><strong>Paired §1.1 mutation.</strong> Author a fixture where the
+<code>rtt</code> box is absolutely positioned over the
+<code>label</code> box → <code>text_box_intersections</code> is
+non-empty → <code>CM-NO-LABEL-OVERLAY</code> FAILs. (And the analyzer&#39;s
+own golden-bad in §5 is exactly this fixture, so the analyzer is proven
+able to catch it.)</p>
+<hr />
+<h2 id="3-the-token-drift-gate-visual-side">3. The token-drift gate
+(visual side)</h2>
+<p>[EXP §5] owns the <strong>source-side</strong> byte gate
+<code>DS-DRIFT</code> (a generated <code>dist/**</code> form must equal
+a fresh regenerate). This document owns the
+<strong>consumer-side</strong> half: when a token change lands, the
+<strong>rendered</strong> UI must be re-blessed too, or a stale golden
+hides the new colour. The gate is <code>DS-TOKEN-DRIFT</code> (the [EXP
+§5.4] / [CL §0] <code>DS-I5</code> reference).</p>
+<h3 id="31-what-it-asserts">3.1 What it asserts</h3>
+<pre><code>DS-TOKEN-DRIFT  (the visual-regression coupling to a token change):
+  1. detect a change to tokens/** OR dist/** (the EXP §5 DS-DRIFT trigger)
+  2. re-render the affected component goldens (the components whose comp.* root
+     references the changed semantic/primitive token — resolved via the token
+     reference graph [DT §3.1])
+  3. run DS-GOLDEN-MATCH on the re-rendered set against the committed goldens
+  4. if the source DS-DRIFT (EXP §5) is GREEN but a golden now differs and was
+     NOT re-blessed in the same change ⇒ FAIL (the token moved but the UI proof
+     is stale)</code></pre>
+<p>The <strong>reference graph</strong> keeps the re-render targeted: a
+change to <code>color.semantic.state.connected.fill</code> re-renders
+only ConnectButton + StatusChip + the screens that show connection state
+([SCR-C §5/§11]), not the whole catalog — the [DT §3.1] resolution map
+says which <code>comp.*</code> tokens dereference the changed token. The
+targeted set + its diff result is captured to
+<code>qa/drift/visual_rerun.json</code>.</p>
+<h3 id="32-why-both-halves-are-needed">3.2 Why both halves are
+needed</h3>
+<table>
+<thead>
+<tr>
+<th>Gate</th>
+<th>Catches</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>DS-DRIFT</code> ([EXP §5])</td>
+<td>a hand-edit of a generated <code>dist/**</code> form; source ≠
+artifact</td>
+</tr>
+<tr>
+<td><code>DS-TOKEN-DRIFT</code> (here)</td>
+<td>a <em>correct</em> token change whose <strong>rendered</strong>
+golden was never updated — the artifact changed but the visual proof is
+stale</td>
+</tr>
+</tbody>
+</table>
+<p>Together they span &quot;the token bytes are right&quot; (EXP) and &quot;the pixels
+the user sees match the current tokens&quot; (here) — the [EXP §5.2]
+§11.4.108 SOURCE→ARTIFACT logic extended one hop further, to
+ARTIFACT→RENDERED-PIXELS.</p>
+<p><strong>Paired §1.1 mutation.</strong> Change
+<code>state.connected.fill</code> in <code>tokens/**</code>, regenerate
+<code>dist/**</code> (so <code>DS-DRIFT</code> is GREEN), but commit the
+<strong>old</strong> ConnectButton golden → the re-render differs from
+the stale golden → <code>DS-TOKEN-DRIFT</code> FAILs (forcing the golden
+re-bless in the same change).</p>
+<hr />
+<h2 id="4-the-accessibility-automated-battery">4. The accessibility
+automated battery</h2>
+<p>Five gates, all autonomous (no human eyeball required, §11.4.52),
+each citing a captured-evidence file (§11.4.69).</p>
+<h3 id="41-contrast-from-tokens-self-validated">4.1 Contrast from tokens
+(self-validated)</h3>
+<p><code>DS-A11Y-CONTRAST</code> recomputes the [COLOR §4] WCAG
+arithmetic <strong>directly from the token values</strong> (not from a
+hand-typed table) so a token edit that drops a pair below its floor
+FAILs the build. The analyzer reads <code>dist/json/tokens.json</code>
+([EXP §4]), pairs every
+<code>text.*</code>/<code>icon.*</code>/<code>border.*</code> token with
+the surface(s) it renders on (per the [CL] component slots), computes
+<code>(L1+0.05)/(L2+0.05)</code> on the relative luminances, and asserts
+each clears its governing threshold:</p>
+<table>
+<thead>
+<tr>
+<th>Pair class</th>
+<th>Threshold</th>
+<th>Example (from [COLOR §4.1], reproduced)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>normal text</td>
+<td>AA 4.5</td>
+<td><code>text.tertiary #6B7385</code> /
+<code>surface.default #FFFFFF</code> = <strong>4.76</strong> ✓</td>
+</tr>
+<tr>
+<td>large/bold text (≥24 px)</td>
+<td>AA-large 3.0</td>
+<td><code>text.onState</code> white on every state fill (≥3.0, [COLOR
+§4.3]) ✓</td>
+</tr>
+<tr>
+<td>non-text UI (focus ring, borders, dots)</td>
+<td>3.0</td>
+<td><code>border.focus</code> ≥ 3.0 in both themes ([COLOR §4.5]) ✓</td>
+</tr>
+<tr>
+<td>disabled text</td>
+<td>exempt (SC 1.4.3)</td>
+<td><code>text.disabled #9AA2B2</code> / <code>#FFFFFF</code> = 2.57,
+flagged <code>exempt</code> not FAIL</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb5"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="er">//</span> <span class="er">qa/a11y/contrast_report.json</span>  <span class="er">(excerpt</span> <span class="er">—</span> <span class="er">every</span> <span class="er">ratio</span> <span class="er">is</span> <span class="er">computed,</span> <span class="er">not</span> <span class="er">typed)</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;computed_by&quot;</span><span class="fu">:</span> <span class="st">&quot;wcag21 relative-luminance + (L1+0.05)/(L2+0.05)&quot;</span><span class="fu">,</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;pairs&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span> <span class="dt">&quot;fg&quot;</span><span class="fu">:</span> <span class="st">&quot;text.tertiary #6B7385&quot;</span><span class="fu">,</span> <span class="dt">&quot;bg&quot;</span><span class="fu">:</span> <span class="st">&quot;surface.default #FFFFFF&quot;</span><span class="fu">,</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;theme&quot;</span><span class="fu">:</span> <span class="st">&quot;light&quot;</span><span class="fu">,</span> <span class="dt">&quot;ratio&quot;</span><span class="fu">:</span> <span class="fl">4.76</span><span class="fu">,</span> <span class="dt">&quot;threshold&quot;</span><span class="fu">:</span> <span class="fl">4.5</span><span class="fu">,</span> <span class="dt">&quot;class&quot;</span><span class="fu">:</span> <span class="st">&quot;normal&quot;</span><span class="fu">,</span> <span class="dt">&quot;verdict&quot;</span><span class="fu">:</span> <span class="st">&quot;PASS&quot;</span> <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span> <span class="dt">&quot;fg&quot;</span><span class="fu">:</span> <span class="st">&quot;text.disabled #9AA2B2&quot;</span><span class="fu">,</span> <span class="dt">&quot;bg&quot;</span><span class="fu">:</span> <span class="st">&quot;surface.default #FFFFFF&quot;</span><span class="fu">,</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;theme&quot;</span><span class="fu">:</span> <span class="st">&quot;light&quot;</span><span class="fu">,</span> <span class="dt">&quot;ratio&quot;</span><span class="fu">:</span> <span class="fl">2.57</span><span class="fu">,</span> <span class="dt">&quot;threshold&quot;</span><span class="fu">:</span> <span class="fl">4.5</span><span class="fu">,</span> <span class="dt">&quot;class&quot;</span><span class="fu">:</span> <span class="st">&quot;disabled&quot;</span><span class="fu">,</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;verdict&quot;</span><span class="fu">:</span> <span class="st">&quot;EXEMPT&quot;</span><span class="fu">,</span> <span class="dt">&quot;reason&quot;</span><span class="fu">:</span> <span class="st">&quot;WCAG SC 1.4.3 inactive-control exemption&quot;</span> <span class="fu">}</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;fails&quot;</span><span class="fu">:</span> <span class="ot">[]</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>Self-validation (§11.4.107(10), §5): the analyzer ships a
+<strong>golden-good</strong> fixture (a token set whose every pair
+clears its floor → MUST PASS) and a <strong>golden-bad</strong> fixture
+(one text token deliberately at a 3.9 ratio → MUST FAIL). An analyzer
+that passes its golden-bad is itself the bluff, caught by
+<code>DS-ANALYZER-SELF-VALIDATED</code>.</p>
+<p><strong>Paired §1.1 mutation.</strong> Edit <code>text.primary</code>
+to a near-surface grey (ratio &lt; 4.5) in a fixture →
+<code>DS-A11Y-CONTRAST</code> FAILs.</p>
+<h3 id="42-focus-order">4.2 Focus order</h3>
+<p><code>DS-A11Y-FOCUS-ORDER</code> drives each screen&#39;s focus traversal
+autonomously (Flutter <code>FocusTraversalPolicy</code> walk / web
+<code>Tab</code> key simulation) and asserts the visited order matches
+the <strong>declared reading order</strong> ([CL §1.3]: top→bottom,
+leading→trailing). For modals it asserts focus is
+<strong>trapped</strong> (tabbing past the last control returns to the
+first, never escapes to the page behind) and <code>Esc</code> closes +
+<strong>restores</strong> focus to the trigger ([CL §4.3 ExitPicker]).
+The visited sequence is captured to
+<code>qa/a11y/focus_order/&lt;screen&gt;.json</code>.</p>
+<p><strong>Paired §1.1 mutation.</strong> Move the Sign-in screen&#39;s
+password field&#39;s traversal order before the username ([SCR-C §4.2]) →
+visited order ≠ reading order → FAIL.</p>
+<h3 id="43-hit-target-44-px">4.3 Hit-target ≥44 px</h3>
+<p><code>CM-hit-target-44</code> (the [CL §1.3]/[CL §1.5] reference)
+asserts every interactive element&#39;s <strong>hit box</strong> (not its
+visual box) is ≥ 44 × 44 px. It reads the gesture geometry from the
+render tree (Flutter <code>GestureDetector</code>/<code>InkWell</code>
+hit-test size; web the clickable element&#39;s box + padding) so a
+<em>visually</em> 20 px checkbox with a 44 px transparent tap area ([CL
+§1.3]) PASSes, while a 40 px button FAILs. Captured to
+<code>qa/a11y/hit_targets.json</code>.</p>
+<p><strong>Paired §1.1 mutation.</strong> Shrink the StatusChip&#39;s
+tappable variant to a 40 px height ([CL §3]) →
+<code>CM-hit-target-44</code> FAILs.</p>
+<h3 id="44-screen-reader-label-presence">4.4 Screen-reader label
+presence</h3>
+<p><code>DS-A11Y-LABEL-PRESENT</code> dumps each rendered surface&#39;s
+<strong>semantics tree</strong> (Flutter <code>SemanticsNode</code> tree
+/ web accessibility tree) and asserts every node with an interactive
+role (<code>button</code>, <code>switch</code>, <code>option</code>,
+<code>combobox</code>, …) has a <strong>non-empty accessible
+name</strong> ([CL §1.3]). Icon-only controls (ConnectButton, favourite
+star) MUST carry an explicit <code>semanticLabel</code> — an icon-only
+node with an empty name FAILs. The tree dump is
+<code>qa/a11y/semantics_tree/&lt;key&gt;.json</code>; it also feeds the
+[CL §2] &quot;stateful accessible name&quot; check (ConnectButton announces
+&quot;Connected, direct path, 28 milliseconds&quot;, not a bare &quot;button&quot;).</p>
+<p><strong>Paired §1.1 mutation.</strong> Remove the
+<code>semanticLabel</code> from the icon-only ConnectButton → empty name
+on an interactive node → <code>DS-A11Y-LABEL-PRESENT</code> FAILs.</p>
+<h3 id="45-reduce-motion-no-flash">4.5 Reduce-motion no-flash</h3>
+<p><code>DS-A11Y-NO-FLASH</code> renders the animated components ([CL
+§1.2], [DT §6.4] <code>connectPulse</code>/<code>stateXfade</code>)
+<strong>under the OS reduce-motion flag</strong> and asserts the
+animation degrades to its <strong>static</strong> end-state (the pulse
+becomes a static amber ring, [COLOR §3.2]) — i.e. the frame at t=0 and
+t=600 ms are <strong>identical</strong> under reduce-motion (frame-hash
+equality), proving nothing loops or strobes (§11.4.107 no-flash).
+Without reduce-motion the two frames <strong>differ</strong> (the pulse
+animates), proving the animation is real, not dead. Both frame hashes
+are captured to <code>qa/a11y/motion/&lt;key&gt;.json</code>.</p>
+<p><strong>Paired §1.1 mutation.</strong> Leave
+<code>connectPulse</code> looping under reduce-motion (ignore the flag)
+→ the two frames differ when they must match →
+<code>DS-A11Y-NO-FLASH</code> FAILs.</p>
+<hr />
+<h2 id="5-self-validated-analyzers-11410710">5. Self-validated analyzers
+(§11.4.107(10))</h2>
+<p>Every analyzer in this document (the perceptual differ, the occlusion
+analyzer, the contrast computer, the OCR reader, the motion
+frame-hasher, the §6 doc validator) is itself a possible bluff: an
+analyzer that always returns PASS makes every gate green while the
+design is broken. <code>DS-ANALYZER-SELF-VALIDATED</code> closes this
+with the §11.4.107(10) golden-good / golden-bad fixture pair per
+analyzer:</p>
+<table>
+<thead>
+<tr>
+<th>Analyzer</th>
+<th>Golden-good fixture (MUST PASS)</th>
+<th>Golden-bad fixture (MUST FAIL)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>perceptual differ</td>
+<td>a render byte-identical to its golden</td>
+<td>a render with one shifted hex above <code>τ</code></td>
+</tr>
+<tr>
+<td>occlusion analyzer</td>
+<td>the §2.2 PASS layout</td>
+<td>a layout with two intersecting label boxes</td>
+</tr>
+<tr>
+<td>contrast computer</td>
+<td>a token set all-pairs ≥ floor</td>
+<td>a token set with one pair at 3.9</td>
+</tr>
+<tr>
+<td>OCR reader</td>
+<td>a clean caption strip</td>
+<td>a chrome menu label where dialogue is expected ([CL]
+/§11.4.137-class)</td>
+</tr>
+<tr>
+<td>motion frame-hasher</td>
+<td>reduce-motion → identical frames</td>
+<td>a looping animation under reduce-motion</td>
+</tr>
+<tr>
+<td>doc validator (§6)</td>
+<td>a rendered PDF with rasterised diagrams</td>
+<td>a PDF with raw <code>flowchart TD</code> as body text</td>
+</tr>
+</tbody>
+</table>
+<p>The self-check runs <strong>before</strong> the real gates each
+cycle; an analyzer that fails its self-check blocks the whole battery (a
+broken analyzer cannot be trusted to judge the design). Captured to
+<code>qa/selfcheck/&lt;analyzer&gt;.json</code>.</p>
+<p><strong>Paired §1.1 mutation.</strong> Make the contrast computer
+treat its golden-bad fixture as PASS (e.g. invert the threshold
+comparison) → its golden-bad no longer FAILs →
+<code>DS-ANALYZER-SELF-VALIDATED</code> FAILs (the discriminator
+§11.4.120: a real gate&#39;s mutation makes it FAIL; a bluffed one does
+not).</p>
+<hr />
+<h2 id="6-114168-exported-design-doc-visual-validation">6. §11.4.168
+exported-design-doc visual validation</h2>
+<p>Every Volume-10 design doc (this one, [CL], [COLOR], [DT], [EXP], the
+screen docs) contains <strong>rendered swatches + Mermaid
+diagrams</strong>; per §11.4.65 each has synchronized
+<code>.html</code>/<code>.pdf</code> siblings ([EXP §6]). §11.4.168
+demands an <strong>independent</strong> check that the <em>exported
+artefact a reader opens</em> is faithful, readable, and visually
+rendered — not just that the <code>.md</code> is correct. The gate is
+<code>CM-EXPORTED-DOC-VISUALLY-VALIDATED</code>.</p>
+<h3 id="61-the-three-layers-114168">6.1 The three layers
+(§11.4.168)</h3>
+<ol type="1">
+<li><strong>Content</strong> — the export carries the source&#39;s data;
+nothing dropped/truncated. Checked by extracting the PDF/HTML text and
+asserting the section headings + key tables ([COLOR §3] palette, [CL §0]
+inventory) are present.</li>
+<li><strong>Textual</strong> — <strong>no raw Mermaid/diagram source as
+body text.</strong> <code>pdftotext</code> over the export, asserting it
+contains <strong>no</strong> lines matching the Mermaid grammar
+(<code>^\s*(flowchart|sequenceDiagram|stateDiagram|graph|gantt|classDiagram)\b</code>)
+as readable body text. This is the exact §11.4.168 forensic failure (raw
+<code>gantt</code> shipped as text) applied to the design docs&#39; many
+diagrams.</li>
+<li><strong>Full visual</strong> — every Mermaid diagram rendered as an
+<strong>image</strong>, every swatch as a <strong>visible colour
+block</strong>. <code>pdfimages -list</code> confirms the diagrams
+rasterised (an expected image count); <code>pdftoppm</code> → OCR
+confirms the rendered page text is human-readable and the swatch ROIs
+carry the expected colour blocks (not empty).</li>
+</ol>
+<h3 id="62-the-captured-evidence-form">6.2 The captured-evidence
+form</h3>
+<div class="sourceCode" id="cb6"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="er">//</span> <span class="er">qa/docs/color-system.validation.json</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;doc&quot;</span><span class="fu">:</span> <span class="st">&quot;final/v10-design/color-system.md&quot;</span><span class="fu">,</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;exports&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="st">&quot;color-system.html&quot;</span><span class="ot">,</span> <span class="st">&quot;color-system.pdf&quot;</span><span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;content&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;headings_found&quot;</span><span class="fu">:</span> <span class="dv">9</span><span class="fu">,</span> <span class="dt">&quot;headings_expected&quot;</span><span class="fu">:</span> <span class="dv">9</span><span class="fu">,</span> <span class="dt">&quot;palette_table_present&quot;</span><span class="fu">:</span> <span class="kw">true</span> <span class="fu">},</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;textual&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;raw_mermaid_lines&quot;</span><span class="fu">:</span> <span class="ot">[]</span><span class="fu">,</span> <span class="dt">&quot;raw_codefence_leaks&quot;</span><span class="fu">:</span> <span class="ot">[]</span> <span class="fu">},</span>        <span class="er">//</span> <span class="er">empty</span> <span class="er">⇒</span> <span class="er">PASS</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;visual&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;mermaid_blocks&quot;</span><span class="fu">:</span> <span class="dv">3</span><span class="fu">,</span> <span class="dt">&quot;rasterised_images&quot;</span><span class="fu">:</span> <span class="dv">3</span><span class="fu">,</span> <span class="dt">&quot;swatch_blocks_rendered&quot;</span><span class="fu">:</span> <span class="dv">24</span> <span class="fu">},</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;verdict&quot;</span><span class="fu">:</span> <span class="st">&quot;PASS&quot;</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>A non-empty <code>raw_mermaid_lines</code> (a diagram leaked as
+text), or <code>rasterised_images &lt; mermaid_blocks</code> (a diagram
+failed to render), or a swatch ROI that OCRs to empty/garble, sets
+<code>verdict: &quot;FAIL&quot;</code> — a release blocker (§11.4.168). The doc
+validator is self-validated (§5): a golden-bad PDF seeded with a raw
+<code>flowchart TD</code> block MUST FAIL.</p>
+<p><strong>Paired §1.1 mutation.</strong> Export a design-doc PDF with a
+Mermaid block left as raw <code>flowchart TD …</code> text in the body →
+<code>raw_mermaid_lines</code> non-empty →
+<code>CM-EXPORTED-DOC-VISUALLY-VALIDATED</code> FAILs.</p>
+<hr />
+<h2 id="7-the-local-ci-equivalent-gate-wiring-114156">7. The local
+CI-equivalent gate wiring (§11.4.156)</h2>
+<p>Per §11.4.156 <strong>all</strong> server-side CI/CD is disabled
+across every governed repo — no GitHub Actions, no GitLab pipeline
+triggers a run. The entire QA battery is therefore wired at the
+<strong>local</strong> seam (the §11.4.75 mechanical-enforcement layer),
+and <code>CM-LOCAL-GATE-WIRED</code> asserts it.</p>
+<h3 id="71-where-each-gate-runs">7.1 Where each gate runs</h3>
+<pre class="mermaid"><code>flowchart TB
+    subgraph LOCAL[&quot;LOCAL ONLY — no remote CI (§11.4.156)&quot;]
+      pc[&quot;pre-commit hook (§11.4.75)&lt;br/&gt;fast subset: occlusion + contrast + label + drift on staged&quot;]
+      pb[&quot;pre-build / pre-merge sweep (§11.4.32)&lt;br/&gt;full battery: goldens + a11y + doc-validate + self-check&quot;]
+      tag[&quot;pre-tag full retest (§11.4.40)&lt;br/&gt;every gate, every form-factor, clean baseline&quot;]
+    end
+    edit[&quot;design change&quot;] --&gt; pc --&gt; pb --&gt; tag
+    pc -. &quot;BLOCK on FAIL&quot; .-&gt; edit
+    note[&quot;NO .github/workflows/*.yml that runs these (§11.4.156)&lt;br/&gt;workflow preserved only as *.disabled-local-only&quot;]:::n
+    classDef n fill:#0000,stroke-dasharray:3 3</code></pre>
+<ul>
+<li><strong>pre-commit</strong> (§11.4.75) — the <strong>fast</strong>
+subset on staged files only (occlusion
+<ul>
+<li>contrast + label-present + <code>DS-TOKEN-DRIFT</code> for touched
+tokens); blocks the commit on FAIL. Full golden rendering is too slow
+for every commit.</li>
+</ul></li>
+<li><strong>pre-build / pre-merge</strong> (§11.4.32 post-pull sweep) —
+the <strong>full</strong> battery: every golden re-rendered + matched,
+the whole a11y battery, the §6 doc validation, and
+<code>DS-ANALYZER-SELF-VALIDATED</code> first.</li>
+<li><strong>pre-tag</strong> (§11.4.40 full retest) — every gate, every
+form-factor, on a clean baseline, before a release tag.</li>
+</ul>
+<h3 id="72-what-the-gate-asserts">7.2 What the gate asserts</h3>
+<p><code>CM-LOCAL-GATE-WIRED</code> asserts (a) the pre-commit +
+pre-build hooks invoke the QA battery, (b) <strong>no</strong> active
+<code>.github/workflows/*.yml</code> (or <code>.gitlab-ci.yml</code>)
+runs these gates — a remote CI workflow that runs the design QA is a
+§11.4.156 violation, the workflow may exist only as
+<code>*.disabled-local-only</code> ([§11.4.75 Layer 5]). Captured to
+<code>qa/wiring/local_gate.json</code>.</p>
+<p><strong>Paired §1.1 mutation.</strong> Add
+<code>.github/workflows/visual-regression.yml</code> with
+<code>on: push</code> running these gates →
+<code>CM-LOCAL-GATE-WIRED</code> FAILs (and the §11.4.156
+<code>CM-NO-ACTIVE-CI</code> gate FAILs in parallel).</p>
+<hr />
+<h2 id="8-the-coverage-matrix">8. The coverage matrix</h2>
+<p>The §11.4.25/§11.4.52 coverage ledger for the design system: feature
+(component/screen) × theme × form-factor × evidence-state. Regenerated
+each release-gate sweep ([SCR-C §1], [CL §0] are its row sources). A
+cell&#39;s <strong>evidence-state</strong> is one of <code>VERIFIED</code>
+(golden + a11y green, evidence path on file), <code>DESIGNED</code>
+(golden authored, gate not yet wired), <code>GAP</code> (honest
+un-rendered state per §1.1), <code>N/A</code> (state does not apply on
+this form-factor).</p>
+<table>
+<thead>
+<tr>
+<th>Component / screen</th>
+<th>light</th>
+<th>dark</th>
+<th>phone</th>
+<th>tablet</th>
+<th>desktop</th>
+<th>tv</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ConnectButton (7 FFI states)</td>
+<td>VERIFIED</td>
+<td>VERIFIED</td>
+<td>VERIFIED</td>
+<td>VERIFIED</td>
+<td>VERIFIED</td>
+<td>VERIFIED</td>
+<td><code>qa/golden/connectButton__*</code> +
+<code>qa/a11y/*</code></td>
+</tr>
+<tr>
+<td>StatusChip</td>
+<td>VERIFIED</td>
+<td>VERIFIED</td>
+<td>VERIFIED</td>
+<td>VERIFIED</td>
+<td>VERIFIED</td>
+<td>VERIFIED</td>
+<td><code>qa/golden/statusChip__*</code></td>
+</tr>
+<tr>
+<td>ServerListItem / ServerList / ExitPicker</td>
+<td>VERIFIED</td>
+<td>VERIFIED</td>
+<td>VERIFIED</td>
+<td>VERIFIED</td>
+<td>VERIFIED</td>
+<td>DESIGNED</td>
+<td><code>qa/golden/server*__*</code></td>
+</tr>
+<tr>
+<td>ShieldToggle</td>
+<td>VERIFIED</td>
+<td>VERIFIED</td>
+<td>VERIFIED</td>
+<td>VERIFIED</td>
+<td>VERIFIED</td>
+<td>VERIFIED</td>
+<td><code>qa/golden/shieldToggle__*</code></td>
+</tr>
+<tr>
+<td>MultiHopChainEditor</td>
+<td>VERIFIED</td>
+<td>VERIFIED</td>
+<td>VERIFIED</td>
+<td>VERIFIED</td>
+<td>VERIFIED</td>
+<td>GAP (reorder on tv)</td>
+<td><code>qa/golden/hopChain__*</code></td>
+</tr>
+<tr>
+<td>PeerCard / PolicyEditor / TopologyGraph / AuditLogRow (Console)</td>
+<td>VERIFIED</td>
+<td>VERIFIED</td>
+<td>N/A</td>
+<td>VERIFIED</td>
+<td>VERIFIED</td>
+<td>N/A</td>
+<td><code>qa/golden/&lt;comp&gt;__*</code></td>
+</tr>
+<tr>
+<td>Foundational components (Button…Skeleton, [CL §11])</td>
+<td>VERIFIED</td>
+<td>VERIFIED</td>
+<td>VERIFIED</td>
+<td>VERIFIED</td>
+<td>VERIFIED</td>
+<td>VERIFIED</td>
+<td><code>qa/golden/&lt;comp&gt;__*</code></td>
+</tr>
+<tr>
+<td>Client screens (Home, Exit, Multi-hop, Shields, Account, Settings,
+Danger) [SCR-C §1]</td>
+<td>VERIFIED</td>
+<td>VERIFIED</td>
+<td>VERIFIED</td>
+<td>VERIFIED</td>
+<td>VERIFIED</td>
+<td>VERIFIED</td>
+<td><code>qa/golden/screen_*</code></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Honest gaps (§11.4.6/§11.4.118).</strong> <code>GAP</code>
+cells (e.g. MultiHopChainEditor&#39;s reorder interaction on TV-leanback)
+are <strong>tracked</strong>, not silently implied covered — each
+<code>GAP</code> carries a migration item. <code>N/A</code> cells
+(Console components on phone) reflect that those surfaces are
+tablet/desktop-only ([CL §0] Used-by). The matrix is the §8
+evidence-state ledger; a row claiming <code>VERIFIED</code> with no
+evidence path FAILs the §11.4.25 ledger audit.</p>
+</blockquote>
+<hr />
+<h2 id="9-how-a-design-change-flows-through-the-gates">9. How a design
+change flows through the gates</h2>
+<p>The end-to-end path a design edit takes — the §11.4.142
+(every-change-reviewed) + §11.4.134 (iterate-to-GO) discipline applied
+to the design system:</p>
+<ol type="1">
+<li><strong>Edit</strong> — change a token ([DT]/[EXP]), a component
+([CL]), a screen ([SCR-C]), or a doc. (A token edit may instead
+originate from the OpenDesign round-trip reconcile, [EXP §7].)</li>
+<li><strong>Regenerate</strong> — <code>pnpm export</code> ([EXP §3])
+emits the platform forms; <code>DS-DRIFT</code> ([EXP §5]) proves
+source==artifact.</li>
+<li><strong>Re-render goldens</strong> — <code>DS-TOKEN-DRIFT</code>
+(§3) re-renders the affected component goldens; the author re-blesses
+intentionally (reviewed, §1.3).</li>
+<li><strong>Run the battery</strong> — pre-build sweep (§7):
+<code>DS-ANALYZER-SELF-VALIDATED</code> first, then
+<code>DS-GOLDEN-MATCH</code> + <code>DS-GOLDEN-COVERAGE</code> +
+<code>CM-NO-LABEL-OVERLAY</code> + <code>CM-hit-target-44</code> + the
+<code>DS-A11Y-*</code> battery +
+<code>CM-EXPORTED-DOC-VISUALLY-VALIDATED</code>.</li>
+<li><strong>Independent review</strong> (§11.4.142) — a reviewer
+distinct from the author reads the diff + the diff heat-maps + the
+occlusion/contrast reports; the goldens make the visual change
+auditable.</li>
+<li><strong>Iterate to GO</strong> (§11.4.134) — any FAIL (or warning)
+re-arms the loop: fix → re-render → re-validate, until zero
+findings.</li>
+<li><strong>Merge</strong> — only with every gate GREEN + the coverage
+matrix (§8) updated.</li>
+<li><strong>Pre-tag</strong> (§11.4.40) — the full battery re-runs on a
+clean baseline before a release tag ([EXP §5.4]).</li>
+</ol>
+<p>A design change that reaches merge with a stale golden, an
+un-rendered theme, a sub-floor contrast pair, an overlapping label, or a
+doc PDF leaking raw Mermaid is impossible to land green — that is the
+§11.4.162/§11.4.168/§11.4 promise made mechanical.</p>
+<hr />
+<h2 id="10-the-full-qa-pipeline-diagram">10. The full QA pipeline
+diagram</h2>
+<pre class="mermaid"><code>flowchart TB
+    subgraph SRC[&quot;DESIGN CHANGE&quot;]
+        T[&quot;token edit (tokens/**)&quot;]
+        C[&quot;component edit (helix_design widget)&quot;]
+        S[&quot;screen edit (helix_ui)&quot;]
+        D[&quot;design-doc edit (v10-design/*.md)&quot;]
+    end
+    T --&gt; EXP[&quot;pnpm export + DS-DRIFT (EXP §5)&quot;]
+    C --&gt; RND
+    S --&gt; RND
+    EXP --&gt; RND[&quot;render fixtures: light + dark × {phone,tablet,desktop,tv}&quot;]
+    T -.-&gt;|&quot;reference graph (DT §3.1)&quot;| RND
+
+    RND --&gt; SELF[&quot;DS-ANALYZER-SELF-VALIDATED (golden-good PASS / golden-bad FAIL — §11.4.107(10))&quot;]
+    SELF --&gt; V1[&quot;DS-GOLDEN-MATCH + DS-GOLDEN-COVERAGE + CM-component-inventory (§1)&quot;]
+    SELF --&gt; V2[&quot;CM-NO-LABEL-OVERLAY occlusion + OCR (§2)&quot;]
+    SELF --&gt; V3[&quot;DS-A11Y-CONTRAST / FOCUS-ORDER / hit-target-44 / LABEL-PRESENT / NO-FLASH (§4)&quot;]
+    T --&gt; V4[&quot;DS-TOKEN-DRIFT visual re-bless (§3)&quot;]
+    D --&gt; V5[&quot;CM-EXPORTED-DOC-VISUALLY-VALIDATED: pdftotext + pdfimages + OCR (§6)&quot;]
+
+    V1 &amp; V2 &amp; V3 &amp; V4 &amp; V5 --&gt; WIRE[&quot;CM-LOCAL-GATE-WIRED — pre-commit / pre-build / pre-tag, NO remote CI (§11.4.156, §7)&quot;]
+    WIRE --&gt; GATE{all GREEN?}
+    GATE --&gt;|no| LOOP[&quot;§11.4.134 iterate: fix → re-render → re-validate&quot;]
+    LOOP --&gt; RND
+    GATE --&gt;|yes| REV[&quot;§11.4.142 independent review (diff + heat-maps + reports)&quot;]
+    REV --&gt; MATRIX[&quot;§8 coverage matrix updated&quot;]
+    MATRIX --&gt; MERGE[&quot;merge → §11.4.40 pre-tag full retest&quot;]</code></pre>
+<hr />
+<h2 id="11-surfaced-decisions--cross-doc-contracts">11. Surfaced
+decisions &amp; cross-doc contracts</h2>
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>Decision / contract</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>D-QA-1</strong> <code>UNVERIFIED</code></td>
+<td>Snapshot harnesses = <code>alchemist</code> (Flutter) + Playwright
+(web); native shim snapshot pending its test target. Build-time dev dep
+only. Exact tools + versions ratified at Volume-10 review per
+§11.4.99.</td>
+<td>open</td>
+</tr>
+<tr>
+<td><strong>D-QA-2</strong></td>
+<td>Comparator = pixel pre-filter → perceptual diff vs a
+<strong>calibrated</strong> <code>τ</code> (per project goldens, not
+hardcoded, §11.4.6/§11.4.107(13)).</td>
+<td>decided</td>
+</tr>
+<tr>
+<td><strong>D-QA-3</strong></td>
+<td>Every component golden ships <strong>both</strong> themes ×
+<strong>four</strong> form-factors; a missing theme/form-factor cell
+FAILs <code>DS-GOLDEN-COVERAGE</code> (mechanises [CL §1.4]).</td>
+<td>decided</td>
+</tr>
+<tr>
+<td><strong>D-QA-4</strong></td>
+<td>Occlusion is checked <strong>structurally</strong> (bounding-box
+geometry) <strong>and</strong> <strong>pixel-side</strong> (OCR
+legibility) — the §11.4.162 no-label-overlay made mechanical, the [CL
+§1.5] guarantee&#39;s proof.</td>
+<td>decided</td>
+</tr>
+<tr>
+<td><strong>D-QA-5</strong></td>
+<td>Every analyzer is self-validated golden-good/golden-bad
+(§11.4.107(10)); a broken analyzer blocks the battery via
+<code>DS-ANALYZER-SELF-VALIDATED</code>.</td>
+<td>decided</td>
+</tr>
+<tr>
+<td><strong>D-QA-6</strong></td>
+<td>All gates run <strong>local only</strong>
+(pre-commit/pre-build/pre-tag); <strong>no remote CI</strong> runs them
+(§11.4.156); <code>CM-LOCAL-GATE-WIRED</code> enforces.</td>
+<td>decided</td>
+</tr>
+<tr>
+<td><strong>C-QA-A</strong> (provides)</td>
+<td>The gate ids <code>CM-component-inventory</code>,
+<code>CM-hit-target-44</code>, the per-theme golden suite, and
+<code>DS-I5</code>/<code>DS-TOKEN-DRIFT</code> referenced by [CL §0/§1]
+and [EXP §5.4] are <strong>defined here</strong> — this doc is their
+canonical owner.</td>
+<td>contract</td>
+</tr>
+<tr>
+<td><strong>C-QA-B</strong> (consumes)</td>
+<td>The source-side byte gate <code>DS-DRIFT</code> [EXP §5] —
+<code>DS-TOKEN-DRIFT</code> (§3) is its rendered-pixels extension.</td>
+<td>contract</td>
+</tr>
+<tr>
+<td><strong>C-QA-C</strong> (consumes)</td>
+<td>The computed contrast ratios [COLOR §4] —
+<code>DS-A11Y-CONTRAST</code> (§4.1) recomputes them from tokens so a
+token edit cannot silently break a proven pair.</td>
+<td>contract</td>
+</tr>
+<tr>
+<td><strong>C-QA-D</strong> (consumes)</td>
+<td>The component catalog + state sets [CL §0–§11] + the no-overlap
+structural guarantee [CL §1.5] — the suite&#39;s row source and the
+occlusion gate&#39;s contract.</td>
+<td>contract</td>
+</tr>
+<tr>
+<td><strong>U-QA-1</strong> <code>UNVERIFIED</code></td>
+<td>Exact native-shim snapshot target (XCUITest/Espresso) + its
+determinism flags — pinned when the shim test target exists per
+§11.4.99.</td>
+<td>open</td>
+</tr>
+<tr>
+<td><strong>U-QA-2</strong> <code>UNVERIFIED</code></td>
+<td>Exact perceptual-diff library + the per-golden calibrated
+<code>τ</code> values — measured on the reference host at the suite&#39;s
+first run, not asserted as a settled number here (§11.4.6).</td>
+<td>open</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="sources-verified">Sources verified</h2>
+<ul>
+<li><strong>The QA architecture (the golden-screenshot suite, the
+occlusion analyzer, the a11y battery, the self-validated-analyzer
+discipline, the token-drift visual coupling, the §11.4.168 doc
+validation, the local gate wiring, the coverage matrix, the change-flow)
+and every gate id defined here</strong> — <strong>NO external source
+needed — original HelixVPN design work</strong>, layered on the
+well-established golden-test / visual-regression pattern (Flutter golden
+tests; the <code>alchemist</code>/<code>golden_toolkit</code>
+CI-determinism approach; Playwright <code>toHaveScreenshot</code>;
+<code>pixelmatch</code>/SSIM perceptual diffing) and the WCAG 2.1
+success criteria (1.4.3 contrast-minimum, 1.4.11 non-text-contrast,
+2.5.5/2.5.8 target-size, 2.3.x no-flash). The exact harness + library +
+calibrated tolerance are <strong>D-QA-1/D-QA-2/U-QA-2
+<code>UNVERIFIED</code></strong>, pinned per §11.4.99 at the Volume-10
+review — not asserted as settled facts here.</li>
+<li><strong>The component catalog, the load-bearing state sets, the
+cross-cutting a11y baseline (role/name/focus/≥44
+px/contrast/reduce-motion/colour-independence), and the structural
+no-overlap / no-label-overlay guarantee</strong> —
+<code>final/v10-design/component-library.md</code> §0, §1.3, §1.4, §1.5,
+§2, §3, §11 (sibling, this wave, read 2026-06-25). Every gate this doc
+references from the catalog (<code>CM-component-inventory</code>,
+<code>CM-hit-target-44</code>, the per-theme golden suite) is the
+catalog&#39;s own forward-reference, defined here.</li>
+<li><strong>The computed WCAG contrast ratios (reproduced, not
+re-guessed) + the connection-state palette + the no-overlay colour-layer
+rule</strong> — <code>final/v10-design/color-system.md</code> §3,
+§4.1–§4.5, §5 (sibling, read 2026-06-25).
+<code>text.tertiary #6B7385 / #FFFFFF = 4.76</code>,
+<code>border.focus ≥ 3.0</code>,
+<code>text.disabled #9AA2B2 / #FFFFFF = 2.57 (exempt)</code> are
+reproduced from [COLOR §4]&#39;s captured computation, not re-derived.</li>
+<li><strong>The source-side drift gate <code>DS-DRIFT</code>, the
+<code>dist/json/tokens.json</code> emit, the reference-resolution graph,
+and the §11.4.65/§11.4.168 export hook the doc validator
+extends</strong> —
+<code>final/v10-design/token-export-pipeline.md</code> §3.1, §4, §5, §6
+(sibling, read 2026-06-25).</li>
+<li><strong>The token reference model + <code>$type</code> mapping +
+naming</strong> — <code>final/v10-design/design-tokens.md</code> §2,
+§3.1, §3.2, §6 (sibling, this wave).</li>
+<li><strong>The screen inventory + the four form-factors + the
+<code>AdaptiveScaffold</code> responsive contract + the
+loading-≠-connected distinction</strong> —
+<code>final/v10-design/screens-client.md</code> §0, §1, §3, §5, §11
+(sibling, read 2026-06-25).</li>
+<li><strong>Constitution clauses</strong> §11.4.6 (no-guessing —
+calibrated thresholds, computed ratios, honest gaps), §11.4.25/§11.4.52
+(coverage ledger / autonomous validation), §11.4.32 (post-pull
+validation sweep), §11.4.40 (pre-tag full retest), §11.4.69 (captured
+evidence per check), §11.4.75 (mechanical enforcement / local
+pre-commit), §11.4.107(10)/(12)/(13) (self-validated analyzer / OCR
+confidence-floor+ROI / calibrated-not-hardcoded thresholds), §11.4.108
+(SOURCE→ARTIFACT equality — the drift gate&#39;s class, extended to rendered
+pixels), §11.4.118 (enumerated coverage, no implied-clean), §11.4.120
+(gate-mutation discriminator), §11.4.134 (iterate-to-GO), §11.4.142
+(every-change-reviewed), §11.4.156 (all remote CI disabled — local
+only), §11.4.162 (OpenDesign UI system / light+dark / no-overlap /
+visual-regression mandate), §11.4.168 (exported-doc
+content+textual+visual validation) — constitution submodule text
+embedded in this repo&#39;s <code>constitution/CLAUDE.md</code>, accessed
+2026-06-25.</li>
+<li>Items explicitly marked <code>UNVERIFIED</code> (D-QA-1 exact
+harnesses, U-QA-1 native-shim target, U-QA-2 perceptual library +
+calibrated <code>τ</code>) are pending their named first-run / §11.4.99
+verification per §11.4.6 — not asserted as fact.</li>
+</ul>
+</body>
+</html>

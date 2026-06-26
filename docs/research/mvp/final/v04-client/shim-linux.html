@@ -1,0 +1,1811 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Linux shim (kernel WG / tun)</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Linux shim (kernel WG / tun)</h1>
+</header>
+<h1 id="linux-shim-kernel-wg--tun">Linux shim (kernel WG / tun)</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-06-25T00:00:00Z</p>
+<blockquote>
+<p>Volume 4 (Clients) nano-detail specification — deepens the
+<strong>Linux</strong> row of the <code>TunnelPlatform</code> shim
+matrix [03-client §5.4]. SPEC ONLY: it pins <strong>what to
+build</strong> — concrete Rust/Dart signatures, the
+<code>TunnelPlatform</code> contract impl, FFI surface, the
+helper-daemon IPC, state machines, lifecycle, privilege model, memory
+budgets, error handling, edge cases, and test points tied to the
+§11.4.169 closed test-type vocabulary. It does <strong>not</strong>
+write the shipping product. Sources cited inline by id —
+<code>[03-client §N]</code> =
+<code>final/03-client-core-and-ui.md</code> (the pass-1 client overview
+this deepens); <code>[01-TXP §N]</code> =
+<code>final/v02-data-plane/transport-trait.md</code>;
+<code>[01-ORC §N]</code> =
+<code>final/v02-data-plane/orchestrator-and-state.md</code>;
+<code>[04_ARCH §N]</code> =
+<code>04_VPN_CLD/HelixVPN-Architecture-Refined.md</code>;
+<code>[04_UI §N]</code> =
+<code>04_VPN_CLD/HelixVPN-helix-ui-Flutter.md</code>;
+<code>[04_P0 §N]</code> =
+<code>04_VPN_CLD/HelixVPN-Phase0-Spike.md</code>; <code>[SYN §N]</code>
+= <code>v09-research/_SYNTHESIS.md</code>.
+<code>[research-flutter_ffi]</code> /
+<code>[research-ios_android]</code> = the FFI / native-shim pattern
+digests (referenced for the generic
+<code>flutter_rust_bridge</code>/UniFFI patterns doc 03 already
+grounds). Anything not grounded in that evidence base is tagged
+<code>UNVERIFIED</code> per constitution §11.4.6 — never fabricated.</p>
+</blockquote>
+<hr />
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#0-position-ownership-and-what-makes-linux-different">0.
+Position, ownership, and what makes Linux different</a></li>
+<li><a href="#1-non-negotiable-linux-shim-invariants">1. Non-negotiable
+Linux-shim invariants</a></li>
+<li><a href="#2-the-two-data-path-backends-kernel-wg-vs-userspace-tun">2. The
+two data-path backends (kernel WG vs userspace tun)</a></li>
+<li><a href="#3-deployment-topologies-in-process-vs-privileged-helper-daemon">3.
+Deployment topologies (in-process vs privileged helper daemon)</a></li>
+<li><a href="#4-the-tunnelplatform-contract--linux-impl">4. The
+<code>TunnelPlatform</code> contract — Linux impl</a></li>
+<li><a href="#5-ffi-surface-consumed-on-linux--the-tun-handoff">5. FFI
+surface consumed on Linux + the TUN handoff</a></li>
+<li><a href="#6-the-privileged-helper-daemon-helix-netd--ipc">6. The
+privileged helper daemon (<code>helix-netd</code>) + IPC</a></li>
+<li><a href="#7-privilege-model--cap_net_admin-rootless-polkit-setcap">7.
+Privilege model — CAP_NET_ADMIN, rootless, polkit, setcap</a></li>
+<li><a href="#8-systemd-integration">8. systemd integration</a></li>
+<li><a href="#9-the-connector-daemon-deployment---modeconnector">9. The
+connector-daemon deployment (<code>--mode=connector</code>)</a></li>
+<li><a href="#10-shim-lifecycle-state-machine">10. Shim lifecycle state
+machine</a></li>
+<li><a href="#11-kill-switch--dns-on-linux-nftables--resolved">11.
+Kill-switch + DNS on Linux (nftables / resolved)</a></li>
+<li><a href="#12-memory--size--performance-budgets">12. Memory / size /
+performance budgets</a></li>
+<li><a href="#13-error-taxonomy--edge-cases">13. Error taxonomy &amp;
+edge cases</a></li>
+<li><a href="#14-test-points-1114169">14. Test points
+(§11.4.169)</a></li>
+<li><a href="#15-open-decisions-surfaced-by-this-document">15. Open
+decisions surfaced by this document</a></li>
+<li><a href="#16-cross-document-contracts-this-document-consumesfixes">16.
+Cross-document contracts this document consumes/fixes</a></li>
+<li><a href="#sources-verified">Sources verified</a></li>
+</ul>
+<hr />
+<h2 id="0-position-ownership-and-what-makes-linux-different">0.
+Position, ownership, and what makes Linux different</h2>
+<p>The Linux shim is one row of the <code>TunnelPlatform</code> matrix
+[03-client §5, 04_ARCH §5.3]: <em>configure the OS tunnel, hand packets
+to/from <code>helix-core</code>, report lifecycle — everything else is
+shared Dart</em> [04_UI §6]. This document owns <strong>only</strong>
+the Linux instantiation of that contract; it does not re-specify the FFI
+surface (owned by [03-client §3]), the <code>Transport</code> trait
+([01-TXP]), or the orchestrator/<code>TunnelStatus</code> ([01-ORC]) —
+it <strong>consumes</strong> them.</p>
+<p>Linux is the <strong>reference / simplest</strong> shim platform
+[04_P0 §9, 03-client §5.4]: on desktop the core can drive the TUN
+<strong>in-process</strong> — there is no OS-managed extension process
+(unlike iOS Network Extension or Android <code>VpnService</code>), no
+mandatory IPC hop (unlike the Windows privileged service). That
+simplicity is exactly why Phase-0 gate G5
+(<code>flutter_rust_bridge</code> drives the core from Dart) ships on
+Flutter-Linux first [04_P0 §9].</p>
+<p>But Linux carries <strong>two structural complications the other
+shims do not</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Linux-specific reality</th>
+<th>Consequence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>L0a</td>
+<td><strong>Two real data-path backends</strong> exist — kernel
+WireGuard (netlink) and userspace <code>/dev/net/tun</code> — with
+<em>different obfuscation reach</em> (§2).</td>
+<td>A backend-selection decision the core makes per active
+<code>Transport</code>, not a fixed choice.</td>
+</tr>
+<tr>
+<td>L0b</td>
+<td><strong>CAP_NET_ADMIN is mandatory</strong> to create a TUN, program
+routes, and install the kill-switch, yet the Flutter GUI runs
+unprivileged.</td>
+<td>A privilege seam (§7) — either file-caps on a helper or a
+polkit-gated helper daemon (§6), mirroring the Windows service
+model.</td>
+</tr>
+<tr>
+<td>L0c</td>
+<td><strong>Linux is the connector&#39;s primary host</strong> — the
+headless <code>--mode=connector</code> daemon (§9) runs on Linux far
+more than the GUI does [04_ARCH §5.4, 01-ORC §9].</td>
+<td>This doc owns the <em>daemon</em> deployment too, not only the
+desktop GUI shim.</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Ownership boundary (CI1 [03-client §0.1]).</strong> The shim
+owns the OS tunnel <em>lifecycle and privilege</em>
+(create/configure/destroy the TUN, acquire CAP_NET_ADMIN, install/remove
+firewall rules). It does <strong>not</strong> own crypto, obfuscation,
+or status truth — <code>helix-core</code> is the only place WG +
+transport live (O2 [03-client §4.1]), and <code>TunnelStatus</code> is
+core-sourced (CI2). On Linux the core is linked
+<strong>in-process</strong> (desktop GUI / connector daemon) so the seam
+is a function-call boundary, not a socket — but the <em>ownership</em>
+split is identical to every other platform.</p>
+</blockquote>
+<pre class="mermaid"><code>flowchart TB
+  subgraph ui[&quot;Flutter helix-ui (Dart, unprivileged) — shared, identical across 8 platforms&quot;]
+    CB[&quot;ConnectButton / StatusChip / ShieldIndicator&quot;]
+    TP[&quot;LinuxTunnelPlatform (Dart)\nimplements TunnelPlatform (§4)&quot;]
+    FFI[&quot;helix_core_ffi (frb v2)\nstart/stop/status_stream/attach_tun&quot;]
+  end
+  subgraph priv[&quot;privileged plane (CAP_NET_ADMIN) — §7&quot;]
+    HELP[&quot;helix-netd helper daemon (§6)\nOR in-process w/ file-caps (§3)&quot;]
+    CORE[&quot;helix-core (Rust, in-process)\norchestrator + helix-wg + helix-transport&quot;]
+    TUNK[&quot;kernel WireGuard (netlink)\nplain-udp ONLY (§2.1)&quot;]
+    TUNU[&quot;/dev/net/tun (userspace)\nobfuscated carriers (§2.2)&quot;]
+    KS[&quot;nftables kill-switch + DNS (§11)&quot;]
+  end
+  CB --&gt; TP
+  TP -- &quot;MethodChannel-equiv: in-proc call OR UDS IPC (§6)&quot; --&gt; HELP
+  TP --&gt; FFI
+  FFI -- &quot;frb StreamSink: TunnelStatus&quot; --&gt; CB
+  HELP --&gt; CORE
+  CORE -- &quot;plain-udp: program peer&quot; --&gt; TUNK
+  CORE -- &quot;obfuscated: attach_tun(fd) + pump&quot; --&gt; TUNU
+  CORE --&gt; KS</code></pre>
+<hr />
+<h2 id="1-non-negotiable-linux-shim-invariants">1. Non-negotiable
+Linux-shim invariants</h2>
+<p>Inherits the five <code>TunnelPlatform</code> obligations O1–O5
+[03-client §4.1] and adds the Linux-specific ones below. A violation is
+a release blocker (§11.4 anti-bluff at the platform-shim layer; the shim
+is the only untyped seam — O5).</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Invariant</th>
+<th>Why / mechanical consequence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>LX1</strong></td>
+<td>The shim <strong>never crypts/obfuscates</strong>; it only creates
+the carrier device and hands the core a tun fd (userspace) or programs a
+kernel-WG peer (plain-udp).</td>
+<td>O2 [03-client §4.1]; one core, no fork [01-TXP I4].</td>
+</tr>
+<tr>
+<td><strong>LX2</strong></td>
+<td><strong>CAP_NET_ADMIN is acquired through exactly one sanctioned
+path</strong> (file-cap helper <em>or</em> polkit-gated
+<code>helix-netd</code>, §7) — never <code>sudo</code> from the GUI,
+never a setuid-root blob.</td>
+<td>§11.4.161 rootless-first; §11.4.133 target-system safety.</td>
+</tr>
+<tr>
+<td><strong>LX3</strong></td>
+<td><strong><code>startTunnel</code> is idempotent +
+permission-aware</strong>: if privilege acquisition is denied, emit
+<code>permissionDenied</code> (not <code>error</code>), leave
+<strong>no</strong> half-open tun / orphan route / dangling nft table
+(§11.4.14).</td>
+<td>O1 [03-client §4.1].</td>
+</tr>
+<tr>
+<td><strong>LX4</strong></td>
+<td>On <code>stopTunnel</code> <strong>and on every abnormal exit
+path</strong> the shim restores a quiescent host: tun destroyed, routes
+withdrawn, nft kill-switch table flushed <em>per the §8.6/§11
+fail-closed rule</em> (kill-switch stays closed on crash, opens only on
+user-stop).</td>
+<td>O4 [03-client §4.1]; O-I11 [01-ORC §0.3];
+<code>trap</code>/<code>Drop</code>/systemd
+<code>ExecStopPost</code>.</td>
+</tr>
+<tr>
+<td><strong>LX5</strong></td>
+<td>The shim reports <strong>lifecycle</strong> as
+<code>PlatformTunnelEvent</code>
+(up/down/permissionDenied/revoked/error); it <strong>never</strong>
+synthesizes a <code>TunnelStatus</code>. Protection-state truth flows
+core→FFI→UI (CI2).</td>
+<td>prevents &quot;UI says connected while tunnel is down&quot;.</td>
+</tr>
+<tr>
+<td><strong>LX6</strong></td>
+<td><strong>Backend choice is determined by the active
+<code>Transport::kind()</code></strong> (§2), never guessed: plain-udp
+MAY use kernel WG; any obfuscated carrier MUST use the userspace tun
+path. The shim asks the core which backend the resolved rung needs; it
+does not infer.</td>
+<td>§11.4.6 no-guessing; §2.3.</td>
+</tr>
+<tr>
+<td><strong>LX7</strong></td>
+<td>The <strong>connector daemon and the desktop GUI run the
+byte-identical core</strong> (<code>--mode={client|connector}</code>),
+differing only in routing posture and privilege host (§9).</td>
+<td>O-I13 [01-ORC §0.3], I4 [01-TXP].</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="2-the-two-data-path-backends-kernel-wg-vs-userspace-tun">2. The
+two data-path backends (kernel WG vs userspace tun)</h2>
+<p>The single most consequential Linux nano-detail. HelixVPN&#39;s
+obfuscation is <strong>pluggable beneath WireGuard</strong> [04_ARCH
+§2/§3, SYN §2]; <code>helix-transport</code> carriers
+(<code>masque-h3</code>, <code>shadowsocks</code>,
+<code>udp-over-tcp</code>, <code>lwo</code>, …) sit <em>below</em> the
+WG datagram [01-TXP §0]. This collides with how Linux kernel WireGuard
+works.</p>
+<h3 id="21-kernel-wireguard-netlink--plain-udp-only">2.1 Kernel
+WireGuard (netlink) — <code>plain-udp</code> ONLY</h3>
+<p>Kernel WG owns its <strong>own</strong> UDP socket to the peer
+endpoint; it encrypts in the kernel and sends WG datagrams directly out
+a raw UDP port [04_ARCH §3 table, SYN §5]. It is the fast path (zero
+userspace copies, no per-packet context-switch). It is configured over
+<strong>netlink</strong> (the <code>wireguard</code> genl family)</p>
+<ul>
+<li><code>rtnetlink</code> for addresses/routes — via the
+<code>wireguard-control</code> / <code>defguard_wireguard_rs</code> +
+<code>rtnetlink</code> crates (<code>UNVERIFIED</code> exact crate
+choice — a Phase-1 dependency decision; the netlink <em>mechanism</em>
+is grounded [04_ARCH §5.3]).</li>
+</ul>
+<p><strong>Hard limitation (FACT, not a guess — §11.4.6):</strong>
+kernel WG speaks only plain WireGuard-over-UDP. It cannot route its
+datagrams <em>through</em> a userspace MASQUE / Shadowsocks / TCP
+obfuscator. Therefore <strong>kernel WG is usable only when the active
+rung is <code>plain-udp</code></strong> (the unrestricted-network
+baseline [01-TXP §4.1]).</p>
+<pre><code>plain-udp via kernel WG:
+  [app traffic] → kernel route → wgX (kernel WG iface) → kernel encrypts
+       → kernel UDP :51820 → peer        (helix-core only PROGRAMS the peer; no per-packet pump)</code></pre>
+<p>In this mode <code>helix-core</code>&#39;s data loops
+(<code>01-ORC §3</code>) <strong>do not pump packets</strong> — the
+kernel does the datapath. The orchestrator still owns control:
+reconcile, kill-switch, DNS, status. It programs the kernel WG device
+(peer pubkey, endpoint, AllowedIPs) and reads
+<code>last_handshake_time</code> / rx/tx counters via netlink to drive
+<code>Handshaking → Connected</code> and <code>PeerTimeout</code> (§10,
+§13).</p>
+<h3 id="22-userspace-devnettun--every-obfuscated-carrier">2.2 Userspace
+<code>/dev/net/tun</code> — every obfuscated carrier</h3>
+<p>When the active rung is <strong>any</strong> obfuscating transport,
+the datapath MUST be userspace: the shim opens
+<code>/dev/net/tun</code>,
+<code>ioctl(TUNSETIFF, IFF_TUN|IFF_NO_PI)</code> to create
+<code>tunX</code>, programs addresses/routes/MTU on it, and hands the
+<strong>fd</strong> to the core via <code>attach_tun(fd)</code>
+[03-client §3.1, 01-ORC §2.1]. The core&#39;s three loops [01-ORC §3] then
+run: plaintext IP ← tun → helix-wg (boringtun userspace) encrypt →
+helix-transport obfuscate → OS socket; and the reverse.</p>
+<pre><code>masque-h3 (or any obfs) via userspace tun:
+  [app traffic] → kernel route → tunX (/dev/net/tun) → read by helix-core loop A
+       → helix-wg encrypt → helix-transport (masque-h3) → QUIC/H3 :443 → gateway</code></pre>
+<p>This is the path that the iOS NE / Android <code>VpnService</code>
+shims use universally (they have no kernel-WG option) [03-client
+§5.1/§5.2]; on Linux it is the <strong>obfuscated</strong> path and the
+<strong>fallback</strong> path when kernel WG is unavailable (no
+<code>wireguard</code> module, missing CAP, container without the genl
+family) [04_ARCH §5.3 &quot;boringtun userspace only as fallback&quot;].</p>
+<h3 id="23-backend-selection-the-core-decides-the-shim-obeys--lx6">2.3
+Backend selection (the core decides, the shim obeys — LX6)</h3>
+<pre class="mermaid"><code>flowchart TD
+  start[&quot;startTunnel(cfg) → core start(): ladder picks rung (01-TXP §6)&quot;] --&gt; q{&quot;resolved Transport::kind()&quot;}
+  q -- &quot;plain-udp AND kernel WG available\nAND policy allows kernel path&quot; --&gt; kw[&quot;backend = KernelWg\nshim: create wgX via netlink,\nprogram peer; NO attach_tun&quot;]
+  q -- &quot;masque-h3 | shadowsocks | udp-over-tcp\n| lwo | connect-ip | hysteria2\nOR kernel WG unavailable&quot; --&gt; uw[&quot;backend = UserspaceTun\nshim: open /dev/net/tun,\nattach_tun(fd); core pumps&quot;]
+  kw --&gt; up[&quot;emit PlatformTunnelEvent.up\n(then core emits Handshaking→Connected)&quot;]
+  uw --&gt; up
+  q -. &quot;ladder escalates plain-udp → masque mid-session (01-ORC §7)&quot; .-&gt; swap[&quot;backend SWITCH:\ntear wgX, create tunX, attach_tun(fd)\n(re-create the carrier device, §13 E-LX5)&quot;]
+  swap --&gt; uw</code></pre>
+<p>Selection rule (closed, §11.4.6 — no guessing):</p>
+<ol type="1">
+<li>The core&#39;s ladder resolves the rung → <code>Transport::kind()</code>
+[01-TXP §6.3].</li>
+<li><code>kind() == &quot;plain-udp&quot;</code> <strong>and</strong> the host
+advertised <code>kernel_wg = true</code> at <code>startTunnel</code>
+<strong>and</strong> <code>KernelPathPolicy != ForceUserspace</code> ⇒
+<strong>KernelWg</strong>.</li>
+<li>Otherwise ⇒ <strong>UserspaceTun</strong> (the universal path;
+always available where <code>/dev/net/tun</code> + CAP_NET_ADMIN
+exist).</li>
+<li>A <strong>ladder escalation that changes
+<code>kind()</code></strong> across the kernel/userspace boundary (e.g.
+<code>plain-udp</code> blocked → escalate to <code>masque-h3</code>) is
+a <strong>backend switch</strong>: the orchestrator&#39;s atomic carrier
+swap [01-ORC §7.3] is paired with a shim-side carrier-device swap — tear
+the kernel wgX, create the userspace tunX, <code>attach_tun(fd)</code>,
+re-program routes/DNS/kill-switch on the new device. The kill-switch
+stays <strong>closed</strong> across the swap (O-I11) so no leak
+window.</li>
+</ol>
+<blockquote>
+<p><strong>Decision D-LXN-1 (surfaced, §11.4.66).</strong> Whether to
+ship the kernel-WG fast path in Phase 1 at all, or default every Linux
+session to the userspace tun for one uniform datapath (simpler, slightly
+slower for the plain-udp case). Option A (ship both): best plain-udp
+throughput on cooperative networks. Option B (userspace-only Phase 1):
+one datapath, no backend-switch complexity, matches iOS/Android exactly
+— defer kernel WG to Phase 2 as a perf optimisation.
+<strong>Recommendation: B for Phase 1</strong>
+(kill-switch/backend-switch correctness &gt; peak plain-udp throughput;
+the userspace path is the one every obfuscated carrier needs anyway),
+promote A in Phase 2 behind a measured <code>BENCH</code> gain. See
+§15.</p>
+</blockquote>
+<hr />
+<h2 id="3-deployment-topologies-in-process-vs-privileged-helper-daemon">3.
+Deployment topologies (in-process vs privileged helper daemon)</h2>
+<p>Two ways the privileged datapath is reached from the unprivileged
+Flutter GUI [04_ARCH §5.3, 03-client §5.4]. Both implement the same Dart
+<code>TunnelPlatform</code> (§4); they differ only in <em>where
+CAP_NET_ADMIN lives</em>.</p>
+<table>
+<thead>
+<tr>
+<th>Topology</th>
+<th>Core runs</th>
+<th>Privilege held by</th>
+<th>When</th>
+<th>Mirrors</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>T-A in-process</strong></td>
+<td>inside the Flutter process via frb</td>
+<td>the Flutter process itself (file-caps on the launcher, §7.2) — or
+the app was launched by a service manager with caps</td>
+<td>dev / single-user appliance / CLI; <strong>Phase-0 G5
+reference</strong> [04_P0 §9]</td>
+<td>(none — Linux-only simplicity)</td>
+</tr>
+<tr>
+<td><strong>T-B helper daemon</strong></td>
+<td>inside a privileged <code>helix-netd</code> system service (§6);
+Flutter is unprivileged</td>
+<td><code>helix-netd</code> (systemd
+<code>AmbientCapabilities=CAP_NET_ADMIN</code>, polkit-gated)</td>
+<td>desktop GUI on a multi-user workstation — <strong>recommended for
+shipped desktop</strong></td>
+<td>the Windows privileged-service + named-pipe model [03-client
+§5.3]</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Why T-B for the shipped desktop GUI.</strong> Giving the
+whole Flutter+Skia process CAP_NET_ADMIN (T-A) widens the privileged
+attack surface to all of Dart + the UI toolkit. T-B confines privilege
+to a small audited Rust daemon (§6) and keeps the GUI unprivileged — the
+same reasoning that puts the core in a Windows service [03-client §5.3].
+T-A remains the <strong>Phase-0 spike</strong> and the <strong>CLI /
+headless appliance</strong> topology where there is no separate GUI
+process to de-privilege [04_P0 §9].</p>
+</blockquote>
+<p>In <strong>T-A</strong> the <code>helix-core</code> link is the frb
+in-process bridge [research-flutter_ffi; 03-client §3];
+<code>attach_tun(fd)</code> is a direct call. In <strong>T-B</strong>
+the core lives in <code>helix-netd</code>; the Dart
+<code>LinuxTunnelPlatform</code> marshals
+<code>startTunnel/stopTunnel</code> over a Unix-domain socket (§6) and
+the <strong>status stream crosses the socket</strong> too — the GUI&#39;s
+frb binding subscribes to a relayed stream (§6.4), preserving CI2 (UI is
+a pure function of the core&#39;s status stream).</p>
+<pre class="mermaid"><code>flowchart LR
+  subgraph TA[&quot;T-A in-process (Phase-0 / CLI / appliance)&quot;]
+    A1[&quot;Flutter proc (+CAP_NET_ADMIN via file-cap)&quot;] --&gt; A2[&quot;helix-core (frb in-proc)&quot;] --&gt; A3[&quot;tunX / wgX&quot;]
+  end
+  subgraph TB[&quot;T-B helper daemon (shipped desktop)&quot;]
+    B1[&quot;Flutter proc (unprivileged)&quot;] -- &quot;UDS /run/helix/netd.sock (§6)&quot; --&gt; B2[&quot;helix-netd (+CAP_NET_ADMIN)&quot;]
+    B2 --&gt; B3[&quot;helix-core (in-daemon)&quot;] --&gt; B4[&quot;tunX / wgX&quot;]
+    B2 -- &quot;relayed TunnelStatus stream&quot; --&gt; B1
+  end</code></pre>
+<hr />
+<h2 id="4-the-tunnelplatform-contract--linux-impl">4. The
+<code>TunnelPlatform</code> contract — Linux impl</h2>
+<p>The Dart contract is fixed by [03-client §4] (one
+<code>MethodChannel</code> <code>helixvpn/tunnel</code> + one
+<code>EventChannel</code> <code>helixvpn/tunnel/events</code>,
+<code>startTunnel/stopTunnel/events</code>, <code>TunnelConfig</code>,
+<code>PlatformTunnelEvent</code>). On Linux the &quot;channel&quot; is
+<strong>not</strong> a Flutter platform channel to native code — there
+is no Kotlin/Swift layer — it is either an in-process frb call (T-A) or
+a UDS RPC (T-B). The Dart class is identical regardless:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode dart"><code class="sourceCode dart"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix_core_ffi/lib/src/linux/linux_tunnel_platform.dart</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Implements the shared TunnelPlatform contract [03-client §4].</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="at">final</span> <span class="kw">class</span> LinuxTunnelPlatform <span class="kw">implements</span> TunnelPlatform <span class="op">{</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  LinuxTunnelPlatform(<span class="kw">this</span><span class="op">.</span>_core<span class="op">,</span> <span class="kw">this</span><span class="op">.</span>_priv);     <span class="co">// _priv = InProcPriv (T-A) | NetdClient (T-B)</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">final</span> HelixCore _core;                            <span class="co">// frb-generated core handle [03-client §3.2]</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">final</span> PrivilegedTunnelOps _priv;                  <span class="co">// §4.1 — the only privileged seam</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  <span class="kw">@override</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Future</span><span class="op">&lt;</span><span class="dt">void</span><span class="op">&gt;</span> startTunnel(TunnelConfig cfg) <span class="at">async</span> <span class="op">{</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 1. ask the privileged plane to acquire CAP_NET_ADMIN + decide backend (§2.3)</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">final</span> backend <span class="op">=</span> <span class="at">await</span> _priv<span class="op">.</span>acquireAndSelectBackend(cfg);   <span class="co">// throws PermissionDenied → §10</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 2. create the carrier device under privilege; for userspace get the tun fd</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">final</span> created <span class="op">=</span> <span class="at">await</span> _priv<span class="op">.</span>createCarrier(cfg<span class="op">,</span> backend);     <span class="co">// KernelWgHandle | TunFd</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 3. start the core; userspace path hands it the fd (CI1: core never opens the tun)</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">await</span> _core<span class="op">.</span>start(transport<span class="op">:</span> <span class="st">&#39;auto&#39;</span><span class="op">,</span> mapPathOrSession<span class="op">:</span> cfg<span class="op">.</span>sessionOrMapToken);</span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (created <span class="kw">is</span> TunFd) <span class="op">{</span> <span class="at">await</span> _core<span class="op">.</span>attachTun(created<span class="op">.</span>fd); <span class="op">}</span> <span class="co">// §5</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 4. lifecycle event (NOT status — LX5); status arrives via _core.statusStream()</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>    _emit(PlatformTunnelEvent(PlatformTunnelEventKind<span class="op">.</span>up));</span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>  <span class="kw">@override</span></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Future</span><span class="op">&lt;</span><span class="dt">void</span><span class="op">&gt;</span> stopTunnel() <span class="at">async</span> <span class="op">{</span></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>    <span class="at">await</span> _core<span class="op">.</span>detachTun();                         <span class="co">// userspace path; no-op on kernel path</span></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>    <span class="at">await</span> _core<span class="op">.</span>stop();</span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>    <span class="at">await</span> _priv<span class="op">.</span>destroyCarrier();                    <span class="co">// tear tun/wgX, withdraw routes (LX4)</span></span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>    <span class="at">await</span> _priv<span class="op">.</span>revertKillSwitch(userInitiated<span class="op">:</span> <span class="cn">true</span>); <span class="co">// §11 — the ONLY open path (§8.6)</span></span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>    _emit(PlatformTunnelEvent(PlatformTunnelEventKind<span class="op">.</span>down));</span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>  <span class="kw">@override</span></span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Stream</span><span class="op">&lt;</span>PlatformTunnelEvent<span class="op">&gt;</span> events() <span class="op">=&gt;</span> _events<span class="op">.</span>stream;  <span class="co">// up/down/permissionDenied/revoked/error</span></span>
+<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="41-privilegedtunnelops--the-privileged-seam-the-only-linux-specific-surface">4.1
+<code>PrivilegedTunnelOps</code> — the privileged seam (the only
+Linux-specific surface)</h3>
+<div class="sourceCode" id="cb7"><pre class="sourceCode dart"><code class="sourceCode dart"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">// The abstraction that hides T-A (in-proc) vs T-B (helper daemon) from the rest of the app.</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="kw">abstract</span> <span class="kw">interface</span> <span class="kw">class</span> PrivilegedTunnelOps <span class="op">{</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="co">/// Acquire CAP_NET_ADMIN (file-cap path: already held; helper path: polkit auth) and</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="co">/// resolve the data-path backend for the ladder&#39;s chosen rung (§2.3). Throws</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="co">/// PermissionDenied (→ permissionDenied event, LX3) if privilege is refused.</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Future</span><span class="op">&lt;</span>TunBackend<span class="op">&gt;</span> acquireAndSelectBackend(TunnelConfig cfg);</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>  <span class="co">/// Create the carrier device under privilege. KernelWg → program wgX peer (no fd);</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>  <span class="co">/// UserspaceTun → open /dev/net/tun, ioctl(TUNSETIFF), program addrs/routes/MTU, return fd.</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Future</span><span class="op">&lt;</span>CarrierHandle<span class="op">&gt;</span> createCarrier(TunnelConfig cfg<span class="op">,</span> TunBackend backend);</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>  <span class="co">/// Switch backend mid-session on a ladder escalation crossing the kernel/userspace</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>  <span class="co">/// boundary (§2.3 swap); kill-switch stays closed across the swap (O-I11).</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Future</span><span class="op">&lt;</span>CarrierHandle<span class="op">&gt;</span> switchCarrier(TunBackend to<span class="op">,</span> TunnelConfig cfg);</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Future</span><span class="op">&lt;</span><span class="dt">void</span><span class="op">&gt;</span> destroyCarrier();                 <span class="co">// idempotent (LX4)</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Future</span><span class="op">&lt;</span><span class="dt">void</span><span class="op">&gt;</span> applyKillSwitch(KillSwitchSpec s);<span class="co">// §11</span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Future</span><span class="op">&lt;</span><span class="dt">void</span><span class="op">&gt;</span> revertKillSwitch(<span class="op">{</span>required <span class="dt">bool</span> userInitiated<span class="op">}</span>); <span class="co">// §8.6 — open only if userInitiated</span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> TunBackend <span class="op">{</span> kernelWg<span class="op">,</span> userspaceTun <span class="op">}</span></span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a><span class="at">sealed</span> <span class="kw">class</span> CarrierHandle <span class="op">{}</span></span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a><span class="at">final</span> <span class="kw">class</span> KernelWgHandle <span class="kw">extends</span> CarrierHandle <span class="op">{</span> <span class="at">final</span> <span class="dt">String</span> iface; KernelWgHandle(<span class="kw">this</span><span class="op">.</span>iface); <span class="op">}</span></span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a><span class="at">final</span> <span class="kw">class</span> TunFd          <span class="kw">extends</span> CarrierHandle <span class="op">{</span> <span class="at">final</span> <span class="dt">int</span> fd; <span class="at">final</span> <span class="dt">String</span> iface; TunFd(<span class="kw">this</span><span class="op">.</span>fd<span class="op">,</span> <span class="kw">this</span><span class="op">.</span>iface); <span class="op">}</span></span></code></pre></div>
+<p><code>TunnelConfig</code> is unchanged from [03-client §4]:
+<code>overlayIp</code>, <code>routes</code>, <code>dnsServers</code>,
+<code>splitExcludeApps</code> (per-route bypass on Linux — see §11),
+<code>mtu</code> (1280 default over MASQUE, 1420 plain WG [03-client
+§4]), <code>sessionOrMapToken</code>.</p>
+<hr />
+<h2 id="5-ffi-surface-consumed-on-linux--the-tun-handoff">5. FFI surface
+consumed on Linux + the TUN handoff</h2>
+<p>The Linux shim consumes the <strong>frozen</strong> FFI surface
+[03-client §3.1] — it adds no new FFI verbs except the tun-fd handoff
+that already exists for Android
+(<code>attach_tun</code>/<code>detach_tun</code>) [03-client §3.1,
+01-ORC §2.1]. Reproduced here for the Linux-relevant subset (consistency
+anchor — the canonical definition lives in [03-client §3.1]):</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-ffi/src/api.rs (subset consumed on Linux) — canonical surface: [03-client §3.1]</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> start(cfg<span class="op">:</span> ClientConfig) <span class="op">-&gt;</span> <span class="pp">anyhow::</span><span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">&gt;;</span>   <span class="co">// ClientConfig{ map_path_or_session, transport, mode }</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> stop()  <span class="op">-&gt;</span> <span class="pp">anyhow::</span><span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">&gt;;</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">fn</span> status_stream(sink<span class="op">:</span> StreamSink<span class="op">&lt;</span>TunnelStatus<span class="op">&gt;</span>)<span class="op">;</span>          <span class="co">// §5.1</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">fn</span> attach_tun(fd<span class="op">:</span> <span class="dt">i32</span>) <span class="op">-&gt;</span> <span class="pp">anyhow::</span><span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">&gt;;</span>              <span class="co">// userspace path: hand the /dev/net/tun fd</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">fn</span> detach_tun() <span class="op">-&gt;</span> <span class="pp">anyhow::</span><span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">&gt;;</span>                     <span class="co">// userspace path teardown; no-op on kernel path</span></span></code></pre></div>
+<h3 id="51-tunnelstatus--consistency-with-the-data-plane-lx5">5.1
+<code>TunnelStatus</code> — consistency with the data plane (LX5)</h3>
+<p>The <strong>canonical data-plane status enum</strong> is the
+5-variant <code>TunnelStatus</code> emitted by the orchestrator over
+<code>tokio::broadcast</code> [01-ORC §4.1]:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co">// CANONICAL — [01-ORC §4.1]. The Linux shim NEVER constructs this; it is core-sourced.</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">enum</span> TunnelStatus <span class="op">{</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    Connecting<span class="op">,</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    Handshaking<span class="op">,</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    Connected <span class="op">{</span> transport<span class="op">:</span> <span class="dt">String</span><span class="op">,</span> rtt_ms<span class="op">:</span> <span class="dt">u32</span> <span class="op">},</span>   <span class="co">// transport = Transport::kind() (e.g. &quot;plain-udp&quot;,&quot;masque-h3&quot;)</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    Reconnecting<span class="op">,</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>    Down <span class="op">{</span> reason<span class="op">:</span> <span class="dt">String</span> <span class="op">},</span>                          <span class="co">// reason prefix vocabulary: [01-ORC §4.4]</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>The <strong>FFI mirror</strong> [03-client §3.1] is a <em>UI
+superset</em> of the same enum — it adds <code>Disconnected</code> (the
+clean-idle projection of pre-<code>start</code>/<code>stopped</code>), a
+<code>path</code> field on <code>Connected</code>
+(<code>&quot;direct&quot;|&quot;relay&quot;</code>, Phase 2 [03-client §3.1]), and
+<code>Danger{kind}</code> (leak/kill-switch-tripped, a UI projection
+driven by the §11 detector). Per [01-ORC §5.1],
+<code>Idle</code>/<code>ShuttingDown</code> map to
+<code>Disconnected</code>/<code>Down</code> at the FFI;
+<code>Danger</code> is <em>not</em> an orchestrator state — it is a UI
+overlay derived from a leak signal. <strong>The Linux shim emits none of
+these</strong>; it emits <code>PlatformTunnelEvent</code> only (LX5),
+and the orchestrator&#39;s broadcast reaches Dart over frb (T-A) or the
+relayed UDS stream (T-B, §6.4). This keeps the FFI surface
+byte-consistent with [01-ORC §4.1] and [03-client §3.1]; a drift FAILs
+the FFI contract test [03-client §12].</p>
+<h3 id="52-the-userspace-tun-fd-lifecycle-the-one-linux-specific-ffi-flow">5.2
+The userspace tun-fd lifecycle (the one Linux-specific FFI flow)</h3>
+<pre class="mermaid"><code>sequenceDiagram
+  autonumber
+  participant TP as LinuxTunnelPlatform (Dart)
+  participant PV as PrivilegedTunnelOps (§4.1)
+  participant K as kernel (/dev/net/tun)
+  participant CO as helix-core (Rust, in-proc/daemon)
+  participant TX as helix-transport carrier
+
+  TP-&gt;&gt;PV: acquireAndSelectBackend(cfg) → UserspaceTun (obfs rung, §2.3)
+  PV-&gt;&gt;K: open(&quot;/dev/net/tun&quot;); ioctl(TUNSETIFF, IFF_TUN|IFF_NO_PI, &quot;helix0&quot;)
+  K--&gt;&gt;PV: fd
+  PV-&gt;&gt;K: rtnetlink: addr=overlayIp/32, mtu=cfg.mtu, up; routes=cfg.routes
+  TP-&gt;&gt;CO: start(ClientConfig{ session, transport:&quot;auto&quot;, Client })
+  TP-&gt;&gt;CO: attach_tun(fd)            %% CI1: core receives the fd, never opens the tun
+  Note over CO: loops A/B/C pump tun ↔ helix-wg ↔ TX (01-ORC §3)
+  CO-&gt;&gt;TX: WG datagrams over masque-h3 :443
+  CO--&gt;&gt;TP: status_stream → Handshaking → Connected{&quot;masque-h3&quot;,rtt}
+  TP--&gt;&gt;TP: PlatformTunnelEvent.up (LX5)</code></pre>
+<p><strong>fd ownership.</strong> After <code>attach_tun(fd)</code> the
+<strong>core owns</strong> the fd for read/write; the shim retains the
+fd only to <code>close()</code> it on teardown <em>after</em>
+<code>detach_tun()</code> returns (double-close guard:
+<code>detach_tun</code> makes the core drop its read loop and relinquish
+the fd; the shim then closes — never the reverse).
+<code>IFF_NO_PI</code> (no 4-byte packet-info prefix) is mandatory so
+the core&#39;s loop A reads raw IP packets [01-ORC §3.1]
+(<code>UNVERIFIED</code>: exact flags confirmed against the running
+kernel in the Phase-0 <code>IT</code> rig, not assumed).</p>
+<hr />
+<h2 id="6-the-privileged-helper-daemon-helix-netd--ipc">6. The
+privileged helper daemon (<code>helix-netd</code>) + IPC</h2>
+<p>T-B&#39;s privileged plane. A small Rust daemon that <strong>is</strong>
+the privileged carrier manager + core host; the unprivileged Flutter GUI
+is a thin client. Mirrors the Windows <code>HelixTunnelSvc</code> +
+named-pipe design [03-client §5.3] with a Unix-domain socket instead of
+a named pipe.</p>
+<h3 id="61-surface-the-same-tunnelplatform-verbs-over-uds">6.1 Surface
+(the same <code>TunnelPlatform</code> verbs, over UDS)</h3>
+<div class="sourceCode" id="cb11"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-netd/src/ipc.rs — length-prefixed CBOR (or protobuf) frames over a SOCK_SEQPACKET UDS.</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Socket: /run/helix/netd.sock  (systemd socket-activated, §8). 0660 root:helix-netd group.</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">enum</span> NetdRequest <span class="op">{</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    StartTunnel <span class="op">{</span> cfg<span class="op">:</span> WireTunnelConfig <span class="op">},</span>     <span class="co">// mirrors Dart TunnelConfig [03-client §4]</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    StopTunnel<span class="op">,</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>    SetPin     <span class="op">{</span> kind<span class="op">:</span> <span class="dt">Option</span><span class="op">&lt;</span><span class="dt">String</span><span class="op">&gt;</span> <span class="op">},</span>        <span class="co">// manual transport pin [01-ORC §2.1 set_pin]</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>    ApplyMap   <span class="op">{</span> map<span class="op">:</span> WireRouteMap <span class="op">},</span>           <span class="co">// Phase 0 file-watch stand-in is daemon-side; Phase 1 stream</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>    Subscribe<span class="op">,</span>                                  <span class="co">// opens the status relay (§6.4)</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">enum</span> NetdResponse <span class="op">{</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>    <span class="cn">Ok</span><span class="op">,</span></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>    PermissionDenied <span class="op">{</span> detail<span class="op">:</span> <span class="dt">String</span> <span class="op">},</span>        <span class="co">// → permissionDenied event (LX3)</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>    <span class="bu">Error</span> <span class="op">{</span> detail<span class="op">:</span> <span class="dt">String</span> <span class="op">},</span>                   <span class="co">// honest reason (§11.4.6), never a secret (§11.4.10)</span></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>    Status(WireTunnelStatus)<span class="op">,</span>                    <span class="co">// streamed after Subscribe (§6.4)</span></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="62-authn--authz-of-the-ipc">6.2 Authn / authz of the IPC</h3>
+<ul>
+<li>The UDS is <code>0660 root:helix-netd</code>; only members of the
+<code>helix-netd</code> group (the GUI&#39;s runtime user, added at install)
+may connect — coarse gate.</li>
+<li><strong>Per-action authorization is polkit</strong> (§7.3):
+<code>StartTunnel</code>/<code>StopTunnel</code> trigger the polkit
+action <code>digital.vasic.helixvpn.manage-tunnel</code>; the daemon
+calls <code>polkit</code> with the caller&#39;s <code>SO_PEERCRED</code>
+(pid/uid) to authorize, so an interactive auth prompt is shown for a
+non-allowlisted user (<code>auth_admin_keep</code>) and silently allowed
+for an allowlisted desktop session (<code>UNVERIFIED</code>: exact
+polkit rule shipped — a Phase-1 packaging decision).</li>
+<li>The daemon <strong>never</strong> accepts a WG private key or a
+<code>SecretBytes</code> over the IPC in the clear beyond what the wire
+config already carries (§11.4.10); secrets in
+<code>WireTunnelConfig</code> are redacted in every daemon log
+(§13).</li>
+</ul>
+<h3 id="63-single-owner-discipline">6.3 Single-owner discipline</h3>
+<p><code>helix-netd</code> serves <strong>one</strong> active tunnel at
+a time (one carrier device, one core). A second <code>StartTunnel</code>
+while a tunnel is up is rejected <code>Error{busy}</code> (idempotency:
+a <code>StartTunnel</code> with the <em>same</em> cfg fingerprint is a
+no-op <code>Ok</code> — LX3). This is the §11.4.119
+single-resource-owner rule applied to the host&#39;s tun device.</p>
+<h3 id="64-status-relay-preserving-ci2-across-the-socket">6.4 Status
+relay (preserving CI2 across the socket)</h3>
+<pre class="mermaid"><code>flowchart LR
+  CO[&quot;helix-core broadcast&amp;lt;TunnelStatus&amp;gt; (01-ORC §4)&quot;] --&gt; RELAY[&quot;helix-netd relay task\nsubscribe() → serialize → UDS&quot;]
+  RELAY -- &quot;WireTunnelStatus frames&quot; --&gt; GUI[&quot;Flutter: frb-equivalent Stream&lt;TunnelStatus&gt;\n(LinuxTunnelPlatform feeds tunnelStatusProvider)&quot;]
+  GUI --&gt; UI[&quot;ConnectButton / StatusChip (CI2: pure fn of stream)&quot;]</code></pre>
+<p>The relay applies the <strong>same</strong> receiver contract as the
+FFI [01-ORC §4.6]: <code>Lagged</code> → skip-to-latest (never an
+error), <code>Closed</code> → daemon gone → GUI shows
+<code>Down{reason:&quot;helper-unavailable&quot;}</code> and offers reconnect.
+Coalescing ([01-ORC §4.3]) happens core-side before the relay, so the
+socket carries only rare state-change frames.</p>
+<hr />
+<h2 id="7-privilege-model--cap_net_admin-rootless-polkit-setcap">7.
+Privilege model — CAP_NET_ADMIN, rootless, polkit, setcap</h2>
+<h3 id="71-what-needs-privilege-fact--1146">7.1 What needs privilege
+(FACT — §11.4.6)</h3>
+<table>
+<thead>
+<tr>
+<th>Operation</th>
+<th>Capability required</th>
+<th>Used by</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>open(&quot;/dev/net/tun&quot;)</code> + <code>ioctl(TUNSETIFF)</code>
+(create tun)</td>
+<td><strong>CAP_NET_ADMIN</strong></td>
+<td>userspace backend (§2.2)</td>
+</tr>
+<tr>
+<td>Create/configure a kernel <code>wireguard</code> netlink device</td>
+<td><strong>CAP_NET_ADMIN</strong></td>
+<td>kernel backend (§2.1)</td>
+</tr>
+<tr>
+<td><code>rtnetlink</code> addr/route/MTU programming</td>
+<td><strong>CAP_NET_ADMIN</strong></td>
+<td>both backends</td>
+</tr>
+<tr>
+<td>nftables kill-switch table install/flush</td>
+<td><strong>CAP_NET_ADMIN</strong></td>
+<td>§11</td>
+</tr>
+<tr>
+<td>Bind a low transport port (none — carriers bind
+ephemeral/<code>:443</code>-dest, not listen)</td>
+<td>none (client dials outbound, SYN §1)</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Honest boundary (§11.4.6).</strong> A <strong>fully
+unprivileged</strong> (zero-CAP) system-wide Linux tunnel is <strong>not
+possible</strong> — creating a TUN and programming routes both require
+CAP_NET_ADMIN; this is a kernel constraint, not a design choice (cf.
+§11.4.112 structural-impossibility class). <code>UNVERIFIED</code>: some
+distros allow a pre-created persistent tun owned by a group
+(<code>tunctl</code>/<code>ip tuntap … user</code>) that an unprivileged
+process may then <em>open</em>, but route/firewall programming still
+needs CAP_NET_ADMIN — so the privilege cannot be fully eliminated, only
+<em>confined</em> (T-B). The §11.4.161 &quot;rootless&quot; mandate is satisfied
+by <strong>never escalating to full root</strong> — CAP_NET_ADMIN ≠
+root, and the daemon drops every other capability (§8.2).</p>
+</blockquote>
+<h3 id="72-setcap--file-capability-path-t-a-and-the-helper-binary-in-t-b">7.2
+setcap / file-capability path (T-A, and the helper binary in T-B)</h3>
+<pre><code># install-time (packaging), the ONLY sanctioned grant (LX2):
+setcap &#39;cap_net_admin,cap_net_raw=ep&#39; /usr/lib/helixvpn/helix-netd     # T-B helper
+# (T-A appliance/CLI:)  setcap &#39;cap_net_admin=ep&#39; /usr/bin/helixvpn-cli</code></pre>
+<p><code>cap_net_raw</code> is added only if a carrier needs raw sockets
+(<code>UNVERIFIED</code> — none of the §2 carriers does today; included
+defensively for ICMP-based path probing, removed if unused per §11.4.124
+dead-capability discipline). The GUI binary <strong>never</strong>
+carries file-caps in T-B (LX2).</p>
+<h3 id="73-polkit-t-b-per-action-gate">7.3 polkit (T-B per-action
+gate)</h3>
+<p>A polkit action file
+<code>digital.vasic.helixvpn.manage-tunnel</code> (allow_active =
+<code>auth_admin_keep</code> by default; a desktop install MAY relax to
+<code>yes</code> for the console user via a shipped rule).
+<code>helix-netd</code> authorizes each <code>StartTunnel</code>/
+<code>StopTunnel</code> against the caller&#39;s <code>SO_PEERCRED</code>.
+Denial → <code>PermissionDenied</code> → <code>permissionDenied</code>
+event (LX3) — <strong>never</strong> an <code>error</code> (clean UX,
+[03-client O1]).</p>
+<h3 id="74-rootless-containerized-path-connector-114161">7.4 Rootless
+containerized path (connector, §11.4.161)</h3>
+<p>For the connector daemon shipped as a rootless Podman container
+(§9.4): the container is granted <code>--cap-add NET_ADMIN</code> and
+<code>--device /dev/net/tun</code> and runs as a non-root UID.
+<code>UNVERIFIED</code>: rootless Podman + <code>/dev/net/tun</code> +
+NET_ADMIN requires the host <code>tun</code> module loaded and the
+rootless user&#39;s netns to permit it — verified in the §11.4.76
+containers-submodule on-demand <code>IT</code> rig, never assumed. The
+userspace tun backend (§2.2) is mandatory inside a container (kernel WG
+netlink to the <em>host</em> wg subsystem is generally not available to
+a rootless container netns — <code>UNVERIFIED</code>, measured in
+<code>IT</code>).</p>
+<hr />
+<h2 id="8-systemd-integration">8. systemd integration</h2>
+<h3 id="81-desktop-helper-units-t-b">8.1 Desktop helper units (T-B)</h3>
+<div class="sourceCode" id="cb14"><pre class="sourceCode ini"><code class="sourceCode ini"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># /usr/lib/systemd/system/helix-netd.socket  — socket activation (daemon idle until first connect)</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="kw">[Socket]</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="dt">ListenStream</span><span class="ot">=</span><span class="st">/run/helix/netd.sock</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="dt">SocketMode</span><span class="ot">=</span><span class="dv">0660</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="dt">SocketUser</span><span class="ot">=</span><span class="st">root</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="dt">SocketGroup</span><span class="ot">=</span><span class="st">helix-netd</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="kw">[Install]</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="dt">WantedBy</span><span class="ot">=</span><span class="st">sockets.target</span></span></code></pre></div>
+<div class="sourceCode" id="cb15"><pre class="sourceCode ini"><code class="sourceCode ini"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># /usr/lib/systemd/system/helix-netd.service</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="kw">[Service]</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="dt">Type</span><span class="ot">=</span><span class="st">notify                         # sd_notify READY=1 once the IPC loop is serving (§8.3)</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="dt">ExecStart</span><span class="ot">=</span><span class="st">/usr/lib/helixvpn/helix-netd</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="dt">AmbientCapabilities</span><span class="ot">=</span><span class="st">CAP_NET_ADMIN   # the ONLY cap granted (LX2 / §7.1); NOT root</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="dt">CapabilityBoundingSet</span><span class="ot">=</span><span class="st">CAP_NET_ADMIN # nothing else is even reachable</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="dt">NoNewPrivileges</span><span class="ot">=</span><span class="kw">yes</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="dt">ProtectSystem</span><span class="ot">=</span><span class="st">strict</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a><span class="dt">ProtectHome</span><span class="ot">=</span><span class="kw">yes</span></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a><span class="dt">PrivateTmp</span><span class="ot">=</span><span class="kw">yes</span></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a><span class="dt">ProtectKernelModules</span><span class="ot">=</span><span class="kw">yes</span></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a><span class="dt">ProtectControlGroups</span><span class="ot">=</span><span class="kw">yes</span></span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a><span class="dt">RestrictAddressFamilies</span><span class="ot">=</span><span class="st">AF_UNIX AF_INET AF_INET6 AF_NETLINK   # UDS + sockets + netlink only</span></span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a><span class="dt">SystemCallFilter</span><span class="ot">=</span><span class="st">@system-service</span></span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a><span class="dt">MemoryDenyWriteExecute</span><span class="ot">=</span><span class="kw">yes</span></span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a><span class="dt">ExecStopPost</span><span class="ot">=</span><span class="st">/usr/lib/helixvpn/helix-netd --flush-killswitch-on-crash   # LX4 / O-I11</span></span></code></pre></div>
+<p><code>ProtectSystem=strict</code> etc. are §11.4.133
+target-system-safety hardening; the daemon keeps <strong>only</strong>
+CAP_NET_ADMIN (§7.1). <code>RestrictAddressFamilies</code> includes
+<code>AF_NETLINK</code> (kernel-WG/route programming) and
+<code>AF_INET/6</code> (the transport carriers dial outbound).
+<code>ExecStopPost</code> enforces fail-closed kill-switch on an
+abnormal stop (O-I11 [01-ORC §0.3]).</p>
+<h3 id="82-sd_notify-lifecycle-the-daemon--systemd-contract">8.2
+sd_notify lifecycle (the daemon ↔︎ systemd contract)</h3>
+<div class="sourceCode" id="cb16"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-netd readiness + watchdog (Type=notify, WatchdogSec= set in §9 connector unit).</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>sd_notify(<span class="cn">false</span><span class="op">,</span> <span class="st">&quot;READY=1</span><span class="sc">\n</span><span class="st">STATUS=serving on /run/helix/netd.sock&quot;</span>)<span class="op">;</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="co">// per loop: sd_notify(false, &amp;format!(&quot;WATCHDOG=1&quot;));               // liveness ping</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="co">// on reconfigure: sd_notify(false, &quot;RELOADING=1&quot;); … &quot;READY=1&quot;;</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="co">// on stop:        sd_notify(false, &quot;STOPPING=1\nSTATUS=tearing down tunnel&quot;);</span></span></code></pre></div>
+<h3 id="83-why-socket-activation">8.3 Why socket activation</h3>
+<p>The desktop helper is <strong>idle (not running)</strong> until the
+GUI first connects — zero resident cost when no tunnel is wanted.
+systemd starts <code>helix-netd</code> on the first UDS connection and
+(optionally) stops it after an idle timeout
+post-<code>stopTunnel</code>. For the <strong>connector</strong> (§9)
+socket activation is <em>off</em> — it is a persistent network appliance
+that must reconnect autonomously (fail-static, I3 [01-ORC §0.3]).</p>
+<hr />
+<h2 id="9-the-connector-daemon-deployment---modeconnector">9. The
+connector-daemon deployment (<code>--mode=connector</code>)</h2>
+<p>The connector is the <strong>same <code>helix-core</code></strong>,
+<code>Mode::Connector</code> — byte-identical loops, status stream,
+reconciler, transport ladder; only the routing posture differs (O-I13
+[01-ORC §9], I4 [01-TXP]). Linux is its primary host [04_ARCH §5.4]. It
+is <strong>headless</strong> (no Flutter UI required; the Connector
+flavor GUI is optional config surface [03-client §6, D-CLIENT-4]).</p>
+<h3 id="91-what-differs-from-the-gui-client">9.1 What differs from the
+GUI client</h3>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>GUI client</th>
+<th>Connector daemon</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Topology</td>
+<td>T-A or T-B (§3)</td>
+<td><strong>standalone privileged service</strong> (no GUI; core in the
+daemon process)</td>
+</tr>
+<tr>
+<td>Carrier device</td>
+<td>tun capturing the device default route</td>
+<td>LAN iface + tun; <strong>forwards</strong> decapsulated packets into
+the served CIDR + NAT (no default-route capture) [01-ORC §9.1]</td>
+</tr>
+<tr>
+<td>Kill-switch</td>
+<td><code>Strict</code>/<code>Permissive</code> (privacy)</td>
+<td>typically <code>Off</code> — it is an appliance, not a privacy
+client (config knob, [01-ORC §9.4])</td>
+</tr>
+<tr>
+<td>Inbound</td>
+<td>n/a</td>
+<td><strong>outbound-only</strong> — dials the gateway, never listens
+(founding no-port-forward constraint [SYN §1])</td>
+</tr>
+<tr>
+<td>Verdict map</td>
+<td>n/a</td>
+<td>installs the compiled policy as an <strong>nftables/eBPF verdict
+map</strong>, re-installed <code>&lt;1s</code> on reconcile,
+default-deny fail-closed [01-ORC §9.2/§9.3]</td>
+</tr>
+<tr>
+<td>Lifecycle host</td>
+<td>GUI process / helper</td>
+<td>systemd <code>Type=notify</code> service or rootless Podman quadlet
+(§9.4)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="92-the-connector-data-path-loop-b-branch">9.2 The connector data
+path (loop B branch)</h3>
+<pre class="mermaid"><code>flowchart LR
+  GW[&quot;gateway :443/:51820&quot;] -- &quot;obfuscated WG datagrams&quot; --&gt; TX[&quot;helix-transport recv&quot;]
+  TX --&gt; WG[&quot;helix-wg decrypt&quot;]
+  WG --&gt; ACL{&quot;verdict map\n(default-deny, I6)\n[01-ORC §9.2]&quot;}
+  ACL -- Allow --&gt; NAT[&quot;SNAT into served CIDR → LAN iface&quot;]
+  ACL -- Deny --&gt; DROP[&quot;drop + counter (policy_drop)&quot;]
+  LAN[&quot;LAN host reply&quot;] --&gt; WG2[&quot;helix-wg encrypt (gateway peer)&quot;] --&gt; TX2[&quot;helix-transport send&quot;] --&gt; GW</code></pre>
+<p>The connector runs <strong>loop A driven by the LAN iface</strong>
+(not a TUN) and <strong>loop B forwarding into the LAN</strong> —
+<code>TunSpec</code> abstracts both so the loop bodies are unchanged
+[01-ORC §9.2]. CAP_NET_ADMIN is required for the tun, the LAN-forward
+NAT, and the nftables verdict map (§7.1).</p>
+<h3 id="93-systemd-unit-connector">9.3 systemd unit (connector)</h3>
+<div class="sourceCode" id="cb18"><pre class="sourceCode ini"><code class="sourceCode ini"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># /usr/lib/systemd/system/helix-connectord.service</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="kw">[Unit]</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="dt">Description</span><span class="ot">=</span><span class="st">Helix VPN Connector (outbound-only network agent)</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="dt">After</span><span class="ot">=</span><span class="st">network-online.target</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="dt">Wants</span><span class="ot">=</span><span class="st">network-online.target</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a><span class="kw">[Service]</span></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a><span class="dt">Type</span><span class="ot">=</span><span class="st">notify</span></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a><span class="dt">ExecStart</span><span class="ot">=</span><span class="st">/usr/lib/helixvpn/helix-connectord --mode=connector --config /etc/helixvpn/connector.toml</span></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a><span class="dt">AmbientCapabilities</span><span class="ot">=</span><span class="st">CAP_NET_ADMIN</span></span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a><span class="dt">CapabilityBoundingSet</span><span class="ot">=</span><span class="st">CAP_NET_ADMIN</span></span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a><span class="dt">NoNewPrivileges</span><span class="ot">=</span><span class="kw">yes</span></span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a><span class="dt">WatchdogSec</span><span class="ot">=</span><span class="st">30                       # §8.2 sd_notify WATCHDOG=1 every &lt;15s; restart on hang</span></span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a><span class="dt">Restart</span><span class="ot">=</span><span class="st">on-failure</span></span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a><span class="dt">RestartSec</span><span class="ot">=</span><span class="st">2                         # bounded; complements the core&#39;s own backoff [01-ORC §7]</span></span>
+<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a><span class="dt">ProtectSystem</span><span class="ot">=</span><span class="st">strict</span></span>
+<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a><span class="dt">ProtectHome</span><span class="ot">=</span><span class="kw">yes</span></span>
+<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a><span class="dt">PrivateTmp</span><span class="ot">=</span><span class="kw">yes</span></span>
+<span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a><span class="dt">RestrictAddressFamilies</span><span class="ot">=</span><span class="st">AF_UNIX AF_INET AF_INET6 AF_NETLINK</span></span>
+<span id="cb18-19"><a href="#cb18-19" aria-hidden="true" tabindex="-1"></a><span class="dt">SystemCallFilter</span><span class="ot">=</span><span class="st">@system-service</span></span>
+<span id="cb18-20"><a href="#cb18-20" aria-hidden="true" tabindex="-1"></a><span class="kw">[Install]</span></span>
+<span id="cb18-21"><a href="#cb18-21" aria-hidden="true" tabindex="-1"></a><span class="dt">WantedBy</span><span class="ot">=</span><span class="st">multi-user.target</span></span></code></pre></div>
+<p><code>Restart=on-failure</code> + <code>WatchdogSec</code> give the
+appliance autonomous recovery <em>on top of</em> the core&#39;s in-process
+reconnect ladder [01-ORC §7] — the systemd restart is the last-resort
+supervisor (E10 [01-ORC §12]: a panicked core is restarted;
+<code>start()</code> resets the ladder). The credential file
+<code>/etc/helixvpn/connector.toml</code> and any enrollment secret are
+<code>0600</code> root-owned and git-ignored (§11.4.10/.30) — never in
+the unit, never logged.</p>
+<h3 id="94-rootless-podman-quadlet-11476--114161">9.4 Rootless Podman
+quadlet (§11.4.76 / §11.4.161)</h3>
+<p>Per §11.4.76 all containerized deploy goes through the
+<code>vasic-digital/containers</code> submodule; the connector ships as
+an OCI image run by a Podman <strong>quadlet</strong>
+(<code>.container</code> unit managed by systemd, rootless) [04_ARCH §4,
+SYN §2]:</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode ini"><code class="sourceCode ini"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># ~/.config/containers/systemd/helix-connectord.container  (rootless quadlet)</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="kw">[Container]</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="dt">Image</span><span class="ot">=</span><span class="st">ghcr.io/vasic-digital/helix-connectord:helixvpn-&lt;version&gt;   # §11.4.151 prefix</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="dt">AddCapability</span><span class="ot">=</span><span class="st">NET_ADMIN              # ONLY this; rootless, non-root UID inside (§11.4.161)</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="dt">AddDevice</span><span class="ot">=</span><span class="st">/dev/net/tun</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a><span class="dt">Exec</span><span class="ot">=</span><span class="st">--mode=connector --config /etc/helixvpn/connector.toml</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a><span class="dt">Notify</span><span class="ot">=</span><span class="st">true                          # quadlet → Type=notify passthrough</span></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a><span class="kw">[Service]</span></span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a><span class="dt">Restart</span><span class="ot">=</span><span class="st">on-failure</span></span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a><span class="kw">[Install]</span></span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a><span class="dt">WantedBy</span><span class="ot">=</span><span class="st">default.target</span></span></code></pre></div>
+<p>Inside the container the <strong>userspace tun backend is
+mandatory</strong> (§7.4); the container boots its integration infra
+on-demand via the containers submodule (§11.4.76 on-demand-infra
+invariant) for the <code>IT</code> test rig (§14).</p>
+<hr />
+<h2 id="10-shim-lifecycle-state-machine">10. Shim lifecycle state
+machine</h2>
+<p>The shim&#39;s <strong>own</strong> lifecycle (distinct from the core&#39;s
+<code>OrchState</code> [01-ORC §5]). It emits
+<code>PlatformTunnelEvent</code> (LX5), never
+<code>TunnelStatus</code>.</p>
+<pre class="mermaid"><code>stateDiagram-v2
+  [*] --&gt; Idle
+  Idle --&gt; AcquiringPriv : startTunnel(cfg)
+  AcquiringPriv --&gt; PermissionDenied : polkit/file-cap refused → emit permissionDenied (LX3)
+  AcquiringPriv --&gt; CreatingCarrier : CAP_NET_ADMIN held + backend selected (§2.3)
+  CreatingCarrier --&gt; CarrierError : tun open / netlink / ioctl failed → emit error (honest detail §13)
+  CreatingCarrier --&gt; CoreStarting : tun fd / wgX ready
+  CoreStarting --&gt; Up : core.start ok (+ attach_tun on userspace) → emit up
+  Up --&gt; Switching : ladder escalation crosses kernel/userspace boundary (§2.3)
+  Switching --&gt; Up : switchCarrier ok (kill-switch stayed closed, O-I11)
+  Up --&gt; Revoked : OS/admin revoked out-of-band (device.revoked, O3) → emit revoked
+  Up --&gt; Stopping : stopTunnel()
+  Revoked --&gt; Stopping : auto-teardown after revoke
+  CarrierError --&gt; Cleanup
+  PermissionDenied --&gt; Cleanup
+  Stopping --&gt; Cleanup : detach_tun + core.stop + destroyCarrier
+  Cleanup --&gt; Idle : host quiescent (LX4); emit down ; kill-switch per §8.6/§11
+  CarrierError --&gt; [*]</code></pre>
+<p>State→event map (the only events crossing to the UI per [03-client
+§4]):</p>
+<table>
+<thead>
+<tr>
+<th>Shim state reached</th>
+<th><code>PlatformTunnelEventKind</code> emitted</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Up</code></td>
+<td><code>up</code></td>
+<td>UI still waits for the <strong>core</strong> <code>Connected</code>
+before painting green (CI2)</td>
+</tr>
+<tr>
+<td><code>PermissionDenied</code></td>
+<td><code>permissionDenied</code></td>
+<td>distinct from <code>error</code> (LX3) — UI offers &quot;grant
+access&quot;</td>
+</tr>
+<tr>
+<td><code>CarrierError</code></td>
+<td><code>error</code> (+ honest <code>detail</code>)</td>
+<td>tun/netlink failure; no half-open device left (LX4)</td>
+</tr>
+<tr>
+<td><code>Revoked</code></td>
+<td><code>revoked</code></td>
+<td>admin/out-of-band kill (O3); core also emits
+<code>Down{auth-failed}</code></td>
+</tr>
+<tr>
+<td><code>Cleanup→Idle</code></td>
+<td><code>down</code></td>
+<td>host quiescent; kill-switch closed unless user-initiated stop
+(§8.6)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="11-kill-switch--dns-on-linux-nftables--resolved">11. Kill-switch
++ DNS on Linux (nftables / resolved)</h2>
+<p>The kill-switch and DNS-leak protection are <strong>owned by the core
+state machine</strong> [01-ORC §8], <em>applied</em> by the privileged
+plane on Linux. The shim never hand-edits rules independently — it
+executes the core&#39;s side-effect commands (O-I10 [01-ORC §0.3]).</p>
+<h3 id="111-nftables-kill-switch">11.1 nftables kill-switch</h3>
+<pre><code># installed on Idle→Connecting (Strict mode) [01-ORC §8.2]; flushed only on user-stop (§8.6)
+table inet helix_killswitch {
+  chain output {
+    type filter hook output priority 0; policy drop;       # default-DROP egress (fail-closed, O-I11)
+    oifname &quot;helix0&quot; accept                                  # the tun/wg carrier device
+    ip daddr &lt;gateway_endpoints&gt; udp dport 443 accept        # allow_gateway_endpoints [01-ORC §8.2]
+    ip daddr &lt;gateway_endpoints&gt; tcp dport 443 accept        # masque/uot dial
+    meta l4proto { icmp, icmpv6 } accept                     # ND/DHCP link bring-up
+    ip daddr &lt;rfc1918&gt; accept                                # allow_lan (config; printers etc.)
+  }
+}</code></pre>
+<p><code>&lt;gateway_endpoints&gt;</code> =
+<code>KillSwitchConfig.allow_gateway_endpoints</code> [01-ORC §8.2] —
+the carrier MUST always reach <code>:443</code>. The table is installed
+<strong>closed before the first handshake</strong> (Strict) so there is
+no pre-connect leak, and <strong>stays installed on crash</strong>
+(O-I11) — the systemd <code>ExecStopPost</code> (§8.1) only flushes on a
+<em>clean</em> user stop (§8.6). <code>splitExcludeApps</code>
+[03-client §4] maps on Linux to per-cgroup / per-<code>fwmark</code>
+accept rules (<code>UNVERIFIED</code> exact mechanism — Phase-2
+split-tunnel item; the cgroup-net-cls / nftables
+<code>meta cgroup</code> path is the design reference).</p>
+<h3 id="112-dns-the-dnsapplymethod-matrix-01-orc-83">11.2 DNS (the
+<code>DnsApplyMethod</code> matrix [01-ORC §8.3])</h3>
+<table>
+<thead>
+<tr>
+<th>Host DNS stack</th>
+<th><code>DnsApplyMethod</code></th>
+<th>Mechanism</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>systemd-resolved</code> present</td>
+<td><code>systemd-resolved</code></td>
+<td><code>resolvectl dns helix0 &lt;tunnelDns&gt;</code> +
+<code>resolvectl domain helix0 &#39;~.&#39;</code> (route all)</td>
+</tr>
+<tr>
+<td><code>resolvconf</code> present</td>
+<td><code>resolvconf</code></td>
+<td><code>resolvconf -a helix0</code> with the tunnel servers</td>
+</tr>
+<tr>
+<td>neither (static)</td>
+<td><code>/etc/resolv.conf</code></td>
+<td>atomic rewrite + restore-on-stop (backup the original)</td>
+</tr>
+</tbody>
+</table>
+<p><code>block_plaintext_53</code> [01-ORC §8.3] adds nft rules dropping
+any off-tunnel <code>:53</code> (UDP+TCP) when <code>Connected</code> —
+closing the classic DNS leak. The block <strong>stays</strong> on
+<code>Reconnecting</code>/<code>Down</code> (fail-closed) and reverts
+only on user-stop (§8.6, [01-ORC §8.4]). A DNS-apply failure at start is
+<code>host-fatal</code> → core emits <code>Down{host-fatal}</code>
+[01-ORC §8.2] — the shim never proceeds with an unverified DNS posture
+(§11.4.6).</p>
+<hr />
+<h2 id="12-memory--size--performance-budgets">12. Memory / size /
+performance budgets</h2>
+<p>Linux has <strong>no iOS-NE-class hard ceiling</strong> (CI4
+[03-client §0.1] is iOS-only) — but the connector appliance / embedded
+host and the §11.4.161 rootless container warrant a real budget.
+Captured in the Phase-0 <code>MEM</code>/<code>BENCH</code> evidence,
+never asserted (§11.4.6/.123) [04_P0 §8].</p>
+<table>
+<thead>
+<tr>
+<th>Budget</th>
+<th>Target</th>
+<th>Basis</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Kernel-WG backend userspace RSS</td>
+<td><strong>near-zero datapath</strong> (kernel owns packets); core
+resident = control only</td>
+<td>§2.1 — fast path</td>
+</tr>
+<tr>
+<td>Userspace-tun backend core RSS</td>
+<td>low-tens MB steady-state (boringtun + transport buffers); no
+per-datagram heap growth</td>
+<td>shares the <code>helix-core</code> budget [03-client §10]; reused
+<code>scratch</code> buffers [01-ORC §3.1]</td>
+</tr>
+<tr>
+<td><code>helix-netd</code> daemon RSS (idle, socket-activated)</td>
+<td><strong>0 (not running)</strong> until first connect (§8.3)</td>
+<td>socket activation</td>
+</tr>
+<tr>
+<td><code>helix-netd</code> RSS (active, T-B)</td>
+<td>core RSS + a thin IPC relay (single-digit MB overhead)</td>
+<td>§6</td>
+</tr>
+<tr>
+<td>Connector daemon RSS</td>
+<td>low-tens MB; bounded by <code>peers × Tunn</code> + verdict map (no
+per-conn state, I5)</td>
+<td>[01-ORC §13.2]</td>
+</tr>
+<tr>
+<td>Through-tunnel throughput (plain-udp, kernel WG)</td>
+<td>≥ 80% bare link (G1)</td>
+<td>[04_P0 §8]; kernel datapath ≈ native WG</td>
+</tr>
+<tr>
+<td>Through-tunnel throughput (userspace tun, masque-h3)</td>
+<td>≥ 50% of plain-udp (G2); double-crypto/CC tax acknowledged</td>
+<td>[01-TXP §11], [04_P0 §8]</td>
+</tr>
+<tr>
+<td>Roam / iface-flap recovery</td>
+<td>&lt; 3 s</td>
+<td>[01-ORC §7.5]; netlink iface watcher posts
+<code>RoamDetected</code></td>
+</tr>
+<tr>
+<td>Backend switch (kernel→userspace) latency</td>
+<td>bounded; kill-switch closed throughout (no leak window)</td>
+<td>§2.3, O-I11</td>
+</tr>
+</tbody>
+</table>
+<p>The Linux iface watcher feeding <code>RoamDetected</code> [01-ORC
+§7.5] is <strong>netlink</strong>
+(<code>RTM_NEWADDR</code>/<code>RTM_DELADDR</code> on the
+<code>rtnetlink</code> route socket) — the shim&#39;s only ongoing
+background duty besides the carrier pump.</p>
+<hr />
+<h2 id="13-error-taxonomy--edge-cases">13. Error taxonomy &amp; edge
+cases</h2>
+<p>Shim-layer errors map to <code>PlatformTunnelEvent</code> (§10); core
+errors flow through <code>TunnelStatus</code> ([01-ORC §10]). The shim&#39;s
+honest <code>detail</code> strings (§11.4.6) never carry a secret
+(§11.4.10).</p>
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>Cause</th>
+<th>Event / mapping</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>LX-E1</code></td>
+<td>polkit / file-cap refused</td>
+<td><code>permissionDenied</code> (NOT error, LX3)</td>
+</tr>
+<tr>
+<td><code>LX-E2</code></td>
+<td><code>/dev/net/tun</code> absent (no <code>tun</code> module)</td>
+<td><code>error{detail:&quot;tun-module-missing&quot;}</code>; suggest
+<code>modprobe tun</code> (CLI)</td>
+</tr>
+<tr>
+<td><code>LX-E3</code></td>
+<td><code>ioctl(TUNSETIFF)</code> / netlink addr/route failed</td>
+<td><code>error</code> + full host cleanup (LX4); no orphan iface</td>
+</tr>
+<tr>
+<td><code>LX-E4</code></td>
+<td>kernel <code>wireguard</code> genl family absent (kernel
+backend)</td>
+<td>fall back to userspace tun (§2.3 rule 3), not an error</td>
+</tr>
+<tr>
+<td><code>LX-E5</code></td>
+<td>nft kill-switch install failed</td>
+<td>core → <code>Down{host-fatal}</code> [01-ORC §8.2]; shim emits
+<code>error</code></td>
+</tr>
+<tr>
+<td><code>LX-E6</code></td>
+<td><code>helix-netd</code> UDS unreachable (T-B)</td>
+<td><code>error{detail:&quot;helper-unavailable&quot;}</code>; GUI offers
+retry/install</td>
+</tr>
+</tbody>
+</table>
+<p>Edge cases (each → a §14 test point):</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Edge case</th>
+<th>Required behaviour</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>E-LX1</td>
+<td><code>startTunnel</code> called twice (same cfg)</td>
+<td>idempotent no-op <code>Ok</code> (LX3); different cfg while up →
+<code>Error{busy}</code> (§6.3)</td>
+</tr>
+<tr>
+<td>E-LX2</td>
+<td>privilege granted but tun create fails</td>
+<td>full cleanup, <strong>no half-open device</strong> (LX4);
+<code>error</code></td>
+</tr>
+<tr>
+<td>E-LX3</td>
+<td>core crashes while shim holds the tun fd</td>
+<td>T-A: process dies, kill-switch rules persist (O-I11),
+systemd/supervisor restarts; T-B: daemon <code>ExecStopPost</code>
+flush-on-crash leaves closed rules</td>
+</tr>
+<tr>
+<td>E-LX4</td>
+<td><code>detach_tun</code> then shim closes fd, but a core read loop
+lingered</td>
+<td>ordering guard (§5.2): core drops the loop on
+<code>detach_tun</code> <em>before</em> shim <code>close()</code>;
+double-close impossible</td>
+</tr>
+<tr>
+<td>E-LX5</td>
+<td>ladder escalates
+<code>plain-udp</code>(kernel)→<code>masque-h3</code>(userspace)
+mid-session</td>
+<td>backend switch (§2.3): tear wgX, create tunX,
+<code>attach_tun</code>, re-program routes/DNS/KS; <strong>kill-switch
+stays closed across the swap</strong> (O-I11); recovery within the
+[01-ORC §7] budget</td>
+</tr>
+<tr>
+<td>E-LX6</td>
+<td>host has no <code>systemd</code> (e.g. minimal
+container/Alpine-OpenRC)</td>
+<td>T-A path only; helper-daemon socket-activation degrades to a plain
+spawned daemon; <code>UNVERIFIED</code> non-systemd init support is a
+Phase-2 packaging item</td>
+</tr>
+<tr>
+<td>E-LX7</td>
+<td><code>device.revoked</code> arrives out-of-band (admin kills the
+connector)</td>
+<td>core → <code>Down{auth-failed}</code>; shim emits
+<code>revoked</code> (O3); kill-switch stays closed (connector
+<code>Off</code> → traffic just stops forwarding)</td>
+</tr>
+<tr>
+<td>E-LX8</td>
+<td>rootless container lacks NET_ADMIN</td>
+<td><code>startTunnel</code> → <code>permissionDenied</code> with
+<code>detail:&quot;container-missing-net-admin&quot;</code>; documented
+remediation (§7.4) — never a fake success</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="14-test-points-114169">14. Test points (§11.4.169)</h2>
+<p>Every Linux-shim workable item declares its required test types from
+the §11.4.169 closed vocabulary [06-phase0-spike-wbs §0.4]; the ONLY
+permitted absence of a warranted type is an honest §11.4.3
+SKIP-with-reason, never a silent gap. Four-layer enforcement per
+§11.4.4(b) on every closure. Every PASS ships rock-solid captured
+evidence (§11.4.5/.69/.107) — config-only / grep-only PASS
+forbidden.</p>
+<table>
+<thead>
+<tr>
+<th>Test id</th>
+<th>§11.4.169 types</th>
+<th>What it proves</th>
+<th>Rig / captured evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>LX-1</td>
+<td><code>UT</code></td>
+<td><code>PrivilegedTunnelOps</code> backend-selection table (§2.3) is
+total + correct for every <code>kind()</code> × <code>kernel_wg</code>×
+policy</td>
+<td>table-driven Rust/Dart unit test; mocks allowed (unit only,
+§11.4.27)</td>
+</tr>
+<tr>
+<td>LX-2</td>
+<td><code>UT</code></td>
+<td>nft kill-switch ruleset render is exact for Strict/Permissive/Off +
+<code>allow_lan</code>/<code>allow_gateway</code></td>
+<td>golden nft-script diff</td>
+</tr>
+<tr>
+<td>LX-3</td>
+<td><code>IT</code></td>
+<td>userspace path: open <code>/dev/net/tun</code>,
+<code>attach_tun(fd)</code>, loop A/B move real WG datagrams;
+<code>curl http://10.10.0.20/</code> over plain-udp <strong>and</strong>
+masque-h3</td>
+<td>netns + edge + connector booted via containers submodule (§11.4.76);
+<code>tcpdump</code> + curl 200</td>
+</tr>
+<tr>
+<td>LX-4</td>
+<td><code>IT</code></td>
+<td>kernel-WG path: program wgX via netlink,
+<code>last_handshake_time</code> drives <code>Connected</code>;
+<code>curl</code> over plain-udp</td>
+<td>netns + kernel <code>wireguard</code>; netlink dump + curl 200</td>
+</tr>
+<tr>
+<td>LX-5</td>
+<td><code>E2E</code>+<code>FA</code></td>
+<td>full status arc
+<code>Connecting→Handshaking→Connected{plain-udp,rtt}</code> driven ONLY
+by the core stream on Flutter-Linux (G5)</td>
+<td>window-scoped MP4 + vision/OCR verdict (§11.4.159) of
+<code>StatusChip</code> reading <code>plain-udp · 23ms</code></td>
+</tr>
+<tr>
+<td>LX-6</td>
+<td><code>E2E</code>+<code>FA</code></td>
+<td><strong>backend switch</strong>
+plain-udp(kernel)→masque-h3(userspace) on a DPI block; zero leak across
+the swap (E-LX5)</td>
+<td><code>nft</code> block plain WG mid-session; <code>tcpdump</code>
+underlay shows ZERO app packets during swap; ordered status trace (N=3
+identical, §11.4.50)</td>
+</tr>
+<tr>
+<td>LX-7</td>
+<td><code>SEC</code></td>
+<td>kill-switch closes on drop — no plaintext egress while
+<code>Reconnecting</code>/<code>Down</code>; closed rules persist on
+simulated crash (E-LX3)</td>
+<td>block gateway mid-<code>Connected</code>; <code>tcpdump</code>
+underlay = ZERO leaked packets; SIGKILL the core, assert nft table still
+present</td>
+</tr>
+<tr>
+<td>LX-8</td>
+<td><code>SEC</code></td>
+<td>DNS-leak guard: off-tunnel <code>:53</code> dropped when
+<code>Connected</code>; system DNS restored on user-stop only
+(§11.2)</td>
+<td><code>dig @off-tunnel</code> blocked;
+<code>resolvectl</code>/<code>resolv.conf</code> capture
+before/after</td>
+</tr>
+<tr>
+<td>LX-9</td>
+<td><code>SEC</code></td>
+<td>privilege confinement: <code>helix-netd</code> holds
+<strong>only</strong> CAP_NET_ADMIN; GUI binary carries no file-caps
+(LX2); secrets absent from daemon logs (§11.4.10)</td>
+<td><code>getpcaps</code>/<code>capsh</code> dump; <code>getcap</code>
+on GUI; plant-a-secret grep-empty proof</td>
+</tr>
+<tr>
+<td>LX-10</td>
+<td><code>E2E</code></td>
+<td>polkit denial → <code>permissionDenied</code> (NOT error), no
+half-open tun (LX3/E-LX2)</td>
+<td>deny the polkit action; assert event kind +
+<code>ip tuntap show</code> empty</td>
+</tr>
+<tr>
+<td>LX-11</td>
+<td><code>INT</code></td>
+<td>connector posture: gateway→connector→LAN forward + reverse,
+ACL-gated default-deny; verdict map re-install <code>&lt;1s</code> on
+reconcile</td>
+<td>netns LAN; authorized host reachable, unauthorized DROPPED+counted;
+pid unchanged on policy edit</td>
+</tr>
+<tr>
+<td>LX-12</td>
+<td><code>SC</code></td>
+<td>iface flap → <code>RoamDetected</code> (netlink) → re-dial →
+<code>Connected</code> <code>&lt;3s</code>; process-kill mid-transfer →
+systemd restart recovers</td>
+<td>netns flap + SIGKILL; status-trace timing CSV; recovery
+<code>&lt;3s</code></td>
+</tr>
+<tr>
+<td>LX-13</td>
+<td><code>CONC</code>+<code>RACE</code></td>
+<td>concurrent <code>startTunnel</code>/<code>stopTunnel</code> +
+backend switch under load drop zero datagrams; UDS relay no
+deadlock</td>
+<td>concurrency harness; <code>cargo test --features loom</code> on the
+swap; relay log</td>
+</tr>
+<tr>
+<td>LX-14</td>
+<td><code>MEM</code>+<code>BENCH</code></td>
+<td>kernel-WG ≥80% bare link (G1); userspace masque ≥50% of plain (G2);
+core RSS bounded, no per-datagram heap growth</td>
+<td><code>iperf3</code> via <code>bench.sh</code> CSV;
+<code>/proc/&lt;pid&gt;/status</code> RSS sample</td>
+</tr>
+<tr>
+<td>LX-15</td>
+<td><code>LOAD</code></td>
+<td>connector under 1/10/100 concurrent client sessions +
+handshake-flood: no fd leak, bounded mem, verdict map holds</td>
+<td>iperf3 fan-in + handshake-flood CSV;
+<code>ls /proc/&lt;pid&gt;/fd</code> count stable</td>
+</tr>
+<tr>
+<td>LX-16</td>
+<td><code>CH</code>+<code>HQA</code></td>
+<td>a <code>challenges</code>/<code>helix_qa</code> bank entry scores
+PASS only on the captured LX-5/LX-6/LX-7 evidence (not config)</td>
+<td>HelixQA autonomous session, evidence-gated (§11.4.27/.107);
+Challenge <code>result.json</code></td>
+</tr>
+</tbody>
+</table>
+<p>Each gate ships a paired §1.1 meta-test mutation so it provably
+cannot bluff — e.g. flip the shim to <code>close()</code> the tun fd
+<em>before</em> <code>detach_tun</code> returns → LX-13 double-close
+guard FAILs; weaken the connector verdict gate → LX-11 FAILs; emit
+<code>up</code> before privilege is acquired → LX-10 FAILs; flush the
+kill-switch on crash → LX-7 FAILs.</p>
+<hr />
+<h2 id="15-open-decisions-surfaced-by-this-document">15. Open decisions
+surfaced by this document</h2>
+<p>Per §11.4.6/§11.4.66 — options + recommendation, never silently
+resolved.</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Decision</th>
+<th>Option A</th>
+<th>Option B</th>
+<th>Recommendation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>D-LXN-1</strong></td>
+<td>Kernel-WG fast path in Phase 1?</td>
+<td>ship both backends (best plain-udp throughput)</td>
+<td>userspace-tun-only Phase 1 (one datapath, no swap complexity,
+matches iOS/Android)</td>
+<td><strong>B for Phase 1</strong>; promote A in Phase 2 behind a
+measured <code>BENCH</code> gain (§2.3).</td>
+</tr>
+<tr>
+<td><strong>D-LXN-2</strong></td>
+<td>Desktop GUI privilege topology</td>
+<td>T-A in-process (file-caps on the GUI)</td>
+<td>T-B helper daemon <code>helix-netd</code> (polkit, confined
+caps)</td>
+<td><strong>T-B for the shipped GUI</strong> (small audited privileged
+surface, mirrors Windows); T-A for Phase-0 spike + CLI/appliance
+(§3).</td>
+</tr>
+<tr>
+<td><strong>D-LXN-3</strong></td>
+<td>netlink crate for kernel WG + routes</td>
+<td><code>defguard_wireguard_rs</code> + <code>rtnetlink</code></td>
+<td>hand-rolled genl/<code>rtnetlink</code></td>
+<td><strong>A (reuse a maintained crate)</strong> per §11.4.74
+catalogue-first; <code>UNVERIFIED</code> maturity — confirm in Phase-1
+spike before committing.</td>
+</tr>
+<tr>
+<td><strong>D-LXN-4</strong></td>
+<td>Split-tunnel (<code>splitExcludeApps</code>) mechanism</td>
+<td>cgroup-net-cls + <code>fwmark</code> + nft
+<code>meta cgroup</code></td>
+<td>network-namespace per app</td>
+<td><strong>A (Phase 2)</strong> — lower blast radius, no per-app netns;
+surfaced, not built in MVP (§11.1).</td>
+</tr>
+<tr>
+<td><strong>D-LXN-5</strong></td>
+<td>Non-systemd init support (OpenRC/Alpine)</td>
+<td>T-A spawned daemon only</td>
+<td>full OpenRC service scripts</td>
+<td><strong>A for MVP</strong>, B as a Phase-2 packaging item (E-LX6);
+<code>UNVERIFIED</code> demand.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="16-cross-document-contracts-this-document-consumesfixes">16.
+Cross-document contracts this document consumes/fixes</h2>
+<table>
+<thead>
+<tr>
+<th>Contract</th>
+<th>Source of truth</th>
+<th>This doc&#39;s role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FFI surface
+(<code>start/stop/status_stream/attach_tun/detach_tun</code>)</td>
+<td>[03-client §3.1]</td>
+<td><strong>consumes</strong> unchanged; adds no FFI verb (§5)</td>
+</tr>
+<tr>
+<td><code>TunnelStatus</code> (5-variant canonical)</td>
+<td>[01-ORC §4.1]</td>
+<td><strong>consumes</strong>; shim never constructs it (LX5); FFI
+mirror superset noted (§5.1)</td>
+</tr>
+<tr>
+<td><code>TunnelPlatform</code> channel contract
+(<code>startTunnel/stopTunnel/events</code>, <code>TunnelConfig</code>,
+<code>PlatformTunnelEvent</code>)</td>
+<td>[03-client §4]</td>
+<td><strong>implements</strong> for Linux (§4); fixes the
+<code>PrivilegedTunnelOps</code> Linux seam</td>
+</tr>
+<tr>
+<td><code>Transport::kind()</code> → backend selection</td>
+<td>[01-TXP §2/§6]</td>
+<td><strong>consumes</strong> to choose kernel-WG vs userspace tun
+(§2.3, LX6)</td>
+</tr>
+<tr>
+<td>Kill-switch/DNS side-effect matrix</td>
+<td>[01-ORC §8]</td>
+<td><strong>applies</strong> on Linux via nftables/resolved (§11)</td>
+</tr>
+<tr>
+<td>Connector posture (<code>Mode::Connector</code>)</td>
+<td>[01-ORC §9]</td>
+<td><strong>fixes</strong> the Linux daemon deployment (§9): systemd +
+rootless Podman quadlet</td>
+</tr>
+<tr>
+<td>CAP_NET_ADMIN / rootless / containers</td>
+<td>§11.4.76/.161/.133, [SYN §2]</td>
+<td><strong>fixes</strong> the privilege model (§7) + quadlet deploy
+(§9.4)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="sources-verified">Sources verified</h2>
+<ul>
+<li><code>final/03-client-core-and-ui.md</code> <code>[03-client]</code>
+— §0.1 (CI1/CI2/CI4 invariants), §3 (FFI surface +
+<code>TunnelStatus</code> FFI mirror), §4 (<code>TunnelPlatform</code>
+contract, obligations O1–O5), §5.3 (Windows service/pipe parallel), §5.4
+(Linux row), §6 (flavors), §10 (budgets), §12 (testing).</li>
+<li><code>final/v02-data-plane/orchestrator-and-state.md</code>
+<code>[01-ORC]</code> — §0.3 (O-I10/11/13), §2.1
+(<code>attach_tun</code>, <code>Mode</code>, <code>TunSpec</code>), §3
+(three loops), §4.1 (canonical <code>TunnelStatus</code>), §4.4
+(<code>Down.reason</code>), §5 (state machine), §7 (backoff/roam), §8
+(kill-switch + DNS apply methods), §9 (connector posture/verdict map),
+§12 (edge cases), §13.2 (perf budgets).</li>
+<li><code>final/v02-data-plane/transport-trait.md</code>
+<code>[01-TXP]</code> — §0/§2 (<code>Transport</code>,
+<code>kind()</code>), §4 (per-carrier dial: plain-udp vs obfuscated), §6
+(ladder/dial), §11 (throughput budgets G1/G2).</li>
+<li><code>04_VPN_CLD/HelixVPN-Architecture-Refined.md</code>
+<code>[04_ARCH]</code> — §3 (WG crypto core + pluggable transports),
+§5.3 (per-platform shim matrix; Linux = kernel WG/tun, Rust), §5.4
+(connector daemon), kernel-vs-userspace WG note, Podman quadlets.</li>
+<li><code>04_VPN_CLD/HelixVPN-Phase0-Spike.md</code>
+<code>[04_P0]</code> — §9 (G5 Flutter-Linux FFI demo; &quot;on Linux the core
+can drive the TUN directly&quot;), §8 (gates / recovery &lt;3s).</li>
+<li><code>04_VPN_CLD/HelixVPN-helix-ui-Flutter.md</code>
+<code>[04_UI]</code> — §6 (shim contract: shim does only
+configure/handoff/lifecycle).</li>
+<li><code>v09-research/_SYNTHESIS.md</code> <code>[SYN]</code> — §1
+(outbound-only), §2 (rootless Podman,
+kernel-WG-fast-path/boringtun-fallback), §5 (client architecture), §9
+(constitution bindings).</li>
+<li><code>06-phase0-spike-wbs.md</code> §0.4 — the §11.4.169 test-type
+code map (UT/IT/E2E/FA/ CH/HQA/LOAD/SEC/SC/CONC/RACE/MEM/BENCH).</li>
+<li><code>[research-flutter_ffi]</code> — generic
+<code>flutter_rust_bridge</code> v2 in-process binding pattern (as
+grounded by [03-client §3]); <code>[research-ios_android]</code> —
+native-shim precedent (Linux in-process contrast). Items not in the read
+evidence base are tagged <code>UNVERIFIED</code> per §11.4.6 (kernel-WG
+crate choice, <code>IFF_NO_PI</code> flags, rootless-container tun
+reachability, polkit rule, non-systemd init, split-tunnel cgroup
+mechanism).</li>
+</ul>
+<p><em>Constitution: §11.4.6 (no-guessing / <code>UNVERIFIED</code>
+tags), §11.4.10 (secret redaction), §11.4.66 (decisions = options +
+recommendation), §11.4.76 (containers submodule), §11.4.112
+(structural-impossibility honesty — zero-CAP tunnel), §11.4.119
+(single-resource-owner), §11.4.124 (dead-capability discipline),
+§11.4.133 (target-system safety / systemd hardening), §11.4.151/.155
+(release/ recording prefixes), §11.4.159 (window-scoped vision-verified
+evidence), §11.4.161 (rootless), §11.4.169 (test-type coverage), §1.1
+(paired mutations).</em></p>
+<p><em>End of nano-detail specification — Linux shim (kernel WG / tun),
+Volume 4 (Clients). Pairs with [03-client §5.4] (the row this deepens),
+[01-ORC] (the core it hosts in-process), [01-TXP] (the carrier whose
+<code>kind()</code> drives backend selection), and the sibling shim docs
+(apple / android / windows / harmonyos / aurora). Surfaced decisions:
+D-LXN-1..5 (§15) — presented, none silently resolved
+(§11.4.66).</em></p>
+</body>
+</html>

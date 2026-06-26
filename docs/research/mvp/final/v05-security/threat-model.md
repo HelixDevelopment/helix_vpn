@@ -1,7 +1,7 @@
 # Threat Model — STRIDE + LINDDUN
 
-**Revision:** 1
-**Last modified:** 2026-06-25T12:00:00Z
+**Revision:** 2
+**Last modified:** 2026-06-26T12:00:00Z
 
 > Master technical specification — Volume 5 (Security & Privacy), nano-detail document
 > **threat-model**. Deepens [`04-security-privacy-pki.md`] (the security spine: zero-trust,
@@ -217,7 +217,7 @@ the Internet [04_ARCH §1.1]. That outbound-only posture is itself the largest m
 |---|---|---|---|---|---|---|
 | T-CONN-S-1 | Spoofing | A rogue agent claims to be a trusted connector and advertises a CIDR it does not serve | C-ACT, C-INS | AS-DB | Connector authenticates with a CA-signed device cert (S4); `bind_kind=connector` on its enroll token; advertised prefixes are tied to the authenticated `device_id` [`v03-control-plane/svc-policy.md` §1.1 `ConnPrefixes`] | A compromised connector *can* lie about CIDRs it is enrolled for → §10 R-CONN |
 | T-CONN-T-1 | Tampering | Inject/alter advertised-prefix messages on the wire | C-ACT | AS-DB | Advertisement rides the mTLS control channel (TB-3); off-channel injection fails TLS auth | none under A4 |
-| T-CONN-R-1 | Repudiation | Operator denies advertising a malicious route | C-INS | AS-AUDIT | `prefix.advertise`/`prefix.withdraw` are audited with actor binding (S7) | insider with DB write can edit audit → §10 R-INS |
+| T-CONN-R-1 | Repudiation | Operator denies advertising a malicious route | C-INS | AS-AUDIT | `connector.prefixes.changed` is audited with actor binding (S7) | insider with DB write can edit audit → §10 R-INS |
 | T-CONN-I-1 | Info disclosure | Connector leaks the LAN topology behind it | C-PEER, C-INS | AS-MAP | Need-to-know: only devices whose policy grants the connector's CIDR receive it (S3, R2) | a granted device legitimately learns that slice (by design) |
 | T-CONN-D-1 | DoS | Flood the Gateway with bogus advertise/reconnect churn | C-PEER | AS-DB | Per-tenant + per-source rate limits on control RPCs (Redis, [`04-security-privacy-pki.md` §3.4]); recompile is debounced | sustained authenticated abuse → §10 R-DOS |
 | T-CONN-E-1 | Elevation | Connector tries to be an exit node / full-tunnel target | C-PEER | AS-DB | `ERR_EXIT_IS_CONNECTOR` — the compiler **blocks** any `exitNodes` entry resolving to a connector (P-level, [`v03-control-plane/svc-policy.md` §5.1 / E7]) | none — mechanically rejected at compile |
@@ -287,7 +287,7 @@ The CA is the highest-value asset (AS-CA). Compromise mints arbitrary trusted id
 |---|---|---|---|---|---|---|
 | T-PKI-S-1 | Spoofing | Get the CA to sign a cert for a key the requester doesn't hold | C-PEER | AS-LEAF | CSR proof-of-possession verified before signing ([`04-security-privacy-pki.md` §3.4 / §4.7]) | none |
 | T-PKI-T-1 | Tampering | Issue a long-lived or wildcard cert | C-INS | AS-CA | Cert profile fixes `≤24 h` validity + `CA:FALSE` + `clientAuth` only ([`04-security-privacy-pki.md` §4.3]); profile enforced in the signer, not a request field | insider editing the profile code → audited, code-reviewed (§11.4.142) |
-| T-PKI-R-1 | Repudiation | Covert cert issuance with no record | C-INS | AS-AUDIT | `device.enroll`/cert issuance audited (S7); KMS produces its own sign-event log (A1) | insider with both DB *and* KMS log access → §10 R-CA (highest residual) |
+| T-PKI-R-1 | Repudiation | Covert cert issuance with no record | C-INS | AS-AUDIT | `device.enrolled` / `device.cert.issued` audited (S7); KMS produces its own sign-event log (A1) | insider with both DB *and* KMS log access → §10 R-CA (highest residual) |
 | T-PKI-I-1 | Info disclosure | Read the CA private key | C-INS, C-NAT | AS-CA | Key in KMS/HSM, never in process memory; `pki` holds a *signing grant* not the raw key (S11, A1, [`04-security-privacy-pki.md` §4.7 `CASigner`]) | a KMS-credential theft → §10 R-CA |
 | T-PKI-D-1 | DoS | Flood `SignDeviceCert` to exhaust KMS quota | C-PEER | AS-CA | Enroll rate limits (§3.4); renewal rides the *existing* authenticated channel (no new token) | quota exhaustion under authenticated abuse → §10 R-DOS |
 | T-PKI-E-1 | Elevation | A revoked device keeps control access | C-DEV | AS-DB | Revocation in `<1 s` (S5): cert serial blacklisted, open stream force-closed, WG peer removed; ≤24 h expiry is the defence-in-depth floor ([`04-security-privacy-pki.md` §4.6]) | the sub-second race window is honest, not zero (§10 R-RACE) |
@@ -355,7 +355,7 @@ invariant(s). "✓Phase-2" marks a mitigation that strengthens but is not MVP.
 
 | Asset \ concern | Spoof | Tamper | Disclose | DoS | Elevate | Privacy (LINDDUN) | Binding invariants |
 |---|---|---|---|---|---|---|---|
-| **AS-CA** (CA key) | T-PKI-S-1 | T-PKI-T-1 | T-PKI-I-1 | T-PKI-D-1 | — | — | S11, A1, ✓Phase-2 two-tier CA |
+| **AS-CA** (CA key) | T-PKI-S-1 | T-PKI-T-1 | T-PKI-I-1 | T-PKI-D-1 | — | — | S11, A1, ✓MVP two-tier issuing CA (offline root + online intermediate); Phase-2 per-region/multi-intermediate + HSM root ceremony |
 | **AS-DB** (control truth) | T-CP-S-1/2 | T-CP-T-1/2 | T-CP-I-1 | T-CP-D-1 | T-CP-E-1 | LP-DD-1 | P6 (RLS), S1, S7 |
 | **AS-WGK** (device WG key) | — | — | T-CLI-I-1 | — | T-CLI-E-1 | — | S2, A2 |
 | **AS-LEAF** (leaf key) | T-CLI-S-1 | — | T-CLI-I-1 | — | T-PKI-E-1 | — | S2, S4 |
@@ -420,7 +420,7 @@ mitigations, each with its honest boundary and the planned/possible strengthenin
 
 | id | Residual risk | Why it survives | Strengthening |
 |---|---|---|---|
-| **R-CA** | Tenant CA compromise mints arbitrary identities | A single critical secret; KMS theft or a malicious insider with KMS+DB access is catastrophic | Phase-2 two-tier CA (offline root + short intermediate) shrinks blast radius; HSM with quorum/audited sign; reserve `ca_chain` already done ([`04-security-privacy-pki.md` §4.2]) |
+| **R-CA** | Tenant CA compromise mints arbitrary identities | A single critical secret; KMS theft or a malicious insider with KMS+DB access is catastrophic | MVP already ships the two-tier issuing CA (offline root + online issuing intermediate) so the root stays offline and a compromised issuing CA is rotated without touching the root, shrinking blast radius ([`04-security-privacy-pki.md` §4.2], [`../v03-control-plane/svc-pki.md` §2]); Phase-2 adds an HSM root ceremony with quorum/audited sign + per-region issuers |
 | **R-RELAY** | An on-box insider can observe *live* relayed plaintext | A relay edge necessarily decrypts the WG core to forward; nothing is stored (S6) but in-flight memory is readable by root | True end-to-end (peer-to-peer) paths where the gateway only relays ciphertext; documented as a property, not yet universal — **UNVERIFIED** for all topologies |
 | **R-COMPEL** | Operator can be legally compelled to start *future* logging | S6 removes the *past* record; it cannot prevent a court order to instrument the live path going forward | Warrant-canary-class transparency; open self-host so the user can run their own gateway |
 | **R-INS** | Malicious insider with DB-superuser can edit/delete `audit_events` and bypass RLS | RLS is a non-superuser backstop; a superuser is above it (A1 scopes the CA, not the whole DB) | Phase-2 hash-chained audit (`meta.prev_hash`, [`04-security-privacy-pki.md` §7]); external append-only audit sink; least-privilege DB roles |

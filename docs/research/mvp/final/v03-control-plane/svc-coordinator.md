@@ -1,7 +1,7 @@
 # coordinator service (the brain)
 
-**Revision:** 1
-**Last modified:** 2026-06-25T00:00:00Z
+**Revision:** 2
+**Last modified:** 2026-06-26T12:00:00Z
 
 > Master technical specification — Volume 3 (Control Plane, Go), document `svc-coordinator`.
 > Scope: the **`internal/coordinator`** package — HelixVPN's brain. It holds a per-tenant
@@ -704,14 +704,20 @@ sequenceDiagram
 
 ```go
 helix_reconcile_seconds      histogram // event-receive → stream.Send; p99 < 1 s is the gate
-helix_open_streams           gauge{tenant}
+helix_open_streams           gauge      // global aggregate — NO tenant label (C3 cardinality)
 helix_fanout_affected_nodes  histogram // size of the minimal affected set per event (should be small)
 helix_backpressure_drops_total counter // slow-consumer drops (§5)
 helix_events_dlq_total       counter   // poison events routed to DLQ (§4.1)
-helix_presence_online        gauge{tenant}
-helix_graph_nodes            gauge{tenant}
+helix_presence_online        gauge      // global aggregate — NO tenant label (C3 cardinality)
+helix_graph_nodes            gauge      // global aggregate — NO tenant label (C3 cardinality)
 process_resident_memory_bytes gauge    // 24 h-soak slope ≈ 0 (no leak)
 ```
+
+> **Reconciled (§11.4.35, 2026-06-26):** the `/metrics` gauges are **global aggregates with no
+> `{tenant}` label** — a `tenant_id` label is forbidden on `/metrics` (unbounded cardinality +
+> leaks tenant population) per [`svc-telemetry.md` §3.1]'s C3 guard. Per-tenant breakdowns are NOT
+> exposed on `/metrics`; they live behind the authenticated `/v1/stats` API [`svc-telemetry.md`
+> §5.2], never the public scrape endpoint.
 
 ### 7.3 SLO acceptance numbers [02_CP §10.2, 04_P1 §10]
 

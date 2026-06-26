@@ -1,0 +1,1441 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Overlay Routing &amp; Addressing</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Overlay Routing &amp; Addressing</h1>
+</header>
+<h1 id="overlay-routing--addressing">Overlay Routing &amp;
+Addressing</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-06-25T00:00:00Z</p>
+<blockquote>
+<p>Volume 2 (Data Plane) nano-detail specification — deepens the
+<strong>Overlay addressing &amp; multi-network routing</strong> section
+(§6) and the <strong>Policy/ACL → AllowedIPs + verdict-map</strong>
+section (§7) of the pass-1 data-plane overview [01-DP §6, §7]. This is a
+SPEC: it describes what to build in the <code>helix-route</code> crate;
+it does <strong>not</strong> ship the product. Source evidence is cited
+inline by id — <code>[01-DP §N]</code> (final/01-data-plane.md),
+<code>[04_ARCH §N]</code> (04_VPN_CLD/HelixVPN-Architecture-Refined.md),
+<code>[04_P0 §N]</code> (Phase0-Spike.md),
+<code>[research-pki_pq_nat §N]</code> (scratchpad/kb),
+<code>[SYNTHESIS §N]</code>. Any claim not grounded in the evidence base
+is flagged <code>UNVERIFIED</code> per constitution §11.4.6 — never
+fabricated.</p>
+</blockquote>
+<hr />
+<h2 id="0-position-ownership-and-the-problem-this-document-solves">0.
+Position, ownership, and the problem this document solves</h2>
+<p>This document owns the <strong><code>helix-route</code>
+crate</strong> [01-DP §2 crate layout]: overlay addressing, the 4via6
+mapping engine, the connector-CIDR-advertisement → compiled routing-map
+pipeline, the policy/ACL → per-peer <code>AllowedIPs</code> +
+nftables/eBPF verdict-map compiler, and split-horizon microsegmentation.
+It is the layer that decides <strong>which overlay address a node
+has</strong> and <strong>which next hop / verdict a packet gets</strong>
+— strictly <em>above</em> the WireGuard crypto core and the
+<code>Transport</code> carrier, both specified in 01-DP.</p>
+<p>It does <strong>not</strong> own: the <code>WatchNetworkMap</code>
+protobuf/Connect wire contract (doc 03 — the live source of the
+<code>RouteMap</code> stream <code>helix-route</code> consumes), the Go
+control-plane policy <em>authoring</em> UI (doc 02 — the ACL DSL is
+authored there; <code>helix-route</code> consumes the <em>compiled</em>
+form), nor enrollment/PKI (doc 02, [research-pki_pq_nat §1]). The split
+is: <strong>the control plane authors and compiles intent;
+<code>helix-route</code> is the data-plane reconciler that converges the
+compiled desired-state and installs kernel state</strong> [04_ARCH §4.4,
+01-DP §6.3].</p>
+<h3 id="01-the-founding-requirement">0.1 The founding requirement</h3>
+<p>A single user reaches <strong>N joined private networks</strong>,
+which may carry <strong>colliding RFC1918 ranges</strong> — two
+connectors each serving <code>192.168.1.0/24</code> [01-DP §6, SYNTHESIS
+§1, §3 D4]. That collision <strong>MUST be solved at v1</strong>
+[SYNTHESIS §3 D4]. This document is the v1 solution: <strong>IPv6 ULA
+/48 per tenant + Tailscale-style 4via6</strong> ([04_ARCH §3.4],
+decision <strong>D4 Camp A</strong>), with <strong>CGNAT 100.64/10
+1:1</strong> as the documented IPv4-only fallback (D4 Camp B), analyzed
+at §8.</p>
+<h3 id="02-invariants-inherited-from-the-data-plane-binding-here">0.2
+Invariants inherited from the data plane (binding here)</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Invariant</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>I5</td>
+<td><strong>No-logging by construction</strong>: routing/policy state is
+aggregate counters only; no per-peer/per-flow durable record.</td>
+<td>[01-DP §0.1 I5, 04_ARCH §2.7]</td>
+</tr>
+<tr>
+<td>I6</td>
+<td><strong>Default-deny</strong>: no peer reaches anything without an
+explicit compiled rule expressed as <code>AllowedIPs</code> + an edge
+verdict map.</td>
+<td>[01-DP §0.1 I6, 04_ARCH §3.4]</td>
+</tr>
+<tr>
+<td>R1</td>
+<td>The reconciler <strong>converges without restart</strong>; a
+route/policy delta reflects on all affected edges in <strong>&lt; 1
+s</strong> (p99).</td>
+<td>[04_ARCH §4.4, 01-DP §6.3]</td>
+</tr>
+<tr>
+<td>R2</td>
+<td>Peers are delivered <strong>already policy-filtered</strong>
+(need-to-know): a node never learns of networks it cannot reach.</td>
+<td>[SYNTHESIS §7, 01-DP §7]</td>
+</tr>
+<tr>
+<td>R3</td>
+<td>The verdict map <strong>fails closed</strong>: absent/stale compiled
+policy ⇒ drop.</td>
+<td>[04_ARCH §7, 01-DP §7]</td>
+</tr>
+<tr>
+<td>R4</td>
+<td>ACL ACLs/routes target the <strong>IPv6 overlay</strong> address,
+<strong>never</strong> the underlying IPv4 of a 4via6-mapped LAN.</td>
+<td>[research-pki_pq_nat §3.4]</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="1-crate-surface-helix-route">1. Crate surface
+(<code>helix-route</code>)</h2>
+<pre><code>helix-route/
+├── src/lib.rs          # public façade: RouteEngine, re-exports
+├── src/addr.rs         # §2  ULA /48 allocation + node-address layout + types
+├── src/via6.rs         # §3  4via6 encode/decode (byte-exact)
+├── src/map.rs          # §4  RouteMap desired-state + advertisement ingest
+├── src/fib.rs          # §5  longest-prefix-match next-hop table (overlay FIB)
+├── src/policy.rs       # §6  ACL→AllowedIPs + CompiledPolicy→verdict-map compiler
+├── src/nft.rs          # §6  nftables verdict-map renderer (Phase 1)
+├── src/ebpf.rs         # §6  eBPF verdict-map loader (Phase 2, feature = &quot;ebpf&quot;)
+├── src/reconcile.rs    # §5/§7 declarative reconciler (push, no restart) — R1
+└── src/error.rs        # §9  RouteError taxonomy</code></pre>
+<div class="sourceCode" id="cb2"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-route/src/lib.rs — the one object the orchestrator (helix-core) holds.</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> RouteEngine <span class="op">{</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    tenant<span class="op">:</span>   TenantPrefix<span class="op">,</span>        <span class="co">// §2.1 this node&#39;s tenant ULA /48</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    self_id<span class="op">:</span>  OverlayAddr<span class="op">,</span>         <span class="co">// §2.3 this node&#39;s stable overlay address</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    fib<span class="op">:</span>      Fib<span class="op">,</span>                 <span class="co">// §5   longest-prefix-match next-hop table</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    policy<span class="op">:</span>   <span class="dt">Option</span><span class="op">&lt;</span>CompiledPolicy<span class="op">&gt;,</span> <span class="co">// §6 None ⇒ fail-closed (R3)</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    verdict<span class="op">:</span>  <span class="dt">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> VerdictSink<span class="op">&gt;,</span>    <span class="co">// §6 nft (P1) | ebpf (P2)</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    counters<span class="op">:</span> RouteCounters<span class="op">,</span>       <span class="co">// §0.2 I5 aggregate-only telemetry</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> RouteEngine <span class="op">{</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Converge to a freshly-pushed desired-state RouteMap (doc 03 stream / Phase-0 file).</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Diff-and-apply; NEVER restart unrelated state (R1). Returns the applied delta summary.</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">fn</span> reconcile(<span class="op">&amp;</span><span class="kw">mut</span> <span class="kw">self</span><span class="op">,</span> desired<span class="op">:</span> <span class="op">&amp;</span>RouteMap) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>ReconcileReport<span class="op">,</span> RouteError<span class="op">&gt;;</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Install a new compiled policy version atomically (R3: failure leaves prior version live).</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">fn</span> apply_policy(<span class="op">&amp;</span><span class="kw">mut</span> <span class="kw">self</span><span class="op">,</span> p<span class="op">:</span> CompiledPolicy) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">,</span> RouteError<span class="op">&gt;;</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Resolve the next hop for an overlay destination (used by the connector forward path).</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">fn</span> next_hop(<span class="op">&amp;</span><span class="kw">self</span><span class="op">,</span> dst<span class="op">:</span> <span class="op">&amp;</span>OverlayAddr) <span class="op">-&gt;</span> <span class="dt">Option</span><span class="op">&lt;</span>NextHop<span class="op">&gt;;</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<hr />
+<h2 id="2-overlay-addressing--ula-48-per-tenant">2. Overlay addressing —
+ULA /48 per tenant</h2>
+<p>Every node (client, connector, advertised host) gets a <strong>stable
+overlay address</strong> in the tenant&#39;s ULA /48 [04_ARCH §3.4 &quot;every
+node ... gets a stable overlay address&quot;]. HelixVPN is
+<strong>IPv6-native on the overlay</strong>; advertised IPv4 LANs are
+surfaced <em>through</em> 4via6 (§3), never as raw overlapping IPv4
+[04_ARCH §3.4, research-pki_pq_nat §3.4].</p>
+<h3 id="21-tenant-prefix--rfc-4193-ula-byte-layout">2.1 Tenant prefix —
+RFC 4193 ULA byte layout</h3>
+<blockquote>
+<p><strong>Honest correction (§11.4.6):</strong> the overview writes the
+prefix illustratively as <code>fd7a:helix:&lt;tenant&gt;::/48</code>
+[01-DP §6.1]. <code>helix</code> is <strong>not</strong> valid hex and
+cannot appear in a real address; it is a mnemonic. The implementable
+layout below uses a real RFC 4193 ULA: <code>fd</code> + 40-bit random
+per-tenant Global ID. <code>UNVERIFIED</code>: the literal hex
+<code>fd7a:115c:a1e0</code> example used downstream is Tailscale&#39;s fixed
+ULA [research-pki_pq_nat §3.4]; HelixVPN generates a <strong>fresh
+random 40-bit Global ID per tenant</strong> at tenant creation (control
+plane, doc 02) — it is NOT Tailscale&#39;s constant.</p>
+</blockquote>
+<p>A tenant prefix is a <code>/48</code> (RFC 4193 §3.1): the 8-bit ULA
+prefix <code>1111110</code> + L-bit <code>1</code> (<code>0xfd</code>),
+then a 40-bit Global ID. The 16 bits between bit 48 and bit 63 are the
+<strong>Subnet ID</strong> field, used here as an <strong>address-class
+discriminator</strong>; the low 64 bits are the <strong>Interface
+ID</strong>.</p>
+<pre><code> 128-bit overlay address (tenant /48):
+
+  0        8                              48      64                               128
+  ┌────────┬──────────────────────────────┬───────┬─────────────────────────────────┐
+  │ 0xfd   │  40-bit tenant Global ID (T)  │ 16-bit│        64-bit Interface ID        │
+  │ ULA    │  random, per tenant           │ Class │   (class-dependent layout, §2.2) │
+  └────────┴──────────────────────────────┴───────┴─────────────────────────────────┘
+  └──────── tenant /48 prefix ────────────┘└─ Class field selects the address kind ──┘</code></pre>
+<div class="sourceCode" id="cb4"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-route/src/addr.rs</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::net::</span>Ipv6Addr<span class="op">;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co">/// A tenant&#39;s ULA /48: 0xfd || 40-bit Global ID. Stored as the 6 high bytes.</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="bu">Clone</span><span class="op">,</span> <span class="bu">Copy</span><span class="op">,</span> <span class="bu">PartialEq</span><span class="op">,</span> <span class="bu">Eq</span><span class="op">,</span> <span class="bu">Hash</span><span class="op">,</span> <span class="bu">Debug</span><span class="at">)]</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> TenantPrefix <span class="op">{</span> <span class="kw">pub</span> bytes<span class="op">:</span> [<span class="dt">u8</span><span class="op">;</span> <span class="dv">6</span>] <span class="op">}</span>   <span class="co">// bytes[0] == 0xfd by construction</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> TenantPrefix <span class="op">{</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Random per-tenant Global ID per RFC 4193 §3.2.2 (control plane mints once).</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">fn</span> generate(rng<span class="op">:</span> <span class="op">&amp;</span><span class="kw">mut</span> <span class="kw">impl</span> <span class="pp">rand_core::</span>RngCore) <span class="op">-&gt;</span> <span class="dt">Self</span> <span class="op">{</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> <span class="kw">mut</span> b <span class="op">=</span> [<span class="dv">0u8</span><span class="op">;</span> <span class="dv">6</span>]<span class="op">;</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>        rng<span class="op">.</span>fill_bytes(<span class="op">&amp;</span><span class="kw">mut</span> b)<span class="op">;</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>        b[<span class="dv">0</span>] <span class="op">=</span> <span class="dv">0xfd</span><span class="op">;</span>                 <span class="co">// ULA prefix + L=1</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>        TenantPrefix <span class="op">{</span> bytes<span class="op">:</span> b <span class="op">}</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">fn</span> contains(<span class="op">&amp;</span><span class="kw">self</span><span class="op">,</span> a<span class="op">:</span> <span class="op">&amp;</span>Ipv6Addr) <span class="op">-&gt;</span> <span class="dt">bool</span> <span class="op">{</span> a<span class="op">.</span>octets()[<span class="op">..</span><span class="dv">6</span>] <span class="op">==</span> <span class="kw">self</span><span class="op">.</span>bytes <span class="op">}</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a><span class="co">/// 16-bit Subnet-ID address class (bits 48..64).</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="bu">Clone</span><span class="op">,</span> <span class="bu">Copy</span><span class="op">,</span> <span class="bu">PartialEq</span><span class="op">,</span> <span class="bu">Eq</span><span class="op">,</span> <span class="bu">Debug</span><span class="at">)]</span></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>repr<span class="at">(</span><span class="dt">u16</span><span class="at">)]</span></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">enum</span> AddrClass <span class="op">{</span></span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>    Node   <span class="op">=</span> <span class="dv">0x0000</span><span class="op">,</span>   <span class="co">// §2.3 clients/connectors/advertised native-v6 hosts</span></span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>    Via6   <span class="op">=</span> <span class="dv">0x4636</span><span class="op">,</span>   <span class="co">// §3   4via6-mapped IPv4 LANs  (&#39;F6&#39; mnemonic, fixed constant)</span></span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>    Relay  <span class="op">=</span> <span class="dv">0x0001</span><span class="op">,</span>   <span class="co">// reserved: DERP-style relay overlay endpoints (doc, Phase 2)</span></span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 0x0002..=0x4635 and 0x4637..=0xFFFF reserved; unknown class ⇒ RouteError::UnknownClass</span></span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="22-address-class-layout-summary">2.2 Address-class layout
+summary</h3>
+<table>
+<thead>
+<tr>
+<th>Class (<code>bits 48..64</code>)</th>
+<th>Kind</th>
+<th>Interface-ID (<code>bits 64..128</code>) layout</th>
+<th>§ref</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>0x0000</code> Node</td>
+<td>Client / connector / native-v6 host</td>
+<td>64-bit stable random/enrolled Node ID</td>
+<td>§2.3</td>
+</tr>
+<tr>
+<td><code>0x4636</code> Via6</td>
+<td>4via6-mapped IPv4 LAN host/route</td>
+<td><code>0x0000</code> (16) ‖ siteID (16) ‖ IPv4 (32)</td>
+<td>§3.1</td>
+</tr>
+<tr>
+<td><code>0x0001</code> Relay</td>
+<td>Relay overlay endpoint (Phase 2)</td>
+<td>relay node ID</td>
+<td>§8 NAT (doc 03)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="23-node-addressing-class-node">2.3 Node addressing (class
+<code>Node</code>)</h3>
+<p>A native overlay node&#39;s Interface ID is a <strong>stable 64-bit Node
+ID</strong> assigned at enrollment and bound to the device&#39;s WG public
+key in the control plane [research-pki_pq_nat §1.3] (the WG public key
+<em>is</em> the device identity; the overlay Node ID is its routable
+handle). It is <strong>stable across roams</strong> — WireGuard roaming
+changes the underlay endpoint, never the overlay address [04_P2 §3.2,
+01-DP §8].</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-route/src/addr.rs</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="co">/// A fully-qualified overlay address = tenant prefix + class + interface id.</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="bu">Clone</span><span class="op">,</span> <span class="bu">Copy</span><span class="op">,</span> <span class="bu">PartialEq</span><span class="op">,</span> <span class="bu">Eq</span><span class="op">,</span> <span class="bu">Hash</span><span class="op">,</span> <span class="bu">Debug</span><span class="at">)]</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> OverlayAddr(<span class="kw">pub</span> Ipv6Addr)<span class="op">;</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> OverlayAddr <span class="op">{</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">fn</span> node(t<span class="op">:</span> TenantPrefix<span class="op">,</span> node_id<span class="op">:</span> <span class="dt">u64</span>) <span class="op">-&gt;</span> <span class="dt">Self</span> <span class="op">{</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> <span class="kw">mut</span> o <span class="op">=</span> [<span class="dv">0u8</span><span class="op">;</span> <span class="dv">16</span>]<span class="op">;</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>        o[<span class="op">..</span><span class="dv">6</span>]<span class="op">.</span>copy_from_slice(<span class="op">&amp;</span>t<span class="op">.</span>bytes)<span class="op">;</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>        o[<span class="dv">6</span><span class="op">..</span><span class="dv">8</span>]<span class="op">.</span>copy_from_slice(<span class="op">&amp;</span>(<span class="pp">AddrClass::</span>Node <span class="kw">as</span> <span class="dt">u16</span>)<span class="op">.</span>to_be_bytes())<span class="op">;</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>        o[<span class="dv">8</span><span class="op">..</span><span class="dv">16</span>]<span class="op">.</span>copy_from_slice(<span class="op">&amp;</span>node_id<span class="op">.</span>to_be_bytes())<span class="op">;</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>        OverlayAddr(<span class="pp">Ipv6Addr::</span>from(o))</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">fn</span> class(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>AddrClass<span class="op">,</span> RouteError<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> c <span class="op">=</span> <span class="dt">u16</span><span class="pp">::</span>from_be_bytes([<span class="kw">self</span><span class="op">.</span><span class="dv">0</span><span class="op">.</span>octets()[<span class="dv">6</span>]<span class="op">,</span> <span class="kw">self</span><span class="op">.</span><span class="dv">0</span><span class="op">.</span>octets()[<span class="dv">7</span>]])<span class="op">;</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>        <span class="pp">AddrClass::</span>try_from(c)<span class="op">.</span>map_err(<span class="op">|</span>_<span class="op">|</span> <span class="pp">RouteError::</span>UnknownClass(c))</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><strong>Edge case — stability under tenant-prefix rotation:</strong>
+a tenant Global ID is permanent for the tenant&#39;s life. If a tenant is
+ever re-keyed (operator decision, §11.4.122-class capability change),
+every Node ID is re-prefixed but its low-64 ID is preserved, so policy
+referencing Node IDs survives a prefix change. <code>UNVERIFIED</code>:
+prefix rotation is not specified in the evidence base — flagged as a
+future operator-gated capability, not an MVP path.</p>
+<hr />
+<h2 id="3-4via6--overlapping-cidr-overlay-mapping">3. 4via6 —
+overlapping-CIDR overlay mapping</h2>
+<p>4via6 lets a tenant connect <strong>hundreds/thousands of identical
+(overlapping-CIDR) IPv4 networks without renumbering</strong>, by
+mapping each site&#39;s IPv4 route into a <strong>unique IPv6
+prefix</strong> whose address <strong>encodes a site ID + the IPv4
+address</strong> [research-pki_pq_nat §3.4, 04_ARCH §3.4]. This is the
+engine that lets two connectors both serving <code>192.168.1.0/24</code>
+coexist: each connector gets a distinct <strong>site ID</strong>, so its
+<code>192.168.1.0/24</code> maps to a <em>distinct</em> overlay /120,
+and the gateway/connector NATs back into the correct LAN [04_ARCH §3.4
+overlapping-CIDR handling, 01-DP §6.1].</p>
+<h3 id="31-byte-exact-encoding-class-via6">3.1 Byte-exact encoding
+(class <code>Via6</code>)</h3>
+<p>The 64-bit Interface ID of a <code>Via6</code> address is laid out
+exactly as Tailscale&#39;s
+<code>tailscale debug via &lt;site-id&gt; &lt;ipv4-route&gt;</code>
+interface-ID region [research-pki_pq_nat §3.4], placed inside HelixVPN&#39;s
+tenant /48 + <code>Via6</code> class:</p>
+<pre><code> 4via6 address (class 0x4636):
+
+  0        8                       48        64        80        96               128
+  ┌────────┬───────────────────────┬─────────┬─────────┬─────────┬─────────────────┐
+  │ 0xfd   │ 40-bit tenant Global ID│ 0x4636  │ 0x0000  │ siteID  │   IPv4 (32 bit) │
+  │        │       (T)              │ (Via6)  │ (rsvd)  │ (16 bit)│   big-endian    │
+  └────────┴───────────────────────┴─────────┴─────────┴─────────┴─────────────────┘
+                                              └──────── Interface ID (64 bit) ───────┘
+
+  Site ID range: 0..=65535 (lower 16 bits only) — matches Tailscale&#39;s constraint.
+  A mapped IPv4 /N route  →  overlay /(96 + N)   (e.g. /24 → /120, /32 host → /128).</code></pre>
+<div class="sourceCode" id="cb7"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-route/src/via6.rs</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::net::</span>Ipv4Addr<span class="op">;</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">ipnet::</span><span class="op">{</span>Ipv4Net<span class="op">,</span> Ipv6Net<span class="op">};</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">type</span> SiteId <span class="op">=</span> <span class="dt">u16</span><span class="op">;</span>   <span class="co">// 0..=65535 [research-pki_pq_nat §3.4]</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="co">/// Encode an advertised IPv4 host into its 4via6 overlay address.</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">fn</span> encode_host(t<span class="op">:</span> TenantPrefix<span class="op">,</span> site<span class="op">:</span> SiteId<span class="op">,</span> v4<span class="op">:</span> Ipv4Addr) <span class="op">-&gt;</span> OverlayAddr <span class="op">{</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> o <span class="op">=</span> [<span class="dv">0u8</span><span class="op">;</span> <span class="dv">16</span>]<span class="op">;</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>    o[<span class="op">..</span><span class="dv">6</span>]<span class="op">.</span>copy_from_slice(<span class="op">&amp;</span>t<span class="op">.</span>bytes)<span class="op">;</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>    o[<span class="dv">6</span><span class="op">..</span><span class="dv">8</span>]<span class="op">.</span>copy_from_slice(<span class="op">&amp;</span>(<span class="pp">AddrClass::</span>Via6 <span class="kw">as</span> <span class="dt">u16</span>)<span class="op">.</span>to_be_bytes())<span class="op">;</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>    <span class="co">// o[8..10] = 0x0000 reserved (already zero)</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>    o[<span class="dv">10</span><span class="op">..</span><span class="dv">12</span>]<span class="op">.</span>copy_from_slice(<span class="op">&amp;</span>site<span class="op">.</span>to_be_bytes())<span class="op">;</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>    o[<span class="dv">12</span><span class="op">..</span><span class="dv">16</span>]<span class="op">.</span>copy_from_slice(<span class="op">&amp;</span>v4<span class="op">.</span>octets())<span class="op">;</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>    OverlayAddr(<span class="pp">Ipv6Addr::</span>from(o))</span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a><span class="co">/// Encode an advertised IPv4 /N route into the overlay /(96+N) prefix it occupies.</span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">fn</span> encode_route(t<span class="op">:</span> TenantPrefix<span class="op">,</span> site<span class="op">:</span> SiteId<span class="op">,</span> v4<span class="op">:</span> Ipv4Net) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>Ipv6Net<span class="op">,</span> RouteError<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> base <span class="op">=</span> encode_host(t<span class="op">,</span> site<span class="op">,</span> v4<span class="op">.</span>network())<span class="op">.</span><span class="dv">0</span><span class="op">;</span></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> plen <span class="op">=</span> <span class="dv">96u8</span> <span class="op">+</span> v4<span class="op">.</span>prefix_len()<span class="op">;</span>             <span class="co">// /24 → /120, /32 → /128</span></span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>    <span class="pp">Ipv6Net::</span>new(base<span class="op">,</span> plen)<span class="op">.</span>map_err(<span class="op">|</span>_<span class="op">|</span> <span class="pp">RouteError::</span>BadPrefixLen(plen))</span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a><span class="co">/// Decode a 4via6 overlay address back to (site, IPv4) for the connector&#39;s NAT-back step.</span></span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">fn</span> decode(a<span class="op">:</span> <span class="op">&amp;</span>OverlayAddr) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>(SiteId<span class="op">,</span> Ipv4Addr)<span class="op">,</span> RouteError<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> a<span class="op">.</span>class()<span class="op">?</span> <span class="op">!=</span> <span class="pp">AddrClass::</span>Via6 <span class="op">{</span> <span class="cf">return</span> <span class="cn">Err</span>(<span class="pp">RouteError::</span>NotVia6)<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> o <span class="op">=</span> a<span class="op">.</span><span class="dv">0</span><span class="op">.</span>octets()<span class="op">;</span></span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> o[<span class="dv">8</span>] <span class="op">!=</span> <span class="dv">0</span> <span class="op">||</span> o[<span class="dv">9</span>] <span class="op">!=</span> <span class="dv">0</span> <span class="op">{</span> <span class="cf">return</span> <span class="cn">Err</span>(<span class="pp">RouteError::</span>ReservedNonZero)<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> site <span class="op">=</span> <span class="dt">u16</span><span class="pp">::</span>from_be_bytes([o[<span class="dv">10</span>]<span class="op">,</span> o[<span class="dv">11</span>]])<span class="op">;</span></span>
+<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> v4   <span class="op">=</span> <span class="pp">Ipv4Addr::</span>new(o[<span class="dv">12</span>]<span class="op">,</span> o[<span class="dv">13</span>]<span class="op">,</span> o[<span class="dv">14</span>]<span class="op">,</span> o[<span class="dv">15</span>])<span class="op">;</span></span>
+<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a>    <span class="cn">Ok</span>((site<span class="op">,</span> v4))</span>
+<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><strong>Worked example</strong> [grounded in research-pki_pq_nat §3.4
+encoding rules]:</p>
+<ul>
+<li>Tenant Global ID <code>12:3456:789a</code> ⇒ tenant prefix
+<code>fd12:3456:789a::/48</code>.</li>
+<li>Connector A served LAN <code>192.168.1.0/24</code>, assigned
+<strong>site 7</strong> ⇒ overlay route
+<code>fd12:3456:789a:4636:0:7:c0a8:100/120</code>
+(<code>c0a8:0100</code> = <code>192.168.1.0</code>).</li>
+<li>Connector B <em>also</em> serving <code>192.168.1.0/24</code>,
+assigned <strong>site 8</strong> ⇒ overlay route
+<code>fd12:3456:789a:4636:0:8:c0a8:100/120</code> — <strong>distinct
+prefix, no collision</strong>.</li>
+<li>Host <code>192.168.1.10</code> behind A ⇒
+<code>fd12:3456:789a:4636:0:7:c0a8:10a/128</code>.</li>
+</ul>
+<h3 id="32-encodedecode-flow-diagram">3.2 Encode/decode flow
+diagram</h3>
+<pre class="mermaid"><code>flowchart LR
+    subgraph Advertise[&quot;Connector advertises (control plane)&quot;]
+        A1[&quot;Connector A: serves 192.168.1.0/24&quot;] --&gt; A2[&quot;control plane assigns siteID = 7&quot;]
+        B1[&quot;Connector B: serves 192.168.1.0/24&quot;] --&gt; B2[&quot;control plane assigns siteID = 8&quot;]
+    end
+    A2 --&gt; E[&quot;encode_route(tenant, 7, 192.168.1.0/24)&quot;]
+    B2 --&gt; F[&quot;encode_route(tenant, 8, 192.168.1.0/24)&quot;]
+    E --&gt; EO[&quot;fd..:4636:0:7:c0a8:100/120&quot;]
+    F --&gt; FO[&quot;fd..:4636:0:8:c0a8:100/120&quot;]
+    EO --&gt; M[&quot;RouteMap: distinct overlay prefixes (no collision)&quot;]
+    FO --&gt; M
+    M --&gt; R[&quot;client FIB: dst-overlay -&gt; via_connector(siteID)&quot;]
+    R --&gt; D[&quot;connector: decode() -&gt; (siteID, IPv4) -&gt; DNAT into served LAN&quot;]</code></pre>
+<h3 id="33-site-id-allocation-authority--control-plane-consumed-here">3.3
+Site-ID allocation (authority = control plane, consumed here)</h3>
+<p>Site IDs are <strong>allocated by the control plane</strong> (doc 02
+IPAM) at connector enrollment and delivered in
+<code>PeerRoute.via_connector</code> [01-DP §6.2].
+<code>helix-route</code> does <strong>not</strong> mint site IDs; it
+<strong>validates</strong> them (<code>0..=65535</code>, unique within a
+tenant) and rejects a <code>RouteMap</code> that contains a duplicate
+<code>(tenant, siteID)</code> pair or two distinct connectors claiming
+the same site ID (<code>RouteError::DuplicateSiteId</code>). Allocation
+policy (control plane): one site ID per connector that serves at least
+one <em>overlapping</em> CIDR; non-overlapping connectors MAY share
+<code>siteID = 0</code> (a single &quot;default site&quot;) as an optimization.
+<code>UNVERIFIED</code>: the share-site-0 optimization is a design
+recommendation, not stated in the evidence base; flagged.</p>
+<hr />
+<h2 id="4-connector-cidr-advertisement--routemap">4. Connector CIDR
+advertisement → <code>RouteMap</code></h2>
+<p>Connectors advertise their served CIDRs to the control plane; the
+control plane compiles a <strong>routing map</strong> (which connector
+is the next hop for which overlay prefix) and pushes it to the gateway
+edge + to authorized clients via <code>WatchNetworkMap</code> [01-DP
+§6.2, 04_ARCH §3.4]. The data plane consumes the map into
+<code>helix-route</code>. <strong>Phase 0 fakes the stream with a static
+<code>map.json</code> of the exact shape Phase 1 streams</strong> [01-DP
+§6.2, 04_P0 §10], so the reconciler is real even when the source is
+static.</p>
+<h3 id="41-advertised-cidr-ingest-record-the-wire-shape-helix-route-consumes">4.1
+Advertised-CIDR ingest record (the wire shape <code>helix-route</code>
+consumes)</h3>
+<p>The authoritative wire format is the doc-03
+<code>WatchNetworkMap</code> protobuf; below is the <strong>logical Rust
+shape</strong> the reconciler converges to (re-stated from 01-DP §6.2,
+extended with the advertisement fields this document owns):</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-route/src/map.rs  — desired-state the reconciler converges to (doc 03 streams it)</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> RouteMap <span class="op">{</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> version<span class="op">:</span>      <span class="dt">u64</span><span class="op">,</span>            <span class="co">// monotonic; reconciler ignores a lower version (R1)</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> tenant<span class="op">:</span>       TenantPrefix<span class="op">,</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> self_overlay<span class="op">:</span> OverlayAddr<span class="op">,</span>    <span class="co">// this node&#39;s stable overlay IP (§2.3)</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> peers<span class="op">:</span>        <span class="dt">Vec</span><span class="op">&lt;</span>PeerRoute<span class="op">&gt;,</span> <span class="co">// ALREADY policy-filtered, need-to-know (R2)</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> dns<span class="op">:</span>          <span class="dt">Vec</span><span class="op">&lt;</span>OverlayAddr<span class="op">&gt;,</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> PeerRoute <span class="op">{</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> wg_pubkey<span class="op">:</span>            [<span class="dt">u8</span><span class="op">;</span> <span class="dv">32</span>]<span class="op">,</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> endpoint_candidates<span class="op">:</span>  <span class="dt">Vec</span><span class="op">&lt;</span><span class="pp">std::net::</span>SocketAddr<span class="op">&gt;,</span>  <span class="co">// §8 NAT traversal (doc 03)</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> allowed_ips<span class="op">:</span>          <span class="dt">Vec</span><span class="op">&lt;</span>Ipv6Net<span class="op">&gt;,</span>   <span class="co">// overlay prefixes this peer is next hop for (R4: v6 only)</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> via_connector<span class="op">:</span>        <span class="dt">Option</span><span class="op">&lt;</span>SiteId<span class="op">&gt;,</span> <span class="co">// present iff allowed_ips carry 4via6 routes</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> advertised_v4<span class="op">:</span>        <span class="dt">Vec</span><span class="op">&lt;</span>Ipv4Net<span class="op">&gt;,</span>   <span class="co">// the RAW served LANs (for the connector&#39;s own NAT-back)</span></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><strong>Validation on ingest (<code>map.rs::validate</code>)</strong>
+— every rule rejects, never silently fixes (§11.4.6):</p>
+<table>
+<thead>
+<tr>
+<th>Check</th>
+<th>Reject error</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>peer.allowed_ips</code> all within
+<code>tenant /48</code></td>
+<td><code>RouteError::OutOfTenant</code></td>
+</tr>
+<tr>
+<td>every <code>allowed_ips</code> entry is a valid overlay class
+(<code>Node</code>/<code>Via6</code>)</td>
+<td><code>RouteError::UnknownClass</code></td>
+</tr>
+<tr>
+<td>a <code>Via6</code> route&#39;s encoded <code>(site, v4)</code> matches
+some <code>advertised_v4</code> + <code>via_connector</code></td>
+<td><code>RouteError::Via6Mismatch</code></td>
+</tr>
+<tr>
+<td>no two peers advertise the <strong>same overlay prefix</strong></td>
+<td><code>RouteError::OverlapAdvertise</code></td>
+</tr>
+<tr>
+<td><code>via_connector</code> unique per distinct
+served-overlapping-LAN connector</td>
+<td><code>RouteError::DuplicateSiteId</code></td>
+</tr>
+<tr>
+<td><code>version &gt; self.fib.version</code></td>
+<td>(ignored, not an error — stale push)</td>
+</tr>
+</tbody>
+</table>
+<p>The <strong><code>OverlapAdvertise</code> check is the collision
+firewall</strong>: because two connectors serving the same IPv4
+<code>/24</code> get <em>distinct</em> 4via6 overlay prefixes (§3.1),
+their <code>allowed_ips</code> never overlap — a residual overlap means
+a site-ID allocation bug upstream and is rejected, fail-closed (R3).</p>
+<h3 id="42-advertisement-lifecycle-state-machine">4.2 Advertisement
+lifecycle state machine</h3>
+<p>The connector side of advertisement (the connector publishes its
+CIDRs; the gateway compiles and re-pushes) is a small state machine.
+<code>helix-route</code> on the connector drives the
+<strong>advertise</strong> path; on the client/edge it drives the
+<strong>consume</strong> path.</p>
+<pre class="mermaid"><code>stateDiagram-v2
+    [*] --&gt; Unadvertised
+    Unadvertised --&gt; Pending: connector start --&gt; publish served CIDRs to control plane
+    Pending --&gt; Allocated: control plane assigns siteID + overlay prefixes
+    Allocated --&gt; Live: RouteMap(version=v) pushed to edge + authorized clients (R1 &lt;1s)
+    Live --&gt; Live: CIDR added/removed --&gt; new version v+1 --&gt; reconcile delta (no restart)
+    Live --&gt; Withdrawn: connector offline (Redis presence TTL) --&gt; routes withdrawn
+    Withdrawn --&gt; Live: connector returns --&gt; re-advertise --&gt; same siteID re-bound
+    Withdrawn --&gt; [*]: connector deleted (operator) --&gt; siteID freed
+    Allocated --&gt; Rejected: validation fails (overlap / dup siteID) --&gt; fail-closed (R3)
+    Rejected --&gt; Pending: operator fixes allocation --&gt; re-publish</code></pre>
+<blockquote>
+<p><code>UNVERIFIED</code>: the Redis presence-TTL withdrawal trigger
+and same-siteID re-bind on return are consistent with the &quot;Redis =
+ephemeral presence&quot; model [SYNTHESIS §2] but the exact TTL and re-bind
+semantics live in the control-plane doc (02/03), not this data-plane
+doc. The data-plane contract is only: <em>a <code>RouteMap</code> with a
+withdrawn peer ⇒ reconcile that peer down in &lt; 1 s, no restart</em>
+(R1).</p>
+</blockquote>
+<hr />
+<h2 id="5-routing-map-compilation--longest-prefix-match-fib">5. Routing
+map compilation → longest-prefix-match FIB</h2>
+<p><code>helix-route</code> compiles the validated <code>RouteMap</code>
+into an <strong>overlay FIB</strong> — a longest-prefix-match table from
+overlay destination prefix → next hop (a WG peer + optional 4via6 site).
+This is the table the connector forward path and the client routing
+layer consult.</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-route/src/fib.rs</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> Fib <span class="op">{</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> version<span class="op">:</span> <span class="dt">u64</span><span class="op">,</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    trie<span class="op">:</span> <span class="pp">ip_network_table::</span>IpNetworkTable<span class="op">&lt;</span>NextHop<span class="op">&gt;,</span>  <span class="co">// LPM over Ipv6Net keys</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="bu">Clone</span><span class="at">)]</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> NextHop <span class="op">{</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> wg_pubkey<span class="op">:</span> [<span class="dt">u8</span><span class="op">;</span> <span class="dv">32</span>]<span class="op">,</span>     <span class="co">// which WG peer carries it</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> via_site<span class="op">:</span>  <span class="dt">Option</span><span class="op">&lt;</span>SiteId<span class="op">&gt;,</span> <span class="co">// Some ⇒ connector must decode()+DNAT into served LAN (§3.1)</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> Fib <span class="op">{</span></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Build from a validated RouteMap. O(Σ prefixes); rebuilt wholesale per version,</span></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// then swapped atomically so next_hop() never observes a half-applied table (R1).</span></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">fn</span> build(map<span class="op">:</span> <span class="op">&amp;</span>RouteMap) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>Fib<span class="op">,</span> RouteError<span class="op">&gt;</span> <span class="op">{</span> <span class="co">/* … */</span> <span class="op">}</span></span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Longest-prefix match. None ⇒ no route ⇒ packet dropped (default-deny composes I6).</span></span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">fn</span> next_hop(<span class="op">&amp;</span><span class="kw">self</span><span class="op">,</span> dst<span class="op">:</span> <span class="op">&amp;</span>OverlayAddr) <span class="op">-&gt;</span> <span class="dt">Option</span><span class="op">&lt;&amp;</span>NextHop<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a>        <span class="kw">self</span><span class="op">.</span>trie<span class="op">.</span>longest_match(dst<span class="op">.</span><span class="dv">0</span>)<span class="op">.</span>map(<span class="op">|</span>(_<span class="op">,</span> nh)<span class="op">|</span> nh)</span>
+<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="51-reconciliation--push-dont-poll-r1">5.1 Reconciliation — push,
+don&#39;t poll (R1)</h3>
+<p>The reconciler diffs <strong>desired</strong> (<code>RouteMap</code>)
+vs <strong>actual</strong> (live <code>Fib</code> + installed WG peers +
+verdict map) and converges: bring peers up/down, switch routes, update
+the verdict map — <strong>without restarting</strong> unrelated state
+[04_ARCH §4.4, 01-DP §6.3]. It <strong>never polls</strong>; it reacts
+to map deltas pushed on the open stream (file-watch stands in during
+Phase 0 [01-DP §6.2]).</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-route/src/reconcile.rs</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> ReconcileReport <span class="op">{</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> from_version<span class="op">:</span> <span class="dt">u64</span><span class="op">,</span> <span class="kw">pub</span> to_version<span class="op">:</span> <span class="dt">u64</span><span class="op">,</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> peers_added<span class="op">:</span> <span class="dt">u32</span><span class="op">,</span> <span class="kw">pub</span> peers_removed<span class="op">:</span> <span class="dt">u32</span><span class="op">,</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> routes_changed<span class="op">:</span> <span class="dt">u32</span><span class="op">,</span> <span class="kw">pub</span> policy_reinstalled<span class="op">:</span> <span class="dt">bool</span><span class="op">,</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> elapsed<span class="op">:</span> <span class="pp">std::time::</span>Duration<span class="op">,</span>   <span class="co">// asserted &lt; 1s in the R1 test (§14)</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Convergence target: a route/policy change reflected on all affected
+edges in <strong>&lt; 1 second</strong> (p99) [04_ARCH §4.4]. The new
+<code>Fib</code> and the new verdict map are built <strong>off to the
+side</strong> and swapped in atomically (build-then-swap), so an
+in-flight packet never sees a half-built table.</p>
+<h3 id="52-packet-flow--client--connector-lan-host-the-headline-path">5.2
+Packet flow — client → connector LAN host (the headline path)</h3>
+<pre class="mermaid"><code>sequenceDiagram
+    autonumber
+    participant App as App on client
+    participant Cli as Client helix-route (FIB)
+    participant WG  as WG / Transport (01-DP)
+    participant Edge as Gateway edge (verdict map §6)
+    participant Con as Connector helix-route
+    participant LAN as 192.168.1.10 (served LAN host)
+
+    App-&gt;&gt;Cli: packet dst = fd..:4636:0:7:c0a8:10a  (4via6 overlay addr)
+    Cli-&gt;&gt;Cli: fib.next_hop(dst) -&gt; NextHop{ wg_pubkey=connectorA, via_site=7 }
+    Cli-&gt;&gt;WG: WG-encrypt to connectorA peer (AllowedIPs must include dst — §6.1)
+    WG-&gt;&gt;Edge: encrypted datagram via active Transport (plain-udp / masque-h3)
+    Edge-&gt;&gt;Edge: ip6 saddr.daddr.proto.dport vmap @policy_v  (default-deny; ALLOW?)
+    alt verdict = accept
+        Edge-&gt;&gt;Con: forward (relay path, Phase 1) / direct (Phase 2 P2P)
+        Con-&gt;&gt;Con: decode(dst) -&gt; (site=7, 192.168.1.10); confirm site owned
+        Con-&gt;&gt;LAN: DNAT into served LAN: src=connector, dst=192.168.1.10
+        LAN--&gt;&gt;Con: reply
+        Con--&gt;&gt;App: reverse path (SNAT 192.168.1.10 -&gt; overlay; WG-encrypt back)
+    else verdict = drop
+        Edge--xCli: silently dropped (R3); aggregate drop counter++ (I5)
+    end</code></pre>
+<hr />
+<h2 id="6-policy--acl--allowedips--nftablesebpf-verdict-map">6. Policy /
+ACL → <code>AllowedIPs</code> + nftables/eBPF verdict map</h2>
+<p>Default-<strong>deny</strong> (I6). A declarative allow-list
+(Tailscale-ACL-flavored,
+<code>group:contractors → net:warehouse-cameras:554/tcp</code>) is
+<strong>authored + compiled by the control plane</strong> [04_ARCH §3.4,
+§7, SYNTHESIS §4]; <code>helix-route</code> consumes the
+<strong>compiled</strong> form and installs two enforcement layers,
+<strong>both required</strong> (defense in depth) [01-DP §7]:</p>
+<ol type="1">
+<li><strong>WireGuard <code>AllowedIPs</code></strong> — coarse,
+crypto-enforced routing: each peer&#39;s <code>AllowedIPs</code> is the set
+of overlay prefixes it may send/receive; WG itself drops a packet whose
+source/dest does not match. This is derived from the FIB + policy and
+installed on the WG peer (helix-wg, 01-DP §4).</li>
+<li><strong>Edge verdict map</strong> — port/proto-granular: an
+<strong>nftables verdict map</strong> (Phase 1) or <strong>eBPF</strong>
+program (Phase 2 scale) evaluates the compiled rule
+<code>(src → dst : proto : ports : action)</code> per flow;
+default-deny; fails <strong>closed</strong> (absent/stale policy ⇒ drop)
+(R3).</li>
+</ol>
+<h3 id="61-compiled-types-consumed-re-stated-from-01-dp-7--extended">6.1
+Compiled types (consumed; re-stated from 01-DP §7 + extended)</h3>
+<div class="sourceCode" id="cb14"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-route/src/policy.rs</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> CompiledPolicy <span class="op">{</span> <span class="kw">pub</span> version<span class="op">:</span> <span class="dt">u64</span><span class="op">,</span> <span class="kw">pub</span> rules<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span>VerdictRule<span class="op">&gt;</span> <span class="op">}</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> VerdictRule <span class="op">{</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> src<span class="op">:</span>   Ipv6Net<span class="op">,</span>    <span class="co">// overlay src prefix  (R4: v6 only — 4via6 dst, never raw v4)</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> dst<span class="op">:</span>   Ipv6Net<span class="op">,</span>    <span class="co">// overlay dst prefix</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> proto<span class="op">:</span> L4Proto<span class="op">,</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> ports<span class="op">:</span> PortRange<span class="op">,</span>  <span class="co">// inclusive lo..=hi; full range for L4Proto::Any/Icmp</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> action<span class="op">:</span> Verdict<span class="op">,</span></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">enum</span> Verdict  <span class="op">{</span> Allow<span class="op">,</span> <span class="bu">Drop</span> <span class="op">}</span>            <span class="co">// default Drop (I6)</span></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">enum</span> L4Proto  <span class="op">{</span> <span class="bu">Any</span><span class="op">,</span> Tcp<span class="op">,</span> Udp<span class="op">,</span> Icmp <span class="op">}</span></span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> PortRange <span class="op">{</span> <span class="kw">pub</span> lo<span class="op">:</span> <span class="dt">u16</span><span class="op">,</span> <span class="kw">pub</span> hi<span class="op">:</span> <span class="dt">u16</span> <span class="op">}</span></span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a><span class="co">/// The per-peer AllowedIPs derivation: union of every dst prefix the peer is permitted to</span></span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a><span class="co">/// receive on, plus its own self-prefix. Installed on the WG peer (helix-wg).</span></span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">fn</span> allowed_ips_for(peer<span class="op">:</span> <span class="op">&amp;</span>PeerRoute<span class="op">,</span> policy<span class="op">:</span> <span class="op">&amp;</span>CompiledPolicy) <span class="op">-&gt;</span> <span class="dt">Vec</span><span class="op">&lt;</span>Ipv6Net<span class="op">&gt;</span> <span class="op">{</span> <span class="co">/* … */</span> <span class="op">}</span></span></code></pre></div>
+<p><strong><code>AllowedIPs</code> derivation rule:</strong> a peer&#39;s
+<code>AllowedIPs</code> = <code>peer.allowed_ips</code> (what it is the
+next hop for) ∩-consistent-with the policy rules whose
+<code>src</code>/<code>dst</code> resolve to that peer — i.e. WG is
+configured to carry <strong>only</strong> prefixes the policy actually
+permits across that peer. This is the crypto-layer realization of
+need-to-know (R2): a peer that is granted nothing receives an empty
+<code>AllowedIPs</code> and can carry no traffic.</p>
+<h3 id="62-nftables-verdict-map-renderer-phase-1">6.2 nftables
+verdict-map renderer (Phase 1)</h3>
+<div class="sourceCode" id="cb15"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-route/src/nft.rs</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">trait</span> VerdictSink <span class="op">{</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Install a compiled policy version atomically (nft transaction / eBPF map swap).</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// On error the PRIOR version stays live (R3 — never leaves the edge open).</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> install(<span class="op">&amp;</span><span class="kw">mut</span> <span class="kw">self</span><span class="op">,</span> p<span class="op">:</span> <span class="op">&amp;</span>CompiledPolicy) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">,</span> RouteError<span class="op">&gt;;</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> clear_to_default_deny(<span class="op">&amp;</span><span class="kw">mut</span> <span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">,</span> RouteError<span class="op">&gt;;</span>  <span class="co">// fail-closed reset</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> NftSink <span class="op">{</span> <span class="co">/* nft handle, table name &quot;helix&quot; */</span> <span class="op">}</span></span></code></pre></div>
+<p>Rendered nftables (Phase 1 representation; eBPF equivalent in Phase
+2) [01-DP §7]:</p>
+<pre class="nft"><code># edge-installed verdict map — one atomic `nft -f` transaction per CompiledPolicy version
+table inet helix {
+    map policy_v {
+        type ipv6_addr . ipv6_addr . inet_proto . inet_service : verdict
+        elements = {
+            fd12:3456:789a::a . fd12:3456:789a:4636:0:7:c0a8:14 . tcp . 554 : accept
+        }
+    }
+    chain forward {
+        type filter hook forward priority 0; policy drop;   # DEFAULT-DENY (I6) / fail-closed (R3)
+        ip6 saddr . ip6 daddr . meta l4proto . th dport vmap @policy_v
+    }
+}</code></pre>
+<p><strong>Atomic install:</strong> the renderer writes the full new
+table to a temp ruleset and applies it in a <strong>single
+<code>nft -f</code> transaction</strong>; a failed apply aborts with the
+prior ruleset intact (R3). A port <em>range</em> rule expands to the
+nftables interval set form (<code>th dport . { 554-560 }</code>);
+<code>L4Proto::Any</code> omits the proto/port match keys for that
+element. The <strong><code>UNVERIFIED</code></strong> eBPF Phase-2 path
+(<code>src/ebpf.rs</code>, <code>feature = &quot;ebpf&quot;</code>) installs the
+equivalent verdict in an
+<code>LPM_TRIE</code>+<code>HASH</code>-of-rules map and swaps the
+program atomically — the eBPF data-structure choice is a design
+recommendation, not specified in the evidence base; flagged.</p>
+<h3 id="63-acl-compile--install-sequence">6.3 ACL-compile + install
+sequence</h3>
+<pre class="mermaid"><code>sequenceDiagram
+    autonumber
+    participant Adm as Admin (Console, doc 02)
+    participant CP as Control plane policy compiler (doc 02)
+    participant Stream as WatchNetworkMap (doc 03)
+    participant RE as helix-route RouteEngine
+    participant WG as helix-wg (AllowedIPs)
+    participant NFT as VerdictSink (nft/eBPF)
+
+    Adm-&gt;&gt;CP: edit ACL: group:contractors -&gt; net:cams:554/tcp
+    CP-&gt;&gt;CP: resolve groups+nets -&gt; overlay prefixes; compile CompiledPolicy{version=v}
+    CP-&gt;&gt;Stream: push policy-filtered RouteMap + CompiledPolicy (peers need-to-know, R2)
+    Stream-&gt;&gt;RE: reconcile(desired v)
+    RE-&gt;&gt;WG: allowed_ips_for(peer) -&gt; install per-peer AllowedIPs (crypto layer)
+    RE-&gt;&gt;NFT: install(CompiledPolicy v) atomically
+    alt install ok
+        NFT--&gt;&gt;RE: ok; prior version dropped
+        RE--&gt;&gt;Stream: ReconcileReport{ elapsed &lt; 1s }  (R1)
+    else install fails
+        NFT--&gt;&gt;RE: Err; PRIOR version stays live (R3 fail-closed)
+        RE--&gt;&gt;Stream: RouteError surfaced; aggregate error counter++ (I5)
+    end</code></pre>
+<hr />
+<h2 id="7-split-horizon-microsegmentation">7. Split-horizon
+microsegmentation</h2>
+<p>Microsegmentation is the <strong>default</strong>, not an add-on
+[04_ARCH §3.4, §7, 01-DP §7]:</p>
+<ul>
+<li><strong>Connectors cannot reach each other</strong> unless an
+explicit policy rule says so. There is no default connector↔︎connector
+route in the FIB; cross-connector traffic requires a
+<code>VerdictRule{ src=connectorA-prefix, dst=connectorB-prefix, action=Allow }</code>
+AND matching <code>AllowedIPs</code>.</li>
+<li><strong>Clients cannot reach networks they are not granted.</strong>
+A client&#39;s <code>RouteMap</code> is delivered already policy-filtered
+(R2) — it never even learns of a connector/CIDR it cannot reach
+[SYNTHESIS §7], so its FIB has no entry for that prefix →
+<code>next_hop()</code> returns <code>None</code> → drop.</li>
+<li><strong>Revocation:</strong> <code>device.revoked</code> (doc 02) →
+the verdict map drops the peer + WG removes the peer key in <strong>&lt;
+1 second</strong> with no restart [04_ARCH §4.4, SYNTHESIS §7,
+research-pki_pq_nat §1.1 &quot;revocation is structurally trivial — remove
+the public key&quot;]. The crypto layer (WG key removal) and the verdict
+layer (vmap element removal) are removed in the same reconcile
+pass.</li>
+</ul>
+<pre class="mermaid"><code>flowchart TB
+    C[&quot;Client (contractor)&quot;] --&gt;|granted: cams 554/tcp| RE{Verdict map + FIB}
+    RE --&gt;|allow| CamA[&quot;Connector A: warehouse cameras&quot;]
+    RE -.-&gt;|no FIB entry + default-deny| CamB[&quot;Connector B: finance LAN&quot;]
+    CamA -.-&gt;|no rule connectorA&lt;-&gt;connectorB| CamB
+    classDef denied stroke-dasharray:4 4
+    class CamB,RE denied</code></pre>
+<p><strong>Split-horizon invariant (testable):</strong> for any two
+prefixes P, Q with no <code>Allow</code> rule between them,
+<code>fib.next_hop</code> resolution + verdict evaluation MUST drop P→Q
+in both directions. The default-deny <code>forward</code> chain policy
+(<code>policy drop</code>) guarantees the verdict half; the need-to-know
+filtered map guarantees the FIB half.</p>
+<hr />
+<h2 id="8-decision-d4--4via6-vs-cgnat-10064-analyzed">8. Decision D4 —
+4via6 vs CGNAT 100.64, analyzed</h2>
+<blockquote>
+<p><strong>DECISION D4 — IP-subnet collision across N joined networks.
+SURFACED, not silently resolved</strong> [SYNTHESIS §3 D4, 04_ARCH §3.4,
+01-DP §6.1].</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>Axis</th>
+<th><strong>Camp A — ULA /48 + 4via6 (recommended)</strong></th>
+<th><strong>Camp B — CGNAT 100.64.0.0/10, 1:1 per network</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Collision handling</td>
+<td>Each site gets a distinct overlay /120 via siteID encoding —
+overlapping <code>192.168.1.0/24</code>s never collide [04_ARCH §3.4,
+research §3.4]</td>
+<td>Each joined network is 1:1-NAT&#39;d into a distinct slice of CGNAT
+space [SYNTHESIS §3 D4 Camp B, GMI/KMI]</td>
+</tr>
+<tr>
+<td>Scale ceiling</td>
+<td>Site ID = 16 bits ⇒ <strong>65 536 sites/tenant</strong>; address
+space per site = full IPv4 (/120 per /24) [research §3.4]</td>
+<td><code>100.64.0.0/10</code> = ~4.19 M addresses total;
+hand-partitioning ⇒ far fewer <strong>distinct networks</strong> before
+exhaustion</td>
+</tr>
+<tr>
+<td>IP family</td>
+<td>IPv6-native (the future default); ACLs target the v6 CIDR (R4)
+[research §3.4]</td>
+<td>IPv4; works on IPv4-only edges with no v6 path</td>
+</tr>
+<tr>
+<td>Proven model</td>
+<td>Tailscale 4via6 — connects &quot;hundreds/thousands of identical
+networks&quot; [research §3.4]</td>
+<td>Standard CGNAT 1:1 NAT — simple, ubiquitous tooling</td>
+</tr>
+<tr>
+<td>Tooling floor</td>
+<td>Requires v6 on the subnet router (Tailscale parallel: v1.24+);
+clients reaching it may be v4 [research §3.4]</td>
+<td>Requires no v6; but hairpinning/overlap-edge cases multiply with
+each added net</td>
+</tr>
+<tr>
+<td>UX risk</td>
+<td>4via6 mapping is <strong>powerful but confusing</strong> — must be
+hidden behind Console UX (a named open risk) [04_ARCH §13, §13 risk
+table]</td>
+<td>1:1 CGNAT mapping is conceptually simpler to surface to an
+operator</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Recommendation (adopt Camp A):</strong> ULA /48 + 4via6
+scales to far more networks than a hand-partitioned CGNAT space, is the
+proven Tailscale model, and is IPv6-native [01-DP §6.1]. <strong>Surface
+4via6 as the engine but hide it behind Console UX</strong> — the mapping
+confuses end users [04_ARCH §13]. <strong>CGNAT 1:1 remains a documented
+fallback for IPv4-only edge environments</strong> —
+<code>helix-route</code> reserves the seam: a <code>RouteMap</code> MAY
+carry an alternative <code>Cgnat { slice: Ipv4Net }</code> next-hop
+class instead of a <code>Via6</code> class, decoded by an analogous
+<code>cgnat.rs</code> decoder. This MVP specifies <strong>only the 4via6
+path</strong>; CGNAT is the documented escape hatch, not built in Phase
+1.</p>
+<hr />
+<h2 id="9-error-taxonomy-helix-routesrcerrorrs">9. Error taxonomy
+(<code>helix-route/src/error.rs</code>)</h2>
+<p>Every variant is a <strong>finding</strong>, never silently swallowed
+(§11.4.1/.6). Ingest/validation errors reject the whole
+<code>RouteMap</code> version (atomic — a bad map never half-applies);
+install errors leave the prior version live (R3).</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="pp">thiserror::</span><span class="bu">Error</span><span class="op">,</span> <span class="bu">Debug</span><span class="at">)]</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">enum</span> RouteError <span class="op">{</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">// --- addressing / via6 (§2/§3) ---</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>error<span class="at">(</span><span class="st">&quot;overlay class {0:#06x} unknown&quot;</span><span class="at">)]</span>            UnknownClass(<span class="dt">u16</span>)<span class="op">,</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>error<span class="at">(</span><span class="st">&quot;address not within tenant /48&quot;</span><span class="at">)]</span>             OutOfTenant<span class="op">,</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>error<span class="at">(</span><span class="st">&quot;address is not a 4via6 (class Via6)&quot;</span><span class="at">)]</span>       NotVia6<span class="op">,</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>error<span class="at">(</span><span class="st">&quot;4via6 reserved bytes [8..10] non-zero&quot;</span><span class="at">)]</span>     ReservedNonZero<span class="op">,</span></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>error<span class="at">(</span><span class="st">&quot;4via6 (site,v4) != advertised LAN&quot;</span><span class="at">)]</span>         Via6Mismatch<span class="op">,</span></span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>error<span class="at">(</span><span class="st">&quot;bad ipv6 prefix length {0}&quot;</span><span class="at">)]</span>                BadPrefixLen(<span class="dt">u8</span>)<span class="op">,</span></span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">// --- map ingest / validation (§4) ---</span></span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>error<span class="at">(</span><span class="st">&quot;two peers advertise overlapping overlay prefix&quot;</span><span class="at">)]</span> OverlapAdvertise<span class="op">,</span></span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>error<span class="at">(</span><span class="st">&quot;duplicate siteID across distinct connectors&quot;</span><span class="at">)]</span>    DuplicateSiteId(SiteId)<span class="op">,</span></span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>error<span class="at">(</span><span class="st">&quot;siteID {0} out of range 0..=65535&quot;</span><span class="at">)]</span>              SiteIdRange(<span class="dt">u32</span>)<span class="op">,</span></span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a>    <span class="co">// --- policy / verdict install (§6) ---</span></span>
+<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>error<span class="at">(</span><span class="st">&quot;verdict-map install failed (prior version retained): {0}&quot;</span><span class="at">)]</span> VerdictInstall(<span class="dt">String</span>)<span class="op">,</span></span>
+<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>error<span class="at">(</span><span class="st">&quot;policy absent — failing closed&quot;</span><span class="at">)]</span>                           PolicyAbsentFailClosed<span class="op">,</span></span>
+<span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a>    <span class="co">// --- reconcile (§5) ---</span></span>
+<span id="cb19-18"><a href="#cb19-18" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>error<span class="at">(</span><span class="st">&quot;fib build failed: {0}&quot;</span><span class="at">)]</span>                     FibBuild(<span class="dt">String</span>)<span class="op">,</span></span>
+<span id="cb19-19"><a href="#cb19-19" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>error<span class="at">(</span><span class="st">&quot;io: {0}&quot;</span><span class="at">)]</span>                                    Io(<span class="at">#[</span>from<span class="at">]</span> <span class="pp">std::io::</span><span class="bu">Error</span>)<span class="op">,</span></span>
+<span id="cb19-20"><a href="#cb19-20" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Error</th>
+<th>Trigger</th>
+<th>Disposition</th>
+<th>Composes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>OverlapAdvertise</code></td>
+<td>site-ID allocation bug upstream</td>
+<td>reject map version, keep prior</td>
+<td>R3, §4.1</td>
+</tr>
+<tr>
+<td><code>DuplicateSiteId</code></td>
+<td>two connectors claim same site</td>
+<td>reject map version</td>
+<td>§3.3, §4.1</td>
+</tr>
+<tr>
+<td><code>Via6Mismatch</code></td>
+<td>overlay route decodes to a LAN not advertised</td>
+<td>reject map version</td>
+<td>§3.1, §4.1</td>
+</tr>
+<tr>
+<td><code>VerdictInstall</code></td>
+<td><code>nft -f</code> / eBPF swap fails</td>
+<td><strong>prior policy stays live</strong></td>
+<td>R3</td>
+</tr>
+<tr>
+<td><code>PolicyAbsentFailClosed</code></td>
+<td>reconcile with <code>policy = None</code></td>
+<td>default-deny everything</td>
+<td>I6, R3</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="10-config-knobs">10. Config knobs</h2>
+<p>All knobs are <strong>data pushed in the
+<code>RouteMap</code>/<code>CompiledPolicy</code></strong>
+(server-tunable without a client rebuild [04_P2 §2.3 pattern]) except
+the two host-local ones noted. No knob can weaken I6/R3 — a verdict-map
+install always carries <code>policy drop</code> as the chain
+default.</p>
+<table>
+<thead>
+<tr>
+<th>Knob</th>
+<th>Where</th>
+<th>Default</th>
+<th>Range / values</th>
+<th>Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>tenant Global ID</td>
+<td>control plane, per tenant</td>
+<td>random 40-bit</td>
+<td>RFC 4193 random</td>
+<td>tenant /48 prefix (§2.1)</td>
+</tr>
+<tr>
+<td><code>AddrClass::Via6</code> constant</td>
+<td>compile-time</td>
+<td><code>0x4636</code></td>
+<td>fixed</td>
+<td>4via6 subnet discriminator (§2.1)</td>
+</tr>
+<tr>
+<td>site-ID space</td>
+<td>control plane</td>
+<td><code>0..=65535</code></td>
+<td>16-bit</td>
+<td>per-tenant site cap (§3.1)</td>
+</tr>
+<tr>
+<td><code>reconcile</code> debounce</td>
+<td>host-local</td>
+<td><code>0 ms</code></td>
+<td><code>0..=250 ms</code></td>
+<td>coalesce burst map deltas before rebuild</td>
+</tr>
+<tr>
+<td>verdict backend</td>
+<td>host-local feature</td>
+<td><code>nft</code> (P1)</td>
+<td><code>nft</code> | <code>ebpf</code></td>
+<td>enforcement engine (§6.2)</td>
+</tr>
+<tr>
+<td>FIB rebuild mode</td>
+<td>compile-time</td>
+<td><code>wholesale build-then-swap</code></td>
+<td>fixed</td>
+<td>atomicity guarantee (§5)</td>
+</tr>
+<tr>
+<td>CGNAT fallback</td>
+<td>control plane</td>
+<td><strong>off</strong></td>
+<td>off | <code>Cgnat{slice}</code></td>
+<td>IPv4-only escape hatch (§8)</td>
+</tr>
+<tr>
+<td>DAITA-orthogonal</td>
+<td>n/a</td>
+<td>n/a</td>
+<td>n/a</td>
+<td>routing is independent of DAITA/transport (01-DP §9)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="11-edge-cases-each-maps-to-a-14-test-point">11. Edge cases (each
+maps to a §14 test point)</h2>
+<ol type="1">
+<li><strong>Two connectors, identical
+<code>192.168.1.0/24</code></strong> — distinct site IDs ⇒ distinct
+overlay /120s; client FIB resolves each to the right connector; no
+collision (§3.1, §3.2). <em>Primary v1 requirement.</em></li>
+<li><strong><code>/32</code> host advertisement</strong> —
+<code>encode_route</code> yields a <code>/128</code>; LPM still
+resolves; DNAT-back to the single host (§3.1).</li>
+<li><strong>Overlapping advertisement that survives to ingest</strong>
+(site-ID bug upstream) — <code>OverlapAdvertise</code> rejects the whole
+version, prior map stays live (§4.1, R3).</li>
+<li><strong>Stale map (lower version)</strong> — silently ignored, not
+an error; reconciler keeps the newer FIB (§4.1).</li>
+<li><strong>Reconcile during in-flight traffic</strong> —
+build-then-swap means <code>next_hop()</code> never observes a
+half-built FIB; an in-flight packet uses either the old or the new
+table, never a torn one (§5).</li>
+<li><strong>Policy absent on reconcile</strong> —
+<code>PolicyAbsentFailClosed</code> → default-deny everything (I6,
+R3).</li>
+<li><strong>Revocation mid-flow</strong> — peer removed from both WG
+<code>AllowedIPs</code> and the verdict map in one reconcile pass, &lt;
+1 s, no restart (§7, R1).</li>
+<li><strong>Connector roam (underlay endpoint change)</strong> — overlay
+address/Node ID unchanged; only <code>endpoint_candidates</code> change;
+FIB/policy untouched (§2.3, 01-DP §8).</li>
+<li><strong>Port-range rule</strong> — expands to nftables interval set;
+boundary ports <code>lo</code>/<code>hi</code> inclusive (§6.2).</li>
+<li><strong><code>L4Proto::Any</code> + <code>PortRange</code>
+full</strong> — proto/port match keys omitted for that vmap element;
+must not accidentally widen another rule (§6.2).</li>
+<li><strong>4via6 reserved bytes non-zero</strong> —
+<code>ReservedNonZero</code> reject; guards against a malformed/forged
+overlay address (§3.1, §9).</li>
+<li><strong>Site ID 0 shared by non-overlapping connectors</strong> —
+permitted optimization; the <code>OverlapAdvertise</code> check still
+fires if their <em>overlay</em> prefixes actually collide (§3.3).
+<code>UNVERIFIED</code> optimization — flagged.</li>
+</ol>
+<hr />
+<h2 id="12-security-considerations">12. Security considerations</h2>
+<ul>
+<li><strong>R4 — ACLs/routes target the v6 overlay, never raw
+v4.</strong> A rule written against the underlying IPv4 of a 4via6 LAN
+is a category error and is impossible to express
+(<code>VerdictRule.src/dst</code> are <code>Ipv6Net</code>)
+[research-pki_pq_nat §3.4]. This prevents a misconfigured rule from
+matching the wrong site&#39;s identically-numbered LAN.</li>
+<li><strong>Fail-closed everywhere (R3, I6).</strong>
+Absent/stale/failed policy ⇒ drop. The <code>forward</code> chain
+default is <code>policy drop</code>; a verdict-map install failure
+retains the prior (restrictive) version, never opens the edge.</li>
+<li><strong>Need-to-know map filtering (R2).</strong> A node&#39;s
+<code>RouteMap</code> carries only peers/prefixes it is authorized for
+[SYNTHESIS §7]; the data plane cannot leak the existence of unreachable
+networks because it never receives them.</li>
+<li><strong>No-logging by construction (I5).</strong>
+<code>RouteCounters</code> are aggregate (packets dropped by
+default-deny, reconcile count, install failures) — never
+per-peer/per-flow durable state [04_ARCH §2.7]. The CI schema-lint that
+fails the build on any durable connection/traffic table [SYNTHESIS §7]
+applies to the control plane; the data-plane analogue is:
+<code>RouteEngine</code> holds no per-flow map keyed by a peer identity
+beyond the live FIB.</li>
+<li><strong>Forged overlay address.</strong> WG <code>AllowedIPs</code>
+is the crypto gate: a peer cannot source a packet from an overlay prefix
+outside its <code>AllowedIPs</code> — WG drops it before it reaches the
+verdict map (defense in depth, §6).</li>
+<li><strong>Revocation latency</strong> is bounded by R1 (&lt; 1 s) and
+is structurally a key-removal [research-pki_pq_nat §1.1] — no CRL/OCSP
+distribution latency.</li>
+<li><strong>Site-ID exhaustion / forgery.</strong> Site IDs are minted
+only by the control plane and validated on ingest (range + uniqueness);
+a forged/duplicate site ID rejects the map (§4.1, §9).</li>
+</ul>
+<hr />
+<h2 id="13-performance-budget">13. Performance budget</h2>
+<table>
+<thead>
+<tr>
+<th>Operation</th>
+<th>Target</th>
+<th>Rationale / source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>fib.next_hop()</code> (LPM)</td>
+<td>O(prefix bits) per packet; sub-µs on the forward hot path</td>
+<td><code>ip_network_table</code> LPM trie; routing must not bottleneck
+the WG fast path [01-DP §10 perf framing]</td>
+</tr>
+<tr>
+<td>Reconcile (build-then-swap FIB + verdict map)</td>
+<td><strong>p99 &lt; 1 s</strong> edge-to-converged</td>
+<td>R1 [04_ARCH §4.4]</td>
+</tr>
+<tr>
+<td><code>RouteMap</code> validation</td>
+<td>O(Σ peers·prefixes), bounded by tenant size</td>
+<td>reject-fast on the ingest path (§4.1)</td>
+</tr>
+<tr>
+<td>Verdict-map install</td>
+<td>single <code>nft -f</code> transaction; atomic</td>
+<td>R3 atomicity (§6.2)</td>
+</tr>
+<tr>
+<td>Memory</td>
+<td>O(active prefixes + active rules); aggregate counters only</td>
+<td>I5 — no per-flow state [04_ARCH §2.7]</td>
+</tr>
+<tr>
+<td>4via6 encode/decode</td>
+<td>constant-time byte ops, no allocation</td>
+<td>§3.1 fns are pure array writes</td>
+</tr>
+</tbody>
+</table>
+<p>The &lt; 1 s convergence target is the load-bearing data-plane SLO
+(R1); the FIB swap + verdict-map transaction are both designed so the
+only time cost is the wholesale rebuild, which is bounded by tenant size
+and runs off the packet path.</p>
+<hr />
+<h2 id="14-test-points-constitution-114169-test-type-mapping">14. Test
+points (constitution §11.4.169 test-type mapping)</h2>
+<p>Per §11.4.169 [constitution Status summary 2026-06-25], every PASS
+cites rock-solid captured <strong>physical</strong> evidence
+(§11.4.5/.69/.107); the only permitted absence is an honest §11.4.3
+SKIP-with-reason. Four-layer §11.4.4(b) coverage; each row is a
+coverage-ledger entry.</p>
+<table>
+<thead>
+<tr>
+<th>§11.4.169 test type</th>
+<th><code>helix-route</code> coverage</th>
+<th>Captured evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>unit</strong></td>
+<td><code>via6::{encode_host,encode_route,decode}</code> byte-exactness
+vs the §3.1 worked example; <code>OverlayAddr::class</code>;
+<code>allowed_ips_for</code>; <code>Fib::next_hop</code> LPM</td>
+<td>golden-vector test: site 7 &amp; 8 / <code>192.168.1.0/24</code> ⇒
+the two distinct /120s (§3.1); assertion log</td>
+</tr>
+<tr>
+<td><strong>integration</strong> (real System, infra via containers
+submodule §11.4.76)</td>
+<td>two real connector netns each serving <code>192.168.1.0/24</code>;
+client reaches host behind A vs B with no collision; nft verdict map
+installed in a real <code>inet helix</code> table</td>
+<td><code>ip -6 route</code> + <code>nft list ruleset</code> capture;
+<code>ping6</code>/<code>curl</code> to each LAN host succeeds;
+pcap</td>
+</tr>
+<tr>
+<td><strong>e2e</strong></td>
+<td>client→edge→connector→LAN host through the full 01-DP transport +
+this FIB+policy; deny an unauthorized dst</td>
+<td><code>TunnelStatus</code> trace + pcap showing allow path delivered,
+deny path dropped</td>
+</tr>
+<tr>
+<td><strong>full-automation</strong> (§11.4.25/.52/.98, deterministic
+§11.4.50)</td>
+<td>scripted reconcile: edit static <code>map.json</code> → peer
+reachable, <strong>no restart</strong> (the G6 gate) [01-DP §12.1 G6,
+04_P0 §10]; run N=3 identical</td>
+<td><code>ReconcileReport.elapsed &lt; 1s</code> × 3 identical runs;
+before/after route table</td>
+</tr>
+<tr>
+<td><strong>Challenges</strong> (challenges submodule §11.4.27(B))</td>
+<td>a Challenge that scores PASS only on a <strong>denied-flow
+capture</strong> for split-horizon (§7) and a collision-resolved capture
+(§3)</td>
+<td>challenge <code>result.json</code> + pcap</td>
+</tr>
+<tr>
+<td><strong>HelixQA</strong> (helix_qa submodule)</td>
+<td>route/addressing test bank: every §11 edge case as a bank entry;
+autonomous QA session</td>
+<td>bank run report citing each edge-case verdict</td>
+</tr>
+<tr>
+<td><strong>DDoS/load-flood</strong></td>
+<td>verdict-map evaluation under a forwarded-packet flood; default-deny
+holds; no leak</td>
+<td>throughput/drop-rate CSV; default-deny verified under load</td>
+</tr>
+<tr>
+<td><strong>security</strong> (§11.4.10 + security submodule)</td>
+<td>forged-overlay-address rejection; <code>ReservedNonZero</code>; R4
+(no raw-v4 rule); fail-closed on absent policy</td>
+<td>rejection assertions + a fail-closed drop capture</td>
+</tr>
+<tr>
+<td><strong>stress + chaos</strong> (§11.4.85)</td>
+<td>reconcile under burst map deltas (N≥100); kill the connector
+mid-flow → routes withdrawn → restored on return (§4.2); corrupt a
+pushed <code>map.json</code> → rejected, prior live</td>
+<td>latency p50/p95/p99 CSV; <code>categorised_errors.txt</code>;
+recovery trace</td>
+</tr>
+<tr>
+<td><strong>concurrency/atomicity</strong></td>
+<td>build-then-swap FIB while <code>next_hop()</code> is read by the
+forward loop — reader never sees a torn table (§5, edge case 5)</td>
+<td>concurrent-reader test: 10 readers + writer, no torn read, evidence
+hash identical</td>
+</tr>
+<tr>
+<td><strong>race-condition/deadlock</strong></td>
+<td>reconcile vs <code>apply_policy</code> vs <code>next_hop</code>
+interleavings; no deadlock; atomic version swap</td>
+<td>thread-sanitizer / loom-style schedule log</td>
+</tr>
+<tr>
+<td><strong>memory</strong></td>
+<td>no per-flow growth under sustained churn (I5); FIB/rule memory =
+O(active)</td>
+<td>RSS time-series under churn; no unbounded growth</td>
+</tr>
+<tr>
+<td><strong>benchmarking/performance</strong></td>
+<td><code>next_hop</code> sub-µs; reconcile p99 &lt; 1 s (R1)</td>
+<td>criterion bench CSV; reconcile timing histogram</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Paired §1.1 mutations</strong> (each gate proven non-bluff):
+(a) mutate <code>encode_route</code> to drop the site ID → the two
+<code>192.168.1.0/24</code>s collide → unit + integration FAIL; (b) flip
+the <code>forward</code> chain default from <code>drop</code> to
+<code>accept</code> → the deny-flow capture PASSes incorrectly →
+security + Challenge FAIL; (c) make <code>VerdictSink::install</code>
+swallow its error and clear to accept on failure → fail-closed (R3) test
+FAILs; (d) make <code>validate</code> accept an
+<code>OverlapAdvertise</code> map → collision test FAILs. A gate whose
+mutation does <strong>not</strong> make it FAIL is itself a bluff
+(§11.4.1).</p>
+<hr />
+<h2 id="15-frozen-contracts--what-this-document-does-not-own">15. Frozen
+contracts &amp; what this document does not own</h2>
+<p><strong>Frozen contracts</strong> (consumed downstream, must not
+break): <code>OverlayAddr</code>/<code>TenantPrefix</code>/
+<code>AddrClass</code> (§2), the 4via6 byte layout (§3.1),
+<code>RouteMap</code>/<code>PeerRoute</code> (§4.1 — the doc-03
+<code>WatchNetworkMap</code> materializes this shape),
+<code>CompiledPolicy</code>/<code>VerdictRule</code> (§6.1 — the doc-02
+compiler emits this). <strong>Not owned here:</strong> the
+<code>WatchNetworkMap</code> protobuf/Connect wire encoding (doc 03),
+the ACL DSL authoring + group/net resolution (doc 02), enrollment/PKI +
+site-ID/Node-ID <em>allocation</em> (doc 02, [research-pki_pq_nat §1]),
+NAT-traversal endpoint discovery that fills
+<code>PeerRoute.endpoint_candidates</code> (01-DP §8, doc 03), and the
+post-quantum PSK (security doc — no routing impact, [research-pki_pq_nat
+§2]).</p>
+<hr />
+<p><em>End of Overlay Routing &amp; Addressing (Volume 2, Data Plane).
+Deepens 01-DP §6–§7. Pair with doc 03 (<code>WatchNetworkMap</code> —
+the live source of the §4.1 <code>RouteMap</code>) and doc 02 (policy
+compiler + IPAM — the authority for the §3.3 site IDs and §6.1
+<code>CompiledPolicy</code> this crate consumes). The 4via6 byte layout
+(§3.1) and the addressing classes (§2.2) are byte-frozen
+contracts.</em></p>
+</body>
+</html>

@@ -1,7 +1,7 @@
 # telemetry service
 
-**Revision:** 1
-**Last modified:** 2026-06-25T00:00:00Z
+**Revision:** 2
+**Last modified:** 2026-06-26T12:00:00Z
 
 > Master technical specification — Volume 3 (Control Plane, Go), nano-detail service spec.
 > Deepens the telemetry part of [02 §1.1 / §4.174-row, §5.1, §10.2] — the `internal/telemetry`
@@ -303,9 +303,16 @@ const (
     ActionEnrollTokenUsed    AuditAction = "enroll_token.used"
     ActionTenantCreated      AuditAction = "tenant.create"
     ActionUserRoleChanged    AuditAction = "user.role.change"
+    ActionAuthLogin          AuditAction = "auth.login"          // OIDC/account login (control-action audit)
+    ActionAuthEnrollDenied   AuditAction = "auth.enroll.denied"  // rejected enroll attempt (abuse signal)
 )
 var auditVocabulary = map[AuditAction]struct{}{ /* all of the above */ }
 ```
+
+> **Reconciled (§11.4.35, 2026-06-26):** `auth.login` + `auth.enroll.denied` are adopted into
+> this canonical `AuditAction` enum (they are legitimate control-action audits — a login and a
+> rejected enroll, never traffic). This enum is the superset source of truth; `[04-SEC §7]` and
+> `[audit-and-compliance §4]` mirror it (`D-AC-1` resolved).
 
 `Audit()` rejects any `Action` not in `auditVocabulary` with `ErrUnknownAuditAction` (§9) — a
 closed set is the mechanical guarantee that audit never silently grows toward traffic logging.

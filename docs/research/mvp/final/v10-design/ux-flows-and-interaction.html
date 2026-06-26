@@ -1,0 +1,1637 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>UX flows &amp; interaction patterns — the end-to-end behaviour of every HelixVPN surface</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">UX flows &amp; interaction patterns — the end-to-end
+behaviour of every HelixVPN surface</h1>
+</header>
+<h1 id="ux-flows--interaction-patterns--the-end-to-end-behaviour-of-every-helixvpn-surface">UX
+flows &amp; interaction patterns — the end-to-end behaviour of every
+HelixVPN surface</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-06-25T12:00:00Z</p>
+<blockquote>
+<p>Master technical specification — Volume 10 (Design System),
+nano-detail deep-dive. This document <strong>owns</strong> HelixVPN&#39;s
+<strong>end-to-end UX flows and the universal interaction
+patterns</strong> that bind the three apps (Client, Console, Connector)
+across eight platforms and four form factors into one coherent product.
+It is the <strong>behavioural</strong> half of the design system: where
+[<code>screens-client.md</code>] / [<code>screens-console.md</code>] /
+[<code>screens-connector.md</code>] own <em>each screen</em> and
+[<code>component-library.md</code>] owns <em>each component</em>, this
+doc owns the <strong>journeys between them</strong> — the step-by-step
+sequences, the per-app information architecture + navigation model, the
+universal interaction grammar (gestures, keyboard, TV-remote D-pad,
+long-press, pull-to-refresh), the reusable <strong>loading / empty /
+error / success</strong> state contract, the <strong>motion
+choreography</strong>, the full <strong>accessibility</strong> spec
+(WCAG 2.1 AA target), and the <strong>i18n / RTL / localization</strong>
+patterns.</p>
+<p><strong>The product&#39;s emotional centre of gravity</strong> is one
+question — <em>&quot;am I protected right now?&quot;</em> [04_CLIENT §7]. Every
+flow below is designed so that question is answered instantly and
+unambiguously, and so the <strong>loading / connecting</strong> state is
+never mistaken for the <strong>connected</strong> state (§11.4.107 — a
+spinner is <strong>not</strong> proof of connection; the connected state
+is reached only on an actual <code>Connected{...}</code> FFI event,
+never on a timer or an optimistic guess).</p>
+<p><strong>SPEC-ONLY.</strong> It describes <em>what each flow is and
+how each interaction behaves</em> — not the shipping Flutter navigator,
+gesture recognisers, or focus-traversal code. Screen layouts are owned
+by the three <code>screens-*</code> docs; component internals by
+[<code>component-library.md</code>]; colours by
+[<code>color-system.md</code>]; token scales (spacing / motion /
+breakpoints) by [<code>design-tokens.md</code>]; the type/icon/motion
+catalog by [<code>typography-iconography-motion.md</code>].</p>
+<p><strong>Boundary with sibling docs.</strong> <strong>Owns:</strong>
+the cross-screen <strong>journeys</strong>, the per-app
+<strong>navigation model</strong>, the <strong>interaction
+grammar</strong>, the <strong>state-pattern contract</strong>,
+<strong>motion choreography</strong>, the <strong>a11y flow</strong>,
+and <strong>i18n/RTL</strong>. <strong>Consumes:</strong> the
+<strong>7-variant <code>ffi::TunnelStatus</code></strong> state machine
++ its Dart-facing state diagram [FFI §3.2, §3.4]; the connection-state
+palette [COLOR §3]; the motion tokens [DT §6.4]; the screen inventories
++ nav maps of the three <code>screens-*</code> docs; the components each
+flow drives [<code>component-library.md</code>].</p>
+<p><strong>Evidence base.</strong> <code>[04_CLIENT §N]</code> =
+<code>final/03-client-core-and-ui.md</code>; <code>[FFI §N]</code> =
+<code>final/v04-client/ffi-surface.md</code>; <code>[SC §N]</code> =
+<code>final/v10-design/screens-client.md</code>; <code>[SK §N]</code> =
+<code>final/v10-design/screens-console.md</code>; <code>[SN §N]</code> =
+<code>final/v10-design/screens-connector.md</code>; <code>[CL §N]</code>
+= <code>final/v10-design/component-library.md</code>;
+<code>[COLOR §N]</code> = <code>final/v10-design/color-system.md</code>;
+<code>[DT §N]</code> = <code>final/v10-design/design-tokens.md</code>;
+<code>[CP §N]</code> = <code>final/02-control-plane.md</code>;
+<code>[POL §N]</code>/<code>[REG §N]</code>/<code>[IPAM §N]</code>/<code>[COORD §N]</code>
+= the matching <code>final/v03-control-plane/svc-*.md</code>. Claims not
+grounded in the evidence base or in this document&#39;s own original UX
+design choices are tagged <code>UNVERIFIED</code> per constitution
+§11.4.6 — never fabricated. The flow and interaction designs are
+<strong>original HelixVPN UX design work</strong> (modelled on
+well-established WAI-ARIA Authoring-Practices, Material/Apple-HIG, and
+TV-leanback focus patterns, cited in Sources).</p>
+</blockquote>
+<hr />
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#0-scope--the-principles-that-shape-every-flow">0. Scope
+&amp; the principles that shape every flow</a></li>
+<li><a href="#1-information-architecture--navigation-model-per-app-per-form-factor">1.
+Information architecture &amp; navigation model (per app, per form
+factor)</a>
+<ul>
+<li><a href="#11-the-navigation-affordance-ladder">1.1 The
+navigation-affordance ladder</a></li>
+<li><a href="#12-client-ia">1.2 Client IA</a></li>
+<li><a href="#13-console-ia">1.3 Console IA</a></li>
+<li><a href="#14-connector-ia">1.4 Connector IA</a></li>
+</ul></li>
+<li><a href="#2-the-state-machine-spine-every-flow-rides">2. The
+state-machine spine every flow rides</a></li>
+<li><a href="#3-flow-1--first-run-onboarding--first-connect">3. Flow 1 —
+first-run onboarding → first connect</a></li>
+<li><a href="#4-flow-2--connect--established--graceful-disconnect">4.
+Flow 2 — connect → established → graceful disconnect</a></li>
+<li><a href="#5-flow-3--reconnect--drop-recovery">5. Flow 3 — reconnect
+/ drop recovery</a></li>
+<li><a href="#6-flow-4--leak--kill-switch-tripped-danger-intent-override">6.
+Flow 4 — leak / kill-switch-tripped Danger (intent-override)</a></li>
+<li><a href="#7-flow-5--exit-switch--multi-hop-build">7. Flow 5 — exit
+switch + multi-hop build</a></li>
+<li><a href="#8-flow-6--console-enroll-a-device--author-a-policy--see-it-converge">8.
+Flow 6 — Console: enroll a device → author a policy → see it
+converge</a></li>
+<li><a href="#9-flow-7--connector-enroll--advertise-a-subnet--resolve-a-cidr-conflict">9.
+Flow 7 — Connector: enroll → advertise a subnet → resolve a CIDR
+conflict</a></li>
+<li><a href="#10-universal-interaction-patterns">10. Universal
+interaction patterns</a>
+<ul>
+<li><a href="#101-gestures-touch">10.1 Gestures (touch)</a></li>
+<li><a href="#102-keyboard-navigation-desktop--web-less-native">10.2
+Keyboard navigation (desktop / web-less native)</a></li>
+<li><a href="#103-tv-leanback-d-pad--remote">10.3 TV-leanback D-pad /
+remote</a></li>
+<li><a href="#104-long-press--context-actions">10.4 Long-press / context
+actions</a></li>
+<li><a href="#105-pull-to-refresh--live-vs-pull">10.5 Pull-to-refresh
+&amp; live-vs-pull</a></li>
+</ul></li>
+<li><a href="#11-the-loading--empty--error--success-state-contract">11.
+The loading / empty / error / success state contract</a></li>
+<li><a href="#12-motion-choreography">12. Motion choreography</a></li>
+<li><a href="#13-accessibility-wcag-21-aa">13. Accessibility (WCAG 2.1
+AA)</a></li>
+<li><a href="#14-internationalization-rtl--localization">14.
+Internationalization, RTL &amp; localization</a></li>
+<li><a href="#15-surfaced-decisions--cross-doc-contracts">15. Surfaced
+decisions &amp; cross-doc contracts</a></li>
+<li><a href="#sources-verified">Sources verified</a></li>
+</ul>
+<hr />
+<h2 id="0-scope--the-principles-that-shape-every-flow">0. Scope &amp;
+the principles that shape every flow</h2>
+<p>This document specifies the <strong>dynamic</strong> behaviour of
+HelixVPN: the ordered sequences a user moves through, and the grammar of
+interaction those sequences share. Six principles govern every flow:</p>
+<ol type="1">
+<li><strong>The status stream is the single source of truth.</strong>
+Every connection-bearing screen is a <strong>pure function</strong> of
+the <code>ffi::TunnelStatus</code> stream [FFI §3.4]; no flow ever
+paints &quot;Protected&quot; off a timer, an optimistic local guess, or a
+button-press it merely <em>initiated</em>. Only an actual
+<code>Connected{...}</code> event paints green (§11.4.107, [04_CLIENT
+§8.2]).</li>
+<li><strong><code>Danger</code> overrides intent.</strong> A
+<code>Danger{kind}</code> event interrupts whatever the user is doing
+and pushes the red surface to the top of the stack [FFI §3.3, SC §11].
+No flow can suppress it; every flow yields to it.</li>
+<li><strong>No dead ends.</strong> Every error, empty, denied, or
+blocked state offers a next action (retry, re-explain, deep-link,
+alternative path). A flow never strands the user (§11.4.66 — closed-set
+choices use the interactive question mechanism, never a silent
+wait).</li>
+<li><strong>Honesty over optimism (§11.4.6).</strong> A flow shows
+<em>cached + stale-labelled</em> data rather than a fake-fresh value; a
+&quot;loading&quot; spinner is visually + semantically distinct from a &quot;connected&quot;
+success; a partial result is shown as partial, never rounded up to
+done.</li>
+<li><strong>One decision per step.</strong> Onboarding and destructive
+flows present a single decision per screen (the §11.4.162 no-overlap
+covenant applied to time, not just space) so the path is unambiguous on
+every form factor.</li>
+<li><strong>Reachable on every input model.</strong> Each flow is fully
+operable by touch, keyboard, screen reader, and TV-remote D-pad — the
+canonical path is never gesture-only or hover-only (§13).</li>
+</ol>
+<blockquote>
+<p><strong>Honest boundary (§11.4.6).</strong> This doc owns <em>flow +
+interaction behaviour</em>. The exact router config is deferred to a
+Volume-10 navigation refinement pass (see MASTER_INDEX; not yet
+authored); the gesture-recogniser thresholds and focus-traversal
+matrices are pinned by [<code>platform-adaptation.md</code>]; where a
+concrete numeric threshold or per-platform focus order is named without
+a grounding citation it is tagged <code>UNVERIFIED</code>.</p>
+</blockquote>
+<hr />
+<h2 id="1-information-architecture--navigation-model-per-app-per-form-factor">1.
+Information architecture &amp; navigation model (per app, per form
+factor)</h2>
+<h3 id="11-the-navigation-affordance-ladder">1.1 The
+navigation-affordance ladder</h3>
+<p>All three apps share one responsive law: <strong>the navigation
+affordance is chosen by width size-class, never by
+<code>Platform.isX</code></strong> [04_CLIENT §7.3, SC §0, SK §1, SN
+§1], so a resized desktop window degrades to a phone layout and
+Web/desktop &quot;just work&quot;. The shared ladder:</p>
+<table>
+<thead>
+<tr>
+<th>Size class</th>
+<th>Width [DT §6.6]</th>
+<th>Nav affordance</th>
+<th>Body</th>
+<th>Archetype</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>compact</strong></td>
+<td>&lt; 600 px</td>
+<td><code>BottomNavigationBar</code></td>
+<td>single pane</td>
+<td>phone (portrait)</td>
+</tr>
+<tr>
+<td><strong>medium</strong></td>
+<td>600–1024 px</td>
+<td><code>NavigationRail</code> (icon-only)</td>
+<td>master / detail</td>
+<td>tablet / landscape phone</td>
+</tr>
+<tr>
+<td><strong>expanded</strong></td>
+<td>&gt; 1024 px</td>
+<td>extended <code>NavigationRail</code> (icon + label)</td>
+<td>multi-pane</td>
+<td>desktop</td>
+</tr>
+<tr>
+<td><strong>tv</strong></td>
+<td>≥ 1440 px + leanback input</td>
+<td>extended rail, enlarged focus targets, D-pad traversal</td>
+<td>multi-pane</td>
+<td>Android TV / leanback</td>
+</tr>
+</tbody>
+</table>
+<p><code>Drawer</code> is <strong>not</strong> a primary HelixVPN nav
+affordance: the destination count per app is small (Client 5, Console
+10, Connector 3), so a bottom-nav (compact) or rail (medium+) holds them
+all without a hamburger-hidden menu. A drawer is used only for
+<strong>secondary overflow</strong> where a screen genuinely needs it
+(Console&#39;s &quot;More&quot; sheet on compact for destinations beyond the
+bottom-nav&#39;s 5 [SK §1]). This is <strong>D-UX-1</strong>.</p>
+<blockquote>
+<p><strong>TV-leanback is a size class + an input model</strong>, not a
+separate platform tree [SC §0]. It renders the <code>expanded</code>
+layout with focus targets enlarged to a ~64 px hit area, a visible focus
+ring (<code>border.focus</code> [COLOR §4.5]) on every focusable, and a
+per-screen declared D-pad traversal order (§10.3). The Console and
+Connector also render on TV via the same ladder, but the
+<strong>Client</strong> is the only flavor whose hero (the
+ConnectButton) is designed as the default-focused TV control [SC
+§5].</p>
+</blockquote>
+<h3 id="12-client-ia">1.2 Client IA</h3>
+<p>The Client is a <strong>hub-and-spoke from Home</strong> [SC §2].
+Home (<code>/</code>) is the root of the post-onboarding
+<code>AdaptiveScaffold</code>; Exits, Shields, Account, Settings are its
+peer destinations.</p>
+<pre class="mermaid"><code>flowchart TD
+    ROOT[&quot;/ Home (hub) — the ConnectButton&quot;]
+    ROOT --- EX[&quot;/exits — Exit selection&quot;]
+    ROOT --- SH[&quot;/shields — Privacy shields&quot;]
+    ROOT --- AC[&quot;/account — Identity + devices&quot;]
+    ROOT --- ST[&quot;/settings — Preferences&quot;]
+    EX --- MH[&quot;/exits/multihop — Multi-hop builder&quot;]
+    ST --- APP[&quot;/settings/appearance&quot;]
+    ST --- ABT[&quot;/settings/about&quot;]
+    ST -. &quot;if connector cap&quot; .- CN[&quot;/settings/connector (D-SC-3)&quot;]
+    ROOT -. &quot;Danger{kind} overrides intent&quot; .-&gt; DG[&quot;/danger/* — full red surface&quot;]
+    AC -. &quot;auth revoked&quot; .-&gt; DAU[&quot;/danger/auth → re-sign-in&quot;]</code></pre>
+<ul>
+<li><strong>compact:</strong> bottom-nav with 5 destinations (Home ·
+Exits · Shields · Account · Settings); Home shows the full-width
+ConnectButton [SC §3].</li>
+<li><strong>medium:</strong> icon-only rail; Exits and Settings become
+master/detail (list left, selected detail right) without leaving the
+destination.</li>
+<li><strong>expanded:</strong> extended rail; Home gains a right pane
+(live status detail), Exits gains a wide detail pane.</li>
+<li><strong>tv:</strong> extended rail; ConnectButton is the
+default-focused control; D-pad down reaches the exit summary then the
+shields row [SC §5].</li>
+</ul>
+<h3 id="13-console-ia">1.3 Console IA</h3>
+<p>The Console is a <strong>hub-and-spoke from the Dashboard</strong>
+with <strong>cross-links that follow the data</strong> [SK §2] (a policy
+compile error naming an un-advertised host CIDR links to IPAM; a
+topology connector node links to its prefixes; an audit
+<code>policy.activate</code> row links to that policy version). It adds
+a <strong>⌘K command palette</strong> [SK §1] as a keyboard-first
+jump-to-anything affordance orthogonal to the rail, and a
+<strong>live-events rail</strong> (expanded only) folding the WS/SSE
+stream.</p>
+<pre class="mermaid"><code>flowchart TD
+    DASH[&quot;/ Dashboard (hub)&quot;]
+    DASH --- DEV[&quot;/devices → /devices/:id&quot;]
+    DASH --- POL[&quot;/policy — editor&quot;]
+    DASH --- TOP[&quot;/topology — graph&quot;]
+    DASH --- USR[&quot;/users — SSO + roles&quot;]
+    DASH --- IPAM[&quot;/ipam — prefixes&quot;]
+    DASH --- AUD[&quot;/audit&quot;]
+    DASH --- HLTH[&quot;/health — telemetry&quot;]
+    DASH --- SET[&quot;/settings&quot;]
+    POL -. &quot;compile error → host ref&quot; .-&gt; IPAM
+    TOP -. &quot;click device node&quot; .-&gt; DEV
+    AUD -. &quot;policy.activate row&quot; .-&gt; POL
+    CMD[&quot;⌘K palette&quot;] -. &quot;jump to any screen/entity/action&quot; .-&gt; DASH &amp; DEV &amp; POL &amp; TOP</code></pre>
+<h3 id="14-connector-ia">1.4 Connector IA</h3>
+<p>The Connector is a <strong>near-linear flow</strong> [SN §2] with a
+deliberately narrow IA: get enrolled, prove healthy, declare subnets,
+surface conflicts. Three primary destinations only (Status · Routes ·
+Settings); Enroll precedes the shell.</p>
+<pre class="mermaid"><code>flowchart TD
+    ENR[&quot;/enroll (pre-shell)&quot;] --&gt;|enrolled| STAT[&quot;/ Status (home)&quot;]
+    STAT --- RT[&quot;/routes → /routes/edit&quot;]
+    STAT --- CSET[&quot;/settings&quot;]
+    RT -. &quot;conflict in result&quot; .-&gt; CONF[&quot;/routes/conflicts&quot;]
+    CONF -. &quot;explains + links&quot; .-&gt; CONSOLE[&quot;Console (resolves centrally)&quot;]
+    STAT -. &quot;revoked out-of-band&quot; .-&gt; ENR</code></pre>
+<hr />
+<h2 id="2-the-state-machine-spine-every-flow-rides">2. The state-machine
+spine every flow rides</h2>
+<p>Every connection-bearing flow (Client Home, Connector Status)
+switches on the <strong>7-variant
+<code>ffi::TunnelStatus</code></strong> [FFI §3.2] via the Dart-facing
+state diagram [FFI §3.4]. This is the spine the flows in §4–§6 map onto;
+it is reproduced here as the canonical reference (owned by [FFI §3.4],
+consumed here):</p>
+<pre class="mermaid"><code>stateDiagram-v2
+    [*] --&gt; Disconnected
+    Disconnected --&gt; Connecting : start() (via shim)
+    Connecting   --&gt; Handshaking : carrier up
+    Connecting   --&gt; Reconnecting : dial err (budget left)
+    Connecting   --&gt; Down : ladder-exhausted / host-fatal
+    Handshaking  --&gt; Connected : WG handshake complete
+    Handshaking  --&gt; Reconnecting : handshake timeout (budget left)
+    Handshaking  --&gt; Danger : auth-failed (revoked) — kill-switch closed
+    Connected    --&gt; Connected : rtt drift / path change (re-emit)
+    Connected    --&gt; Reconnecting : drop (PeerTimeout / TransportError)
+    Connected    --&gt; Danger : leak / killswitch_tripped (overrides intent)
+    Connected    --&gt; Disconnected : user stop
+    Reconnecting --&gt; Connected : re-dial ok
+    Reconnecting --&gt; Down : ladder-exhausted + backoff cap
+    Reconnecting --&gt; Disconnected : user stop
+    Down         --&gt; Connecting : start() again
+    Danger       --&gt; Connecting : start() / re-enroll
+    Danger       --&gt; Disconnected : user stop</code></pre>
+<p><strong>The UI mapping</strong> of each state (fill colour / icon /
+label / motion) is owned by the Home render matrix [SC §5] and the
+<code>ConnectButton</code> state table [CL §2]; the <strong>flows below
+reference state names</strong>, not colours, so they stay valid
+regardless of theme.</p>
+<hr />
+<h2 id="3-flow-1--first-run-onboarding--first-connect">3. Flow 1 —
+first-run onboarding → first connect</h2>
+<p><strong>Goal.</strong> A brand-new install reaches its first
+<code>Connected{...}</code> with the minimum decisions, never
+dead-ending, honouring the OS-mediated VPN-consent step.</p>
+<p><strong>Entry.</strong> App launch with <strong>no persisted device
+token / session</strong> [04_CLIENT §8] → the launch gate routes to
+<code>/welcome</code> [SC §2]. (A present token skips straight to Home —
+Flow 2.)</p>
+<p><strong>Step-by-step.</strong></p>
+<ol type="1">
+<li><strong>Welcome (<code>/welcome</code>, SC §4.1).</strong> Static
+value-promise; one decision: <strong>Get started</strong> (→ sign-in) or
+&quot;I already have an account / device&quot;. No async.</li>
+<li><strong>Sign-in (<code>/welcome/sign-in</code>, SC §4.2).</strong>
+The user picks <strong>one of two</strong> enrolment paths the spine
+supports [04_CLIENT §6]:
+<ul>
+<li><strong>OIDC</strong> (managed identity / SSO) — opens the issuer in
+an <code>OidcWebView</code> / system browser; success returns a code
+exchanged for a session.</li>
+<li><strong>Anonymous device token</strong> (self-hostable, privacy-max)
+— generates + registers a per-device token against the configured server
+(server URL entered here on first run). No email, no personal identity.
+While the chosen path runs, the <strong>other card disables</strong> (no
+double-enrol); on failure an <code>InlineError</code> gives a typed,
+human reason (unreachable server, bad URL, issuer rejected, token bound
+elsewhere) and returns to idle for retry — never a silent fail
+(§11.4.6).</li>
+</ul></li>
+<li><strong>VPN permission grant (<code>/welcome/grant</code>, SC
+§4.3).</strong> A pre-consent explainer (&quot;Helix needs permission to
+create a VPN tunnel; we never see your traffic&quot;) then <strong>Allow
+VPN</strong> triggers the <strong>OS-owned</strong> consent dialog the
+<code>TunnelPlatform</code> shim requires (NEPacketTunnelProvider
+<code>saveToPreferences</code> / <code>VpnService.prepare()</code> /
+privileged-service install, per platform [SC §4.3]).
+<ul>
+<li><em>granted</em> → brief success tick → Home.</li>
+<li><em>denied</em> → a <strong>calm re-explain</strong> + &quot;Try again&quot; +
+a &quot;How to enable in Settings&quot; deep-link; if the OS won&#39;t re-show the
+dialog (denied-permanently), the Settings deep-link is the path. Never a
+dead end.</li>
+</ul></li>
+<li><strong>Home, <code>Disconnected</code> (<code>/</code>, SC
+§5).</strong> First post-onboarding frame. The ConnectButton renders
+<code>Disconnected</code> (the safe default — never a fake &quot;connected&quot;
+first frame) with chip &quot;Tap to connect&quot;.</li>
+<li><strong>First connect.</strong> The user taps the ConnectButton →
+<code>connectController.toggle(Disconnected)</code> calls
+<code>start()</code> via the shim [04_CLIENT §8.2]. The status stream
+now drives the UI through
+<code>Connecting → Handshaking → Connected{...}</code> (Flow 2). The
+first <code>Connected{...}</code> event paints green — and
+<strong>only</strong> that event does (§11.4.107).</li>
+</ol>
+<pre class="mermaid"><code>sequenceDiagram
+    actor U as New user
+    participant W as Welcome/Sign-in/Grant
+    participant OS as OS VPN-consent
+    participant H as Home (ConnectButton)
+    participant FFI as status stream
+    U-&gt;&gt;W: Get started → pick OIDC | device-token
+    W--&gt;&gt;U: success → grant explainer
+    U-&gt;&gt;OS: Allow VPN
+    OS--&gt;&gt;H: granted → Home (Disconnected)
+    U-&gt;&gt;FFI: tap Connect → start()
+    FFI--&gt;&gt;H: Connecting
+    FFI--&gt;&gt;H: Handshaking
+    FFI--&gt;&gt;H: Connected{transport,path,rtt}  %% green only here
+    H--&gt;&gt;U: &quot;Protected · {transport·path·rtt}&quot;</code></pre>
+<p><strong>a11y.</strong> Each onboarding step is its own route (sane OS
+back; partial enrolment resumes at the right step); the actionable
+button is focused per step; success / denied results are announced via a
+polite live-region; the headline is an <code>h1</code> heading node [SC
+§4]. <strong>Resume:</strong> a half-finished enrolment (token saved,
+consent not granted) resumes at step 3, not step 1.</p>
+<hr />
+<h2 id="4-flow-2--connect--established--graceful-disconnect">4. Flow 2 —
+connect → established → graceful disconnect</h2>
+<p><strong>Goal.</strong> The everyday happy path: connect, observe the
+established connection honestly (the §11.4.107 loading-vs-connected
+distinction), then disconnect cleanly.</p>
+<p><strong>The state transitions this flow maps to UI</strong> (the
+spine, §2):</p>
+<table>
+<thead>
+<tr>
+<th>Transition</th>
+<th>UI on Home [SC §5]</th>
+<th>Why it is honest</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Disconnected → Connecting</code></td>
+<td>amber fill, spinner-ring, <strong>&quot;Connecting…&quot;</strong>, chip
+&quot;Contacting exit…&quot;, <code>connectPulse</code></td>
+<td>animated + &quot;…&quot;-suffixed + non-committal chip ⇒ not &quot;connected&quot;</td>
+</tr>
+<tr>
+<td><code>Connecting → Handshaking</code></td>
+<td>amber (= Connecting), key-exchange glyph,
+<strong>&quot;Securing…&quot;</strong>, chip &quot;Handshaking…&quot;</td>
+<td>still amber, still busy (<code>aria-busy</code>)</td>
+</tr>
+<tr>
+<td><code>Handshaking → Connected{direct}</code></td>
+<td><strong>green</strong> fill, shield-check,
+<strong>&quot;Protected&quot;</strong>, chip
+<code>transport·direct·{rtt}ms</code>, one-shot settle</td>
+<td>green painted <strong>only</strong> on the real
+<code>Connected{...}</code> event</td>
+</tr>
+<tr>
+<td><code>Handshaking → Connected{relay}</code></td>
+<td>teal-green, shield-check-relay, <strong>&quot;Protected ·
+relayed&quot;</strong>, chip <code>transport·relay·{rtt}ms</code></td>
+<td>relay path surfaced honestly (not hidden as &quot;direct&quot;)</td>
+</tr>
+<tr>
+<td><code>Connected → Connected</code> (rtt drift / path change)</td>
+<td>chip updates in place; fill steady</td>
+<td>re-emit coalesced [FFI §4.4]; no flicker</td>
+</tr>
+<tr>
+<td><code>Connected → Disconnected</code> (user stop)</td>
+<td>grey, power-off glyph, <strong>&quot;Not connected&quot;</strong></td>
+<td>clean idle, distinct from a drop</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Step-by-step.</strong></p>
+<ol type="1">
+<li><strong>Tap ConnectButton</strong> from <code>Disconnected</code> →
+<code>start()</code> [04_CLIENT §8.2].</li>
+<li><strong><code>Connecting</code></strong> — amber +
+<code>connectPulse</code>; the chip shows the in-flight phase; the
+button announces &quot;Connecting&quot; with <code>aria-busy=true</code> [CL
+§2].</li>
+<li><strong><code>Handshaking</code></strong> — &quot;Securing…&quot;; still
+amber, still busy. The user cannot mistake this for connected: colour
+(amber) + icon (spinner/key) + text (&quot;…&quot;-suffixed) + the non-committal
+chip are <strong>four independent signals</strong> that say &quot;not yet&quot;
+(§11.4.107, §13 colour-independence).</li>
+<li><strong><code>Connected{...}</code></strong> — green/teal
+<strong>settle</strong> (a one-shot, non-looping motion, §12); the chip
+now shows the live <code>transport · path · rtt</code>; the button
+announces &quot;Connected, direct path, 28 milliseconds&quot; via a polite
+live-region. This is the <strong>only</strong> state painted as
+protected, and it is reached <strong>only</strong> from a real FFI
+<code>Connected{...}</code> event — never from the tap, a timeout, or an
+optimistic guess.</li>
+<li><strong>Established steady state.</strong> rtt drift / path change
+re-emit <code>Connected</code>, updating the chip without re-animating
+the fill (coalesced [FFI §4.4]). The shields row + exit summary reflect
+the live session.</li>
+<li><strong>Graceful disconnect.</strong> The user taps the
+ConnectButton (now in <code>Connected</code>) →
+<code>toggle(Connected)</code> calls <code>stop()</code>. The
+orchestrator emits <code>Down{reason:&quot;stopped&quot;}</code>, which the
+projector maps to <strong><code>Disconnected</code></strong> [FFI §3.3]
+(a <em>user</em> stop is clean idle, <strong>not</strong> a
+<code>Down</code> drop). The button cross-fades grey → &quot;Not connected&quot;;
+no Danger, no banner.</li>
+</ol>
+<pre class="mermaid"><code>sequenceDiagram
+    actor U as User
+    participant H as Home
+    participant FFI as status stream
+    U-&gt;&gt;FFI: tap → start()
+    FFI--&gt;&gt;H: Connecting (amber, pulse, aria-busy)
+    FFI--&gt;&gt;H: Handshaking (amber, &quot;Securing…&quot;)
+    FFI--&gt;&gt;H: Connected{direct,28ms} (green settle)
+    Note over H: green painted ONLY on this event (§11.4.107)
+    loop established
+        FFI--&gt;&gt;H: Connected (rtt drift / path change → chip update)
+    end
+    U-&gt;&gt;FFI: tap → stop()
+    FFI--&gt;&gt;H: Down{reason:&quot;stopped&quot;} → Disconnected (clean idle)</code></pre>
+<p><strong>a11y.</strong> State changes fire polite live-region
+announcements; <code>Connected</code> adds the composed
+<code>transport·path·rtt</code> to the accessible name; the loading
+states set <code>aria-busy</code>; the disconnect tap is announced as a
+protection-reducing action only when a shield (kill-switch) would be
+lowered (it isn&#39;t here — a clean stop is neutral). <strong>Connector
+parity:</strong> the Connector Status home rides the same spine (its
+hero answers &quot;am I up and serving my subnets?&quot; [SN §0]) but with no user
+&quot;connect&quot; tap — an appliance is connected by config, so its home shows
+the live state read-only and surfaces re-enroll only on revoke (Flow
+7).</p>
+<hr />
+<h2 id="5-flow-3--reconnect--drop-recovery">5. Flow 3 — reconnect / drop
+recovery</h2>
+<p><strong>Goal.</strong> An <em>unexpected</em> link loss recovers
+automatically without alarming the user as if they were exposed —
+distinct from both a clean stop (Flow 2) and a Danger exposure (Flow
+4).</p>
+<p><strong>The distinction (load-bearing, §11.4.6).</strong> Three
+different &quot;not fully connected&quot; situations get three different visual
+languages so the user is never misled:</p>
+<table>
+<thead>
+<tr>
+<th>Situation</th>
+<th>FFI state</th>
+<th>Home language</th>
+<th>Severity</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>User stopped</td>
+<td><code>Disconnected</code></td>
+<td>grey, &quot;Not connected&quot;</td>
+<td>neutral</td>
+</tr>
+<tr>
+<td>Link dropped, retrying</td>
+<td><code>Reconnecting</code></td>
+<td><strong>amber pulse</strong>, &quot;Reconnecting…&quot;, chip &quot;Lost link,
+retrying…&quot;</td>
+<td>transient (no exposure)</td>
+</tr>
+<tr>
+<td>Retry budget exhausted</td>
+<td><code>Down{reason}</code></td>
+<td><strong>orange</strong> + inline <code>DownBanner</code> on Home,
+&quot;Disconnected — dropped&quot;, reason (stable-prefix)</td>
+<td>failed (no exposure)</td>
+</tr>
+<tr>
+<td>Traffic may be escaping</td>
+<td><code>Danger{kind}</code></td>
+<td><strong>red full surface</strong> (Flow 4)</td>
+<td>exposure</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Step-by-step.</strong></p>
+<ol type="1">
+<li>From <code>Connected</code>, the carrier drops (PeerTimeout /
+TransportError) → the orchestrator&#39;s re-dial driver begins; the FFI
+emits <strong><code>Reconnecting</code></strong>.</li>
+<li><strong><code>Reconnecting</code></strong> — amber
+<strong>pulsing</strong> fill, rotating glyph, &quot;Reconnecting…&quot;, chip
+&quot;Lost link, retrying…&quot;; <code>aria-busy=true</code>. This is an
+<strong>inline</strong> state on Home — <em>not</em> a full red surface
+— because a retrying drop is not an exposure.</li>
+<li><strong>Recovery path A —
+<code>Reconnecting → Connected</code>.</strong> Re-dial succeeds → green
+settle; the chip returns to live <code>transport·path·rtt</code>. A
+polite announcement: &quot;Reconnected, direct path, 31 milliseconds&quot;.</li>
+<li><strong>Recovery path B —
+<code>Reconnecting → Down{reason}</code>.</strong> The re-dial ladder is
+exhausted + the backoff cap is hit →
+<strong><code>Down{reason}</code></strong>: an orange button + the
+inline <strong><code>DownBanner</code></strong> on Home (z below Danger,
+never full-screen-red), label &quot;Disconnected — dropped&quot;, the reason shown
+by <strong>stable prefix</strong> (<code>ladder-exhausted</code> /
+<code>host-fatal</code>) not parsed prose (§11.4.6). The banner offers
+<strong>Reconnect</strong> (→ <code>start()</code> again, back to
+<code>Connecting</code>).</li>
+<li><strong>The kill-switch interaction.</strong> If the kill-switch
+shield is <strong>on</strong>, traffic is blocked while
+<code>Reconnecting</code>/<code>Down</code> (the protection is
+<em>working</em>) — the shields row shows kill-switch active to
+reassure; this is coordinated by the screen, not an overlap [CL §5]. (If
+kill-switch is <em>off</em>, a drop may expose traffic → that path is a
+<code>Danger{kind:&quot;leak&quot;}</code>, Flow 4.)</li>
+</ol>
+<pre class="mermaid"><code>stateDiagram-v2
+    Connected --&gt; Reconnecting : drop (PeerTimeout/TransportError)
+    Reconnecting --&gt; Connected : re-dial ok (green settle)
+    Reconnecting --&gt; Down : ladder-exhausted + backoff cap
+    Down --&gt; Connecting : Reconnect (start() again)
+    note right of Reconnecting : amber pulse · INLINE · aria-busy · &quot;retrying&quot;
+    note right of Down : orange · DownBanner · stable-prefix reason · Reconnect CTA</code></pre>
+<p><strong>a11y.</strong> <code>Reconnecting</code> announces politely
+(not assertively — it is not an emergency); <code>Down</code> announces
+the typed reason and moves focus to the <code>DownBanner</code>&#39;s
+Reconnect action. The pulse degrades to a <strong>static</strong> amber
+ring under reduce-motion (§12) — it never strobes (§11.4.107
+no-flash).</p>
+<hr />
+<h2 id="6-flow-4--leak--kill-switch-tripped-danger-intent-override">6.
+Flow 4 — leak / kill-switch-tripped Danger (intent-override)</h2>
+<p><strong>Goal.</strong> Make &quot;you may be exposed&quot; impossible to miss
+and impossible to suppress, and give exactly one safe action — without
+strobing or panicking.</p>
+<p><strong>The override rule.</strong> A <code>Danger{kind}</code> from
+the stream <strong>paints red regardless of where the user is</strong>
+[FFI §3.3, §3.2]: the projector returns <code>Danger</code> <em>before
+matching any other state</em> (&quot;Danger overrides everything&quot;). The UI
+honours this by <strong>pushing the Danger surface over the entire
+stack</strong> — over Home, over Exits, over Settings, even over a modal
+or a toast (the <code>DangerBanner</code> is z-top,
+<code>z.semantic.danger</code> 2000, and can never be occluded [SC §0]).
+This is <strong>D-UX-2</strong>: the Danger surface is the only
+input-overriding navigation event in the product.</p>
+<p><strong>The two kinds.</strong></p>
+<table>
+<thead>
+<tr>
+<th><code>Danger.kind</code></th>
+<th>Source</th>
+<th>Surface [SC §11]</th>
+<th>Safe action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>&quot;leak&quot;</code></td>
+<td><code>shields_tripped = &quot;leak&quot;</code> (DNS/IPv6/route escape) [FFI
+§3.3]</td>
+<td><code>/danger/leak</code> — full red <code>DangerScreen</code> +
+<code>LeakDetail</code> (what leaked, plain language)</td>
+<td><strong>Reconnect securely</strong></td>
+</tr>
+<tr>
+<td><code>&quot;killswitch_tripped&quot;</code></td>
+<td><code>auth-failed</code> (revoked) → kill-switch closed [FFI
+§3.3]</td>
+<td><code>/danger/killswitch</code> — full red +
+<code>KillSwitchDetail</code></td>
+<td>resolve (re-sign-in / re-enroll)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Step-by-step.</strong></p>
+<ol type="1">
+<li>The core detects an exposure (a shield trips, or auth fails and the
+kill-switch closes) → the FFI emits
+<strong><code>Danger{kind}</code></strong>.</li>
+<li><strong>Immediate, anywhere.</strong> Wherever the user is, the
+<strong><code>DangerBanner</code></strong> appears z-top (red, &quot;EXPOSED
+— leak detected&quot; / &quot;Kill-switch engaged&quot;) and the full
+<code>DangerScreen</code> is pushed. An <strong>assertive</strong>
+screen-reader announcement interrupts (this is the one place an
+assertive announcement is correct, §13) because the user must know
+<em>now</em> [CL §2].</li>
+<li><strong>No strobe.</strong> The red is a <strong>static</strong>
+fill — there is <strong>no flashing</strong> (§11.4.107 no-flash; a
+strobing exposure warning would be both an a11y hazard and a panic
+trigger). Colour + the alert glyph + the &quot;Exposed&quot; text are three
+independent signals so colour-blind and screen-reader users get it too
+(§13).</li>
+<li><strong>One safe action.</strong>
+<ul>
+<li><em>leak</em> → <strong>Reconnect securely</strong> re-establishes
+the tunnel (→ <code>Connecting</code>); a secondary &quot;See what happened&quot;
+expands the <code>LeakDetail</code>.</li>
+<li><em>killswitch_tripped (auth revoked)</em> → resolve by re-sign-in /
+re-enroll (→ <code>/welcome/sign-in</code>, Flow 1 step 2); the
+kill-switch <em>stays closed</em> (blocking traffic) until resolved —
+the block is the protection working.</li>
+</ul></li>
+<li><strong>Exit.</strong> <code>Danger → Connecting</code> (reconnect /
+re-enroll) or <code>Danger → Disconnected</code> (user stop). The red
+surface is dismissed only by an actual state transition off
+<code>Danger</code> — never by a back-gesture that would merely hide an
+active exposure.</li>
+</ol>
+<pre class="mermaid"><code>sequenceDiagram
+    participant FFI as status stream
+    participant ANY as Any screen (Home/Exits/Settings/modal)
+    participant D as DangerScreen (z-top)
+    participant SR as Screen reader
+    FFI--&gt;&gt;ANY: Danger{kind:&quot;leak&quot;}  %% overrides intent
+    ANY-&gt;&gt;D: push red surface (z 2000, cannot be occluded)
+    D--&gt;&gt;SR: ASSERTIVE announce &quot;Exposed — leak detected&quot;
+    Note over D: static red (NO strobe) · colour+glyph+text
+    D-&gt;&gt;FFI: Reconnect securely → start()
+    FFI--&gt;&gt;D: Connecting → … → Connected (red dismissed by real transition)</code></pre>
+<p><strong>a11y.</strong> Assertive announcement (the only one in the
+product); focus moves to the single safe action; the red surface traps
+focus until a real state transition dismisses it; the static red clears
+the §11.4.107 no-flash rule. <strong>Connector note:</strong> an
+appliance with kill-switch <em>off by default</em> [SN §0 principle 4]
+does not enter <code>Danger{leak}</code> on a drop the way a Client does
+— its exposure model is different (it serves a LAN); the Connector
+surfaces a drop as a health-degraded state, and a revoke as a
+re-enroll-required state, not a red consumer-exposure surface. This is
+<strong>D-UX-3</strong>.</p>
+<hr />
+<h2 id="7-flow-5--exit-switch--multi-hop-build">7. Flow 5 — exit switch
++ multi-hop build</h2>
+<p><strong>Goal.</strong> Change where traffic exits (single exit) or
+compose an ordered multi-hop chain — applied live, with honest
+validation, without dropping protection.</p>
+<p><strong>Sub-flow A — single exit switch.</strong></p>
+<ol type="1">
+<li>From Home, tap the <strong><code>ExitSummaryCard</code></strong> →
+<code>/exits</code> (SC §6).</li>
+<li>The <code>ExitPicker</code> list loads (<code>core.exits()</code>):
+<strong>loading</strong> = skeleton rows; <strong>empty</strong> = &quot;No
+exits available&quot; + a CTA (self-host with none configured) — never a
+blank screen; <strong>error</strong> = &quot;Couldn&#39;t load exits&quot; + retry +
+the last cached list shown stale-labelled [SC §6, §11.4.6];
+<strong>populated</strong> = RTT-sorted ascending, favourites
+pinned.</li>
+<li>The user filters (<code>SearchField</code>), optionally stars a
+favourite, taps a row.</li>
+<li><strong>Apply live.</strong> Selecting an exit while
+<code>Connected</code> triggers a <strong>seamless re-route</strong>
+(<code>apply_map</code> / <code>set_exit</code> [FFI §2]) — the
+orchestrator switches the active path without a full drop where
+possible; Home&#39;s <code>ExitSummaryCard</code> updates and the chip
+re-emits the new <code>transport·path·rtt</code>. The user returns to
+Home with the new exit active.</li>
+</ol>
+<p><strong>Sub-flow B — multi-hop build (SC §7, CL §6).</strong></p>
+<ol type="1">
+<li>From Exits, tap <strong>&quot;Build a multi-hop chain&quot;</strong> →
+<code>/exits/multihop</code>.</li>
+<li>The <code>HopChainEditor</code> opens with <strong>one entry
+hop</strong> (= the current exit). The user <strong>adds</strong> a
+second hop (an <code>ExitPicker</code> sub-sheet), then more
+(<code>entry → middle → … → exit</code>).</li>
+<li><strong>Live validation.</strong> As hops are added/reordered, the
+summed estimated latency (Σ hop RTTs) recomputes in the sticky
+<code>ChainSummaryBar</code>. An <strong>invalid</strong> chain
+(duplicate hop, a non-relaying exit, overlapping-CIDR if a network hop)
+flags the offending row (<code>feedback.error</code>) and
+<strong>disables Apply</strong> with a typed reason — never silently
+accepted (§11.4.6).</li>
+<li><strong>Reorder is keyboard/remote-operable</strong>, not drag-only:
+focus a hop, <code>Space</code> to lift, arrow to move,
+<code>Space</code> to drop, with a live-region announcing &quot;Hop 2 moved
+to position 1&quot; (WAI APG reorder pattern [CL §6]).</li>
+<li><strong>Apply</strong> (enabled only when valid) calls
+<code>apply_map</code>/<code>set_exit</code> [FFI §2]; the chain becomes
+the active route; Home reflects it.</li>
+</ol>
+<pre class="mermaid"><code>flowchart TD
+    HOME[&quot;Home · ExitSummaryCard&quot;] --&gt;|tap| EXITS[&quot;/exits — ExitPicker&quot;]
+    EXITS --&gt;|loading| SKEL[&quot;skeleton rows&quot;]
+    EXITS --&gt;|empty| CTA[&quot;&#39;No exits&#39; + Add/Join CTA&quot;]
+    EXITS --&gt;|error| RETRY[&quot;cached+stale + Retry&quot;]
+    EXITS --&gt;|pick row| APPLY[&quot;apply_map/set_exit → seamless re-route&quot;]
+    APPLY --&gt; HOME
+    EXITS --&gt;|Multi-hop| MH[&quot;/exits/multihop — HopChainEditor&quot;]
+    MH --&gt;|add/reorder| VAL{valid?}
+    VAL --&gt;|no| INVALID[&quot;flag row · Apply disabled · typed reason&quot;]
+    VAL --&gt;|yes| APPLYCHAIN[&quot;Apply → chain active&quot;]
+    APPLYCHAIN --&gt; HOME</code></pre>
+<p><strong>a11y.</strong> Each exit row announces name + jurisdiction +
+RTT + selected + favourite (RTT colour is paired with the numeric value
+— never colour-only [SC §6]); the favourite star is a nested button with
+its own 44 px target; each hop announces its ordinal + role (&quot;Hop 1 of
+3, entry, Sweden&quot;); the chain summary announces total latency +
+validity.</p>
+<hr />
+<h2 id="8-flow-6--console-enroll-a-device--author-a-policy--see-it-converge">8.
+Flow 6 — Console: enroll a device → author a policy → see it
+converge</h2>
+<p><strong>Goal.</strong> An admin admits a new device, writes an access
+rule for it, and watches the change propagate — fail-closed,
+preview-before-apply, live-not-polled [SK §0].</p>
+<p><strong>Step-by-step.</strong></p>
+<ol type="1">
+<li><strong>Enroll / approve a device.</strong> A new device appears in
+Devices (<code>/devices</code>, SK §5) as
+<strong><code>pending-approval</code></strong> (a <code>PeerCard</code>
+with primary <strong>Approve</strong> / <strong>Deny</strong> [CL §7]).
+The admin Approves → the control plane admits it; the live-events rail
+shows <code>device.online</code> [SK §1]. (Token minting for the device
+itself is the Console operator action in [CP §9.2]; the device-side
+enroll is Flow 7 / Flow 1.)</li>
+<li><strong>Author a policy (<code>/policy</code>, SK §7).</strong> The
+admin adds a <code>RuleRow</code> in the <code>PolicyEditor</code>: an
+<strong>AllowDenyToggle</strong> (allow/deny), a
+<strong>TargetPicker</strong> source (e.g. <code>group:eng</code>), a
+destination (<code>tag:prod</code>), a port (<code>:443</code>) [CL §8].
+Order matters (first-match ACL) — rows are keyboard-reorderable.</li>
+<li><strong>Compile dry-run first (fail-closed).</strong> The editor
+compiles the spec <strong>dry-run</strong> and shows an
+<strong>effect-diff</strong> before anything activates [POL §4/§5, SK
+§0]: what access this rule grants/revokes, and any
+<strong>conflict</strong> (a rule shadowed by an earlier one → amber
+<code>conflictMark</code> + a tooltip naming the shadowing rule [CL
+§8]). A compile error that names an un-advertised host CIDR
+<strong>links to IPAM</strong> (S6) — cross-links follow the data [SK
+§2].</li>
+<li><strong>Activate.</strong> Only after the admin reviews the diff and
+confirms (§11.4.66 confirmation for a high-stakes change) does the
+policy version activate; the live-events rail shows
+<code>policy.compiled</code> / version-activated.</li>
+<li><strong>See it converge.</strong> The admin watches convergence
+live: the topology graph (<code>/topology</code>, SK §8) and telemetry
+(<code>/health</code>) fold the WS/SSE stream so edges / device state
+update <strong>without a manual refresh</strong> [SK §0 principle 3];
+the convergence/event-lag SLOs show the change landing. The
+<strong>stream-health chip</strong> is the §11.4.6-honest signal that
+&quot;live&quot; is real — amber when reconnecting, red
+<ul>
+<li>a &quot;may be stale&quot; notice when down, rather than lying [SK §1].</li>
+</ul></li>
+</ol>
+<pre class="mermaid"><code>sequenceDiagram
+    actor A as Admin
+    participant DEV as Devices
+    participant POL as PolicyEditor
+    participant CP as Control plane
+    participant LIVE as Live-events rail / Topology
+    A-&gt;&gt;DEV: Approve pending device
+    CP--&gt;&gt;LIVE: device.online
+    A-&gt;&gt;POL: add RuleRow (allow group:eng → tag:prod :443)
+    POL-&gt;&gt;CP: compile DRY-RUN
+    CP--&gt;&gt;POL: effect-diff (+ conflicts, fail-closed)
+    A-&gt;&gt;POL: review diff → confirm → activate
+    CP--&gt;&gt;LIVE: policy.compiled / version active
+    LIVE--&gt;&gt;A: topology + SLOs converge (live, no refresh)</code></pre>
+<p><strong>a11y.</strong> The policy is an ordered <code>list</code> of
+<code>RuleRow</code> <code>listitem</code>s (order = precedence,
+announced &quot;rule 3 of 8&quot; [CL §8]); the allow/deny verb is colour + glyph
+(check / block), never colour alone; the effect-diff is a reviewable
+region; destructive control actions (revoke, deactivate) carry confirm
+dialogs [SK §0]. The topology graph ships a <strong>dual
+representation</strong> — the visual canvas plus an always-available
+navigable <code>treegrid</code> of the same nodes+edges — so a
+screen-reader / keyboard admin has a non-visual path (§11.4.117, [CL
+§9]).</p>
+<hr />
+<h2 id="9-flow-7--connector-enroll--advertise-a-subnet--resolve-a-cidr-conflict">9.
+Flow 7 — Connector: enroll → advertise a subnet → resolve a CIDR
+conflict</h2>
+<p><strong>Goal.</strong> Stand up an appliance: turn an enroll token
+into an identity, declare the LAN subnet it exposes, and handle an
+overlapping-CIDR conflict honestly [SN §0].</p>
+<p><strong>Step-by-step.</strong></p>
+<ol type="1">
+<li><strong>Enroll (<code>/enroll</code>, SN §3).</strong> A first-run
+stepper (<code>token → keys → name → done</code>). The operator pastes
+the single-use <strong>enroll token</strong> (minted in the Console [CP
+§9.2]) or scans its QR. The device <strong>generates its WG keypair
+locally — the private key never leaves it</strong> (C6 [CP §9.2]); only
+the 32-byte public key registers. Steps show honest progress; on success
+→ the Status home.</li>
+<li><strong>Status home (<code>/</code>, SN §4).</strong> The connector
+proves it is up and <strong>serving its subnets</strong> — the home is a
+pure function of the <code>statusStream</code> [FFI §3.2], never &quot;up&quot; on
+intent alone [SN §0 principle 1]. (Kill-switch is <strong>Off by
+default</strong> on an appliance — turning it on would sever the LAN it
+serves; that is a deliberate, explained choice [SN §0 principle 4,
+§7].)</li>
+<li><strong>Advertise a subnet (<code>/routes</code> →
+<code>/routes/edit</code>, SN §5).</strong> The operator adds a CIDR
+(e.g. <code>10.20.0.0/24</code>) and enables it. The core
+<code>advertise()</code> call returns
+<code>AdvertiseResult { accepted, conflicts }</code> [FFI §3.1]; the UI
+shows <strong>accepted</strong> vs <strong>conflicting</strong> CIDRs
+honestly and <strong>never claims a conflicting prefix is live</strong>
+[SN §0 principle 3].</li>
+<li><strong>Resolve a conflict (<code>/routes/conflicts</code>, SN
+§6).</strong> If the result carries a conflict (another site already
+advertises an overlapping CIDR), the conflict view
+<strong>explains</strong> it (with the 4via6 / overlapping-prefix
+explanation [REG §6.2, IPAM §6]) and <strong>links to the
+Console</strong>, which resolves IPAM/policy <strong>centrally</strong>
+— the Connector view explains + guides, it does not resolve centrally
+itself [SN §0, SN §2]. The operator either changes the local CIDR or
+coordinates the central fix.</li>
+<li><strong>Out-of-band revoke.</strong> A <code>device.revoke</code>
+from the Console [CP §9.3] drops the Connector back to an
+<strong>enroll-required</strong> state (→ <code>/enroll</code>),
+surfaced honestly on the Status home, not as a silent failure.</li>
+</ol>
+<pre class="mermaid"><code>flowchart TD
+    ENR[&quot;/enroll — token→keys(local)→name→done&quot;] --&gt;|enrolled| STAT[&quot;/ Status (serving subnets)&quot;]
+    STAT --&gt; RTE[&quot;/routes/edit — add CIDR 10.20.0.0/24&quot;]
+    RTE --&gt;|advertise()| RES{AdvertiseResult}
+    RES --&gt;|accepted| LIVE[&quot;route live (honest)&quot;]
+    RES --&gt;|conflicts| CONF[&quot;/routes/conflicts — explain + 4via6&quot;]
+    CONF -.-&gt;|links| CONSOLE[&quot;Console resolves IPAM/policy centrally&quot;]
+    STAT -. &quot;device.revoke (out-of-band)&quot; .-&gt; ENR
+    LIVE --&gt; STAT</code></pre>
+<p><strong>a11y.</strong> The enroll stepper announces &quot;step N of M&quot; +
+the current step&#39;s purpose; the keygen step states the private key never
+leaves the device (privacy-honest); each route row announces its CIDR +
+accepted/conflict state (never colour-only); the conflict view&#39;s
+explanation is body text + a link, focus-ordered. The appliance form
+factor is compact-first, so the bottom-nav (Status · Routes · Settings)
+is the default affordance [SN §1].</p>
+<hr />
+<h2 id="10-universal-interaction-patterns">10. Universal interaction
+patterns</h2>
+<p>These patterns are shared by all three apps; a flow above composes
+them.</p>
+<h3 id="101-gestures-touch">10.1 Gestures (touch)</h3>
+<table>
+<thead>
+<tr>
+<th>Gesture</th>
+<th>Meaning</th>
+<th>Where</th>
+<th>Reduce-/no-touch fallback</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>tap</strong></td>
+<td>activate the primary action</td>
+<td>everywhere</td>
+<td>keyboard <code>Enter</code>/<code>Space</code>; D-pad
+<code>OK</code></td>
+</tr>
+<tr>
+<td><strong>long-press</strong></td>
+<td>reveal context actions (§10.4)</td>
+<td>list rows, ConnectButton (transport-override sheet
+<code>UNVERIFIED</code>)</td>
+<td>keyboard menu key / a visible <code>⋯</code> button</td>
+</tr>
+<tr>
+<td><strong>swipe (horizontal)</strong></td>
+<td>onboarding carousel; reveal row actions (favourite/remove) where
+used</td>
+<td>Welcome pager [SC §4.1]; list rows</td>
+<td>arrow keys; visible inline action buttons</td>
+</tr>
+<tr>
+<td><strong>drag</strong></td>
+<td>reorder (hops, policy rules) — <strong>sugar only</strong></td>
+<td>multi-hop, PolicyEditor</td>
+<td>keyboard lift/move/drop is the <strong>canonical</strong> path [CL
+§6]</td>
+</tr>
+<tr>
+<td><strong>pull-to-refresh</strong></td>
+<td>re-probe live data (RTT, devices)</td>
+<td>Exits list, Console tables</td>
+<td>a visible Refresh button; live stream where present (§10.5)</td>
+</tr>
+<tr>
+<td><strong>pinch / pan</strong></td>
+<td>zoom the topology graph</td>
+<td>Console topology</td>
+<td>zoom/fit controls + keyboard pan [CL §9]</td>
+</tr>
+</tbody>
+</table>
+<p>Every gesture has a non-gesture equivalent (§13) — the canonical path
+is never gesture-only. Gesture thresholds are <code>UNVERIFIED</code>
+(owned by [<code>platform-adaptation.md</code>]).</p>
+<h3 id="102-keyboard-navigation-desktop--web-less-native">10.2 Keyboard
+navigation (desktop / web-less native)</h3>
+<ul>
+<li><strong>Tab order</strong> follows reading order (top→bottom,
+leading→trailing); modals <strong>trap</strong> focus; <code>Esc</code>
+closes dismissibles and <strong>restores focus</strong> to the trigger
+(e.g. ExitPicker trigger [CL §4.3]); tab order never jumps [CL
+§1.3].</li>
+<li><strong>Activation:</strong> <code>Enter</code> / <code>Space</code>
+on buttons + the ConnectButton toggle; arrow keys traverse
+lists/rails/segmented controls; <code>Home</code>/<code>End</code> jump
+list ends; <code>PageUp</code>/<code>Down</code> page long lists [CL
+§4.2].</li>
+<li><strong>Reorder:</strong> focus → <code>Space</code> lift → arrows
+move → <code>Space</code> drop, with live-region feedback (multi-hop,
+policy rules) [CL §6].</li>
+<li><strong>Console command palette:</strong> <strong>⌘K /
+Ctrl-K</strong> jumps to any screen / entity / action; keyboard-first,
+but every action it lists is also mouse-reachable [SK §1].</li>
+<li><strong>Focus is never colour-only:</strong> a 2 px
+<code>border.focus</code> ring, offset from the container, visible
+against any state fill (≥3.0 non-text contrast both themes [COLOR §4.5])
+[CL §1.2].</li>
+</ul>
+<h3 id="103-tv-leanback-d-pad--remote">10.3 TV-leanback D-pad /
+remote</h3>
+<ul>
+<li><strong>Default focus</strong> is declared per screen (Client Home →
+ConnectButton; Welcome → &quot;Get started&quot;; Appearance → the current theme
+choice) so the remote lands on the right control [SC §4, §5,
+§10.a].</li>
+<li><strong>Traversal:</strong> D-pad up/down/left/right moves focus
+along the per-screen declared order; <code>OK</code>/center activates;
+<code>Back</code> pops. No hover-only affordances; no gesture-only
+paths.</li>
+<li><strong>Enlarged targets + ring:</strong> focus targets are enlarged
+to ~64 px hit area with an always-visible focus ring
+(<code>border.focus</code>); the rail is reachable by D-pad (no
+bottom-nav on TV) [SC §0, §3].</li>
+<li>The exact per-screen D-pad focus-order matrices are
+<code>UNVERIFIED</code> — pinned by
+[<code>platform-adaptation.md</code>] + the leanback golden-screenshot
+suite; this doc and the <code>screens-*</code> docs state the focus
+<strong>intent</strong> per screen [SC §0].</li>
+</ul>
+<h3 id="104-long-press--context-actions">10.4 Long-press / context
+actions</h3>
+<p>Long-press (touch) / menu-key (keyboard) / long-<code>OK</code>
+(remote) reveals <strong>secondary</strong> actions that are never the
+only path to a capability:</p>
+<ul>
+<li><strong>Client:</strong> long-press the ConnectButton → a quick
+transport-override sheet (<code>auto</code> / specific) [SC §5]
+(<code>UNVERIFIED</code> — the override UX is pinned by [CL §2]);
+long-press an exit row → favourite/details (also reachable by the
+visible star + row tap).</li>
+<li><strong>Console:</strong> a <code>PeerCard</code> /
+<code>AuditLogRow</code> exposes its actions via a visible
+<code>⋯</code>-menu button <strong>and</strong> the high-priority
+actions inline (Approve / Revoke), so the menu is an accelerator, not a
+requirement [CL §7, §10].</li>
+</ul>
+<p>Every long-press target also exposes a <strong>visible</strong>
+affordance (a <code>⋯</code> button, a star, an inline action) so the
+capability is discoverable without knowing the gesture (§13).</p>
+<h3 id="105-pull-to-refresh--live-vs-pull">10.5 Pull-to-refresh &amp;
+live-vs-pull</h3>
+<p>HelixVPN distinguishes <strong>live</strong> surfaces (folding a
+stream) from <strong>pull</strong> surfaces (on-demand re-probe). This
+is <strong>D-UX-4</strong>:</p>
+<ul>
+<li><strong>Live surfaces</strong> (Client Home status, Console device
+list / topology / audit / live-events rail, Connector Status) fold the
+FFI status stream or the control plane&#39;s WS/SSE <code>/v1/stream</code>
+and update <strong>without a manual refresh</strong> [SK §0, FFI §4]. A
+<strong>stream-health chip</strong> honestly signals stream state (green
+/ amber reconnecting / red down + &quot;may be stale&quot; notice) — the live
+claim is never a lie [SK §1].</li>
+<li><strong>Pull surfaces</strong> (Exit-list RTT re-probe, Console
+tables on a non-stream view) support <strong>pull-to-refresh</strong> +
+a visible Refresh button; a pull shows a determinate-where-possible
+progress, then the fresh (or cached+stale-labelled on failure) data [SC
+§6].</li>
+</ul>
+<p>A surface is <strong>never both lying-fresh and stale</strong>: if a
+live stream is down, the data is shown with an explicit stale label, not
+silently frozen as fresh (§11.4.6).</p>
+<hr />
+<h2 id="11-the-loading--empty--error--success-state-contract">11. The
+loading / empty / error / success state contract</h2>
+<p>Every async surface in every app renders one of <strong>four</strong>
+states, each a reusable contract (composed from [CL §11.15]
+ProgressIndicator, [CL §11.16] EmptyState, [CL §11.17] Skeleton, [CL
+§11.8] Banner). This is <strong>D-UX-5</strong> — the single state
+grammar all three apps share.</p>
+<table>
+<thead>
+<tr>
+<th>State</th>
+<th>What it MUST do</th>
+<th>What it MUST NOT do</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>loading</strong></td>
+<td>show a <strong>skeleton</strong> (list/table) or an
+<strong>indeterminate spinner</strong> (action),
+<code>aria-busy=true</code>, distinct colour/motion from any success
+state</td>
+<td><strong>never</strong> look like the connected/success state
+(§11.4.107); never block forever with no timeout path</td>
+</tr>
+<tr>
+<td><strong>empty</strong></td>
+<td>state the empty reason + offer a <strong>next action</strong> (CTA:
+&quot;Add a server&quot; / &quot;Join a network&quot; / &quot;Clear filter&quot;)</td>
+<td>never a blank screen; never imply data exists</td>
+</tr>
+<tr>
+<td><strong>error</strong></td>
+<td>a typed, human reason + <strong>retry</strong> + show the
+<strong>last cached</strong> value stale-labelled if available
+(§11.4.6)</td>
+<td>never a silent fail; never a raw stack/error code as the only
+message; never fake-fresh cached data</td>
+</tr>
+<tr>
+<td><strong>success</strong></td>
+<td>render the real data; for the connection hero, paint the
+protected/connected language <strong>only</strong> on a real
+<code>Connected{...}</code> event</td>
+<td>never paint success off a timer, a tap, or an optimistic guess
+(§11.4.107)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>The §11.4.107 loading-vs-connected rule is the contract&#39;s
+keystone.</strong> On the connection hero (Client Home, Connector
+Status), &quot;loading/connecting&quot; and &quot;connected&quot; are kept distinct by
+<strong>four independent signals</strong> — colour (amber vs
+green/teal), icon (spinner/key vs shield-check), text (&quot;…&quot;-suffixed vs
+&quot;Protected&quot;), and the chip (non-committal vs live
+<code>transport·path·rtt</code>) — so the distinction survives
+colour-blindness, a muted screen, and a screen reader (§11.4.107, §13).
+A spinner is <strong>never</strong> proof of connection.</p>
+<p><strong>State transitions</strong> cross-fade fill
+<strong>and</strong> label together
+(<code>motion.semantic.stateXfade</code>, 180 ms [DT §6.4]) so no
+in-between frame is illegible (§12, [SC §0]).</p>
+<pre class="mermaid"><code>stateDiagram-v2
+    [*] --&gt; loading
+    loading --&gt; success : real data / Connected{...}
+    loading --&gt; empty : zero results
+    loading --&gt; error : load failed
+    error --&gt; loading : retry
+    empty --&gt; loading : CTA (add/join/clear)
+    success --&gt; loading : refresh / re-probe
+    note right of loading : skeleton/spinner · aria-busy · NOT success-looking
+    note right of error : typed reason · retry · cached+stale (§11.4.6)</code></pre>
+<hr />
+<h2 id="12-motion-choreography">12. Motion choreography</h2>
+<p>Motion is <strong>functional, not decorative</strong> — it
+communicates state change, spatial relationship, and busy-ness, and it
+always degrades to a static end-state under reduce-motion. All
+durations/curves are <strong>tokens</strong> [DT §6.4]; this doc names
+the <em>choreography</em>, the values live in tokens.</p>
+<table>
+<thead>
+<tr>
+<th>Moment</th>
+<th>Motion token</th>
+<th>Behaviour</th>
+<th>Reduce-motion fallback</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>state cross-fade</strong> (any state→state on the hero)</td>
+<td><code>motion.semantic.stateXfade</code> (180 ms)</td>
+<td>fill <strong>and</strong> label cross-fade together; no illegible
+mid-frame</td>
+<td>instant swap to the end-state</td>
+</tr>
+<tr>
+<td><strong>connecting / reconnecting</strong></td>
+<td><code>motion.semantic.connectPulse</code> (looping aura)</td>
+<td>amber pulse aura while
+<code>Connecting</code>/<code>Handshaking</code>/<code>Reconnecting</code></td>
+<td><strong>static</strong> amber ring (no loop, no strobe)</td>
+</tr>
+<tr>
+<td><strong>connected settle</strong></td>
+<td>one-shot settle</td>
+<td>a single, non-looping &quot;lock-in&quot; on reaching
+<code>Connected{...}</code></td>
+<td>static green/teal end-state</td>
+</tr>
+<tr>
+<td><strong>press feedback</strong></td>
+<td><code>motion.semantic.press</code> (≈100 ms)</td>
+<td>a brief scale/overlay on tap</td>
+<td>overlay only, no scale</td>
+</tr>
+<tr>
+<td><strong>danger</strong></td>
+<td>none</td>
+<td><strong>static</strong> red — <strong>no strobe, no flash</strong>
+(§11.4.107)</td>
+<td>already static</td>
+</tr>
+<tr>
+<td><strong>skeleton shimmer</strong></td>
+<td><code>comp.skeleton</code> shimmer</td>
+<td>a low-contrast sweep while loading</td>
+<td>static skeleton (<code>motion.semantic.reducedMotion</code>)</td>
+</tr>
+<tr>
+<td><strong>route/sheet transitions</strong></td>
+<td><code>motion.semantic.*</code> page/sheet</td>
+<td>enter/exit slide+fade</td>
+<td>fade only / instant</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Hard rules.</strong> (1) <strong>Nothing strobes</strong> —
+the <code>Danger</code> surface and every pulse are static or
+sub-flash-threshold (§11.4.107 no-flash; the connecting pulse is a slow
+aura, not a flash). (2) <strong>Every looping/transition animation
+degrades</strong> to its static end-state via
+<code>motion.semantic.reducedMotion</code> [DT §6.4, CL §1.3] when the
+OS reduce-motion setting is on. (3) <strong>Motion never conveys state
+alone</strong> — it reinforces a colour+icon+text signal, never replaces
+it (a reduce-motion user loses no information).</p>
+<hr />
+<h2 id="13-accessibility-wcag-21-aa">13. Accessibility (WCAG 2.1
+AA)</h2>
+<p>HelixVPN targets <strong>WCAG 2.1 Level AA</strong> across all three
+apps and eight platforms. This is <strong>D-UX-6</strong>. The baseline
+(every component) is owned by [CL §1.3]; this section owns the
+<strong>flow-level</strong> a11y guarantees.</p>
+<p><strong>Screen-reader flow.</strong></p>
+<ul>
+<li>Every flow above is fully operable by screen reader (VoiceOver /
+TalkBack / Narrator / Orca / the HarmonyOS+Aurora a11y trees [CL §1.3]);
+the canonical path is never gesture- or hover-only.</li>
+<li><strong>Connection state is announced</strong> on every change: the
+ConnectButton announces a <strong>stateful</strong> name (&quot;Connecting&quot; /
+&quot;Connected, direct path, 28 milliseconds&quot; / &quot;Not protected, leak
+detected&quot;) via a <strong>polite</strong> live-region — except
+<code>Danger</code>, which fires an <strong>assertive</strong>
+announcement (the one place interruption is correct, §6) [CL §2].</li>
+<li>Loading states set <code>aria-busy</code>; the StatusChip is a
+polite <code>status</code> live-region [CL §3]; error states move focus
+to the error/retry control.</li>
+</ul>
+<p><strong>Focus order.</strong> Logical (reading order); modals + the
+Danger surface <strong>trap</strong> focus; <code>Esc</code> closes
+dismissibles and restores focus to the trigger; the multi-hop and policy
+reorders are keyboard lift/move/drop with live-region feedback [CL §1.3,
+§6].</p>
+<p><strong>Contrast.</strong> Text vs background ≥ <strong>4.5</strong>
+AA-normal (or 3.0 AA-large for ≥24 px); non-text UI parts ≥
+<strong>3.0</strong>; every state fill is proven against its white/dark
+label in both themes [COLOR §4]. The focus ring clears the 3.0 non-text
+floor in both themes [COLOR §4.5].</p>
+<p><strong>Reduced motion.</strong> Every looping/transition animation
+degrades to its static end-state (§12); nothing strobes (§11.4.107
+no-flash).</p>
+<p><strong>Hit targets.</strong> Every interactive target is <strong>≥
+44 × 44 px</strong> (touch floor); a visually-smaller control keeps a 44
+px transparent tap area centred on the glyph; TV-leanback enlarges to
+~64 px (a hard gate <code>CM-hit-target-44</code> [CL §1.3,
+<code>visual-regression-and-qa.md</code>]).</p>
+<p><strong>Colour-independent state (the load-bearing a11y rule for a
+<em>VPN</em> product).</strong> State is <strong>never</strong> conveyed
+by colour alone — every coloured state also carries an <strong>icon and
+text</strong>: connecting (amber + spinner + &quot;Connecting…&quot;), connected
+(green</p>
+<ul>
+<li>shield-check + &quot;Protected&quot;), reconnecting (amber-pulse + rotate +
+&quot;Reconnecting…&quot;), down (orange + alert + &quot;dropped&quot;), danger (red + alert
++ &quot;Exposed&quot;). A colour-blind user reads &quot;Protected&quot; vs &quot;Exposed&quot; from
+the <strong>glyph + label</strong>, not the green/red [COLOR §0, CL §2,
+§11.4.107]. RTT, presence dots, allow/deny verbs, and audit severities
+are all icon/text-reinforced too.</li>
+</ul>
+<p><strong>Graph fallback.</strong> The Console topology ships a
+<strong>dual representation</strong> — the visual canvas
+<strong>plus</strong> an always-available navigable
+<code>treegrid</code> of the same nodes+edges — so a non-visual user has
+a structured path (§11.4.117, [CL §9]).</p>
+<p><strong>The §11.4.162 covenant.</strong> Every screen ships light AND
+dark, no element overlaps another, no element overlays a label, and
+visual-regression goldens (per theme, per size, per app)
+OCR-/overlap-check every surface [CL §1.5, SC §0].</p>
+<hr />
+<h2 id="14-internationalization-rtl--localization">14.
+Internationalization, RTL &amp; localization</h2>
+<p>HelixVPN is multi-region (the spine targets self-host + managed
+worldwide), so every flow is <strong>i18n-ready by
+construction</strong>. This is <strong>D-UX-7</strong>.</p>
+<p><strong>String externalization.</strong> No user-visible string is
+hard-coded; all copy is in ARB/<code>.arb</code>-class resource bundles
+resolved at runtime (<code>UNVERIFIED</code> exact l10n toolchain —
+owned by [<code>platform-adaptation.md</code>]). Status labels
+(&quot;Connecting…&quot;, &quot;Protected&quot;, &quot;Exposed&quot;), error reasons, and CTAs are
+localized; the <strong>stable reason prefixes</strong> the FFI carries
+(<code>ladder-exhausted</code>, <code>auth-failed</code>,
+<code>killswitch_tripped</code> [FFI §3.3]) are <strong>keys</strong>,
+mapped to localized human strings in the UI layer — never the raw key
+shown to a user, never the localized string parsed back (§11.4.6).</p>
+<p><strong>RTL (right-to-left).</strong> Every layout mirrors for Arabic
+/ Hebrew / Persian: leading/trailing swap (the favourite star, chevrons,
+the <code>→</code> policy arrow, the multi-hop chain direction all
+mirror); the bottom-nav / rail order mirrors; text aligns to the start
+edge. Directional glyphs (chevron, arrow, reorder) use
+<strong>start/end</strong> semantics, not fixed left/right, so they flip
+correctly. The multi-hop chain renders <code>entry → … → exit</code>
+start-to-end, mirroring in RTL so the <em>meaning</em> (entry first) is
+preserved [CL §6].</p>
+<p><strong>Text expansion.</strong> Layouts tolerate ~+30–40 % string
+growth (German / Finnish): the no-overlap covenant (§11.4.162) means a
+label grows within its own box and ellipsises + tooltips rather than
+colliding with a neighbour [CL §1.5]; the ConnectButton label wraps
+(never truncates) under large accessibility text sizes</p>
+<ul>
+<li>long localizations, never overlaying the icon or sub-label [SC
+§5].</li>
+</ul>
+<p><strong>Numerals, dates, units.</strong> RTT (&quot;28 ms&quot;), latency sums
+(&quot;+71 ms&quot;), timestamps (audit UTC), and counts use locale-aware
+formatting; the audit log keeps UTC for forensic precision but announces
+a locale-readable form [CL §10]. Country/flag labels in the exit list
+are localized country names, not only flags (the flag is decorative; the
+name carries meaning, §13).</p>
+<p><strong>Bi-di safety.</strong> Mixed-direction content (an LTR server
+URL or CIDR inside an RTL sentence) uses bidi isolation so a CIDR like
+<code>10.20.0.0/24</code> or a URL renders correctly within RTL
+copy.</p>
+<hr />
+<h2 id="15-surfaced-decisions--cross-doc-contracts">15. Surfaced
+decisions &amp; cross-doc contracts</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Decision</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>D-UX-1</strong></td>
+<td>Bottom-nav (compact) / rail (medium+) are the primary nav
+affordances; drawer is secondary-overflow only (Console &quot;More&quot; sheet on
+compact).</td>
+<td>Asserted (this doc)</td>
+</tr>
+<tr>
+<td><strong>D-UX-2</strong></td>
+<td>The <code>Danger{kind}</code> surface is the <strong>only
+input-overriding</strong> navigation event; it pushes z-top over
+everything, dismissed only by a real state transition off
+<code>Danger</code>.</td>
+<td>Grounded [FFI §3.3, SC §11]</td>
+</tr>
+<tr>
+<td><strong>D-UX-3</strong></td>
+<td>The Connector&#39;s exposure model differs from the Client&#39;s
+(kill-switch Off by default; a drop is health-degraded, a revoke is
+re-enroll-required — not a red consumer-exposure surface).</td>
+<td>Grounded [SN §0, CP §9.3]</td>
+</tr>
+<tr>
+<td><strong>D-UX-4</strong></td>
+<td>Live surfaces (status / device list / topology / audit) fold a
+stream + a stream-health chip; pull surfaces (RTT re-probe, non-stream
+tables) use pull-to-refresh; a surface is never lying-fresh while
+stale.</td>
+<td>Asserted (this doc); grounded [SK §0, FFI §4]</td>
+</tr>
+<tr>
+<td><strong>D-UX-5</strong></td>
+<td>One <strong>loading / empty / error / success</strong> state grammar
+shared by all three apps; the §11.4.107 loading-vs-connected distinction
+is its keystone.</td>
+<td>Asserted (this doc)</td>
+</tr>
+<tr>
+<td><strong>D-UX-6</strong></td>
+<td>WCAG 2.1 <strong>AA</strong> is the accessibility target across all
+apps/platforms; colour-independent state (icon+text) is the load-bearing
+rule for a VPN product.</td>
+<td>Asserted (this doc)</td>
+</tr>
+<tr>
+<td><strong>D-UX-7</strong></td>
+<td>Every flow is i18n-ready by construction: externalized strings, full
+RTL mirroring (start/end semantics), +30–40 % expansion tolerance,
+locale-aware numerals/dates, bidi isolation.</td>
+<td>Asserted (this doc)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Cross-doc contracts this doc depends on.</strong></p>
+<ul>
+<li>The <strong>7-variant <code>ffi::TunnelStatus</code></strong> state
+machine + Dart-facing state diagram [FFI §3.2, §3.4] — the spine §2–§6
+ride; if the FFI enum changes, the flows here re-map.</li>
+<li>The <strong>Home render matrix</strong> [SC §5] +
+<strong>ConnectButton state table</strong> [CL §2] — the per-state
+colour/icon/label/motion this doc references by state name.</li>
+<li>The <strong>connection-state palette</strong> + contrast proofs
+[COLOR §3, §4] and <strong>motion tokens</strong> [DT §6.4] — every
+colour/motion reference resolves there.</li>
+<li>The three <strong>screen inventories + nav maps</strong> [SC §2, SK
+§2, SN §2] — the per-app IA §1 consumes.</li>
+<li>The <strong>component a11y baseline</strong> [CL §1.3] +
+<strong>topology dual-representation</strong> [CL §9] — the §13
+flow-level a11y builds on.</li>
+<li>The §11.4.162 <strong>no-overlap / light+dark /
+visual-regression</strong> covenant [CL §1.5, SC §0] — enforced on every
+surface a flow renders.</li>
+</ul>
+<p><strong><code>UNVERIFIED</code> surfaces in this doc</strong>
+(flagged inline, never fabricated): exact gesture thresholds +
+per-screen TV D-pad focus-order matrices
+([<code>platform-adaptation.md</code>]); the ConnectButton
+transport-override long-press UX ([CL §2]); the l10n toolchain
+([<code>platform-adaptation.md</code>]); the exact router config
+(deferred to a Volume-10 navigation refinement pass — see MASTER_INDEX;
+not yet authored).</p>
+<hr />
+<h2 id="sources-verified">Sources verified</h2>
+<ul>
+<li><strong>HelixVPN sibling specs (same wave, on disk, read for
+consistency):</strong> <code>final/v10-design/screens-client.md</code>
+(Client screen inventory, nav map, AdaptiveScaffold ladder, Home 7-state
+render matrix, Danger surfaces) ·
+<code>final/v10-design/screens-console.md</code> (Console IA, command
+palette, live-events rail, policy fail-closed, stream-health chip) ·
+<code>final/v10-design/screens-connector.md</code> (Connector
+near-linear IA, enroll, advertise, conflict, appliance defaults) ·
+<code>final/v10-design/component-library.md</code>
+(ConnectButton/StatusChip state sets, reorder pattern, topology
+dual-representation, a11y baseline, no-overlap guarantee) ·
+<code>final/v10-design/color-system.md</code> (connection-state palette,
+contrast proofs, focus-ring contrast) ·
+<code>final/v04-client/ffi-surface.md</code> §3 (the 7-variant
+<code>ffi::TunnelStatus</code>, projector, §3.4 Dart-facing state
+diagram, §4 StreamSink delivery + current-truth guarantee). Verified
+2026-06-25 against the files at the cited paths.</li>
+<li><strong>External interaction/accessibility precedent</strong>
+(pattern grounding, not copied): W3C <strong>WAI-ARIA Authoring
+Practices Guide</strong> (listbox, dialog focus-trap + restoration,
+keyboard reorder, treegrid) — <a href="https://www.w3.org/WAI/ARIA/apg/">https://www.w3.org/WAI/ARIA/apg/</a>
+· <strong>WCAG 2.1</strong> Level AA success criteria (1.4.3 contrast,
+1.4.11 non-text contrast, 2.1.1 keyboard, 2.3.1 no-flash, 2.5.5 target
+size, 1.4.10 reflow, 1.3.4 orientation) — <a href="https://www.w3.org/TR/WCAG21/">https://www.w3.org/TR/WCAG21/</a> ·
+<strong>Material Design 3</strong> adaptive navigation (bottom-nav /
+rail / drawer by window-size class) — <a href="https://m3.material.io/foundations/layout/understanding-layout/overview">https://m3.material.io/foundations/layout/understanding-layout/overview</a>
+· <strong>Apple HIG</strong> — Designing for tvOS (focus + parallax,
+remote interaction) — <a href="https://developer.apple.com/design/human-interface-guidelines/designing-for-tvos">https://developer.apple.com/design/human-interface-guidelines/designing-for-tvos</a>
+· <strong>Android TV</strong> leanback / D-pad focus guidance — <a href="https://developer.android.com/training/tv/start/navigation">https://developer.android.com/training/tv/start/navigation</a>
+. Verified 2026-06-25 (latest-source check per §11.4.99; these are
+stable W3C/ vendor references used for pattern grounding only — no
+HelixVPN behaviour is asserted from them).</li>
+<li><strong>Constitution anchors applied:</strong> §11.4.6 (no-guessing
+— <code>UNVERIFIED</code> tags, no fabrication), §11.4.107 (loading ≠
+connected — the keystone of §4, §11, §12), §11.4.117 (pixel-only graph →
+structured fallback, §13), §11.4.162 (OpenDesign: light+dark, no overlap
+/ no label overlay, visual regression — §11, §13).</li>
+</ul>
+</body>
+</html>

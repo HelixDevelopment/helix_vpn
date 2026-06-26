@@ -1,0 +1,1894 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Threat Model — STRIDE + LINDDUN</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Threat Model — STRIDE + LINDDUN</h1>
+</header>
+<h1 id="threat-model--stride--linddun">Threat Model — STRIDE +
+LINDDUN</h1>
+<p><strong>Revision:</strong> 2 <strong>Last modified:</strong>
+2026-06-26T12:00:00Z</p>
+<blockquote>
+<p>Master technical specification — Volume 5 (Security &amp; Privacy),
+nano-detail document <strong>threat-model</strong>. Deepens
+[<code>04-security-privacy-pki.md</code>] (the security spine:
+zero-trust, identity, PKI, no-logging, kill-switch, PQ) into an
+implementation-grade threat model: a STRIDE decomposition <strong>per
+component</strong>, a LINDDUN <strong>privacy</strong> decomposition,
+the attacker-class taxonomy, the trust-boundary diagram, every threat
+mapped to a concrete spec mechanism, an assets × threats × mitigation
+matrix, and an honest residual-risk register. SPEC ONLY — this document
+<em>describes</em> the security properties the build must have; it does
+not build the product. Sources are cited inline by id:
+<code>[04_ARCH §N]</code> (HelixVPN-Architecture-Refined.md),
+<code>[04_P1 §N]</code> (HelixVPN-Phase1-MVP.md),
+<code>[04_P2 §N]</code> (Phase-2 PQ/transport notes),
+<code>[research-pki_pq_nat]</code> (scratchpad/kb),
+<code>[SYNTHESIS §N]</code>, and sibling specs by filename. Every
+invariant id <code>S1</code>–<code>S11</code> is the one defined in
+[<code>04-security-privacy-pki.md</code> §0.1];
+<code>P1</code>–<code>P8</code> in
+[<code>v03-control-plane/svc-policy.md</code> §0.1];
+<code>I5/I6/R1</code>–<code>R4</code> in
+[<code>v02-data-plane/routing-and-addressing.md</code> §0.2]. Any claim
+not grounded in the evidence base is flagged <strong>UNVERIFIED</strong>
+per constitution §11.4.6 — never fabricated.</p>
+</blockquote>
+<hr />
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#0-position-ownership--what-this-document-delivers">0.
+Position, ownership &amp; what this document delivers</a></li>
+<li><a href="#1-methodology-scope--assumptions">1. Methodology, scope
+&amp; assumptions</a></li>
+<li><a href="#2-asset-register--what-we-are-protecting">2. Asset
+register — what we are protecting</a></li>
+<li><a href="#3-trust-boundaries">3. Trust boundaries</a></li>
+<li><a href="#4-attacker-classes">4. Attacker classes</a></li>
+<li><a href="#5-stride-per-component">5. STRIDE per component</a>
+<ul>
+<li><a href="#51-connector-outbound-only-network-side-agent">5.1
+Connector</a></li>
+<li><a href="#52-gateway--go-control-plane">5.2 Gateway — control
+plane</a></li>
+<li><a href="#53-gateway--rust-edge-data-plane">5.3 Gateway — Rust edge
+(data plane)</a></li>
+<li><a href="#54-client-device-helix-core">5.4 Client device</a></li>
+<li><a href="#55-coordinator-watchnetworkmap-fan-out">5.5
+Coordinator</a></li>
+<li><a href="#56-pki--tenant-ca">5.6 PKI / tenant CA</a></li>
+<li><a href="#57-data-plane-the-tunnel-on-the-wire">5.7 Data plane (the
+tunnel on the wire)</a></li>
+</ul></li>
+<li><a href="#6-linddun-privacy-threats">6. LINDDUN privacy
+threats</a></li>
+<li><a href="#7-threat--mitigation-map">7. Threat → mitigation map
+(every threat to a spec mechanism)</a></li>
+<li><a href="#8-assets--threats--mitigation-matrix">8. Assets × threats
+× mitigation matrix</a></li>
+<li><a href="#9-attack-trees-two-worked">9. Attack trees (two
+worked)</a></li>
+<li><a href="#10-residual-risks--honestly-stated">10. Residual risks —
+honestly stated</a></li>
+<li><a href="#11-test--validation-mapping-1141169">11. Test &amp;
+validation mapping (§11.4.169)</a></li>
+<li><a href="#sources-verified">Sources verified</a></li>
+</ul>
+<hr />
+<h2 id="0-position-ownership--what-this-document-delivers">0. Position,
+ownership &amp; what this document delivers</h2>
+<p>HelixVPN is a self-hostable overlay network with a privacy-VPN front
+end: three roles — <strong>Connector</strong> (outbound-only, advertises
+CIDRs) ⇄ <strong>Gateway</strong> (public VPS: control + data plane) ⇄
+<strong>Client</strong> (Mullvad-style end-user app) [04_ARCH §1.1,
+SYNTHESIS §1]. The security spine is owned by
+[<code>04-security-privacy-pki.md</code>]; <strong>this document owns
+the threat analysis that justifies every mechanism in that
+spine.</strong> A mechanism with no mapped threat is a candidate for
+removal; a threat with no mapped mechanism is a release blocker.</p>
+<p>This document <strong>owns</strong>: the STRIDE/LINDDUN
+decompositions (§5/§6), the attacker-class model (§4), the
+trust-boundary diagram (§3), the asset register (§2), the
+threat→mitigation map (§7), the assets×threats×mitigation matrix (§8),
+and the residual-risk register (§10).</p>
+<p>It does <strong>not</strong> own: the mechanisms themselves (the
+enrollment protocol, the PKI lifecycle, the kill-switch state machine,
+the PQ handshake — all [<code>04-security-privacy-pki.md</code>]); the
+policy compiler ([<code>v03-control-plane/svc-policy.md</code>]); the WG
+crypto core and transports (doc 01); the platform tunnel shims (doc 06).
+It <em>references</em> those by id and asserts what each defends
+against.</p>
+<h3 id="01-how-a-threat-is-recorded-here-the-discipline">0.1 How a
+threat is recorded here (the discipline)</h3>
+<p>Each threat carries: a stable id
+(<code>T-&lt;COMPONENT&gt;-&lt;STRIDE-letter&gt;-&lt;n&gt;</code> or
+<code>LP-&lt;letter&gt;-&lt;n&gt;</code>), the STRIDE/LINDDUN category,
+the attacker class(es) that can reach it (§4), the asset(s) at risk
+(§2), the <strong>mitigation</strong> (a cited spec mechanism), and an
+honest <strong>residual</strong> note (§11.4.6 — &quot;mitigated&quot; never means
+&quot;eliminated&quot; unless proven). A mitigation that is only &quot;planned/Phase-2&quot;
+is labelled so; claiming an unshipped control as live is itself a §11.4
+bluff at the threat-model layer.</p>
+<hr />
+<h2 id="1-methodology-scope--assumptions">1. Methodology, scope &amp;
+assumptions</h2>
+<h3 id="11-two-complementary-frameworks">1.1 Two complementary
+frameworks</h3>
+<table>
+<thead>
+<tr>
+<th>Framework</th>
+<th>Question it answers</th>
+<th>Applied in</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>STRIDE</strong> (Spoofing, Tampering, Repudiation,
+Information disclosure, Denial of service, Elevation of privilege)</td>
+<td><em>security</em> threats per component/data-flow crossing a trust
+boundary</td>
+<td>§5</td>
+</tr>
+<tr>
+<td><strong>LINDDUN</strong> (Linking, Identifying, Non-repudiation,
+Detecting, Data disclosure, Unawareness, Non-compliance)</td>
+<td><em>privacy</em> threats — the harms a privacy VPN exists to
+prevent</td>
+<td>§6</td>
+</tr>
+</tbody>
+</table>
+<p>STRIDE alone would miss the privacy core: a system can be
+STRIDE-clean (no spoofing, no tampering) and still <strong>link</strong>
+a user to the sites they visit. The no-logging invariant (S6) is a
+LINDDUN mitigation that STRIDE does not even ask about — hence both
+frameworks [research-pki_pq_nat].</p>
+<h3 id="12-scope">1.2 Scope</h3>
+<p>In scope: every trust boundary in §3 — the hostile network, the
+client device, the gateway (control plane + edge + CA), and the
+connector. Out of scope (stated, not hidden): physical attacks on the
+operator&#39;s datacenter (deployment doc 09&#39;s concern), supply-chain
+compromise of upstream dependencies beyond the signed-image floor (S8,
+Phase-3 reproducible builds [04_ARCH §12]), and the security of the
+operator&#39;s chosen IdP (HelixVPN is an OIDC Relying Party, never an IdP —
+[<code>04-security-privacy-pki.md</code> §2.1]).</p>
+<h3 id="13-assumptions-each-is-a-load-bearing-precondition--a-false-assumption-is-a-finding">1.3
+Assumptions (each is a load-bearing precondition — a false assumption is
+a finding)</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Assumption</th>
+<th>If false →</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A1</td>
+<td>The tenant CA private key is held in a KMS/HSM and never enters
+control-plane process memory in the recommended deployment (S11).</td>
+<td>total identity compromise — §10 R-CA</td>
+</tr>
+<tr>
+<td>A2</td>
+<td>The device OS keystore (Keychain / Android Keystore / TPM / DPAPI)
+is not already compromised when keys are sealed (S2,
+[<code>04-security-privacy-pki.md</code> §3.3]).</td>
+<td>device-key exfiltration — §10 R-DEV</td>
+</tr>
+<tr>
+<td>A3</td>
+<td>WireGuard&#39;s Curve25519 + ChaCha20-Poly1305 core is sound against a
+<em>classical</em> adversary today; quantum is addressed by hybrid PQ
+(S10).</td>
+<td>data confidentiality — §10 R-PQ</td>
+</tr>
+<tr>
+<td>A4</td>
+<td>TLS 1.3 mutual auth with a pinned tenant CA is sound for the control
+channel (S4).</td>
+<td>control-channel MITM — §5.2</td>
+</tr>
+<tr>
+<td>A5</td>
+<td>The operator runs the published rootless-Podman hardened images, not
+a hand-modified host (S8).</td>
+<td>edge container escape — §5.3</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="2-asset-register--what-we-are-protecting">2. Asset register —
+what we are protecting</h2>
+<p>Threats are scored against concrete assets. The asset&#39;s
+<strong>sensitivity</strong> drives mitigation priority (§11.4.132
+risk-ordering applies to the security backlog too).</p>
+<table>
+<thead>
+<tr>
+<th>Asset id</th>
+<th>Asset</th>
+<th>Where it lives</th>
+<th>Sensitivity</th>
+<th>Why it matters</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>AS-CA</strong></td>
+<td>Tenant CA private key</td>
+<td>KMS/HSM (S11)</td>
+<td><strong>Critical</strong></td>
+<td>Signs every device cert; its theft mints arbitrary trusted
+identities. The &quot;one true secret&quot; [04_ARCH §10].</td>
+</tr>
+<tr>
+<td><strong>AS-DB</strong></td>
+<td>Postgres control-plane truth (identity, policy, topology)</td>
+<td>Gateway DB</td>
+<td><strong>Critical</strong></td>
+<td>The source of <em>who exists</em> and <em>who may reach what</em>;
+corruption = policy bypass; exfil = membership graph disclosure.</td>
+</tr>
+<tr>
+<td><strong>AS-WGK</strong></td>
+<td>Per-device WG static private key</td>
+<td>Device OS keystore (S2)</td>
+<td><strong>Critical</strong></td>
+<td>Decrypts that device&#39;s tunnel; never leaves the device by
+design.</td>
+</tr>
+<tr>
+<td><strong>AS-LEAF</strong></td>
+<td>Device leaf cert private key (Ed25519)</td>
+<td>Device OS keystore</td>
+<td>High</td>
+<td>Authenticates the control channel; ≤24 h lifetime caps blast radius
+(S4).</td>
+</tr>
+<tr>
+<td><strong>AS-MAP</strong></td>
+<td>A device&#39;s policy-filtered <code>NetworkMap</code></td>
+<td>In transit + device memory</td>
+<td>High</td>
+<td>Reveals the peers/routes that device may reach (need-to-know, S3);
+leak = topology disclosure for that device&#39;s slice.</td>
+</tr>
+<tr>
+<td><strong>AS-TOKEN</strong></td>
+<td>Enroll token (plaintext, shown once)</td>
+<td>Out-of-band to the user; only Argon2id hash stored</td>
+<td>High</td>
+<td>Whoever holds it can enroll a device into the tenant (§2.2).</td>
+</tr>
+<tr>
+<td><strong>AS-TRAFFIC</strong></td>
+<td>User traffic content + metadata (dst, timing, volume)</td>
+<td>On the wire (ciphertext) + transiently in the edge</td>
+<td><strong>Critical (privacy)</strong></td>
+<td>The thing a privacy VPN exists to protect; <strong>never durably
+stored</strong> (S6).</td>
+</tr>
+<tr>
+<td><strong>AS-AUDIT</strong></td>
+<td><code>audit_events</code> (control actions)</td>
+<td>Postgres</td>
+<td>Medium</td>
+<td>Tamper or deletion hides operator/insider abuse (S7).</td>
+</tr>
+<tr>
+<td><strong>AS-PRESENCE</strong></td>
+<td>Ephemeral presence/session state</td>
+<td>Redis (TTL&#39;d)</td>
+<td>Medium (privacy)</td>
+<td>Coarse &quot;who is online now&quot;; never a connection log; expires.</td>
+</tr>
+<tr>
+<td><strong>AS-PSK</strong></td>
+<td>PQ-derived session PSK</td>
+<td>Device + edge memory, per-session</td>
+<td>High</td>
+<td>Adds harvest-now-decrypt-later resistance (S10); ephemeral, never
+persisted.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="3-trust-boundaries">3. Trust boundaries</h2>
+<p>A trust boundary is any edge a data flow crosses between principals
+of different trust level. Each numbered boundary <code>TB-n</code> is
+where STRIDE is most productive — it is precisely where an attacker
+tries to spoof, tamper, or escalate.</p>
+<pre class="mermaid"><code>flowchart TB
+  subgraph Z0[&quot;Zone 0 — Hostile network (zero trust)&quot;]
+    DPI[DPI / censor / passive recorder]
+    MITM[active on-path attacker]
+  end
+  subgraph Z1[&quot;Zone 1 — Client device (semi-trusted: holds its own keys)&quot;]
+    Core[&quot;helix-core: WG + transport + kill-switch + DNS&quot;]
+    KS[(OS keystore: WG priv + leaf priv)]
+  end
+  subgraph Z2[&quot;Zone 2 — Gateway VPS (trusted root of control)&quot;]
+    direction TB
+    Edge[&quot;Rust edge (data plane): kernel WG + verdict maps&quot;]
+    CP[&quot;Go control plane: identity / pki / policy / coordinator&quot;]
+    DB[(Postgres: identity/policy/topology + audit)]
+    RDS[(Redis: ephemeral presence + rate-limit)]
+  end
+  subgraph Z3[&quot;Zone 3 — KMS / HSM (highest trust, smallest surface)&quot;]
+    CA[(Tenant CA key — AS-CA)]
+  end
+  subgraph Z4[&quot;Zone 4 — Private network (trusted by its operator only)&quot;]
+    Conn[&quot;Connector: outbound-only agent&quot;]
+    LAN[LAN hosts behind advertised CIDRs]
+  end
+
+  Core -- &quot;TB-1 WG Noise IK (data)&quot; --&gt; Edge
+  Core -- &quot;TB-2 mTLS control (leaf cert)&quot; --&gt; CP
+  Conn -- &quot;TB-3 mTLS control&quot; --&gt; CP
+  Conn -- &quot;TB-3 WG Noise IK (data)&quot; --&gt; Edge
+  CP  -- &quot;TB-4 sign request (no raw key)&quot; --&gt; CA
+  CP  -- &quot;TB-5 RLS-scoped SQL&quot; --&gt; DB
+  CP  -- &quot;TB-6 TTL&#39;d presence&quot; --&gt; RDS
+  Edge -- &quot;TB-7 policy verdict ALLOW/DENY&quot; --&gt; LAN
+  DPI -. &quot;observes ciphertext only&quot; .- Core
+  MITM -. &quot;cannot complete IK / mTLS without keys&quot; .- Edge</code></pre>
+<table>
+<thead>
+<tr>
+<th>Boundary</th>
+<th>From → To</th>
+<th>Crossing protection</th>
+<th>Primary STRIDE risks</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>TB-1</strong></td>
+<td>Client → Edge (data)</td>
+<td>WG Noise IK; peer pubkey via policy-filtered map</td>
+<td>Spoofing, Information disclosure</td>
+</tr>
+<tr>
+<td><strong>TB-2</strong></td>
+<td>Client → CP (control)</td>
+<td>TLS 1.3 mutual, ≤24 h leaf, pinned CA (S4)</td>
+<td>Spoofing, Tampering, Elevation</td>
+</tr>
+<tr>
+<td><strong>TB-3</strong></td>
+<td>Connector → CP/Edge</td>
+<td>same control mTLS + WG IK</td>
+<td>Spoofing, Elevation</td>
+</tr>
+<tr>
+<td><strong>TB-4</strong></td>
+<td>CP → CA</td>
+<td>KMS sign grant; CP never holds the raw key (S11)</td>
+<td>Elevation, Tampering</td>
+</tr>
+<tr>
+<td><strong>TB-5</strong></td>
+<td>CP → Postgres</td>
+<td><code>WithTenant</code> under <code>FORCE ROW LEVEL SECURITY</code>
+(P6)</td>
+<td>Elevation (cross-tenant), Disclosure</td>
+</tr>
+<tr>
+<td><strong>TB-6</strong></td>
+<td>CP → Redis</td>
+<td>TTL&#39;d presence; no durable flow data (S6/I5)</td>
+<td>Disclosure (privacy)</td>
+</tr>
+<tr>
+<td><strong>TB-7</strong></td>
+<td>Edge → LAN</td>
+<td>nftables/eBPF verdict map; default <code>DROP</code> (I6/R3)</td>
+<td>Elevation (lateral), Tampering</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="4-attacker-classes">4. Attacker classes</h2>
+<p>Six classes, ordered by capability. Each STRIDE/LINDDUN threat in
+§5/§6 names the classes that can reach it — a threat reachable only by a
+nation-state is weighted differently from one reachable by any passive
+observer.</p>
+<table>
+<thead>
+<tr>
+<th>Class id</th>
+<th>Attacker</th>
+<th>Capabilities</th>
+<th>Cannot (under assumptions §1.3)</th>
+<th>Primary goal</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>C-PASV</strong></td>
+<td>Passive network observer / DPI censor</td>
+<td>Records all ciphertext on the path; classifies protocols; blocks by
+fingerprint</td>
+<td>Decrypt; inject without detection</td>
+<td>Identify VPN use; censor; harvest-now-decrypt-later</td>
+</tr>
+<tr>
+<td><strong>C-ACT</strong></td>
+<td>Active on-path / MITM</td>
+<td>Drop, delay, reorder, inject, replay; spoof endpoints; attempt
+downgrade</td>
+<td>Complete WG IK or mTLS without a valid key (A3/A4)</td>
+<td>Hijack a session; downgrade crypto; block recovery</td>
+</tr>
+<tr>
+<td><strong>C-PEER</strong></td>
+<td>Malicious authenticated peer</td>
+<td>A legitimately-enrolled device that turns hostile; can probe the
+overlay</td>
+<td>Reach peers/CIDRs its compiled policy does not grant (S1/I6)</td>
+<td>Lateral movement; reach unauthorized LAN hosts</td>
+</tr>
+<tr>
+<td><strong>C-DEV</strong></td>
+<td>Compromised client device</td>
+<td>Root/admin on a device; reads app memory; drives the OS</td>
+<td>Extract a keystore-sealed key without defeating the OS keystore
+(A2)</td>
+<td>Exfiltrate keys; impersonate the user</td>
+</tr>
+<tr>
+<td><strong>C-INS</strong></td>
+<td>Malicious insider / operator</td>
+<td>Admin on the Gateway host; can read Postgres, run code, edit
+config</td>
+<td>Read traffic content/destinations that were never stored (S6);
+silently sign certs without an audit row (S7) — <em>see residual
+§10</em></td>
+<td>Surveil users; covertly grant access</td>
+</tr>
+<tr>
+<td><strong>C-NAT</strong></td>
+<td>Nation-state</td>
+<td>Union of C-PASV+C-ACT at scale; legal compulsion of an operator;
+long-horizon cryptanalysis</td>
+<td>Same crypto floor as A3/A4; cannot retroactively read PQ-protected
+sessions (S10)</td>
+<td>Mass surveillance; targeted deanonymization</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="5-stride-per-component">5. STRIDE per component</h2>
+<p>Notation: each row is
+<code>T-&lt;comp&gt;-&lt;X&gt;-&lt;n&gt;</code>,
+<code>X ∈ {S,T,R,I,D,E}</code>. <strong>Mitigation</strong> cites the
+owning spec; <strong>Residual</strong> is the honest gap (§11.4.6).</p>
+<h3 id="51-connector-outbound-only-network-side-agent">5.1 Connector
+(outbound-only, network-side agent)</h3>
+<p>The connector dials <em>out</em> to the Gateway and advertises CIDRs;
+it never accepts inbound from the Internet [04_ARCH §1.1]. That
+outbound-only posture is itself the largest mitigation.</p>
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>Cat</th>
+<th>Threat</th>
+<th>Attacker</th>
+<th>Asset</th>
+<th>Mitigation</th>
+<th>Residual</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>T-CONN-S-1</td>
+<td>Spoofing</td>
+<td>A rogue agent claims to be a trusted connector and advertises a CIDR
+it does not serve</td>
+<td>C-ACT, C-INS</td>
+<td>AS-DB</td>
+<td>Connector authenticates with a CA-signed device cert (S4);
+<code>bind_kind=connector</code> on its enroll token; advertised
+prefixes are tied to the authenticated <code>device_id</code>
+[<code>v03-control-plane/svc-policy.md</code> §1.1
+<code>ConnPrefixes</code>]</td>
+<td>A compromised connector <em>can</em> lie about CIDRs it is enrolled
+for → §10 R-CONN</td>
+</tr>
+<tr>
+<td>T-CONN-T-1</td>
+<td>Tampering</td>
+<td>Inject/alter advertised-prefix messages on the wire</td>
+<td>C-ACT</td>
+<td>AS-DB</td>
+<td>Advertisement rides the mTLS control channel (TB-3); off-channel
+injection fails TLS auth</td>
+<td>none under A4</td>
+</tr>
+<tr>
+<td>T-CONN-R-1</td>
+<td>Repudiation</td>
+<td>Operator denies advertising a malicious route</td>
+<td>C-INS</td>
+<td>AS-AUDIT</td>
+<td><code>connector.prefixes.changed</code> is audited with actor
+binding (S7)</td>
+<td>insider with DB write can edit audit → §10 R-INS</td>
+</tr>
+<tr>
+<td>T-CONN-I-1</td>
+<td>Info disclosure</td>
+<td>Connector leaks the LAN topology behind it</td>
+<td>C-PEER, C-INS</td>
+<td>AS-MAP</td>
+<td>Need-to-know: only devices whose policy grants the connector&#39;s CIDR
+receive it (S3, R2)</td>
+<td>a granted device legitimately learns that slice (by design)</td>
+</tr>
+<tr>
+<td>T-CONN-D-1</td>
+<td>DoS</td>
+<td>Flood the Gateway with bogus advertise/reconnect churn</td>
+<td>C-PEER</td>
+<td>AS-DB</td>
+<td>Per-tenant + per-source rate limits on control RPCs (Redis,
+[<code>04-security-privacy-pki.md</code> §3.4]); recompile is
+debounced</td>
+<td>sustained authenticated abuse → §10 R-DOS</td>
+</tr>
+<tr>
+<td>T-CONN-E-1</td>
+<td>Elevation</td>
+<td>Connector tries to be an exit node / full-tunnel target</td>
+<td>C-PEER</td>
+<td>AS-DB</td>
+<td><code>ERR_EXIT_IS_CONNECTOR</code> — the compiler
+<strong>blocks</strong> any <code>exitNodes</code> entry resolving to a
+connector (P-level, [<code>v03-control-plane/svc-policy.md</code> §5.1 /
+E7])</td>
+<td>none — mechanically rejected at compile</td>
+</tr>
+</tbody>
+</table>
+<h3 id="52-gateway--go-control-plane">5.2 Gateway — Go control
+plane</h3>
+<p>The control plane authors identity, signs certs (via KMS), compiles
+policy, and runs the coordinator. It is the trust root for <em>who
+exists</em> and <em>who may reach what</em>.</p>
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>Cat</th>
+<th>Threat</th>
+<th>Attacker</th>
+<th>Asset</th>
+<th>Mitigation</th>
+<th>Residual</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>T-CP-S-1</td>
+<td>Spoofing</td>
+<td>Unauthenticated party calls a control RPC</td>
+<td>C-ACT</td>
+<td>AS-DB</td>
+<td>mTLS device cert required on every <code>Coordinator</code> RPC (S4,
+TB-2); REST behind OIDC/RBAC ([<code>04-security-privacy-pki.md</code>
+§2.3])</td>
+<td>none under A4</td>
+</tr>
+<tr>
+<td>T-CP-S-2</td>
+<td>Spoofing</td>
+<td>Forged OIDC ID token to gain admin</td>
+<td>C-ACT</td>
+<td>AS-DB</td>
+<td>ID-token signature verified against pinned IdP JWKS;
+<code>iss</code>/<code>aud</code> pinned
+([<code>04-security-privacy-pki.md</code> §2.1])</td>
+<td>a compromised IdP (out of scope §1.2)</td>
+</tr>
+<tr>
+<td>T-CP-T-1</td>
+<td>Tampering</td>
+<td>Cross-tenant write via a logic bug</td>
+<td>C-INS, C-PEER</td>
+<td>AS-DB</td>
+<td><code>WithTenant</code> under <code>FORCE ROW LEVEL SECURITY</code>
+as non-superuser <code>helix_app</code> (P6, TB-5) — RLS is the backstop
+<em>below</em> app RBAC</td>
+<td>a superuser DB role bypasses RLS → §10 R-INS</td>
+</tr>
+<tr>
+<td>T-CP-T-2</td>
+<td>Tampering</td>
+<td>Push an allow-all policy by corrupting compile</td>
+<td>C-INS</td>
+<td>AS-DB</td>
+<td>Pure deterministic compiler (P2) + fail-closed dry-run (P4): a bad
+spec is <em>rejected</em>, never silently widened to allow-all
+[<code>v03-control-plane/svc-policy.md</code> §5]</td>
+<td>insider editing <code>spec</code> directly still passes a
+<em>valid</em> malicious policy → audited (S7)</td>
+</tr>
+<tr>
+<td>T-CP-R-1</td>
+<td>Repudiation</td>
+<td>Operator denies a privileged change</td>
+<td>C-INS</td>
+<td>AS-AUDIT</td>
+<td>Every state-changing action → <code>audit_events</code> with actor
+(S7); live stream to Console</td>
+<td>audit integrity vs. insider → §10 R-INS / Phase-2 hash-chain</td>
+</tr>
+<tr>
+<td>T-CP-I-1</td>
+<td>Info disclosure</td>
+<td>Read another tenant&#39;s policy/topology</td>
+<td>C-INS, C-PEER</td>
+<td>AS-DB, AS-MAP</td>
+<td>RLS scope (P6); member role cannot read cross-tenant even with
+crafted <code>WHERE</code>
+([<code>v03-control-plane/svc-policy.md</code> §9])</td>
+<td>none under non-superuser assumption</td>
+</tr>
+<tr>
+<td>T-CP-D-1</td>
+<td>DoS</td>
+<td>Compile-bomb: a huge spec stalls the service</td>
+<td>C-PEER (operator role)</td>
+<td>AS-DB</td>
+<td>Compile is <code>O(devices × rules × targets)</code> bounded
+<code>&lt;200 ms</code> at 1k devices (E10/§11 budget
+[<code>v03-control-plane/svc-policy.md</code>])</td>
+<td>a 10k×1k tenant is the measured ceiling, soak-tested</td>
+</tr>
+<tr>
+<td>T-CP-E-1</td>
+<td>Elevation</td>
+<td>Member role activates a policy</td>
+<td>C-PEER</td>
+<td>AS-DB</td>
+<td><code>requireRole(&quot;admin&quot;,&quot;operator&quot;)</code> + RLS floor; agents are
+read-only w.r.t. policy ([<code>v03-control-plane/svc-policy.md</code>
+§9])</td>
+<td>none</td>
+</tr>
+</tbody>
+</table>
+<h3 id="53-gateway--rust-edge-data-plane">5.3 Gateway — Rust edge (data
+plane)</h3>
+<p>The only component reachable from the hostile Internet on the data
+port, hence the most hardened (S8). It sees <strong>ciphertext
+only</strong> and enforces the verdict map.</p>
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>Cat</th>
+<th>Threat</th>
+<th>Attacker</th>
+<th>Asset</th>
+<th>Mitigation</th>
+<th>Residual</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>T-EDGE-S-1</td>
+<td>Spoofing</td>
+<td>Forge a WG peer to inject into the tunnel</td>
+<td>C-ACT</td>
+<td>AS-TRAFFIC</td>
+<td>WG Noise IK: only a peer holding the registered static private key
+completes the handshake (TB-1)</td>
+<td>none under A3</td>
+</tr>
+<tr>
+<td>T-EDGE-T-1</td>
+<td>Tampering</td>
+<td>Container escape to edit verdict rules</td>
+<td>C-NAT, C-ACT (post-exploit)</td>
+<td>AS-TRAFFIC</td>
+<td>Rootless Podman, read-only rootfs, <code>DropCapability=ALL</code> +
+only <code>CAP_NET_ADMIN</code>/<code>CAP_NET_RAW</code>, default-deny
+seccomp allowlist, distroless/no-shell (S8,
+[<code>04-security-privacy-pki.md</code> §5])</td>
+<td>a kernel-level 0-day in the allowed syscall surface → §10
+R-EDGE</td>
+</tr>
+<tr>
+<td>T-EDGE-R-1</td>
+<td>Repudiation</td>
+<td>n/a — edge keeps no per-flow record (S6)</td>
+<td>—</td>
+<td>—</td>
+<td>by-construction: nothing to repudiate (no traffic log exists)</td>
+<td>—</td>
+</tr>
+<tr>
+<td>T-EDGE-I-1</td>
+<td>Info disclosure</td>
+<td>Read user traffic at the edge</td>
+<td>C-INS</td>
+<td>AS-TRAFFIC</td>
+<td>Edge sees ciphertext for the WG core; plaintext exists only
+transiently in-process during forwarding and is never written to disk
+(S6/I5)</td>
+<td>an insider with live process memory access on a relayed (not E2E)
+hop <em>can</em> see plaintext in flight → §10 R-RELAY (honest)</td>
+</tr>
+<tr>
+<td>T-EDGE-D-1</td>
+<td>DoS</td>
+<td>Handshake/UDP flood on <code>:443</code></td>
+<td>C-ACT, C-NAT</td>
+<td>AS-TRAFFIC</td>
+<td>WG&#39;s stateless cookie-reply anti-DoS (doc 01); host firewall floor;
+rate-limit unauthenticated handshakes</td>
+<td>volumetric DDoS needs upstream scrubbing (deployment doc 09) → §10
+R-DOS</td>
+</tr>
+<tr>
+<td>T-EDGE-E-1</td>
+<td>Elevation</td>
+<td>A granted peer pivots to an <em>un</em>granted CIDR</td>
+<td>C-PEER</td>
+<td>AS-TRAFFIC, AS-MAP</td>
+<td>WG <code>AllowedIPs</code> cryptokey routing <strong>drops</strong>
+any packet outside the grant + the edge verdict map
+default-<code>DROP</code> (I6/R3, TB-7) — two independent layers</td>
+<td>none — both layers must fail</td>
+</tr>
+</tbody>
+</table>
+<h3 id="54-client-device-helix-core">5.4 Client device (helix-core)</h3>
+<p>Semi-trusted: it holds its own private keys but is otherwise
+least-privileged. The biggest client threat is a fully-compromised
+device (C-DEV).</p>
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>Cat</th>
+<th>Threat</th>
+<th>Attacker</th>
+<th>Asset</th>
+<th>Mitigation</th>
+<th>Residual</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>T-CLI-S-1</td>
+<td>Spoofing</td>
+<td>Impersonate the user to the control plane</td>
+<td>C-DEV, C-ACT</td>
+<td>AS-LEAF</td>
+<td>mTLS leaf cert + ≤24 h TTL (S4); CSR proof-of-possession at enroll
+prevents enrolling a key you don&#39;t control
+([<code>04-security-privacy-pki.md</code> §3.4])</td>
+<td>C-DEV that already roots the device → §10 R-DEV</td>
+</tr>
+<tr>
+<td>T-CLI-T-1</td>
+<td>Tampering</td>
+<td>Patch the client to disable the kill-switch</td>
+<td>C-DEV</td>
+<td>AS-TRAFFIC</td>
+<td>Kill-switch is a core-owned state machine that re-enforces the
+firewall <em>before</em> every transition (S9,
+[<code>04-security-privacy-pki.md</code> §8.4`]); signed app + platform
+integrity</td>
+<td>a rooted device can patch anything — out of the device&#39;s own TCB
+(honest)</td>
+</tr>
+<tr>
+<td>T-CLI-R-1</td>
+<td>Repudiation</td>
+<td>n/a at the client (audit is server-side)</td>
+<td>—</td>
+<td>—</td>
+<td>control writes the client triggers are audited server-side (S7)</td>
+<td>—</td>
+</tr>
+<tr>
+<td>T-CLI-I-1</td>
+<td>Info disclosure</td>
+<td>Extract WG/leaf private keys from the app</td>
+<td>C-DEV</td>
+<td>AS-WGK, AS-LEAF</td>
+<td>Keys sealed in OS keystore (Keychain/Secure Enclave, Android
+StrongBox, TPM, DPAPI); <code>Zeroizing</code> on drop; FFI exposes
+<em>operations</em> not raw bytes (S2,
+[<code>04-security-privacy-pki.md</code> §3.3])</td>
+<td>a device whose keystore is already defeated (A2 false) → §10
+R-DEV</td>
+</tr>
+<tr>
+<td>T-CLI-D-1</td>
+<td>DoS</td>
+<td>Drain battery / wedge the tunnel</td>
+<td>C-DEV</td>
+<td>—</td>
+<td>local-only impact; auto-reconnect ladder + <code>Blocked</code>
+lockdown (S9) prevents a <em>leak</em> during churn</td>
+<td>device-local; not a system threat</td>
+</tr>
+<tr>
+<td>T-CLI-E-1</td>
+<td>Elevation</td>
+<td>App reads beyond its sandbox</td>
+<td>C-DEV</td>
+<td>AS-WGK</td>
+<td>Platform sandbox + least-privilege tunnel entitlement (doc 06
+shims)</td>
+<td>OS sandbox escape — out of scope §1.2</td>
+</tr>
+</tbody>
+</table>
+<h3 id="55-coordinator-watchnetworkmap-fan-out">5.5 Coordinator
+(<code>WatchNetworkMap</code> fan-out)</h3>
+<p>The coordinator streams policy-filtered maps and revocation deltas.
+Its central security job is <strong>need-to-know filtering before the
+wire</strong> (S3).</p>
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>Cat</th>
+<th>Threat</th>
+<th>Attacker</th>
+<th>Asset</th>
+<th>Mitigation</th>
+<th>Residual</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>T-COORD-S-1</td>
+<td>Spoofing</td>
+<td>Open a <code>WatchNetworkMap</code> stream as another device</td>
+<td>C-ACT, C-DEV</td>
+<td>AS-MAP</td>
+<td>mTLS device cert binds the stream to a <code>device_id</code> (S4);
+the server filters <em>for that device id</em>, not a client-supplied
+one</td>
+<td>C-DEV with a valid live cert sees only <em>its own</em> map (by
+design)</td>
+</tr>
+<tr>
+<td>T-COORD-T-1</td>
+<td>Tampering</td>
+<td>Forge a map delta to grant a peer</td>
+<td>C-ACT</td>
+<td>AS-MAP</td>
+<td>Deltas originate server-side from the compiled
+<code>CompiledPolicy</code>; the stream is server→client over
+authenticated mTLS</td>
+<td>none under A4</td>
+</tr>
+<tr>
+<td>T-COORD-I-1</td>
+<td>Info disclosure</td>
+<td>A device learns peers it cannot reach (over-share)</td>
+<td>C-PEER, C-DEV</td>
+<td>AS-MAP</td>
+<td>Server filters to <code>CompiledPolicy.VisibleTo[self]</code>
+<em>before</em> serialization (S3/R2,
+[<code>v03-control-plane/svc-policy.md</code> §3 ARTIFACT 1]); revoked
+devices never enter <code>visible</code> (P1)</td>
+<td>a filtering bug is the threat — caught by the §11 anti-bluff &quot;denied
+an unauthorized peer&quot; test</td>
+</tr>
+<tr>
+<td>T-COORD-D-1</td>
+<td>DoS</td>
+<td>Many streams exhaust fan-out resources</td>
+<td>C-PEER</td>
+<td>AS-MAP</td>
+<td>Bounded streams; the &lt;1 s convergence budget is measured under
+load ([<code>v03-control-plane/svc-policy.md</code> §11)</td>
+<td>p99 under 10k streams is <strong>UNVERIFIED</strong> — a measured
+soak number, not yet a result</td>
+</tr>
+<tr>
+<td>T-COORD-E-1</td>
+<td>Elevation</td>
+<td>A device pushes a spec via the RPC</td>
+<td>C-PEER</td>
+<td>AS-DB</td>
+<td><code>Coordinator</code> RPC is read-only w.r.t. policy — devices
+receive maps, never author them
+([<code>v03-control-plane/svc-policy.md</code> §9])</td>
+<td>none</td>
+</tr>
+</tbody>
+</table>
+<h3 id="56-pki--tenant-ca">5.6 PKI / tenant CA</h3>
+<p>The CA is the highest-value asset (AS-CA). Compromise mints arbitrary
+trusted identities.</p>
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>Cat</th>
+<th>Threat</th>
+<th>Attacker</th>
+<th>Asset</th>
+<th>Mitigation</th>
+<th>Residual</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>T-PKI-S-1</td>
+<td>Spoofing</td>
+<td>Get the CA to sign a cert for a key the requester doesn&#39;t hold</td>
+<td>C-PEER</td>
+<td>AS-LEAF</td>
+<td>CSR proof-of-possession verified before signing
+([<code>04-security-privacy-pki.md</code> §3.4 / §4.7])</td>
+<td>none</td>
+</tr>
+<tr>
+<td>T-PKI-T-1</td>
+<td>Tampering</td>
+<td>Issue a long-lived or wildcard cert</td>
+<td>C-INS</td>
+<td>AS-CA</td>
+<td>Cert profile fixes <code>≤24 h</code> validity +
+<code>CA:FALSE</code> + <code>clientAuth</code> only
+([<code>04-security-privacy-pki.md</code> §4.3]); profile enforced in
+the signer, not a request field</td>
+<td>insider editing the profile code → audited, code-reviewed
+(§11.4.142)</td>
+</tr>
+<tr>
+<td>T-PKI-R-1</td>
+<td>Repudiation</td>
+<td>Covert cert issuance with no record</td>
+<td>C-INS</td>
+<td>AS-AUDIT</td>
+<td><code>device.enrolled</code> / <code>device.cert.issued</code>
+audited (S7); KMS produces its own sign-event log (A1)</td>
+<td>insider with both DB <em>and</em> KMS log access → §10 R-CA (highest
+residual)</td>
+</tr>
+<tr>
+<td>T-PKI-I-1</td>
+<td>Info disclosure</td>
+<td>Read the CA private key</td>
+<td>C-INS, C-NAT</td>
+<td>AS-CA</td>
+<td>Key in KMS/HSM, never in process memory; <code>pki</code> holds a
+<em>signing grant</em> not the raw key (S11, A1,
+[<code>04-security-privacy-pki.md</code> §4.7
+<code>CASigner</code>])</td>
+<td>a KMS-credential theft → §10 R-CA</td>
+</tr>
+<tr>
+<td>T-PKI-D-1</td>
+<td>DoS</td>
+<td>Flood <code>SignDeviceCert</code> to exhaust KMS quota</td>
+<td>C-PEER</td>
+<td>AS-CA</td>
+<td>Enroll rate limits (§3.4); renewal rides the <em>existing</em>
+authenticated channel (no new token)</td>
+<td>quota exhaustion under authenticated abuse → §10 R-DOS</td>
+</tr>
+<tr>
+<td>T-PKI-E-1</td>
+<td>Elevation</td>
+<td>A revoked device keeps control access</td>
+<td>C-DEV</td>
+<td>AS-DB</td>
+<td>Revocation in <code>&lt;1 s</code> (S5): cert serial blacklisted,
+open stream force-closed, WG peer removed; ≤24 h expiry is the
+defence-in-depth floor ([<code>04-security-privacy-pki.md</code>
+§4.6])</td>
+<td>the sub-second race window is honest, not zero (§10 R-RACE)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="57-data-plane-the-tunnel-on-the-wire">5.7 Data plane (the tunnel
+on the wire)</h3>
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>Cat</th>
+<th>Threat</th>
+<th>Attacker</th>
+<th>Asset</th>
+<th>Mitigation</th>
+<th>Residual</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>T-DP-S-1</td>
+<td>Spoofing</td>
+<td>Impersonate the gateway endpoint</td>
+<td>C-ACT</td>
+<td>AS-TRAFFIC</td>
+<td>WG IK binds to the gateway&#39;s registered static pubkey delivered in
+the (authenticated) map; a wrong key fails the handshake</td>
+<td>none under A3</td>
+</tr>
+<tr>
+<td>T-DP-T-1</td>
+<td>Tampering</td>
+<td>Modify ciphertext in flight</td>
+<td>C-ACT</td>
+<td>AS-TRAFFIC</td>
+<td>ChaCha20-Poly1305 AEAD: any tamper fails the auth tag (doc 01)</td>
+<td>none under A3</td>
+</tr>
+<tr>
+<td>T-DP-I-1</td>
+<td>Info disclosure (now)</td>
+<td>Read tunnel content today</td>
+<td>C-PASV, C-NAT</td>
+<td>AS-TRAFFIC</td>
+<td>WG AEAD encryption; no plaintext on the wire</td>
+<td>none classically (A3)</td>
+</tr>
+<tr>
+<td>T-DP-I-2</td>
+<td>Info disclosure (future)</td>
+<td>Harvest-now-decrypt-later once quantum matures</td>
+<td>C-NAT</td>
+<td>AS-TRAFFIC, AS-PSK</td>
+<td>Hybrid PQ PSK (ML-KEM-768) mixed into the WG handshake — attacker
+must break <em>both</em> classical ECDH and the PQ KEM (S10,
+[<code>04-security-privacy-pki.md</code> §9])</td>
+<td>PQ is <strong>capability-negotiated</strong>; a peer without PQ
+falls back to classical (still secure <em>today</em>) → §10 R-PQ</td>
+</tr>
+<tr>
+<td>T-DP-D-1</td>
+<td>DoS</td>
+<td>Block/throttle the tunnel; censor the protocol</td>
+<td>C-PASV, C-ACT, C-NAT</td>
+<td>AS-TRAFFIC</td>
+<td>Transport obfuscation / pluggable carriers + a reconnection ladder
+(doc 01); kill-switch keeps the leak window closed during recovery
+(S9)</td>
+<td>a total network block is unbeatable from inside — honest (§10
+R-CENSOR)</td>
+</tr>
+<tr>
+<td>T-DP-I-3</td>
+<td>Info disclosure (metadata)</td>
+<td>Traffic-analysis: infer activity from packet timing/size</td>
+<td>C-PASV, C-NAT</td>
+<td>AS-TRAFFIC</td>
+<td>Encryption hides content; obfuscation hides the fingerprint;
+<strong>timing/volume correlation is not fully defeated</strong></td>
+<td>a global passive adversary can do traffic analysis → §10 R-TA
+(honest, hard)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="6-linddun-privacy-threats">6. LINDDUN privacy threats</h2>
+<p>LINDDUN asks the questions a privacy VPN must answer. Most
+mitigations here are the no-logging-by-construction family (S6/S7/I5)
+plus the anonymous-enroll posture.</p>
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>Cat</th>
+<th>Privacy threat</th>
+<th>Attacker</th>
+<th>Asset</th>
+<th>Mitigation</th>
+<th>Residual</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>LP-L-1</td>
+<td><strong>Linking</strong></td>
+<td>Link a user to the sites they visit (the cardinal privacy harm)</td>
+<td>C-INS, C-NAT</td>
+<td>AS-TRAFFIC</td>
+<td><strong>No durable connection/traffic log exists (S6)</strong> —
+there is no <code>dst</code>-bearing row to link from; CI schema-lint
+fails the build if a flow-shaped table appears
+([<code>04-security-privacy-pki.md</code> §6.2])</td>
+<td>a <em>live</em> on-box insider can observe in-flight relayed traffic
+(not stored) → §10 R-RELAY</td>
+</tr>
+<tr>
+<td>LP-L-2</td>
+<td>Linking</td>
+<td>Correlate a device&#39;s sessions over time</td>
+<td>C-INS</td>
+<td>AS-PRESENCE</td>
+<td>Presence is ephemeral in Redis (TTL&#39;d); <code>last_seen_at</code> is
+coarse and carries no destination
+([<code>04-security-privacy-pki.md</code> §6.1])</td>
+<td>coarse online/offline timing is observable while live</td>
+</tr>
+<tr>
+<td>LP-I-1</td>
+<td><strong>Identifying</strong></td>
+<td>Tie a tunnel to a real human identity</td>
+<td>C-INS, C-NAT</td>
+<td>AS-DB</td>
+<td>Anonymous mode: enroll token with <strong>no email, no SSO</strong>;
+<code>users.email = NULL</code>, <code>oidc_sub = NULL</code>; no
+reverse-link to a human by design
+([<code>04-security-privacy-pki.md</code> §2.2])</td>
+<td>managed-mode tenants <em>do</em> store <code>email</code> (the
+tenant&#39;s choice; stated, not hidden)</td>
+</tr>
+<tr>
+<td>LP-N-1</td>
+<td><strong>Non-repudiation</strong> (privacy-adverse)</td>
+<td>Prove a specific user visited a specific site (court-compellable
+record)</td>
+<td>C-NAT (legal compulsion)</td>
+<td>AS-TRAFFIC</td>
+<td>The record does not exist (S6) — the operator <em>cannot</em>
+produce what was never stored, even under compulsion</td>
+<td>the operator <em>can</em> be compelled to start logging
+<em>future</em> traffic at the relay (warrant-canary class) → §10
+R-COMPEL (honest)</td>
+</tr>
+<tr>
+<td>LP-D-1</td>
+<td><strong>Detecting</strong></td>
+<td>Detect that a person uses HelixVPN at all</td>
+<td>C-PASV, C-NAT</td>
+<td>AS-TRAFFIC</td>
+<td>Transport obfuscation makes the protocol harder to fingerprint (doc
+01)</td>
+<td>obfuscation raises cost, does not guarantee undetectability → §10
+R-CENSOR</td>
+</tr>
+<tr>
+<td>LP-DD-1</td>
+<td><strong>Data disclosure</strong></td>
+<td>A breach dumps the membership/destination graph</td>
+<td>C-INS, C-NAT</td>
+<td>AS-DB, AS-TRAFFIC</td>
+<td>Destinations are never stored (S6); the DB holds identity+policy,
+scoped by RLS; CA key in KMS (S11)</td>
+<td>a DB breach still discloses the <em>membership</em> graph (who is
+enrolled, what CIDRs exist) — minimized, not zero → §10 R-DB</td>
+</tr>
+<tr>
+<td>LP-U-1</td>
+<td><strong>Unawareness</strong></td>
+<td>User doesn&#39;t know what is/isn&#39;t collected</td>
+<td>—</td>
+<td>AS-PRESENCE</td>
+<td>The &quot;what is / is not stored&quot; table is a published spec contract
+([<code>04-security-privacy-pki.md</code> §6.1]); the no-log promise is
+mechanically enforced (S6) and auditable</td>
+<td>transparency is a doc property; an end user must trust the published
+build (mitigated by open self-host)</td>
+</tr>
+<tr>
+<td>LP-NC-1</td>
+<td><strong>Non-compliance</strong></td>
+<td>Operator drifts into unlawful/over-broad logging</td>
+<td>C-INS</td>
+<td>AS-TRAFFIC</td>
+<td>S6 schema-lint <strong>fails the build</strong> if a connection-log
+table is added; S7 limits audit to control actions only</td>
+<td>an operator running a <em>forked</em> build can re-add logging
+(self-host honesty) → §10 R-FORK</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="7-threat--mitigation-map">7. Threat → mitigation map</h2>
+<p>Every mechanism in [<code>04-security-privacy-pki.md</code>] is
+justified by the threats it closes; every threat above is closed by a
+cited mechanism. The forward map (mechanism → threats it defends):</p>
+<table>
+<thead>
+<tr>
+<th>Mechanism (owner)</th>
+<th>Invariant</th>
+<th>Threats it defends</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>WG Noise IK + ChaCha20-Poly1305 (doc 01)</td>
+<td>—</td>
+<td>T-EDGE-S-1, T-DP-S-1, T-DP-T-1, T-DP-I-1</td>
+</tr>
+<tr>
+<td>Two-channel auth (mTLS control / WG data), never conflated</td>
+<td>S4</td>
+<td>T-CP-S-1, T-CLI-S-1, T-COORD-S-1, T-PKI-E-1</td>
+</tr>
+<tr>
+<td>Device keys never leave device; OS-keystore-sealed</td>
+<td>S2</td>
+<td>T-CLI-I-1, T-PKI-S-1</td>
+</tr>
+<tr>
+<td>Need-to-know map filtering before the wire</td>
+<td>S3 / R2</td>
+<td>T-CONN-I-1, T-COORD-I-1, LP-L-1(partial)</td>
+</tr>
+<tr>
+<td>Short-lived ≤24 h leaf certs</td>
+<td>S4</td>
+<td>T-CLI-S-1, T-PKI-T-1, T-PKI-E-1</td>
+</tr>
+<tr>
+<td>Sub-second revocation pipeline</td>
+<td>S5</td>
+<td>T-PKI-E-1, T-COORD-* (stale grant)</td>
+</tr>
+<tr>
+<td>No durable connection/traffic log + CI schema-lint</td>
+<td>S6 / I5</td>
+<td>T-EDGE-R-1, LP-L-1, LP-N-1, LP-DD-1, LP-NC-1</td>
+</tr>
+<tr>
+<td>Control-action audit (actor-bound)</td>
+<td>S7</td>
+<td>T-CONN-R-1, T-CP-R-1, T-PKI-R-1</td>
+</tr>
+<tr>
+<td>Edge hardening (rootless Podman, seccomp, no-SSH)</td>
+<td>S8</td>
+<td>T-EDGE-T-1, T-EDGE-D-1</td>
+</tr>
+<tr>
+<td>Kill-switch + DNS-leak state machine</td>
+<td>S9</td>
+<td>T-CLI-T-1, T-DP-D-1 (leak window)</td>
+</tr>
+<tr>
+<td>Hybrid PQ PSK (never PQ-only)</td>
+<td>S10</td>
+<td>T-DP-I-2</td>
+</tr>
+<tr>
+<td>CA key in KMS/HSM; cattle data-plane nodes</td>
+<td>S11</td>
+<td>T-PKI-I-1, T-PKI-T-1</td>
+</tr>
+<tr>
+<td>Default-deny policy compiler (pure, fail-closed)</td>
+<td>S1 / I6 / P1–P8</td>
+<td>T-CONN-E-1, T-CP-T-2, T-EDGE-E-1, T-COORD-I-1</td>
+</tr>
+<tr>
+<td>RLS <code>FORCE ROW LEVEL SECURITY</code> backstop</td>
+<td>P6</td>
+<td>T-CP-T-1, T-CP-I-1, T-CP-E-1</td>
+</tr>
+<tr>
+<td>Anonymous enroll (no email/SSO)</td>
+<td>—</td>
+<td>LP-I-1, LP-N-1</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="8-assets--threats--mitigation-matrix">8. Assets × threats ×
+mitigation matrix</h2>
+<p>The compact cross-reference: for each asset, the dominant threats and
+the binding mitigation invariant(s). &quot;✓Phase-2&quot; marks a mitigation that
+strengthens but is not MVP.</p>
+<table>
+<thead>
+<tr>
+<th>Asset \ concern</th>
+<th>Spoof</th>
+<th>Tamper</th>
+<th>Disclose</th>
+<th>DoS</th>
+<th>Elevate</th>
+<th>Privacy (LINDDUN)</th>
+<th>Binding invariants</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>AS-CA</strong> (CA key)</td>
+<td>T-PKI-S-1</td>
+<td>T-PKI-T-1</td>
+<td>T-PKI-I-1</td>
+<td>T-PKI-D-1</td>
+<td>—</td>
+<td>—</td>
+<td>S11, A1, ✓MVP two-tier issuing CA (offline root + online
+intermediate); Phase-2 per-region/multi-intermediate + HSM root
+ceremony</td>
+</tr>
+<tr>
+<td><strong>AS-DB</strong> (control truth)</td>
+<td>T-CP-S-1/2</td>
+<td>T-CP-T-1/2</td>
+<td>T-CP-I-1</td>
+<td>T-CP-D-1</td>
+<td>T-CP-E-1</td>
+<td>LP-DD-1</td>
+<td>P6 (RLS), S1, S7</td>
+</tr>
+<tr>
+<td><strong>AS-WGK</strong> (device WG key)</td>
+<td>—</td>
+<td>—</td>
+<td>T-CLI-I-1</td>
+<td>—</td>
+<td>T-CLI-E-1</td>
+<td>—</td>
+<td>S2, A2</td>
+</tr>
+<tr>
+<td><strong>AS-LEAF</strong> (leaf key)</td>
+<td>T-CLI-S-1</td>
+<td>—</td>
+<td>T-CLI-I-1</td>
+<td>—</td>
+<td>T-PKI-E-1</td>
+<td>—</td>
+<td>S2, S4</td>
+</tr>
+<tr>
+<td><strong>AS-MAP</strong> (filtered map)</td>
+<td>T-COORD-S-1</td>
+<td>T-COORD-T-1</td>
+<td>T-COORD-I-1, T-CONN-I-1</td>
+<td>T-COORD-D-1</td>
+<td>—</td>
+<td>LP-L-1</td>
+<td>S3, R2</td>
+</tr>
+<tr>
+<td><strong>AS-TOKEN</strong> (enroll token)</td>
+<td>T-PKI-S-1</td>
+<td>—</td>
+<td>—</td>
+<td>T-PKI-D-1</td>
+<td>—</td>
+<td>LP-I-1</td>
+<td>Argon2id hash, single/bounded-use, TTL</td>
+</tr>
+<tr>
+<td><strong>AS-TRAFFIC</strong> (user data)</td>
+<td>T-DP-S-1</td>
+<td>T-DP-T-1</td>
+<td>T-DP-I-1/2/3, T-EDGE-I-1</td>
+<td>T-DP-D-1, T-EDGE-D-1</td>
+<td>T-EDGE-E-1</td>
+<td>LP-L-1, LP-N-1</td>
+<td>S6, S9, S10, I6</td>
+</tr>
+<tr>
+<td><strong>AS-AUDIT</strong> (audit log)</td>
+<td>—</td>
+<td>T-CP-R-1 (forge)</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>S7, ✓Phase-2 hash-chain</td>
+</tr>
+<tr>
+<td><strong>AS-PRESENCE</strong> (Redis)</td>
+<td>—</td>
+<td>—</td>
+<td>LP-L-2</td>
+<td>—</td>
+<td>—</td>
+<td>LP-L-2</td>
+<td>I5 (ephemeral/TTL)</td>
+</tr>
+<tr>
+<td><strong>AS-PSK</strong> (PQ PSK)</td>
+<td>—</td>
+<td>—</td>
+<td>T-DP-I-2</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>S10 (ephemeral)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="9-attack-trees-two-worked">9. Attack trees (two worked)</h2>
+<h3 id="91-goal-read-a-target-users-traffic-content">9.1 Goal: read a
+target user&#39;s traffic content</h3>
+<pre class="mermaid"><code>flowchart TD
+  G[&quot;GOAL: read user U&#39;s plaintext traffic&quot;]
+  G --&gt; A1[&quot;A. Break the tunnel crypto&quot;]
+  G --&gt; A2[&quot;B. Steal U&#39;s device WG key&quot;]
+  G --&gt; A3[&quot;C. Read it at the relay edge&quot;]
+  G --&gt; A4[&quot;D. Compel the operator to log&quot;]
+
+  A1 --&gt; A1a[&quot;Break Curve25519 + ChaCha20-Poly1305 (classical) — infeasible (A3)&quot;]
+  A1 --&gt; A1b[&quot;Harvest-now-decrypt-later (quantum) — blocked by hybrid PQ PSK if PQ negotiated (S10)&quot;]
+  A2 --&gt; A2a[&quot;Defeat the OS keystore / Secure Enclave (A2) — high cost (C-DEV)&quot;]
+  A2 --&gt; A2b[&quot;Phish the enroll token — single-use + TTL + Argon2id (AS-TOKEN)&quot;]
+  A3 --&gt; A3a[&quot;Live process-memory access on a relayed hop (C-INS) — RESIDUAL R-RELAY (honest)&quot;]
+  A3 --&gt; A3b[&quot;Container escape on the edge — rootless+seccomp+distroless (S8)&quot;]
+  A4 --&gt; A4a[&quot;Legal compulsion to start FUTURE logging — RESIDUAL R-COMPEL (no PAST record exists, S6)&quot;]</code></pre>
+<p>The tree shows the only <em>practical</em> leaves are residuals
+R-RELAY and R-COMPEL — both honestly stated in §10, both about
+<em>live</em> traffic the operator&#39;s box necessarily handles, neither a
+<em>retrospective</em> breach (S6 makes the past unrecoverable).</p>
+<h3 id="92-goal-reach-an-unauthorized-lan-host-lateral-movement">9.2
+Goal: reach an unauthorized LAN host (lateral movement)</h3>
+<pre class="mermaid"><code>flowchart TD
+  G2[&quot;GOAL: malicious peer reaches CIDR it was not granted&quot;]
+  G2 --&gt; B1[&quot;A. Get policy to grant it&quot;]
+  G2 --&gt; B2[&quot;B. Bypass enforcement at the edge&quot;]
+  B1 --&gt; B1a[&quot;Author a wider spec — needs admin/operator role (T-CP-E-1 blocks member)&quot;]
+  B1 --&gt; B1b[&quot;Corrupt the compiler to allow-all — fail-closed dry-run rejects (P4, T-CP-T-2)&quot;]
+  B2 --&gt; B2a[&quot;Send packets outside AllowedIPs — WG cryptokey routing DROPS (I6)&quot;]
+  B2 --&gt; B2b[&quot;Slip past the verdict map — default verdict is DROP (R3, T-EDGE-E-1)&quot;]
+  B2 --&gt; B2c[&quot;Exploit stale policy after revoke — sub-second pipeline + fail-static floor (S5)&quot;]</code></pre>
+<p>Every leaf terminates at a mechanical block — the two independent
+data-plane layers (<code>AllowedIPs</code> <em>and</em> the verdict map)
+mean both must fail, and the control-plane path is gated by RBAC + the
+fail-closed compiler.</p>
+<hr />
+<h2 id="10-residual-risks--honestly-stated">10. Residual risks —
+honestly stated</h2>
+<p>Per §11.4.6, &quot;mitigated&quot; is not &quot;eliminated&quot;. These are the gaps that
+survive the MVP mitigations, each with its honest boundary and the
+planned/possible strengthening.</p>
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>Residual risk</th>
+<th>Why it survives</th>
+<th>Strengthening</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>R-CA</strong></td>
+<td>Tenant CA compromise mints arbitrary identities</td>
+<td>A single critical secret; KMS theft or a malicious insider with
+KMS+DB access is catastrophic</td>
+<td>MVP already ships the two-tier issuing CA (offline root + online
+issuing intermediate) so the root stays offline and a compromised
+issuing CA is rotated without touching the root, shrinking blast radius
+([<code>04-security-privacy-pki.md</code> §4.2],
+[<code>../v03-control-plane/svc-pki.md</code> §2]); Phase-2 adds an HSM
+root ceremony with quorum/audited sign + per-region issuers</td>
+</tr>
+<tr>
+<td><strong>R-RELAY</strong></td>
+<td>An on-box insider can observe <em>live</em> relayed plaintext</td>
+<td>A relay edge necessarily decrypts the WG core to forward; nothing is
+stored (S6) but in-flight memory is readable by root</td>
+<td>True end-to-end (peer-to-peer) paths where the gateway only relays
+ciphertext; documented as a property, not yet universal —
+<strong>UNVERIFIED</strong> for all topologies</td>
+</tr>
+<tr>
+<td><strong>R-COMPEL</strong></td>
+<td>Operator can be legally compelled to start <em>future</em>
+logging</td>
+<td>S6 removes the <em>past</em> record; it cannot prevent a court order
+to instrument the live path going forward</td>
+<td>Warrant-canary-class transparency; open self-host so the user can
+run their own gateway</td>
+</tr>
+<tr>
+<td><strong>R-INS</strong></td>
+<td>Malicious insider with DB-superuser can edit/delete
+<code>audit_events</code> and bypass RLS</td>
+<td>RLS is a non-superuser backstop; a superuser is above it (A1 scopes
+the CA, not the whole DB)</td>
+<td>Phase-2 hash-chained audit (<code>meta.prev_hash</code>,
+[<code>04-security-privacy-pki.md</code> §7]); external append-only
+audit sink; least-privilege DB roles</td>
+</tr>
+<tr>
+<td><strong>R-DEV</strong></td>
+<td>A fully-compromised device (C-DEV) can patch the client and use
+keystore-sealed keys <em>in place</em></td>
+<td>Keys are sealed against <em>extraction</em>, but a rooted device can
+invoke key operations</td>
+<td>Platform attestation (Phase-2,
+[<code>04-security-privacy-pki.md</code> §3.5]) to require
+hardware-bound keys</td>
+</tr>
+<tr>
+<td><strong>R-RACE</strong></td>
+<td>Sub-second revocation/convergence race window</td>
+<td>The system targets p99 <code>&lt;1 s</code>, not a globally-atomic
+instant; the floor is fail-static, never fail-open
+([<code>v03-control-plane/svc-policy.md</code> §10.3])</td>
+<td>Measured under load (§11 soak); ≤24 h cert expiry is the hard
+ceiling</td>
+</tr>
+<tr>
+<td><strong>R-EDGE</strong></td>
+<td>Kernel 0-day in the allowed syscall surface escapes the edge
+container</td>
+<td>Seccomp narrows but cannot eliminate kernel attack surface</td>
+<td>Phase-2 SELinux type enforcement; signed/repro images (S8
+Phase-3)</td>
+</tr>
+<tr>
+<td><strong>R-DB</strong></td>
+<td>A DB breach discloses the <em>membership</em> graph (who is
+enrolled, what CIDRs)</td>
+<td>Destinations are never stored (S6) but identity/policy must be</td>
+<td>Minimize stored fields; anonymous mode removes the human link
+(LP-I-1)</td>
+</tr>
+<tr>
+<td><strong>R-PQ</strong></td>
+<td>A non-PQ peer falls back to classical (harvest-now-decrypt-later
+possible)</td>
+<td>PQ is capability-negotiated, on-by-default only when <em>both</em>
+ends support it (S10)</td>
+<td>Make PQ mandatory per-tenant policy (Phase-2 toggle); conservative
+McEliece hybrid</td>
+</tr>
+<tr>
+<td><strong>R-TA</strong></td>
+<td>Global passive traffic-analysis (timing/volume correlation)</td>
+<td>Encryption + obfuscation hide content+fingerprint, not timing</td>
+<td>Padding/cover-traffic research (out of MVP scope) —
+<strong>UNVERIFIED</strong> as effective</td>
+</tr>
+<tr>
+<td><strong>R-CENSOR</strong></td>
+<td>A determined network can block the protocol entirely</td>
+<td>No inside-the-tunnel mitigation beats a full network block</td>
+<td>Pluggable transports / domain-fronting research (doc 01
+carriers)</td>
+</tr>
+<tr>
+<td><strong>R-DOS</strong></td>
+<td>Authenticated abuse (compile-bomb, enroll/handshake flood)</td>
+<td>Rate limits bound it; a large legitimate tenant is the measured
+ceiling</td>
+<td>Upstream DDoS scrubbing (deployment doc 09); adaptive rate
+limits</td>
+</tr>
+<tr>
+<td><strong>R-FORK</strong></td>
+<td>A self-host operator can run a <em>forked</em> build that re-adds
+logging</td>
+<td>S6 is a build property of the <em>published</em> build; forks are
+out of our control</td>
+<td>Reproducible signed builds (S8 Phase-3) let users verify the binary
+matches the no-log source</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Honest summary (§11.4.6):</strong> the MVP closes every
+<em>retrospective</em> confidentiality and every
+<em>lateral-movement</em> threat with mechanical, two-layer enforcement.
+The surviving residuals are (a) the single critical secret (R-CA), (b)
+<em>live</em> on-box observation/compulsion at a relay
+(R-RELAY/R-COMPEL), (c) the insider-vs-audit gap (R-INS), and (d) the
+unbeatable-from-inside network adversary (R-TA/R-CENSOR). None is a
+hidden bluff; each has a stated Phase-2 path or an explicit &quot;out of
+scope&quot; boundary.</p>
+</blockquote>
+<hr />
+<h2 id="11-test--validation-mapping-114169">11. Test &amp; validation
+mapping (§11.4.169)</h2>
+<p>A threat model is itself anti-bluff: each high-severity threat MUST
+have a test whose PASS is captured evidence the mitigation is
+<em>live</em>, not promised
+([<code>v03-control-plane/svc-policy.md</code> §12 pattern],
+§11.4.5/§11.4.69/§11.4.107/§1.1).</p>
+<table>
+<thead>
+<tr>
+<th>Threat(s)</th>
+<th>Test type</th>
+<th>Concrete test point</th>
+<th>Captured evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>T-EDGE-E-1, T-CONN-E-1, B2a/B2b</td>
+<td>E2E / full-automation (§11.4.98)</td>
+<td>enroll client; reach an <em>authorized</em> LAN host;
+<strong>deny</strong> an <em>unauthorized</em> one — packet-level</td>
+<td><code>docs/qa/&lt;run-id&gt;/</code> transcript + pcap of the
+DROP</td>
+</tr>
+<tr>
+<td>T-CP-T-2, LP-NC-1</td>
+<td>Integration + meta-test (§1.1)</td>
+<td>inject a <code>CREATE TABLE flows(src,dst,bytes,ts)</code> migration
+→ S6 schema-lint MUST FAIL ([<code>04-security-privacy-pki.md</code>
+§6.2])</td>
+<td>lint FAIL log + restore PASS</td>
+</tr>
+<tr>
+<td>T-PKI-E-1, R-RACE</td>
+<td>Integration</td>
+<td><code>device.revoke</code> → assert WG peer gone + stream
+force-closed + serial blacklisted, timed <code>&lt;1 s</code> p99</td>
+<td>revoke-to-removed timer trace</td>
+</tr>
+<tr>
+<td>T-CLI-T-1, T-DP-D-1</td>
+<td>Runtime (§11.4.107)</td>
+<td>drop tunnel mid-transfer; capture host physical iface; assert
+<strong>zero plaintext (incl. :53)</strong> egresses during
+<code>Reconnecting</code>/<code>Blocked</code> (S9)</td>
+<td>host-interface pcap</td>
+</tr>
+<tr>
+<td>T-CLI-I-1, T-PKI-S-1</td>
+<td>Security/unit</td>
+<td>attempt to read a sealed key via FFI → blocked; CSR with mismatched
+key → sign refused</td>
+<td>refusal capture</td>
+</tr>
+<tr>
+<td>T-CP-I-1, T-CP-E-1</td>
+<td>RLS test (P6)</td>
+<td>tenant-A session cannot read tenant-B rows even with crafted
+<code>WHERE</code>; member role cannot activate policy</td>
+<td>denied-query capture</td>
+</tr>
+<tr>
+<td>T-DP-I-2</td>
+<td>Integration</td>
+<td>negotiate PQ; assert the WG handshake carries the ML-KEM-derived
+PSK; non-PQ peer falls back classically (S10)</td>
+<td>handshake capture</td>
+</tr>
+<tr>
+<td>T-EDGE-T-1</td>
+<td>Security/chaos</td>
+<td>attempt <code>execve</code>/<code>mount</code>/<code>ptrace</code>
+inside the edge container → seccomp <code>EPERM</code></td>
+<td>seccomp denial log</td>
+</tr>
+<tr>
+<td>T-COORD-I-1</td>
+<td>Integration</td>
+<td>a device whose policy grants only conn-A receives a map with
+<strong>only</strong> conn-A; conn-B absent (S3)</td>
+<td>served-map byte-compare</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>Anti-bluff floor: a security &quot;PASS&quot; is valid only with captured
+evidence that the <em>attack was actually attempted and blocked</em> — a
+green unit assertion that the mitigation &quot;exists&quot; is necessary, never
+sufficient ([<code>04-security-privacy-pki.md</code> §6.2
+self-validated-analyzer pattern]). The §1.1 mutations (strip the
+schema-lint; widen the verdict default to ACCEPT; drop the
+revoked-serial check) are the runtime signatures (§11.4.108) that
+S1/S5/S6/I6 are live.</p>
+</blockquote>
+<hr />
+<h2 id="sources-verified">Sources verified</h2>
+<ul>
+<li>[<code>04-security-privacy-pki.md</code>] HelixVPN Volume-4/security
+spine — §0.1 invariants S1–S11, §1 trust model + two channels, §2
+identity (OIDC + anonymous enroll), §3 enrollment + S2 key handling +
+§3.4 anti-replay + §3.5 attestation, §4 PKI/cert lifecycle/revocation
+<code>&lt;1 s</code>, §5 edge hardening (rootless
+Podman/seccomp/no-SSH), §6 no-logging-as-code + CI schema-lint, §7
+audit, §8 kill-switch/DNS-leak state machine, §9 hybrid PQ PSK. (Read
+2026-06-25.)</li>
+<li>[<code>v03-control-plane/svc-policy.md</code>] — §0.1 invariants
+P1–P8, §3 <code>CompiledPolicy</code> {Version, SpecHash, VisibleTo,
+AllowedIPs, Verdicts, Via6, ExitNodes}, §5 fail-closed dry-run, §9
+authz/RLS, §10.3 honest convergence-race boundary, §12 test matrix.
+(Read 2026-06-25.)</li>
+<li>[<code>v02-data-plane/routing-and-addressing.md</code>] — §0.2
+invariants I5/I6/R1–R4 (no-logging, default-deny, converge
+<code>&lt;1 s</code>, need-to-know, fail-closed verdict map). (Read
+2026-06-25.)</li>
+<li>[04_ARCH] HelixVPN-Architecture-Refined.md §1.1 (roles), §3.4
+(overlay/policy), §7 (zero-trust, no-logging, edge hardening), §10
+(CA/secrets), §12 (Phase-3 repro builds) — cited via the spine doc.</li>
+<li>[04_P1] HelixVPN-Phase1-MVP.md §6 (identity/PKI/enroll), §7
+(policy), §11 DoD (kill-switch, authorized/denied acceptance) — cited
+via the spine doc.</li>
+<li>[04_P2] Phase-2 PQ notes §5 (PQ PSK, ML-KEM, McEliece, Rosenpass) —
+cited via the spine doc.</li>
+<li>[research-pki_pq_nat], [SYNTHESIS §1/§3/§4/§7] — trust gradient, D4
+4via6, key decisions.</li>
+<li>STRIDE (Microsoft threat-modeling) and LINDDUN (privacy
+threat-modeling, KU Leuven) are the two methodology frameworks applied;
+their category sets are used as defined. <strong>UNVERIFIED</strong>
+items (measured revocation/convergence p99 under 10k streams;
+universality of the ciphertext-only-relay property; traffic-analysis
+padding effectiveness) are flagged inline per §11.4.6 and tracked as
+residuals (§10), never asserted as results.</li>
+</ul>
+</body>
+</html>

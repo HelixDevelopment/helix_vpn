@@ -1,0 +1,1317 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>MASQUE / QUIC Transport</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">MASQUE / QUIC Transport</h1>
+</header>
+<h1 id="masque--quic-transport">MASQUE / QUIC Transport</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-06-25T00:00:00Z</p>
+<blockquote>
+<p>Master technical specification — Volume 2 (Data Plane), nano-detail
+document deepening the <strong>MASQUE / QUIC Transport</strong> section
+of <a href="../01-data-plane.md"><code>01-data-plane.md</code></a> §3.3.
+Scope: the <code>masque-h3</code> implementation of the
+<code>Transport</code> trait — WireGuard datagram → HTTP Datagram (RFC
+9297) → QUIC DATAGRAM frame (RFC 9221) → HTTP/3 CONNECT-UDP (RFC 9298)
+to <code>:443/udp</code>, the hand-rolled CONNECT-UDP framing on
+<code>quinn</code> + <code>h3</code>, SNI masquerade, browser-HTTP/3
+indistinguishability, MTU 1280, and the edge termination side. This is a
+<strong>SPEC</strong> — it describes what to build; it does not contain
+the shipping product. Source evidence cited inline by id:
+<code>[01-DP §N]</code> = <a href="../01-data-plane.md"><code>01-data-plane.md</code></a>;
+<code>[research-masque §N]</code> = the MASQUE research note;
+<code>[04_ARCH §N]</code> / <code>[04_P0 §N]</code> = the refined
+architecture / Phase-0 spike; <code>[SYNTHESIS §N]</code> = the
+cross-document synthesis; <code>[RFC NNNN]</code> = the cited IETF RFC
+(all RFC facts are sourced through <code>[research-masque §1]</code>
+unless otherwise noted). Facts not grounded in the evidence base are
+marked <code>UNVERIFIED</code> per constitution §11.4.6.</p>
+</blockquote>
+<hr />
+<h2 id="0-position-invariants-and-what-this-document-owns">0. Position,
+invariants, and what this document owns</h2>
+<p><code>masque-h3</code> is <strong>one</strong> <code>Transport</code>
+impl among N; it is the headline obfuscating carrier and
+<strong>Mullvad&#39;s actual mechanism</strong> — <em>Mullvad&#39;s &quot;QUIC mode&quot;
+is not a separate protocol, it is WireGuard tunnelled over
+MASQUE/HTTP-3</em> [01-DP §0, §3.3; 04_ARCH §0, §22; research-masque
+§2]. This document owns the
+<code>crates/helix-transport/src/masque.rs</code> module and its
+edge-side termination in <code>bin/helix-edge.rs</code>; it does
+<strong>not</strong> re-specify the <code>Transport</code> trait (owned
+by [01-DP §3.1]), the WG crypto core (<code>helix-wg</code>, [01-DP
+§4]), the ladder (<code>helix-core/src/ladder.rs</code>, [01-DP §5.3]),
+or <code>connect-ip</code> (RFC 9484, a distinct datapath, [01-DP
+§3.4]).</p>
+<h3 id="01-inherited-invariants-this-module-must-not-break">0.1
+Inherited invariants this module must not break</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Invariant</th>
+<th>Source</th>
+<th>How <code>masque-h3</code> upholds it</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>I1</td>
+<td>Transport <strong>never sees plaintext</strong> — carries only
+already-encrypted WG datagrams.</td>
+<td>[01-DP I1]</td>
+<td>The HTTP Datagram payload is the opaque WG datagram byte-for-byte
+(§3); <code>masque.rs</code> never parses it.</td>
+</tr>
+<tr>
+<td>I2</td>
+<td>Transport carries <strong>unreliable datagrams</strong>, never an
+ordered byte stream.</td>
+<td>[01-DP I2]</td>
+<td>WG datagrams ride <strong>QUIC DATAGRAM frames (RFC 9221)</strong>,
+<em>not</em> a QUIC stream — preserving WG loss semantics, avoiding
+head-of-line blocking [01-DP §3.1; 04_P0 §4.2, §5.1; research-masque
+§1].</td>
+</tr>
+<tr>
+<td>I4</td>
+<td><strong>One transport crate, three consumers</strong> — the client
+obfuscation code is the edge de-obfuscation code.</td>
+<td>[01-DP I4]</td>
+<td><code>masque.rs</code> framing functions
+(<code>encode_http_datagram</code>/<code>decode_http_datagram</code>)
+are shared byte-for-byte by client and <code>helix-edge</code> (Decision
+D5 = Rust edge) [01-DP §11.2; SYNTHESIS §3 D5].</td>
+</tr>
+<tr>
+<td>I5</td>
+<td><strong>No-logging by construction</strong> — only aggregate
+counters.</td>
+<td>[01-DP I5]</td>
+<td>The module exports only <code>TransportHealth</code> EWMA counters;
+no per-packet/per-flow durable state (§7).</td>
+</tr>
+</tbody>
+</table>
+<h3 id="02-maturity-caveat-load-bearing-governs-the-whole-module">0.2
+Maturity caveat (load-bearing, governs the whole module)</h3>
+<p><strong>There is NO turnkey Rust crate that gives RFC 9298
+CONNECT-UDP client+proxy out of the box. You hand-roll it on top of
+<code>quinn</code> + <code>h3</code>. This is exactly what Mullvad
+did</strong> [research-masque §3, §5]. Concretely the module implements,
+by hand: (a) the Extended-CONNECT request/response (RFC 9220
+<code>:protocol</code> bootstrap), (b) the Quarter-Stream-ID +
+context-id HTTP-Datagram mux (RFC 9297/9298), (c) the proxy UDP-socket
+relay (edge side) [research-masque §3]. Strong evidence this is the
+trodden path: Mullvad&#39;s <code>mullvad-daemon</code> depends on
+<code>quinn</code>/<code>quinn_udp</code> [research-masque §2]. This
+immaturity-vs-Go (<code>masque-go</code> is turnkey) is itself the input
+to Decision D5/G4 [01-DP §11.2; 04_P0 §7; research-masque §4]. The
+documented G2 unblock if Rust proves painful: prototype MASQUE first in
+Go to pass G2, then port [01-DP §3.8; 04_P0 §13].</p>
+<hr />
+<h2 id="1-the-rfc-stack-the-standardised-building-blocks">1. The RFC
+stack (the standardised building blocks)</h2>
+<p>WG-over-MASQUE is a layering of four published IETF <strong>Proposed
+Standards</strong> (stable, not drafts) [research-masque §1]:</p>
+<table>
+<thead>
+<tr>
+<th>RFC</th>
+<th>Role</th>
+<th>What <code>masque-h3</code> uses from it</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>RFC 9298</strong> — Proxying UDP in HTTP (CONNECT-UDP)</td>
+<td>MASQUE control plane. Extended-CONNECT
+(<code>:protocol = connect-udp</code>) to a URI template, proxy opens a
+UDP socket to the target and relays.</td>
+<td>The one-time flow-setup request at <code>dial()</code> (§2); the URI
+template (§4.2).</td>
+</tr>
+<tr>
+<td><strong>RFC 9297</strong> — HTTP Datagrams &amp; the Capsule
+Protocol</td>
+<td>The <code>HTTP Datagram</code> abstraction + <strong>Quarter Stream
+ID</strong> multiplexing tying each datagram to its request stream. Over
+HTTP/3 they ride the QUIC DATAGRAM frame.</td>
+<td>The per-WG-datagram framing (§3).</td>
+</tr>
+<tr>
+<td><strong>RFC 9221</strong> — QUIC DATAGRAM frame extension</td>
+<td>Unreliable, un-retransmitted datagram frame inside a QUIC
+connection. Negotiated via the <code>max_datagram_frame_size</code>
+transport parameter.</td>
+<td>The data-plane carrier
+(<code>send_datagram</code>/<code>read_datagram</code>), upholding
+I2.</td>
+</tr>
+<tr>
+<td><strong>RFC 9220</strong> — Bootstrapping WebSockets / Extended
+CONNECT over HTTP/3</td>
+<td>Adds the <code>:protocol</code> pseudo-header that CONNECT-UDP
+requires over HTTP/3.</td>
+<td>The Extended-CONNECT handshake (§2.3).</td>
+</tr>
+</tbody>
+</table>
+<p>Distinct sibling (out of scope here): <strong>RFC 9484 — Proxying IP
+in HTTP (CONNECT-IP)</strong> — proxies IP packets, not UDP;
+<em>not</em> what Mullvad uses; specified separately in [01-DP §3.4]
+[research-masque §1].</p>
+<p><strong>The canonical data-plane flow</strong> [01-DP §3.3; 04_P0
+§5.1; research-masque §1]:</p>
+<pre><code>client WG datagram (Bytes, already-encrypted, opaque — I1)
+  └▶ HTTP Datagram  (RFC 9297, context-id = 0 for the proxied UDP payload)
+       └▶ QUIC DATAGRAM frame (RFC 9221, unreliable — matches WG semantics, I2)
+            └▶ QUIC / HTTP-3 connection to https://gateway:443  (looks like web)
+                 └▶ EDGE: extract HTTP Datagram → WG datagram → kernel WG fast path</code></pre>
+<pre class="mermaid"><code>flowchart TD
+    subgraph Client[&quot;Client — helix-transport/src/masque.rs&quot;]
+        WG[&quot;WG datagram (Bytes)\nopaque, already-encrypted (I1)&quot;]
+        HD[&quot;HTTP Datagram payload\n[Context ID=0][UDP Proxying Payload=WG]&quot;]
+        QDF[&quot;QUIC DATAGRAM frame body\n[Quarter Stream ID][HTTP Datagram payload]&quot;]
+    end
+    WG --&gt;|encode_http_datagram| HD
+    HD --&gt;|prepend Quarter Stream ID| QDF
+    QDF --&gt;|quinn Connection.send_datagram| Wire
+    Wire[&quot;QUIC/HTTP-3 conn → gateway:443/udp\nALPN h3, SNI=masquerade host&quot;]
+    Wire --&gt;|read_datagram| Edge
+    subgraph Edge[&quot;Gateway — bin/helix-edge.rs (shares masque.rs, I4)&quot;]
+        EQDF[&quot;strip Quarter Stream ID → match CONNECT-UDP flow&quot;]
+        EHD[&quot;strip Context ID=0 → WG datagram&quot;]
+        EWG[&quot;WG datagram → kernel/boringtun WG fast path&quot;]
+    end
+    Edge --&gt; EQDF --&gt; EHD --&gt; EWG</code></pre>
+<hr />
+<h2 id="2-dial--connection-bring-up-state-machine">2.
+<code>dial()</code> — connection bring-up state machine</h2>
+<p><code>dial(TransportConfig::MasqueH3 { url, sni, bind, congestion })</code>
+returns a live <code>Box&lt;dyn Transport&gt;</code> within a bounded
+timeout, or a <code>TransportError</code> that the ladder maps to
+escalation [01-DP §3.1, §5.3]. The CONNECT-UDP request establishes the
+proxied UDP <strong>flow once at <code>dial()</code></strong>;
+thereafter WG datagrams ride as HTTP Datagrams with <strong>no
+per-packet HTTP round trip</strong> [01-DP §3.3; 04_P0 §5.1;
+research-masque §1].</p>
+<h3 id="21-the-bring-up-state-machine">2.1 The bring-up state
+machine</h3>
+<pre class="mermaid"><code>stateDiagram-v2
+    [*] --&gt; Idle
+    Idle --&gt; ResolvingEndpoint: dial(cfg)
+    ResolvingEndpoint --&gt; QuicConnecting: socket bound to cfg.bind
+    QuicConnecting --&gt; QuicConnecting: QUIC Initial / handshake (rustls TLS 1.3)
+    QuicConnecting --&gt; Failed_Quic: idle/handshake timeout → DialTimeout
+    QuicConnecting --&gt; H3Setup: QUIC handshake complete (ALPN=h3)
+    H3Setup --&gt; Failed_Param: max_datagram_frame_size==0 → HandshakeFailed(&quot;no datagram support&quot;)
+    H3Setup --&gt; H3Setup: SETTINGS exchange (H3_DATAGRAM=1, ENABLE_CONNECT_PROTOCOL=1)
+    H3Setup --&gt; ExtendedConnect: settings OK
+    ExtendedConnect --&gt; Failed_Connect: non-2xx / stream reset → HandshakeFailed
+    ExtendedConnect --&gt; FlowEstablished: 2xx response on the CONNECT-UDP stream
+    FlowEstablished --&gt; [*]: return Box&lt;MasqueTransport&gt;
+    Failed_Quic --&gt; [*]: Err(DialTimeout) → ladder escalates
+    Failed_Param --&gt; [*]: Err(HandshakeFailed) → ladder escalates
+    Failed_Connect --&gt; [*]: Err(HandshakeFailed) → ladder escalates</code></pre>
+<h3 id="22-bring-up-step-contract-each-step-is-a-hard-gate-no-guessing--1146">2.2
+Bring-up step contract (each step is a hard gate, no guessing —
+§11.4.6)</h3>
+<table>
+<thead>
+<tr>
+<th>Step</th>
+<th>Action</th>
+<th>Success signal</th>
+<th>Failure → <code>TransportError</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1. Resolve + bind</td>
+<td>Parse <code>url</code> → <code>SocketAddr</code> (gateway
+<code>:443/udp</code>); bind a <code>quinn::Endpoint</code> to
+<code>cfg.bind</code>.</td>
+<td>socket bound</td>
+<td><code>Io</code> → caller treats as <code>DialTimeout</code></td>
+</tr>
+<tr>
+<td>2. QUIC connect</td>
+<td><code>endpoint.connect_with(client_cfg, addr, &amp;sni)?.await</code>
+— rustls TLS 1.3, <strong>ALPN = <code>h3</code></strong>, <strong>SNI =
+<code>cfg.sni</code></strong> (the masquerade host, §5).</td>
+<td>QUIC handshake complete</td>
+<td><code>DialTimeout</code> (idle/handshake timeout);
+<code>EndpointBlocked</code> if QUIC Initial is dropped repeatedly
+(DPI)</td>
+</tr>
+<tr>
+<td>3. Datagram param check</td>
+<td>Verify peer advertised <code>max_datagram_frame_size &gt; 0</code>
+(RFC 9221 transport parameter) so I2 is honourable.</td>
+<td>param present, ≥ 1252 (§3.4)</td>
+<td><code>HandshakeFailed(&quot;peer rejects QUIC datagrams&quot;)</code></td>
+</tr>
+<tr>
+<td>4. H3 SETTINGS</td>
+<td>Open the H3 control stream; require
+<code>SETTINGS_H3_DATAGRAM=1</code> (RFC 9297) <strong>and</strong>
+<code>SETTINGS_ENABLE_CONNECT_PROTOCOL=1</code> (RFC 9220) from the
+server.</td>
+<td>both settings = 1</td>
+<td><code>HandshakeFailed(&quot;server lacks H3 datagram / extended-connect&quot;)</code></td>
+</tr>
+<tr>
+<td>5. Extended CONNECT</td>
+<td>Send the CONNECT-UDP request stream (§2.3); record its
+<strong>Quarter Stream ID</strong> (= stream-id ÷ 4, §3.2).</td>
+<td>2xx response received</td>
+<td><code>HandshakeFailed(status)</code>; stream RESET →
+<code>HandshakeFailed(&quot;connect-udp reset&quot;)</code></td>
+</tr>
+<tr>
+<td>6. Establish flow</td>
+<td>Bind <code>flow_ctx = 0</code> (context-id of the proxied UDP
+payload) + <code>qstream_id</code>; spawn the recv pump.</td>
+<td><code>MasqueTransport</code> constructed</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Honest gap (§11.4.6).</strong> The numeric
+<code>H3_DATAGRAM</code> / <code>ENABLE_CONNECT_PROTOCOL</code> SETTINGS
+identifier code-points and the exact <code>quinn</code>/<code>h3</code>
+API surface that exposes them are
+<strong><code>UNVERIFIED</code></strong> against this evidence base —
+<code>h3-datagram</code> is pre-1.0 (<code>v0.0.2</code>, &quot;API subject
+to change&quot;) and Extended CONNECT is a separate modular <code>h3</code>
+feature [research-masque §3]; the implementer MUST pin them against the
+then-current <code>h3</code>/<code>h3-datagram</code>/RFC 9297/9220 text
+and capture the negotiated values as evidence (§8), never assume
+them.</p>
+</blockquote>
+<h3 id="23-the-connect-udp-request-line-rfc-9298-over-http3">2.3 The
+CONNECT-UDP request line (RFC 9298 over HTTP/3)</h3>
+<p>The Extended-CONNECT request issued in step 5 [research-masque
+§1]:</p>
+<pre><code>:method   = CONNECT
+:protocol = connect-udp                         (RFC 9220 Extended CONNECT)
+:scheme   = https
+:authority= &lt;gateway host:443&gt;                  (matches cfg.sni masquerade host, §5)
+:path     = /.well-known/masque/udp/&lt;target_host&gt;/&lt;target_port&gt;/
+            └─ default-template-vars resolve to the gateway&#39;s INTERNAL WG socket
+capsule-protocol = ?1                            (RFC 9297, Capsule Protocol enabled)</code></pre>
+<p><code>&lt;target_host&gt;/&lt;target_port&gt;</code> resolve to the
+gateway&#39;s <strong>internal</strong> WireGuard endpoint (e.g.
+<code>127.0.0.1/51820</code>) — the proxy opens a UDP socket there and
+relays [01-DP §3.3; 04_P0 §5.1; research-masque §1]. The client never
+sees that internal address; it is the URI-template target the edge fixes
+(§4.2).</p>
+<blockquote>
+<p>The <code>.well-known/masque/udp/{target_host}/{target_port}/</code>
+template shape is the RFC 9298 canonical default [research-masque §1].
+HelixVPN <strong>pins the template at the edge</strong> (§4.2) so the
+client sends a fixed <code>:path</code>; the exact pinned literal is a
+§11.4.35 project-instantiation value, recorded in the edge config, not
+guessed here.</p>
+</blockquote>
+<hr />
+<h2 id="3-wire-format--the-per-datagram-framing-the-hand-rolled-core">3.
+Wire format — the per-datagram framing (the hand-rolled core)</h2>
+<p>This is the byte-level contract the implementer hand-rolls (the
+maturity caveat, §0.2). Two nested framings sit between the WG datagram
+and <code>quinn</code>&#39;s <code>send_datagram(Bytes)</code>.</p>
+<h3 id="31-quic-variable-length-integer-the-encoding-primitive">3.1 QUIC
+variable-length integer (the encoding primitive)</h3>
+<p>All length/id fields below are <strong>QUIC varints</strong> (RFC
+9000 §16 — the QUIC base over which RFC 9221/9297 are defined). The 2
+most-significant bits of the first byte select length: <code>00</code>→1
+byte (6-bit value, 0–63), <code>01</code>→2 bytes (14-bit, 0–16383),
+<code>10</code>→4 bytes (30-bit), <code>11</code>→8 bytes (62-bit).</p>
+<blockquote>
+<p>The varint encoding is RFC-9000-standard QUIC and is
+<strong><code>UNVERIFIED</code> against this evidence base</strong> (the
+cited research notes do not reproduce RFC 9000 §16); it is stated as the
+well-known QUIC primitive the implementer pins against RFC 9000. For
+HelixVPN&#39;s identifiers (<code>flow_ctx = 0</code>, small
+<code>qstream_id</code>) the common case is the <strong>1-byte</strong>
+form.</p>
+</blockquote>
+<h3 id="32-layer-a--http-datagram-payload-rfc-9297--rfc-9298-context">3.2
+Layer A — HTTP Datagram payload (RFC 9297 + RFC 9298 context)</h3>
+<p>The <strong>HTTP Datagram Payload</strong> carried for a CONNECT-UDP
+flow is (RFC 9297 + RFC 9298 [research-masque §1]):</p>
+<pre><code>HTTP Datagram Payload (CONNECT-UDP / RFC 9298) {
+    Context ID            (QUIC varint)   ; = 0  → the proxied UDP payload itself
+    UDP Proxying Payload  (bytes)         ; = the opaque WireGuard datagram (I1)
+}</code></pre>
+<ul>
+<li><code>Context ID = 0</code> is the registered &quot;UDP packet payload&quot;
+context for CONNECT-UDP [01-DP §3.3; 04_P0 §5.1; research-masque §1]. As
+a 1-byte varint it is the single byte <code>0x00</code>.</li>
+<li>The UDP Proxying Payload is the WG datagram
+<strong>verbatim</strong> — <code>masque.rs</code> does not inspect it
+(I1).</li>
+</ul>
+<p>So <code>encode_http_datagram(0, wg)</code> ⇒ <code>0x00 || wg</code>
+(1 prefix byte for the common ctx-0 case).
+<code>decode_http_datagram</code> reads the leading varint context-id; a
+non-zero context-id is an <strong>unknown context</strong> and the
+datagram MUST be dropped silently per RFC 9297 (a future extension
+context), not surfaced as an error (§6 E-CTX).</p>
+<h3 id="33-layer-b--quic-datagram-frame-body-rfc-9221--rfc-9297-mux">3.3
+Layer B — QUIC DATAGRAM frame body (RFC 9221 + RFC 9297 mux)</h3>
+<p>Over HTTP/3, an HTTP Datagram rides one QUIC DATAGRAM frame; the
+frame body is (RFC 9297 §2.1 [research-masque §1]):</p>
+<pre><code>QUIC DATAGRAM frame body {
+    Quarter Stream ID   (QUIC varint)   ; = (CONNECT-UDP request stream-id) / 4
+    HTTP Datagram Payload (bytes)        ; = Layer A above
+}</code></pre>
+<ul>
+<li><strong>Quarter Stream ID</strong> ties the datagram to its
+CONNECT-UDP request stream (RFC 9297 multiplexing) [research-masque §1,
+§3]. The client&#39;s first client-initiated bidirectional stream is
+stream-id 0 → Quarter Stream ID 0 (1-byte varint <code>0x00</code>);
+HelixVPN runs exactly one CONNECT-UDP flow per QUIC connection, so
+<code>qstream_id</code> is fixed for the connection&#39;s life.</li>
+<li><code>quinn</code> prepends the QUIC DATAGRAM <strong>frame
+type</strong> + handles the QUIC framing; the module supplies only this
+frame <strong>body</strong> to
+<code>Connection::send_datagram(Bytes)</code> [04_P0 §5.2;
+research-masque §3].</li>
+</ul>
+<h3 id="34-full-on-the-wire-byte-layout-common-case-ctx-0-qstream-0">3.4
+Full on-the-wire byte layout (common case: ctx 0, qstream 0)</h3>
+<pre><code>quinn-supplied:  [ DATAGRAM frame type (0x30/0x31) ]   ← quinn writes this
+module-supplied body:
+  byte 0:        Quarter Stream ID varint   = 0x00      ← Layer B
+  byte 1:        Context ID varint          = 0x00      ← Layer A
+  bytes 2..n:    WireGuard datagram (opaque, already-encrypted)   ← I1</code></pre>
+<p><strong>Per-datagram framing overhead in the common case = 2
+bytes</strong> (Quarter Stream ID</p>
+<ul>
+<li>Context ID), atop QUIC/UDP/IP headers. This 2-byte module overhead,
+plus QUIC short-header + AEAD tag + UDP + IP, is what drives
+<code>effective_mtu()</code> to <strong>1280</strong> (§3.5). The QUIC
+DATAGRAM frame-type byte values <code>0x30</code>/<code>0x31</code> are
+RFC 9221 and are <code>UNVERIFIED</code> against this evidence base —
+pinned by <code>quinn</code>, captured in §8 wire evidence, never
+assumed.</li>
+</ul>
+<h3 id="35-effective_mtu--1280">3.5 <code>effective_mtu()</code> =
+1280</h3>
+<p><code>masque-h3</code> reports <strong>1280</strong> [01-DP §3.3,
+§10; 04_P0 §5.2]:</p>
+<ul>
+<li><strong>1280 is the IPv6 minimum-MTU floor</strong> — the largest
+value guaranteed deliverable on any IPv6 path without fragmentation
+[01-DP §10].</li>
+<li>QUIC + HTTP-Datagram + UDP-proxy overhead &quot;eats headroom&quot;; 1280 is
+the <strong>measure &amp; tune</strong> floor, not a computed exactness
+[01-DP §3.3, §10; 04_P0 §5.2]. The exact MTU penalty is
+<strong>quantified in Phase 0</strong> (record MTU/throughput/CPU vs
+plain-udp) so the ladder&#39;s cost model is real [01-DP §10; 04_P0 §5.3,
+§8].</li>
+<li>The orchestrator sets inner WG MTU =
+<code>min(masque.effective_mtu()=1280, path-MTU-discovered)</code>
+[01-DP §10]. A WG datagram exceeding the budget after framing is a hard
+<code>TransportError::Oversize</code> — never silent truncation [01-DP
+§10].</li>
+<li>Relation to the RFC 9221 <code>max_datagram_frame_size</code> step-3
+floor (≥ 1252): 1252 = 1280 IPv6 floor − 28 (typical IPv6+UDP minimal
+headroom) is a derived sanity floor for &quot;can a ≥1280-inner datagram ever
+fit&quot;; the precise constant is <code>UNVERIFIED</code> and MUST be
+measured (§8), not assumed.</li>
+</ul>
+<hr />
+<h2 id="4-steady-state-datapath-send--recv">4. Steady-state datapath
+(<code>send</code> / <code>recv</code>)</h2>
+<p>Once <code>FlowEstablished</code>, the module is a pure datagram
+relay — no HTTP round trips [01-DP §3.3; 04_P0 §5.1].</p>
+<h3 id="41-the-transport-impl-signatures--framing-wiring">4.1 The
+<code>Transport</code> impl (signatures + framing wiring)</h3>
+<div class="sourceCode" id="cb8"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co">// crates/helix-transport/src/masque.rs</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">async_trait::</span>async_trait<span class="op">;</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">bytes::</span><span class="op">{</span>Bytes<span class="op">,</span> BytesMut<span class="op">,</span> BufMut<span class="op">,</span> Buf<span class="op">};</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="kw">crate</span><span class="pp">::</span><span class="op">{</span>Transport<span class="op">,</span> TransportError<span class="op">,</span> TransportHealth<span class="op">,</span> HealthCell<span class="op">};</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> MasqueTransport <span class="op">{</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    conn<span class="op">:</span> <span class="pp">quinn::</span>Connection<span class="op">,</span>   <span class="co">// established QUIC/H3 connection to gw:443 (ALPN h3)</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>    qstream_id<span class="op">:</span> <span class="dt">u64</span><span class="op">,</span>           <span class="co">// Quarter Stream ID of the CONNECT-UDP request stream (§3.3)</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>    flow_ctx<span class="op">:</span> <span class="dt">u64</span><span class="op">,</span>             <span class="co">// CONNECT-UDP context-id (= 0) established at dial() (§3.2)</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>    health<span class="op">:</span> HealthCell<span class="op">,</span>        <span class="co">// RTT EWMA + last-recv age + send-error counters (I5, §7)</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>async_trait<span class="at">]</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> Transport <span class="cf">for</span> MasqueTransport <span class="op">{</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">async</span> <span class="kw">fn</span> send(<span class="op">&amp;</span><span class="kw">self</span><span class="op">,</span> wg<span class="op">:</span> Bytes) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">,</span> TransportError<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> body <span class="op">=</span> encode_quic_datagram_body(<span class="kw">self</span><span class="op">.</span>qstream_id<span class="op">,</span> <span class="kw">self</span><span class="op">.</span>flow_ctx<span class="op">,</span> <span class="op">&amp;</span>wg)<span class="op">?;</span> <span class="co">// §3.3+§3.2</span></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>        <span class="kw">self</span><span class="op">.</span>conn</span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span>send_datagram(body)                                  <span class="co">// RFC 9221 unreliable (I2)</span></span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span>map_err(map_send_err)<span class="op">?;</span>                              <span class="co">// §6 error mapping</span></span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>        <span class="kw">self</span><span class="op">.</span>health<span class="op">.</span>mark_send_ok()<span class="op">;</span></span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>        <span class="cn">Ok</span>(())</span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>    <span class="kw">async</span> <span class="kw">fn</span> recv(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>Bytes<span class="op">,</span> TransportError<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a>        <span class="cf">loop</span> <span class="op">{</span></span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a>            <span class="kw">let</span> dg <span class="op">=</span> <span class="kw">self</span><span class="op">.</span>conn<span class="op">.</span>read_datagram()<span class="op">.</span><span class="kw">await</span><span class="op">.</span>map_err(map_recv_err)<span class="op">?;</span></span>
+<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a>            <span class="cf">match</span> decode_quic_datagram_body(<span class="kw">self</span><span class="op">.</span>qstream_id<span class="op">,</span> <span class="kw">self</span><span class="op">.</span>flow_ctx<span class="op">,</span> dg) <span class="op">{</span></span>
+<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a>                <span class="cn">Ok</span>(<span class="cn">Some</span>(wg)) <span class="op">=&gt;</span> <span class="op">{</span> <span class="kw">self</span><span class="op">.</span>health<span class="op">.</span>mark_recv()<span class="op">;</span> <span class="cf">return</span> <span class="cn">Ok</span>(wg)<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a>                <span class="cn">Ok</span>(<span class="cn">None</span>)      <span class="op">=&gt;</span> <span class="cf">continue</span><span class="op">,</span> <span class="co">// foreign qstream / unknown ctx → drop, keep reading (§6)</span></span>
+<span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a>                <span class="cn">Err</span>(e)        <span class="op">=&gt;</span> <span class="cf">return</span> <span class="cn">Err</span>(e)<span class="op">,</span></span>
+<span id="cb8-31"><a href="#cb8-31" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb8-32"><a href="#cb8-32" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb8-33"><a href="#cb8-33" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-34"><a href="#cb8-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-35"><a href="#cb8-35" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> kind(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="op">&amp;</span><span class="ot">&#39;static</span> <span class="dt">str</span> <span class="op">{</span> <span class="st">&quot;masque-h3&quot;</span> <span class="op">}</span></span>
+<span id="cb8-36"><a href="#cb8-36" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> effective_mtu(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">u16</span> <span class="op">{</span> <span class="dv">1280</span> <span class="op">}</span>                       <span class="co">// §3.5</span></span>
+<span id="cb8-37"><a href="#cb8-37" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> health(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> TransportHealth <span class="op">{</span> <span class="kw">self</span><span class="op">.</span>health<span class="op">.</span>snapshot() <span class="op">}</span></span>
+<span id="cb8-38"><a href="#cb8-38" aria-hidden="true" tabindex="-1"></a>    <span class="kw">async</span> <span class="kw">fn</span> close(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">,</span> TransportError<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb8-39"><a href="#cb8-39" aria-hidden="true" tabindex="-1"></a>        <span class="kw">self</span><span class="op">.</span>conn<span class="op">.</span>close(<span class="dv">0u32</span><span class="op">.</span>into()<span class="op">,</span> <span class="st">b&quot;bye&quot;</span>)<span class="op">;</span>                     <span class="co">// QUIC CONNECTION_CLOSE</span></span>
+<span id="cb8-40"><a href="#cb8-40" aria-hidden="true" tabindex="-1"></a>        <span class="cn">Ok</span>(())                                                    <span class="co">// idempotent</span></span>
+<span id="cb8-41"><a href="#cb8-41" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-42"><a href="#cb8-42" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="42-the-framing-helpers-the-i4-shared-byte-contract">4.2 The
+framing helpers (the I4-shared byte contract)</h3>
+<div class="sourceCode" id="cb9"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co">/// Encode one outbound WG datagram into a QUIC DATAGRAM frame BODY.</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="co">/// Layout (§3.4): [Quarter Stream ID varint][Context ID varint][WG bytes].</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="co">/// Shared byte-for-byte with the edge decode path (I4).</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> encode_quic_datagram_body(qsid<span class="op">:</span> <span class="dt">u64</span><span class="op">,</span> ctx<span class="op">:</span> <span class="dt">u64</span><span class="op">,</span> wg<span class="op">:</span> <span class="op">&amp;</span>[<span class="dt">u8</span>]) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>Bytes<span class="op">,</span> TransportError<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> need <span class="op">=</span> varint_len(qsid) <span class="op">+</span> varint_len(ctx) <span class="op">+</span> wg<span class="op">.</span>len()<span class="op">;</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Enforce the transport budget BEFORE handing to quinn (§3.5, §6 Oversize).</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> need <span class="op">&gt;</span> MASQUE_MAX_DATAGRAM_BODY <span class="op">{</span> <span class="cf">return</span> <span class="cn">Err</span>(<span class="pp">TransportError::</span>Oversize(need))<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> b <span class="op">=</span> <span class="pp">BytesMut::</span>with_capacity(need)<span class="op">;</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>    put_varint(<span class="op">&amp;</span><span class="kw">mut</span> b<span class="op">,</span> qsid)<span class="op">;</span>     <span class="co">// Layer B (§3.3)</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>    put_varint(<span class="op">&amp;</span><span class="kw">mut</span> b<span class="op">,</span> ctx)<span class="op">;</span>      <span class="co">// Layer A context-id (§3.2)</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>    b<span class="op">.</span>put_slice(wg)<span class="op">;</span>              <span class="co">// opaque WG datagram (I1)</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>    <span class="cn">Ok</span>(b<span class="op">.</span>freeze())</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a><span class="co">/// Decode one inbound QUIC DATAGRAM frame body back to a WG datagram.</span></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a><span class="co">/// Returns Ok(None) for a datagram that is NOT our flow (foreign Quarter Stream ID</span></span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a><span class="co">/// or unknown context-id) — RFC 9297 says drop silently, keep the connection (§6).</span></span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> decode_quic_datagram_body(exp_qsid<span class="op">:</span> <span class="dt">u64</span><span class="op">,</span> exp_ctx<span class="op">:</span> <span class="dt">u64</span><span class="op">,</span> <span class="kw">mut</span> dg<span class="op">:</span> Bytes)</span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>    <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span><span class="dt">Option</span><span class="op">&lt;</span>Bytes<span class="op">&gt;,</span> TransportError<span class="op">&gt;</span></span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a><span class="op">{</span></span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> qsid <span class="op">=</span> get_varint(<span class="op">&amp;</span><span class="kw">mut</span> dg)<span class="op">.</span>ok_or(<span class="pp">TransportError::</span>Quic(<span class="st">&quot;trunc qsid&quot;</span><span class="op">.</span>into()))<span class="op">?;</span></span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> qsid <span class="op">!=</span> exp_qsid <span class="op">{</span> <span class="cf">return</span> <span class="cn">Ok</span>(<span class="cn">None</span>)<span class="op">;</span> <span class="op">}</span>            <span class="co">// not our CONNECT-UDP flow → drop</span></span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> ctx  <span class="op">=</span> get_varint(<span class="op">&amp;</span><span class="kw">mut</span> dg)<span class="op">.</span>ok_or(<span class="pp">TransportError::</span>Quic(<span class="st">&quot;trunc ctx&quot;</span><span class="op">.</span>into()))<span class="op">?;</span></span>
+<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> ctx <span class="op">!=</span> exp_ctx   <span class="op">{</span> <span class="cf">return</span> <span class="cn">Ok</span>(<span class="cn">None</span>)<span class="op">;</span> <span class="op">}</span>            <span class="co">// unknown context (future ext) → drop</span></span>
+<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a>    <span class="cn">Ok</span>(<span class="cn">Some</span>(dg))                                        <span class="co">// remainder = WG datagram, verbatim</span></span>
+<span id="cb9-26"><a href="#cb9-26" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb9-27"><a href="#cb9-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-28"><a href="#cb9-28" aria-hidden="true" tabindex="-1"></a><span class="co">// QUIC varint primitives (RFC 9000 §16, §3.1). `UNVERIFIED` exactness — pin to RFC 9000.</span></span>
+<span id="cb9-29"><a href="#cb9-29" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> varint_len(v<span class="op">:</span> <span class="dt">u64</span>) <span class="op">-&gt;</span> <span class="dt">usize</span> <span class="op">{</span> <span class="cf">if</span> v <span class="op">&lt;</span> <span class="dv">64</span> <span class="op">{</span><span class="dv">1</span><span class="op">}</span> <span class="cf">else</span> <span class="cf">if</span> v <span class="op">&lt;</span> <span class="dv">16384</span> <span class="op">{</span><span class="dv">2</span><span class="op">}</span> <span class="cf">else</span> <span class="cf">if</span> v <span class="op">&lt;</span> <span class="dv">1</span><span class="op">&lt;&lt;</span><span class="dv">30</span> <span class="op">{</span><span class="dv">4</span><span class="op">}</span> <span class="cf">else</span> <span class="op">{</span><span class="dv">8</span><span class="op">}</span> <span class="op">}</span></span>
+<span id="cb9-30"><a href="#cb9-30" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> put_varint(b<span class="op">:</span> <span class="op">&amp;</span><span class="kw">mut</span> BytesMut<span class="op">,</span> v<span class="op">:</span> <span class="dt">u64</span>) <span class="op">{</span> <span class="co">/* 2-MSB length tag + big-endian value */</span> <span class="op">}</span></span>
+<span id="cb9-31"><a href="#cb9-31" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> get_varint(b<span class="op">:</span> <span class="op">&amp;</span><span class="kw">mut</span> Bytes) <span class="op">-&gt;</span> <span class="dt">Option</span><span class="op">&lt;</span><span class="dt">u64</span><span class="op">&gt;</span> <span class="op">{</span> <span class="co">/* read tag, then 1/2/4/8 bytes */</span> <span class="op">}</span></span>
+<span id="cb9-32"><a href="#cb9-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-33"><a href="#cb9-33" aria-hidden="true" tabindex="-1"></a><span class="co">/// Largest module-supplied DATAGRAM body that fits the negotiated QUIC datagram</span></span>
+<span id="cb9-34"><a href="#cb9-34" aria-hidden="true" tabindex="-1"></a><span class="co">/// limit; derived from the peer&#39;s max_datagram_frame_size (step 3) MINUS quinn&#39;s</span></span>
+<span id="cb9-35"><a href="#cb9-35" aria-hidden="true" tabindex="-1"></a><span class="co">/// own frame-type byte. Computed at dial(), never hardcoded (§3.5).</span></span>
+<span id="cb9-36"><a href="#cb9-36" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> MASQUE_MAX_DATAGRAM_BODY<span class="op">:</span> <span class="dt">usize</span> <span class="op">=</span> <span class="co">/* set from negotiated max_datagram_frame_size */</span> <span class="dv">1300</span><span class="op">;</span></span></code></pre></div>
+<h3 id="43-send--recv-sequence">4.3 Send / recv sequence</h3>
+<pre class="mermaid"><code>sequenceDiagram
+    autonumber
+    participant WG as helix-wg (WgPeer)
+    participant M as MasqueTransport
+    participant Q as quinn::Connection
+    participant E as Gateway edge (:443/udp)
+    participant K as Kernel/boringtun WG
+
+    Note over WG,K: steady state — flow already established at dial()
+    WG-&gt;&gt;M: send(wg_datagram: Bytes)   %% already-encrypted (I1)
+    M-&gt;&gt;M: encode_quic_datagram_body(qsid, ctx=0, wg)  %% §3.4, +2B
+    M-&gt;&gt;Q: send_datagram(body)         %% RFC 9221 unreliable (I2)
+    Q--&gt;&gt;E: QUIC DATAGRAM frame on the h3 conn
+    E-&gt;&gt;E: strip qsid → match CONNECT-UDP flow; strip ctx=0
+    E-&gt;&gt;K: plain UDP WG datagram → internal WG socket (127.0.0.1:51820)
+    K--&gt;&gt;E: WG reply datagram
+    E-&gt;&gt;E: encode_quic_datagram_body(qsid, ctx=0, reply)  %% SAME helper (I4)
+    E--&gt;&gt;Q: QUIC DATAGRAM frame
+    Q--&gt;&gt;M: read_datagram() resolves
+    M-&gt;&gt;M: decode_quic_datagram_body → Some(wg)  %% foreign/unknown → drop, loop
+    M--&gt;&gt;WG: recv() → Ok(wg_datagram)</code></pre>
+<hr />
+<h2 id="5-sni-masquerade--browser-http3-indistinguishability">5. SNI
+masquerade &amp; browser-HTTP/3 indistinguishability</h2>
+<h3 id="51-what-is-actually-claimed-and-what-is-not--1146-honest-boundary">5.1
+What is actually claimed (and what is not — §11.4.6 honest
+boundary)</h3>
+<p>The <strong>public, documented</strong> DPI-resistance mechanism is
+<strong>collateral-damage deterrence</strong>: the flow is HTTP/3 on
+QUIC/UDP 443; blocking it risks breaking the open web (Google, YouTube,
+Cloudflare all run HTTP/3), so censors face a high false-positive cost
+[research-masque §2; 04_ARCH §3.3]. To a passive observer the flow is
+<strong>indistinguishable from a browser doing HTTP/3</strong> to a web
+server [01-DP §3.3; 04_P0 §5.3].</p>
+<p><strong>What is NOT publicly documented by Mullvad, and therefore an
+OPEN design problem, not a solved checkbox</strong> [research-masque §2,
+§5]: the exact TLS/QUIC ClientHello fingerprint matching (uTLS-style),
+the SNI value used, the ALPN set ordering, domain-fronting, and how
+closely the QUIC Initial mimics Chrome/Firefox. <strong>A serious parity
+effort MUST treat QUIC/TLS fingerprint mimicry as an explicit
+research/risk item, never claim it is done.</strong> This module
+therefore specifies the <em>seams</em> for fingerprint control and marks
+the fingerprint policy itself <code>UNVERIFIED</code> /
+research-tracked.</p>
+<h3 id="52-sni--alpn-config-seam">5.2 SNI + ALPN config seam</h3>
+<div class="sourceCode" id="cb11"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co">// TransportConfig::MasqueH3 carries the fingerprint-relevant knobs:</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="co">//   url        : &quot;https://&lt;gateway-host&gt;:443&quot;   — the dialled endpoint</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="co">//   sni        : &quot;&lt;masquerade host&gt;&quot;            — TLS SNI sent in the QUIC Initial (§5.3)</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="co">//   congestion : Cubic | Bbr                    — CC profile (§6.3, lossy-mobile knob)</span></span></code></pre></div>
+<ul>
+<li><strong>SNI = the masquerade host</strong>, set to a believable web
+hostname; the edge&#39;s certificate MUST be valid for it (§5.4) so the TLS
+handshake completes cleanly and the flow &quot;looks like web&quot; [01-DP §3.3;
+04_P0 §5.3].</li>
+<li><strong>ALPN MUST be exactly <code>h3</code></strong> (and only
+<code>h3</code>) — a non-<code>h3</code> ALPN, or an extra protocol, is
+a fingerprint deviation from real browser HTTP/3 (§5.5).</li>
+<li>The Phase-0 <code>tshark</code>/<code>tls SNI</code> capture (G2)
+verifies SNI matches the masquerade host and the flow classifies as
+HTTP/3 with <strong>no WG signature</strong> [01-DP §3.3, §12.1; 04_P0
+§5.3, §8].</li>
+</ul>
+<h3 id="53-the-quictls-fingerprint-surface-research-tracked-unverified">5.3
+The QUIC/TLS fingerprint surface (research-tracked,
+<code>UNVERIFIED</code>)</h3>
+<p>The following are the parameters a uTLS-equivalent would have to
+mimic for a real browser. HelixVPN exposes them as a future
+<code>FingerprintProfile</code> config object; their <strong>target
+values are <code>UNVERIFIED</code> and an open research item</strong>
+[research-masque §2, §5] — the spec mandates the <em>seam</em>, not
+specific values:</p>
+<table>
+<thead>
+<tr>
+<th>Surface</th>
+<th>Why it matters</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>TLS ClientHello cipher/extension order</td>
+<td>uTLS-style mimicry of Chrome/Firefox</td>
+<td><code>UNVERIFIED</code> — research item; Mullvad does not
+publish</td>
+</tr>
+<tr>
+<td>QUIC transport parameters (incl.
+<code>max_datagram_frame_size</code>, idle timeout, flow-control
+windows)</td>
+<td>a non-browser-like set is a fingerprint</td>
+<td>seam: derive from a captured browser profile; values
+<code>UNVERIFIED</code></td>
+</tr>
+<tr>
+<td>ALPN</td>
+<td>must be <code>h3</code> only</td>
+<td>specified (§5.2)</td>
+</tr>
+<tr>
+<td>SNI value</td>
+<td>must be a plausible web host</td>
+<td>specified (§5.2), value is §11.4.35 project config</td>
+</tr>
+<tr>
+<td>QUIC version / Initial packet shape</td>
+<td>Chrome/Firefox-like Initial</td>
+<td><code>UNVERIFIED</code> — research item</td>
+</tr>
+</tbody>
+</table>
+<h3 id="54-edge-masquerade-decoy-site-for-non-connect-udp-traffic">5.4
+Edge masquerade (decoy site for non-CONNECT-UDP traffic)</h3>
+<p>The edge <code>:443</code> listener serves a <strong>believable decoy
+site</strong> to anything that is <em>not</em> a valid CONNECT-UDP flow
+(probes, scanners) — native edge behaviour replacing the original doc&#39;s
+Nginx-camouflage idea [01-DP §3.3; 04_P0 §5.4; 04_ARCH §3.3]. Phase 0
+ships a static &quot;it&#39;s just a website&quot; page behind the same QUIC listener
+[04_P0 §5.4]. Classification rule (§4 edge side):</p>
+<pre class="mermaid"><code>flowchart TD
+    A[&quot;Inbound QUIC/H3 request on :443/udp&quot;] --&gt; B{&quot;:method=CONNECT\n:protocol=connect-udp\nvalid masque URI-template path?&quot;}
+    B -- yes --&gt; C[&quot;Authenticate flow → establish CONNECT-UDP → relay WG (§4)&quot;]
+    B -- no  --&gt; D[&quot;Serve decoy site (static HTML / reverse-proxy a real page)\n→ looks like an ordinary HTTP/3 web server&quot;]
+    C --&gt; E[&quot;WG datagrams ride as HTTP Datagrams&quot;]
+    D --&gt; F[&quot;Probe/scanner sees only a website — no VPN signal&quot;]</code></pre>
+<h3 id="55-indistinguishability-acceptance-the-g2-wire-fingerprint-gate">5.5
+Indistinguishability acceptance (the G2 wire-fingerprint gate)</h3>
+<p><code>tshark</code> capture of the <code>masque-h3</code> flow MUST
+classify it as <strong>HTTP/3 with no WG signature</strong>, with SNI
+matching the masquerade host, while plain WG/UDP is
+<code>nft</code>-blocked [01-DP §3.3, §12.1; 04_P0 §5.3, §8]. This is
+the G2 / S3 gate and the <code>SEC</code>-DPI test point (§8).</p>
+<hr />
+<h2 id="6-error-taxonomy-edge-cases-and-ladder-mapping">6. Error
+taxonomy, edge cases, and ladder mapping</h2>
+<p>The module maps every failure onto the shared
+<code>TransportError</code> enum [01-DP §3.1]; the ladder consumes
+<code>DialTimeout</code> / <code>HandshakeFailed</code> /
+<code>EndpointBlocked</code> as escalation triggers and
+<code>Closed</code> as a reconnect trigger [01-DP §5.3].</p>
+<h3 id="61-error-mapping-table">6.1 Error mapping table</h3>
+<table>
+<thead>
+<tr>
+<th>Condition (masque-h3)</th>
+<th><code>TransportError</code></th>
+<th>Ladder effect [01-DP §5.3]</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>QUIC handshake idle/timeout at <code>dial()</code></td>
+<td><code>DialTimeout</code></td>
+<td>escalate to next rung</td>
+</tr>
+<tr>
+<td>QUIC Initial repeatedly dropped (DPI on :443)</td>
+<td><code>EndpointBlocked</code></td>
+<td>escalate; note region telemetry (I5, aggregate)</td>
+</tr>
+<tr>
+<td>peer <code>max_datagram_frame_size == 0</code> (step 3)</td>
+<td><code>HandshakeFailed(&quot;no datagram support&quot;)</code></td>
+<td>escalate</td>
+</tr>
+<tr>
+<td>missing H3 settings (step 4)</td>
+<td><code>HandshakeFailed(&quot;no h3-datagram / extended-connect&quot;)</code></td>
+<td>escalate</td>
+</tr>
+<tr>
+<td>CONNECT-UDP non-2xx / stream RESET (step 5)</td>
+<td><code>HandshakeFailed(status)</code></td>
+<td>escalate</td>
+</tr>
+<tr>
+<td><code>send_datagram</code> over budget</td>
+<td><code>Oversize(n)</code></td>
+<td>orchestrator lowers inner WG MTU or fragments at L3 [01-DP §10]</td>
+</tr>
+<tr>
+<td><code>send_datagram</code> transient (datagram queue full /
+blocked)</td>
+<td><code>Quic(msg)</code></td>
+<td>counted in <code>health.send_errors</code>; caller retries/keeps
+state</td>
+</tr>
+<tr>
+<td>QUIC <code>CONNECTION_CLOSE</code> / path lost mid-session</td>
+<td><code>Closed</code></td>
+<td>orchestrator → <code>Reconnecting</code>, re-<code>dial()</code>
+(per-network memory may re-pin masque-h3)</td>
+</tr>
+<tr>
+<td><code>read_datagram</code> foreign Quarter Stream ID</td>
+<td>(none) → drop, keep reading</td>
+<td>no effect — RFC 9297 silent drop (§4.2)</td>
+</tr>
+<tr>
+<td><code>read_datagram</code> unknown context-id (≠ 0)</td>
+<td>(none) → drop, keep reading</td>
+<td>no effect — future-extension context (§3.2)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="62-edge-cases-each-is-a-test-point-8">6.2 Edge cases (each is a
+test point, §8)</h3>
+<ul>
+<li><strong>E-CTX — unknown context-id:</strong> an inbound HTTP
+Datagram with context-id ≠ 0 is a registered-future-extension payload;
+<strong>drop silently, do not error, do not close</strong> the
+connection (RFC 9297) [research-masque §1]. (Test: <code>UNIT</code>
+framing.)</li>
+<li><strong>E-QSID — foreign Quarter Stream ID:</strong> datagram for a
+different stream/flow on the same QUIC connection; drop silently and
+continue the <code>recv</code> loop (§4.1). HelixVPN runs one flow per
+connection, so this is normally adversarial/spurious. (Test:
+<code>UNIT</code>.)</li>
+<li><strong>E-TRUNC — truncated framing:</strong> a datagram too short
+to hold the qsid/ctx varints → <code>Quic(&quot;trunc …&quot;)</code> and the
+orchestrator treats it as a single lost datagram (I2 — WG tolerates
+loss), <strong>not</strong> a connection kill. (Test: <code>UNIT</code>
++ <code>CHAOS</code>.)</li>
+<li><strong>E-OVERSIZE — datagram &gt; budget:</strong> enforced
+<em>before</em> <code>quinn</code> (§4.2) → <code>Oversize</code>;
+orchestrator lowers inner MTU rather than silently truncating [01-DP
+§10]. (Test: <code>UNIT</code> + <code>BENCH</code> MTU sweep.)</li>
+<li><strong>E-0RTT — early data:</strong> 0-RTT QUIC resumption is
+<strong>disabled by default</strong> for the obfuscation path (a 0-RTT
+Initial is a distinguishable fingerprint and risks replay); seam exists
+to enable per <code>FingerprintProfile</code> once §5.3 is settled.
+Status <code>UNVERIFIED</code> — research-tracked. (Test:
+<code>SEC</code>-DPI.)</li>
+<li><strong>E-RECONNECT — roaming / NAT-rebind:</strong> QUIC connection
+migration may carry the flow across a client IP change; if migration
+fails the module surfaces <code>Closed</code> and the ladder re-dials,
+with WG&#39;s own roaming latching onto the new path [01-DP §8]. (Test:
+<code>CHAOS</code> iface-flap.)</li>
+<li><strong>E-DRAIN — <code>close()</code> idempotency:</strong>
+<code>close()</code> calls <code>conn.close()</code> once; a second call
+is a no-op (<code>Ok(())</code>) (§4.1). (Test: <code>UNIT</code>.)</li>
+</ul>
+<h3 id="63-congestion-control-knob">6.3 Congestion-control knob</h3>
+<p><code>congestion: Cubic | Bbr</code> selects the <code>quinn</code>
+congestion controller [01-DP §3.1, §3.3]: <strong><code>Cubic</code>
+default</strong>; <strong><code>Bbr</code> for lossy mobile</strong>
+networks (the Hysteria &quot;Brutal&quot; lineage / <code>quinn</code>
+window-ratio tuning is the reference) [01-DP §3.3, §11_arch tuning
+note]. Loss resilience is the reason mobile got this feature: under
+<code>netem loss 5%</code>, <code>masque-h3</code> MUST sustain higher
+goodput than the UDP-over-TCP strawman [01-DP §3.3, §12.1; 04_P0 §5.3,
+§8].</p>
+<hr />
+<h2 id="7-performance-budget--no-logging-counters">7. Performance budget
+&amp; no-logging counters</h2>
+<h3 id="71-the-acknowledged-tax-anti-bluff--do-not-claim-parity-speed">7.1
+The acknowledged tax (anti-bluff — do NOT claim parity speed)</h3>
+<p><code>masque-h3</code> wraps the WG tunnel in a QUIC tunnel; this is
+<strong>computationally expensive and reduces throughput</strong> — the
+<strong>double-encryption + double-congestion- control tax</strong> (WG
+crypto inside QUIC crypto = two AEAD layers; QUIC CC over UDP atop WG&#39;s
+own pacing) [research-masque §2, §5]. Mullvad explicitly acknowledges
+this and advises &quot;use only when needed&quot; [research-masque §2]. The spec
+<strong>MUST require captured throughput evidence WG-direct vs
+WG-over-MASQUE and MUST NOT claim parity speed</strong> [research-masque
+§5; 01-DP §10].</p>
+<h3 id="72-quantified-budget-phase-0-gates-captured-not-assumed">7.2
+Quantified budget (Phase-0 gates, captured not assumed)</h3>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>masque-h3 target</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Through-tunnel throughput</td>
+<td><strong>≥ 50% of plain-UDP</strong></td>
+<td>[04_P0 §8; SYNTHESIS §4 G2]</td>
+</tr>
+<tr>
+<td>Added latency (p50/p99)</td>
+<td><strong>&lt; 15 ms added</strong> vs bare</td>
+<td>[04_P0 §8]</td>
+</tr>
+<tr>
+<td>Handshake time (connect→first-data)</td>
+<td><strong>&lt; 2 s</strong></td>
+<td>[04_P0 §8]</td>
+</tr>
+<tr>
+<td>Loss resilience @ <code>netem loss 5%</code></td>
+<td><strong>goodput &gt; UoT strawman</strong></td>
+<td>[01-DP §3.3; 04_P0 §5.3, §8]</td>
+</tr>
+<tr>
+<td>MTU</td>
+<td><strong>1280</strong> (penalty quantified vs plain-udp)</td>
+<td>[01-DP §3.5, §10; 04_P0 §5.2]</td>
+</tr>
+<tr>
+<td>Wire fingerprint</td>
+<td><strong>HTTP/3, no WG signature</strong> (<code>tshark</code>)</td>
+<td>[01-DP §12.1; 04_P0 §8]</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>The plain-udp baseline these are measured against is <strong>≥ 80% of
+bare link</strong> (the G1 gate) [01-DP §3.2; 04_P0 §8]. So masque-h3&#39;s
+floor is ≥ 50% of (≥ 80% of bare).</p>
+</blockquote>
+<h3 id="73-no-logging-counters-i5">7.3 No-logging counters (I5)</h3>
+<p>The module exports <strong>only</strong> the aggregate
+<code>TransportHealth</code> snapshot — <code>rtt_ewma_ms</code>,
+<code>last_recv_age_ms</code>, <code>send_errors</code> [01-DP §3.1, I5]
+— plus optional aggregate escalation telemetry (&quot;transport masque-h3
+succeeded after N escalations in region R&quot;) with <strong>no
+per-connection/per-packet durable state</strong> [01-DP §5.3 step 6,
+I5]. No SNI, no flow-id, no peer address is logged durably.</p>
+<hr />
+<h2 id="8-test-points-tie-to-114169-test-types">8. Test points (tie to
+§11.4.169 test types)</h2>
+<p>Every claim ships captured evidence, not config-only PASS
+(§11.4.5/.69/.107; [01-DP §12.1]). Test-type abbreviations are the
+canonical taxonomy of [<code>10-testing-acceptance-and-qa.md</code>
+§2].</p>
+<table>
+<thead>
+<tr>
+<th>Test point</th>
+<th>§11.4.169 type</th>
+<th>What it proves</th>
+<th>Captured evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Framing round-trip —
+<code>encode_quic_datagram_body</code>∘<code>decode</code> = identity
+for ctx 0, qsid 0 (§3.4)</td>
+<td><code>UNIT</code></td>
+<td>byte-exact framing; mocks allowed only here (§11.4.27)</td>
+<td><code>cargo test</code> vectors + golden hex fixtures</td>
+</tr>
+<tr>
+<td>E-CTX / E-QSID / E-TRUNC silent-drop (§6.2)</td>
+<td><code>UNIT</code></td>
+<td>unknown-context / foreign-stream / truncated datagram dropped,
+connection survives</td>
+<td>assertion log</td>
+</tr>
+<tr>
+<td><code>effective_mtu()=1280</code> enforced; E-OVERSIZE before quinn
+(§4.2)</td>
+<td><code>UNIT</code> + <code>BENCH</code></td>
+<td>budget enforced, no silent truncation</td>
+<td>MTU-sweep CSV</td>
+</tr>
+<tr>
+<td>Slice works with <strong>plain WG/UDP
+<code>nft</code>-blocked</strong> (S3/G2)</td>
+<td><code>E2E</code> + <code>FA</code></td>
+<td>real censorship evasion, not &quot;QUIC also works&quot;</td>
+<td>netns rig run log [04_P0 §3]; <code>-count=3</code> re-runnable
+(§11.4.98)</td>
+</tr>
+<tr>
+<td>Flow classifies as <strong>HTTP/3, no WG signature</strong>, SNI =
+masquerade host (§5.5)</td>
+<td><code>SEC</code> (DPI)</td>
+<td>browser-HTTP/3 indistinguishability (public layer)</td>
+<td><code>tshark</code>/pcap capture [01-DP §12.1; 04_P0 §8]</td>
+</tr>
+<tr>
+<td>QUIC/TLS fingerprint mimicry (§5.3)</td>
+<td><code>SEC</code> (DPI)</td>
+<td><strong>research-tracked <code>UNVERIFIED</code> gap</strong> — not
+a PASS until §5.3 settled; tracked item, honest SKIP-with-reason
+(§11.4.3)</td>
+<td>risk-item ticket + capture diff vs browser profile</td>
+</tr>
+<tr>
+<td>Throughput WG-direct vs WG-over-MASQUE; CPU-per-Gbps; handshake/sec
+(§7)</td>
+<td><code>BENCH</code> + <code>PERF</code></td>
+<td>quantified tax — <strong>no parity claim</strong> (§7.1)</td>
+<td><code>bench.sh</code> CSV [04_P0 §8]</td>
+</tr>
+<tr>
+<td>Loss resilience @ <code>netem loss 5%</code> beats UoT (§6.3,
+§7.2)</td>
+<td><code>BENCH</code> + <code>STRESS</code></td>
+<td>QUIC loss recovery (the mobile rationale)</td>
+<td>goodput comparison [04_P0 §5.3]</td>
+</tr>
+<tr>
+<td>Sustained ≥30 s / ≥100-iter framing under load; ≥10 parallel
+conns</td>
+<td><code>STRESS</code></td>
+<td>no leak, no deadlock in the recv pump</td>
+<td><code>stress_chaos.sh</code> <code>ab_stress_*</code>
+(§11.4.85)</td>
+</tr>
+<tr>
+<td>Mid-flight QUIC <code>CONNECTION_CLOSE</code> / iface-flap →
+<code>Closed</code> → re-dial recovery (E-RECONNECT)</td>
+<td><code>CHAOS</code></td>
+<td>recovery restores a consistent flow</td>
+<td><code>ab_chaos_*</code> recovery trace (§11.4.85)</td>
+</tr>
+<tr>
+<td>recv-pump data-race / deadlock on the hot path</td>
+<td><code>RACE</code></td>
+<td>concurrency-safe
+<code>send</code>/<code>recv</code>/<code>close</code></td>
+<td><code>cargo +nightly</code> loom / tsan</td>
+</tr>
+<tr>
+<td>Edge: probe / scanner → <strong>decoy site</strong>, valid
+CONNECT-UDP → relay (§5.4)</td>
+<td><code>SEC</code> + <code>E2E</code></td>
+<td>masquerade classification correct</td>
+<td>pcap of probe→decoy + valid→relay</td>
+</tr>
+<tr>
+<td>Self-validated analyzer for the <code>tshark</code> &quot;is-HTTP/3&quot;
+verdict (golden-good HTTP/3 pcap PASS, golden-bad WG-signature pcap
+FAIL)</td>
+<td><code>CHAL</code> / <code>HQA</code></td>
+<td>the DPI analyzer itself cannot bluff (§11.4.107(10))</td>
+<td><code>challenges</code>/<code>helix_qa</code> bank entry</td>
+</tr>
+<tr>
+<td>iOS: masque-h3 buffers under the NE memory ceiling (run plain-udp
+AND masque separately)</td>
+<td><code>MEM</code></td>
+<td>QUIC buffers fit ≥30% headroom (G3-critical)</td>
+<td>Instruments / <code>/proc</code> RSS [04_P0 §6]</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Anti-bluff stance (§11.4.6).</strong> The DPI-evasion
+<code>SEC</code> test proves only the <strong>public</strong> &quot;looks
+like HTTP/3 / collateral-damage&quot; layer. The QUIC/TLS fingerprint mimicry
+layer (§5.3) is an <strong>open research problem</strong>
+[research-masque §2, §5]; until it is settled it MUST be carried as a
+tracked risk item with an honest SKIP-with-reason,
+<strong>never</strong> reported as a passing checkbox.</p>
+</blockquote>
+<hr />
+<h2 id="9-decisions-this-module-is-downstream-of-surfaced-not-re-resolved">9.
+Decisions this module is downstream of (surfaced, not re-resolved)</h2>
+<table>
+<thead>
+<tr>
+<th>Decision</th>
+<th>Resolution this module assumes</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>D1</strong> primary obfuscating transport</td>
+<td><code>masque-h3</code> <strong>primary</strong> (true Mullvad
+parity, single Rust impl, WG stays crypto core); Hysteria2 a
+feature-gated ladder rung</td>
+<td>[01-DP §3.8; SYNTHESIS §3 D1]</td>
+</tr>
+<tr>
+<td><strong>D5</strong> gateway edge language</td>
+<td><strong>Rust</strong>
+(<code>quinn</code>+<code>h3</code>+hand-rolled CONNECT-UDP) so the edge
+shares this module byte-for-byte (I4); Go
+(<code>quic-go</code>+<code>masque-go</code>) is the
+conformance-suite-mitigated fallback decided by G4 benchmark</td>
+<td>[01-DP §11.2; 04_P0 §7; research-masque §4]</td>
+</tr>
+<tr>
+<td><strong>D6</strong> transport topology</td>
+<td>per-leg <code>TransportPolicy</code> makes masque-h3 a
+user↔︎gateway-leg choice for free; no module change</td>
+<td>[01-DP §11.3]</td>
+</tr>
+</tbody>
+</table>
+<p>The G2-unblock contingency (prototype CONNECT-UDP in Go via
+<code>masque-go</code>, then port to this module) is the documented
+escape if MASQUE-in-Rust over-runs budget [01-DP §3.8; 04_P0 §13;
+research-masque §4]; it does not change the trait contract (§4.1) or the
+wire format (§3) — those are the I4-frozen surfaces.</p>
+<hr />
+<h2 id="10-file-by-file-build-checklist-this-module">10. File-by-file
+build checklist (this module)</h2>
+<table>
+<thead>
+<tr>
+<th>File / symbol</th>
+<th>Owns</th>
+<th>Phase</th>
+<th>Phase-0 gate</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>crates/helix-transport/src/masque.rs</code> —
+<code>MasqueTransport</code> (§4.1)</td>
+<td>the <code>Transport</code> impl</td>
+<td>0</td>
+<td>G2 / S3</td>
+</tr>
+<tr>
+<td><code>…/masque.rs</code> — <code>dial()</code> bring-up FSM
+(§2)</td>
+<td>QUIC connect → H3 settings → Extended CONNECT → flow</td>
+<td>0</td>
+<td>G2 / S3</td>
+</tr>
+<tr>
+<td><code>…/masque.rs</code> —
+<code>encode/decode_quic_datagram_body</code> + varint helpers (§3,
+§4.2)</td>
+<td>the hand-rolled RFC 9297/9298 framing (I4-shared)</td>
+<td>0</td>
+<td>G2 / S3 (UNIT)</td>
+</tr>
+<tr>
+<td><code>…/masque.rs</code> — <code>FingerprintProfile</code> seam
+(§5.3)</td>
+<td>SNI/ALPN/transport-param fingerprint knobs (research-tracked)</td>
+<td>0→2</td>
+<td>SEC (DPI), <code>UNVERIFIED</code></td>
+</tr>
+<tr>
+<td><code>bin/helix-edge.rs</code> — CONNECT-UDP termination + decoy
+classifier (§5.4)</td>
+<td>edge relay + masquerade</td>
+<td>0</td>
+<td>G2 / G4 / S3-S4</td>
+</tr>
+<tr>
+<td>error mapping <code>map_send_err</code>/<code>map_recv_err</code>
+(§6.1)</td>
+<td><code>TransportError</code> taxonomy bridge</td>
+<td>0</td>
+<td>S3</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<p><em>End of nano-detail document — MASQUE / QUIC Transport. Parent
+overview: <a href="../01-data-plane.md"><code>01-data-plane.md</code></a> §3.3, §10,
+§11.2. Sibling nano-docs in this volume cover the other
+<code>Transport</code> impls (<code>plain-udp</code>,
+<code>shadowsocks</code>, <code>udp-over-tcp</code>, <code>lwo</code>,
+<code>connect-ip</code>, <code>hysteria2</code>) against the same frozen
+trait [01-DP §3.1]. The <code>Transport</code> trait (§4.1 here), the
+1280 MTU (§3.5), and the encode/decode framing byte contract (§3) are
+I4-frozen surfaces shared client↔︎edge; their internals may evolve, the
+wire bytes may not without a coordinated client+edge change. Fingerprint
+mimicry (§5.3) and the precise <code>h3</code>/<code>h3-datagram</code>
+SETTINGS/API surface (§2.2) are the two <code>UNVERIFIED</code>,
+research-tracked items the implementer MUST pin against current RFC +
+crate text and capture as evidence (§8) — never assume.</em></p>
+</body>
+</html>
