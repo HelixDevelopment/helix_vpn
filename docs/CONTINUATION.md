@@ -21,7 +21,7 @@
 5. ✅ §11.4.65 HTML/PDF exports — all docs have synced siblings
 6. ✅ §11.4.153 DOCX exports — pipeline updated, generating DOCX alongside HTML/PDF
 7. ✅ Go workable-items binary (HVPN-P1-150) — DONE, all 6 commands verified
-8. ⏳ vasic-digital component repos — subagent creating on GitHub+GitLab
+8. ✅ vasic-digital component repos — 8 repos created on GitHub+GitLab
 9. ✅ Pre-build gate updated — Inv7 (DB) + Inv8 (docs_chain) added
 10. ✅ .gitignore-meta regen mechanisms created (§11.4.77)
 11. ✅ README Tracked-Items section added (§11.4.57)
@@ -60,15 +60,18 @@
 
 ## What Remains
 
-### Pre-tag quality items
-1. **D-PKI-CA-TIER** — two-tier issuing CA (reconciled to svc-pki source); operator may veto for single-tier MVP
-2. **D-OD-1** — OpenDesign interpretation (authoring layer + decoupled token export); awaits operator confirm
+### Done (all subagents completed)
+- **D-PKI-CA-TIER** — operator confirmed: two-tier issuing CA as MVP default
+- **D-OD-1** — operator confirmed: OpenDesign authoring-layer interpretation
+- **vasic-digital component repos** — 8 repos created on GitHub+GitLab + added as submodules
+- **Go workable-items binary** — HVPN-P1-150 complete, 6 commands verified
+- **DOCX exports** — pipeline updated, all docs have DOCX siblings
 
-### In progress (subagents)
-3. **vasic-digital component repos** (GitHub+GitLab) — subagent creating
+### Known issues
+- `install_upstreams` recipe format mismatch: recipe files use `GIT_SSH_URL` but the script expects `UPSTREAMABLE_REPOSITORY`. Remotes configured manually. Should be fixed upstream in the Upstreamable toolkit.
 
 ### Deferred
-5. **Implementation phase** — spec-only mandate; no code until operator directs
+- **Implementation phase** — spec-only mandate; no code until operator directs
 
 ---
 
