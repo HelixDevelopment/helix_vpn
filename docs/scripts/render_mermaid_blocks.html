@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>render_mermaid_blocks.py — companion guide</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">render_mermaid_blocks.py — companion guide</h1>
+</header>
+<h1 id="render_mermaid_blockspy--companion-guide">render_mermaid_blocks.py —
+companion guide</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-06-26T00:00:00Z</p>
+<h2 id="overview">Overview</h2>
+<p><code>scripts/testing/render_mermaid_blocks.py</code> pre-processes a
+Markdown file so that every <code>```mermaid</code> fenced block is
+replaced by a reference to a rendered <strong>PNG</strong> image,
+<strong>before</strong> the file is handed to pandoc. This closes the
+Constitution <strong>§11.4.168</strong> gap: pandoc has no mermaid
+filter and weasyprint cannot execute JavaScript, so without
+pre-rendering the diagram <em>source</em> would ship as literal text in
+the HTML/PDF exports.</p>
+<p>It is invoked automatically by
+<code>scripts/testing/sync_all_markdown_exports.sh</code>; it can also
+be run standalone.</p>
+<h2 id="prerequisites">Prerequisites</h2>
+<ul>
+<li><code>python3</code> (stdlib only)</li>
+<li><code>mmdc</code> (mermaid-cli) on <code>PATH</code> —
+<code>npm i -g @mermaid-js/mermaid-cli</code></li>
+<li>Config: <code>scripts/testing/mermaid.config.json</code></li>
+</ul>
+<h2 id="usage">Usage</h2>
+<pre><code>render_mermaid_blocks.py &lt;input.md&gt; &lt;output.md&gt; &lt;png_dir&gt; [&lt;cache_dir&gt;]</code></pre>
+<ul>
+<li><code>&lt;input.md&gt;</code> — source (never modified)</li>
+<li><code>&lt;output.md&gt;</code> — pre-processed copy; each fence →
+<code>![diagram](&lt;abs-png&gt;)</code></li>
+<li><code>&lt;png_dir&gt;</code> — where per-block PNGs are written</li>
+<li><code>&lt;cache_dir&gt;</code> — optional content-addressed cache
+(sha256 of source+config); a cache hit reuses the PNG instead of
+re-rendering. The driver wrapper uses
+<code>&lt;repo&gt;/.mermaid-cache</code> (gitignored; regen mechanism =
+the wrapper, §11.4.77).</li>
+</ul>
+<p>Prints <code>mermaid: rendered=N reused=M failed=K</code>.</p>
+<h2 id="why-png-not-svg">Why PNG (not SVG)</h2>
+<p>Empirically (<code>§11.4.6</code>): weasyprint does
+<strong>not</strong> render mermaid&#39;s default-config SVG
+<code>&lt;foreignObject&gt;</code> text — it vanishes in the PDF. An
+<code>htmlLabels:false</code> SVG keeps native text but breaks
+<code>&lt;br/&gt;</code> labels. Rendering to PNG lets Chromium (inside
+<code>mmdc</code>) do the full rendering — every label feature — and
+weasyprint simply embeds the raster, which it can never fail to display.
+OCR of the rendered PDF page confirms readability (the §11.4.168
+validation oracle). Proven across all 8 diagram types the spec uses.</p>
+<h2 id="edge-cases">Edge cases</h2>
+<ul>
+<li><strong>A diagram fails to render</strong> (syntax error): the
+script exits <strong>1</strong> and the output carries a
+<code>**[MERMAID RENDER FAILED — block #N]**</code> marker — NEVER raw
+source. The wrapper marks the file FAILED. Fix the diagram source (see
+<code>validate_mermaid_blocks.md</code>) — a render failure is a real
+defect, not a tooling glitch.</li>
+<li><strong>No mermaid fences</strong>: the input is copied
+verbatim.</li>
+</ul>
+<h2 id="related-scripts">Related scripts</h2>
+<ul>
+<li><code>scripts/testing/validate_mermaid_blocks.py</code> —
+render-validate every diagram</li>
+<li><code>scripts/testing/sync_all_markdown_exports.sh</code> — the
+export driver</li>
+<li><code>scripts/testing/mermaid.config.json</code> — mermaid render
+config</li>
+</ul>
+<p><em>Last verified: 2026-06-26 (rendered all 356 spec diagrams; 0
+raw-source leaks into PDF confirmed via pdftotext + OCR).</em></p>
+</body>
+</html>
