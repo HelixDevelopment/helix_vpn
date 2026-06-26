@@ -1,8 +1,9 @@
 # HelixVPN — Master Glossary (every term, acronym, protocol, RFC)
 
-**Revision:** 1
+**Revision:** 2
 **Last modified:** 2026-06-26T12:00:00Z
 **Status:** active — Volume 0 (Spine, meta & governance) nano-detail document
+**Rev 2:** Added `challenges` (vasic-digital/challenges, §11.4.27) + `containers` (vasic-digital/containers, §11.4.76/.161) submodule entries; added a `HelixError` entry cross-referencing its R7 rename to the canonical `CoreError`.
 **Authority:** Subordinate to [`../SPECIFICATION.md`](../SPECIFICATION.md) §11 (the spine glossary, which this document expands). Where this glossary disagrees with the spine on a term's meaning, the spine wins until amended per §11.4.73.
 
 > **Document role.** The single, comprehensive, alphabetical glossary for the whole
@@ -80,6 +81,7 @@ mirrors [SPEC §10] and [MASTER_INDEX]:
 - **CarrierHealth** — the `TransportConn::health()` return (rtt, loss, handshakes_failed) the auto-ladder reads to decide escalation. (SPEC §7.1; `v02-data-plane/transport-trait.md`)
 - **CGNAT** — see **100.64.0.0/10**.
 - **ChaCha20-Poly1305** — WireGuard's AEAD cipher; part of the never-forked crypto core (P2). (01; `v02-data-plane/wireguard-core.md`; FR-001; HVPN-NFR-400)
+- **`challenges` (vasic-digital/challenges)** — the anti-bluff Challenge-bank submodule (§11.4.27): a §11.4.169 mandatory test surface whose banks score PASS only on positive captured evidence; HelixVPN registers one Challenge per user-visible feature. (10 §5.5; `v06-deploy/helix-ecosystem-integration.md`; §11.4.27)
 - **CIDR** — Classless Inter-Domain Routing notation for an IP prefix; a Connector advertises the CIDRs its LAN exposes (`route.advertised`). (`v03-control-plane/svc-registry.md`; FR-704)
 - **Client** — the end-user role: dials in, gets an overlay IP, reaches its authorized subset of joined networks or uses the gateway as a plain privacy exit. Reuses `helix-core` + `helix-ui`. (00 §3; SPEC §3)
 - **CloudNativePG (CNPG)** — a Kubernetes Postgres operator (Patroni-class) for in-cluster HA Postgres; the concrete example for D-K8S-PG-HA option (a). (`v06-deploy/kubernetes.md`; D-K8S-PG-HA)
@@ -88,6 +90,7 @@ mirrors [SPEC §10] and [MASTER_INDEX]:
 - **CONNECT-UDP** — RFC 9298 UDP-proxying over HTTP/3; the mechanism that wraps WireGuard datagrams to look like web traffic — the core of "MASQUE/QUIC mode". (01; `v02-data-plane/transport-masque-quic.md`; FR-004; RFC 9298)
 - **Connector (Helix Connector)** — the network-side role/app: runs inside a private network, dials outbound to the gateway, advertises served CIDRs, routes LAN traffic for authorized clients. The in-network half of "two-way". (00 §3; SPEC §3; FR-7xx)
 - **Console (Helix Console)** — the admin app: tenants, users, devices, networks, routes, policies, audit, optional billing. Flutter web+desktop, API-client only (**no** `helix-core`). (00 §3; `v04-client/web-console.md`; FR-6xx)
+- **`containers` (vasic-digital/containers)** — the mandated container-orchestration submodule (§11.4.76/.161): every containerized HelixVPN workload (test infra, edge images) boots on-demand through its `pkg/boot`/`pkg/compose`/`pkg/health` primitives — rootless Podman only, no ad-hoc docker/podman commands. (05; `v06-deploy/helix-ecosystem-integration.md`; `v06-deploy/podman-quadlets.md`; §11.4.76; §11.4.161)
 - **Control plane** — the Go services holding routing/policy truth (identity/registry/ipam/pki/policy/coordinator/events/telemetry/api/store); strictly separated from the data plane and never in the packet path (P1). (02; `v03-control-plane/*`)
 - **Coordinator** — the Go control-plane brain that builds per-agent network maps from an in-memory topology graph and pushes minimal deltas with a p99 < 1s convergence SLO. (02; `v03-control-plane/svc-coordinator.md`; HVPN-NFR-003)
 - **`CoreError`** — the unified 7-variant FFI error enum `{NotStarted, AlreadyStarted, Config, Auth, HostFatal, BadFd, Internal}` every FFI verb returns; `anyhow` stays orchestrator-internal and converts at the boundary. (`v04-client/ffi-surface.md`; REFINEMENT_NOTES R7)
@@ -143,6 +146,7 @@ mirrors [SPEC §10] and [MASTER_INDEX]:
 - **`helix-core` / `helix_core`** — the Rust data-plane core shared by client, connector, and edge: WG control, transport, reconciler, FFI. The D2 decision (Rust over Go). (03; `v04-client/helix-core-rust.md`; D2)
 - **`helix_design`** — the decoupled, reusable design-system submodule (`vasic-digital/helix_design`) — the canonical token source + polyglot exporters; the subject of Volume 10 (OpenDesign mandate §11.4.162). (10; `v10-design/*`; D-DESIGN-EXTRACT; D-OD-1)
 - **`helix-edge` / `helix_edge`** — see **Edge**.
+- **`HelixError`** — the *superseded* name for the unified FFI error enum sketched in [SPEC §7.3]; the R7 reconciliation renamed it to **`CoreError`** (see that entry — the canonical 7-variant type every FFI verb returns). `HelixError` survives only as a label in the `SPECIFICATION.md` §7.3 FFI sketch and MUST NOT be used in new code. (SPEC §7.3; `v04-client/ffi-surface.md`; REFINEMENT_NOTES R7)
 - **`helix-ffi` / `helix_ffi`** — the Rust crate exposing the `flutter_rust_bridge` + UniFFI surface to Dart/native. (03; `v04-client/ffi-surface.md`)
 - **`helix-go` / `helix_go`** — the Go control-plane modular monolith. (02; `helix_go`)
 - **`helix-proto` / `helix_proto`** — the Protobuf + OpenAPI schemas from which Dart/Go/Rust clients are generated (schema-first, zero drift, P8). (02; `v03-control-plane/protobuf-spec.md`; `v06-deploy/codegen-pipeline.md`)

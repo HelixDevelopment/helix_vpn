@@ -1,8 +1,9 @@
 # HelixVPN — Requirements Traceability Matrix (requirement → component → test)
 
-**Revision:** 2
+**Revision:** 3
 **Last modified:** 2026-06-26T12:00:00Z
 **Status:** active — Volume 0 (Spine, meta & governance) nano-detail document
+**Rev 3:** §1 legend — marked **UI/UX/REC** and **META** as *adjacent* types (NOT members of the §11.4.169 13-type set), added a member column; reworded the "Sources verified" MASTER_INDEX citation to cite on-disk existence (`[DONE]`) rather than a "to-be-generated" status as existence proof (§11.4.6).
 **Rev 2:** Corrected GAP-3/GAP-5 — `v06-deploy/disaster-recovery.md` and all 15 `v08-testing/` docs are now authored (the stale "not-yet-authored" framing fixed per §11.4.6; residual gaps are pending-measurement, not missing docs).
 **Authority:** Subordinate to [`../SPECIFICATION.md`](../SPECIFICATION.md). Requirement ids are owned by [`../v01-product/functional-requirements.md`](../v01-product/functional-requirements.md) (`HVPN-FR-NNN`) and [`../v01-product/nonfunctional-requirements.md`](../v01-product/nonfunctional-requirements.md) (`HVPN-NFR-NNN`); this document does **not** mint new requirements — it cross-references them. Test types are the §11.4.169 closed set owned by [`../10-testing-acceptance-and-qa.md`](../10-testing-acceptance-and-qa.md).
 
@@ -59,26 +60,30 @@ populated mechanically from this matrix.
 
 ## 1. The §11.4.169 test-type legend
 
-The closed mandatory test-type set (`10-testing-acceptance-and-qa.md` §2 / §5,
-§11.4.169). Each requirement names ≥1:
+The closed mandatory test-type set is the **13** §11.4.169 types (the first 13 rows,
+`10-testing-acceptance-and-qa.md` §2 / §5). **UI/UX/REC** and **META** are *adjacent*
+types (NOT members of the §11.4.169 13-type set) — UI/UX derives from §11.4.48/.49 +
+§11.4.162 and recorded-evidence from §11.4.153/.158/.159; META is the §1.1 paired-
+mutation discipline applied to every gate. Each requirement names ≥1 §11.4.169 type
+(and, where user-visible, an adjacent UI/UX/REC pass):
 
-| Tag | Test type | Volume-8 §5 home |
-|---|---|---|
-| **U** | unit | §5.1 |
-| **INT** | integration (containers-submodule infra) | §5.2 |
-| **E2E** | end-to-end (netns rig) | §5.3 |
-| **FA** | full-automation (autonomous, re-runnable) | §5.4 |
-| **CHAL** | Challenges (challenges-submodule banks) | §5.5 |
-| **HQA** | HelixQA autonomous sessions | §5.6 |
-| **SEC** | security | §5.7 |
-| **DDOS** | DoS / load-flood | §5.8 |
-| **STR/CHAOS** | stress + chaos | §5.9 |
-| **CONC** | concurrency / atomicity | §5.10 |
-| **RACE** | race-condition / deadlock | §5.11 |
-| **MEM** | memory (iOS NE soak) | §5.12 |
-| **BENCH/PERF/SCALE** | benchmarking / performance / scale | §5.13 |
-| **UI/UX/REC** | UI/UX + recorded-evidence (vision_engine) | §5.14 |
-| **META** | paired §1.1 meta-test mutation | every gate |
+| Tag | Test type | §11.4.169 member | Volume-8 §5 home |
+|---|---|---|---|
+| **U** | unit | yes | §5.1 |
+| **INT** | integration (containers-submodule infra) | yes | §5.2 |
+| **E2E** | end-to-end (netns rig) | yes | §5.3 |
+| **FA** | full-automation (autonomous, re-runnable) | yes | §5.4 |
+| **CHAL** | Challenges (challenges-submodule banks) | yes | §5.5 |
+| **HQA** | HelixQA autonomous sessions | yes | §5.6 |
+| **SEC** | security | yes | §5.7 |
+| **DDOS** | DoS / load-flood | yes | §5.8 |
+| **STR/CHAOS** | stress + chaos | yes | §5.9 |
+| **CONC** | concurrency / atomicity | yes | §5.10 |
+| **RACE** | race-condition / deadlock | yes | §5.11 |
+| **MEM** | memory (iOS NE soak) | yes | §5.12 |
+| **BENCH/PERF/SCALE** | benchmarking / performance / scale | yes | §5.13 |
+| **UI/UX/REC** | UI/UX + recorded-evidence (vision_engine) | **adjacent** (§11.4.48/.49/.162/.153/.158/.159) | §5.14 |
+| **META** | paired §1.1 meta-test mutation | **adjacent** (§1.1) | every gate |
 
 Every row implicitly also carries **META** (the §1.1 paired mutation per gate) and,
 for any user-visible feature, a **CHAL**/**HQA** anti-bluff pass; the columns below
@@ -416,7 +421,7 @@ The reverse loop closes mechanically: `LEDG-FR-NNN` ↔ `HVPN-FR-NNN` ↔ owning
 - [`../v01-product/nonfunctional-requirements.md`](../v01-product/nonfunctional-requirements.md) — the NFR ids, targets, the **Verify by** §11.4.169 test type column, priority, §9 NFR→principle map, §10 convergence chain, and the `UNVERIFIED`/`TARGET` markers (G1/G2/G3/iOS-NE/RTO).
 - [`../10-testing-acceptance-and-qa.md`](../10-testing-acceptance-and-qa.md) §2/§5 — the closed §11.4.169 test-type taxonomy (the §1 legend), §6 the coverage-ledger model (PENDING evidence-state), §7 per-phase acceptance gates.
 - [`../SPECIFICATION.md`](../SPECIFICATION.md) §7 (cross-cutting contracts → FR-003/018/205), §8 (phase gates G1–G6 + 8-criteria DoD → §4/§5), §9 (decisions → `decision-register.md`).
-- [`../MASTER_INDEX.md`](../MASTER_INDEX.md) Volumes 2–10 (owning-doc filenames) + the `[GEN]` status of `v08-testing/` and `v06-deploy/disaster-recovery.md` (GAP-3, GAP-5).
+- [`../MASTER_INDEX.md`](../MASTER_INDEX.md) Volumes 2–10 (owning-doc filenames) + the on-disk existence (now `[DONE]`) of the `v08-testing/` docs and `v06-deploy/disaster-recovery.md` — verified as files present on disk, not inferred from a "to-be-generated" status (GAP-3, GAP-5).
 - [`../99-source-coverage-ledger.md`](../99-source-coverage-ledger.md) gap G1 (DR/RTO consolidation → GAP-3).
 
 *Constitution bindings: §11.4.44 (revision header), §11.4.6 (no captured PASS asserted; `UNVERIFIED` targets owned by named gates; GAPs surfaced not hidden), §11.4.108 (evidence-state is the runtime-signature dimension — PENDING until captured on a clean deployment), §11.4.118 (enumerated-coverage claim + its boundary in §7), §11.4.169 (every requirement → a mandatory test type), §11.4.93 (each requirement + GAP → a workable item), §11.4.25 (coverage-ledger discipline), §11.4.65/.153 (HTML+PDF[+DOCX] exports follow in refinement).*

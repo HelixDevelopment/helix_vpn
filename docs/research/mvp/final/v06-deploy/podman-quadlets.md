@@ -1,7 +1,7 @@
 # Podman Quadlets (rootless — the canonical substrate)
 
-**Revision:** 1
-**Last modified:** 2026-06-25T12:00:00Z
+**Revision:** 2
+**Last modified:** 2026-06-26T12:00:00Z
 
 > Master technical specification — Volume 6 (Deployment, Tooling & Operations), nano-detail
 > document. **[RES]** research-backed. Scope: the **canonical rootless Podman quadlet deployment**
@@ -160,6 +160,24 @@ WantedBy=default.target
 > module loaded outside the container** (a container cannot `modprobe` rootlessly; kernels ≥ 5.6
 > ship it built-in), and `/dev/net/tun` for the userspace path. The unit above adds all three;
 > the kernel module is a host prerequisite documented in the operator guide.
+
+> **Reconciled (§11.4.35, 2026-06-26):** the canonical edge capability set across **all four
+> Volume-6 substrate docs** (this doc, [`docker-compose.md`](docker-compose.md),
+> [`kubernetes.md`](kubernetes.md)) and the [`security` privesc scan](helix-ecosystem-integration.md)
+> is **`{NET_ADMIN, NET_RAW}` + the `/dev/net/tun` device** — no more, no less. This is the FACT
+> the cited research points to (§11.4.6): `[research-podman_k8s §2]` confirms (3 sources) that the
+> **kernel-mode WireGuard fast path** — the edge's primary data path — needs **both** `NET_ADMIN`
+> **and** `NET_RAW` ("WireGuard needs NET_RAW … which Docker enables by default but Podman does
+> not"); `/dev/net/tun` is added for the **userspace boringtun fallback** (module-less nodes). The
+> earlier "ONLY NET_ADMIN" reading in the K8s/overview/security drafts was the under-specified
+> side and has been corrected to this set everywhere; the privesc scan asserts **no caps beyond
+> this canonical set**.
+
+> **Note — build-org ≠ source-org.** Container images are published under
+> `ghcr.io/helixdevelopment/*` (the GHCR build/registry org) while the source submodules live under
+> `vasic-digital/*` (the GitHub source org). This is intentional, not an inconsistency: the
+> registry namespace and the source namespace differ. The same `ghcr.io/helixdevelopment/*` image
+> coordinates are used by every Volume-6 substrate (quadlets, Compose, K8s).
 
 ### 3.3 `helixd.container` — the control plane (drops all caps)
 

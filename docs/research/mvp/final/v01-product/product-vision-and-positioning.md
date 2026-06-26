@@ -1,6 +1,6 @@
 # Product Vision & Positioning
 
-**Revision:** 1
+**Revision:** 2
 **Last modified:** 2026-06-26T12:00:00Z
 
 > **Document role.** This is the Volume 1 (Product & Requirements) deep document
@@ -273,9 +273,16 @@ non-HelixVPN cells carry the §4 `UNVERIFIED` blanket caveat.
 
 ## 5. Differentiators
 
-The four differentiators the overview tells us to lead with [00 §6]
-(`[04_ARCH §1.3]`), each tied to the architecture that delivers it and the spec
-doc that owns it. None is aspirational — each maps to a concrete component.
+> **Reconciled (§11.4.35, 2026-06-26):** the overview names **four**
+> differentiators *to lead with externally* [00 §6] (`[04_ARCH §1.3]`); this
+> section **expands them to seven** (D-1…D-7) for the internal positioning map.
+> The "four" and the "seven" are not in conflict — four are the headline messaging
+> set, seven are the full enumeration here.
+
+The differentiators the overview tells us to lead with [00 §6]
+(`[04_ARCH §1.3]`) — **four to lead with externally, expanded to seven here** —
+each tied to the architecture that delivers it and the spec doc that owns it. None
+is aspirational; each maps to a concrete component.
 
 ### D-1 — Self-hosted AND Mullvad-grade obfuscation (incl. MASQUE/QUIC)
 
@@ -323,12 +330,25 @@ a **p99 < 1 s** convergence SLO, including policy edits and device revocation
 
 ### D-6 — No-logging-as-code (verifiable, not promised)
 
+> **Reconciled (§11.4.35, 2026-06-26) — parity, not a Mullvad differentiator.**
+> Mullvad already runs a strong no-logging stance, so "no-logging" is a **parity
+> row**, not an edge over Mullvad. HelixVPN's genuine edge is that no-logging is
+> **verifiable by construction** — you **self-host** the box and a CI schema-lint
+> fails the build if a durable connection/traffic/packet table appears — rather
+> than a trust-the-operator promise.
+
 Privacy is a build property: no durable traffic table, CI-enforced (P7) [00 §8 P7].
 The mechanical teeth are a CI schema-lint that fails the build on a forbidden
 durable table [00 §8 illustrative guard]. Owned by
 [`../v05-security/no-logging-as-code.md`](../v05-security/no-logging-as-code.md).
 
 ### D-7 — Post-quantum-ready, hybrid-never-PQ-only
+
+> **Reconciled (§11.4.35, 2026-06-26) — parity, not a Mullvad differentiator.**
+> Mullvad ships post-quantum too, so a PQ handshake is a **parity row**, not an
+> edge over Mullvad. HelixVPN's genuine edge is that the same hybrid PQ handshake
+> runs on a stack **you self-host and can audit** — the differentiation is
+> self-host + verifiability, not the PQ feature itself.
 
 A PQ KEM (ML-KEM / FIPS-203) derives a PSK mixed into the classical WG handshake;
 an attacker must break both, and disabling PQ leaves classical WG secure [00 §9 F16],

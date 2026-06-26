@@ -1,7 +1,14 @@
 # DDoS / Load-Flood Test Strategy
 
-**Revision:** 1
+**Revision:** 2
 **Last modified:** 2026-06-26T12:00:00Z
+
+> **Reconciled (§11.4.35, 2026-06-26):** the `wg_init_flood` generator (§2, §8) now
+> targets the **canonical plain-WG port `gw:51820`** — a real WG `MessageInitiation`
+> flood hits the plain-WG port that [test-rig.md §3.1](test-rig.md) drops, not the
+> MASQUE/QUIC `:443` port (the earlier `gw:443` target conflated the two surfaces).
+> The volumetric `iperf3` flood keeps `:443` (the MASQUE/QUIC surface); the edge
+> multiplexes both, but each flood class is modelled on its own port for rig fidelity.
 
 > Master technical specification — Volume 8 (Testing & QA), nano-detail document **ddos**,
 > one of the seven §11.4.169 cross-cutting test-type deep-dives. It deepens
@@ -95,7 +102,7 @@ owns the edge data port; the flood generators and the legit probe are distinct n
    │ wg_init_flood  (Noise-IK init torrent)│     │ helix-core: real enroll + WG    │
    │ iperf3 -u -b <rate>  (volumetric)     │     │   handshake, sampled p99 latency│
    └───────────────┬──────────────────────┘     └───────────────┬────────────────┘
-                   │   both target :443 on        ▲              │
+                   │  init→:51820 vol→:443        ▲              │
                    ▼                              │ probe        ▼
         ┌───────────────────────────────────────────────────────────────┐
         │ helix-edge (Rust, rootless Podman §11.4.161) — verdict map +    │
@@ -106,9 +113,11 @@ owns the edge data port; the flood generators and the legit probe are distinct n
 
 - **`wg_init_flood`** — a custom Noise-IK initiation-message generator (not a mock: it emits real
   WG `MessageInitiation` frames with valid framing but unregistered static keys, exactly the
-  cheapest attacker packet [01-DP], [TM `T-EDGE-D-1`]). Rust binary `rig/wg_init_flood`, rate
-  configurable (`--pps`).
-- **`iperf3 -u -b <rate>`** — UDP volumetric flood at line rate toward `:443`.
+  cheapest attacker packet [01-DP], [TM `T-EDGE-D-1`]); it targets the **canonical plain-WG port
+  `udp/51820`** (the port [`test-rig.md` §3.1] drops), *not* the MASQUE/QUIC `:443` surface — plain
+  WG is `udp/51820`, MASQUE/QUIC is `:443` (the edge multiplexes both, but the handshake-flood
+  models real plain WG on its own port). Rust binary `rig/wg_init_flood`, rate configurable (`--pps`).
+- **`iperf3 -u -b <rate>`** — UDP volumetric flood at line rate toward the MASQUE/QUIC `:443`.
 - **legit probe** — a real `helix-core` instance performing genuine enroll + WG handshake +
   `iperf3` goodput in the `legit` netns, sampling handshake completion latency.
 - **counter scrape** — `helix-edge`'s Prometheus endpoint (control-plane-local, no per-user data,
@@ -233,7 +242,7 @@ out="qa-results/ddos/$(date +%s)"; mkdir -p "$out"
 trap 'rig/flood_stop.sh; rig/netns_down.sh' EXIT            # §11.4.14 cleanup on every path
 scrape_counters_1hz "$out/limiter_counters.csv" &           # edge counters
 sample_edge_liveness_1hz "$out/edge_liveness.csv" &         # helix_edge_up, RSS
-ip netns exec flooders rig/wg_init_flood --target gw:443 --pps "$ATTACK_PPS" --keys attacker_keys.bin &
+ip netns exec flooders rig/wg_init_flood --target gw:51820 --pps "$ATTACK_PPS" --keys attacker_keys.bin &  # plain-WG port (test-rig.md §3.1)
 sleep 2                                                      # let the flood ramp
 ip netns exec legit helix-core probe --enroll legit_client.toml --iperf 20 \
     --latency-out "$out/legit_latency.json"                 # the LEGIT client, concurrently

@@ -1,7 +1,15 @@
 # End-to-End Testing — HelixVPN nano-detail spec (Volume 8 · §11.4.169 type 3)
 
-**Revision:** 1
+**Revision:** 2
 **Last modified:** 2026-06-26T12:00:00Z
+
+> **Reconciled (§11.4.35, 2026-06-26):** the §2 harness topology + skeletons were
+> rewritten onto the **canonical four-namespace rig** (`client` / `censor` /
+> `gateway` / `exit`) of [test-rig.md](test-rig.md), with the DPI/censor in a
+> distinct `censor-ns` middlebox and the wire/DPI capture point on the censor egress
+> `cen2gw`. The earlier inferior 3-namespace rig (`client` / `gateway` / `lanA` with
+> the `nft` block bolted onto the gateway forward hook) is superseded — test-rig.md
+> is the single source for the rig's namespace/interface names and capture points.
 
 > Nano-detail expansion of [§5.3 of the Volume-8 overview](../10-testing-acceptance-and-qa.md).
 > E2E proves the **whole reachability slice on one box**: a real control plane issues
@@ -55,56 +63,68 @@ E2E drives the *core* and the *wire*.
 
 ## 2. Harness — the netns + nftables-DPI + tc-netem rig
 
-Three real processes (`client`, `gateway`, `connector`) run in **Linux network
-namespaces** on one host; an `nft` table simulates a DPI UDP block; `tc netem`
-injects loss/delay for the resilience slice. The rig is the Phase-0 deliverable
-HVPN-P0-022/023 ([06](../06-phase0-spike-wbs.md)).
+The E2E substrate is the **canonical four-namespace rig** defined in
+[test-rig.md](test-rig.md): four real Linux network namespaces — `client`, `censor`,
+`gateway`, `exit` — on one host. The adversary is split out of the path as its **own
+`censor-ns` middlebox** the packet must traverse, so the DPI/censor `nft` ruleset is
+a *distinct forwarding hop* (not an `nft` rule bolted onto an endpoint,
+[test-rig.md §0](test-rig.md)); `tc netem` on the censor egress (`cen2gw`) injects
+loss/delay for the resilience slice. The rig is the Phase-0 deliverable
+HVPN-P0-022/023 ([06](../06-phase0-spike-wbs.md)). The rig scripts (`rig/netns_up.sh`,
+`rig/netns_down.sh`, the regime `nft` profiles, `rig/impair.sh`, `rig/exercise.sh`)
+are defined canonically in [test-rig.md §§2–4](test-rig.md) and shared by every
+skeleton below — same namespace names, same interface names, same `cen2gw` capture
+point.
 
 ```mermaid
 graph LR
-  subgraph clientns["netns: client"]
-    C["helix-core client<br/>(real tunnel build)"]
+  subgraph clientns["netns: client (10.0.1.2)"]
+    C["helix-core client<br/>(real tunnel build · kill-switch FSM)"]
   end
-  subgraph gwns["netns: gateway"]
-    G["helix-gateway + helix-edge<br/>(real verdict-map)"]
+  subgraph censorns["netns: censor (forwarder + adversary)"]
+    Z["nft DPI/censor rules §3<br/>udp dport 51820 drop / 443 accept<br/>tc netem loss/delay on cen2gw §4"]
   end
-  subgraph lanA["netns: lanA (connector private LAN)"]
-    S["python3 -m http.server 80<br/>@10.10.0.20 (the sink)"]
+  subgraph gwns["netns: gateway (10.0.2.2 / pub :443)"]
+    G["helix-edge :443 + WG gateway<br/>(real verdict-map)"]
   end
-  C -->|overlay0 tunnel| G
-  G -->|veth| S
-  DPI["nft table inet dpi<br/>udp dport 51820 drop / 443 accept"] -.simulates censor.-> G
-  NETEM["tc netem loss 5% delay 40ms"] -.impairs.-> C
+  subgraph exitns["netns: exit (10.10.0.20 LAN sink)"]
+    S["python3 -m http.server 80<br/>@10.10.0.20 (reach sink) · DNS :53 (leak oracle)"]
+  end
+  C -- "veth cli↔cen 10.0.1.0/30" --> Z
+  Z -- "veth cen↔gw 10.0.2.0/30" --> G
+  G -- "overlay0 tunnel + veth gw↔exit 10.10.0.0/24" --> S
+  Z -. "pcap tap on cen2gw (WAN-facing egress, §6 leak/DPI evidence)" .-> CAP[("qa-results/<run>/*.pcap")]
 ```
 
 The `sudo` for `ip netns add` is the **only** privileged step in the whole harness
 and is a documented, scoped `CAP_NET_ADMIN` exception — never a container-management
 escalation ([overview §9](../10-testing-acceptance-and-qa.md), §11.4.161). Container
-infra (the real control plane's PG/Redis) is still booted rootless via `containers`
-([integration.md §2](integration.md)).
+infra (the real control plane's PG/Redis behind the gateway) is still booted rootless
+via `containers` ([integration.md §2](integration.md)).
 
 ```bash
-# rig/netns_up.sh — connector-side "private LAN" simulated with a netns [06 HVPN-P0-023]
+# rig/netns_up.sh — the 4-ns rig (CANONICAL definition: test-rig.md §2)
+#   client(10.0.1.2) -> censor -> gateway(10.0.2.2:443) -> exit(10.10.0.20)
 set -euo pipefail
-ip netns add lanA
-ip link add veth-host type veth peer name veth-lanA
-ip link set veth-lanA netns lanA
-ip -n lanA addr add 10.10.0.20/24 dev veth-lanA && ip -n lanA link set veth-lanA up
-ip netns exec lanA python3 -m http.server 80 --bind 10.10.0.20 &   # the hello service (sink)
+for ns in client censor gateway exit; do ip netns add "$ns" 2>/dev/null || true; done
+# veths client↔censor (10.0.1.0/30) · censor↔gateway (10.0.2.0/30) · gateway↔exit (10.10.0.0/24),
+# forwarding + routes, and the exit-ns sinks are wired in full by test-rig.md §2:
+ip netns exec exit python3 -m http.server 80 --bind 10.10.0.20 &   # the hello service (sink @10.10.0.20)
 
-# rig/dpi_block.sh — DPI/censorship sim for the AC4 escalation E2E
-nft add table inet dpi
-nft add chain inet dpi fwd '{ type filter hook forward priority 0; }'
-nft add rule  inet dpi fwd udp dport 51820 drop      # kill plain WireGuard
-nft add rule  inet dpi fwd udp dport 443  accept     # allow MASQUE/H3
+# rig/dpi_block.sh — DPI/censor sim on the CENSOR-ns forward hook (the middlebox), AC4 escalation E2E
+ip netns exec censor nft add table inet censor
+ip netns exec censor nft add chain inet censor fwd '{ type filter hook forward priority 0; policy accept; }'
+ip netns exec censor nft add rule  inet censor fwd udp dport 51820 drop   # kill plain WireGuard
+ip netns exec censor nft add rule  inet censor fwd udp dport 443  accept  # allow MASQUE/H3
 
-# rig/impair.sh — loss/jitter for the resilience E2E (§11.4.85 adjacency)
-tc qdisc add dev "$IFACE" root netem loss 5% delay 40ms 10ms
+# rig/impair.sh — loss/jitter on the censor egress cen2gw (§11.4.85 adjacency; CANONICAL: test-rig.md §4)
+ip netns exec censor tc qdisc add dev cen2gw root netem loss 5% delay 40ms 10ms
 ```
 
-Cleanup is non-negotiable: `trap 'rig/netns_down.sh' EXIT` leaves the host
-quiescent (§11.4.14); the orchestrator's post-test sanity check FAILs the run if a
-namespace, `nft` table, or `netem` qdisc survives.
+Cleanup is non-negotiable: `trap 'rig/netns_down.sh' EXIT` deletes all four
+namespaces and leaves the host quiescent (§11.4.14); the orchestrator's post-test
+sanity check FAILs the run if any `client`/`censor`/`gateway`/`exit` namespace, the
+`inet censor` `nft` table, or a `netem` qdisc survives.
 
 ---
 
@@ -273,7 +293,7 @@ sleep 6                                                # allow the ladder to esc
 transport=$(jq -r '.transport' /tmp/status.json)
 [ "$transport" = "masque-h3" ] || ab_fail "did not escalate: transport=$transport (B3)"
 pcap="qa-results/e2e/$(date +%s)_escalate.pcap"
-ip netns exec client tcpdump -i any -w "$pcap" & TP=$!
+ip netns exec censor tcpdump -i cen2gw -w "$pcap" & TP=$!   # tap the censor↔gateway path where DPI classifies (test-rig.md §7)
 ip netns exec client curl -s --max-time 5 http://10.10.0.20/ >/dev/null
 kill "$TP" 2>/dev/null
 tshark -r "$pcap" -Y 'http3' | grep -q . \

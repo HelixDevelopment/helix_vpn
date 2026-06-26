@@ -240,8 +240,8 @@ substrate)</h1>
 </header>
 <h1 id="kubernetes-deployment-fleet--phase-2-ha-substrate">Kubernetes
 deployment (fleet / Phase-2 HA substrate)</h1>
-<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
-2026-06-25T12:00:00Z</p>
+<p><strong>Revision:</strong> 2 <strong>Last modified:</strong>
+2026-06-26T12:00:00Z</p>
 <blockquote>
 <p>Master technical specification — Volume 6 (Deployment, Tooling &amp;
 Operations), nano-detail document <code>kubernetes.md</code>. Scope: the
@@ -370,7 +370,7 @@ mandate (<code>helix_vpn-…</code>, §11.4.151, <code>[05 §9]</code>).</p>
       D[Deployment helixd&lt;br/&gt;replicas≥2 + HPA&lt;br/&gt;stateless C5]
     end
     subgraph dp[data plane — node-local]
-      DS[DaemonSet helix-edge&lt;br/&gt;hostNetwork + NET_ADMIN&lt;br/&gt;UDP/443 + UDP/51820]
+      DS[DaemonSet helix-edge&lt;br/&gt;hostNetwork + NET_ADMIN+NET_RAW&lt;br/&gt;UDP/443 + UDP/51820]
     end
     subgraph state[durable + ephemeral state]
       PG[(StatefulSet helix-pg&lt;br/&gt;Patroni HA — TRUTH C2)]
@@ -647,20 +647,40 @@ entire K8s story:</p>
 <blockquote>
 <p><strong>The kernel-net caveat (the reason the edge is
 special).</strong> WireGuard and MASQUE are <strong>UDP</strong> and
-require kernel network capability — at minimum <code>NET_ADMIN</code> to
+require kernel network capability — <code>NET_ADMIN</code> to
 create/configure the <code>wg</code> interface and program AllowedIPs,
-plus the packet path must reach the node&#39;s real UDP socket
-<code>[05 §7.3, research-podman_k8s]</code>. A normal pod behind a
-<code>ClusterIP</code>/L7 ingress <strong>cannot</strong> carry this:
-most cloud L7 ingress can&#39;t forward UDP, and an extra NAT hop breaks the
-WG endpoint model. Therefore the edge runs as a
-<strong><code>DaemonSet</code> with
+<strong>plus <code>NET_RAW</code></strong> for the kernel-mode WireGuard
+fast path (<code>[research-podman_k8s §2]</code>, CONFIRMED), plus the
+packet path must reach the node&#39;s real UDP socket
+<code>[05 §7.3]</code>. A normal pod behind a <code>ClusterIP</code>/L7
+ingress <strong>cannot</strong> carry this: most cloud L7 ingress can&#39;t
+forward UDP, and an extra NAT hop breaks the WG endpoint model.
+Therefore the edge runs as a <strong><code>DaemonSet</code> with
 <code>hostNetwork: true</code></strong> so UDP/443 lands directly on the
 node IP (the node IP <em>is</em> the gateway IP), with
-<code>capabilities: add: [NET_ADMIN]</code> and everything else dropped.
-This is <code>D-K8S-EDGE-INGRESS</code> option (a), recommended for
+<code>capabilities: add: [NET_ADMIN, NET_RAW]</code> (the canonical set
+— <code>[podman-quadlets §3.2, research-podman_k8s §2]</code>) and
+everything else dropped, plus a <code>/dev/net/tun</code> hostPath
+device for the userspace <code>boringtun</code> fallback (§11). This is
+<code>D-K8S-EDGE-INGRESS</code> option (a), recommended for
 self-host-on-k8s parity with the quadlet model
 <code>[05 §7.3]</code>.</p>
+</blockquote>
+<blockquote>
+<p><strong>Reconciled (§11.4.35, 2026-06-26):</strong> the edge
+capability set here is now the <strong>canonical
+<code>{NET_ADMIN, NET_RAW}</code> + <code>/dev/net/tun</code></strong>
+shared by all four Volume-6 substrates (quadlets, Compose, this doc) and
+the <a href="helix-ecosystem-integration.md"><code>security</code>
+privesc scan</a>. The earlier &quot;ONLY NET_ADMIN&quot; reading in this doc + the
+architecture diagram + the privesc-scan assertion was the
+under-specified side: <code>[research-podman_k8s §2]</code> confirms (3
+cited sources) that kernel-mode WireGuard — the edge&#39;s primary fast path
+— needs <strong>both</strong> <code>NET_ADMIN</code>
+<strong>and</strong> <code>NET_RAW</code>, so the previous K8s set could
+not satisfy the quadlet/Compose <code>Q4</code>/<code>DC4</code> gates
+<strong>and</strong> the security scan simultaneously. They now all
+assert the same set (§11.4.6).</p>
 </blockquote>
 <div class="sourceCode" id="cb8"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># deploy/k8s/base/edge-daemonset.yaml — DATA PLANE (privileged-minimal)</span></span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">apiVersion</span><span class="kw">:</span><span class="at"> apps/v1</span></span>
@@ -681,24 +701,36 @@ self-host-on-k8s parity with the quadlet model
 <span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">securityContext</span><span class="kw">:</span></span>
 <span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="fu">readOnlyRootFilesystem</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
 <span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="fu">allowPrivilegeEscalation</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span></span>
-<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="fu">capabilities</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">drop</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;ALL&quot;</span><span class="kw">],</span><span class="at"> </span><span class="fu">add</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;NET_ADMIN&quot;</span><span class="kw">]</span><span class="at"> </span><span class="kw">}</span><span class="co">   # ONLY NET_ADMIN (doc 04 §)</span></span>
-<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">ports</span><span class="kw">:</span></span>
-<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="kw">-</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> masque</span><span class="kw">,</span><span class="at"> </span><span class="fu">containerPort</span><span class="kw">:</span><span class="at"> </span><span class="dv">443</span><span class="kw">,</span><span class="at">   </span><span class="fu">protocol</span><span class="kw">:</span><span class="at"> UDP</span><span class="kw">,</span><span class="at"> </span><span class="fu">hostPort</span><span class="kw">:</span><span class="at"> </span><span class="dv">443</span><span class="at"> </span><span class="kw">}</span></span>
-<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="kw">-</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> wg</span><span class="kw">,</span><span class="at">     </span><span class="fu">containerPort</span><span class="kw">:</span><span class="at"> </span><span class="dv">51820</span><span class="kw">,</span><span class="at"> </span><span class="fu">protocol</span><span class="kw">:</span><span class="at"> UDP</span><span class="kw">,</span><span class="at"> </span><span class="fu">hostPort</span><span class="kw">:</span><span class="at"> </span><span class="dv">51820</span><span class="at"> </span><span class="kw">}</span></span>
-<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">env</span><span class="kw">:</span></span>
-<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="kw">-</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> HELIXD_ADDR</span><span class="kw">,</span><span class="at"> </span><span class="fu">value</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;helixd:8443&quot;</span><span class="at"> </span><span class="kw">}</span><span class="co">   # edge dials the control-plane Service for its stream</span></span></code></pre></div>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a><span class="co">            # canonical set: NET_ADMIN + NET_RAW (kernel-mode WG fast path)</span></span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a><span class="co">            # [podman-quadlets.md §3.2, research-podman_k8s §2 — CONFIRMED]</span></span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="fu">capabilities</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">drop</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;ALL&quot;</span><span class="kw">],</span><span class="at"> </span><span class="fu">add</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;NET_ADMIN&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;NET_RAW&quot;</span><span class="kw">]</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">ports</span><span class="kw">:</span></span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="kw">-</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> masque</span><span class="kw">,</span><span class="at"> </span><span class="fu">containerPort</span><span class="kw">:</span><span class="at"> </span><span class="dv">443</span><span class="kw">,</span><span class="at">   </span><span class="fu">protocol</span><span class="kw">:</span><span class="at"> UDP</span><span class="kw">,</span><span class="at"> </span><span class="fu">hostPort</span><span class="kw">:</span><span class="at"> </span><span class="dv">443</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="kw">-</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> wg</span><span class="kw">,</span><span class="at">     </span><span class="fu">containerPort</span><span class="kw">:</span><span class="at"> </span><span class="dv">51820</span><span class="kw">,</span><span class="at"> </span><span class="fu">protocol</span><span class="kw">:</span><span class="at"> UDP</span><span class="kw">,</span><span class="at"> </span><span class="fu">hostPort</span><span class="kw">:</span><span class="at"> </span><span class="dv">51820</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">env</span><span class="kw">:</span></span>
+<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="kw">-</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> HELIXD_ADDR</span><span class="kw">,</span><span class="at"> </span><span class="fu">value</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;helixd:8443&quot;</span><span class="at"> </span><span class="kw">}</span><span class="co">   # edge dials the control-plane Service for its stream</span></span>
+<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">volumeMounts</span><span class="kw">:</span></span>
+<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="kw">-</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> tun</span><span class="kw">,</span><span class="at"> </span><span class="fu">mountPath</span><span class="kw">:</span><span class="at"> /dev/net/tun </span><span class="kw">}</span><span class="co">          # userspace boringtun fallback (§11 / U2)</span></span>
+<span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">volumes</span><span class="kw">:</span></span>
+<span id="cb8-31"><a href="#cb8-31" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> tun</span><span class="co">                                            # host TUN device for the module-less-node fallback</span></span>
+<span id="cb8-32"><a href="#cb8-32" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">hostPath</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">path</span><span class="kw">:</span><span class="at"> /dev/net/tun</span><span class="kw">,</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> CharDevice </span><span class="kw">}</span></span></code></pre></div>
 <blockquote>
 <p><strong>UNVERIFIED — kernel WireGuard module availability.</strong>
-<code>hostNetwork</code> + <code>NET_ADMIN</code> lets the edge program
-WG, but the <em>kernel</em> <code>wireguard</code> module must be
-present on the node (or <code>boringtun</code> userspace fallback used,
+<code>hostNetwork</code> + <code>NET_ADMIN</code>+<code>NET_RAW</code>
+lets the edge program kernel WG, but the <em>kernel</em>
+<code>wireguard</code> module must be present on the node (or the
+<code>boringtun</code> userspace fallback used,
 <code>[SYNTHESIS §2]</code>, referenced from <code>helix-core</code>).
 Whether the target node kernels ship the module is cluster-specific and
 MUST be verified per fleet, never assumed (§11.4.6/§11.4.133). The edge
-image carries the userspace fallback so a module-less node still
-functions, at a performance cost — that fallback path is the data-plane
-spec&#39;s concern, not this document&#39;s, and its presence is asserted only
-as the documented mitigation.</p>
+image carries the userspace fallback <strong>and the DaemonSet mounts
+<code>/dev/net/tun</code> (the <code>tun</code> hostPath volume
+above)</strong> so a module-less node can actually run
+<code>boringtun</code> — without that device the cited fallback could
+not open its TUN. The fallback still functions at a performance cost;
+its data-plane internals are the data-plane spec&#39;s concern, asserted
+here only as the documented mitigation with its substrate prerequisite
+wired.</p>
 </blockquote>
 <p>Alternative ingress options (record, not silently dropped) per
 <code>D-K8S-EDGE-INGRESS</code> <code>[05 §7.3]</code>:

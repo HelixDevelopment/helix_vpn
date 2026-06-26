@@ -1,7 +1,14 @@
 # The Network Test Rig — netns topology, nftables DPI/censor sim, tc-netem, iperf3, leak harness (§11.4.169 / §11.4.69)
 
-**Revision:** 1
+**Revision:** 2
 **Last modified:** 2026-06-26T12:00:00Z
+
+> **Reconciled (§11.4.35, 2026-06-26):** this document's four-namespace rig
+> (`client` / `censor` / `gateway` / `exit`, DPI in a distinct `censor-ns` middlebox)
+> is the **canonical** test-rig topology; [e2e.md §2](e2e.md) was rewritten onto it.
+> §6.1 `rig/killswitch_drop.sh` is the **single canonical definition** of the
+> kill-switch driver — capture on the censor / WAN-facing egress (`cen2gw`); the SEC
+> view ([security.md §9](security.md)) cites it rather than redefining it.
 
 > Volume 8 (Testing & QA) nano-detail specification. This document deepens the
 > [10 §5.3] netns E2E rig and [10 §4] topology into the **reproducible network test
@@ -310,6 +317,12 @@ of a packet** captured on the censor-ns egress (the path to the synthetic WAN)
 path out) so the capture observes exactly what would reach a real ISP.
 
 ### 6.1 Kill-switch (S4) — seal on tunnel drop
+
+> **Canonical `rig/killswitch_drop.sh`.** This is the single source of truth for the
+> kill-switch driver; the SEC view ([security.md §9](security.md)) cites this
+> definition rather than redefining it. The capture taps the **censor / WAN-facing
+> egress (`cen2gw`)** because AC7's §11.4.69 negative-evidence (zero plaintext / zero
+> `:53` leak) is only valid on the WAN path, not on the client-local interface.
 
 ```bash
 # rig/killswitch_drop.sh — S4, the anti-bluff kill-switch test (defeats B2) [10 §5.7]

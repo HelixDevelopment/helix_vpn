@@ -175,8 +175,25 @@ Model</h1>
 </header>
 <h1 id="personas-jobs-to-be-done--the-rbac-role-model">Personas,
 Jobs-to-be-Done &amp; the RBAC Role Model</h1>
-<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+<p><strong>Revision:</strong> 2 <strong>Last modified:</strong>
 2026-06-26T12:00:00Z</p>
+<blockquote>
+<p><strong>Reconciled (§11.4.35, 2026-06-26):</strong> the RBAC role set
+is fixed to the authoritative <code>svc-identity.md</code> enum
+<code>{member, operator, admin}</code> (+ <strong>Device</strong>, which
+holds <strong>no RBAC</strong> and is policy-gated). The earlier
+invented <strong>&quot;tenant owner&quot;</strong> RBAC role is
+<strong>removed</strong> — <code>admin</code> is the top RBAC role — and
+the missing <strong><code>operator</code></strong> role (mint enroll
+tokens / manage devices + policies + advertise prefixes) is
+<strong>added</strong>. &quot;Self-hoster / tenant-owner&quot; is modelled as a
+<strong>host/deployment privilege</strong>, NOT an RBAC role. The
+connector-operator&#39;s <code>route.advertised</code> capability is
+<strong><code>operator</code>-tier</strong>, not <code>member</code>.
+This aligns the document to <code>use-cases-and-journeys.md</code> UC-04
+(admin/operator) and the <code>svc-identity.md</code> §7.3
+<code>minRole</code> table, which win on any conflict.</p>
+</blockquote>
 <blockquote>
 <p><strong>Document role.</strong> Volume 1 deep document that expands
 §5 (personas and the three app classes) and §3 (the three system roles)
@@ -189,10 +206,10 @@ and that downstream readers routinely conflate:</p>
 <li><strong>System roles</strong> — <em>Connector / Gateway /
 Client</em> — the topological role a node plays in the data path [00
 §3], [SPEC §3].</li>
-<li><strong>Identity/RBAC roles</strong> — <em>tenant owner / admin /
-member / device (anon-device-token)</em> — the authorization a principal
-holds in the control plane [00 §12 &quot;Tenant&quot;], (security overview
-S1–S5).</li>
+<li><strong>Identity/RBAC roles</strong> — <em>admin / operator / member
+/ device (anon-device-token)</em> — the authorization a principal holds
+in the control plane [00 §12 &quot;Tenant&quot;], (security overview S1–S5), per
+<code>svc-identity.md</code>.</li>
 </ol>
 <p>A persona is a <em>human</em>; an app class is the <em>software</em>
 a persona drives; a system role is the <em>topological position</em>; an
@@ -255,20 +272,22 @@ Cross-document contracts this document fixes</a></li>
     S3[Connector]
   end
   subgraph RBAC[&quot;RBAC roles (authorization)&quot;]
-    R1[Tenant owner]
-    R2[Admin]
+    R1[Admin]
+    R2[Operator]
     R3[Member]
     R4[Device / anon-device-token]
   end
   P1 --&gt; A1 --&gt; S1 --&gt; R4
   P2 --&gt; A2 --&gt; S2 --&gt; R1
   P3 --&gt; A1 --&gt; S1 --&gt; R3
-  P4 --&gt; A3 --&gt; S3 --&gt; R3
+  P4 --&gt; A3 --&gt; S3 --&gt; R2
   P5 --&gt; A4 --&gt; S2 --&gt; R1</code></pre>
-<p>The mapping is <em>not</em> one-to-one: a self-hoster wears the
-tenant-owner RBAC role <em>and</em> operates Connectors <em>and</em>
-uses an Access client — one human, several roles. The matrix in §5 makes
-every cell explicit so no capability is assumed.</p>
+<p>The mapping is <em>not</em> one-to-one: a self-hoster holds the
+<code>admin</code> RBAC role <em>and</em> the host/deployment-owner
+privilege <em>and</em> operates Connectors <em>and</em> uses an Access
+client — one human, several roles. (&quot;Tenant-ownership / self-hosting&quot; is
+a host/deployment privilege, not an RBAC role — see §4.) The matrix in
+§5 makes every cell explicit so no capability is assumed.</p>
 <table>
 <thead>
 <tr>
@@ -297,8 +316,8 @@ connector-operator, self-hoster</td>
 </tr>
 <tr>
 <td>RBAC role</td>
-<td>tenant owner, admin, member, device (anon-device-token)</td>
-<td>[00 §12], [SEC S1–S5], svc-identity</td>
+<td>admin, operator, member, device (anon-device-token)</td>
+<td>[00 §12], [SEC S1–S5], svc-identity (authoritative enum)</td>
 </tr>
 </tbody>
 </table>
@@ -396,8 +415,8 @@ Gateway control plane [00 §5]</td>
 </tr>
 <tr>
 <td><strong>RBAC role</strong></td>
-<td><strong>Tenant owner</strong> (or delegated
-<strong>Admin</strong>)</td>
+<td><strong>Admin</strong> (the top RBAC role; tenant-ownership is a
+host/deployment privilege, not an RBAC role)</td>
 </tr>
 <tr>
 <td><strong>JTBD</strong></td>
@@ -520,10 +539,13 @@ slim UI; Android/embedded for appliances) [00 §3.1, §5]</td>
 </tr>
 <tr>
 <td><strong>RBAC role</strong></td>
-<td>typically <strong>Member</strong>-level (a connector identity
-enrolled into a tenant with the right to advertise prefixes); a
-self-hoster operating their own connector is also tenant owner
-(§2.5)</td>
+<td><strong>Operator</strong> — the connector identity mints/redeems
+enroll tokens, manages devices + policies, and advertises prefixes; the
+<code>route.advertised</code> capability is
+<strong><code>operator</code>-tier per
+<code>svc-identity.md</code></strong>, not <code>member</code>. A
+self-hoster operating their own connector also holds
+<strong><code>admin</code></strong> (§2.5)</td>
 </tr>
 <tr>
 <td><strong>JTBD</strong></td>
@@ -583,9 +605,12 @@ Connector + Access — wears <strong>all</strong> software hats</td>
 </tr>
 <tr>
 <td><strong>RBAC role</strong></td>
-<td><strong>Tenant owner</strong> of their own tenant(s) (a self-hoster
-running networks for multiple clients has multiple tenants [00
-§12])</td>
+<td><strong>Admin</strong> of their own tenant(s) — the top RBAC role.
+<strong>Tenant-ownership / self-hosting is a host/deployment
+privilege</strong>, NOT an RBAC role: the human who owns the box
+bootstraps each tenant (<code>helixvpnctl init</code>) and then
+administers it as <code>admin</code>. A self-hoster running networks for
+multiple clients administers multiple tenants [00 §12]</td>
 </tr>
 <tr>
 <td><strong>JTBD</strong></td>
@@ -648,7 +673,7 @@ data-plane nodes are cattle [SEC S11]</td>
 <td>Helix Console</td>
 <td>(Access as a user)</td>
 <td>none in data path</td>
-<td>Tenant owner (or Admin)</td>
+<td>Admin</td>
 <td>no (Console is API-client only)</td>
 </tr>
 <tr>
@@ -664,7 +689,7 @@ data-plane nodes are cattle [SEC S11]</td>
 <td>Helix Connector</td>
 <td>(Console to verify routes)</td>
 <td>Connector</td>
-<td>Member (+ Device); or Tenant owner if self-hosting</td>
+<td>Operator (+ Device); or Admin if self-hosting</td>
 <td>yes (<code>helix-core</code> advertise/route mode)</td>
 </tr>
 <tr>
@@ -672,7 +697,7 @@ data-plane nodes are cattle [SEC S11]</td>
 <td><code>helixvpnctl</code> + Console + Connector + Access</td>
 <td>all</td>
 <td>Gateway + Connector + Client</td>
-<td>Tenant owner</td>
+<td>Admin (+ host/deployment-owner privilege)</td>
 <td>yes (as Connector/Client)</td>
 </tr>
 </tbody>
@@ -691,11 +716,17 @@ this contract. Owned by <a href="../03-client-core-and-ui.md"><code>../03-client
 <p>The control plane authorizes principals by <strong>RBAC role within a
 tenant</strong>. A <strong>tenant</strong> is an isolated organization
 boundary enforced by Postgres RLS [00 §12], [SEC S6/RLS]. The closed
-role set:</p>
+role set is the authoritative <code>svc-identity.md</code> enum
+<code>{member, operator, admin}</code> (+ Device, which holds <strong>no
+RBAC</strong> and is policy-gated). <strong>Tenant-ownership /
+self-hosting is a host/deployment privilege, not a member of this RBAC
+enum.</strong> The role lattice
+(<code>admin &gt; operator &gt; member</code>, per
+<code>svc-identity.md</code> §7.3):</p>
 <pre class="mermaid"><code>flowchart TB
-  TO[Tenant owner] --&gt;|all admin caps + tenant lifecycle + billing| ADM[Admin]
-  ADM --&gt;|user/device/policy/route CRUD + revoke + audit-read| MEM[Member]
-  MEM --&gt;|own devices, reach granted networks| DEV[Device / anon-device-token]
+  ADM[Admin] --&gt;|+ device revoke + user management| OPR[Operator]
+  OPR --&gt;|mint enroll tokens, manage devices/policies, advertise prefixes| MEM[Member]
+  MEM --&gt;|read-only on most surfaces; own devices, reach granted networks| DEV[Device / anon-device-token]
   DEV --&gt;|data-plane principal: holds WG key, reaches AllowedIPs only| EDGE[(Edge verdict map)]</code></pre>
 <h3 id="41-role-definitions">4.1 Role definitions</h3>
 <table>
@@ -709,33 +740,35 @@ role set:</p>
 </thead>
 <tbody>
 <tr>
-<td><strong>Tenant owner</strong></td>
-<td>The principal who owns a tenant; the self-hoster&#39;s default role for
-their own tenant; can have ≥1 tenant</td>
-<td>tenant lifecycle (create/delete tenant), billing (optional SKU),
-assign/revoke Admins</td>
+<td><strong>Admin</strong></td>
+<td>The <strong>top</strong> RBAC role within a tenant — everything an
+Operator can do, plus device revoke and user management; the
+business-admin&#39;s and self-hoster&#39;s role</td>
+<td>device revoke; user management; full CRUD on
+users/devices/networks/routes/policies</td>
 <td>OIDC identity [00 §9 F15]</td>
 </tr>
 <tr>
-<td><strong>Admin</strong></td>
-<td>Delegated administrator within a tenant</td>
-<td>full CRUD on users/devices/networks/routes/policies; device revoke;
-audit read</td>
+<td><strong>Operator</strong></td>
+<td>Manages a tenant&#39;s devices and policies and mints enrollment tokens;
+the connector-operator&#39;s role</td>
+<td>mint/redeem enroll tokens; manage devices/policies;
+<strong>advertise prefixes (<code>route.advertised</code>)</strong></td>
 <td>OIDC identity</td>
 </tr>
 <tr>
 <td><strong>Member</strong></td>
-<td>A user that belongs to a tenant and owns enrolled devices, without
-admin rights</td>
-<td>enroll own devices; connect; reach granted networks; advertise
-prefixes (connector identities)</td>
+<td>A user that belongs to a tenant and owns enrolled devices;
+<strong>read-only on most administrative surfaces</strong></td>
+<td>enroll own devices; connect; reach granted networks</td>
 <td>OIDC identity</td>
 </tr>
 <tr>
 <td><strong>Device / anon-device-token</strong></td>
 <td>A <em>data-plane</em> principal — an enrolled device holding its own
-WG keypair; the anonymous-device-token variant has no human identity
-behind it (the privacy-consumer case)</td>
+WG keypair; <strong>holds no RBAC role (policy-gated, never the RBAC
+matrix)</strong>; the anonymous-device-token variant has no human
+identity behind it (the privacy-consumer case)</td>
 <td>open <code>WatchNetworkMap</code>; reach <code>AllowedIPs</code>;
 nothing administrative</td>
 <td>short-lived mTLS device cert (≤24 h, tenant-CA-signed) [SEC S4], +
@@ -743,6 +776,18 @@ WG Noise IK for data [SEC §1.2]</td>
 </tr>
 </tbody>
 </table>
+<blockquote>
+<p><strong>Host/deployment privilege (not RBAC).</strong> Tenant
+lifecycle (create/delete a tenant), bringing up the Gateway
+(<code>helixvpnctl init</code>), and any managed-SKU billing are
+<strong>host/deployment-owner</strong> capabilities the self-hoster
+exercises by owning the box — they are <strong>not</strong> entries in
+the <code>{member, operator, admin}</code> RBAC enum.
+<code>svc-identity.md</code> §7.3&#39;s <code>minRole</code> table (the
+authoritative <code>Permission → Role</code> map) tops out at
+<code>admin</code> (user management + device revoke); it has no &quot;tenant
+owner&quot; tier.</p>
+</blockquote>
 <h3 id="42-two-authentication-channels-never-conflated">4.2 Two
 authentication channels, never conflated</h3>
 <p>Per the security overview [SEC §1.2], a principal authenticates on
@@ -773,9 +818,9 @@ device tokens (the privacy lane)</h3>
 <p>The anonymous-device-token enrollment is a first-class path alongside
 OIDC [00 §9 F15]: a device enrolls and obtains a control identity with
 <strong>no email / no PII</strong>, generating its WG keypair on-device
-(private key never leaves) [SEC S2]. This is the privacy-consumer&#39;s RBAC
-role — a Device principal with no human Member/Admin behind it. Owned by
-<a href="../v05-security/identity-and-enrollment.md"><code>../v05-security/identity-and-enrollment.md</code></a></p>
+(private key never leaves) [SEC S2]. This is the privacy-consumer&#39;s
+principal — a Device (holding no RBAC role) with no human
+member/operator/admin behind it. Owned by <a href="../v05-security/identity-and-enrollment.md"><code>../v05-security/identity-and-enrollment.md</code></a></p>
 <ul>
 <li><a href="../v03-control-plane/svc-identity.md"><code>../v03-control-plane/svc-identity.md</code></a>.</li>
 </ul>
@@ -802,9 +847,9 @@ additively, default-deny §4.3). The authoritative permission contract is
 <th>Capability</th>
 <th>Privacy-consumer (Device/anon)</th>
 <th>Business-end-user (Member)</th>
-<th>Connector-operator (Member)</th>
+<th>Connector-operator (Operator)</th>
 <th>Business-admin (Admin)</th>
-<th>Self-hoster (Tenant owner)</th>
+<th>Self-hoster (Admin + host privilege)</th>
 </tr>
 </thead>
 <tbody>
@@ -868,7 +913,8 @@ additively, default-deny §4.3). The authoritative permission contract is
 <td>Author / edit ACL policy</td>
 <td>⛔</td>
 <td>⛔</td>
-<td>local ACLs only (<code>UNVERIFIED</code> scope)</td>
+<td>✅ (Operator tier = <code>PermManagePolicy</code>; local-vs-central
+scope <code>UNVERIFIED</code>)</td>
 <td>✅</td>
 <td>✅</td>
 </tr>
@@ -901,16 +947,18 @@ additively, default-deny §4.3). The authoritative permission contract is
 <td>⛔</td>
 <td>⛔</td>
 <td>⛔</td>
-<td>⛔ (<code>UNVERIFIED</code> — may be delegable)</td>
-<td>✅</td>
+<td>⛔ (host/deployment privilege, not RBAC; <code>UNVERIFIED</code>
+whether ever exposed to <code>admin</code>)</td>
+<td>✅ (host/deployment privilege, not RBAC)</td>
 </tr>
 <tr>
 <td>Manage billing (optional SKU)</td>
 <td>⛔</td>
 <td>⛔</td>
 <td>⛔</td>
-<td>⛔ (<code>UNVERIFIED</code>)</td>
-<td>✅</td>
+<td>⛔ (host/deployment / managed-SKU privilege;
+<code>UNVERIFIED</code>)</td>
+<td>✅ (host/deployment / managed-SKU privilege)</td>
 </tr>
 <tr>
 <td>Bring up Gateway (<code>helixvpnctl init</code>)</td>
@@ -918,7 +966,7 @@ additively, default-deny §4.3). The authoritative permission contract is
 <td>⛔</td>
 <td>⛔</td>
 <td>⛔</td>
-<td>✅ (operator/host privilege, not RBAC)</td>
+<td>✅ (host/deployment privilege, not RBAC)</td>
 </tr>
 </tbody>
 </table>
@@ -928,10 +976,12 @@ additively, default-deny §4.3). The authoritative permission contract is
 because the exact grant is fixed by
 <code>svc-identity</code>/<code>svc-policy</code>, not by a product
 narrative: (a) whether an anon device token may reach a private network
-or is exit-only; (b) the scope of a Connector-operator&#39;s &quot;local ACLs&quot; vs
-central policy; (c) whether tenant-lifecycle and billing are delegable
-to Admin or owner-exclusive. Each is a tracked refinement item; the
-conservative default (narrower grant) is assumed until pinned, per
+or is exit-only; (b) the local-vs-central scope of a
+Connector-operator&#39;s (Operator-tier) policy authoring; (c) whether
+tenant-lifecycle and billing — both <strong>host/deployment privileges,
+not RBAC</strong> — are ever surfaced through the <code>admin</code>
+role or remain box-owner-exclusive. Each is a tracked refinement item;
+the conservative default (narrower grant) is assumed until pinned, per
 §11.4.6/§11.4.101.</p>
 </blockquote>
 <hr />

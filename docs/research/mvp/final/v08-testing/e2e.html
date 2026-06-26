@@ -240,8 +240,20 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; }
 </header>
 <h1 id="end-to-end-testing--helixvpn-nano-detail-spec-volume-8--114169-type-3">End-to-End
 Testing — HelixVPN nano-detail spec (Volume 8 · §11.4.169 type 3)</h1>
-<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+<p><strong>Revision:</strong> 2 <strong>Last modified:</strong>
 2026-06-26T12:00:00Z</p>
+<blockquote>
+<p><strong>Reconciled (§11.4.35, 2026-06-26):</strong> the §2 harness
+topology + skeletons were rewritten onto the <strong>canonical
+four-namespace rig</strong> (<code>client</code> / <code>censor</code> /
+<code>gateway</code> / <code>exit</code>) of <a href="test-rig.md">test-rig.md</a>, with the DPI/censor in a distinct
+<code>censor-ns</code> middlebox and the wire/DPI capture point on the
+censor egress <code>cen2gw</code>. The earlier inferior 3-namespace rig
+(<code>client</code> / <code>gateway</code> / <code>lanA</code> with the
+<code>nft</code> block bolted onto the gateway forward hook) is
+superseded — test-rig.md is the single source for the rig&#39;s
+namespace/interface names and capture points.</p>
+</blockquote>
 <blockquote>
 <p>Nano-detail expansion of <a href="../10-testing-acceptance-and-qa.md">§5.3 of the Volume-8
 overview</a>. E2E proves the <strong>whole reachability slice on one
@@ -348,50 +360,65 @@ drives the <em>core</em> and the <em>wire</em>.</p>
 <hr />
 <h2 id="2-harness--the-netns--nftables-dpi--tc-netem-rig">2. Harness —
 the netns + nftables-DPI + tc-netem rig</h2>
-<p>Three real processes (<code>client</code>, <code>gateway</code>,
-<code>connector</code>) run in <strong>Linux network namespaces</strong>
-on one host; an <code>nft</code> table simulates a DPI UDP block;
-<code>tc netem</code> injects loss/delay for the resilience slice. The
-rig is the Phase-0 deliverable HVPN-P0-022/023 (<a href="../06-phase0-spike-wbs.md">06</a>).</p>
+<p>The E2E substrate is the <strong>canonical four-namespace
+rig</strong> defined in <a href="test-rig.md">test-rig.md</a>: four real
+Linux network namespaces — <code>client</code>, <code>censor</code>,
+<code>gateway</code>, <code>exit</code> — on one host. The adversary is
+split out of the path as its <strong>own <code>censor-ns</code>
+middlebox</strong> the packet must traverse, so the DPI/censor
+<code>nft</code> ruleset is a <em>distinct forwarding hop</em> (not an
+<code>nft</code> rule bolted onto an endpoint, <a href="test-rig.md">test-rig.md §0</a>); <code>tc netem</code> on the
+censor egress (<code>cen2gw</code>) injects loss/delay for the
+resilience slice. The rig is the Phase-0 deliverable HVPN-P0-022/023 (<a href="../06-phase0-spike-wbs.md">06</a>). The rig scripts
+(<code>rig/netns_up.sh</code>, <code>rig/netns_down.sh</code>, the
+regime <code>nft</code> profiles, <code>rig/impair.sh</code>,
+<code>rig/exercise.sh</code>) are defined canonically in <a href="test-rig.md">test-rig.md §§2–4</a> and shared by every skeleton
+below — same namespace names, same interface names, same
+<code>cen2gw</code> capture point.</p>
 <pre class="mermaid"><code>graph LR
-  subgraph clientns[&quot;netns: client&quot;]
-    C[&quot;helix-core client&lt;br/&gt;(real tunnel build)&quot;]
+  subgraph clientns[&quot;netns: client (10.0.1.2)&quot;]
+    C[&quot;helix-core client&lt;br/&gt;(real tunnel build · kill-switch FSM)&quot;]
   end
-  subgraph gwns[&quot;netns: gateway&quot;]
-    G[&quot;helix-gateway + helix-edge&lt;br/&gt;(real verdict-map)&quot;]
+  subgraph censorns[&quot;netns: censor (forwarder + adversary)&quot;]
+    Z[&quot;nft DPI/censor rules §3&lt;br/&gt;udp dport 51820 drop / 443 accept&lt;br/&gt;tc netem loss/delay on cen2gw §4&quot;]
   end
-  subgraph lanA[&quot;netns: lanA (connector private LAN)&quot;]
-    S[&quot;python3 -m http.server 80&lt;br/&gt;@10.10.0.20 (the sink)&quot;]
+  subgraph gwns[&quot;netns: gateway (10.0.2.2 / pub :443)&quot;]
+    G[&quot;helix-edge :443 + WG gateway&lt;br/&gt;(real verdict-map)&quot;]
   end
-  C --&gt;|overlay0 tunnel| G
-  G --&gt;|veth| S
-  DPI[&quot;nft table inet dpi&lt;br/&gt;udp dport 51820 drop / 443 accept&quot;] -.simulates censor.-&gt; G
-  NETEM[&quot;tc netem loss 5% delay 40ms&quot;] -.impairs.-&gt; C</code></pre>
+  subgraph exitns[&quot;netns: exit (10.10.0.20 LAN sink)&quot;]
+    S[&quot;python3 -m http.server 80&lt;br/&gt;@10.10.0.20 (reach sink) · DNS :53 (leak oracle)&quot;]
+  end
+  C -- &quot;veth cli↔cen 10.0.1.0/30&quot; --&gt; Z
+  Z -- &quot;veth cen↔gw 10.0.2.0/30&quot; --&gt; G
+  G -- &quot;overlay0 tunnel + veth gw↔exit 10.10.0.0/24&quot; --&gt; S
+  Z -. &quot;pcap tap on cen2gw (WAN-facing egress, §6 leak/DPI evidence)&quot; .-&gt; CAP[(&quot;qa-results/&lt;run&gt;/*.pcap&quot;)]</code></pre>
 <p>The <code>sudo</code> for <code>ip netns add</code> is the
 <strong>only</strong> privileged step in the whole harness and is a
 documented, scoped <code>CAP_NET_ADMIN</code> exception — never a
 container-management escalation (<a href="../10-testing-acceptance-and-qa.md">overview §9</a>, §11.4.161).
-Container infra (the real control plane&#39;s PG/Redis) is still booted
-rootless via <code>containers</code> (<a href="integration.md">integration.md §2</a>).</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># rig/netns_up.sh — connector-side &quot;private LAN&quot; simulated with a netns [06 HVPN-P0-023]</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="bu">set</span> <span class="at">-euo</span> pipefail</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="ex">ip</span> netns add lanA</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="ex">ip</span> link add veth-host type veth peer name veth-lanA</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="ex">ip</span> link set veth-lanA netns lanA</span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="ex">ip</span> <span class="at">-n</span> lanA addr add 10.10.0.20/24 dev veth-lanA <span class="kw">&amp;&amp;</span> <span class="ex">ip</span> <span class="at">-n</span> lanA link set veth-lanA up</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="ex">ip</span> netns exec lanA python3 <span class="at">-m</span> http.server 80 <span class="at">--bind</span> 10.10.0.20 <span class="kw">&amp;</span>   <span class="co"># the hello service (sink)</span></span>
+Container infra (the real control plane&#39;s PG/Redis behind the gateway)
+is still booted rootless via <code>containers</code> (<a href="integration.md">integration.md §2</a>).</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># rig/netns_up.sh — the 4-ns rig (CANONICAL definition: test-rig.md §2)</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co">#   client(10.0.1.2) -&gt; censor -&gt; gateway(10.0.2.2:443) -&gt; exit(10.10.0.20)</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="bu">set</span> <span class="at">-euo</span> pipefail</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> ns <span class="kw">in</span> client censor gateway exit<span class="kw">;</span> <span class="cf">do</span> <span class="ex">ip</span> netns add <span class="st">&quot;</span><span class="va">$ns</span><span class="st">&quot;</span> <span class="dv">2</span><span class="op">&gt;</span>/dev/null <span class="kw">||</span> <span class="fu">true</span><span class="kw">;</span> <span class="cf">done</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co"># veths client↔censor (10.0.1.0/30) · censor↔gateway (10.0.2.0/30) · gateway↔exit (10.10.0.0/24),</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="co"># forwarding + routes, and the exit-ns sinks are wired in full by test-rig.md §2:</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="ex">ip</span> netns exec exit python3 <span class="at">-m</span> http.server 80 <span class="at">--bind</span> 10.10.0.20 <span class="kw">&amp;</span>   <span class="co"># the hello service (sink @10.10.0.20)</span></span>
 <span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="co"># rig/dpi_block.sh — DPI/censorship sim for the AC4 escalation E2E</span></span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="ex">nft</span> add table inet dpi</span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="ex">nft</span> add chain inet dpi fwd <span class="st">&#39;{ type filter hook forward priority 0; }&#39;</span></span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="ex">nft</span> add rule  inet dpi fwd udp dport 51820 drop      <span class="co"># kill plain WireGuard</span></span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="ex">nft</span> add rule  inet dpi fwd udp dport 443  accept     <span class="co"># allow MASQUE/H3</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="co"># rig/dpi_block.sh — DPI/censor sim on the CENSOR-ns forward hook (the middlebox), AC4 escalation E2E</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="ex">ip</span> netns exec censor nft add table inet censor</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="ex">ip</span> netns exec censor nft add chain inet censor fwd <span class="st">&#39;{ type filter hook forward priority 0; policy accept; }&#39;</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="ex">ip</span> netns exec censor nft add rule  inet censor fwd udp dport 51820 drop   <span class="co"># kill plain WireGuard</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="ex">ip</span> netns exec censor nft add rule  inet censor fwd udp dport 443  accept  <span class="co"># allow MASQUE/H3</span></span>
 <span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="co"># rig/impair.sh — loss/jitter for the resilience E2E (§11.4.85 adjacency)</span></span>
-<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="ex">tc</span> qdisc add dev <span class="st">&quot;</span><span class="va">$IFACE</span><span class="st">&quot;</span> root netem loss 5% delay 40ms 10ms</span></code></pre></div>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="co"># rig/impair.sh — loss/jitter on the censor egress cen2gw (§11.4.85 adjacency; CANONICAL: test-rig.md §4)</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="ex">ip</span> netns exec censor tc qdisc add dev cen2gw root netem loss 5% delay 40ms 10ms</span></code></pre></div>
 <p>Cleanup is non-negotiable: <code>trap &#39;rig/netns_down.sh&#39; EXIT</code>
-leaves the host quiescent (§11.4.14); the orchestrator&#39;s post-test
-sanity check FAILs the run if a namespace, <code>nft</code> table, or
+deletes all four namespaces and leaves the host quiescent (§11.4.14);
+the orchestrator&#39;s post-test sanity check FAILs the run if any
+<code>client</code>/<code>censor</code>/<code>gateway</code>/<code>exit</code>
+namespace, the <code>inet censor</code> <code>nft</code> table, or a
 <code>netem</code> qdisc survives.</p>
 <hr />
 <h2 id="3-fixtures--real-processes-simulated-network-zero-mocks">3.
@@ -656,7 +683,7 @@ escalation through a DPI block (AC4)</h3>
 <span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="va">transport</span><span class="op">=</span><span class="va">$(</span><span class="ex">jq</span> <span class="at">-r</span> <span class="st">&#39;.transport&#39;</span> /tmp/status.json<span class="va">)</span></span>
 <span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="bu">[</span> <span class="st">&quot;</span><span class="va">$transport</span><span class="st">&quot;</span> <span class="ot">=</span> <span class="st">&quot;masque-h3&quot;</span> <span class="bu">]</span> <span class="kw">||</span> <span class="ex">ab_fail</span> <span class="st">&quot;did not escalate: transport=</span><span class="va">$transport</span><span class="st"> (B3)&quot;</span></span>
 <span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="va">pcap</span><span class="op">=</span><span class="st">&quot;qa-results/e2e/</span><span class="va">$(</span><span class="fu">date</span> +%s<span class="va">)</span><span class="st">_escalate.pcap&quot;</span></span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="ex">ip</span> netns exec client tcpdump <span class="at">-i</span> any <span class="at">-w</span> <span class="st">&quot;</span><span class="va">$pcap</span><span class="st">&quot;</span> <span class="kw">&amp;</span> <span class="va">TP</span><span class="op">=</span><span class="va">$!</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="ex">ip</span> netns exec censor tcpdump <span class="at">-i</span> cen2gw <span class="at">-w</span> <span class="st">&quot;</span><span class="va">$pcap</span><span class="st">&quot;</span> <span class="kw">&amp;</span> <span class="va">TP</span><span class="op">=</span><span class="va">$!</span>   <span class="co"># tap the censor↔gateway path where DPI classifies (test-rig.md §7)</span></span>
 <span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="ex">ip</span> netns exec client curl <span class="at">-s</span> <span class="at">--max-time</span> 5 http://10.10.0.20/ <span class="op">&gt;</span>/dev/null</span>
 <span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="bu">kill</span> <span class="st">&quot;</span><span class="va">$TP</span><span class="st">&quot;</span> <span class="dv">2</span><span class="op">&gt;</span>/dev/null</span>
 <span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="ex">tshark</span> <span class="at">-r</span> <span class="st">&quot;</span><span class="va">$pcap</span><span class="st">&quot;</span> <span class="at">-Y</span> <span class="st">&#39;http3&#39;</span> <span class="kw">|</span> <span class="fu">grep</span> <span class="at">-q</span> . <span class="dt">\</span></span>

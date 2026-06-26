@@ -239,8 +239,8 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; }
 </header>
 <h1 id="helix-ecosystem-submodule-integration">Helix-ecosystem submodule
 integration</h1>
-<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
-2026-06-25T12:00:00Z</p>
+<p><strong>Revision:</strong> 2 <strong>Last modified:</strong>
+2026-06-26T12:00:00Z</p>
 <blockquote>
 <p>Master technical specification — Volume 6 (Deployment, Tooling &amp;
 Operations), nano-detail document
@@ -697,13 +697,27 @@ against SSRF</td>
 </tr>
 <tr>
 <td><strong>privesc scan of the edge container</strong></td>
-<td>CI/pre-build scan asserting the edge image holds ONLY
-<code>NET_ADMIN</code>, no shell, read-only rootfs
-<code>[kubernetes §6, 05 §7.1]</code></td>
+<td>CI/pre-build scan asserting the edge holds <strong>no caps beyond
+the canonical <code>{NET_ADMIN, NET_RAW}</code></strong> (plus the
+<code>/dev/net/tun</code> device), no shell, read-only rootfs
+<code>[podman-quadlets §3.2, kubernetes §6, research-podman_k8s §2]</code></td>
 <td>§11.4.133</td>
 </tr>
 </tbody>
 </table>
+<blockquote>
+<p><strong>Reconciled (§11.4.35, 2026-06-26):</strong> the privesc scan
+asserts <strong>no caps beyond the canonical edge set
+<code>{NET_ADMIN, NET_RAW}</code></strong> — matching the
+quadlet/Compose/K8s substrates, not the earlier &quot;ONLY
+<code>NET_ADMIN</code>&quot; wording. <code>NET_RAW</code> is
+<strong>CONFIRMED required</strong> by
+<code>[research-podman_k8s §2]</code> for the kernel-mode WireGuard fast
+path; <code>/dev/net/tun</code> is the userspace-fallback device. A scan
+that flagged <code>NET_RAW</code> as excess would have made the
+<code>Q4</code>/<code>DC4</code> capability gates and this security gate
+non-satisfiable together — they now agree on one set (§11.4.6).</p>
+</blockquote>
 <p>Wiring contract:</p>
 <ul>
 <li><strong>Reuse the libraries; extend upstream for gaps

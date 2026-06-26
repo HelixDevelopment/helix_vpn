@@ -1,7 +1,13 @@
 # Full-Automation Testing — HelixVPN nano-detail spec (Volume 8 · §11.4.169 type 4)
 
-**Revision:** 1
+**Revision:** 2
 **Last modified:** 2026-06-26T12:00:00Z
+
+> **Reconciled (§11.4.35, 2026-06-26):** the MVP Definition-of-Done bank has **NINE**
+> acceptance criteria (AC1–AC9) per the canonical overview
+> [`10-testing-acceptance-and-qa.md` §7.2](../10-testing-acceptance-and-qa.md). The
+> earlier "8-AC DoD bank" wording (§2, §6) was a mis-count; an FA gate driving only
+> 8/9 ACs is a §11.4.118 coverage bluff. Corrected to the 9-AC bank.
 
 > Nano-detail expansion of [§5.4 of the Volume-8 overview](../10-testing-acceptance-and-qa.md).
 > Full-automation (FA) is the §11.4.98 invariant made concrete: **every** E2E /
@@ -67,7 +73,7 @@ Two one-shot Make targets are the FA drivers ([overview §9](../10-testing-accep
 | Target | Phase | What it drives |
 |---|---|---|
 | `make spike` | Phase 0 | the G1–G6 gate sweep (rig reach, MASQUE-through-DPI, FFI round-trip, push-reconcile) end-to-end, N=3 |
-| `make qa` | Phase 1 | the `helix_qa` autonomous session over the 8-AC DoD bank ([helixqa.md](helixqa.md)) |
+| `make qa` | Phase 1 | the `helix_qa` autonomous session over the 9-AC DoD bank ([helixqa.md](helixqa.md)) |
 
 ```mermaid
 graph TD
@@ -173,7 +179,7 @@ ab_run_n_times() {                       # $1 name  $2 N  $3 fn
 | Gate | Bar | Bound item |
 |---|---|---|
 | **`make spike`** | G1–G6 all clear N=3, evidence captured | Phase-0 exit ([overview §7.1](../10-testing-acceptance-and-qa.md)) |
-| **`make qa`** | the 8-AC DoD bank PASS via `helix_qa`, N=3 | Phase-1 DoD ([overview §7.2](../10-testing-acceptance-and-qa.md)) |
+| **`make qa`** | the 9-AC DoD bank PASS via `helix_qa`, N=3 | Phase-1 DoD ([overview §7.2](../10-testing-acceptance-and-qa.md)) |
 | **`CM-FA-RERUNNABLE`** (§11.4.98) | every E2E/INT/CHAL passes at `-count=3`; no human-action line in any driver | pre-build + runtime |
 | **`CM-FA-NO-MANUAL-STEP`** | no `operator MUST` / manual-prompt / hard-coded-session-UUID pattern in test sources | pre-build lint |
 

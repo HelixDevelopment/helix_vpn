@@ -1,7 +1,15 @@
 # Coverage Ledger — feature × test-type × evidence-state schema (§11.4.25/.52/.153/.169)
 
-**Revision:** 1
+**Revision:** 2
 **Last modified:** 2026-06-26T12:00:00Z
+
+> **Reconciled (§11.4.35, 2026-06-26):** two fixes. (1) §1 Axis-B now states the
+> test-type set consistently as **16 bundled families / 18 enumerated codes** (the
+> [10 §2] taxonomy families vs the 18 `test_type` CHECK codes of §3) — resolving the
+> "sixteen types" / 17-token / 18-code drift. (2) §6's table is relabelled the
+> illustrative **target** state (NOT current): at spec time the §2/§3 CHECK makes any
+> `AUTONOMOUS_VERIFIED` cell schema-impossible without captured evidence, so the §7
+> generator seeds every cell at `REQUIRED`/`PENDING`.
 
 > Volume 8 (Testing & QA) nano-detail specification. This document deepens §6 of
 > the Volume-8 overview [10 §6] into the **canonical schema, generation pipeline,
@@ -75,9 +83,12 @@ spec declares, each a `features` row keyed `F-<SLUG>` with a `component`
 self-contained title (≥40 chars), a §11.4.69 `evidence_class`, and a `phase`
 (`P0`..`P3`). The full inventory is enumerated in §5.
 
-**Axis B — the test types.** The closed sixteen-abbreviation set fixed by [10 §2]:
-`UNIT INT E2E FA CHAL HQA SEC DDOS STRESS CHAOS CONC RACE MEM BENCH PERF SCALE
-UI/REC`. A feature **declares** which subset it warrants (§11.4.169 — the *absence*
+**Axis B — the test types.** The closed §11.4.169 set fixed by [10 §2] — **16 bundled
+families / 18 enumerated codes**: the [10 §2] taxonomy presents 16 families (UI/UX and
+CHAL/HQA each render as one family), which expand to the 18 enumerated `test_type`
+codes of the §3 CHECK:
+`UNIT INT E2E FA CHAL HQA SEC DDOS STRESS CHAOS CONC RACE MEM BENCH PERF SCALE UI REC`.
+A feature **declares** which subset it warrants (§11.4.169 — the *absence*
 of a warranted type is never silent; it is an explicit `NOT_APPLICABLE: <reason>`).
 A cell exists for every `(feature, declared-type)` pair; types a feature genuinely
 does not warrant simply have no cell (e.g. `F-IOS-NE-MEM` warrants only `MEM`).
@@ -283,8 +294,13 @@ a real iOS device (§11.4.3 — never a simulator PASS, [10 QA-D3]).
 
 The rendered `docs/qa/coverage_ledger.md` table (✓ = `AUTONOMOUS_VERIFIED`, ▣ =
 authored/`DESIGNED`, — = no cell, NA = `NOT_APPLICABLE`, S = `SKIP`, AC = bound DoD
-Challenge). Illustrative target state at the MVP gate; the live values are
-generated from the DB (§7).
+Challenge). **This sketch is the illustrative _target_ state at the MVP gate — NOT
+the current state.** At spec time no test has run, so every `✓` shown here is
+schema-impossible *today*: the §2/§3 CHECK forbids `AUTONOMOUS_VERIFIED` without a
+captured `evidence_path` + `artifact_md5`. The generator (§7) therefore seeds every
+declared cell at **`REQUIRED`** (or `PENDING` once a test is authored) and advances a
+cell to `✓` only when a real clean-deploy run lands its evidence; the live values are
+always generated from the DB (§7), never hand-set to this target.
 
 | feature_id | UNIT | INT | E2E | SEC | STRESS | CHAOS | CONC | RACE | MEM | BENCH | PERF | UI/REC | CHAL |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|

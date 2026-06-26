@@ -1,7 +1,13 @@
 # Memory Test Strategy (iOS NE ceiling + leak soak)
 
-**Revision:** 1
+**Revision:** 2
 **Last modified:** 2026-06-26T12:00:00Z
+
+> **Reconciled (§11.4.35, 2026-06-26):** the 24 h MEM-SOAK-LEAK / SLO4 single run is
+> now an **explicit, documented §11.4.50 carve-out recorded at the gate (§6)** —
+> verdict deterministic-by-construction (re-run on any regression), not a silent
+> deviation; only the short G3 probe is N=3. §5 + §6 state the carve-out, replacing
+> the prior bare prose.
 
 > Master technical specification — Volume 8 (Testing & QA), nano-detail document **memory**,
 > one of the seven §11.4.169 cross-cutting test-type deep-dives. It deepens
@@ -144,14 +150,20 @@ PASSes, golden-bad leaking series FAILs).
 
 ## 5. Determinism (§11.4.50)
 
-The G3 peak and the soak slope are asserted N=3 (G3 short probe) / over a single authoritative 24 h
-run (soak — a 24 h run is not repeated N=3, but its *verdict* is deterministic: peak < ceiling is a
-fact about that run, and the run is re-run on any regression). `ab_run_n_times "g3-ios-peak" 3
-run_ios_probe` runs the short G3 probe 3× against the same `.ipa` MD5 + same device; the evidence-hash
-is over `(peak_footprint_bucket, headroom_pct_meets_30: bool)` — all 3 MUST agree. A run where the
-headroom meets 30% in 2 of 3 is **auto-FAIL** (the ceiling margin must be reliable, not lucky). The
-soak's monotonic-growth verdict is deterministic given the same workload; a divergent slope across
-two soaks is a regression triggering §11.4.4 STOP.
+**G3 short probe — N=3 (the §11.4.50 default).** `ab_run_n_times "g3-ios-peak" 3 run_ios_probe`
+runs the short G3 peak-RSS probe 3× against the same `.ipa` MD5 + same device; the evidence-hash is
+over `(peak_footprint_bucket, headroom_pct_meets_30: bool)` — all 3 MUST agree. A run where the
+headroom meets 30% in 2 of 3 is **auto-FAIL** (the ceiling margin must be reliable, not lucky).
+
+**24 h soak (MEM-SOAK-LEAK + SLO4) — an explicit, documented §11.4.50 carve-out.** A 24 h run is
+**not** repeated N=3 (three back-to-back 24 h soaks per gate is operationally infeasible). The
+carve-out is justified because the soak's verdict is **deterministic-by-construction**, not
+deterministic-by-repetition: `peak < ceiling` and `no monotonic RSS growth` are falsifiable facts
+about *that one authoritative run*, and the run is **re-run on any regression** (a divergent slope
+across two soaks is a regression triggering the §11.4.4 STOP). Running the soak once does **not**
+violate §11.4.50 — the property under test is a per-run threshold / monotonicity verdict, not a
+flake-prone pass/fail the N-iteration loop exists to catch. This carve-out is recorded **at the gate
+(§6)**, never left as bare prose.
 
 ---
 
@@ -168,6 +180,13 @@ G3 is the program's make-or-break gate: a No-Go means the architecture changes (
 budget rework), escalated per §11.4.66 — never silently overrun [04_P0]. G3 + SLO4 are §11.4.132
 risk-ordered high (G3 is the highest-risk Phase-0 gate). The MEM cell appears in the ledger for
 F-IOS-NE-MEM (G3) and SLO4 (overview §6.3, §7.2).
+
+> **§11.4.50 carve-out (recorded at the gate, per §5).** The **24 h** rows —
+> `MEM-SOAK-LEAK` and `SLO4` — are NOT run N=3: a 24 h soak is run **once** as the
+> authoritative run, its verdict deterministic-by-construction (`peak < ceiling` /
+> `no monotonic growth`) and **re-run on any regression**. Only the short **G3**
+> probe is run N=3 (`ab_run_n_times`, §5). This is the explicit, documented carve-out
+> — not a silent §11.4.50 deviation.
 
 ---
 

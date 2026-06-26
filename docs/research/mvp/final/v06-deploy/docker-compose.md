@@ -1,7 +1,7 @@
 # Docker Compose (the documented fallback substrate)
 
-**Revision:** 1
-**Last modified:** 2026-06-25T12:00:00Z
+**Revision:** 2
+**Last modified:** 2026-06-26T12:00:00Z
 
 > Master technical specification — Volume 6 (Deployment, Tooling & Operations), nano-detail
 > document. **[RES]** research-backed. Scope: the **Docker Compose equivalent** of the HelixVPN
@@ -82,6 +82,14 @@ The Compose service keys map the quadlet directives one-for-one [RPK §4/§6]:
 > module loaded outside the container**, and `/dev/net/tun` for the userspace path. Docker enables
 > NET_RAW by default for root containers, but the least-privilege baseline here is `cap_drop:
 > [ALL]` then `cap_add: [NET_ADMIN, NET_RAW]` — explicit, not implicit.
+
+> **Reconciled (§11.4.35, 2026-06-26):** the canonical edge capability set is **`{NET_ADMIN,
+> NET_RAW}` + `/dev/net/tun`** across every Volume-6 substrate (quadlets, this Compose doc,
+> [`kubernetes.md`](kubernetes.md)) and the [`security` privesc scan](helix-ecosystem-integration.md).
+> `NET_RAW` is **CONFIRMED required** by `[research-podman_k8s §2]` for the **kernel-mode WireGuard
+> fast path** (the edge's primary path); `/dev/net/tun` serves the **userspace boringtun fallback**.
+> The `DC4` gate below already asserts exactly this set ("ONLY NET_ADMIN+NET_RAW"); the earlier
+> "ONLY NET_ADMIN" wording in the K8s/overview/security drafts was corrected to match (§11.4.6).
 
 ---
 

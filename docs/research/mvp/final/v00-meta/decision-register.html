@@ -174,10 +174,15 @@ vertical-align: middle;
 </header>
 <h1 id="helixvpn--master-decision-register-expanded">HelixVPN — Master
 Decision Register (expanded)</h1>
-<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+<p><strong>Revision:</strong> 2 <strong>Last modified:</strong>
 2026-06-26T12:00:00Z <strong>Status:</strong> active — Volume 0 (Spine,
-meta &amp; governance) nano-detail document <strong>Authority:</strong>
-Subordinate to <a href="../SPECIFICATION.md"><code>../SPECIFICATION.md</code></a> §9 (the
+meta &amp; governance) nano-detail document <strong>Rev 2:</strong>
+Added the §0-mandated explicit reversal line to the seven §4 decisions
+that lacked one (D-AC-1, D-OPENAPI-AUTHORING, D-CODEGEN-TRACK,
+D-K8S-EDGE-INGRESS, D-K8S-PG-HA, D-GW-SELECT, D-DESIGN-EXTRACT); fixed
+the §1 D4 &quot;Resolved by&quot; cross-ref <code>doc 04/svc-ipam.md</code> →
+<code>v03-control-plane/svc-ipam.md</code> (svc-ipam.md is a Volume-3
+doc). <strong>Authority:</strong> Subordinate to <a href="../SPECIFICATION.md"><code>../SPECIFICATION.md</code></a> §9 (the
 spine decision register D1–D8, which this document expands). Where this
 register disagrees with the spine on a spine decision&#39;s camps or
 recommendation, the spine wins until amended per §11.4.73. The
@@ -331,8 +336,8 @@ at MVP scale (would pull NATS earlier)</td>
 <td><strong>CGNAT 100.64/10 1:1 per network</strong></td>
 <td><strong>4via6</strong> for scale + clean overlay; hide the mapping
 behind Console UX (a v1 must-decide)</td>
-<td>doc 01 (routing) + doc 04/<code>svc-ipam.md</code> + an MVP
-multi-connector overlap test</td>
+<td>doc 01 (routing) + <code>v03-control-plane/svc-ipam.md</code> + an
+MVP multi-connector overlap test</td>
 <td>4via6 client/OS support proves inadequate on a target platform →
 fall back to documented per-network NAT (FR-303 already provisions
 it)</td>
@@ -781,7 +786,10 @@ closed enum (<code>svc-telemetry §4.2</code>) is the mechanical truth;
 one option must be picked and master §7 aligned to it <strong>before the
 release tag</strong> (a §11.4.120 fix-breaks-its-own-gate-class
 reconciliation). Owning doc:
-<code>v05-security/audit-and-compliance.md</code> §13.1.</li>
+<code>v05-security/audit-and-compliance.md</code> §13.1.
+<strong>Reversal:</strong> n/a — a reconcile-before-tag process choice;
+once the enum↔︎master-§7 alignment is picked and tagged, re-opening
+requires a new audit-action requirement (a §11.4.66 decision).</li>
 <li><strong>D-AC-2 (recommended: Phase-2).</strong> Tamper-evident audit
 <strong>hash chain</strong> — the <code>meta.prev_hash</code> seam is
 reserved in MVP but the capability is <em>not claimed</em> for MVP
@@ -822,7 +830,10 @@ the pcap exists. Owning doc:
 <strong>spec-first</strong> (hand-authored contract; handlers validated
 against it), not code-first from handler annotations — so the TS/Dart
 app clients generate from a stable surface.
-(<code>v06-deploy/codegen-pipeline.md</code>)</li>
+(<code>v06-deploy/codegen-pipeline.md</code>) <strong>Reversal:</strong>
+n/a — an authoring-workflow process choice; re-opens only if spec-first
+authoring captures sustained friction on a surface, reverting that
+surface to code-first.</li>
 <li><strong>D-CODEGEN-TRACK (binding).</strong> Generated clients are
 <strong>gitignored</strong>; <code>make gen</code> from a clean clone
 reproduces them deterministically (the schema is the single source of
@@ -830,7 +841,9 @@ truth; a committed generated tree is a second copy that rots). A
 <code>.gitignore-meta/&lt;slug&gt;.yaml</code> declares the §11.4.77
 regeneration mechanism. This is a <em>visible reconciliation</em>
 (§11.4.35) of the overview&#39;s &quot;generated code gitignored&quot; intent into the
-binding Volume-6 decision.</li>
+binding Volume-6 decision. <strong>Reversal:</strong> n/a — a process
+choice; schema-as-SSoT + the §11.4.77 regen make tracking generated
+trees strictly worse, so no evidence re-opens it.</li>
 <li><strong>D-CODEGEN-NET (recommended).</strong> <code>buf</code>
 remote plugins need network; per §11.4.77 the regen must work from a
 clean clone, so vendor pinned local <code>protoc-gen-*</code> plugins
@@ -851,7 +864,12 @@ node IP (node IP = gateway IP), <code>NET_ADMIN</code>-only, everything
 else dropped — parity with the quadlet model. Alternatives (record, not
 silently dropped):
 <code>NodePort</code>/<code>LoadBalancer</code>-UDP/Gateway-API-UDP.
-(<code>v06-deploy/kubernetes.md</code>; <code>[05 §7.3]</code>)</li>
+(<code>v06-deploy/kubernetes.md</code>; <code>[05 §7.3]</code>)
+<strong>Reversal:</strong> a target K8s platform forbids
+<code>hostNetwork</code>/<code>NET_ADMIN</code> pods (captured platform
+constraint) → fall back to the recorded
+<code>NodePort</code>/<code>LoadBalancer</code>-UDP / Gateway-API-UDP
+ingress path.</li>
 <li><strong>D-K8S-PG-HA (recommended: a/b).</strong> (a) Patroni
 operator / CloudNativePG (primary + ≥2 replicas, auto-failover) for
 self-managed fleets — keeps failover in-cluster; (b) external managed
@@ -859,7 +877,10 @@ Postgres referenced by <code>DATABASE_URL</code>; (c) single-replica
 <code>StatefulSet</code> is explicitly <strong>not</strong>
 production-grade (the single-node parity build only).
 (<code>v06-deploy/kubernetes.md</code>;
-<code>ha-and-multiregion.md §3</code>)</li>
+<code>ha-and-multiregion.md §3</code>) <strong>Reversal:</strong> an
+operator standardises on managed Postgres (b), or a Patroni/CNPG drill
+captures inadequate in-cluster failover → switch tiers (the (a)/(b)/(c)
+set is the menu; the pick is operator/evidence-driven, §11.4.66).</li>
 </ul>
 <h3 id="d-gw-select--multi-region-gateway-selection">D-GW-SELECT —
 multi-region gateway selection</h3>
@@ -879,6 +900,10 @@ regional failover the coordinator emits
 <code>gateway.failover {from,to}</code> and pushes a
 <code>GatewayInfo</code>-only delta.
 (<code>v06-deploy/ha-and-multiregion.md</code>)</li>
+<li><strong>Reversal.</strong> geoDNS (a) DNS-TTL failover captures
+too-slow recovery for a latency-critical fleet → adopt anycast (b) where
+the BGP/anycast capability exists; the (a)/(b)/(c) options are
+complementary, so the switch is additive (no client break).</li>
 </ul>
 <h3 id="d-design-extract--d-repo-create--extraction-timing">D-DESIGN-EXTRACT
 / D-REPO-CREATE — extraction timing</h3>
@@ -886,8 +911,10 @@ regional failover the coordinator emits
 <li><strong>D-DESIGN-EXTRACT (recommended: b).</strong>
 <code>helix_design</code> decouples <strong>day-one</strong> as its own
 <code>vasic-digital</code> submodule (the Volume-10 §11.4.162 mandate),
-independent of code churn — unlike the six code pillars
-(D-REPO-CREATE).</li>
+independent of code churn — unlike the six code pillars (D-REPO-CREATE).
+<strong>Reversal:</strong> n/a — a process/timing choice fixed by the
+Volume-10 §11.4.162 day-one-decoupling mandate; re-opening requires a
+§11.4.26 constitution amendment.</li>
 <li><strong>D-REPO-CREATE (recommended: b; operator-gated
 creation).</strong> Extract the reusable code repos in <strong>one batch
 at Phase-1 exit</strong> (shared release prefix, stable seams). Remote

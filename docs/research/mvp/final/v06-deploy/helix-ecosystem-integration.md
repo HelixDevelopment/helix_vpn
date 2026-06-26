@@ -1,7 +1,7 @@
 # Helix-ecosystem submodule integration
 
-**Revision:** 1
-**Last modified:** 2026-06-25T12:00:00Z
+**Revision:** 2
+**Last modified:** 2026-06-26T12:00:00Z
 
 > Master technical specification — Volume 6 (Deployment, Tooling & Operations), nano-detail
 > document `helix-ecosystem-integration.md`. Scope: **how HelixVPN wires every already-
@@ -272,7 +272,14 @@ no-logging + zero-trust promises honest at the code layer (`[05 §6.1]`, doc 04)
 | **HTTP security headers** | middleware on the Gin REST surface (`[svc-events §3.6]` Console API) — HSTS, CSP, no-sniff | doc 04 |
 | **AES-256-GCM at-rest** | encrypt the data-dir secrets (`helixvpnctl init` writes creds at mode 0600, `[05 §5.3]`) | §11.4.10 |
 | **SSRF-deny on outbound** | guard any control-plane outbound call (OIDC discovery, webhook) against SSRF | doc 04 |
-| **privesc scan of the edge container** | CI/pre-build scan asserting the edge image holds ONLY `NET_ADMIN`, no shell, read-only rootfs `[kubernetes §6, 05 §7.1]` | §11.4.133 |
+| **privesc scan of the edge container** | CI/pre-build scan asserting the edge holds **no caps beyond the canonical `{NET_ADMIN, NET_RAW}`** (plus the `/dev/net/tun` device), no shell, read-only rootfs `[podman-quadlets §3.2, kubernetes §6, research-podman_k8s §2]` | §11.4.133 |
+
+> **Reconciled (§11.4.35, 2026-06-26):** the privesc scan asserts **no caps beyond the canonical
+> edge set `{NET_ADMIN, NET_RAW}`** — matching the quadlet/Compose/K8s substrates, not the earlier
+> "ONLY `NET_ADMIN`" wording. `NET_RAW` is **CONFIRMED required** by `[research-podman_k8s §2]` for
+> the kernel-mode WireGuard fast path; `/dev/net/tun` is the userspace-fallback device. A scan that
+> flagged `NET_RAW` as excess would have made the `Q4`/`DC4` capability gates and this security
+> gate non-satisfiable together — they now agree on one set (§11.4.6).
 
 Wiring contract:
 

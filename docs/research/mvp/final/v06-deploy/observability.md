@@ -1,7 +1,7 @@
 # Observability (Prometheus / Grafana-as-code, SLOs & alerts)
 
-**Revision:** 1
-**Last modified:** 2026-06-25T12:00:00Z
+**Revision:** 2
+**Last modified:** 2026-06-26T12:00:00Z
 
 > Master technical specification — Volume 6 (Deployment, Tooling & Operations), nano-detail
 > document `observability.md`. Scope: the **operator-facing observability stack** for
@@ -113,19 +113,23 @@ The canonical declarations live in `internal/telemetry/metrics.go` `[svc-telemet
 |---|---|---|
 | `helix_open_watch_streams` | gauge | current open `WatchNetworkMap` streams (coordinator load) `[svc-telemetry §3.2]` |
 | `helix_fanout_affected_nodes` | histogram | size of the minimal affected set per event (should be small) `[svc-coordinator §7.2]` |
-| `helix_graph_nodes{tenant}` | gauge | nodes in the in-mem graph — *NOTE: tenant label flagged below* `[svc-coordinator §7.2]` |
-| `helix_presence_online_devices` | gauge | devices currently online in Redis TTL presence (the active-peer gauge) `[svc-telemetry §3.3]` |
+| `helix_graph_nodes` | gauge | nodes in the in-mem graph — **global aggregate, NO `{tenant}` label** (resolved at source, see below) `[svc-coordinator §7.2]` |
+| `helix_presence_online_devices` | gauge | devices currently online in Redis TTL presence (the active-peer gauge; svc-coordinator §7.2 names the same gauge `helix_presence_online` — canonical svc-telemetry name is `helix_presence_online_devices`) `[svc-telemetry §3.3]` |
 | `helix_backpressure_drops_total` | counter | slow-consumer stream drops `[svc-coordinator §7.2]` |
 
-> **UNVERIFIED / cardinality flag — `{tenant}` labels.** `[svc-coordinator §7.2]` declares
-> `helix_open_streams{tenant}` and `helix_graph_nodes{tenant}`, but `[svc-telemetry §3.1]`
-> **forbids** `tenant_id` as a label (unbounded + leaks tenant population). These two specs
-> disagree. This document resolves it conservatively per §11.4.6: **the deployment-side
-> catalogue treats per-tenant breakdowns as forbidden on `/metrics`** and routes any genuine
-> per-tenant count behind the authenticated REST `/v1/stats` (`[svc-telemetry §3.1]`), not
-> Prometheus. The unit test `[svc-telemetry §10 T-UNIT-3]` (every collector's label set ⊆
-> allow-list) is the mechanical enforcer; a `{tenant}` label that survives is a test failure,
-> not a dashboard feature. This contradiction is surfaced, not silently picked.
+> **Reconciled (§11.4.35, 2026-06-26) — `{tenant}` labels: resolved at source, no contradiction.**
+> An earlier draft flagged a cross-doc contradiction (`[svc-coordinator §7.2]` declaring
+> `helix_open_streams{tenant}` / `helix_graph_nodes{tenant}` vs `[svc-telemetry §3.1]` forbidding
+> `tenant_id`). That contradiction **no longer exists**: `[svc-coordinator §7.2]` was itself
+> reconciled (§11.4.35, 2026-06-26) so its `/metrics` gauges (`helix_open_streams`,
+> `helix_graph_nodes`, `helix_presence_online`) are now **global aggregates with NO `{tenant}`
+> label** — already agreeing with svc-telemetry's C3 cardinality ban. The deployment-side
+> catalogue therefore simply **mirrors the resolved state**: per-tenant breakdowns are forbidden
+> on `/metrics` and any genuine per-tenant count is routed behind the authenticated REST
+> `/v1/stats` (`[svc-telemetry §3.1]`), not Prometheus. The unit test `[svc-telemetry §10
+> T-UNIT-3]` (every collector's label set ⊆ allow-list) remains the mechanical enforcer; a
+> `{tenant}` label that survives is a test failure (§11.4.6 — no contradiction is asserted that
+> the source specs do not actually hold).
 
 ### 2.3 Handshake-failure & event-health counters
 
@@ -280,7 +284,8 @@ Two hard rules, both mechanically enforced:
    allow-list (`stream`, `group`, `consumer`, `event_type`, `code`, `version`); a unit test asserts
    it (`[svc-telemetry §10 T-UNIT-3]`). Prometheus relabeling does NOT add `tenant_id`/`device_id`
    — and there is nothing to add, because the exporter never emits them. The §2.2 `{tenant}`
-   contradiction is resolved on the *exporter* side (drop the label), not patched in scrape config.
+   question is resolved on the *exporter* side at source (svc-coordinator §7.2 now emits global
+   aggregates with no `{tenant}` label), not patched in scrape config.
 
 ---
 
@@ -361,7 +366,7 @@ panel must bind a real, populated series under a real load, captured.
 | # | UNVERIFIED item | Why / status |
 |---|---|---|
 | U1 | Edge `/metrics` series names (handshake-fail, transport mix) (§2.3) | data-plane spec owns them; this doc scopes control-plane series only |
-| U2 | `{tenant}`-labelled gauges in `[svc-coordinator §7.2]` vs the §3.1 allow-list ban (§2.2) | resolved conservatively here (forbid on `/metrics`); the cross-doc contradiction is flagged, not silently picked |
+| ~~U2~~ | ~~`{tenant}`-labelled gauges in `[svc-coordinator §7.2]` vs the §3.1 allow-list ban (§2.2)~~ | **RETIRED (§11.4.35, 2026-06-26)** — resolved at source: svc-coordinator §7.2 now emits global aggregates with no `{tenant}` label, agreeing with the §3.1 ban. No live contradiction remains (§11.4.6); see §2.2 reconciliation note |
 | U3 | Prometheus naming-convention exact wording (`_seconds`/`_total` suffix rules) | standard practice; exact spec wording UNVERIFIED `[svc-telemetry §3.1]` |
 | U4 | `/metrics` port-vs-path isolation final choice (§5) | spec mandates *some* network isolation; port-separation is the recommended default, not validated `[svc-telemetry §8.3]` |
 | U5 | Alertmanager routing/receivers (pager/Slack) | deployment-environment specific; the rules carry `severity` labels, the routing tree is operator config |

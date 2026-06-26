@@ -1,7 +1,15 @@
 # Security Test Strategy
 
-**Revision:** 1
+**Revision:** 2
 **Last modified:** 2026-06-26T12:00:00Z
+
+> **Reconciled (§11.4.35, 2026-06-26):** two fixes. (1) §7 acceptance-gate table
+> relabels the RLS row from `S9 (RLS)` to **`P6 (RLS)`** — §0/§1 map RLS to invariant
+> **P6**, while **S9** is the kill-switch / DNS-leak state machine. (2) §9
+> `rig/killswitch_drop.sh` now taps the **censor / WAN-facing egress (`cen2gw`)**,
+> matching the **canonical** definition in [test-rig.md §6.1](test-rig.md): AC7's
+> §11.4.69 negative-evidence (zero plaintext / zero `:53` leak) is valid only on the
+> WAN path, so both docs cite that one definition.
 
 > Master technical specification — Volume 8 (Testing & QA), nano-detail document **security**,
 > one of the seven §11.4.169 cross-cutting test-type deep-dives. It deepens
@@ -213,7 +221,7 @@ also the §11.4.132 risk-ordered head (runs first, before any convenience test).
 | AC6 / SEC-REVOKE-SUBSEC | revoke→edge enforcement p99 < 1 s | revoke timing CSV | MVP |
 | AC8 / SEC-NO-LOG-SCHEMA | `schemalint` PASS, mutation FAIL | `schemalint.log` | MVP |
 | S2 / SEC-KEY-NEVER-LEAVES | zero key bytes across FFI / logs | `ffi_scan.json` | MVP |
-| S9 (RLS) / SEC-RLS | cross-tenant rowset isolation | `rls_rowset.json` | MVP |
+| P6 (RLS) / SEC-RLS | cross-tenant rowset isolation | `rls_rowset.json` | MVP |
 | SEC-PQ-HYBRID | ML-KEM PSK + classical fallback | `handshake.pcap` | Phase 2 (S10) |
 | SEC-DEP-CVE | zero exploitable CVE on reachable path | scanner JSON | MVP (every build) |
 | SEC-SECRET-LEAK | empty tree + history grep | `secret_audit.log` | MVP (every pre-push + pre-store) |
@@ -244,15 +252,19 @@ gate is not a bluff. The working tree is verified quiescent (§11.4.84) and rest
 ## 9. Test skeletons
 
 ```bash
-# rig/killswitch_drop.sh — S4+S5+S9, the anti-bluff kill-switch test (defeats B2), overview §5.7
+# rig/killswitch_drop.sh — S4+S5+S9 kill-switch test (defeats B2), overview §5.7.
+# CANONICAL definition: test-rig.md §6.1 — this SEC view shares that ONE definition.
+# The capture taps the censor / WAN-facing egress (cen2gw), NOT the client-local iface:
+# AC7's §11.4.69 negative-evidence (zero plaintext / zero :53) is only valid on the WAN path.
 set -euo pipefail
 out="qa-results/sec/$(date +%s)"; mkdir -p "$out"; pcap="$out/killswitch.pcap"
 trap 'rig/netns_down.sh' EXIT                                  # §11.4.14
-ip netns exec client tcpdump -i any -w "$pcap" & TPID=$!
-ip netns exec client curl -s --max-time 30 http://10.10.0.20/ >/dev/null &  # traffic in flight
+ip netns exec censor tcpdump -i cen2gw -w "$pcap" & TPID=$!    # tap the path to the WAN (test-rig.md §6.1)
+ip netns exec client curl -s --max-time 30 http://<overlay-exit>/ >/dev/null &  # traffic in flight (in-tunnel)
 sleep 2; rig/force_tunnel_drop.sh; sleep 5                     # core FSM -> Blocked, firewall seals
-ip netns exec client nslookup example.com 2>/dev/null || true # try to leak a DNS query
+ip netns exec client nslookup example.test 2>/dev/null || true # try to leak a DNS query
 kill "$TPID" 2>/dev/null
+# PASS only if, AFTER the drop (t>2s), ZERO non-loopback packets AND ZERO :53 left the censor egress:
 LEAK=$(tshark -r "$pcap" -Y 'frame.time_relative>2 && ip && not (ip.addr==127.0.0.1)' | wc -l)
 DNS=$(tshark  -r "$pcap" -Y 'frame.time_relative>2 && udp.port==53' | wc -l)
 [ "$LEAK" -eq 0 ] && [ "$DNS" -eq 0 ] \

@@ -239,8 +239,16 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; }
 </header>
 <h1 id="memory-test-strategy-ios-ne-ceiling--leak-soak">Memory Test
 Strategy (iOS NE ceiling + leak soak)</h1>
-<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+<p><strong>Revision:</strong> 2 <strong>Last modified:</strong>
 2026-06-26T12:00:00Z</p>
+<blockquote>
+<p><strong>Reconciled (§11.4.35, 2026-06-26):</strong> the 24 h
+MEM-SOAK-LEAK / SLO4 single run is now an <strong>explicit, documented
+§11.4.50 carve-out recorded at the gate (§6)</strong> — verdict
+deterministic-by-construction (re-run on any regression), not a silent
+deviation; only the short G3 probe is N=3. §5 + §6 state the carve-out,
+replacing the prior bare prose.</p>
+</blockquote>
 <blockquote>
 <p>Master technical specification — Volume 8 (Testing &amp; QA),
 nano-detail document <strong>memory</strong>, one of the seven §11.4.169
@@ -508,19 +516,28 @@ self-validated (§5, golden-good flat series PASSes, golden-bad leaking
 series FAILs).</p>
 <hr />
 <h2 id="5-determinism-11450">5. Determinism (§11.4.50)</h2>
-<p>The G3 peak and the soak slope are asserted N=3 (G3 short probe) /
-over a single authoritative 24 h run (soak — a 24 h run is not repeated
-N=3, but its <em>verdict</em> is deterministic: peak &lt; ceiling is a
-fact about that run, and the run is re-run on any regression).
+<p><strong>G3 short probe — N=3 (the §11.4.50 default).</strong>
 <code>ab_run_n_times &quot;g3-ios-peak&quot; 3 run_ios_probe</code> runs the short
-G3 probe 3× against the same <code>.ipa</code> MD5 + same device; the
-evidence-hash is over
+G3 peak-RSS probe 3× against the same <code>.ipa</code> MD5 + same
+device; the evidence-hash is over
 <code>(peak_footprint_bucket, headroom_pct_meets_30: bool)</code> — all
 3 MUST agree. A run where the headroom meets 30% in 2 of 3 is
 <strong>auto-FAIL</strong> (the ceiling margin must be reliable, not
-lucky). The soak&#39;s monotonic-growth verdict is deterministic given the
-same workload; a divergent slope across two soaks is a regression
-triggering §11.4.4 STOP.</p>
+lucky).</p>
+<p><strong>24 h soak (MEM-SOAK-LEAK + SLO4) — an explicit, documented
+§11.4.50 carve-out.</strong> A 24 h run is <strong>not</strong> repeated
+N=3 (three back-to-back 24 h soaks per gate is operationally
+infeasible). The carve-out is justified because the soak&#39;s verdict is
+<strong>deterministic-by-construction</strong>, not
+deterministic-by-repetition: <code>peak &lt; ceiling</code> and
+<code>no monotonic RSS growth</code> are falsifiable facts about
+<em>that one authoritative run</em>, and the run is <strong>re-run on
+any regression</strong> (a divergent slope across two soaks is a
+regression triggering the §11.4.4 STOP). Running the soak once does
+<strong>not</strong> violate §11.4.50 — the property under test is a
+per-run threshold / monotonicity verdict, not a flake-prone pass/fail
+the N-iteration loop exists to catch. This carve-out is recorded
+<strong>at the gate (§6)</strong>, never left as bare prose.</p>
 <hr />
 <h2 id="6-acceptance-gate">6. Acceptance gate</h2>
 <table>
@@ -566,6 +583,17 @@ architecture changes (Rust→? or a memory budget rework), escalated per
 risk-ordered high (G3 is the highest-risk Phase-0 gate). The MEM cell
 appears in the ledger for F-IOS-NE-MEM (G3) and SLO4 (overview §6.3,
 §7.2).</p>
+<blockquote>
+<p><strong>§11.4.50 carve-out (recorded at the gate, per §5).</strong>
+The <strong>24 h</strong> rows — <code>MEM-SOAK-LEAK</code> and
+<code>SLO4</code> — are NOT run N=3: a 24 h soak is run
+<strong>once</strong> as the authoritative run, its verdict
+deterministic-by-construction (<code>peak &lt; ceiling</code> /
+<code>no monotonic growth</code>) and <strong>re-run on any
+regression</strong>. Only the short <strong>G3</strong> probe is run N=3
+(<code>ab_run_n_times</code>, §5). This is the explicit, documented
+carve-out — not a silent §11.4.50 deviation.</p>
+</blockquote>
 <hr />
 <h2 id="7-the-paired-11-mutation">7. The paired §1.1 mutation</h2>
 <pre class="text"><code>MUTATION (paired §1.1, gate CM-MEM-LEAK-DETECTOR-SELFVALIDATED):

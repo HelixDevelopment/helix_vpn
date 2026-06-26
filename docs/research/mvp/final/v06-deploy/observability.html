@@ -240,8 +240,8 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; }
 </header>
 <h1 id="observability-prometheus--grafana-as-code-slos--alerts">Observability
 (Prometheus / Grafana-as-code, SLOs &amp; alerts)</h1>
-<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
-2026-06-25T12:00:00Z</p>
+<p><strong>Revision:</strong> 2 <strong>Last modified:</strong>
+2026-06-26T12:00:00Z</p>
 <blockquote>
 <p>Master technical specification — Volume 6 (Deployment, Tooling &amp;
 Operations), nano-detail document <code>observability.md</code>. Scope:
@@ -448,16 +448,20 @@ C3)</h3>
 <code>[svc-coordinator §7.2]</code></td>
 </tr>
 <tr>
-<td><code>helix_graph_nodes{tenant}</code></td>
+<td><code>helix_graph_nodes</code></td>
 <td>gauge</td>
-<td>nodes in the in-mem graph — <em>NOTE: tenant label flagged
-below</em> <code>[svc-coordinator §7.2]</code></td>
+<td>nodes in the in-mem graph — <strong>global aggregate, NO
+<code>{tenant}</code> label</strong> (resolved at source, see below)
+<code>[svc-coordinator §7.2]</code></td>
 </tr>
 <tr>
 <td><code>helix_presence_online_devices</code></td>
 <td>gauge</td>
 <td>devices currently online in Redis TTL presence (the active-peer
-gauge) <code>[svc-telemetry §3.3]</code></td>
+gauge; svc-coordinator §7.2 names the same gauge
+<code>helix_presence_online</code> — canonical svc-telemetry name is
+<code>helix_presence_online_devices</code>)
+<code>[svc-telemetry §3.3]</code></td>
 </tr>
 <tr>
 <td><code>helix_backpressure_drops_total</code></td>
@@ -467,22 +471,28 @@ gauge) <code>[svc-telemetry §3.3]</code></td>
 </tbody>
 </table>
 <blockquote>
-<p><strong>UNVERIFIED / cardinality flag — <code>{tenant}</code>
-labels.</strong> <code>[svc-coordinator §7.2]</code> declares
-<code>helix_open_streams{tenant}</code> and
-<code>helix_graph_nodes{tenant}</code>, but
-<code>[svc-telemetry §3.1]</code> <strong>forbids</strong>
-<code>tenant_id</code> as a label (unbounded + leaks tenant population).
-These two specs disagree. This document resolves it conservatively per
-§11.4.6: <strong>the deployment-side catalogue treats per-tenant
-breakdowns as forbidden on <code>/metrics</code></strong> and routes any
-genuine per-tenant count behind the authenticated REST
+<p><strong>Reconciled (§11.4.35, 2026-06-26) — <code>{tenant}</code>
+labels: resolved at source, no contradiction.</strong> An earlier draft
+flagged a cross-doc contradiction (<code>[svc-coordinator §7.2]</code>
+declaring <code>helix_open_streams{tenant}</code> /
+<code>helix_graph_nodes{tenant}</code> vs
+<code>[svc-telemetry §3.1]</code> forbidding <code>tenant_id</code>).
+That contradiction <strong>no longer exists</strong>:
+<code>[svc-coordinator §7.2]</code> was itself reconciled (§11.4.35,
+2026-06-26) so its <code>/metrics</code> gauges
+(<code>helix_open_streams</code>, <code>helix_graph_nodes</code>,
+<code>helix_presence_online</code>) are now <strong>global aggregates
+with NO <code>{tenant}</code> label</strong> — already agreeing with
+svc-telemetry&#39;s C3 cardinality ban. The deployment-side catalogue
+therefore simply <strong>mirrors the resolved state</strong>: per-tenant
+breakdowns are forbidden on <code>/metrics</code> and any genuine
+per-tenant count is routed behind the authenticated REST
 <code>/v1/stats</code> (<code>[svc-telemetry §3.1]</code>), not
 Prometheus. The unit test <code>[svc-telemetry §10 T-UNIT-3]</code>
-(every collector&#39;s label set ⊆ allow-list) is the mechanical enforcer; a
-<code>{tenant}</code> label that survives is a test failure, not a
-dashboard feature. This contradiction is surfaced, not silently
-picked.</p>
+(every collector&#39;s label set ⊆ allow-list) remains the mechanical
+enforcer; a <code>{tenant}</code> label that survives is a test failure
+(§11.4.6 — no contradiction is asserted that the source specs do not
+actually hold).</p>
 </blockquote>
 <h3 id="23-handshake-failure--event-health-counters">2.3
 Handshake-failure &amp; event-health counters</h3>
@@ -733,8 +743,9 @@ registered collector&#39;s label set ⊆ the allow-list (<code>stream</code>,
 (<code>[svc-telemetry §10 T-UNIT-3]</code>). Prometheus relabeling does
 NOT add <code>tenant_id</code>/<code>device_id</code> — and there is
 nothing to add, because the exporter never emits them. The §2.2
-<code>{tenant}</code> contradiction is resolved on the <em>exporter</em>
-side (drop the label), not patched in scrape config.</li>
+<code>{tenant}</code> question is resolved on the <em>exporter</em> side
+at source (svc-coordinator §7.2 now emits global aggregates with no
+<code>{tenant}</code> label), not patched in scrape config.</li>
 </ol>
 <hr />
 <h2 id="6-grafana-dashboards-as-code">6. Grafana dashboards-as-code</h2>
@@ -899,12 +910,14 @@ mix) (§2.3)</td>
 only</td>
 </tr>
 <tr>
-<td>U2</td>
-<td><code>{tenant}</code>-labelled gauges in
+<td><del>U2</del></td>
+<td><del><code>{tenant}</code>-labelled gauges in
 <code>[svc-coordinator §7.2]</code> vs the §3.1 allow-list ban
-(§2.2)</td>
-<td>resolved conservatively here (forbid on <code>/metrics</code>); the
-cross-doc contradiction is flagged, not silently picked</td>
+(§2.2)</del></td>
+<td><strong>RETIRED (§11.4.35, 2026-06-26)</strong> — resolved at
+source: svc-coordinator §7.2 now emits global aggregates with no
+<code>{tenant}</code> label, agreeing with the §3.1 ban. No live
+contradiction remains (§11.4.6); see §2.2 reconciliation note</td>
 </tr>
 <tr>
 <td>U3</td>

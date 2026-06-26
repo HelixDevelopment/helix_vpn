@@ -1,15 +1,16 @@
 # Product Definition, Scope, Roles & Principles
 
-**Revision:** 1
-**Last modified:** 2026-06-25T00:00:00Z
+**Revision:** 2
+**Last modified:** 2026-06-26T12:00:00Z
 
 > **Document role.** This is document `00` of the HelixVPN master technical
 > specification set under `docs/research/mvp/final/`. It establishes the
 > *invariants every later document inherits*: what the product is and is not,
 > who uses it, the three-role topology, the licensing/hosting stance, the
 > per-phase scope boundary, the seven non-negotiable principles, the
-> Mullvad-parity acceptance matrix, and — crucially — the **seven open
-> architectural decisions (D1–D7)** that downstream documents (`01`-transport,
+> Mullvad-parity acceptance matrix, and — crucially — the **eight open
+> architectural decisions (D1–D8)** (D1–D7 technical + D8 licensing, §7.2) that
+> downstream documents (`01`-transport,
 > `02`-control-plane, `03`-client-core, …) must resolve. Where a decision is
 > still open this document gives **options plus a recommendation** (§11.4.6
 > no-guessing, §11.4.66 decision discipline); it never silently picks a camp.
@@ -39,7 +40,7 @@
 - [8. The seven non-negotiable principles](#8-the-seven-non-negotiable-principles)
 - [9. Mullvad feature-parity matrix (acceptance checklist)](#9-mullvad-feature-parity-matrix-acceptance-checklist)
 - [10. Scope per phase (in / out)](#10-scope-per-phase-in--out)
-- [11. Open architectural decisions D1–D7 (options + recommendation)](#11-open-architectural-decisions-d1d7-options--recommendation)
+- [11. Open architectural decisions D1–D8 (options + recommendation)](#11-open-architectural-decisions-d1d8-options--recommendation)
 - [12. Glossary of normative terms](#12-glossary-of-normative-terms)
 - [13. Cross-document contracts this document fixes](#13-cross-document-contracts-this-document-fixes)
 - [Sources verified](#sources-verified)
@@ -73,6 +74,16 @@ tunnel); the gateway relays and routes. The headline differentiator over every
 incumbent is **`1 user → N joined private networks`** — a multi-network,
 bidirectional, policy-routed gateway — which no self-hostable product ships
 today `[04_ARCH §1.3]`.
+
+> **Reconciled (§11.4.35, 2026-06-26) — `UNVERIFIED` (§11.4.99).** "no
+> self-hostable product ships [a 1→N multi-network policy-routed gateway] today"
+> is a **competitive-market claim**, not an architectural fact of HelixVPN. It is
+> plausible from the prior-art map (§6) but MUST be re-verified against current
+> product feature sets in the §11.4.99 latest-source pass before any external-facing
+> use. This matches the marker already carried by
+> [`v01-product/product-vision-and-positioning.md`](v01-product/product-vision-and-positioning.md)
+> §2.2/§8 (R-V4). The *architectural* fact — that HelixVPN's design delivers 1→N
+> policy-routed networks — is cited and is **not** `UNVERIFIED`.
 
 ```mermaid
 graph LR
@@ -337,12 +348,19 @@ graph LR
     IMG --> CTL
 ```
 
-### 7.2 Licensing — **OPEN DECISION, recommendation given**
+### 7.2 Licensing (**D8**) — **OPEN DECISION, recommendation given**
+
+> **Reconciled (§11.4.35, 2026-06-26):** the licensing decision is **D8** in the
+> decision register (§11). `SPECIFICATION.md` §9 and the decision-register already
+> number it D8, and
+> [`v01-product/product-vision-and-positioning.md`](v01-product/product-vision-and-positioning.md)
+> §3.1 cites "[00 §7.2]" as D8's source — this section is therefore the **canonical
+> definition** of D8 and it is summarised in §11.1.
 
 The licensing model is *not yet settled* `[04_ARCH §13]` ("decide the licensing
 … before public release"). Because it materially shapes the repository split
 (§11.4.28/.74 decoupled reusable components → own `vasic-digital` repos), it is
-surfaced here as a decision, not a default.
+surfaced here as decision **D8**, not a default.
 
 | Option | Description | Pros | Cons |
 |---|---|---|---|
@@ -600,7 +618,7 @@ gantt
 
 ---
 
-## 11. Open architectural decisions D1–D7 (options + recommendation)
+## 11. Open architectural decisions D1–D8 (options + recommendation)
 
 These are the decisions where the refined `04_VPN_CLD` docs pivoted to one camp
 while the broader 10-LLM consensus diverged `[SYNTHESIS §3]`. Per §11.4.6 /
@@ -713,6 +731,22 @@ of the phases*, reached incrementally, not a v1 boulder. **Resolution gate:**
 none — this is settled as the document set's organizing principle; recorded here
 so the ambition is not silently re-inflated.
 
+### D8 — Licensing model
+
+The licensing decision is **defined in full in §7.2** (options L-A/L-B/L-C +
+recommendation); it is registered here as D8 so the decision set is complete and
+greppable.
+
+| | Summary |
+|---|---|
+| Options | **L-A** AGPLv3 · **L-B** source-available (BSL→Apache) · **L-C** permissive (Apache-2.0/MIT) reusable cores + source-available managed Console (§7.2) |
+| Recommendation | **L-C** — permissive reusable cores (`helix-core`/`helix-ui`/`helix-proto`, §11.4.28/.74) + source-available (BSL-class) for the commercial multi-tenant/managed layer |
+| Against | a competitor could run a managed clone of the permissive core with no give-back (mitigated by the source-available managed layer) |
+
+**Resolution gate:** **OWNER-GATED** (§11.4.66) before public release; until
+resolved every repo carries an explicit `LICENSE.PENDING` marker, never an assumed
+license (§11.4.6).
+
 ### 11.1 Decision summary
 
 | ID | Decision | Recommendation | Resolution gate |
@@ -724,6 +758,7 @@ so the ambition is not silently re-inflated.
 | D5 | gateway edge language | **Rust** (`quinn`+`h3`) | Phase-0 G4 benchmark |
 | D6 | transport topology | **asymmetric per-leg** via one crate | Phase-1 coordinator design |
 | D7 | MVP ambition | **lean spike → 8-criteria MVP** | settled |
+| D8 | licensing model (§7.2) | **L-C** (permissive reusable cores + source-available managed layer) | OWNER-GATED before public release |
 
 ---
 
@@ -759,8 +794,9 @@ The following invariants are *fixed here* and inherited (never weakened, per
    §11.4.93 workable items.
 7. **Mullvad-parity matrix as the acceptance checklist** (§9) → every feature
    doc traces a row.
-8. **Open decisions D1–D7 carry recommendations + resolution gates** (§11) →
-   each gate is a Phase-0/1/2 task; re-opening requires new evidence (§11.4.6/.7).
+8. **Open decisions D1–D8 carry recommendations + resolution gates** (§11; D8 =
+   licensing, defined in §7.2) → each gate is a Phase-0/1/2 task or OWNER-GATED;
+   re-opening requires new evidence (§11.4.6/.7).
 
 ### 13.1 Helix-ecosystem submodule wiring (must be designed in, not retrofitted)
 

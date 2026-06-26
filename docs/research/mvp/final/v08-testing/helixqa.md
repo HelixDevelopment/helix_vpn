@@ -1,7 +1,14 @@
 # HelixQA Autonomous Sessions — HelixVPN nano-detail spec (Volume 8 · §11.4.169 type 6)
 
-**Revision:** 1
+**Revision:** 2
 **Last modified:** 2026-06-26T12:00:00Z
+
+> **Reconciled (§11.4.35, 2026-06-26):** the MVP Definition-of-Done set has **NINE**
+> acceptance criteria (AC1–AC9) per the canonical overview
+> [`10-testing-acceptance-and-qa.md` §7.2](../10-testing-acceptance-and-qa.md). The
+> earlier "8 ACs" wording (§2, §6) and the §4 `status.json` counters that totalled 8
+> (`pass:5 + pending:3`) were a mis-count that left AC9 uncovered — a §11.4.118
+> coverage bluff. Corrected to NINE (the snapshot now totals 9: `pass:5 + pending:4`).
 
 > Nano-detail expansion of [§5.6 of the Volume-8 overview](../10-testing-acceptance-and-qa.md).
 > HelixQA (`HelixDevelopment/helix_qa`) is the **autonomous QA orchestrator**
@@ -65,7 +72,7 @@ The **written test banks** are organised per surface:
 | `helix_qa/banks/control_plane.yaml` | the Go services | enrollment, RLS, reconcile, revoke, events, API authz (drives INT + CHAL) |
 | `helix_qa/banks/data_plane.yaml` | `helix-core` + edge | reach, default-deny, escalation, kill-switch, liveness (drives E2E + SEC) |
 | `helix_qa/banks/clients_<platform>.yaml` | per-platform app | connect flow, status UI, exit picker — one per platform (Access/Connector/Console × iOS/Android/Linux/Windows/macOS/Web; HarmonyOS/Aurora Phase 3) | drives UI + REC |
-| `helix_qa/banks/mvp_dod.yaml` | the release gate | the 8 ACs ([challenges.md §8](challenges.md)) |
+| `helix_qa/banks/mvp_dod.yaml` | the release gate | the 9 ACs ([challenges.md §8](challenges.md)) |
 
 > **`UNVERIFIED`:** the exact bank-file naming and the per-platform split granularity
 > are the intended layout; the obligation (a written bank per app/service/platform,
@@ -164,7 +171,7 @@ The status snapshot:
 ```jsonc
 // qa-results/helix_qa/status.json — atomically rewritten (write-temp-then-rename)
 { "session":"mvp-dod","build":"<artifact-md5>","phase":"running",
-  "counters":{"pass":5,"fail":0,"skip":0,"operator_blocked":0,"pending":3},
+  "counters":{"pass":5,"fail":0,"skip":0,"operator_blocked":0,"pending":4},   // total == 9 ACs (AC1–AC9)
   "last_verdict":{"id":"HVPN-CHAL-AC6-revoke","result":"PASS","evidence":"qa-results/.../revoke_timing.csv"},
   "open_agents":[{"id":"ui-drive-console","state":"in-flight"}] }   // §11.4.147 — not done while open
 ```
@@ -193,7 +200,7 @@ identical *verdict set* with structurally-identical per-check evidence across N=
 
 | Gate | Bar | Layer |
 |---|---|---|
-| **`make qa`** ([overview §9](../10-testing-acceptance-and-qa.md)) | the `mvp-dod` session reports all 8 ACs PASS with per-check evidence | release sweep |
+| **`make qa`** ([overview §9](../10-testing-acceptance-and-qa.md)) | the `mvp-dod` session reports all 9 ACs PASS with per-check evidence | release sweep |
 | **`CM-AUTONOMOUS-FRAMEWORK-SYNC-CHANNEL`** (§11.4.116) | the session emits the JSONL stream + atomic snapshot; every verdict carries an evidence path | pre-build + runtime |
 | **`CM-HQA-NO-COMPLETE-WITHOUT-EVIDENCE`** (§11.4.147) | the done-condition is unsatisfied while any registry entry is non-`complete`; no `complete` without landed evidence | runtime |
 | **`CM-HQA-SELF-META-TEST`** (§11.4.32) | the planted known-broken AC makes the session report FAIL | pre-build meta-test |

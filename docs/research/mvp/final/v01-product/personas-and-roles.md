@@ -1,7 +1,18 @@
 # Personas, Jobs-to-be-Done & the RBAC Role Model
 
-**Revision:** 1
+**Revision:** 2
 **Last modified:** 2026-06-26T12:00:00Z
+
+> **Reconciled (§11.4.35, 2026-06-26):** the RBAC role set is fixed to the
+> authoritative `svc-identity.md` enum `{member, operator, admin}` (+ **Device**,
+> which holds **no RBAC** and is policy-gated). The earlier invented **"tenant
+> owner"** RBAC role is **removed** — `admin` is the top RBAC role — and the
+> missing **`operator`** role (mint enroll tokens / manage devices + policies +
+> advertise prefixes) is **added**. "Self-hoster / tenant-owner" is modelled as a
+> **host/deployment privilege**, NOT an RBAC role. The connector-operator's
+> `route.advertised` capability is **`operator`-tier**, not `member`. This aligns
+> the document to `use-cases-and-journeys.md` UC-04 (admin/operator) and the
+> `svc-identity.md` §7.3 `minRole` table, which win on any conflict.
 
 > **Document role.** Volume 1 deep document that expands §5 (personas and the
 > three app classes) and §3 (the three system roles) of the overview
@@ -13,9 +24,9 @@
 >
 > 1. **System roles** — *Connector / Gateway / Client* — the topological role a
 >    node plays in the data path [00 §3], [SPEC §3].
-> 2. **Identity/RBAC roles** — *tenant owner / admin / member / device
+> 2. **Identity/RBAC roles** — *admin / operator / member / device
 >    (anon-device-token)* — the authorization a principal holds in the control
->    plane [00 §12 "Tenant"], (security overview S1–S5).
+>    plane [00 §12 "Tenant"], (security overview S1–S5), per `svc-identity.md`.
 >
 > A persona is a *human*; an app class is the *software* a persona drives; a
 > system role is the *topological position*; an RBAC role is the *permission
@@ -77,20 +88,22 @@ flowchart LR
     S3[Connector]
   end
   subgraph RBAC["RBAC roles (authorization)"]
-    R1[Tenant owner]
-    R2[Admin]
+    R1[Admin]
+    R2[Operator]
     R3[Member]
     R4[Device / anon-device-token]
   end
   P1 --> A1 --> S1 --> R4
   P2 --> A2 --> S2 --> R1
   P3 --> A1 --> S1 --> R3
-  P4 --> A3 --> S3 --> R3
+  P4 --> A3 --> S3 --> R2
   P5 --> A4 --> S2 --> R1
 ```
 
-The mapping is *not* one-to-one: a self-hoster wears the tenant-owner RBAC role
-*and* operates Connectors *and* uses an Access client — one human, several roles.
+The mapping is *not* one-to-one: a self-hoster holds the `admin` RBAC role *and*
+the host/deployment-owner privilege *and* operates Connectors *and* uses an Access
+client — one human, several roles. ("Tenant-ownership / self-hosting" is a
+host/deployment privilege, not an RBAC role — see §4.)
 The matrix in §5 makes every cell explicit so no capability is assumed.
 
 | Axis | Closed set | Source of truth |
@@ -98,7 +111,7 @@ The matrix in §5 makes every cell explicit so no capability is assumed.
 | Persona | privacy-consumer, business-admin/tenant-owner, business-end-user, connector-operator, self-hoster | this doc §2 |
 | App class | Helix Access, Helix Console, Helix Connector, `helixvpnctl` | [00 §5], [SPEC §3] |
 | System role | Client, Gateway, Connector | [00 §3], [SPEC §3] |
-| RBAC role | tenant owner, admin, member, device (anon-device-token) | [00 §12], [SEC S1–S5], svc-identity |
+| RBAC role | admin, operator, member, device (anon-device-token) | [00 §12], [SEC S1–S5], svc-identity (authoritative enum) |
 
 ---
 
@@ -135,7 +148,7 @@ that are not yet a fixed acceptance gate are marked `UNVERIFIED`.
 |---|---|
 | **Drives** | Helix Console (Web responsive + Desktop — same Flutter build, **no tunnel core**) [00 §5, §5.2] |
 | **System role** | none in the data path — Console is API-client-only, drives the Gateway control plane [00 §5] |
-| **RBAC role** | **Tenant owner** (or delegated **Admin**) |
+| **RBAC role** | **Admin** (the top RBAC role; tenant-ownership is a host/deployment privilege, not an RBAC role) |
 | **JTBD** | (1) CRUD tenants/users/devices/networks/routes/policies; (2) see/revoke devices instantly; (3) author default-deny ACLs that compile to reachability; (4) read a control-action audit trail; (5) optionally manage multi-tenant billing |
 | **Primary journey** | log in (OIDC) → create a tenant → invite members → approve/enroll devices → author policy (`group:contractors → net:warehouse:554/tcp`) → watch it converge in <1 s → revoke a lost device and watch enforcement in <1 s → review `audit_events` [00 §9 F17], [SPEC §8.1 DoD#5/#6], [SEC S5/S7] |
 | **Pain points removed** | policy edits requiring restarts (push-based, <1 s); device revoke lag (<1 s edge enforcement); destinations/flows leaking into audit (audit is control-only) |
@@ -168,7 +181,7 @@ that are not yet a fixed acceptance gate are marked `UNVERIFIED`.
 |---|---|
 | **Drives** | Helix Connector (headless daemon on Linux/Windows/macOS + optional slim UI; Android/embedded for appliances) [00 §3.1, §5] |
 | **System role** | **Connector** [00 §3.1] |
-| **RBAC role** | typically **Member**-level (a connector identity enrolled into a tenant with the right to advertise prefixes); a self-hoster operating their own connector is also tenant owner (§2.5) |
+| **RBAC role** | **Operator** — the connector identity mints/redeems enroll tokens, manages devices + policies, and advertises prefixes; the `route.advertised` capability is **`operator`-tier per `svc-identity.md`**, not `member`. A self-hoster operating their own connector also holds **`admin`** (§2.5) |
 | **JTBD** | (1) onboard a network without opening any inbound port; (2) advertise the CIDRs the network exposes (`route.advertised`); (3) set local ACLs; (4) run headless and reconnect resiliently |
 | **Primary journey** | install agent on a LAN host → enroll (device cert + enrollment token) → dial outbound to the Gateway (reverse tunnel) → advertise CIDRs → Gateway routes authorized client traffic into the LAN and responses back out — neither side ever opened an inbound port [00 §3.1, §4.1, §8 P3] |
 | **Pain points removed** | router port-forwarding (outbound-only); inbound attack surface (none); per-network bespoke VPN configs (same Rust core in advertise/route mode) |
@@ -184,7 +197,7 @@ that are not yet a fixed acceptance gate are marked `UNVERIFIED`.
 |---|---|
 | **Drives** | `helixvpnctl` (Cobra CLI) for bring-up + Console + Connector + Access — wears **all** software hats |
 | **System role** | operates Gateway, one or more Connectors, and a Client |
-| **RBAC role** | **Tenant owner** of their own tenant(s) (a self-hoster running networks for multiple clients has multiple tenants [00 §12]) |
+| **RBAC role** | **Admin** of their own tenant(s) — the top RBAC role. **Tenant-ownership / self-hosting is a host/deployment privilege**, NOT an RBAC role: the human who owns the box bootstraps each tenant (`helixvpnctl init`) and then administers it as `admin`. A self-hoster running networks for multiple clients administers multiple tenants [00 §12] |
 | **JTBD** | (1) stand up a Gateway from zero on a clean VPS with one command; (2) own the no-logs guarantee by owning the deployment; (3) scale the same images from one homelab pod to an HA fleet without a rewrite |
 | **Primary journey** | `helixvpnctl init` on a clean VPS (one rootless Podman pod: edge + control + Postgres + Redis) → enroll a Connector and a Client → reach a LAN host → confirm no durable connection log exists (schema-lint + runtime check) [00 §7.1, §10.2 DoD#1/#8], [SPEC §8.1] |
 | **Pain points removed** | SaaS coordination dependency (self-hosted); vendor-trusted no-logs (self-evident ownership + CI-enforced schema); separate codebases for homelab vs fleet (same images, P6) |
@@ -198,10 +211,10 @@ that are not yet a fixed acceptance gate are marked `UNVERIFIED`.
 | Persona | Primary app class | Other apps used | System role(s) | RBAC role(s) | Uses tunnel core? |
 |---|---|---|---|---|---|
 | Privacy-consumer | Helix Access | — | Client | Device (anon-device-token) | yes (`helix-core` capture mode) |
-| Business-admin / tenant-owner | Helix Console | (Access as a user) | none in data path | Tenant owner (or Admin) | no (Console is API-client only) |
+| Business-admin / tenant-owner | Helix Console | (Access as a user) | none in data path | Admin | no (Console is API-client only) |
 | Business-end-user | Helix Access | — | Client | Member (+ Device per enrolled device) | yes |
-| Connector-operator | Helix Connector | (Console to verify routes) | Connector | Member (+ Device); or Tenant owner if self-hosting | yes (`helix-core` advertise/route mode) |
-| Self-hoster | `helixvpnctl` + Console + Connector + Access | all | Gateway + Connector + Client | Tenant owner | yes (as Connector/Client) |
+| Connector-operator | Helix Connector | (Console to verify routes) | Connector | Operator (+ Device); or Admin if self-hosting | yes (`helix-core` advertise/route mode) |
+| Self-hoster | `helixvpnctl` + Console + Connector + Access | all | Gateway + Connector + Client | Admin (+ host/deployment-owner privilege) | yes (as Connector/Client) |
 
 > **Note (the single-tree flavoring contract, [00 §5.2]).** All three apps build
 > from one Flutter tree via `runHelixApp(flavor, home, capabilities)`,
@@ -216,13 +229,17 @@ that are not yet a fixed acceptance gate are marked `UNVERIFIED`.
 
 The control plane authorizes principals by **RBAC role within a tenant**. A
 **tenant** is an isolated organization boundary enforced by Postgres RLS [00 §12],
-[SEC S6/RLS]. The closed role set:
+[SEC S6/RLS]. The closed role set is the authoritative `svc-identity.md` enum
+`{member, operator, admin}` (+ Device, which holds **no RBAC** and is policy-gated).
+**Tenant-ownership / self-hosting is a host/deployment privilege, not a member of
+this RBAC enum.** The role lattice (`admin > operator > member`, per
+`svc-identity.md` §7.3):
 
 ```mermaid
 flowchart TB
-  TO[Tenant owner] -->|all admin caps + tenant lifecycle + billing| ADM[Admin]
-  ADM -->|user/device/policy/route CRUD + revoke + audit-read| MEM[Member]
-  MEM -->|own devices, reach granted networks| DEV[Device / anon-device-token]
+  ADM[Admin] -->|+ device revoke + user management| OPR[Operator]
+  OPR -->|mint enroll tokens, manage devices/policies, advertise prefixes| MEM[Member]
+  MEM -->|read-only on most surfaces; own devices, reach granted networks| DEV[Device / anon-device-token]
   DEV -->|data-plane principal: holds WG key, reaches AllowedIPs only| EDGE[(Edge verdict map)]
 ```
 
@@ -230,10 +247,18 @@ flowchart TB
 
 | RBAC role | Definition | Distinguishing capability | Authenticated by |
 |---|---|---|---|
-| **Tenant owner** | The principal who owns a tenant; the self-hoster's default role for their own tenant; can have ≥1 tenant | tenant lifecycle (create/delete tenant), billing (optional SKU), assign/revoke Admins | OIDC identity [00 §9 F15] |
-| **Admin** | Delegated administrator within a tenant | full CRUD on users/devices/networks/routes/policies; device revoke; audit read | OIDC identity |
-| **Member** | A user that belongs to a tenant and owns enrolled devices, without admin rights | enroll own devices; connect; reach granted networks; advertise prefixes (connector identities) | OIDC identity |
-| **Device / anon-device-token** | A *data-plane* principal — an enrolled device holding its own WG keypair; the anonymous-device-token variant has no human identity behind it (the privacy-consumer case) | open `WatchNetworkMap`; reach `AllowedIPs`; nothing administrative | short-lived mTLS device cert (≤24 h, tenant-CA-signed) [SEC S4], + WG Noise IK for data [SEC §1.2] |
+| **Admin** | The **top** RBAC role within a tenant — everything an Operator can do, plus device revoke and user management; the business-admin's and self-hoster's role | device revoke; user management; full CRUD on users/devices/networks/routes/policies | OIDC identity [00 §9 F15] |
+| **Operator** | Manages a tenant's devices and policies and mints enrollment tokens; the connector-operator's role | mint/redeem enroll tokens; manage devices/policies; **advertise prefixes (`route.advertised`)** | OIDC identity |
+| **Member** | A user that belongs to a tenant and owns enrolled devices; **read-only on most administrative surfaces** | enroll own devices; connect; reach granted networks | OIDC identity |
+| **Device / anon-device-token** | A *data-plane* principal — an enrolled device holding its own WG keypair; **holds no RBAC role (policy-gated, never the RBAC matrix)**; the anonymous-device-token variant has no human identity behind it (the privacy-consumer case) | open `WatchNetworkMap`; reach `AllowedIPs`; nothing administrative | short-lived mTLS device cert (≤24 h, tenant-CA-signed) [SEC S4], + WG Noise IK for data [SEC §1.2] |
+
+> **Host/deployment privilege (not RBAC).** Tenant lifecycle (create/delete a
+> tenant), bringing up the Gateway (`helixvpnctl init`), and any managed-SKU
+> billing are **host/deployment-owner** capabilities the self-hoster exercises by
+> owning the box — they are **not** entries in the `{member, operator, admin}` RBAC
+> enum. `svc-identity.md` §7.3's `minRole` table (the authoritative `Permission →
+> Role` map) tops out at `admin` (user management + device revoke); it has no
+> "tenant owner" tier.
 
 ### 4.2 Two authentication channels, never conflated
 
@@ -262,8 +287,8 @@ service. Holding the Member role does **not** imply reaching any network.
 The anonymous-device-token enrollment is a first-class path alongside OIDC
 [00 §9 F15]: a device enrolls and obtains a control identity with **no email / no
 PII**, generating its WG keypair on-device (private key never leaves) [SEC S2].
-This is the privacy-consumer's RBAC role — a Device principal with no human
-Member/Admin behind it. Owned by
+This is the privacy-consumer's principal — a Device (holding no RBAC role) with no
+human member/operator/admin behind it. Owned by
 [`../v05-security/identity-and-enrollment.md`](../v05-security/identity-and-enrollment.md)
 + [`../v03-control-plane/svc-identity.md`](../v03-control-plane/svc-identity.md).
 
@@ -282,7 +307,7 @@ Capabilities are grouped by control-plane domain. Legend: ✅ allowed · ⛔ den
 §4.3). The authoritative permission contract is `svc-identity`; rows it has not
 yet fixed are `UNVERIFIED` (flagged inline).
 
-| Capability | Privacy-consumer (Device/anon) | Business-end-user (Member) | Connector-operator (Member) | Business-admin (Admin) | Self-hoster (Tenant owner) |
+| Capability | Privacy-consumer (Device/anon) | Business-end-user (Member) | Connector-operator (Operator) | Business-admin (Admin) | Self-hoster (Admin + host privilege) |
 |---|---|---|---|---|---|
 | Connect / open tunnel | ✅ | ✅ | ✅ (advertise/route mode) | n/a (Console) | ✅ |
 | Use Gateway as privacy exit | ✅ | ✅ | n/a | n/a | ✅ |
@@ -291,20 +316,21 @@ yet fixed are `UNVERIFIED` (flagged inline).
 | Enroll a device | 🔒 (self only) | 🔒 (own devices) | 🔒 (own connector) | ✅ (any in tenant) | ✅ |
 | See own devices | 🔒 | 🔒 | 🔒 | ✅ (all) | ✅ |
 | Revoke a device | 🔒 (own) | 🔒 (own) | 🔒 (own connector) | ✅ (any, <1 s) | ✅ |
-| Author / edit ACL policy | ⛔ | ⛔ | local ACLs only (`UNVERIFIED` scope) | ✅ | ✅ |
+| Author / edit ACL policy | ⛔ | ⛔ | ✅ (Operator tier = `PermManagePolicy`; local-vs-central scope `UNVERIFIED`) | ✅ | ✅ |
 | CRUD users | ⛔ | ⛔ | ⛔ | ✅ | ✅ |
 | CRUD networks / routes | ⛔ | ⛔ | 🔒 (its own routes) | ✅ | ✅ |
 | Read control-action audit | ⛔ | ⛔ | ⛔ | ✅ | ✅ |
-| Manage tenants (create/delete) | ⛔ | ⛔ | ⛔ | ⛔ (`UNVERIFIED` — may be delegable) | ✅ |
-| Manage billing (optional SKU) | ⛔ | ⛔ | ⛔ | ⛔ (`UNVERIFIED`) | ✅ |
-| Bring up Gateway (`helixvpnctl init`) | ⛔ | ⛔ | ⛔ | ⛔ | ✅ (operator/host privilege, not RBAC) |
+| Manage tenants (create/delete) | ⛔ | ⛔ | ⛔ | ⛔ (host/deployment privilege, not RBAC; `UNVERIFIED` whether ever exposed to `admin`) | ✅ (host/deployment privilege, not RBAC) |
+| Manage billing (optional SKU) | ⛔ | ⛔ | ⛔ | ⛔ (host/deployment / managed-SKU privilege; `UNVERIFIED`) | ✅ (host/deployment / managed-SKU privilege) |
+| Bring up Gateway (`helixvpnctl init`) | ⛔ | ⛔ | ⛔ | ⛔ | ✅ (host/deployment privilege, not RBAC) |
 
 > **Honesty note (§11.4.6).** The matrix is the *product-intent* view. Three cells
 > are `UNVERIFIED` because the exact grant is fixed by `svc-identity`/`svc-policy`,
 > not by a product narrative: (a) whether an anon device token may reach a private
-> network or is exit-only; (b) the scope of a Connector-operator's "local ACLs"
-> vs central policy; (c) whether tenant-lifecycle and billing are delegable to
-> Admin or owner-exclusive. Each is a tracked refinement item; the conservative
+> network or is exit-only; (b) the local-vs-central scope of a Connector-operator's
+> (Operator-tier) policy authoring; (c) whether tenant-lifecycle and billing — both
+> **host/deployment privileges, not RBAC** — are ever surfaced through the `admin`
+> role or remain box-owner-exclusive. Each is a tracked refinement item; the conservative
 > default (narrower grant) is assumed until pinned, per §11.4.6/§11.4.101.
 
 ---

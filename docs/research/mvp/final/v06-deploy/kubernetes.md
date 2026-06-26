@@ -1,7 +1,7 @@
 # Kubernetes deployment (fleet / Phase-2 HA substrate)
 
-**Revision:** 1
-**Last modified:** 2026-06-25T12:00:00Z
+**Revision:** 2
+**Last modified:** 2026-06-26T12:00:00Z
 
 > Master technical specification — Volume 6 (Deployment, Tooling & Operations), nano-detail
 > document `kubernetes.md`. Scope: the **Kubernetes substrate** for HelixVPN — plain
@@ -75,7 +75,7 @@ flowchart TB
       D[Deployment helixd<br/>replicas≥2 + HPA<br/>stateless C5]
     end
     subgraph dp[data plane — node-local]
-      DS[DaemonSet helix-edge<br/>hostNetwork + NET_ADMIN<br/>UDP/443 + UDP/51820]
+      DS[DaemonSet helix-edge<br/>hostNetwork + NET_ADMIN+NET_RAW<br/>UDP/443 + UDP/51820]
     end
     subgraph state[durable + ephemeral state]
       PG[(StatefulSet helix-pg<br/>Patroni HA — TRUTH C2)]
@@ -343,14 +343,26 @@ UDP/51820, and programs **kernel** WireGuard peers from the coordinator's `MapDe
 the **gateway-needs-kernel-net caveat** that shapes the entire K8s story:
 
 > **The kernel-net caveat (the reason the edge is special).** WireGuard and MASQUE are **UDP** and
-> require kernel network capability — at minimum `NET_ADMIN` to create/configure the `wg`
-> interface and program AllowedIPs, plus the packet path must reach the node's real UDP socket
-> `[05 §7.3, research-podman_k8s]`. A normal pod behind a `ClusterIP`/L7 ingress **cannot** carry
-> this: most cloud L7 ingress can't forward UDP, and an extra NAT hop breaks the WG endpoint
-> model. Therefore the edge runs as a **`DaemonSet` with `hostNetwork: true`** so UDP/443 lands
-> directly on the node IP (the node IP *is* the gateway IP), with `capabilities: add: [NET_ADMIN]`
-> and everything else dropped. This is `D-K8S-EDGE-INGRESS` option (a), recommended for
-> self-host-on-k8s parity with the quadlet model `[05 §7.3]`.
+> require kernel network capability — `NET_ADMIN` to create/configure the `wg` interface and
+> program AllowedIPs, **plus `NET_RAW`** for the kernel-mode WireGuard fast path
+> (`[research-podman_k8s §2]`, CONFIRMED), plus the packet path must reach the node's real UDP
+> socket `[05 §7.3]`. A normal pod behind a `ClusterIP`/L7 ingress **cannot** carry this: most
+> cloud L7 ingress can't forward UDP, and an extra NAT hop breaks the WG endpoint model. Therefore
+> the edge runs as a **`DaemonSet` with `hostNetwork: true`** so UDP/443 lands directly on the node
+> IP (the node IP *is* the gateway IP), with `capabilities: add: [NET_ADMIN, NET_RAW]` (the
+> canonical set — `[podman-quadlets §3.2, research-podman_k8s §2]`) and everything else dropped,
+> plus a `/dev/net/tun` hostPath device for the userspace `boringtun` fallback (§11). This is
+> `D-K8S-EDGE-INGRESS` option (a), recommended for self-host-on-k8s parity with the quadlet model
+> `[05 §7.3]`.
+
+> **Reconciled (§11.4.35, 2026-06-26):** the edge capability set here is now the **canonical
+> `{NET_ADMIN, NET_RAW}` + `/dev/net/tun`** shared by all four Volume-6 substrates (quadlets,
+> Compose, this doc) and the [`security` privesc scan](helix-ecosystem-integration.md). The earlier
+> "ONLY NET_ADMIN" reading in this doc + the architecture diagram + the privesc-scan assertion was
+> the under-specified side: `[research-podman_k8s §2]` confirms (3 cited sources) that kernel-mode
+> WireGuard — the edge's primary fast path — needs **both** `NET_ADMIN` **and** `NET_RAW`, so the
+> previous K8s set could not satisfy the quadlet/Compose `Q4`/`DC4` gates **and** the security scan
+> simultaneously. They now all assert the same set (§11.4.6).
 
 ```yaml
 # deploy/k8s/base/edge-daemonset.yaml — DATA PLANE (privileged-minimal)
@@ -372,21 +384,31 @@ spec:
           securityContext:
             readOnlyRootFilesystem: true
             allowPrivilegeEscalation: false
-            capabilities: { drop: ["ALL"], add: ["NET_ADMIN"] }   # ONLY NET_ADMIN (doc 04 §)
+            # canonical set: NET_ADMIN + NET_RAW (kernel-mode WG fast path)
+            # [podman-quadlets.md §3.2, research-podman_k8s §2 — CONFIRMED]
+            capabilities: { drop: ["ALL"], add: ["NET_ADMIN", "NET_RAW"] }
           ports:
             - { name: masque, containerPort: 443,   protocol: UDP, hostPort: 443 }
             - { name: wg,     containerPort: 51820, protocol: UDP, hostPort: 51820 }
           env:
             - { name: HELIXD_ADDR, value: "helixd:8443" }   # edge dials the control-plane Service for its stream
+          volumeMounts:
+            - { name: tun, mountPath: /dev/net/tun }          # userspace boringtun fallback (§11 / U2)
+      volumes:
+        - name: tun                                            # host TUN device for the module-less-node fallback
+          hostPath: { path: /dev/net/tun, type: CharDevice }
 ```
 
-> **UNVERIFIED — kernel WireGuard module availability.** `hostNetwork` + `NET_ADMIN` lets the edge
-> program WG, but the *kernel* `wireguard` module must be present on the node (or `boringtun`
-> userspace fallback used, `[SYNTHESIS §2]`, referenced from `helix-core`). Whether the target
-> node kernels ship the module is cluster-specific and MUST be verified per fleet, never assumed
-> (§11.4.6/§11.4.133). The edge image carries the userspace fallback so a module-less node still
-> functions, at a performance cost — that fallback path is the data-plane spec's concern, not
-> this document's, and its presence is asserted only as the documented mitigation.
+> **UNVERIFIED — kernel WireGuard module availability.** `hostNetwork` + `NET_ADMIN`+`NET_RAW`
+> lets the edge program kernel WG, but the *kernel* `wireguard` module must be present on the node
+> (or the `boringtun` userspace fallback used, `[SYNTHESIS §2]`, referenced from `helix-core`).
+> Whether the target node kernels ship the module is cluster-specific and MUST be verified per
+> fleet, never assumed (§11.4.6/§11.4.133). The edge image carries the userspace fallback **and the
+> DaemonSet mounts `/dev/net/tun` (the `tun` hostPath volume above)** so a module-less node can
+> actually run `boringtun` — without that device the cited fallback could not open its TUN. The
+> fallback still functions at a performance cost; its data-plane internals are the data-plane
+> spec's concern, asserted here only as the documented mitigation with its substrate prerequisite
+> wired.
 
 Alternative ingress options (record, not silently dropped) per `D-K8S-EDGE-INGRESS` `[05 §7.3]`:
 **(b)** `Service type=LoadBalancer` with a **UDP-capable** LB (MetalLB on-prem, NLB on AWS) — for

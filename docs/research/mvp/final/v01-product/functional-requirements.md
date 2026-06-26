@@ -1,7 +1,15 @@
 # Functional Requirements (HVPN-FR-NNN)
 
-**Revision:** 1
+**Revision:** 2
 **Last modified:** 2026-06-26T12:00:00Z
+
+> **Reconciled (§11.4.35, 2026-06-26):** FR-101's RBAC role set is aligned to the
+> authoritative `svc-identity.md` enum `{member, operator, admin}` (no "tenant
+> owner"). FR-019 is restated as a fixed asymmetric per-leg default for MVP with
+> map-driven per-leg policy deferred to P2. Owning-doc citations to the
+> non-existent "Connector spec" / "edge spec" are repointed to concrete files
+> (`v04-client/helix-core-rust.md` advertise/route mode + `v03-control-plane/svc-registry.md`
+> for the connector; `01-data-plane.md` for the edge).
 
 > **Document role.** Volume 1 deep document that enumerates **every functional
 > requirement** of HelixVPN as a numbered, traceable list (`HVPN-FR-NNN`),
@@ -93,7 +101,7 @@ Parity rows F1–F9 [00 §9].
 | HVPN-FR-005 | The Client MUST support lightweight obfuscation (LWO — keyed WG-header obfs + padding) as a cheap signature-evasion rung. | A naive WG-signature block is evaded with LWO; tunnel passes traffic. `[evidence]` | `v02-data-plane/transport-lwo.md` | MVP |
 | HVPN-FR-006 | The Client MUST automatically escalate transports on handshake failure: plain → LWO → MASQUE/QUIC (→ Shadowsocks → UoT in P2). | DoD#4: when plain WG is blocked, the client auto-escalates to MASQUE without user action. `[evidence]` | `v02-data-plane/transport-selection-ladder.md` | MVP |
 | HVPN-FR-007 | The Client MUST allow the user to manually pin a transport (overriding the auto-ladder). | `helix_pin_transport(kind)` pins; `None` restores auto. | `03` (FFI), `v04-client/helix-core-rust.md` | MVP |
-| HVPN-FR-008 | The edge MUST support port-based evasion (custom WG port / :443 / :53) and port-hopping. | Tunnel establishes on :443/udp and :53; a multi-listener accepts. `[evidence]` | `v02-data-plane/transport-masque-quic.md`, edge spec | MVP |
+| HVPN-FR-008 | The edge MUST support port-based evasion (custom WG port / :443 / :53) and port-hopping. | Tunnel establishes on :443/udp and :53; a multi-listener accepts. `[evidence]` | `v02-data-plane/transport-masque-quic.md`, `01` (edge / data-plane) | MVP |
 | HVPN-FR-009 | The Client MUST support Shadowsocks-wrapped WG (AEAD) as an obfuscation rung. | WG-in-Shadowsocks tunnel passes traffic under a QUIC/UDP-hostile network. `[evidence]` | `v02-data-plane/transport-shadowsocks.md` | P2 |
 | HVPN-FR-010 | The Client MUST support UDP-over-TCP as the last-resort transport when UDP is fully blocked. | Tunnel survives a total UDP block via UoT. `[evidence]` | `v02-data-plane/transport-udp-over-tcp.md` | P2 |
 | HVPN-FR-011 | The auto-ladder SHOULD use per-network memory + regional priors to pick the likely-working transport first. | The ladder records last-working transport per network and tries it first. | `v02-data-plane/transport-selection-ladder.md` | P2 |
@@ -104,7 +112,7 @@ Parity rows F1–F9 [00 §9].
 | HVPN-FR-016 | The data plane MUST manage MTU correctly per transport (e.g. 1420 for plain WG; reduced under MASQUE). | No fragmentation/black-hole; large-payload transfer succeeds on each transport. `[evidence]` | `v02-data-plane/transport-plain-udp.md`, `wireguard-core.md` | MVP |
 | HVPN-FR-017 | The data plane SHOULD support DAITA (constant packet sizing + cover traffic) as an orthogonal shaping layer **above** WG. | DAITA shaping produces constant-size packets; measured overhead within budget. `[evidence]` | `v02-data-plane/daita.md` | P2 |
 | HVPN-FR-018 | The Client MUST present connection state transitions (Disconnected/Connecting(transport)/Connected/Reconnecting/Failed) to the UI via a hot status stream. | `helix_status_stream` emits each transition; UI is a pure function of it. `[evidence]` | `03` (§7.3 FFI), `v04-client/state-management.md` | MVP |
-| HVPN-FR-019 | The transport topology MUST support best-fit-per-leg operation (obfuscation user↔gateway; plain WG gateway↔connector). | Per-leg transport policy is honoured from the pushed network map. | `01` (D6), `v03-control-plane/svc-coordinator.md` | P2 |
+| HVPN-FR-019 | The transport topology MUST ship a **fixed asymmetric per-leg default in MVP** — user↔gateway runs the obfuscation ladder, gateway↔connector is plain WG/UDP; **map-driven configurable per-leg transport policy is P2.** | MVP: the default asymmetric legs are honoured (user↔gw escalates the ladder, gw↔connector is plain WG) with no per-leg config surface. P2: per-leg transport policy is overridable from the pushed network map. `[evidence]` | `01` (D6), `v03-control-plane/svc-coordinator.md` | MVP (fixed default) / P2 (configurable) |
 | HVPN-FR-020 | The data plane MUST support direct P2P + NAT traversal with a DERP-style relay fallback. | A P2P session forms across a real NAT; relay fallback engages when hole-punching fails. `[evidence]` | `01`, `v02-data-plane/routing-and-addressing.md` | P2 |
 
 ---
@@ -119,7 +127,7 @@ F15, F17.
 
 | ID | Statement | Acceptance criterion | Owning doc | Priority |
 |---|---|---|---|---|
-| HVPN-FR-101 | The control plane MUST support OIDC identity for human principals (tenant owner / admin / member). | OIDC login yields a tenant-scoped identity. `[evidence]` | `svc-identity.md` | MVP |
+| HVPN-FR-101 | The control plane MUST support OIDC identity for human principals (RBAC roles `admin` / `operator` / `member`, per `svc-identity.md`). | OIDC login yields a tenant-scoped identity with the correct RBAC role. `[evidence]` | `svc-identity.md` | MVP |
 | HVPN-FR-102 | The control plane MUST support anonymous device-token enrollment (no email / no PII) alongside OIDC. | A device enrolls and connects with no PII captured. `[evidence]` | `svc-identity.md`, `identity-and-enrollment.md` | MVP |
 | HVPN-FR-103 | A device MUST generate its WireGuard keypair on-device; the private key MUST NEVER leave the device. | The `pki`/registry schema has no private-key column; only the 32-byte public key is transmitted. `[evidence]` schema + wire capture. | `identity-and-enrollment.md`, `svc-pki.md` | MVP |
 | HVPN-FR-104 | Enrollment MUST be gated by a device cert + enrollment token. | An unenrolled/untokened device is refused; a valid token enrolls. `[evidence]` | `svc-identity.md`, `identity-and-enrollment.md` | MVP |
@@ -165,7 +173,7 @@ X1/X2 [00 §9], multi-network model [00 §4.2], D4.
 | HVPN-FR-303 | The overlay MUST assign each tenant an IPv6 ULA /48 and map advertised IPv4 LANs into it via 4via6 (D4 recommendation), with per-network NAT as a documented fallback. | An advertised IPv4 LAN is reachable through its 4via6 mapping; NAT fallback documented + testable. `[evidence]` | `svc-ipam.md`, `routing-and-addressing.md` | MVP |
 | HVPN-FR-304 | Each node MUST receive a stable overlay IP. | A node's overlay IP persists across reconnects. `[evidence]` | `svc-ipam.md` | MVP |
 | HVPN-FR-305 | A Connector MUST advertise the CIDRs its network exposes (`route.advertised`), and the Gateway MUST route authorized client traffic into that LAN and responses back out. | DoD#3 path: client → gateway → connector LAN host and back. `[evidence]` | `svc-registry.md`, edge, `routing-and-addressing.md` | MVP |
-| HVPN-FR-306 | The Gateway MUST route between the network-side leg (Connector→Gateway) and the user-side leg (Client→Gateway) — the "two-way" model — without either side opening an inbound port. | Both legs are outbound; the Gateway stitches them; no inbound listener on any private network. `[evidence]` | `01`, edge, Connector spec | MVP |
+| HVPN-FR-306 | The Gateway MUST route between the network-side leg (Connector→Gateway) and the user-side leg (Client→Gateway) — the "two-way" model — without either side opening an inbound port. | Both legs are outbound; the Gateway stitches them; no inbound listener on any private network. `[evidence]` | `01` (edge / data-plane), `v04-client/helix-core-rust.md` (advertise/route mode), `svc-registry.md` | MVP |
 | HVPN-FR-307 | The IPAM service MUST allocate from the tenant overlay pool and track host allocations + 4via6 mappings. | Pool allocation is collision-free under concurrent enrollment. `[evidence]` stress test. | `svc-ipam.md` | MVP |
 
 ---
@@ -219,19 +227,21 @@ Persona: business-admin / tenant-owner [00 §5.3].
 
 ## H. Connector (FR-7xx)
 
-Owning docs: Connector spec (Volume 4 shims +
-[`../v04-client/helix-core-rust.md`](../v04-client/helix-core-rust.md) advertise/route
-mode), [`../v03-control-plane/svc-registry.md`](../v03-control-plane/svc-registry.md).
+Owning docs: [`../v04-client/helix-core-rust.md`](../v04-client/helix-core-rust.md)
+(advertise/route mode) + Volume 4 platform shims (`shim-*.md`) +
+[`../v03-control-plane/svc-registry.md`](../v03-control-plane/svc-registry.md)
+(there is no standalone "Connector spec" file — the Connector is the same
+`helix-core` in advertise/route mode plus its registry contract).
 Differentiator X2; persona connector-operator [00 §5.2].
 
 | ID | Statement | Acceptance criterion | Owning doc | Priority |
 |---|---|---|---|---|
-| HVPN-FR-701 | The Connector MUST dial outbound to the Gateway and MUST NOT require any inbound port-forward. | The Connector establishes the tunnel with zero inbound exposure on its network. `[evidence]` | Connector spec, `helix-core-rust.md` | MVP |
-| HVPN-FR-702 | The Connector MUST run headless (daemon) with an optional slim config UI. | The daemon runs without a UI; the optional UI configures it. `[evidence]` | Connector spec | MVP |
+| HVPN-FR-701 | The Connector MUST dial outbound to the Gateway and MUST NOT require any inbound port-forward. | The Connector establishes the tunnel with zero inbound exposure on its network. `[evidence]` | `helix-core-rust.md` (advertise/route mode), `svc-registry.md` | MVP |
+| HVPN-FR-702 | The Connector MUST run headless (daemon) with an optional slim config UI. | The daemon runs without a UI; the optional UI configures it. `[evidence]` | `helix-core-rust.md` (advertise/route mode) | MVP |
 | HVPN-FR-703 | The Connector MUST share the same Rust `helix-core` as the Client, in advertise/route mode (not capture mode). | The Connector links the same crate; runs in advertise/route mode. | `helix-core-rust.md` | MVP |
-| HVPN-FR-704 | The Connector MUST advertise its network's CIDRs to the Gateway and route authorized traffic into the LAN. | Advertised CIDR appears in the registry; authorized client reaches a LAN host. `[evidence]` | `svc-registry.md`, edge | MVP |
-| HVPN-FR-705 | The Connector SHOULD support local ACLs scoped to its own network. | A local ACL on the connector is honoured for its network. `[evidence]` (`UNVERIFIED` interaction with central policy — fixed by `svc-policy.md`) | `svc-policy.md`, Connector spec | MVP |
-| HVPN-FR-706 | The Connector MUST be runnable on Android/embedded appliance hardware in addition to Linux/Windows/macOS. | A Connector build runs on an embedded/Android target. `[evidence]` | Connector spec, `shim-android.md` | P2 |
+| HVPN-FR-704 | The Connector MUST advertise its network's CIDRs to the Gateway and route authorized traffic into the LAN. | Advertised CIDR appears in the registry; authorized client reaches a LAN host. `[evidence]` | `svc-registry.md`, `01` (edge) | MVP |
+| HVPN-FR-705 | The Connector SHOULD support local ACLs scoped to its own network. | A local ACL on the connector is honoured for its network. `[evidence]` (`UNVERIFIED` interaction with central policy — fixed by `svc-policy.md`) | `svc-policy.md`, `helix-core-rust.md` (advertise/route mode) | MVP |
+| HVPN-FR-706 | The Connector MUST be runnable on Android/embedded appliance hardware in addition to Linux/Windows/macOS. | A Connector build runs on an embedded/Android target. `[evidence]` | `helix-core-rust.md` (advertise/route mode), `shim-android.md` | P2 |
 | HVPN-FR-707 | The Connector MUST follow availability-following on drop: detect, log offline, reconnect with defined timings, resume (§11.4.144 alignment). | A simulated drop is logged offline, reconnected, and resumed with no silent gap. `[evidence]` | `orchestrator-and-state.md` | MVP |
 
 ---
@@ -269,7 +279,7 @@ Principle P6; differentiator X3.
 | HVPN-FR-904 | `helixvpnctl` MUST provide init / key management / enrollment-token / policy / revoke commands. | Each subcommand functions end-to-end. `[evidence]` | `helixvpnctl.md` | MVP |
 | HVPN-FR-905 | Deployment MUST also be expressible as Docker Compose and Kubernetes manifests. | Equivalent Compose + K8s manifests bring up the stack. `[evidence]` | `docker-compose.md`, `kubernetes.md` | P2 |
 | HVPN-FR-906 | The edge/data-plane container MUST be hardened: read-only rootfs, seccomp, `NET_ADMIN`-only, no SSH (S8). | The container runs with only `NET_ADMIN`, read-only rootfs, seccomp profile; no SSH. `[evidence]` | `podman-quadlets.md`, `04` (S8) | MVP |
-| HVPN-FR-907 | The system MUST be fail-static: if the control plane is down, existing tunnels keep forwarding. | DoD-adjacent: control plane stopped mid-session → existing tunnel keeps forwarding. `[evidence]` | edge, `01`, `02` | MVP |
+| HVPN-FR-907 | The system MUST be fail-static: if the control plane is down, existing tunnels keep forwarding. | DoD-adjacent: control plane stopped mid-session → existing tunnel keeps forwarding. `[evidence]` | `01` (edge / data-plane), `02` | MVP |
 | HVPN-FR-908 | Any gitignored build-essential artefact MUST have a documented regeneration/re-obtain mechanism (§11.4.77). | A fresh clone regenerates required artefacts via `scripts/setup.sh`. `[evidence]` | `repo-layout-and-decoupling.md` | MVP |
 
 ---

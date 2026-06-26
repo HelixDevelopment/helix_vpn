@@ -242,8 +242,19 @@ DPI/censor sim, tc-netem, iperf3, leak harness (§11.4.169 /
 <h1 id="the-network-test-rig--netns-topology-nftables-dpicensor-sim-tc-netem-iperf3-leak-harness-114169--11469">The
 Network Test Rig — netns topology, nftables DPI/censor sim, tc-netem,
 iperf3, leak harness (§11.4.169 / §11.4.69)</h1>
-<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+<p><strong>Revision:</strong> 2 <strong>Last modified:</strong>
 2026-06-26T12:00:00Z</p>
+<blockquote>
+<p><strong>Reconciled (§11.4.35, 2026-06-26):</strong> this document&#39;s
+four-namespace rig (<code>client</code> / <code>censor</code> /
+<code>gateway</code> / <code>exit</code>, DPI in a distinct
+<code>censor-ns</code> middlebox) is the <strong>canonical</strong>
+test-rig topology; <a href="e2e.md">e2e.md §2</a> was rewritten onto it.
+§6.1 <code>rig/killswitch_drop.sh</code> is the <strong>single canonical
+definition</strong> of the kill-switch driver — capture on the censor /
+WAN-facing egress (<code>cen2gw</code>); the SEC view (<a href="security.md">security.md §9</a>) cites it rather than redefining
+it.</p>
+</blockquote>
 <blockquote>
 <p>Volume 8 (Testing &amp; QA) nano-detail specification. This document
 deepens the [10 §5.3] netns E2E rig and [10 §4] topology into the
@@ -576,6 +587,15 @@ Each uses a host-side pcap on <code>cen2gw</code> (the only path out) so
 the capture observes exactly what would reach a real ISP.</p>
 <h3 id="61-kill-switch-s4--seal-on-tunnel-drop">6.1 Kill-switch (S4) —
 seal on tunnel drop</h3>
+<blockquote>
+<p><strong>Canonical <code>rig/killswitch_drop.sh</code>.</strong> This
+is the single source of truth for the kill-switch driver; the SEC view
+(<a href="security.md">security.md §9</a>) cites this definition rather
+than redefining it. The capture taps the <strong>censor / WAN-facing
+egress (<code>cen2gw</code>)</strong> because AC7&#39;s §11.4.69
+negative-evidence (zero plaintext / zero <code>:53</code> leak) is only
+valid on the WAN path, not on the client-local interface.</p>
+</blockquote>
 <div class="sourceCode" id="cb10"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># rig/killswitch_drop.sh — S4, the anti-bluff kill-switch test (defeats B2) [10 §5.7]</span></span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="bu">set</span> <span class="at">-euo</span> pipefail</span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="va">pcap</span><span class="op">=</span><span class="st">&quot;qa-results/sec/</span><span class="va">$(</span><span class="fu">date</span> +%s<span class="va">)</span><span class="st">_killswitch.pcap&quot;</span></span>

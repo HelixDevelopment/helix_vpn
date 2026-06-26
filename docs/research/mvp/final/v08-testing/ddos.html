@@ -239,8 +239,18 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; }
 </header>
 <h1 id="ddos--load-flood-test-strategy">DDoS / Load-Flood Test
 Strategy</h1>
-<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+<p><strong>Revision:</strong> 2 <strong>Last modified:</strong>
 2026-06-26T12:00:00Z</p>
+<blockquote>
+<p><strong>Reconciled (§11.4.35, 2026-06-26):</strong> the
+<code>wg_init_flood</code> generator (§2, §8) now targets the
+<strong>canonical plain-WG port <code>gw:51820</code></strong> — a real
+WG <code>MessageInitiation</code> flood hits the plain-WG port that <a href="test-rig.md">test-rig.md §3.1</a> drops, not the MASQUE/QUIC
+<code>:443</code> port (the earlier <code>gw:443</code> target conflated
+the two surfaces). The volumetric <code>iperf3</code> flood keeps
+<code>:443</code> (the MASQUE/QUIC surface); the edge multiplexes both,
+but each flood class is modelled on its own port for rig fidelity.</p>
+</blockquote>
 <blockquote>
 <p>Master technical specification — Volume 8 (Testing &amp; QA),
 nano-detail document <strong>ddos</strong>, one of the seven §11.4.169
@@ -393,7 +403,7 @@ probe are distinct netns peers.</p>
    │ wg_init_flood  (Noise-IK init torrent)│     │ helix-core: real enroll + WG    │
    │ iperf3 -u -b &lt;rate&gt;  (volumetric)     │     │   handshake, sampled p99 latency│
    └───────────────┬──────────────────────┘     └───────────────┬────────────────┘
-                   │   both target :443 on        ▲              │
+                   │  init→:51820 vol→:443        ▲              │
                    ▼                              │ probe        ▼
         ┌───────────────────────────────────────────────────────────────┐
         │ helix-edge (Rust, rootless Podman §11.4.161) — verdict map +    │
@@ -405,11 +415,16 @@ probe are distinct netns peers.</p>
 initiation-message generator (not a mock: it emits real WG
 <code>MessageInitiation</code> frames with valid framing but
 unregistered static keys, exactly the cheapest attacker packet [01-DP],
-[TM <code>T-EDGE-D-1</code>]). Rust binary
-<code>rig/wg_init_flood</code>, rate configurable
-(<code>--pps</code>).</li>
+[TM <code>T-EDGE-D-1</code>]); it targets the <strong>canonical plain-WG
+port <code>udp/51820</code></strong> (the port [<code>test-rig.md</code>
+§3.1] drops), <em>not</em> the MASQUE/QUIC <code>:443</code> surface —
+plain WG is <code>udp/51820</code>, MASQUE/QUIC is <code>:443</code>
+(the edge multiplexes both, but the handshake-flood models real plain WG
+on its own port). Rust binary <code>rig/wg_init_flood</code>, rate
+configurable (<code>--pps</code>).</li>
 <li><strong><code>iperf3 -u -b &lt;rate&gt;</code></strong> — UDP
-volumetric flood at line rate toward <code>:443</code>.</li>
+volumetric flood at line rate toward the MASQUE/QUIC
+<code>:443</code>.</li>
 <li><strong>legit probe</strong> — a real <code>helix-core</code>
 instance performing genuine enroll + WG handshake + <code>iperf3</code>
 goodput in the <code>legit</code> netns, sampling handshake completion
@@ -619,7 +634,7 @@ any commit.</p>
 <span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="bu">trap</span> <span class="st">&#39;rig/flood_stop.sh; rig/netns_down.sh&#39;</span> EXIT            <span class="co"># §11.4.14 cleanup on every path</span></span>
 <span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="ex">scrape_counters_1hz</span> <span class="st">&quot;</span><span class="va">$out</span><span class="st">/limiter_counters.csv&quot;</span> <span class="kw">&amp;</span>           <span class="co"># edge counters</span></span>
 <span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="ex">sample_edge_liveness_1hz</span> <span class="st">&quot;</span><span class="va">$out</span><span class="st">/edge_liveness.csv&quot;</span> <span class="kw">&amp;</span>         <span class="co"># helix_edge_up, RSS</span></span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="ex">ip</span> netns exec flooders rig/wg_init_flood <span class="at">--target</span> gw:443 <span class="at">--pps</span> <span class="st">&quot;</span><span class="va">$ATTACK_PPS</span><span class="st">&quot;</span> <span class="at">--keys</span> attacker_keys.bin <span class="kw">&amp;</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="ex">ip</span> netns exec flooders rig/wg_init_flood <span class="at">--target</span> gw:51820 <span class="at">--pps</span> <span class="st">&quot;</span><span class="va">$ATTACK_PPS</span><span class="st">&quot;</span> <span class="at">--keys</span> attacker_keys.bin <span class="kw">&amp;</span>  <span class="co"># plain-WG port (test-rig.md §3.1)</span></span>
 <span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="fu">sleep</span> 2                                                      <span class="co"># let the flood ramp</span></span>
 <span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="ex">ip</span> netns exec legit helix-core probe <span class="at">--enroll</span> legit_client.toml <span class="at">--iperf</span> 20 <span class="dt">\</span></span>
 <span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">--latency-out</span> <span class="st">&quot;</span><span class="va">$out</span><span class="st">/legit_latency.json&quot;</span>                 <span class="co"># the LEGIT client, concurrently</span></span>

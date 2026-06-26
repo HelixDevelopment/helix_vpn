@@ -1,6 +1,6 @@
 # Workable-Items Model — every WBS task/subtask → the §11.4.93 SQLite single source of truth
 
-**Revision:** 1
+**Revision:** 2
 **Last modified:** 2026-06-26T12:00:00Z
 
 > Volume 7 (Phase Execution), document 1 of 5. This spec defines the **mechanical
@@ -110,7 +110,7 @@ CREATE TABLE IF NOT EXISTS items (
   parent_id     TEXT REFERENCES items(atm_id),          -- owning epic/milestone/task; NULL at epic root
   phase         TEXT NOT NULL CHECK (phase IN ('P0','P1','P2','P3')),
   kind          TEXT NOT NULL CHECK (kind IN ('epic','milestone','task','subtask','gate')),
-  title         TEXT NOT NULL CHECK (length(title) >= 6),                 -- §11.4.91 self-contained
+  title         TEXT NOT NULL CHECK (length(title) >= 6),                 -- DDL char-floor; loader enforces the §11.4.91 ≥6-word/≥40-char rule
   description   TEXT NOT NULL CHECK (length(description) >= 40),          -- §11.4.91/.148 D2
   status        TEXT NOT NULL DEFAULT 'Queued'
                 CHECK (status IN ('Queued','In progress','Ready for testing',
@@ -209,6 +209,40 @@ field contract declared in every phase doc's `§0 Field dictionary` /
 | `· DoD: AC3` / `· SLO1` | `dod_refs` | JSON array |
 | `[04_P1 §7]` inline cites | `source_refs` | JSON array |
 | (attribution) | `created_by`/`assigned_to` | §11.4.104 handles; legacy `''` still parses |
+
+**The §11.4.169 test-type code map (one canonical set + documented aliases).**
+`test_types` stores canonical §11.4.169 codes. The four WBS docs accreted two
+shorthand dialects — Phase 0's terse abbreviations (`UT/IT/CONC/CH/HQA/SC`, e.g.
+the `HVPN-P0-008` sample row and the §10 worked example) and the long forms used
+by Phases 1–3 (`UNIT/INT/CHAOS/CHAL/SCALE/STRESS/…`). The loader normalizes the
+Phase-0 shorthands to the canonical code on `md-to-db`; both render identically.
+Canonical codes and their §11.4.169 type (Phase-0 alias in parentheses where it
+differs):
+
+| Canonical code | §11.4.169 test type | P0 alias |
+|---|---|---|
+| `UNIT` | unit | `UT` |
+| `INT` | integration | `IT` |
+| `E2E` | e2e | `E2E` |
+| `FA` | full-automation | `FA` |
+| `CHAL` | Challenges (`challenges` submodule) | `CH` |
+| `HQA` | HelixQA (test banks + autonomous sessions) | `HQA` |
+| `DDOS` | DDoS / load-flood | `DDOS` |
+| `SEC` | security | `SEC` |
+| `CHAOS` | stress + chaos (chaos half) | — |
+| `STRESS` | stress (load/contention/boundary) | — |
+| `CONC` | concurrency / atomicity | `CONC` |
+| `RACE` | race-condition / deadlock | — |
+| `MEM` | memory (leak / soak / ceiling) | — |
+| `BENCH` | benchmarking / performance | `BENCH` |
+| `SCALE` | scaling | `SC` |
+| `UX` | ux | `UX` |
+| `REC` | recorded media evidence (§11.4.158/.159) | — |
+| `REPRO` | reproducibility (bit-identical builds) | — |
+
+The only genuine alias rewrites are `UT→UNIT`, `IT→INT`, `CH→CHAL`, `SC→SCALE`;
+`CONC`, `HQA`, `BENCH`, `FA`, `E2E`, `UX` are already identical across phases.
+`validate` rejects any code outside this canonical set (or its documented alias).
 
 **Effort honesty (§11.4.6).** Every phase WBS states explicitly that effort
 roll-ups are "indicative person-day totals … **not** a commitment" (`07-…` §22,
@@ -444,7 +478,7 @@ CREATE TABLE IF NOT EXISTS gates (
   owning_epic   TEXT,
   outcome       TEXT NOT NULL DEFAULT 'pending'
                 CHECK (outcome IN ('pending','pass','fail','rust','go',
-                                   'pending_device','operator_blocked')),
+                                   'pending_device','pending_toolchain','operator_blocked')),
   evidence_path TEXT
 );
 ```
@@ -459,9 +493,10 @@ A leaf is `complete` only when (`07-…` §0 anti-bluff note, §11.4.93/.149):
 3. its lifecycle reached a terminal `status` (`Fixed`/`Implemented`/`Completed
    (→ Fixed.md)`) with an `item_history` closure row (§11.4.34 By/Reason/Evidence);
 4. its gate (if any) has `outcome IN ('pass','rust','go')` — or, for Phase-3
-   device-/engagement-gated items, an honest `pending_device`/`operator_blocked`
-   with the §11.4.148 D3 unblock condition, **never** a faked pass (§11.4.6,
-   `09-…` §13 honest-gap rule).
+   device-/engagement-/toolchain-gated items, an honest
+   `pending_device`/`pending_toolchain`/`operator_blocked` (e.g. G26 reproducibility
+   held `PENDING_TOOLCHAIN:` per `09-…` R-P3-7) with the §11.4.148 D3 unblock
+   condition, **never** a faked pass (§11.4.6, `09-…` §13 honest-gap rule).
 
 Metadata-only / config-only / grep-without-runtime PASS is forbidden (§11.4 /
 §11.4.1). The §11.4.147 agent registry treats any non-`complete` item as work

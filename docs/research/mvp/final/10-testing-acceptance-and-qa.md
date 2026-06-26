@@ -1,7 +1,13 @@
 # Testing, Acceptance & Anti-Bluff QA Strategy (constitution §11.4.169)
 
-**Revision:** 1
-**Last modified:** 2026-06-25T00:00:00Z
+**Revision:** 2
+**Last modified:** 2026-06-26T12:00:00Z
+
+> **Reconciled (§11.4.35, 2026-06-26):** §2 now states the test-type set consistently
+> as **16 bundled families / 18 enumerated codes** (resolving the prior "Sixteen
+> types" prose vs the 18 `test_type` CHECK codes in the v08 coverage-ledger schema).
+> §7.2 (DoD = nine ACs, AC1–AC9) is unchanged and is the canonical authority the v08
+> child docs were reconciled to.
 
 > Master technical specification — document 10 of the HelixVPN set. This is the
 > **canonical QA contract**: it defines, once, the §11.4.169 test-type taxonomy,
@@ -110,9 +116,11 @@ regression guard for every closed defect.
 
 ## 2. The closed test-type taxonomy (canonical)
 
-This is the **single source** for the abbreviations used project-wide. Sixteen
-types; `DDOS` and `SCALE` are MVP-`NOT_APPLICABLE` by design (single-node
-self-host) and re-arm in Phase 2 (HA / managed).
+This is the **single source** for the abbreviations used project-wide — **16 bundled
+families / 18 enumerated codes** (the families below expand to the 18 `test_type`
+CHECK codes of the §6 coverage-ledger schema: `UI`/`UX` and `CHAL`/`HQA` each render
+as one family but distinct codes). `DDOS` and `SCALE` are MVP-`NOT_APPLICABLE` by
+design (single-node self-host) and re-arm in Phase 2 (HA / managed).
 
 | Abbrev | §11.4.169 type | HelixVPN floor expectation | Primary harness | MVP status |
 |---|---|---|---|---|

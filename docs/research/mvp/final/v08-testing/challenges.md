@@ -1,7 +1,13 @@
 # Challenges — HelixVPN nano-detail spec (Volume 8 · §11.4.169 type 5)
 
-**Revision:** 1
+**Revision:** 2
 **Last modified:** 2026-06-26T12:00:00Z
+
+> **Reconciled (§11.4.35, 2026-06-26):** the MVP Definition-of-Done has **NINE**
+> acceptance criteria (AC1–AC9) per the canonical overview
+> [`10-testing-acceptance-and-qa.md` §7.2](../10-testing-acceptance-and-qa.md). The
+> earlier "eight … (AC1–AC9)" wording (§1, §6) was a self-contradictory mis-count; a
+> Challenge gate scoring 8/9 ACs is a §11.4.118 coverage bluff. Corrected to NINE.
 
 > Nano-detail expansion of [§5.5 of the Volume-8 overview](../10-testing-acceptance-and-qa.md).
 > Challenges are the constitution's anti-bluff Challenge layer (§11.4.27(B)) — the
@@ -11,7 +17,7 @@
 > code. This is the structural defence against bluff-classes **B1 (config-only)**,
 > **B2 (absence-of-error)**, and **B3 (wrong-plane)**: the Challenge engine does not
 > trust the harness's claim — it re-reads the pcap / counter / recording itself. The
-> eight MVP Definition-of-Done acceptance criteria (AC1–AC9, [overview §7.2](../10-testing-acceptance-and-qa.md)) are authored as executable Challenges. This
+> nine MVP Definition-of-Done acceptance criteria (AC1–AC9, [overview §7.2](../10-testing-acceptance-and-qa.md)) are authored as executable Challenges. This
 > document fixes the bank model, the engine contract, the evidence scoring, the
 > determinism, the gate, the paired §1.1 mutation, and a concrete bank YAML. Spec-only;
 > unproven assumptions marked `UNVERIFIED`. Siblings: [unit.md](unit.md),
@@ -157,7 +163,7 @@ wrapper ([full-automation.md §5](full-automation.md)):
 | **`CM-DOD-CHALLENGES-GREEN`** | a release tag is **blocked** while any DoD Challenge is non-PASS | pre-tag (§11.4.40) |
 | **`CM-ANALYZER-SELF-VALIDATED`** (§11.4.107(10)) | every `self_validated` Challenge's golden-bad artifact scores FAIL | pre-build meta-test |
 
-CHAL is a **release-gating layer**: the MVP ships only when all eight ACs' Challenges
+CHAL is a **release-gating layer**: the MVP ships only when all nine ACs' Challenges
 score PASS on a clean baseline (§11.4.40 + §11.4.108 runtime-signature on a fresh
 deploy). This is QA-D5 ([overview §10](../10-testing-acceptance-and-qa.md)) resolved:
 **`challenges`-scored, not raw exit codes** — the engine re-reads the evidence

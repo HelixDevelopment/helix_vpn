@@ -174,8 +174,19 @@ vertical-align: middle;
 </header>
 <h1 id="functional-requirements-hvpn-fr-nnn">Functional Requirements
 (HVPN-FR-NNN)</h1>
-<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+<p><strong>Revision:</strong> 2 <strong>Last modified:</strong>
 2026-06-26T12:00:00Z</p>
+<blockquote>
+<p><strong>Reconciled (§11.4.35, 2026-06-26):</strong> FR-101&#39;s RBAC
+role set is aligned to the authoritative <code>svc-identity.md</code>
+enum <code>{member, operator, admin}</code> (no &quot;tenant owner&quot;). FR-019
+is restated as a fixed asymmetric per-leg default for MVP with
+map-driven per-leg policy deferred to P2. Owning-doc citations to the
+non-existent &quot;Connector spec&quot; / &quot;edge spec&quot; are repointed to concrete
+files (<code>v04-client/helix-core-rust.md</code> advertise/route mode +
+<code>v03-control-plane/svc-registry.md</code> for the connector;
+<code>01-data-plane.md</code> for the edge).</p>
+</blockquote>
 <blockquote>
 <p><strong>Document role.</strong> Volume 1 deep document that
 enumerates <strong>every functional requirement</strong> of HelixVPN as
@@ -356,7 +367,8 @@ restores auto.</td>
 :53) and port-hopping.</td>
 <td>Tunnel establishes on :443/udp and :53; a multi-listener accepts.
 <code>[evidence]</code></td>
-<td><code>v02-data-plane/transport-masque-quic.md</code>, edge spec</td>
+<td><code>v02-data-plane/transport-masque-quic.md</code>,
+<code>01</code> (edge / data-plane)</td>
 <td>MVP</td>
 </tr>
 <tr>
@@ -455,13 +467,17 @@ function of it. <code>[evidence]</code></td>
 </tr>
 <tr>
 <td>HVPN-FR-019</td>
-<td>The transport topology MUST support best-fit-per-leg operation
-(obfuscation user↔︎gateway; plain WG gateway↔︎connector).</td>
-<td>Per-leg transport policy is honoured from the pushed network
-map.</td>
+<td>The transport topology MUST ship a <strong>fixed asymmetric per-leg
+default in MVP</strong> — user↔︎gateway runs the obfuscation ladder,
+gateway↔︎connector is plain WG/UDP; <strong>map-driven configurable
+per-leg transport policy is P2.</strong></td>
+<td>MVP: the default asymmetric legs are honoured (user↔︎gw escalates the
+ladder, gw↔︎connector is plain WG) with no per-leg config surface. P2:
+per-leg transport policy is overridable from the pushed network map.
+<code>[evidence]</code></td>
 <td><code>01</code> (D6),
 <code>v03-control-plane/svc-coordinator.md</code></td>
-<td>P2</td>
+<td>MVP (fixed default) / P2 (configurable)</td>
 </tr>
 <tr>
 <td>HVPN-FR-020</td>
@@ -497,9 +513,10 @@ Parity rows F15, F17.</p>
 <tr>
 <td>HVPN-FR-101</td>
 <td>The control plane MUST support OIDC identity for human principals
-(tenant owner / admin / member).</td>
-<td>OIDC login yields a tenant-scoped identity.
-<code>[evidence]</code></td>
+(RBAC roles <code>admin</code> / <code>operator</code> /
+<code>member</code>, per <code>svc-identity.md</code>).</td>
+<td>OIDC login yields a tenant-scoped identity with the correct RBAC
+role. <code>[evidence]</code></td>
 <td><code>svc-identity.md</code></td>
 <td>MVP</td>
 </tr>
@@ -768,7 +785,9 @@ client traffic into that LAN and responses back out.</td>
 &quot;two-way&quot; model — without either side opening an inbound port.</td>
 <td>Both legs are outbound; the Gateway stitches them; no inbound
 listener on any private network. <code>[evidence]</code></td>
-<td><code>01</code>, edge, Connector spec</td>
+<td><code>01</code> (edge / data-plane),
+<code>v04-client/helix-core-rust.md</code> (advertise/route mode),
+<code>svc-registry.md</code></td>
 <td>MVP</td>
 </tr>
 <tr>
@@ -976,9 +995,12 @@ overlap/overlay (§11.4.162). <code>[evidence]</code></td>
 </table>
 <hr />
 <h2 id="h-connector-fr-7xx">H. Connector (FR-7xx)</h2>
-<p>Owning docs: Connector spec (Volume 4 shims + <a href="../v04-client/helix-core-rust.md"><code>../v04-client/helix-core-rust.md</code></a>
-advertise/route mode), <a href="../v03-control-plane/svc-registry.md"><code>../v03-control-plane/svc-registry.md</code></a>.
-Differentiator X2; persona connector-operator [00 §5.2].</p>
+<p>Owning docs: <a href="../v04-client/helix-core-rust.md"><code>../v04-client/helix-core-rust.md</code></a>
+(advertise/route mode) + Volume 4 platform shims
+(<code>shim-*.md</code>) + <a href="../v03-control-plane/svc-registry.md"><code>../v03-control-plane/svc-registry.md</code></a>
+(there is no standalone &quot;Connector spec&quot; file — the Connector is the
+same <code>helix-core</code> in advertise/route mode plus its registry
+contract). Differentiator X2; persona connector-operator [00 §5.2].</p>
 <table>
 <thead>
 <tr>
@@ -996,7 +1018,8 @@ Differentiator X2; persona connector-operator [00 §5.2].</p>
 any inbound port-forward.</td>
 <td>The Connector establishes the tunnel with zero inbound exposure on
 its network. <code>[evidence]</code></td>
-<td>Connector spec, <code>helix-core-rust.md</code></td>
+<td><code>helix-core-rust.md</code> (advertise/route mode),
+<code>svc-registry.md</code></td>
 <td>MVP</td>
 </tr>
 <tr>
@@ -1005,7 +1028,7 @@ its network. <code>[evidence]</code></td>
 config UI.</td>
 <td>The daemon runs without a UI; the optional UI configures it.
 <code>[evidence]</code></td>
-<td>Connector spec</td>
+<td><code>helix-core-rust.md</code> (advertise/route mode)</td>
 <td>MVP</td>
 </tr>
 <tr>
@@ -1023,7 +1046,7 @@ mode.</td>
 route authorized traffic into the LAN.</td>
 <td>Advertised CIDR appears in the registry; authorized client reaches a
 LAN host. <code>[evidence]</code></td>
-<td><code>svc-registry.md</code>, edge</td>
+<td><code>svc-registry.md</code>, <code>01</code> (edge)</td>
 <td>MVP</td>
 </tr>
 <tr>
@@ -1033,7 +1056,8 @@ network.</td>
 <td>A local ACL on the connector is honoured for its network.
 <code>[evidence]</code> (<code>UNVERIFIED</code> interaction with
 central policy — fixed by <code>svc-policy.md</code>)</td>
-<td><code>svc-policy.md</code>, Connector spec</td>
+<td><code>svc-policy.md</code>, <code>helix-core-rust.md</code>
+(advertise/route mode)</td>
 <td>MVP</td>
 </tr>
 <tr>
@@ -1042,7 +1066,8 @@ central policy — fixed by <code>svc-policy.md</code>)</td>
 hardware in addition to Linux/Windows/macOS.</td>
 <td>A Connector build runs on an embedded/Android target.
 <code>[evidence]</code></td>
-<td>Connector spec, <code>shim-android.md</code></td>
+<td><code>helix-core-rust.md</code> (advertise/route mode),
+<code>shim-android.md</code></td>
 <td>P2</td>
 </tr>
 <tr>
@@ -1204,7 +1229,7 @@ rootfs, seccomp profile; no SSH. <code>[evidence]</code></td>
 existing tunnels keep forwarding.</td>
 <td>DoD-adjacent: control plane stopped mid-session → existing tunnel
 keeps forwarding. <code>[evidence]</code></td>
-<td>edge, <code>01</code>, <code>02</code></td>
+<td><code>01</code> (edge / data-plane), <code>02</code></td>
 <td>MVP</td>
 </tr>
 <tr>

@@ -1,6 +1,6 @@
 # Cross-Phase Dependency Graph — the HelixVPN delivery DAG and critical paths
 
-**Revision:** 1
+**Revision:** 2
 **Last modified:** 2026-06-26T12:00:00Z
 
 > Volume 7 (Phase Execution), document 2 of 5. This spec consolidates the
@@ -240,7 +240,7 @@ graph TD
   E22 --> E25
   E23 --> E25
   E24 --> E25
-  E25 --> E26["E26 reproducible builds<br/>260→263→264 · G26"]
+  E20 --> E26["E26 reproducible builds<br/>260→263→264 · G26<br/>(deps P3-202, ∥ E25)"]
   E26 --> E27["E27 l10n+release<br/>271→272"]
   E21 --> E27
   E22 --> E27
@@ -250,12 +250,15 @@ graph TD
 
 Critical path (risk-ordered §11.4.132): `E20(200/201→203) →
 {E21(210→211→214) ∥ E22(220→221→223)} → E25(250→252→253→254) →
-E26(260→263→264) → E27(271→272)` (`09-…` §14). E25 (audit) is a **convergence
-gate** — it cannot start until the surfaces it audits (E21–E24) are
-feature-complete (`HVPN-P3-250` deps `214,223,233,244`); E26 depends on E25
-because the audited source tree is what must reproduce. While E21/E22 await
-device access (`PENDING_DEVICE`), E23/E24/E26-tooling progress as ≥3 background
-streams (§11.4.103, `09-…` §4).
+E27(271→272)`. E25 (audit) is a **convergence gate** — it cannot start until the
+surfaces it audits (E21–E24) are feature-complete (`HVPN-P3-250` deps
+`214,223,233,244`). **E26 (reproducible builds, 260→263→264) runs ∥ E25**, gated
+only by E20: `HVPN-P3-260` deps `HVPN-P3-202` (→ `200/201`), **not** P3-254
+(`09-…` §11). Both E25 (`254`) and E26 (`264`) converge into the release set at
+`HVPN-P3-271` (deps `…,254,264`). The `09-…` §14 critical-path note sequences
+E25→E26; this DAG corrects that to the actual `deps` edges per §0 (nothing
+invented). While E21/E22 await device access (`PENDING_DEVICE`),
+E23/E24/E26-tooling progress as ≥3 background streams (§11.4.103, `09-…` §4).
 
 ---
 
@@ -301,8 +304,16 @@ concatenating the per-phase critical paths at the gate boundaries):
 Phase 0:  HVPN-P0-002 → 004 → 008 → 018 → 025(G1) → 031 → 035(G2) → 045(G4)
 Phase 1:  → P1-010 → 022 → 032 → 070 → 071 → 072 → 092 → 094 → 100 → 102 → 145 → 151(MVP tag)
 Phase 2:  → P2-270 → 271 → 272 → 220 → 222 → 223 → 224 → 230 → 232 → 295 → 297 → 301(parity tag)
-Phase 3:  → P3-200 → 203(G20) → 210 → 211 → 214(G21) → 250 → 252 → 253 → 254(G25) → 260 → 263 → 264(G26) → 272(reach tag)
+Phase 3:  → P3-200 → 203(G20) → 210 → 211 → 214(G21) → 250 → 252 → 253 → 254(G25) → 271 → 272(reach tag)   [∥ E26: 260→263→264(G26), gated on P3-202, converges at 271]
 ```
+
+> **`→` here is sequence, not necessarily a `deps` edge.** Within each per-phase
+> line above, `→` denotes **execution sequence** (risk-ordered §11.4.132), not
+> the §0 dependency relation. Some adjacent steps are ordered by phase/gate
+> sequencing and reach their successor through intermediate `deps` not shown
+> inline — e.g. P0 `018→025`, P1 `094→100`/`100→102`/`102→145`, P2
+> `272→220`/`290→295`/`232→295`. The **direct** dependency edges (where `A → B`
+> means B `deps` A per §0) are those enumerated in §2–§7 and the WBS docs.
 
 Parallelism rules that compress this wall-clock (each cited to a constitution
 anchor + the WBS note that invokes it):
