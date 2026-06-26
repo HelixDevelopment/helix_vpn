@@ -68,3 +68,18 @@ bash scripts/install_git_hooks.sh
 
 See `docs/CONTINUATION.md` for a standing session-resumption file with the current
 branch, submodule SHA, completed work, remaining work, and re-run commands.
+
+## Tracked-Items + Status Documents
+
+<!-- doc-link-section:begin -->
+
+| Document | Last modified | Revision | Markdown | HTML | PDF |
+|----------|--------------|----------|----------|------|-----|
+| CONTINUATION | 2026-06-26T15:10:00Z | 4 | [md](docs/CONTINUATION.md) | — | — |
+| MVP Specification | 2026-06-26T12:00:00Z | 4 | [md](docs/research/mvp/final/SPECIFICATION.md) | [html](docs/research/mvp/final/SPECIFICATION.html) | [pdf](docs/research/mvp/final/SPECIFICATION.pdf) |
+| Master Index | 2026-06-26T12:00:00Z | 4 | [md](docs/research/mvp/final/MASTER_INDEX.md) | [html](docs/research/mvp/final/MASTER_INDEX.html) | [pdf](docs/research/mvp/final/MASTER_INDEX.pdf) |
+| Refinement Notes | 2026-06-25T12:00:00Z | 2 | [md](docs/research/mvp/final/REFINEMENT_NOTES.md) | [html](docs/research/mvp/final/REFINEMENT_NOTES.html) | [pdf](docs/research/mvp/final/REFINEMENT_NOTES.pdf) |
+| Source Coverage Ledger | 2026-06-25T12:00:00Z | 1 | [md](docs/research/mvp/final/99-source-coverage-ledger.md) | [html](docs/research/mvp/final/99-source-coverage-ledger.html) | [pdf](docs/research/mvp/final/99-source-coverage-ledger.pdf) |
+| Workable-Items DB | — | — | [db](docs/workable_items.db) | — | — |
+
+<!-- doc-link-section:end -->
