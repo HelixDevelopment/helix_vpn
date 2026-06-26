@@ -134,14 +134,14 @@ erDiagram
     CONNECTORS ||--|| CONNECTOR_SITES : "assigned one"
     CONNECTORS ||--o{ ADVERTISED_PREFIXES : "advertises"
     OVERLAY_POOLS {
-        uuid   tenant_id  PK_FK
+        uuid   tenant_id  PK,FK
         cidr   ula_prefix "fd..::/48 (D4)"
         bigint next_host  "::1 = gateway; >=2 devices"
         bigint next_site  "0 = fabric; 1.. = connectors"
     }
     CONNECTOR_SITES {
         uuid     tenant_id    FK
-        uuid     connector_id PK_FK
+        uuid     connector_id PK,FK
         integer  site_id      "1..65535, UNIQUE per tenant"
         timestamptz allocated_at
     }
@@ -593,7 +593,7 @@ sequenceDiagram
     participant Bus as events.Bus
     Dev->>API: Enroll{enroll_token, wg_pubkey, kind}
     API->>Reg: EnrollDevice(in)
-    Reg->>DB: BEGIN; SET LOCAL app.tenant_id (WithTenant)
+    Reg->>DB: BEGIN, SET LOCAL app.tenant_id (WithTenant)
     Reg->>DB: lookup device by (tenant, wg_pubkey)
     alt new device
         Reg->>IPAM: AllocOverlayIP(q, tenant, deviceID)
@@ -604,7 +604,7 @@ sequenceDiagram
             IPAM->>DB: BumpOverlayNextSite + InsertConnectorSite
             IPAM-->>Reg: site (OutcomeCreated)
         end
-        Reg->>DB: INSERT devices(overlay_ip=...) ; COMMIT
+        Reg->>DB: INSERT devices(overlay_ip=...) , COMMIT
         Reg->>Bus: Publish device.enrolled {device_id, kind, overlay_ip}
         opt connector
             Reg->>Bus: Publish connector.attached {device_id, site}
@@ -935,10 +935,10 @@ sequenceDiagram
     Reg->>IPAM: AssignSite / Via6RoutesFor (in tenant tx)
     IPAM->>DB: commit site + derive via6 routes
     Reg->>Bus: XADD connector.attached / prefixes.changed
-    Bus->>Coord: XREADGROUP (Block 5s; arrives ~ms)
-    Coord->>Coord: update in-mem graph; diff; build MapDelta{upsert_peers[].via6}
+    Bus->>Coord: XREADGROUP (Block 5s, arrives ~ms)
+    Coord->>Coord: update in-mem graph, diff, build MapDelta{upsert_peers[].via6}
     Coord->>Agent: stream MapDelta (policy-filtered, C4)
-    Note over Reg,Agent: budget — DB commit + XADD < 50ms;<br/>bus deliver < 50ms; diff+push < 100ms;<br/>p99 end-to-end target < 1s
+    Note over Reg,Agent: budget — DB commit + XADD < 50ms,<br/>bus deliver < 50ms, diff+push < 100ms,<br/>p99 end-to-end target < 1s
 ```
 
 **ipam's contribution to the budget:**

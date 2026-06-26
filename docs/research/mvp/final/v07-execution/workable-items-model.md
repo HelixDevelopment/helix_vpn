@@ -522,7 +522,7 @@ sequenceDiagram
   DB->>DB: INSERT test_diary(result=PASS, test_type=BENCH,<br/>evidence_path=qa-results/.../loopback.csv)  -- CHECK passes
   DB->>DB: item_history(by=AI, to_status=Completed, evidence=…)
   DC->>DB: verify — md↔db round-trip byte-identical? integrity_hash matches?
-  DC->>EX: regenerate HTML/PDF siblings (§11.4.65); evidence to qa-results/docs_chain/<run-id>/
+  DC->>EX: regenerate HTML/PDF siblings (§11.4.65), evidence to qa-results/docs_chain/<run-id>/
 ```
 
 1. The leaf in `06-…` §3 declares `acceptance: 0 lost @ loopback; deterministic

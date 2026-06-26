@@ -590,8 +590,8 @@ sequenceDiagram
     UI->>PIPE: StopTunnel
     PIPE->>SVC: Command::StopTunnel
     SVC->>CORE: stop() + detach_tun()
-    SVC->>WT: WintunEndSession + WintunCloseAdapter; revert routes/DNS
-    SVC->>WFP: delete DYNAMIC split filters; remove PERSISTENT kill-switch (user stop only, §8.6)
+    SVC->>WT: WintunEndSession + WintunCloseAdapter, revert routes/DNS
+    SVC->>WFP: delete DYNAMIC split filters, remove PERSISTENT kill-switch (user stop only, §8.6)
     SVC-->>PIPE: Event Status(Down{reason:"stopped"}) + Platform(down)
 ```
 

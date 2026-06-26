@@ -113,8 +113,8 @@ sequenceDiagram
     end
     Coord->>Bus: XACK events:policy policy.compiled{N}
     Coord->>API: (WS/SSE) policy.activated{version:N, devices_updated:k}
-    API-->>Admin: live Console event "policy v N active; k devices updated"
-    Note over Admin,Edge: helix_reconcile_seconds observed event→Send; edge timer event→enforced; p99 < 1 s
+    API-->>Admin: live Console event "policy v N active, k devices updated"
+    Note over Admin,Edge: helix_reconcile_seconds observed event→Send, edge timer event→enforced, p99 < 1 s
 ```
 
 ---

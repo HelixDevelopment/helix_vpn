@@ -500,19 +500,19 @@ sequenceDiagram
     Lad->>Tx: dial(PlainUdp)
     Tx->>Edge: WG handshake over UDP :51820
     Edge--xTx: dropped (DPI blocks WG/UDP) → HandshakeFailed
-    Tx-->>Lad: Err(HandshakeFailed) ; budget exceeded
+    Tx-->>Lad: Err(HandshakeFailed), budget exceeded
 
     Note over Lad,Edge: Rung 2 — lwo (cheap header obfs)
     Orch-->>App: status = Reconnecting
     Lad->>Tx: dial(Lwo)
     Tx->>Edge: WG handshake over mangled UDP
     Edge--xTx: dropped (signature still caught) → HandshakeFailed
-    Tx-->>Lad: Err(HandshakeFailed) ; budget exceeded
+    Tx-->>Lad: Err(HandshakeFailed), budget exceeded
 
     Note over Lad,Edge: Rung 3 — masque-h3 (CONNECT-UDP / HTTP-3 on :443)
     Lad->>Tx: dial(MasqueH3)
     Tx->>Edge: QUIC/H3 CONNECT-UDP (RFC 9298) on :443/udp
-    Edge-->>Tx: 200 (flow established) ; looks like HTTP/3
+    Edge-->>Tx: 200 (flow established), looks like HTTP/3
     Tx->>Edge: WG datagrams as HTTP Datagrams (RFC 9297/9221)
     Edge-->>Tx: WG handshake reply
     Tx-->>Lad: Ok(Connected, rtt = 23 ms)

@@ -498,7 +498,7 @@ sequenceDiagram
         FWD-->>FRB: sink.add(ffi::TunnelStatus)
         FRB-->>UI: Stream emits → Riverpod fold → ConnectButton
     end
-    Note over FWD: Lagged → skip-to-latest ; Closed → close sink
+    Note over FWD: Lagged → skip-to-latest , Closed → close sink
 ```
 
 ### 4.4 Emit discipline (coalesce, inherited from the orchestrator)

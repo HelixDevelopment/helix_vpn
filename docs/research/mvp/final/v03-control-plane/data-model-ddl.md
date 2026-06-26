@@ -62,34 +62,80 @@ erDiagram
     DEVICES ||--o{ GROUP_MEMBERS : "member-of"
     DEVICES ||--o{ DEVICE_CERTS : "holds"
 
-    TENANTS { uuid id PK; text name; timestamptz created_at }
+    TENANTS {
+        uuid id PK
+        text name
+        timestamptz created_at
+    }
     USERS {
-        uuid id PK; uuid tenant_id FK; text email "nullable anon"
-        text oidc_sub "nullable SSO"; user_role role
+        uuid id PK
+        uuid tenant_id FK
+        text email "nullable anon"
+        text oidc_sub "nullable SSO"
+        user_role role
     }
     DEVICES {
-        uuid id PK; uuid tenant_id FK; uuid user_id FK "nullable"
-        device_kind kind; bytea wg_pubkey "32B Curve25519 PUBLIC only (C6)"
-        inet overlay_ip "tenant ULA /48"; timestamptz last_seen_at "coarse"
+        uuid id PK
+        uuid tenant_id FK
+        uuid user_id FK "nullable"
+        device_kind kind
+        bytea wg_pubkey "32B Curve25519 PUBLIC only (C6)"
+        inet overlay_ip "tenant ULA /48"
+        timestamptz last_seen_at "coarse"
         timestamptz revoked_at
     }
-    CONNECTORS { uuid device_id PK,FK; uuid tenant_id FK; text site_name; int site_id }
+    CONNECTORS {
+        uuid device_id PK,FK
+        uuid tenant_id FK
+        text site_name
+        int site_id
+    }
     ADVERTISED_PREFIXES {
-        uuid id PK; uuid tenant_id FK; uuid connector_id FK; cidr cidr; boolean enabled
+        uuid id PK
+        uuid tenant_id FK
+        uuid connector_id FK
+        cidr cidr
+        boolean enabled
     }
-    GROUPS { uuid id PK; uuid tenant_id FK; text name }
-    GROUP_MEMBERS { uuid tenant_id FK; uuid group_id PK,FK; uuid device_id PK,FK }
+    GROUPS {
+        uuid id PK
+        uuid tenant_id FK
+        text name
+    }
+    GROUP_MEMBERS {
+        uuid tenant_id FK
+        uuid group_id PK,FK
+        uuid device_id PK,FK
+    }
     POLICIES {
-        uuid id PK; uuid tenant_id FK; jsonb spec; bigint version "monotonic per tenant"
-        boolean active; timestamptz compiled_at
+        uuid id PK
+        uuid tenant_id FK
+        jsonb spec
+        bigint version "monotonic per tenant"
+        boolean active
+        timestamptz compiled_at
     }
-    OVERLAY_POOLS { uuid tenant_id PK,FK; cidr ula_prefix; bigint next_host; int next_site_id }
+    OVERLAY_POOLS {
+        uuid tenant_id PK,FK
+        cidr ula_prefix
+        bigint next_host
+        int next_site_id
+    }
     DEVICE_CERTS {
-        uuid id PK; uuid tenant_id FK; uuid device_id FK; text serial
-        timestamptz not_after; boolean revoked
+        uuid id PK
+        uuid tenant_id FK
+        uuid device_id FK
+        text serial
+        timestamptz not_after
+        boolean revoked
     }
     AUDIT_EVENTS {
-        bigint id PK; uuid tenant_id FK; text actor; text action; text target; jsonb meta
+        bigint id PK
+        uuid tenant_id FK
+        text actor
+        text action
+        text target
+        jsonb meta
     }
 ```
 

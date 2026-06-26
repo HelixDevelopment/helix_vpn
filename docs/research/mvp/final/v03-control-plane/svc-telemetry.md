@@ -327,7 +327,7 @@ Two paths land the same row; both go through one validated sink so the C3/RLS gu
 
 ```mermaid
 flowchart LR
-    A[api / policy / pki<br/>control action handler] -->|Audit(rec) synchronous| S{AuditSink.validate}
+    A[api / policy / pki<br/>control action handler] -->|"Audit(rec) synchronous"| S{AuditSink.validate}
     B[events consumer<br/>device.revoked / policy.compiled] -->|derive AuditRecord| S
     S -->|reject| E[ErrUnknownAuditAction /<br/>ErrAuditMetaShape §9]
     S -->|ok| W[store.WithTenant INSERT audit_events]

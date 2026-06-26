@@ -562,7 +562,7 @@ stateDiagram-v2
     On --> Spinning : Reconnecting (amber, ring resumes — intent kept, §8.4)
     On --> Off : tap → controller.disconnect() → Disconnected
     Spinning --> Off : Down{stopped} (user cancelled)
-    Spinning --> Alarm : Down{reason≠stopped} (red, "Connection failed: <reason>")
+    Spinning --> Alarm : Down{reason≠stopped} (red, "Connection failed - <reason>")
     On --> Alarm : Danger{kind} (red, OVERRIDE intent, §2.3)
     Alarm --> Spinning : tap → retry (controller.connect)
     Alarm --> Off : tap → dismiss (controller.disconnect)

@@ -497,19 +497,19 @@ sequenceDiagram
     ID->>R: SETEX oidc:state:<s> {nonce,verifier,tenant,provider} TTL=10m
     ID-->>API: 302 → IdP authorize?code_challenge=S256&state=<s>&nonce=<n>
     API-->>B: redirect
-    B->>IDP: authenticate (IdP-side; Helix never sees the password)
+    B->>IDP: authenticate (IdP-side, Helix never sees the password)
     IDP-->>B: 302 → /v1/oidc/{provider}/callback?code&state
     B->>API: GET callback?code&state
     API->>ID: CompleteOIDC{code,state}
-    ID->>R: GETDEL oidc:state:<s>  (single-use; missing ⇒ ErrStateInvalid)
+    ID->>R: GETDEL oidc:state:<s>  (single-use, missing ⇒ ErrStateInvalid)
     ID->>IDP: POST /token (code + code_verifier)  [oauth2 exchange]
     IDP-->>ID: id_token (JWT) + access_token
     ID->>IDP: GET /jwks (cached) → verify id_token sig, iss, aud, exp, nonce
-    ID->>PG: upsert user by (tenant, oidc_sub) [JIT]; map claim→role
+    ID->>PG: upsert user by (tenant, oidc_sub) [JIT], map claim→role
     PG-->>ID: User
     ID->>PG: INSERT session (token_hash)
     ID-->>API: Session{raw cookie} + User
-    API-->>B: Set-Cookie helix_session=<raw>; HttpOnly; Secure; SameSite=Lax
+    API-->>B: Set-Cookie helix_session=<raw>, HttpOnly, Secure, SameSite=Lax
 ```
 _Diagram 4 — OIDC login. `state` is single-use (`GETDEL`) and short-lived; `nonce` binds the
 ID token to this request; PKCE `S256` protects the code even for public clients [§11.4.99 —
@@ -930,16 +930,16 @@ sequenceDiagram
     participant Coord as coordinator
     participant Edge as Rust edge / agents
     Admin->>API: POST /v1/users/{id}/suspend
-    API->>ID: SuspendUser (Authorize PermManageUsers; AZ3 last-admin guard)
-    ID->>PG: tx: users.suspended_at=now(); sessions.revoked_at=now() (bulk); per device revoked_at
+    API->>ID: SuspendUser (Authorize PermManageUsers, AZ3 last-admin guard)
+    ID->>PG: tx: users.suspended_at=now(), sessions.revoked_at=now() (bulk), per device revoked_at
     ID->>PG: enumerate user's devices → device_certs.revoked=true
     ID->>Bus: XADD events:devices {device.revoked, device_id} ×N  (R3, one per device)
     Bus-->>Coord: XReadGroup delivers each device.revoked
-    Coord-->>Coord: remove node; compute minimal affected set (02-CP §6.4)
+    Coord-->>Coord: remove node, compute minimal affected set (02-CP §6.4)
     loop each peer who could see the revoked device
         Coord->>Edge: stream.Send(MapDelta{remove_peer_ids})
     end
-    Edge-->>Edge: kernel WG peer removed; sessions dropped
+    Edge-->>Edge: kernel WG peer removed, sessions dropped
     Note over Admin,Edge: revoke→edge-enforced p99 < 1s (02-CP §10.2)
 ```
 _Diagram 7 — user-suspension cascade. One `SuspendUser` fans out to: session revoke (human

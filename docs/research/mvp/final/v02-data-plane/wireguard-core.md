@@ -582,7 +582,7 @@ stateDiagram-v2
     [*] --> ActiveKeyA
     ActiveKeyA --> Rotating: rotation due / scheduled
     Rotating --> DualAdvertised: generate KeyB, enroll pub_B,\ncoordinator pushes pub_B to peers
-    DualAdvertised --> ActiveKeyB: peers handshake with pub_B\n(make-before-break: A still valid)
+    DualAdvertised --> ActiveKeyB: peers handshake with pub_B\n(make-before-break - A still valid)
     ActiveKeyB --> [*]: remove_peer(old A session),\nzeroize KeyA
     Rotating --> ActiveKeyA: rotation aborted (enroll failed)\n→ keep KeyA (no break)
     note right of DualAdvertised

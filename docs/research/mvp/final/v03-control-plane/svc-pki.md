@@ -816,7 +816,7 @@ sequenceDiagram
     PKI->>Cache: add serial (hot-path reject instantly, §8.2)
     PKI->>Bus: XADD device.revoked
     Bus-->>Coord: XReadGroup delivers
-    Coord->>Coord: remove node; compute minimal affected set (C4)
+    Coord->>Coord: remove node, compute minimal affected set (C4)
     loop each affected open WatchNetworkMap stream
         Coord->>Edge: stream.Send(MapDelta remove_peer_ids=[device])
     end

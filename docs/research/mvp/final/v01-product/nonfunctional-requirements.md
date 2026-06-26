@@ -304,7 +304,7 @@ sequenceDiagram
   Coord->>Edge: stream.Send(MapDelta)
   Note over Coord: NFR-003 p99 < 1 s (helix_reconcile_seconds)
   Coord->>Tel: ObserveReconcile (counts-only series)
-  Edge-->>Edge: reconcile WG peers; existing tunnels never drop (NFR-200)
+  Edge-->>Edge: reconcile WG peers, existing tunnels never drop (NFR-200)
   Note over Admin,Edge: NFR-009 admin-perceived < 1 s = superset of NFR-003
 ```
 

@@ -399,15 +399,15 @@ sequenceDiagram
     participant API as Go control plane (doc 02)
 
     U->>C: open Console (unauthenticated)
-    C->>C: generate code_verifier + S256 code_challenge; store verifier in sessionStorage
+    C->>C: generate code_verifier + S256 code_challenge, store verifier in sessionStorage
     C->>IDP: redirect /authorize?response_type=code&code_challenge=…&state=…
     IDP-->>U: login + consent
     IDP-->>C: redirect /callback?code=…&state=…
-    C->>C: verify state (CSRF); pop code_verifier
+    C->>C: verify state (CSRF), pop code_verifier
     C->>API: POST /v1/auth/token {code, code_verifier}   %% token exchange via OUR backend (not the SPA)
     API->>IDP: confirm + mint a short-lived Console session (httpOnly cookie OR bearer)
     API-->>C: { access_token (short TTL), expires_in, refresh via httpOnly cookie }
-    C->>C: hold access_token in MEMORY; schedule refresh at expires_in − skew
+    C->>C: hold access_token in MEMORY, schedule refresh at expires_in − skew
     C->>API: subsequent REST/WS calls with Authorization: Bearer …
 ```
 

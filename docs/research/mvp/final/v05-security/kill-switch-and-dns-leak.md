@@ -253,7 +253,7 @@ projection.
 stateDiagram-v2
     [*] --> Open
     Open --> Closed : Idle→Connecting (Strict) — arm before first handshake (K1)
-    Closed --> OpenTunnel : Handshaking→Connected — egress via tunnel + tunnel DNS + block :53 (K5)
+    Closed --> OpenTunnel : Handshaking→Connected — egress via tunnel + tunnel DNS + block port 53 (K5)
     OpenTunnel --> Closed : Connected→Reconnecting/Down (drop) — keep DNS block (K2)
     Closed --> OpenTunnel : re-dial succeeded (Reconnecting→Connected)
     Closed --> Open : user Stop ONLY — revert system DNS (K3)

@@ -262,7 +262,7 @@ sequenceDiagram
     Note over C,GW: session keys now depend on BOTH X25519 ECDH AND the PQ-derived PSK (S10)
     end
 
-    Note over C,GW: rotate PSK on each WG rekey (~120s); PQ exchange only at setup/rekey — zero per-packet cost
+    Note over C,GW: rotate PSK on each WG rekey (~120s), PQ exchange only at setup/rekey — zero per-packet cost
 ```
 
 ### 4.1 Step-by-step (the contract)

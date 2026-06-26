@@ -301,7 +301,7 @@ original Nginx-camouflage [01 §3.3, 04_ARCH §3.3].
 stateDiagram-v2
     [*] --> Listen
     Listen --> InspectFirstBytes : new flow / first datagram or TCP SYN+data
-    InspectFirstBytes --> ValidMasque : Extended CONNECT, :protocol=connect-udp, path matches /.well-known/masque/udp/
+    InspectFirstBytes --> ValidMasque : Extended CONNECT, protocol=connect-udp, path matches /.well-known/masque/udp/
     InspectFirstBytes --> ValidH3Auth : Hysteria2 QUIC + auth password verifies
     InspectFirstBytes --> ValidPsk : Salamander/LWO PSK demangle yields well-formed WG outer
     InspectFirstBytes --> ValidAead : Shadowsocks AEAD first frame decrypts + tag OK
@@ -312,7 +312,7 @@ stateDiagram-v2
     ValidPsk --> ServeTunnel
     ValidAead --> ServeTunnel
 
-    Suspect --> Decoy : flow looks like a browser (H3/TLS to :443)
+    Suspect --> Decoy : flow looks like a browser (H3/TLS to port 443)
     Suspect --> SilentDrop : flow is malformed UDP / non-TLS junk
     Suspect --> BenignRst : TCP, behave as a real closed/slow port
 
@@ -448,7 +448,7 @@ sequenceDiagram
     participant Tx as Transport.dial
     participant Edge as Gateway edge (:443)
 
-    Orch->>Lad: select() ; estimate = empty (or coordinator prior)
+    Orch->>Lad: select(), estimate = empty (or coordinator prior)
     Lad->>Tx: dial(plain-udp)
     Tx->>Edge: WG handshake / UDP :51820
     Edge--xTx: dropped -> HandshakeFailed

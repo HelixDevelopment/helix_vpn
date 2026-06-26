@@ -396,9 +396,9 @@ sequenceDiagram
   participant TX as helix-transport carrier
 
   TP->>PV: acquireAndSelectBackend(cfg) → UserspaceTun (obfs rung, §2.3)
-  PV->>K: open("/dev/net/tun"); ioctl(TUNSETIFF, IFF_TUN|IFF_NO_PI, "helix0")
+  PV->>K: open("/dev/net/tun") then ioctl(TUNSETIFF, IFF_TUN|IFF_NO_PI, "helix0")
   K-->>PV: fd
-  PV->>K: rtnetlink: addr=overlayIp/32, mtu=cfg.mtu, up; routes=cfg.routes
+  PV->>K: rtnetlink addr=overlayIp/32, mtu=cfg.mtu, up, routes=cfg.routes
   TP->>CO: start(ClientConfig{ session, transport:"auto", Client })
   TP->>CO: attach_tun(fd)            %% CI1: core receives the fd, never opens the tun
   Note over CO: loops A/B/C pump tun ↔ helix-wg ↔ TX (01-ORC §3)
@@ -718,7 +718,7 @@ stateDiagram-v2
   CarrierError --> Cleanup
   PermissionDenied --> Cleanup
   Stopping --> Cleanup : detach_tun + core.stop + destroyCarrier
-  Cleanup --> Idle : host quiescent (LX4); emit down ; kill-switch per §8.6/§11
+  Cleanup --> Idle : host quiescent (LX4), emit down , kill-switch per §8.6/§11
   CarrierError --> [*]
 ```
 

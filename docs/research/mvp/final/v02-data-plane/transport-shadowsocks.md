@@ -351,7 +351,7 @@ stateDiagram-v2
     NeedPayload --> NeedPayload : < payload_len+16B buffered → await more
     NeedPayload --> NeedLen : AEAD-open payload OK → emit WG datagram (advance nonce)
     NeedPayload --> Failed : AEAD tag invalid
-    Failed --> [*] : TransportError::HandshakeFailed → ladder escalates
+    Failed --> [*] : TransportError.HandshakeFailed → ladder escalates
 ```
 
 `fill_at_least(n)` reads from the TCP socket into the reassembly buffer until ≥ `n` bytes are
@@ -402,12 +402,12 @@ end-to-end proof, and a WG-handshake timeout maps to a ladder escalation (§8 E5
 stateDiagram-v2
     [*] --> TcpConnecting
     TcpConnecting --> SaltSent : TCP up, set_nodelay, write send-salt
-    TcpConnecting --> DialFailed : timeout / RST → TransportError::DialTimeout|Io
+    TcpConnecting --> DialFailed : timeout / RST → TransportError.DialTimeout|Io
     SaltSent --> Live : first WG datagram sealed & recv'd (carrier proven by WG handshake)
     SaltSent --> Dead : WG handshake budget exceeded → ladder escalates
     Live --> Live : send/recv WG datagrams (§4.4/§4.5)
     Live --> Dead : AEAD-open failure / TCP RST / FIN (peer closed)
-    Live --> Closed : Transport::close() (graceful FIN)
+    Live --> Closed : Transport.close() (graceful FIN)
     DialFailed --> [*]
     Dead --> [*]
     Closed --> [*]

@@ -715,7 +715,7 @@ sequenceDiagram
     Mut->>Bus: XADD events:* (same unit of work, R3)
     Bus-->>Coord: XReadGroup delivers Envelope
     Note over Coord: t0 = event-receive (histogram start)
-    Coord->>Coord: apply to in-mem graph; compute minimal affected set (§6.4 of 02_CP)
+    Coord->>Coord: apply to in-mem graph, compute minimal affected set (§6.4 of 02_CP)
     loop each affected open stream
         Coord->>Edge: stream.Send(MapDelta)
     end

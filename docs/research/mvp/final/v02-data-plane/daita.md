@@ -548,7 +548,7 @@ sequenceDiagram
     D->>MB: event NormalSent
     MB-->>D: actions [SendPadding(t+Δ1), BlockOutgoing(until t+Δ2)]
     D-->>WG: return [SendNow(padded real), SendCoverAt{t+Δ1,pad_to}, BlockOutgoingUntil{t+Δ2}]
-    Note over D,Tx: orchestrator sends the real frame now; queues cover; holds next real until t+Δ2
+    Note over D,Tx: orchestrator sends the real frame now, queues cover, holds next real until t+Δ2
     Tx->>Tx: wire: looks like a constant-size encrypted flow (T1/T2/T4)
 
     Note over D,MB: timer tick at t+Δ1

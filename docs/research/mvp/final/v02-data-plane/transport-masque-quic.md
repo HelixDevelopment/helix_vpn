@@ -390,7 +390,7 @@ sequenceDiagram
     M->>M: encode_quic_datagram_body(qsid, ctx=0, wg)  %% §3.4, +2B
     M->>Q: send_datagram(body)         %% RFC 9221 unreliable (I2)
     Q-->>E: QUIC DATAGRAM frame on the h3 conn
-    E->>E: strip qsid → match CONNECT-UDP flow; strip ctx=0
+    E->>E: strip qsid → match CONNECT-UDP flow, strip ctx=0
     E->>K: plain UDP WG datagram → internal WG socket (127.0.0.1:51820)
     K-->>E: WG reply datagram
     E->>E: encode_quic_datagram_body(qsid, ctx=0, reply)  %% SAME helper (I4)

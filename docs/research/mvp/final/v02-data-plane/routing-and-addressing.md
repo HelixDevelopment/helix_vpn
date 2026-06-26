@@ -451,15 +451,15 @@ sequenceDiagram
     Cli->>Cli: fib.next_hop(dst) -> NextHop{ wg_pubkey=connectorA, via_site=7 }
     Cli->>WG: WG-encrypt to connectorA peer (AllowedIPs must include dst — §6.1)
     WG->>Edge: encrypted datagram via active Transport (plain-udp / masque-h3)
-    Edge->>Edge: ip6 saddr.daddr.proto.dport vmap @policy_v  (default-deny; ALLOW?)
+    Edge->>Edge: ip6 saddr.daddr.proto.dport vmap @policy_v  (default-deny, ALLOW?)
     alt verdict = accept
         Edge->>Con: forward (relay path, Phase 1) / direct (Phase 2 P2P)
-        Con->>Con: decode(dst) -> (site=7, 192.168.1.10); confirm site owned
+        Con->>Con: decode(dst) -> (site=7, 192.168.1.10), confirm site owned
         Con->>LAN: DNAT into served LAN: src=connector, dst=192.168.1.10
         LAN-->>Con: reply
-        Con-->>App: reverse path (SNAT 192.168.1.10 -> overlay; WG-encrypt back)
+        Con-->>App: reverse path (SNAT 192.168.1.10 -> overlay, WG-encrypt back)
     else verdict = drop
-        Edge--xCli: silently dropped (R3); aggregate drop counter++ (I5)
+        Edge--xCli: silently dropped (R3), aggregate drop counter++ (I5)
     end
 ```
 
@@ -559,17 +559,17 @@ sequenceDiagram
     participant NFT as VerdictSink (nft/eBPF)
 
     Adm->>CP: edit ACL: group:contractors -> net:cams:554/tcp
-    CP->>CP: resolve groups+nets -> overlay prefixes; compile CompiledPolicy{version=v}
+    CP->>CP: resolve groups+nets -> overlay prefixes, compile CompiledPolicy{version=v}
     CP->>Stream: push policy-filtered RouteMap + CompiledPolicy (peers need-to-know, R2)
     Stream->>RE: reconcile(desired v)
     RE->>WG: allowed_ips_for(peer) -> install per-peer AllowedIPs (crypto layer)
     RE->>NFT: install(CompiledPolicy v) atomically
     alt install ok
-        NFT-->>RE: ok; prior version dropped
+        NFT-->>RE: ok, prior version dropped
         RE-->>Stream: ReconcileReport{ elapsed < 1s }  (R1)
     else install fails
-        NFT-->>RE: Err; PRIOR version stays live (R3 fail-closed)
-        RE-->>Stream: RouteError surfaced; aggregate error counter++ (I5)
+        NFT-->>RE: Err, PRIOR version stays live (R3 fail-closed)
+        RE-->>Stream: RouteError surfaced, aggregate error counter++ (I5)
     end
 ```
 

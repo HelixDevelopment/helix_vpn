@@ -163,7 +163,7 @@ sequenceDiagram
     Dev->>Edge: WG Noise IK to a granted peer's pubkey   %% G3 authenticate (data)
     Dev->>Edge: packet to granted CIDR:port
     Edge->>Edge: AllowedIPs match? verdict ACCEPT?   %% G4 enforce (runtime)
-    Edge-->>Dev: forward iff within grant; else DROP (default-deny, I6/R3)
+    Edge-->>Dev: forward iff within grant, else DROP (default-deny, I6/R3)
 ```
 
 ---

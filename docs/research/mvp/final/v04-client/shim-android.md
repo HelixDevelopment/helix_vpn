@@ -511,7 +511,7 @@ sequenceDiagram
     SVC->>OS: Builder.addAddress/addRoute/addDnsServer/setMtu.establish()
     OS-->>SVC: ParcelFileDescriptor (tun fd)
     SVC->>BR: setProtectCallback(this) (§6)
-    SVC->>BR: fd = pfd.detachFd(); start(cfg); attachTun(fd)
+    SVC->>BR: fd = pfd.detachFd(), start(cfg), attachTun(fd)
     BR->>CORE: orchestrator start + attach_tun(fd)
     CORE-->>BR: protect(socketFd) upcall (per transport socket §6)
     BR-->>OS: VpnService.protect(socketFd)
@@ -520,7 +520,7 @@ sequenceDiagram
     CORE-->>UI: TunnelStatus Connecting→Handshaking→Connected (frb, in-process)
     UI->>TP: stopTunnel()
     TP->>SVC: MethodChannel "stopTunnel"
-    SVC->>BR: detachTun(); stop()
+    SVC->>BR: detachTun(), stop()
     BR->>CORE: detach_tun() (closes fd) + stop()
     SVC-->>TP: PlatformTunnelEvent.down
 ```

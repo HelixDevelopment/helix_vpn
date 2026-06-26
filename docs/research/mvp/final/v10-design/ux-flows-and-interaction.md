@@ -689,7 +689,7 @@ LAN subnet it exposes, and handle an overlapping-CIDR conflict honestly [SN §0]
 flowchart TD
     ENR["/enroll — token→keys(local)→name→done"] -->|enrolled| STAT["/ Status (serving subnets)"]
     STAT --> RTE["/routes/edit — add CIDR 10.20.0.0/24"]
-    RTE -->|advertise()| RES{AdvertiseResult}
+    RTE -->|"advertise()"| RES{AdvertiseResult}
     RES -->|accepted| LIVE["route live (honest)"]
     RES -->|conflicts| CONF["/routes/conflicts — explain + 4via6"]
     CONF -.->|links| CONSOLE["Console resolves IPAM/policy centrally"]

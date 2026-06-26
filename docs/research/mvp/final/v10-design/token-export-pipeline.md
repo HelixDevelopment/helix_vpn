@@ -684,7 +684,7 @@ sequenceDiagram
     participant REC as css→json reconciler
     J->>E: pnpm export (themed, light+dark)
     E->>ODC: write tokens.css (:root + [data-theme=dark])
-    ODC->>OD: set active system; designer/agent refines
+    ODC->>OD: set active system, designer/agent refines
     OD-->>ODC: refinement edits (tokens.css tweaks)
     ODC->>REC: diff tokens.css vs last-generated
     REC->>J: apply the human edits back into tokens/** (same-$type)

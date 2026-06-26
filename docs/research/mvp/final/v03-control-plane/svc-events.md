@@ -724,7 +724,7 @@ stateDiagram-v2
     Failed --> Pending: NO ack (stays in PEL)
     Pending --> Reacting: XAUTOCLAIM (idle>=30s), attempt++
     Pending --> Poisoned: attempt > ceiling(5)
-    Poisoned --> DLQ: XADD events:*:dlq + XACK off main
+    Poisoned --> DLQ: XADD to events DLQ stream + XACK off main
     Acked --> [*]
     DLQ --> [*]
 ```

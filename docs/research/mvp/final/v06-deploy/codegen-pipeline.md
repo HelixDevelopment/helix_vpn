@@ -325,7 +325,7 @@ sequenceDiagram
   participant GO as Go connect-go server (gen/go)
   RS->>GO: WatchNetworkMap(WatchRequest{device_id, known_version=0})
   GO-->>RS: MapUpdate{version=42, snapshot}
-  Note over RS,GO: assert decoded snapshot fields == sent server-side state<br/>(prevents stub drift; captured transcript)
+  Note over RS,GO: assert decoded snapshot fields == sent server-side state<br/>(prevents stub drift, captured transcript)
 ```
 
 A Dart client variant proves the third language. Infra (Postgres+Redis) is booted on demand via

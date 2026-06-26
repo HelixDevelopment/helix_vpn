@@ -110,15 +110,15 @@ sequenceDiagram
   participant TEL as telemetry
   U->>U: generate WG keypair on-device (private NEVER leaves, C6)
   U->>ID: enroll(token | OIDC) + WG pubkey
-  ID->>ID: validate token; issue short-lived mTLS device cert
-  ID->>REG: register device; allocate overlay IP (ipam, ULA/48)
+  ID->>ID: validate token, issue short-lived mTLS device cert
+  ID->>REG: register device, allocate overlay IP (ipam, ULA/48)
   ID-->>U: device cert + overlay IP
   U->>CO: WatchNetworkMap(mTLS, known_version=0)
   CO-->>U: snapshot {self overlay IP, gateway endpoint, transport order, peers per policy}
   U->>ED: dial transport (ladder: plain-udp first) → WG handshake
   ED-->>U: WG handshake complete → tunnel up
   U->>ED: full-tunnel internet traffic via exit
-  U->>TEL: heartbeat → MarkOnline (presence TTL); device.enrolled audited
+  U->>TEL: heartbeat → MarkOnline (presence TTL), device.enrolled audited
   Note over U,TEL: postcondition: tunnel up + presence key + NO durable connection row
 ```
 
@@ -160,7 +160,7 @@ sequenceDiagram
   CO-->>U: MapDelta (upsert new peer/exit, remove old) version++
   Note over CO,U: NFR-003 p99 < 1 s, no restart
   U->>ED: reconcile WG peers to new exit
-  ED-->>U: traffic now via new exit; old peer removed
+  ED-->>U: traffic now via new exit, old peer removed
   Note over U: kill-switch holds — no off-tunnel leak during switch (NFR-404)
 ```
 
@@ -202,7 +202,7 @@ sequenceDiagram
   U->>E1: nested WG: outer tunnel to entry
   E1->>E2: inner tunnel entry→exit (entry cannot read inner dest)
   E2-->>U: internet via exit
-  Note over E1,E2: entry sees user, not dest; exit sees dest, not user (F10)
+  Note over E1,E2: entry sees user, not dest, exit sees dest, not user (F10)
 ```
 
 > **Phase boundary (§11.4.6).** Multihop is explicitly OUT of MVP scope (overview
@@ -242,7 +242,7 @@ sequenceDiagram
   participant CO as coordinator
   participant ED as edge
   AD->>API: POST /v1/enroll-tokens (mint) → audited enroll_token.mint
-  API-->>AD: token (shown once; never logged §11.4.10)
+  API-->>AD: token (shown once, never logged §11.4.10)
   AD->>API: PUT /v1/policy (group:contractors → net:warehouse:554/tcp)
   API->>POL: compile (default-deny, fail-closed)
   POL->>BUS: events:policy {policy.compiled, version}
@@ -291,7 +291,7 @@ sequenceDiagram
   participant CO as coordinator
   participant U as authorized Access user
   CN->>ID: outbound dial + enroll(token) + WG pubkey
-  ID-->>CN: device cert; overlay identity; site id (4via6, D4)
+  ID-->>CN: device cert, overlay identity, site id (4via6, D4)
   CN->>REG: advertise CIDRs (route.advertised)
   REG->>CO: events {connector.attached, connector.prefixes.changed}
   CO->>CO: recompute maps for nodes whose policy grants these CIDRs
@@ -382,7 +382,7 @@ firewall shim (nftables/WFP/NE rules), `coordinator` (reconnect map), `edge`.
 stateDiagram-v2
   [*] --> Connected
   Connected --> TunnelDown: network drop / handshake loss
-  TunnelDown --> Locked: kill-switch engages (firewall blocks off-tunnel + plaintext :53)
+  TunnelDown --> Locked: kill-switch engages (firewall blocks off-tunnel + plaintext port 53)
   Locked --> Locked: any app traffic dropped (0 leak, NFR-404/405)
   Locked --> Reconnecting: ladder re-runs (UC-06)
   Reconnecting --> Connected: WG handshake re-established → kill-switch lifts

@@ -174,10 +174,10 @@ sequenceDiagram
   Note over PGp: primary fails
   Pat->>Std: promote (RPO=0 for sync-committed)
   Pat->>HX: helix-pg-rw now points at new primary
-  Note over HX: writes paused during promotion (seconds); /readyz NOT-READY
+  Note over HX: writes paused during promotion (seconds), /readyz NOT-READY
   Note over ED: tunnels KEEP forwarding (C1 fail-static — edge has WG peers)
-  HX->>PGp: reconnect to new primary; outbox relay drains backlog
-  Note over HX,ED: live topology never lost; only new mutations were paused
+  HX->>PGp: reconnect to new primary, outbox relay drains backlog
+  Note over HX,ED: live topology never lost, only new mutations were paused
 ```
 
 > **The HA payoff stated plainly:** a Postgres failover pauses *control* operations (you can't
@@ -291,7 +291,7 @@ sequenceDiagram
   A->>HY: reconnect, known_version=42
   HY->>HY: graph already in RAM from PG + bus (stateless boot)
   HY->>A: deltas (43..current) OR snapshot if ring-gap [svc-coordinator §3.2]
-  Note over A,HY: convergence resumes; p99<1s for events AFTER reconnect
+  Note over A,HY: convergence resumes, p99<1s for events AFTER reconnect
 ```
 
 ---

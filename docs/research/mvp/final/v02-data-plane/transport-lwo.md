@@ -366,7 +366,7 @@ sequenceDiagram
         L->>L: DROP + count lwo_deobf_drops      // L4: never an error
         L->>S: recv() again
     else valid
-        L->>L: L = n - 8 - P ; wg = raw[8 .. 8+L]
+        L->>L: L = n - 8 - P , wg = raw[8 .. 8+L]
         L->>K: obfuscate_header(wg, H)           // XOR is self-inverse → recovers WG
         L->>L: health.mark_recv()
         L-->>WG: Ok(Bytes::copy(wg))
@@ -542,7 +542,7 @@ stateDiagram-v2
     Dialing --> Failed: bind/connect error → TransportError
     Active --> Active: send()/recv() (per-packet stateless, L2)
     Active --> Rekeying: NetworkMap pushes new session_key/salt
-    Rekeying --> Active: derive_keys() swapped atomically;<br/>in-flight packets under old key DROP (L4)
+    Rekeying --> Active: derive_keys() swapped atomically,<br/>in-flight packets under old key DROP (L4)
     Active --> Closed: close() (idempotent, no-op flush)
     Failed --> [*]
     Closed --> [*]

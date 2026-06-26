@@ -695,7 +695,7 @@ sequenceDiagram
   loop each affected open stream
     Coord->>Edge: stream.Send(MapDelta)
   end
-  Note over Coord: t1 = stream.Send returns ; observe(t1-t0)
+  Note over Coord: t1 = stream.Send returns, observe(t1-t0)
   Edge-->>Edge: reconcile WG peers + verdict map (doc 01)
   Note over Pol,Edge: SLO: p99(t1-t0) < 1 s, ZERO restarts (C5)
 ```

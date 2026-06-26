@@ -201,12 +201,12 @@ matches the resolved device — a cert presented for the wrong device is rejecte
 ```mermaid
 stateDiagram-v2
     [*] --> Active: IssueDeviceCert (CSR PoP verified, device_certs row inserted)
-    Active --> Renewed: RenewDeviceCert (new leaf Active; old flips Renewed)
+    Active --> Renewed: RenewDeviceCert (new leaf Active, old flips Renewed)
     Active --> Expired: now ≥ not_after, never renewed
     Active --> Revoked: Revoke() / device.revoked event
     Renewing --> Revoked: device.revoked DURING renewal
     Renewed --> [*]: GC after audit window
-    Expired --> [*]: control channel rejected; device must re-enroll
+    Expired --> [*]: control channel rejected, device must re-enroll
     Revoked --> [*]: kept as revocation evidence until device delete
     note right of Active
       Exactly ONE Active mtls cert per device
@@ -258,7 +258,7 @@ sequenceDiagram
     participant Store as Postgres (RLS)
     participant Bus as events bus
     Note over Dev: T − renewSkew reached (≈4.8h before a 24h expiry)
-    Dev->>API: RenewCert{device_id, new_leaf_pub}  (mTLS w/ CURRENT leaf; only PUBLIC key, P1)
+    Dev->>API: RenewCert{device_id, new_leaf_pub}  (mTLS w/ CURRENT leaf, only PUBLIC key, P1)
     API->>PKI: AuthDevice(current leaf) → ok, not revoked/expired (fail-closed, P5)
     API->>PKI: RenewDeviceCert{prior_cert_id, ttl=24h}
     PKI->>Store: INSERT new leaf Active + flip prior → Renewed + audit (ONE tx)
@@ -386,7 +386,7 @@ sequenceDiagram
     PKI->>Cache: add serial (hot-path reject instantly — no DB hit, §8.2)
     PKI->>Bus: XADD device.revoked
     Bus-->>Coord: XReadGroup delivers
-    Coord->>Coord: remove node; compute minimal affected set (need-to-know, S3)
+    Coord->>Coord: remove node, compute minimal affected set (need-to-know, S3)
     loop each affected open WatchNetworkMap stream
         Coord->>Edge: stream.Send(MapDelta remove_peer_ids=[device])
     end

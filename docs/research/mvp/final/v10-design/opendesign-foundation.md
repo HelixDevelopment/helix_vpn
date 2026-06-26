@@ -354,7 +354,7 @@ sequenceDiagram
 
     DS->>EX: pnpm export (tokens/** → tokens.css, light+dark)
     EX->>ODSYS: write tokens.css (+ author DESIGN.md/components.html)
-    ODSYS->>OD: set active system; generate/refine prototypes & screens
+    ODSYS->>OD: set active system, generate/refine prototypes & screens
     OD-->>ODSYS: refinement edits (tokens.css / DESIGN.md tweaks)
     ODSYS-->>DS: round-trip diff back into tokens/** (D-DESIGN-3 direction)
     DS->>VR: pnpm export ALL forms + golden screenshots (light+dark)

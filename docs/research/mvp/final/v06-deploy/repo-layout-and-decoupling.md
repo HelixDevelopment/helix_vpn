@@ -295,7 +295,7 @@ flowchart TD
   ROOT --> HE["submodules/helix_edge"]
   ROOT --> CT["submodules/containers (own-org)"]
   ROOT --> CH["submodules/challenges (own-org)"]
-  HE -.workspace path dep / import, NOT nested .gitmodules.-> HC
+  HE -.->|workspace path dep / import, NOT nested .gitmodules| HC
   HCTL["submodules/helix_control"] -.replace directive to root path.-> CT
   HCTL -.-> CH
   ROOT --> HCTL
@@ -373,7 +373,7 @@ sequenceDiagram
   Dev->>Dev: cd repo && install_upstreams   (configures BOTH remotes, §11.4.36)
   Dev->>GH: push main + helix_vpn-X.Y tag (merge-onto-main, NO force §11.4.113)
   Dev->>GL: push (cascade, §2.1)
-  Dev->>Dev: git submodule add (flat) into helixvpn/; bump pointer (§11.4.26 step 7)
+  Dev->>Dev: git submodule add (flat) into helixvpn/, bump pointer (§11.4.26 step 7)
 ```
 
 Each push is a fast-forward merge-onto-latest-main (§11.4.113 — **no force-push anywhere**),

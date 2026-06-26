@@ -1,0 +1,30 @@
+context: workable-items
+description: >
+  HelixVPN workable-items sync (§11.4.93/.95/.106). The WBS markdown docs
+  are the authority for item definitions; the SQLite DB is derived via
+  scripts/workable_items_loader.py (md-to-db). The DB is git-tracked per
+  §11.4.95 (NOT a build artifact). When any WBS source changes, docs_chain
+  detects the content-hash drift and the sync command regenerates the DB.
+nodes:
+  # Authority side: WBS markdown docs
+  wbs_p0:     { kind: markdown, path: docs/research/mvp/final/06-phase0-spike-wbs.md }
+  wbs_p1:     { kind: markdown, path: docs/research/mvp/final/07-phase1-mvp-wbs.md }
+  wbs_p2:     { kind: markdown, path: docs/research/mvp/final/08-phase2-parity-wbs.md }
+  wbs_p3:     { kind: markdown, path: docs/research/mvp/final/09-phase3-reach-wbs.md }
+  deep_p1:    { kind: markdown, path: docs/research/mvp/final/v07-execution/subtask-deepening-p1.md }
+  deep_p2:    { kind: markdown, path: docs/research/mvp/final/v07-execution/subtask-deepening-p2.md }
+  deep_p3:    { kind: markdown, path: docs/research/mvp/final/v07-execution/subtask-deepening-p3.md }
+  # Derived side: SQLite DB (git-tracked, §11.4.95)
+  db:         { kind: sqlite,   path: docs/workable_items.db }
+edges:
+  # md-to-db: WBS markdown → SQLite DB via loader script
+  - { type: derive-from, from: wbs_p0,  to: db, transform: md-to-db }
+  - { type: derive-from, from: wbs_p1,  to: db, transform: md-to-db }
+  - { type: derive-from, from: wbs_p2,  to: db, transform: md-to-db }
+  - { type: derive-from, from: wbs_p3,  to: db, transform: md-to-db }
+  - { type: derive-from, from: deep_p1, to: db, transform: md-to-db }
+  - { type: derive-from, from: deep_p2, to: db, transform: md-to-db }
+  - { type: derive-from, from: deep_p3, to: db, transform: md-to-db }
+transforms:
+  # The loader reads all WBS files itself; docs_chain triggers it on any source change.
+  md-to-db: { exec: ./scripts/docs_chain_md_to_db.sh }

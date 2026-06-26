@@ -399,7 +399,7 @@ stateDiagram-v2
     Authenticating --> Snapshotting: cert valid, device not revoked
     Authenticating --> [*]: Unauthenticated / PermissionDenied (§4)
     Snapshotting --> Live: received MapUpdate{snapshot} OR catch-up deltas
-    Live --> Live: MapUpdate{delta}  (apply: upsert/remove peers, maybe transport/dns)
+    Live --> Live: MapUpdate{delta}  (apply upsert/remove peers, maybe transport/dns)
     Live --> Live: MapUpdate{keepalive}  (reset liveness timer)
     Live --> Reconnect: 2 missed keepalives OR transport error OR ResourceExhausted
     Reconnect --> Connecting: reopen with last applied version as known_version

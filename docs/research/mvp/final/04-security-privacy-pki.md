@@ -223,13 +223,13 @@ sequenceDiagram
     participant Edge as Rust edge (kernel WG)
 
     Admin->>ID: POST /v1/enroll-tokens {kind, site?, ttl, max_uses}
-    ID->>ID: token=rand256; store Argon2id(token); emit audit "token.create"
+    ID->>ID: token=rand256, store Argon2id(token), emit audit "token.create"
     ID-->>Admin: {token, qr}  (plaintext shown ONCE)
     Admin-->>Dev: out-of-band: paste token / scan QR
 
     Note over Dev: Device generates WG keypair LOCALLY.<br/>Private key NEVER leaves the device (S2).
     Dev->>Dev: (wg_priv, wg_pub) = X25519.gen()
-    Dev->>Dev: (csr_priv, csr) = Ed25519.gen(); CSR CN = pending device-id
+    Dev->>Dev: (csr_priv, csr) = Ed25519.gen(), CSR CN = pending device-id
 
     Dev->>Coord: Enroll{enroll_token, wg_pubkey, csr, os, name, kind}
     Coord->>ID: verify token (const-time hash, TTL, uses, bind_kind)
@@ -239,10 +239,10 @@ sequenceDiagram
     else token valid
         ID->>IPAM: allocate overlay IP from tenant ULA /48
         IPAM-->>ID: fd7a:helix:<t>::N
-        ID->>ID: INSERT devices(...); used_count++; emit device.enrolled
+        ID->>ID: INSERT devices(...), used_count++, emit device.enrolled
         ID->>PKI: SignDeviceCert(csr, device_id, not_after=now+24h)
-        PKI->>PKI: validate CSR proof-of-possession; sign with tenant CA
-        PKI-->>ID: {cert, serial}; INSERT device_certs(...)
+        PKI->>PKI: validate CSR proof-of-possession, sign with tenant CA
+        PKI-->>ID: {cert, serial}, INSERT device_certs(...)
         ID-->>Coord: EnrollResponse{device_id, overlay_ip, cert, ca_chain, gateway}
         Coord-->>Dev: EnrollResponse
         Note over Dev: persist cert + overlay IP in OS keystore (Keychain/Keystore/TPM where available)
@@ -416,8 +416,8 @@ stateDiagram-v2
     Active --> Expired: now ≥ not_after (no renewal)
     Active --> Revoked: device.revoked event (admin / compromise / policy)
     Renewing --> Revoked: device.revoked during renewal
-    Expired --> [*]: control channel rejected; device must re-enroll
-    Revoked --> [*]: peer dropped everywhere; cert serial blacklisted < 1s (S5)
+    Expired --> [*]: control channel rejected, device must re-enroll
+    Revoked --> [*]: peer dropped everywhere, cert serial blacklisted < 1s (S5)
     note right of Renewing
       Renewal is a re-issue over the AUTHENTICATED channel —
       no new enroll token, no privilege escalation. Same device_id,
@@ -459,7 +459,7 @@ sequenceDiagram
     participant Peers as Affected peers' open WatchNetworkMap streams
 
     Op->>API: POST /v1/devices/{id}:revoke   (RBAC: admin/operator)
-    API->>ID: tx{ devices.revoked_at=now; device_certs.revoked=true; emit audit }
+    API->>ID: tx{ devices.revoked_at=now, device_certs.revoked=true, emit audit }
     ID->>Bus: XADD device.revoked {device_id, tenant_id, wg_pubkey}
     par fan-out (all within the SLO budget)
         Bus->>Coord: consume device.revoked
@@ -468,7 +468,7 @@ sequenceDiagram
     and
         Coord->>Coord: blacklist cert serial in the in-mem revocation set
     end
-    Note over Edge,Peers: kernel WG peer gone ⇒ no further handshake/data;<br/>open mTLS control stream for the revoked device is force-closed.
+    Note over Edge,Peers: kernel WG peer gone ⇒ no further handshake/data,<br/>open mTLS control stream for the revoked device is force-closed.
 ```
 
 Mechanics that make < 1 s real and verifiable:
@@ -801,7 +801,7 @@ sequenceDiagram
     C->>C: ss_c = Decaps(dk, ciphertext)   (ss_c == ss_gw)
     Note over C,GW: both derive: PSK = HKDF-SHA256(shared_secret, "helix-pq-psk-v1")
     C->>GW: WireGuard Noise IK handshake WITH that PSK mixed in
-    Note over C,GW: rotate PSK on each WG rekey interval (~120s); PQ exchange only at setup/rekey, zero per-packet cost
+    Note over C,GW: rotate PSK on each WG rekey interval (~120s), PQ exchange only at setup/rekey, zero per-packet cost
 ```
 
 ### 9.2 KEM choice (decision, with recommendation)

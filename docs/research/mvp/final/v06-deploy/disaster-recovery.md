@@ -277,11 +277,11 @@ sequenceDiagram
   participant CL as clients
   Note over Op: region A confirmed lost (not a transient partition — §7 fencing check)
   Op->>PGB: PROMOTE standby B → primary (operator-gated §4/§11.4.101)
-  Op->>HB: repoint DATABASE_URL → region-B primary; helixd replicas reconnect
-  HB->>HB: rehydrate graph from PG (stateless boot §1.4); outbox re-relays in-flight
-  Op->>DNS: drop region-A gateway IPs; serve region-B edges [ha-and-multiregion §5]
-  DNS->>CL: clients resolve to region-B gateway; re-handshake tunnels
-  Note over CL,HB: control plane live in B within RTO<15min; tunnels re-home via transport ladder
+  Op->>HB: repoint DATABASE_URL → region-B primary, helixd replicas reconnect
+  HB->>HB: rehydrate graph from PG (stateless boot §1.4), outbox re-relays in-flight
+  Op->>DNS: drop region-A gateway IPs, serve region-B edges [ha-and-multiregion §5]
+  DNS->>CL: clients resolve to region-B gateway, re-handshake tunnels
+  Note over CL,HB: control plane live in B within RTO<15min, tunnels re-home via transport ladder
 ```
 
 Step-by-step:

@@ -544,7 +544,7 @@ sequenceDiagram
     CB->>AG: atomic write status.cbor  (App-Group shared container)
     CB->>DN: post "io.helixvpn.status"  (CFNotificationCenter Darwin notify)
     DN-->>APP: observer fires (no payload — just a wake)
-    APP->>AG: read status.cbor  (latest only; coalesced)
+    APP->>AG: read status.cbor  (latest only, coalesced)
     APP->>EC: sink.add(PlatformTunnelEvent.up / down / ...)  (§5.6 mapping)
     EC-->>EC: Riverpod tunnelStatusProvider folds it (CI2)
 ```
@@ -706,10 +706,10 @@ stateDiagram-v2
   Rung1 : Rung 1 — shrink buffers + cap QUIC windows (iOS build)
   Rung1 --> Measure : re-soak
   Rung1 --> Rung2 : still FAIL
-  Rung2 : Rung 2 — MASQUE off-device for iOS (plain WG + on-path obfs only; PARTIAL feature loss)
+  Rung2 : Rung 2 — MASQUE off-device for iOS (plain WG + on-path obfs only, PARTIAL feature loss)
   Rung2 --> Measure : re-soak
   Rung2 --> Rung3 : still FAIL
-  Rung3 : Rung 3 — split core: lean WG datapath in-extension; QUIC negotiation in APP via app-extension IPC
+  Rung3 : Rung 3 — split core — lean WG datapath in-extension, QUIC negotiation in APP via app-extension IPC
   Rung3 --> Measure : re-soak
   Pass --> [*]
 ```
@@ -838,7 +838,7 @@ stateDiagram-v2
   Pumping --> Pumping : packetFlow.readPackets ⇄ helix_core_tun_out / tun_writer
   Pumping --> Stopping : stopTunnel(reason) / device.revoked
   StartFailed --> Stopped : completionHandler(err)
-  Stopping --> Stopped : helix_core_stop(); publish Down{reason} (§5.5); completionHandler()
+  Stopping --> Stopped : helix_core_stop() , publish Down{reason} (§5.5) , completionHandler()
 ```
 
 ### 9.2 App-side connect controller (drives the extension)
@@ -856,12 +856,12 @@ sequenceDiagram
     UI->>PLAT: startTunnel(cfg)
     PLAT->>APP: MethodChannel start(cfg)
     APP->>NEM: load/save prefs + startVPNTunnel(options:{token})
-    NEM->>PTP: spawn ext; startTunnel(options)
+    NEM->>PTP: spawn ext, startTunnel(options)
     PTP->>PTP: applyNetworkSettings (overlay IP, routes, tunnel DNS)
     PTP->>CORE: helix_core_start(cfg) + set_tun_writer + set_status_cb
     CORE-->>PTP: status Connecting → Handshaking → Connected{masque-h3,23}
     PTP->>APP: App-Group write + Darwin notify (§5.2)
-    APP-->>PLAT: EventChannel.up  ;  StatusChip via tunnelStatusProvider
+    APP-->>PLAT: EventChannel.up  ,  StatusChip via tunnelStatusProvider
     UI->>PLAT: stopTunnel()
     PLAT->>APP: MethodChannel stop()
     APP->>NEM: session.stopVPNTunnel()

@@ -870,7 +870,7 @@ The FFI `Shields` (§4.2) maps onto these: `kill_switch=true` ⇒
 stateDiagram-v2
     [*] --> Open
     Open --> Closed : Idle→Connecting (Strict) — arm before first handshake
-    Closed --> OpenTunnel : Handshaking→Connected — egress via tunnel + tunnel DNS + block :53
+    Closed --> OpenTunnel : Handshaking→Connected — egress via tunnel + tunnel DNS + block port 53
     OpenTunnel --> Closed : Connected→Reconnecting/Down (drop) — O-I11, keep DNS block
     Closed --> OpenTunnel : re-dial succeeded (Reconnecting→Connected)
     Closed --> Open : user Stop only (§8.4 row 5) — revert system DNS

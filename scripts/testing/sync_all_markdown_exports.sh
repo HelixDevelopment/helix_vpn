@@ -41,6 +41,8 @@
 #
 # Dependencies:
 #   - bash, pandoc, weasyprint, timeout (coreutils gtimeout fallback), find
+#   - python3 + mmdc (mermaid-cli) for §11.4.168 diagram pre-rendering
+#     (scripts/testing/render_mermaid_blocks.py + mermaid.config.json)
 #
 # Cross-references:
 #   - Constitution §11.4.65 (Universal Markdown export mandate)
@@ -56,6 +58,13 @@ set -u
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 REPO_ROOT=$(CDPATH= cd -- "$SCRIPT_DIR/../.." && pwd)
 SCOPE_ROOT="$REPO_ROOT/docs/research/mvp/final"
+
+# Mermaid pre-render support (§11.4.168). Diagrams are rendered to PNG by
+# render_mermaid_blocks.py BEFORE pandoc runs, so the HTML/PDF carry images,
+# not raw ```mermaid source. The cache is content-addressed + gitignored
+# (its regeneration mechanism is this script — §11.4.77).
+MERMAID_HELPER="$SCRIPT_DIR/render_mermaid_blocks.py"
+MERMAID_CACHE="$REPO_ROOT/.mermaid-cache"
 
 # --- Parse args --------------------------------------------------------------
 FORCE=0
@@ -83,7 +92,9 @@ if [ -n "$PATH_PREFIX" ]; then
     esac
 fi
 
-if [ ! -d "$WALK_ROOT" ]; then
+if [ -f "$WALK_ROOT" ]; then
+    : # single-file mode (a specific .md) — supported for incremental regen
+elif [ ! -d "$WALK_ROOT" ]; then
     echo "ERROR: walk root does not exist: $WALK_ROOT" >&2
     exit 1
 fi
@@ -148,7 +159,11 @@ FAILED_LIST=""
 # contain no newlines, so this is safe and parses cleanly under sh -n + bash -n
 # (no bash-only process substitution / NUL handling required).
 FILELIST=$(mktemp 2>/dev/null || echo "/tmp/_sync_md_list.$$")
-find "$WALK_ROOT" -type f -name '*.md' >"$FILELIST" 2>/dev/null
+if [ -f "$WALK_ROOT" ]; then
+    printf '%s\n' "$WALK_ROOT" >"$FILELIST"
+else
+    find "$WALK_ROOT" -type f -name '*.md' >"$FILELIST" 2>/dev/null
+fi
 
 while IFS= read -r md; do
     [ -n "$md" ] || continue
@@ -171,9 +186,32 @@ while IFS= read -r md; do
     title=$(extract_title "$md")
     file_failed=0
 
+    # --- Mermaid pre-render (§11.4.168) ---------------------------------------
+    # If the source has ```mermaid fences, render each to PNG and feed pandoc a
+    # preprocessed copy. A render failure (broken diagram) marks the file FAILED
+    # but the preprocessed copy carries a visible marker, NEVER raw source — so
+    # the export can never leak diagram source (the bluff §11.4.168 forbids).
+    pandoc_src="$md"
+    mmd_workdir=""
+    if grep -q '```mermaid' "$md" 2>/dev/null; then
+        mmd_workdir=$(mktemp -d 2>/dev/null || echo "/tmp/_mmd_wd.$$")
+        if run_with_timeout 600 python3 "$MERMAID_HELPER" \
+                "$md" "$mmd_workdir/pp.md" "$mmd_workdir/img" "$MERMAID_CACHE" \
+                >"$mmd_workdir/log" 2>&1; then
+            pandoc_src="$mmd_workdir/pp.md"
+        else
+            file_failed=1
+            echo "FAIL (mermaid): $md" >&2
+            sed 's/^/    /' "$mmd_workdir/log" >&2 2>/dev/null || true
+            # Still use the preprocessed copy if it was written (carries failure
+            # markers, not raw source); otherwise fall back to the raw source.
+            [ -f "$mmd_workdir/pp.md" ] && pandoc_src="$mmd_workdir/pp.md"
+        fi
+    fi
+
     # --- HTML via pandoc -----------------------------------------------------
     if [ "$need_html" -eq 1 ]; then
-        if run_with_timeout 60 pandoc "$md" \
+        if run_with_timeout 60 pandoc "$pandoc_src" \
                 --standalone \
                 --embed-resources \
                 --metadata title="$title" \
@@ -201,6 +239,11 @@ while IFS= read -r md; do
             file_failed=1
             echo "FAIL (pdf): $md (no HTML to render from)" >&2
         fi
+    fi
+
+    # --- Per-file mermaid workdir cleanup (cache persists; temp imgs do not) --
+    if [ -n "$mmd_workdir" ]; then
+        rm -rf "$mmd_workdir" 2>/dev/null || true
     fi
 
     if [ "$file_failed" -eq 1 ]; then

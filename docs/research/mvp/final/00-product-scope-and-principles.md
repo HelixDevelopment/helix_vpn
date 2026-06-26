@@ -240,7 +240,7 @@ sequenceDiagram
     G->>C: route via Connector A
     C-->>G: response from 10.10.5.20
     G-->>U: response delivered
-    Note over C,U: Neither side ever opened an inbound port.<br/>Both legs are outbound; Gateway is the router/policer.
+    Note over C,U: Neither side ever opened an inbound port.<br/>Both legs are outbound, Gateway is the router/policer.
 ```
 
 The "two ways" are the **network-side leg** (Connector → Gateway) and the

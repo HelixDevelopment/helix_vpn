@@ -534,7 +534,7 @@ stateDiagram-v2
     [*] --> Idle
     Idle --> Connecting : start() / arm kill-switch CLOSED (§8.2)
 
-    Connecting --> Handshaking : carrier up (loop B: HandshakeStarted)
+    Connecting --> Handshaking : carrier up (loop B - HandshakeStarted)
     Connecting --> Reconnecting : TransportError / dial-timeout (budget left)
     Connecting --> Down : ladder-exhausted OR pinned-transport-failed
 
@@ -543,7 +543,7 @@ stateDiagram-v2
     Handshaking --> Down : auth-failed (WG reject) — NO retry (§5.4)
 
     Connected --> Reconnecting : PeerTimeout OR TransportError / CLOSE kill-switch (O-I11)
-    Connected --> Connected : rtt drift > delta (re-emit, §4.3) ; MapApplied (reconcile, §6)
+    Connected --> Connected : rtt drift > delta (re-emit, §4.3) , MapApplied (reconcile, §6)
     Connected --> ShuttingDown : Stop
 
     Reconnecting --> Connecting : backoff elapsed → re-dial next rung (§7)
@@ -555,7 +555,7 @@ stateDiagram-v2
     Handshaking --> ShuttingDown : Stop
     ShuttingDown --> Down : teardown complete (§2.4) / DNS reverted, kill-switch per §8.6
     Down --> [*]
-    Down --> Connecting : start() again (new attempt; reset ladder to top, L-I8 [01-LAD])
+    Down --> Connecting : start() again (new attempt, reset ladder to top, L-I8 [01-LAD])
 ```
 
 ### 5.3 Driver task (single writer of `OrchState`)
@@ -751,14 +751,14 @@ sequenceDiagram
     SM->>TX: dial(cfg)  [bounded dial timeout]
     alt dial Ok
         TX-->>SM: Box<dyn Transport>
-        SM->>Sh: active_tx = Some(Arc::from(tx))   (atomic swap; loops resume)
+        SM->>Sh: active_tx = Some(Arc::from(tx))   (atomic swap, loops resume)
         SM-->>SM: → Handshaking (WG handshake over new carrier)
-        Note over SM: on HandshakeComplete → Connected; BK.reset()
+        Note over SM: on HandshakeComplete → Connected, BK.reset()
     else dial Err / budget exceeded
         TX-->>SM: Err
         SM->>LD: escalate()  (advance rung)
         SM->>BK: next_delay()  (grow)
-        Note over SM: stay Reconnecting; loop until ladder-exhausted+cap → Down
+        Note over SM: stay Reconnecting, loop until ladder-exhausted+cap → Down
     end
 ```
 
@@ -871,7 +871,7 @@ The kill-switch is reverted to *open* on **exactly one** path: a user-initiated 
 stateDiagram-v2
     [*] --> Open
     Open --> Closed : Idle→Connecting (Strict) — arm before first handshake
-    Closed --> OpenTunnel : Handshaking→Connected — egress via tunnel + tunnel DNS + block :53
+    Closed --> OpenTunnel : Handshaking→Connected — egress via tunnel + tunnel DNS + block port 53
     OpenTunnel --> Closed : Connected→Reconnecting/Down (drop) — O-I11, keep DNS block
     Closed --> OpenTunnel : re-dial succeeded (Reconnecting→Connected)
     Closed --> Open : user Stop only (§8.6) — revert system DNS

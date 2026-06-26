@@ -672,7 +672,7 @@ sequenceDiagram
     Reg->>PKI: Revoke(deviceID)  [mark cert revoked, same tx]
     Reg->>Bus: XADD events:devices {device.revoked, device_id}
     Bus-->>Coord: deliver device.revoked
-    Coord-->>Coord: drop node; compute peer-removal deltas (everyone who saw it, C4)
+    Coord-->>Coord: drop node, compute peer-removal deltas (everyone who saw it, C4)
     Coord->>Edge: stream.Send(MapDelta{remove_peer_ids:[id]})
     Coord->>Edge: force-close revoked device's own stream (PermissionDenied)
     Edge-->>Edge: remove WG peer (kernel) < 1s

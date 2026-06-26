@@ -230,13 +230,13 @@ sequenceDiagram
     participant Edge as Rust edge (kernel WG)
 
     Admin->>ID: POST /v1/enroll-tokens {kind, site?, ttl, max_uses}  (PermMintEnrollToken)
-    ID->>ID: token = rand256; store argon2id(token); audit "token.create"
+    ID->>ID: token = rand256, store argon2id(token), audit "token.create"
     ID-->>Admin: {token, qr}  — PLAINTEXT SHOWN ONCE (never persisted, AS-TOKEN)
     Admin-->>Dev: out-of-band: paste token / scan QR
 
     Note over Dev: Device generates WG + leaf keypairs LOCALLY.<br/>Private keys NEVER leave the device (S2 / K1).
     Dev->>Dev: (wg_priv, wg_pub) = X25519.gen()
-    Dev->>Dev: (leaf_priv, csr) = Ed25519.gen(); CSR CN = pending device-id
+    Dev->>Dev: (leaf_priv, csr) = Ed25519.gen(), CSR CN = pending device-id
 
     Dev->>Coord: Enroll{enroll_token, wg_pubkey, csr, os, name, kind}  (only PUBLIC material, K2)
     Coord->>ID: verify token (const-time hash, TTL, uses, bind_kind)
@@ -246,10 +246,10 @@ sequenceDiagram
     else token valid
         ID->>IPAM: allocate overlay IP (tenant ULA /48)
         IPAM-->>ID: fd7a:helix:<t>::N
-        ID->>ID: INSERT devices(...); used_count++; emit device.enrolled
+        ID->>ID: INSERT devices(...), used_count++, emit device.enrolled
         ID->>PKI: SignDeviceCert(csr, device_id, ttl=24h)
-        PKI->>PKI: verify CSR proof-of-possession (T-PKI-S-1); sign with tenant issuing CA
-        PKI-->>ID: {leaf, serial}; INSERT device_certs + device_wg_keys (one tx)
+        PKI->>PKI: verify CSR proof-of-possession (T-PKI-S-1), sign with tenant issuing CA
+        PKI-->>ID: {leaf, serial}, INSERT device_certs + device_wg_keys (one tx)
         ID-->>Coord: EnrollResponse{device_id, overlay_ip, device_cert, ca_chain, gateway}
         Coord-->>Dev: EnrollResponse
         Note over Dev: persist sealed cert + keys in OS keystore (S2 / K4)
@@ -337,17 +337,17 @@ sequenceDiagram
     API->>ID: BeginOIDC(tenant, provider, redirectURI)
     ID->>R: SETEX oidc:state:<s> {nonce, verifier, tenant, provider}
     ID-->>B: 302 → IdP authorize?code_challenge=S256&state=<s>&nonce=<n>
-    B->>IDP: authenticate (IdP-side; Helix NEVER sees the password)
+    B->>IDP: authenticate (IdP-side, Helix NEVER sees the password)
     IDP-->>B: 302 → /callback?code&state
     B->>API: GET callback?code&state
     API->>ID: CompleteOIDC{code, state}
-    ID->>R: GETDEL oidc:state:<s>   (single-use; missing ⇒ ErrStateInvalid — replay rejected)
+    ID->>R: GETDEL oidc:state:<s>   (single-use, missing ⇒ ErrStateInvalid — replay rejected)
     ID->>IDP: POST /token (code + code_verifier)   [PKCE]
     IDP-->>ID: id_token (JWT)
     ID->>IDP: GET /jwks (cached) → verify sig, iss, aud, exp, nonce
-    ID->>PG: upsert user by (tenant, oidc_sub) [JIT]; map claim → role
+    ID->>PG: upsert user by (tenant, oidc_sub) [JIT], map claim → role
     ID->>PG: INSERT session (token_hash = sha256(opaque))
-    ID-->>B: Set-Cookie helix_session=<raw>; HttpOnly; Secure; SameSite=Lax
+    ID-->>B: Set-Cookie helix_session=<raw>, HttpOnly, Secure, SameSite=Lax
 ```
 
 | Gate | What it stops | Threat |
@@ -545,7 +545,7 @@ sequenceDiagram
     participant Peers as Affected peers' open WatchNetworkMap streams
 
     Op->>API: POST /v1/devices/{id}:revoke   (RBAC: admin)
-    API->>ID: tx{ devices.revoked_at=now; device_certs.revoked=true; retire WG key; audit }
+    API->>ID: tx{ devices.revoked_at=now, device_certs.revoked=true, retire WG key, audit }
     ID->>Bus: XADD device.revoked {device_id, tenant_id, wg_pubkey, serial}
     par fan-out (all within the < 1 s TARGET budget)
         Bus->>Coord: consume device.revoked
@@ -554,7 +554,7 @@ sequenceDiagram
     and
         Coord->>Coord: blacklist cert serial in the in-mem revocation set
     end
-    Note over Edge,Peers: kernel WG peer gone ⇒ no further handshake/data;<br/>the revoked device's OWN control stream is force-closed.
+    Note over Edge,Peers: kernel WG peer gone ⇒ no further handshake/data,<br/>the revoked device's OWN control stream is force-closed.
 ```
 
 The two cooperating teeth (belt-and-suspenders [research-pki_pq_nat §1.2/§1.3]): **(a) stop

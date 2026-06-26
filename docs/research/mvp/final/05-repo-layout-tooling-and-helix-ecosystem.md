@@ -253,7 +253,7 @@ sequenceDiagram
   Dev->>Dev: cd repo && install_upstreams   (configures both remotes, §11.4.36)
   Dev->>GH: push main + helixvpn-X.Y tag (merge-onto-main, no force §11.4.113)
   Dev->>GL: push (cascade, §2.1)
-  Dev->>Dev: git submodule add (flat) into helixvpn/; bump pointer (§11.4.26 step 7)
+  Dev->>Dev: git submodule add (flat) into helixvpn/, bump pointer (§11.4.26 step 7)
 ```
 
 ---

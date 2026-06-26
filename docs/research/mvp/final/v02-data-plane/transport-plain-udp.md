@@ -529,7 +529,7 @@ sequenceDiagram
         Tx-->>Orch: send()/recv() = Err(EndpointBlocked)
         Orch->>Lad: budget hit (fast)
     else no ICMP → liveness timeout (D2)
-        Note over Tx,Orch: no recv; health.last_recv_age_ms climbs
+        Note over Tx,Orch: no recv, health.last_recv_age_ms climbs
         Wg-->>Orch: WriteToTransport(handshake_init #2, #3)  %% WG retries ~5s apart
         Orch->>Tx: send(init#2), send(init#3)
         Tx->>Net: dropped each time
