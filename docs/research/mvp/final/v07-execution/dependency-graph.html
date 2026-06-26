@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Cross-Phase Dependency Graph — the HelixVPN delivery DAG and critical paths</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Cross-Phase Dependency Graph — the HelixVPN delivery
+DAG and critical paths</h1>
+</header>
+<h1 id="cross-phase-dependency-graph--the-helixvpn-delivery-dag-and-critical-paths">Cross-Phase
+Dependency Graph — the HelixVPN delivery DAG and critical paths</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-06-26T12:00:00Z</p>
+<blockquote>
+<p>Volume 7 (Phase Execution), document 2 of 5. This spec consolidates
+the dependency edges scattered across the four phase WBS documents into
+one <strong>cross-phase directed acyclic graph (DAG)</strong>: which
+Phase-0 spikes gate which Phase-1 epics, the critical path to the MVP
+tag, the cross-component dependencies that bind data-plane ↔︎
+control-plane ↔︎ client, and the parallel fan-outs that compress
+wall-clock. It is <strong>spec-only</strong> — every edge is cited to a
+<code>depends_on</code>/<code>deps</code> field in
+<code>06-phase0-spike-wbs.md</code> (<code>HVPN-P0-NNN</code>),
+<code>07-phase1-mvp-wbs.md</code> (<code>HVPN-P1-NNN</code>),
+<code>08-phase2-parity-wbs.md</code> (<code>HVPN-P2-NNN</code>), or
+<code>09-phase3-reach-wbs.md</code> (<code>HVPN-P3-NNN</code>); nothing
+is invented. The DAG is the structure the <code>workable-items</code>
+loader validates for acyclicity (§11.4.93, see
+<code>workable-items-model.md</code> §8). All durations are sizing-only
+<code>TARGET</code>s — never date commitments (§11.4.6, the phase docs&#39;
+no-commitment caveat).</p>
+</blockquote>
+<hr />
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#0-reading-the-dag">0. Reading the DAG</a></li>
+<li><a href="#1-programme-level-phase-dag">1. Programme-level phase
+DAG</a></li>
+<li><a href="#2-phase-0--phase-1-gating-spikes-that-unblock-epics">2.
+Phase 0 → Phase 1 gating (spikes that unblock epics)</a></li>
+<li><a href="#3-the-phase-1-mvp-critical-path">3. The Phase-1 MVP
+critical path</a></li>
+<li><a href="#4-cross-component-dependencies-data--control--client">4.
+Cross-component dependencies (data ↔︎ control ↔︎ client)</a></li>
+<li><a href="#5-phase-2-critical-path--parallel-high-risk-tracks">5.
+Phase-2 critical path + parallel high-risk tracks</a></li>
+<li><a href="#6-phase-3-critical-path--device-gated-parking">6. Phase-3
+critical path + device-gated parking</a></li>
+<li><a href="#7-master-dependency-table-item--depends-on--blocks">7.
+Master dependency table (item → depends-on → blocks)</a></li>
+<li><a href="#8-critical-path-call-out--parallelism-rules">8.
+Critical-path call-out + parallelism rules</a></li>
+<li><a href="#sources-verified">Sources verified</a></li>
+</ul>
+<hr />
+<h2 id="0-reading-the-dag">0. Reading the DAG</h2>
+<p>An edge <code>A → B</code> means <strong>B depends on A</strong> (A
+must be <code>complete</code> before B starts), sourced from B&#39;s
+<code>depends_on</code>/<code>deps</code> field in its WBS doc.
+Cross-phase edges cite the full id (<code>08-…</code> §0). The graph is
+acyclic by construction; <code>workable-items validate</code>
+(<code>workable-items-model.md</code> §8) fails the build on any
+cycle.</p>
+<p>Risk-ordering (§11.4.132) governs <em>sequencing within</em> the DAG:
+the irreversible correctness floor (RLS, no-log lint, kill-switch,
+NAT-traversal honesty, PQ downgrade-safety) leads; convenience UI
+trails. Red nodes are the critical-path / make-or-break carries each
+phase doc flags.</p>
+<hr />
+<h2 id="1-programme-level-phase-dag">1. Programme-level phase DAG</h2>
+<pre class="mermaid"><code>graph LR
+  P0[&quot;Phase 0 — Spike&lt;br/&gt;G1–G6 gates&lt;br/&gt;HVPN-P0-001..080&quot;]
+  P1[&quot;Phase 1 — MVP&lt;br/&gt;8 AC + 4 SLO&lt;br/&gt;HVPN-P1-010..151&quot;]
+  P2[&quot;Phase 2 — Parity+Reach&lt;br/&gt;8 P2-AC + 5 SLO&lt;br/&gt;HVPN-P2-190..301&quot;]
+  P3[&quot;Phase 3 — Extended Reach&lt;br/&gt;G20–G26 gates&lt;br/&gt;HVPN-P3-200..272&quot;]
+  P0 --&gt;|&quot;G1/G2/G4/G5/G6 settled&lt;br/&gt;before P1 starts&quot;| P1
+  P1 --&gt;|&quot;8 DoD + 4 SLO green&lt;br/&gt;= seams exist (P2-E19)&quot;| P2
+  P2 --&gt;|&quot;§08 DoD green&lt;br/&gt;= P3 entry condition&quot;| P3
+  classDef crit fill:#fde,stroke:#c33,stroke-width:2px;
+  class P0,P1 crit;</code></pre>
+<p>Each phase boundary is a hard gate (<code>07-…</code> §5,
+<code>08-…</code> §5, <code>09-…</code> §2.0): the make-or-break Phase-0
+carries (G3 iOS memory, G4 edge language) are <em>resolved before</em>
+Phase 1 starts (<code>07-…</code> §4); Phase 2 assumes the Phase-1 seams
+exist (<code>08-…</code> §5 entry gate
+<code>HVPN-P2-190/191/192</code>); Phase 3 starts only when Phase 2 has
+graduated (<code>09-…</code> §2.0).</p>
+<hr />
+<h2 id="2-phase-0--phase-1-gating-spikes-that-unblock-epics">2. Phase 0
+→ Phase 1 gating (spikes that unblock epics)</h2>
+<p>The six Phase-0 gates map to Phase-1 entry items
+<code>HVPN-P1-001..006</code> (<code>07-…</code> §5), which in turn gate
+the Phase-1 epics. The dependency-bearing edges (from the Phase-1
+<code>deps</code> fields):</p>
+<pre class="mermaid"><code>graph TD
+  G1[&quot;G1 plain-UDP data-path&lt;br/&gt;HVPN-P0-025 → HVPN-P1-001&quot;]
+  G2[&quot;G2 MASQUE-through-DPI&lt;br/&gt;HVPN-P0-035 → HVPN-P1-002&quot;]
+  G3[&quot;G3 iOS NE memory (make-or-break)&lt;br/&gt;HVPN-P0-061..070 → HVPN-P1-003&quot;]
+  G4[&quot;G4 edge language&lt;br/&gt;HVPN-P0-045 → HVPN-P1-004&quot;]
+  G5[&quot;G5 FFI boundary&lt;br/&gt;HVPN-P0-052 → HVPN-P1-005&quot;]
+  G6[&quot;G6 push-reconcile&lt;br/&gt;HVPN-P0-071..076 → HVPN-P1-006&quot;]
+
+  G5 --&gt; E01[&quot;E01 Foundation&lt;br/&gt;HVPN-P1-010 deps HVPN-P1-005&quot;]
+  G2 --&gt; E09T[&quot;HVPN-P1-090 deps HVPN-P1-002&lt;br/&gt;(Transport trait+MASQUE)&quot;]
+  G4 --&gt; E10[&quot;HVPN-P1-100 deps HVPN-P1-004&lt;br/&gt;(edge language fixed)&quot;]
+  G3 --&gt; E12i[&quot;HVPN-P1-122 deps HVPN-P1-003&lt;br/&gt;(iOS NE within budget)&quot;]
+  G1 --&gt; E09T
+  E01 --&gt; E02[&quot;E02 Store+RLS&quot;]
+  classDef mk fill:#fdd,stroke:#c33,stroke-width:2px;
+  class G3 mk;</code></pre>
+<table>
+<thead>
+<tr>
+<th>Phase-0 gate</th>
+<th>Decides</th>
+<th>Phase-1 entry item</th>
+<th>Phase-1 epic it unblocks</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>G1</strong> plain-UDP slice (<code>HVPN-P0-025</code>)</td>
+<td>core viability</td>
+<td><code>HVPN-P1-001</code></td>
+<td>E09 (<code>HVPN-P1-090</code> Transport)</td>
+</tr>
+<tr>
+<td><strong>G2</strong> MASQUE through DPI
+(<code>HVPN-P0-035</code>)</td>
+<td>obfuscation D1</td>
+<td><code>HVPN-P1-002</code></td>
+<td>E09 <code>HVPN-P1-090</code>, E10 <code>HVPN-P1-100</code></td>
+</tr>
+<tr>
+<td><strong>G3</strong> iOS NE memory
+(<code>HVPN-P0-061..070</code>)</td>
+<td><strong>Rust-on-every-platform D2</strong></td>
+<td><code>HVPN-P1-003</code></td>
+<td>E12 <code>HVPN-P1-122</code> (iOS shim)</td>
+</tr>
+<tr>
+<td><strong>G4</strong> Go-vs-Rust edge (<code>HVPN-P0-045</code>)</td>
+<td>edge language D5</td>
+<td><code>HVPN-P1-004</code></td>
+<td>E10 <code>HVPN-P1-100</code> (fixes edge lang)</td>
+</tr>
+<tr>
+<td><strong>G5</strong> frb FFI (<code>HVPN-P0-052</code>)</td>
+<td>FFI boundary</td>
+<td><code>HVPN-P1-005</code></td>
+<td>E01 <code>HVPN-P1-010</code> (monorepo)</td>
+</tr>
+<tr>
+<td><strong>G6</strong> push-reconcile
+(<code>HVPN-P0-071..076</code>)</td>
+<td>push model seed</td>
+<td><code>HVPN-P1-006</code></td>
+<td>E07 <code>WatchNetworkMap</code> seed</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>G3 fail-path (§11.4.66).</strong> If the iOS memory gate
+fails, <code>HVPN-P1-122</code> (iOS shim) re-plans against the §6.4
+fallback ladder (<code>07-…</code> §5 note) — a decision surfaced, not
+silently resolved.</p>
+</blockquote>
+<hr />
+<h2 id="3-the-phase-1-mvp-critical-path">3. The Phase-1 MVP critical
+path</h2>
+<p>The longest dependency chain to AC certification (<code>07-…</code>
+§22), with the red critical-path epics E02/E03/E07/E09/E14
+(<code>07-…</code> §4):</p>
+<pre class="mermaid"><code>graph LR
+  A[&quot;E01 010→011&lt;br/&gt;repo+proto&quot;] --&gt; B[&quot;E02 020→021→022&lt;br/&gt;store+FORCE-RLS&quot;]
+  B --&gt; C[&quot;E03 032&lt;br/&gt;PKI device-cert&quot;]
+  C --&gt; D[&quot;E07 070→071→072→073&lt;br/&gt;coordinator+WatchNetworkMap&quot;]
+  D --&gt; E[&quot;E09 092→093/094&lt;br/&gt;orchestrator+kill-switch&quot;]
+  E --&gt; F[&quot;E10 100→101→102&lt;br/&gt;edge+verdict-map&quot;]
+  F --&gt; G[&quot;E14 140→142→144→145&lt;br/&gt;QA+DoD cert&quot;]
+  G --&gt; H[&quot;E15 151&lt;br/&gt;release tag&quot;]
+  classDef crit fill:#fde,stroke:#c33,stroke-width:2px;
+  class B,C,D,E,G crit;</code></pre>
+<p>Critical path:
+<code>E01(010→011) → E02(020→021→022) → E03(032) → E07(070→071→072→073) → E09(092→093/094) → E10(100→101→102) → E14(140→142→144→145) → E15(151)</code>
+(<code>07-…</code> §22). The two parallel fan-outs that keep wall-clock
+down: <strong>E04/E05/E06</strong> off E02 (disjoint scope → concurrent
+PWUs §11.4.58), and <strong>E11 UI</strong> off E08/E09 in parallel with
+E10/E12.</p>
+<hr />
+<h2 id="4-cross-component-dependencies-data--control--client">4.
+Cross-component dependencies (data ↔︎ control ↔︎ client)</h2>
+<p>The architecture&#39;s three planes (data / control / client) are bound
+by specific <code>deps</code> edges. The MVP is hub-and-spoke: the
+coordinator computes per-node maps, the edge enforces them, the client
+core reconciles them.</p>
+<pre class="mermaid"><code>graph TD
+  subgraph CONTROL[&quot;Control plane (Go)&quot;]
+    STORE[&quot;E02 store+RLS&lt;br/&gt;HVPN-P1-022&quot;]
+    POLICY[&quot;E06 policy compiler&lt;br/&gt;HVPN-P1-061 (2 artifacts)&quot;]
+    COORD[&quot;E07 coordinator&lt;br/&gt;HVPN-P1-071 buildMap&lt;br/&gt;HVPN-P1-072 WatchNetworkMap&quot;]
+    API[&quot;E08 API+authz&lt;br/&gt;HVPN-P1-080 mTLS resolver&quot;]
+  end
+  subgraph CLIENT[&quot;Client core (Rust)&quot;]
+    TRANS[&quot;E09 Transport+MASQUE&lt;br/&gt;HVPN-P1-090&quot;]
+    ORCH[&quot;E09 orchestrator+reconciler&lt;br/&gt;HVPN-P1-092&quot;]
+    KILL[&quot;E09 kill-switch&lt;br/&gt;HVPN-P1-094&quot;]
+  end
+  subgraph DATA[&quot;Data plane (Rust edge)&quot;]
+    EDGE[&quot;E10 MASQUE termination&lt;br/&gt;HVPN-P1-100&quot;]
+    PEER[&quot;E10 kernel-WG peer prog&lt;br/&gt;HVPN-P1-101&quot;]
+    VERD[&quot;E10 verdict-map enforce&lt;br/&gt;HVPN-P1-102&quot;]
+  end
+  STORE --&gt; POLICY --&gt; COORD
+  COORD --&gt; API
+  COORD --&gt; ORCH
+  POLICY --&gt; VERD
+  TRANS --&gt; ORCH --&gt; KILL
+  TRANS --&gt; EDGE --&gt; PEER --&gt; VERD
+  COORD --&gt; PEER
+  COORD --&gt; VERD
+  classDef crit fill:#fde,stroke:#c33;
+  class COORD,TRANS crit;</code></pre>
+<p>The load-bearing cross-plane edges (from the <code>deps</code>
+fields):</p>
+<table>
+<thead>
+<tr>
+<th>Edge</th>
+<th>Cited dep</th>
+<th>Why it binds the planes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>policy compiler → coordinator</td>
+<td><code>HVPN-P1-070</code> deps <code>HVPN-P1-061</code></td>
+<td><code>buildMap</code> consumes the compiled
+<code>{visible,allowedIPs,verdict-map}</code> (<code>07-…</code>
+§11/§12)</td>
+</tr>
+<tr>
+<td>coordinator → client reconciler</td>
+<td><code>HVPN-P1-092</code> deps <code>HVPN-P1-072</code></td>
+<td>the client converges to streamed <code>MapUpdate</code> deltas
+(<code>07-…</code> §14)</td>
+</tr>
+<tr>
+<td>Transport trait → edge</td>
+<td><code>HVPN-P1-100</code> deps <code>HVPN-P1-090,004</code></td>
+<td>edge reuses <code>helix-transport</code> byte-for-byte; G4 fixes
+language (<code>07-…</code> §15)</td>
+</tr>
+<tr>
+<td>compiler verdict-map → edge</td>
+<td><code>HVPN-P1-102</code> deps <code>HVPN-P1-061,101,033</code></td>
+<td>edge applies the port-level verdict map WG <code>AllowedIPs</code>
+lacks (<code>07-…</code> §15)</td>
+</tr>
+<tr>
+<td>PKI cert → API/coordinator authz</td>
+<td><code>HVPN-P1-080</code> deps <code>HVPN-P1-032</code>;
+<code>HVPN-P1-072</code> auth via mTLS</td>
+<td>the device cert authenticates the stream (<code>07-…</code>
+§12/§13)</td>
+</tr>
+<tr>
+<td>IPAM → enroll</td>
+<td><code>HVPN-P1-031</code> deps <code>HVPN-P1-040</code></td>
+<td>enroll allocates the overlay IP before issuing the map
+(<code>07-…</code> §8)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="5-phase-2-critical-path--parallel-high-risk-tracks">5. Phase-2
+critical path + parallel high-risk tracks</h2>
+<p>Phase 2 is additive off the shipped MVP (<code>08-…</code> §4). The
+networking/reach spine is the critical path; PQ and DAITA are parallel
+measure-don&#39;t-assert tracks.</p>
+<pre class="mermaid"><code>graph TD
+  P1[&quot;Phase 1 shipped&quot;] --&gt; E27[&quot;E27 HA+multi-region&lt;br/&gt;270→271→272→273→274&quot;]
+  E27 --&gt; E22[&quot;E22 P2P+NAT traversal&lt;br/&gt;220→221→222→223→224→225&quot;]
+  E22 --&gt; E23[&quot;E23 multi-hop&lt;br/&gt;230→231→232&quot;]
+  E23 --&gt; E29[&quot;E29 QA+DoD cert&lt;br/&gt;290→295→297&quot;]
+  E29 --&gt; E30[&quot;E30 release tag 301&quot;]
+  P1 -.parallel.-&gt; E24[&quot;E24 post-quantum&lt;br/&gt;240→241→242→243&quot;]
+  P1 -.parallel.-&gt; E21[&quot;E21 DAITA&lt;br/&gt;210→211→213&quot;]
+  P1 -.parallel.-&gt; E20[&quot;E20 transport set&lt;br/&gt;200..206&quot;]
+  P1 -.parallel.-&gt; E25[&quot;E25 desktop apps&quot;]
+  P1 -.parallel.-&gt; E26g[&quot;E26 GitOps&quot;]
+  E24 --&gt; E29
+  E21 --&gt; E29
+  E20 --&gt; E29
+  classDef crit fill:#fde,stroke:#c33,stroke-width:2px;
+  class E27,E22,E23,E29 crit;</code></pre>
+<p>Critical path:
+<code>E27(270→271→272→273→274) → E22(220→221→222→223→224→225) → E23(230→231→232) → E29(290→295→297) → E30(301)</code>
+(<code>08-…</code> §19). E27 leads because the STUN endpoints, relay
+fleet, and NATS mesh that E22/E26/E28 consume are <em>its</em> outputs
+(<code>08-…</code> §4): <code>HVPN-P2-220</code> (STUN discovery) deps
+<code>HVPN-P2-271</code>; <code>HVPN-P2-223</code> (relay) deps
+<code>HVPN-P2-273</code>. The two high-risk parallel tracks that
+converge at E29 but do <strong>not</strong> sit on the networking
+critical path: <strong>E24 (PQ)</strong> and <strong>E21
+(DAITA)</strong> — each a disjoint-scope PWU (§11.4.58). Per §11.4.132
+the correctness-and-downgrade-safety floor leads: NAT-traversal honesty
+(<code>HVPN-P2-222</code> no-false-direct), PQ
+never-weaker-than-classical (<code>HVPN-P2-242</code>), DAITA measured
+efficacy (<code>HVPN-P2-213</code>).</p>
+<hr />
+<h2 id="6-phase-3-critical-path--device-gated-parking">6. Phase-3
+critical path + device-gated parking</h2>
+<p>Phase 3&#39;s two native shims (E21 HarmonyOS, E22 Aurora) are the
+make-or-break carries; they run as disjoint-scope parallel PWUs the
+moment E20&#39;s fork runners exist, and <em>park</em> on
+<code>PENDING_DEVICE</code> while host-only work proceeds
+(<code>09-…</code> §4).</p>
+<pre class="mermaid"><code>graph TD
+  P2[&quot;Phase 2 graduated&quot;] --&gt; E20[&quot;E20 reach CI fabric&lt;br/&gt;200/201→202→203 · G20&quot;]
+  E20 --&gt; E21[&quot;E21 HarmonyOS&lt;br/&gt;210→211→214 · G21 ⚠&quot;]
+  E20 --&gt; E22[&quot;E22 Aurora&lt;br/&gt;220→221→223 · G22 ⚠&quot;]
+  E20 --&gt; E23[&quot;E23 WASM proxy&lt;br/&gt;230→231→233 · G23&quot;]
+  E20 --&gt; E24[&quot;E24 billing&lt;br/&gt;240→241..244 · G24&quot;]
+  E21 --&gt; E25[&quot;E25 3rd-party audit&lt;br/&gt;250→252→253→254 · G25&quot;]
+  E22 --&gt; E25
+  E23 --&gt; E25
+  E24 --&gt; E25
+  E25 --&gt; E26[&quot;E26 reproducible builds&lt;br/&gt;260→263→264 · G26&quot;]
+  E26 --&gt; E27[&quot;E27 l10n+release&lt;br/&gt;271→272&quot;]
+  E21 --&gt; E27
+  E22 --&gt; E27
+  classDef risk fill:#fdd,stroke:#c33,stroke-width:2px;
+  class E21,E22 risk;</code></pre>
+<p>Critical path (risk-ordered §11.4.132):
+<code>E20(200/201→203) → {E21(210→211→214) ∥ E22(220→221→223)} → E25(250→252→253→254) → E26(260→263→264) → E27(271→272)</code>
+(<code>09-…</code> §14). E25 (audit) is a <strong>convergence
+gate</strong> — it cannot start until the surfaces it audits (E21–E24)
+are feature-complete (<code>HVPN-P3-250</code> deps
+<code>214,223,233,244</code>); E26 depends on E25 because the audited
+source tree is what must reproduce. While E21/E22 await device access
+(<code>PENDING_DEVICE</code>), E23/E24/E26-tooling progress as ≥3
+background streams (§11.4.103, <code>09-…</code> §4).</p>
+<hr />
+<h2 id="7-master-dependency-table-item--depends-on--blocks">7. Master
+dependency table (item → depends-on → blocks)</h2>
+<p>The load-bearing edges per phase (selected critical/cross-component
+edges; the full set is every <code>deps</code>/<code>depends_on</code>
+field in the four WBS docs, which the loader ingests).
+<code>blocks</code> = the inverse edge (what waits on this item).</p>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Depends on</th>
+<th>Blocks (selected)</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>HVPN-P0-004</code> Transport trait</td>
+<td><code>HVPN-P0-002</code></td>
+<td><code>HVPN-P0-008</code>,<code>028</code>,<code>049</code></td>
+<td><code>06-…</code> §3</td>
+</tr>
+<tr>
+<td><code>HVPN-P0-008</code> plain-UDP</td>
+<td><code>HVPN-P0-006</code></td>
+<td><code>HVPN-P0-018</code> (orchestrator)</td>
+<td><code>06-…</code> §3</td>
+</tr>
+<tr>
+<td><code>HVPN-P0-025</code> G1 reach</td>
+<td><code>HVPN-P0-020,023</code></td>
+<td><code>HVPN-P1-001</code> (G1 entry)</td>
+<td><code>06-…</code> §5</td>
+</tr>
+<tr>
+<td><code>HVPN-P0-035</code> G2 MASQUE</td>
+<td><code>HVPN-P0-031,024</code></td>
+<td><code>HVPN-P1-002</code>,<code>HVPN-P0-039</code> (Rust edge)</td>
+<td><code>06-…</code> §6</td>
+</tr>
+<tr>
+<td><code>HVPN-P0-045</code> G4 bench</td>
+<td><code>HVPN-P0-040,043</code></td>
+<td><code>HVPN-P1-004</code> (edge lang)</td>
+<td><code>06-…</code> §7</td>
+</tr>
+<tr>
+<td><code>HVPN-P1-010</code> monorepo</td>
+<td><code>HVPN-P1-005</code> (G5)</td>
+<td><code>HVPN-P1-011,013,110,150</code></td>
+<td><code>07-…</code> §6</td>
+</tr>
+<tr>
+<td><code>HVPN-P1-022</code> FORCE-RLS</td>
+<td><code>HVPN-P1-021</code></td>
+<td><code>HVPN-P1-030,032,040,050,060</code></td>
+<td><code>07-…</code> §7</td>
+</tr>
+<tr>
+<td><code>HVPN-P1-061</code> policy compiler</td>
+<td><code>HVPN-P1-060</code></td>
+<td><code>HVPN-P1-062,070,102</code></td>
+<td><code>07-…</code> §11</td>
+</tr>
+<tr>
+<td><code>HVPN-P1-072</code> WatchNetworkMap</td>
+<td><code>HVPN-P1-071,080</code></td>
+<td><code>HVPN-P1-073,092,101</code></td>
+<td><code>07-…</code> §12</td>
+</tr>
+<tr>
+<td><code>HVPN-P1-090</code> Transport (prod)</td>
+<td><code>HVPN-P1-002</code></td>
+<td><code>HVPN-P1-091,093,100</code></td>
+<td><code>07-…</code> §14</td>
+</tr>
+<tr>
+<td><code>HVPN-P1-100</code> edge MASQUE term</td>
+<td><code>HVPN-P1-090,004</code></td>
+<td><code>HVPN-P1-101,102,261</code></td>
+<td><code>07-…</code> §15</td>
+</tr>
+<tr>
+<td><code>HVPN-P1-145</code> DoD cert</td>
+<td><code>140,141,142,143,144</code></td>
+<td><code>HVPN-P1-151</code> (tag)</td>
+<td><code>07-…</code> §19</td>
+</tr>
+<tr>
+<td><code>HVPN-P2-190</code> Transport seam</td>
+<td><code>HVPN-P1-090</code></td>
+<td><code>HVPN-P2-200,201,202</code></td>
+<td><code>08-…</code> §5</td>
+</tr>
+<tr>
+<td><code>HVPN-P2-220</code> STUN discovery</td>
+<td><code>HVPN-P2-191,271</code></td>
+<td><code>HVPN-P2-221,222,296</code></td>
+<td><code>08-…</code> §8</td>
+</tr>
+<tr>
+<td><code>HVPN-P2-222</code> hole-punch</td>
+<td><code>HVPN-P2-220,221</code></td>
+<td><code>HVPN-P2-223,224,290</code></td>
+<td><code>08-…</code> §8</td>
+</tr>
+<tr>
+<td><code>HVPN-P2-240</code> ML-KEM PSK</td>
+<td><code>HVPN-P2-192</code></td>
+<td><code>HVPN-P2-241,244</code></td>
+<td><code>08-…</code> §10</td>
+</tr>
+<tr>
+<td><code>HVPN-P2-272</code> NATS mesh</td>
+<td><code>HVPN-P2-270</code></td>
+<td><code>HVPN-P2-273,281,295</code></td>
+<td><code>08-…</code> §13</td>
+</tr>
+<tr>
+<td><code>HVPN-P2-297</code> Phase-2 DoD</td>
+<td><code>290..296</code></td>
+<td><code>HVPN-P2-301</code> (tag)</td>
+<td><code>08-…</code> §15</td>
+</tr>
+<tr>
+<td><code>HVPN-P3-200/201</code> fork runners</td>
+<td><code>—</code></td>
+<td><code>HVPN-P3-210,220,230,260</code></td>
+<td><code>09-…</code> §5</td>
+</tr>
+<tr>
+<td><code>HVPN-P3-210</code> OHOS cross-compile</td>
+<td><code>HVPN-P3-200</code></td>
+<td><code>HVPN-P3-211</code></td>
+<td><code>09-…</code> §6</td>
+</tr>
+<tr>
+<td><code>HVPN-P3-250</code> audit scope</td>
+<td><code>214,223,233,244</code></td>
+<td><code>HVPN-P3-252,253</code></td>
+<td><code>09-…</code> §10</td>
+</tr>
+<tr>
+<td><code>HVPN-P3-260</code> determinize builds</td>
+<td><code>HVPN-P3-202</code></td>
+<td><code>HVPN-P3-261,262,263</code></td>
+<td><code>09-…</code> §11</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="8-critical-path-call-out--parallelism-rules">8. Critical-path
+call-out + parallelism rules</h2>
+<p><strong>The single longest chain to a published release</strong>
+(programme critical path, concatenating the per-phase critical paths at
+the gate boundaries):</p>
+<pre><code>Phase 0:  HVPN-P0-002 → 004 → 008 → 018 → 025(G1) → 031 → 035(G2) → 045(G4)
+Phase 1:  → P1-010 → 022 → 032 → 070 → 071 → 072 → 092 → 094 → 100 → 102 → 145 → 151(MVP tag)
+Phase 2:  → P2-270 → 271 → 272 → 220 → 222 → 223 → 224 → 230 → 232 → 295 → 297 → 301(parity tag)
+Phase 3:  → P3-200 → 203(G20) → 210 → 211 → 214(G21) → 250 → 252 → 253 → 254(G25) → 260 → 263 → 264(G26) → 272(reach tag)</code></pre>
+<p>Parallelism rules that compress this wall-clock (each cited to a
+constitution anchor + the WBS note that invokes it):</p>
+<table>
+<thead>
+<tr>
+<th>Rule</th>
+<th>Where it applies</th>
+<th>Anchor</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Disjoint-scope PWUs run fully parallel</td>
+<td>P1 E04/E05/E06 off E02; P2 E20/E21/E24/E25; P3 E23/E24 off E20</td>
+<td>§11.4.58</td>
+</tr>
+<tr>
+<td>≥3 background streams + auto-backfill</td>
+<td>every phase; P3 while shims park on <code>PENDING_DEVICE</code></td>
+<td>§11.4.103</td>
+</tr>
+<tr>
+<td>Single-resource-owner for shared hardware</td>
+<td>P0 S4 vs S7 must NOT share the bench host at once</td>
+<td>§11.4.119 (<code>06-…</code> §2 note)</td>
+</tr>
+<tr>
+<td>Risk-ordered sequencing (highest-risk first)</td>
+<td>RLS/kill-switch/NAT-honesty/PQ-downgrade-safety lead</td>
+<td>§11.4.132</td>
+</tr>
+<tr>
+<td>Audio-style top-priority maps to correctness floor</td>
+<td>every phase&#39;s iteration ordering</td>
+<td>§11.4.72→§11.4.132</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Honest-uncertainty markers (§11.4.6).</strong> Phase-3
+device-gated nodes (<code>HVPN-P3-211/221</code> and downstream) carry
+the widest error bars and are
+<code>UNCONFIRMED:</code>/<code>PENDING_DEVICE:</code> until hardware
+exists (<code>09-…</code> §14 risk register). A gate that cannot be
+cleared on the real device <strong>is the finding</strong> — escalate
+per §11.4.66/.101/.112, never overrun silently. No edge in this DAG
+implies a calendar date; every duration is a sizing-only
+<code>TARGET</code>.</p>
+<hr />
+<h2 id="sources-verified">Sources verified</h2>
+<ul>
+<li><code>06-phase0-spike-wbs.md</code> §2 milestone DAG + §2
+parallelism note, §3–§11 per-milestone <code>depends_on</code> fields,
+gates table — read 2026-06-26.</li>
+<li><code>07-phase1-mvp-wbs.md</code> §4 epic DAG, §5 entry gates, §21
+traceability, §22 critical path + effort caveat — read 2026-06-26.</li>
+<li><code>08-phase2-parity-wbs.md</code> §4 epic DAG, §5 entry seams,
+§18 traceability, §19 critical path — read 2026-06-26.</li>
+<li><code>09-phase3-reach-wbs.md</code> §2.1 gate DAG, §4 epic DAG, §13
+traceability, §14 critical path + risk register — read 2026-06-26.</li>
+<li>Sibling <code>workable-items-model.md</code> (§8 loader acyclicity
+validation) — authored this volume.</li>
+<li>Constitution anchors §11.4.58/.66/.72/.101/.103/.112/.119/.132 —
+read 2026-06-26.</li>
+</ul>
+<blockquote>
+<p>Honest boundary (§11.4.6): every edge is transcribed from a cited WBS
+<code>deps</code> field; no dependency is inferred or invented.
+Durations are sizing <code>TARGET</code>s, never commitments;
+device-gated Phase-3 chains remain <code>PENDING_DEVICE</code>.</p>
+</blockquote>
+</body>
+</html>

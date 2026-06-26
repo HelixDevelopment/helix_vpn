@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Workable-Items Model — every WBS task/subtask → the §11.4.93 SQLite single source of truth</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Workable-Items Model — every WBS task/subtask → the
+§11.4.93 SQLite single source of truth</h1>
+</header>
+<h1 id="workable-items-model--every-wbs-tasksubtask--the-11493-sqlite-single-source-of-truth">Workable-Items
+Model — every WBS task/subtask → the §11.4.93 SQLite single source of
+truth</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-06-26T12:00:00Z</p>
+<blockquote>
+<p>Volume 7 (Phase Execution), document 1 of 5. This spec defines the
+<strong>mechanical contract</strong> by which every
+Work-Breakdown-Structure leaf in the four phase WBS documents —
+<code>06-phase0-spike-wbs.md</code> (<code>HVPN-P0-NNN</code>),
+<code>07-phase1-mvp-wbs.md</code> (<code>HVPN-P1-NNN</code>),
+<code>08-phase2-parity-wbs.md</code> (<code>HVPN-P2-NNN</code>),
+<code>09-phase3-reach-wbs.md</code> (<code>HVPN-P3-NNN</code>) — becomes
+one row in the git-tracked SQLite single source of truth
+<code>docs/workable_items.db</code> (§11.4.93/.95). It is
+<strong>spec-only</strong>: it describes the schema, the integrity
+contract (§11.4.148), the per-item test diary (§11.4.149), the
+bidirectional docs↔︎DB sync via Docs Chain (§11.4.106), and the
+<code>HVPN-Pn-NNN</code> id convention (§11.4.54) — it does not build
+the loader (that is work-item <code>HVPN-P1-150</code>). Every claim
+here is derived from a cited phase WBS doc or constitution anchor;
+nothing is invented. Effort/duration figures inherited from the phase
+docs are sizing estimates only and are marked <code>TARGET</code> where
+a date could be inferred.</p>
+</blockquote>
+<hr />
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#0-why-a-db-backed-single-source-of-truth">0. Why a
+DB-backed single source of truth</a></li>
+<li><a href="#1-the-id-convention-hvpn-pn-nnn-1114-54">1. The id
+convention (<code>HVPN-Pn-NNN</code>, §11.4.54)</a></li>
+<li><a href="#2-the-canonical-ddl-one-table-for-all-four-phases">2. The
+canonical DDL (one table for all four phases)</a></li>
+<li><a href="#3-field-by-field-mapping-wbs-leaf--db-row">3.
+Field-by-field mapping: WBS leaf → DB row</a></li>
+<li><a href="#4-sample-rows--one-per-phase-drawn-from-the-wbs-docs">4.
+Sample rows — one per phase, drawn from the WBS docs</a></li>
+<li><a href="#5-the-1114-148-integrity-contract-status--type--id-everywhere">5.
+The §11.4.148 integrity contract (status + type + id,
+everywhere)</a></li>
+<li><a href="#6-the-1114-149-per-item-test-diary">6. The §11.4.149
+per-item test diary</a></li>
+<li><a href="#7-docsdb-sync-via-docs-chain-1114-106">7. Docs↔︎DB sync via
+Docs Chain (§11.4.106)</a></li>
+<li><a href="#8-the-loader-contract-cmdworkable-items-hvpn-p1-150">8.
+The loader contract (<code>cmd/workable-items/</code>,
+HVPN-P1-150)</a></li>
+<li><a href="#9-gates-anti-bluff-and-what-complete-means">9. Gates,
+anti-bluff, and what &quot;complete&quot; means</a></li>
+<li><a href="#10-worked-end-to-end-example-p0-leaf--row--diary--export">10.
+Worked end-to-end example (P0 leaf → row → diary → export)</a></li>
+<li><a href="#sources-verified">Sources verified</a></li>
+</ul>
+<hr />
+<h2 id="0-why-a-db-backed-single-source-of-truth">0. Why a DB-backed
+single source of truth</h2>
+<p>The four WBS documents are human-authored Markdown — readable,
+reviewable, diffable. But Markdown alone is a fragile tracker: status
+drifts between the doc and reality, dependency cycles go undetected, and
+&quot;is this work owed?&quot; has no mechanical answer. §11.4.93 mandates a
+<strong>SQLite single source of truth</strong> for workable items, and
+§11.4.95 mandates that DB be <strong>git-tracked</strong> (it is
+authoritative source data, NOT a build artefact — the §11.4.77
+regen-mechanism exemption explicitly does NOT apply).</p>
+<p>The model is <strong>bidirectional</strong> (§11.4.93, §11.4.106):
+the Markdown WBS and the DB are kept byte-identical in a round-trip
+(<code>md-to-db</code> parses the leaves and upserts;
+<code>db-to-md</code> regenerates the leaf blocks). The DB is
+authoritative; the WBS Markdown, the rendered HTML/PDF, and any external
+tracker are <strong>derived</strong>. A <code>verify</code> pass is the
+deterministic pre-build gate that fails on any drift (§11.4.50
+determinism + §11.4.106 conflict-not-silent-merge).</p>
+<p>Each phase WBS already declares this projection in its own
+<code>§3 Workable-item schema (§11.4.93 DB-ready)</code> section: Phase
+0 in <code>06-…</code> §0.3, Phase 1 in <code>07-…</code> §3, Phase 2 in
+<code>08-…</code> §3, Phase 3 in <code>09-…</code> §3. This document
+<strong>reconciles those four into one canonical schema</strong> and one
+loader contract so a single DB holds all four phases (the
+<code>phase</code> discriminator column, introduced in <code>08-…</code>
+§3, carries <code>P0|P1|P2|P3</code>).</p>
+<hr />
+<h2 id="1-the-id-convention-hvpn-pn-nnn-11454">1. The id convention
+(<code>HVPN-Pn-NNN</code>, §11.4.54)</h2>
+<p>Every workable item — task or subtask — carries a stable, unique,
+auto-incremental ticket id (§11.4.54: append-only, never renumbered,
+reused, or decremented). HelixVPN uses the <code>HVPN-</code> project
+prefix instead of the generic <code>ATM-</code>, but the discipline is
+identical.</p>
+<table>
+<thead>
+<tr>
+<th>Element</th>
+<th>Rule</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Prefix</td>
+<td><code>HVPN-</code> (project), then phase tag
+<code>P0</code>/<code>P1</code>/<code>P2</code>/<code>P3</code></td>
+<td>all four WBS §0</td>
+</tr>
+<tr>
+<td>Numeric block</td>
+<td>the epic/milestone encodes the hundreds/tens digit</td>
+<td><code>07-…</code> §0, <code>08-…</code> §0, <code>09-…</code>
+§0.1</td>
+</tr>
+<tr>
+<td>Phase 1+ epics</td>
+<td><code>Enn</code> → tasks <code>nn0..nn9</code> (E02 store →
+<code>020..029</code>)</td>
+<td><code>07-…</code> §0</td>
+</tr>
+<tr>
+<td>Phase 0</td>
+<td>milestones <code>S0..S8</code>; gates use
+<code>001..006</code>-style; cross-cutting <code>077..080</code></td>
+<td><code>06-…</code> §0.1</td>
+</tr>
+<tr>
+<td>Subtask form</td>
+<td>Phase 1+ append <code>.k</code> (<code>HVPN-P1-022.3</code>); Phase
+0 allocates a fresh <code>HVPN-P0-NNN</code> per subtask with
+<code>parent</code> expressing hierarchy</td>
+<td><code>07-…</code> §0, <code>06-…</code> §0.1</td>
+</tr>
+<tr>
+<td>Mutability</td>
+<td><strong>monotonic, never renumbered</strong>; gaps allowed; new work
+appends at next free number</td>
+<td>§11.4.54, all four WBS §0</td>
+</tr>
+<tr>
+<td>Cross-phase deps</td>
+<td>cite the <strong>full</strong> id (<code>HVPN-P1-090</code>) — the
+namespaces are disjoint</td>
+<td><code>08-…</code> §0</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Subtask-id reconciliation (R5, see
+<code>REFINEMENT_NOTES.md</code>).</strong> Phase 0 allocates a
+<em>distinct</em> <code>HVPN-P0-NNN</code> for each subtask (e.g.
+<code>HVPN-P0-009</code>/<code>010</code> under task
+<code>HVPN-P0-008</code>). Phases 1–3 use the dotted <code>.k</code>
+form (<code>HVPN-P1-022.3</code>). Both are valid §11.4.54 stable ids;
+the loader (§8) treats the dotted form as a child whose
+<code>parent_id</code> is the bare task id. The three deepening docs in
+this volume (<code>subtask-deepening-p1/2/3.md</code>) author the
+<code>.k</code> subtasks that this model imports.</p>
+</blockquote>
+<p>The <code>HVPN-Pn-NNN[.k]</code> string is the <strong>binding
+key</strong> across all surfaces — the DB
+<code>atm_id</code>/<code>id</code> primary key, the WBS heading token,
+and (when wired) the external tracker custom field (§11.4.148 D1). A
+heading-hash secondary key (§11.4.54) preserves the binding when wording
+reflows.</p>
+<hr />
+<h2 id="2-the-canonical-ddl-one-table-for-all-four-phases">2. The
+canonical DDL (one table for all four phases)</h2>
+<p>The four WBS docs declare near-identical <code>items</code> +
+<code>test_diary</code> tables; the only divergence is column naming
+(<code>id</code> vs <code>atm_id</code>, <code>est_effort_d</code> vs
+<code>effort_days</code>) and the Phase-2 <code>phase</code>
+discriminator. The <strong>canonical reconciliation</strong> below is
+the schema the loader targets; it is a strict superset that round-trips
+every phase&#39;s projection without loss.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- docs/workable_items.db  — git-tracked (§11.4.95), single source of truth (§11.4.93).</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- Canonical schema reconciling 06-…§0.3 / 07-…§3 / 08-…§3 / 09-…§3.</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> <span class="cf">IF</span> <span class="kw">NOT</span> <span class="kw">EXISTS</span> items (</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  atm_id        TEXT <span class="kw">PRIMARY</span> <span class="kw">KEY</span>,                       <span class="co">-- &#39;HVPN-P1-022&#39; | &#39;HVPN-P0-009&#39; | &#39;HVPN-P2-222.1&#39;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  parent_id     TEXT <span class="kw">REFERENCES</span> items(atm_id),          <span class="co">-- owning epic/milestone/task; NULL at epic root</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  phase         TEXT <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">CHECK</span> (phase <span class="kw">IN</span> (<span class="st">&#39;P0&#39;</span>,<span class="st">&#39;P1&#39;</span>,<span class="st">&#39;P2&#39;</span>,<span class="st">&#39;P3&#39;</span>)),</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  kind          TEXT <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">CHECK</span> (kind <span class="kw">IN</span> (<span class="st">&#39;epic&#39;</span>,<span class="st">&#39;milestone&#39;</span>,<span class="st">&#39;task&#39;</span>,<span class="st">&#39;subtask&#39;</span>,<span class="st">&#39;gate&#39;</span>)),</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  title         TEXT <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">CHECK</span> (<span class="fu">length</span>(title) <span class="op">&gt;=</span> <span class="dv">6</span>),                 <span class="co">-- §11.4.91 self-contained</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  description   TEXT <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">CHECK</span> (<span class="fu">length</span>(description) <span class="op">&gt;=</span> <span class="dv">40</span>),          <span class="co">-- §11.4.91/.148 D2</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  status        TEXT <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> <span class="st">&#39;Queued&#39;</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>                <span class="kw">CHECK</span> (status <span class="kw">IN</span> (<span class="st">&#39;Queued&#39;</span>,<span class="st">&#39;In progress&#39;</span>,<span class="st">&#39;Ready for testing&#39;</span>,</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>                                  <span class="st">&#39;In testing&#39;</span>,<span class="st">&#39;Reopened&#39;</span>,<span class="st">&#39;Operator-blocked&#39;</span>,</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>                                  <span class="st">&#39;Obsolete (→ Fixed.md)&#39;</span>,<span class="st">&#39;Implemented (→ Fixed.md)&#39;</span>,</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>                                  <span class="st">&#39;Completed (→ Fixed.md)&#39;</span>,<span class="st">&#39;Fixed (→ Fixed.md)&#39;</span>)),</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>  <span class="kw">type</span>          TEXT <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> <span class="st">&#39;Task&#39;</span> <span class="kw">CHECK</span> (<span class="kw">type</span> <span class="kw">IN</span> (<span class="st">&#39;Bug&#39;</span>,<span class="st">&#39;Feature&#39;</span>,<span class="st">&#39;Task&#39;</span>)),</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>  severity      TEXT <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> <span class="st">&#39;normal&#39;</span>,</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>  epic          TEXT <span class="kw">NOT</span> <span class="kw">NULL</span>,                          <span class="co">-- &#39;E02&#39; | &#39;S0&#39; | &#39;E22&#39;</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>  module        TEXT <span class="kw">NOT</span> <span class="kw">NULL</span>,                          <span class="co">-- &#39;store&#39;,&#39;coordinator&#39;,&#39;helix-core&#39;,…</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>  gate          TEXT,                                   <span class="co">-- &#39;G1&#39;..&#39;G6&#39;,&#39;G20&#39;..&#39;G26&#39; or NULL</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>  deps          TEXT <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> <span class="st">&#39;[]&#39;</span>,             <span class="co">-- JSON array of atm_ids (cross-phase allowed)</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>  deliverable   TEXT <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>  acceptance    TEXT <span class="kw">NOT</span> <span class="kw">NULL</span>,                          <span class="co">-- falsifiable, captured-evidence (§11.4.5/.69/.107)</span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>  effort_days   <span class="dt">REAL</span> <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> <span class="fl">1.0</span>,              <span class="co">-- sizing only — never a date (TARGET)</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>  test_types    TEXT <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> <span class="st">&#39;[]&#39;</span>,             <span class="co">-- JSON array of §11.4.169 codes</span></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>  dod_refs      TEXT <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> <span class="st">&#39;[]&#39;</span>,             <span class="co">-- JSON: [&#39;AC3&#39;,&#39;SLO1&#39;] | [&#39;P2-AC3&#39;] | [&#39;G21&#39;]</span></span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>  source_refs   TEXT <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> <span class="st">&#39;[]&#39;</span>,             <span class="co">-- JSON: [&#39;04_P1 §7&#39;,&#39;02 §7.2&#39;]</span></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>  created_at    TEXT <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> (datetime(<span class="st">&#39;now&#39;</span>)),</span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>  modified_at   TEXT <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> (datetime(<span class="st">&#39;now&#39;</span>)),</span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- §11.4.148 D1: status + type + id are NOT NULL by construction above.</span></span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- §11.4.104: who created / who owns (canonical participant handles; &#39;&#39; = legacy, must still parse).</span></span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>  created_by    TEXT <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> <span class="st">&#39;&#39;</span>,</span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>  assigned_to   TEXT <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> <span class="st">&#39;&#39;</span></span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a><span class="co">-- §11.4.34 / §11.4.93 append-only lifecycle audit (state transitions, NOT test runs).</span></span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> <span class="cf">IF</span> <span class="kw">NOT</span> <span class="kw">EXISTS</span> item_history (</span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a>  <span class="kw">id</span>          <span class="dt">INTEGER</span> <span class="kw">PRIMARY</span> <span class="kw">KEY</span> AUTOINCREMENT,</span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a>  atm_id      TEXT <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">REFERENCES</span> items(atm_id),</span>
+<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a>  changed_at  TEXT <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a>  <span class="kw">by</span>          TEXT <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">CHECK</span> (<span class="kw">by</span> <span class="kw">IN</span> (<span class="st">&#39;AI&#39;</span>,<span class="st">&#39;User&#39;</span>,<span class="st">&#39;Operator&#39;</span>)),     <span class="co">-- §11.4.34</span></span>
+<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a>  from_status TEXT, to_status TEXT,</span>
+<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a>  reason      TEXT <span class="kw">NOT</span> <span class="kw">NULL</span>,                                            <span class="co">-- §11.4.34 closed vocab</span></span>
+<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a>  evidence    TEXT                                                      <span class="co">-- path/desc (§11.4.7)</span></span>
+<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a><span class="co">-- §11.4.21 Operator-blocked detail (WHAT/WHY/UNBLOCK/WHO) — one row per blocked item.</span></span>
+<span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> <span class="cf">IF</span> <span class="kw">NOT</span> <span class="kw">EXISTS</span> operator_block_details (</span>
+<span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a>  atm_id     TEXT <span class="kw">PRIMARY</span> <span class="kw">KEY</span> <span class="kw">REFERENCES</span> items(atm_id),</span>
+<span id="cb1-50"><a href="#cb1-50" aria-hidden="true" tabindex="-1"></a>  what       TEXT <span class="kw">NOT</span> <span class="kw">NULL</span>, why TEXT <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb1-51"><a href="#cb1-51" aria-hidden="true" tabindex="-1"></a>  unblock    TEXT <span class="kw">NOT</span> <span class="kw">NULL</span>,                                             <span class="co">-- §11.4.148 D3 enumerated choices</span></span>
+<span id="cb1-52"><a href="#cb1-52" aria-hidden="true" tabindex="-1"></a>  who        TEXT <span class="kw">NOT</span> <span class="kw">NULL</span></span>
+<span id="cb1-53"><a href="#cb1-53" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb1-54"><a href="#cb1-54" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-55"><a href="#cb1-55" aria-hidden="true" tabindex="-1"></a><span class="co">-- §11.4.90 Obsolete detail (Since/Reason/Superseding/Triple-check evidence).</span></span>
+<span id="cb1-56"><a href="#cb1-56" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> <span class="cf">IF</span> <span class="kw">NOT</span> <span class="kw">EXISTS</span> obsolete_details (</span>
+<span id="cb1-57"><a href="#cb1-57" aria-hidden="true" tabindex="-1"></a>  atm_id     TEXT <span class="kw">PRIMARY</span> <span class="kw">KEY</span> <span class="kw">REFERENCES</span> items(atm_id),</span>
+<span id="cb1-58"><a href="#cb1-58" aria-hidden="true" tabindex="-1"></a>  since      TEXT <span class="kw">NOT</span> <span class="kw">NULL</span>, reason TEXT <span class="kw">NOT</span> <span class="kw">NULL</span>,                       <span class="co">-- §11.4.90 closed vocab</span></span>
+<span id="cb1-59"><a href="#cb1-59" aria-hidden="true" tabindex="-1"></a>  superseding TEXT, evidence TEXT <span class="kw">NOT</span> <span class="kw">NULL</span></span>
+<span id="cb1-60"><a href="#cb1-60" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb1-61"><a href="#cb1-61" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-62"><a href="#cb1-62" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> <span class="cf">IF</span> <span class="kw">NOT</span> <span class="kw">EXISTS</span> meta (</span>
+<span id="cb1-63"><a href="#cb1-63" aria-hidden="true" tabindex="-1"></a>  schema_version TEXT <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb1-64"><a href="#cb1-64" aria-hidden="true" tabindex="-1"></a>  last_sync_at   TEXT <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb1-65"><a href="#cb1-65" aria-hidden="true" tabindex="-1"></a>  integrity_hash TEXT <span class="kw">NOT</span> <span class="kw">NULL</span>                                         <span class="co">-- §11.4.86 sha256 of sorted keyset</span></span>
+<span id="cb1-66"><a href="#cb1-66" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb1-67"><a href="#cb1-67" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-68"><a href="#cb1-68" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> <span class="cf">IF</span> <span class="kw">NOT</span> <span class="kw">EXISTS</span> idx_items_parent <span class="kw">ON</span> items(parent_id);</span>
+<span id="cb1-69"><a href="#cb1-69" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> <span class="cf">IF</span> <span class="kw">NOT</span> <span class="kw">EXISTS</span> idx_items_phase  <span class="kw">ON</span> items(phase);</span>
+<span id="cb1-70"><a href="#cb1-70" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> <span class="cf">IF</span> <span class="kw">NOT</span> <span class="kw">EXISTS</span> idx_items_gate   <span class="kw">ON</span> items(gate);</span>
+<span id="cb1-71"><a href="#cb1-71" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> <span class="cf">IF</span> <span class="kw">NOT</span> <span class="kw">EXISTS</span> idx_items_status <span class="kw">ON</span> items(status);</span></code></pre></div>
+<p>The <code>gates</code> table from <code>06-…</code> §0.3 and
+<code>09-…</code> §3 is retained verbatim as a sibling (gate verdicts
+are not workable items but carry their own evidence path); it is
+reproduced in §9.</p>
+<hr />
+<h2 id="3-field-by-field-mapping-wbs-leaf--db-row">3. Field-by-field
+mapping: WBS leaf → DB row</h2>
+<p>Each WBS leaf block (a task with no subtasks, or a subtask) carries
+the field contract declared in every phase doc&#39;s
+<code>§0 Field dictionary</code> / <code>§0 Field contract</code>. The
+mapping is 1:1:</p>
+<table>
+<thead>
+<tr>
+<th>WBS field (Markdown)</th>
+<th>DB column</th>
+<th>Transform / rule</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>heading token <code>HVPN-Pn-NNN[.k]</code></td>
+<td><code>atm_id</code></td>
+<td>verbatim; primary key</td>
+</tr>
+<tr>
+<td>owning epic/milestone/task</td>
+<td><code>parent_id</code></td>
+<td>the immediate parent&#39;s id; epic root → NULL</td>
+</tr>
+<tr>
+<td><code>Pn</code> from the id</td>
+<td><code>phase</code></td>
+<td><code>P0</code>/<code>P1</code>/<code>P2</code>/<code>P3</code></td>
+</tr>
+<tr>
+<td><code>kind</code> (task/subtask/epic/milestone/gate)</td>
+<td><code>kind</code></td>
+<td>from the heading style + §0 hierarchy</td>
+</tr>
+<tr>
+<td><code>title</code> (≥6 words, §11.4.91)</td>
+<td><code>title</code></td>
+<td>verbatim; loader rejects &lt; 6 words (§11.4.91 anti-pattern)</td>
+</tr>
+<tr>
+<td><strong>Desc</strong> (≥40 chars, §11.4.148 D2)</td>
+<td><code>description</code></td>
+<td>verbatim; loader rejects stub/section-label fragments</td>
+</tr>
+<tr>
+<td>(lifecycle)</td>
+<td><code>status</code></td>
+<td>default <code>Queued</code>; never authored stale in the WBS</td>
+</tr>
+<tr>
+<td><code>type Task|Feature|Bug</code></td>
+<td><code>type</code></td>
+<td>from the <code>· type X</code> annotation; Phase-2 default
+<code>Feature</code>, else <code>Task</code></td>
+</tr>
+<tr>
+<td>(risk)</td>
+<td><code>severity</code></td>
+<td>from <code>Critical</code>/<code>normal</code> annotation where
+present</td>
+</tr>
+<tr>
+<td>epic id (<code>E02</code>/<code>S0</code>/<code>E22</code>)</td>
+<td><code>epic</code></td>
+<td>parsed from the id block</td>
+</tr>
+<tr>
+<td><code>module:</code> tag</td>
+<td><code>module</code></td>
+<td>from the epic header <code>module:</code> field</td>
+</tr>
+<tr>
+<td><code>gate:</code>/<code>· DoD:</code></td>
+<td><code>gate</code></td>
+<td><code>G1..G6</code>/<code>G20..G26</code> or NULL</td>
+</tr>
+<tr>
+<td><strong>Deps</strong></td>
+<td><code>deps</code></td>
+<td>JSON array; <code>—</code> → <code>[]</code>; cross-phase ids
+allowed</td>
+</tr>
+<tr>
+<td><strong>Deliverable</strong></td>
+<td><code>deliverable</code></td>
+<td>verbatim file paths / artefacts</td>
+</tr>
+<tr>
+<td><strong>Acceptance</strong></td>
+<td><code>acceptance</code></td>
+<td>verbatim; MUST be a falsifiable captured-evidence assertion</td>
+</tr>
+<tr>
+<td><strong>Effort</strong> (<code>XS(1)…XL(15)</code> /
+<code>est_effort</code> days)</td>
+<td><code>effort_days</code></td>
+<td>T-shirt midpoint → REAL; <strong>sizing only, never a date</strong>
+(<code>TARGET</code>)</td>
+</tr>
+<tr>
+<td><strong>Tests</strong></td>
+<td><code>test_types</code></td>
+<td>JSON array of §11.4.169 codes
+(<code>UNIT</code>,<code>INT</code>,…)</td>
+</tr>
+<tr>
+<td><code>· DoD: AC3</code> / <code>· SLO1</code></td>
+<td><code>dod_refs</code></td>
+<td>JSON array</td>
+</tr>
+<tr>
+<td><code>[04_P1 §7]</code> inline cites</td>
+<td><code>source_refs</code></td>
+<td>JSON array</td>
+</tr>
+<tr>
+<td>(attribution)</td>
+<td><code>created_by</code>/<code>assigned_to</code></td>
+<td>§11.4.104 handles; legacy <code>&#39;&#39;</code> still parses</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Effort honesty (§11.4.6).</strong> Every phase WBS states
+explicitly that effort roll-ups are &quot;indicative person-day totals …
+<strong>not</strong> a commitment&quot; (<code>07-…</code> §22,
+<code>08-…</code> §19, <code>09-…</code> §14). The loader stores
+<code>effort_days</code> as a sizing scalar; any report deriving a
+<em>date</em> from it MUST label the date <code>TARGET</code> and cite
+the no-commitment caveat. Phase-3 device-gated items carry the widest
+error bars (<code>09-…</code> §14) and are additionally
+<code>UNCONFIRMED:</code>/<code>PENDING_DEVICE:</code> (§11.4.6).</p>
+<hr />
+<h2 id="4-sample-rows--one-per-phase-drawn-from-the-wbs-docs">4. Sample
+rows — one per phase, drawn from the WBS docs</h2>
+<p>The <code>INSERT</code> form proves the projection is unambiguous.
+These rows are transcribed from the exact leaves in the WBS docs (not
+invented).</p>
+<p><strong>Phase 0 leaf — <code>HVPN-P0-008</code> (plain-UDP transport
+baseline, <code>06-…</code> §3):</strong></p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">INSERT</span> <span class="kw">INTO</span> items (atm_id,parent_id,phase,kind,title,description,<span class="kw">type</span>,severity,</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>                   epic,module,gate,deps,deliverable,acceptance,effort_days,test_types,</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>                   dod_refs,source_refs,created_at,modified_at)</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="kw">VALUES</span> (</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a> <span class="st">&#39;HVPN-P0-008&#39;</span>,<span class="st">&#39;HVPN-P0-S0&#39;</span>,<span class="st">&#39;P0&#39;</span>,<span class="st">&#39;task&#39;</span>,</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a> <span class="st">&#39;Implement plain-UDP Transport and prove a loopback echo round-trip&#39;</span>,</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a> <span class="st">&#39;Trivial PlainUdp over tokio UdpSocket giving the throughput baseline every other transport</span><span class="ch">&#39;&#39;</span><span class="st">s ≥50% bar (G2) is computed against; loopback echo validates the trait round-trips.&#39;</span>,</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a> <span class="st">&#39;Feature&#39;</span>,<span class="st">&#39;normal&#39;</span>,<span class="st">&#39;S0&#39;</span>,<span class="st">&#39;helix-transport&#39;</span>,<span class="st">&#39;G1&#39;</span>,</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a> <span class="st">&#39;[&quot;HVPN-P0-006&quot;]&#39;</span>,</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a> <span class="st">&#39;helix-transport/src/plain_udp.rs + tests/loopback_echo.rs&#39;</span>,</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a> <span class="st">&#39;echo test sends 10k 1280-byte datagrams loopback, 0 lost, order-independent; captured CSV of round-trip count&#39;</span>,</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a> <span class="fl">0.5</span>,<span class="st">&#39;[&quot;UT&quot;,&quot;IT&quot;,&quot;CONC&quot;,&quot;BENCH&quot;]&#39;</span>,<span class="st">&#39;[&quot;G1&quot;]&#39;</span>,<span class="st">&#39;[&quot;04_P0 §4.3&quot;]&#39;</span>,</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a> <span class="st">&#39;2026-06-26T12:00:00Z&#39;</span>,<span class="st">&#39;2026-06-26T12:00:00Z&#39;</span>);</span></code></pre></div>
+<p><strong>Phase 1 leaf — <code>HVPN-P1-022</code> (FORCE RLS,
+<code>07-…</code> §7 / §3 example):</strong></p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">INSERT</span> <span class="kw">INTO</span> items (atm_id,parent_id,phase,kind,title,description,<span class="kw">type</span>,severity,</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>                   epic,module,gate,deps,deliverable,acceptance,effort_days,test_types,</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>                   dod_refs,source_refs,created_at,modified_at)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="kw">VALUES</span> (</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a> <span class="st">&#39;HVPN-P1-022&#39;</span>,<span class="st">&#39;HVPN-P1-E02&#39;</span>,<span class="st">&#39;P1&#39;</span>,<span class="st">&#39;task&#39;</span>,</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a> <span class="st">&#39;FORCE RLS + tenant_isolation policies on all 10 tenant tables&#39;</span>,</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a> <span class="st">&#39;Enable + FORCE row-level security with a tenant_isolation USING/WITH CHECK policy on every tenant-scoped table and abort startup if the app role can bypass RLS.&#39;</span>,</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a> <span class="st">&#39;Task&#39;</span>,<span class="st">&#39;high&#39;</span>,<span class="st">&#39;E02&#39;</span>,<span class="st">&#39;store&#39;</span>,<span class="kw">NULL</span>,</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a> <span class="st">&#39;[&quot;HVPN-P1-021&quot;]&#39;</span>,</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a> <span class="st">&#39;migrations/0002_rls.sql; store/rls_guard.go startup check&#39;</span>,</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a> <span class="st">&#39;a crafted cross-tenant read returns ZERO rows (captured); startup aborts when role has rolsuper/rolbypassrls; CHAOS drop mid-tx rolls back, no leak.&#39;</span>,</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a> <span class="dv">4</span>,<span class="st">&#39;[&quot;UNIT&quot;,&quot;INT&quot;,&quot;SEC&quot;,&quot;CHAOS&quot;]&#39;</span>,<span class="st">&#39;[&quot;AC8&quot;,&quot;AC2&quot;,&quot;AC3&quot;]&#39;</span>,<span class="st">&#39;[&quot;02 §2.3&quot;,&quot;04_P1 §2.2&quot;]&#39;</span>,</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a> <span class="st">&#39;2026-06-26T12:00:00Z&#39;</span>,<span class="st">&#39;2026-06-26T12:00:00Z&#39;</span>);</span></code></pre></div>
+<p><strong>Phase 2 leaf — <code>HVPN-P2-222</code> (UDP hole punching,
+<code>08-…</code> §8 / §3 example):</strong></p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">INSERT</span> <span class="kw">INTO</span> items (atm_id,parent_id,phase,kind,title,description,<span class="kw">type</span>,severity,</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>                   epic,module,gate,deps,deliverable,acceptance,effort_days,test_types,</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>                   dod_refs,source_refs,created_at,modified_at)</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="kw">VALUES</span> (</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a> <span class="st">&#39;HVPN-P2-222&#39;</span>,<span class="st">&#39;HVPN-P2-E22&#39;</span>,<span class="st">&#39;P2&#39;</span>,<span class="st">&#39;task&#39;</span>,</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a> <span class="st">&#39;UDP hole punching across the NAT-type matrix&#39;</span>,</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a> <span class="st">&#39;Drive simultaneous WG handshake probes to every peer candidate so full-/restricted-/port-restricted-cone NATs open a direct path, latching WireGuard roaming onto the working endpoint; symmetric pairs fall through to relay.&#39;</span>,</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a> <span class="st">&#39;Feature&#39;</span>,<span class="st">&#39;high&#39;</span>,<span class="st">&#39;E22&#39;</span>,<span class="st">&#39;helix-core&#39;</span>,<span class="kw">NULL</span>,</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a> <span class="st">&#39;[&quot;HVPN-P2-220&quot;,&quot;HVPN-P2-221&quot;]&#39;</span>,</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a> <span class="st">&#39;helix-core/src/nat/punch.rs; netns NAT-matrix harness&#39;</span>,</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a> <span class="st">&#39;direct datagrams captured bypassing the gateway for full/restricted/port-restricted pairs; symmetric pairs cleanly fall through to relay; no false direct claim (§11.4.107).&#39;</span>,</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a> <span class="dv">8</span>,<span class="st">&#39;[&quot;UNIT&quot;,&quot;E2E&quot;,&quot;STRESS&quot;,&quot;SEC&quot;,&quot;CHAL&quot;]&#39;</span>,<span class="st">&#39;[&quot;P2-AC3&quot;,&quot;P2-SLO1&quot;]&#39;</span>,<span class="st">&#39;[&quot;04_P2 §3.2&quot;,&quot;SYNTHESIS §3 D6&quot;]&#39;</span>,</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a> <span class="st">&#39;2026-06-26T12:00:00Z&#39;</span>,<span class="st">&#39;2026-06-26T12:00:00Z&#39;</span>);</span></code></pre></div>
+<p><strong>Phase 3 leaf — <code>HVPN-P3-211</code> (HarmonyOS VPN
+ability, <code>09-…</code> §6 / §3 seed):</strong></p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">INSERT</span> <span class="kw">INTO</span> items (atm_id,parent_id,phase,kind,title,description,<span class="kw">type</span>,severity,</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>                   epic,module,gate,deps,deliverable,acceptance,effort_days,test_types,</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>                   dod_refs,source_refs,created_at,modified_at)</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="kw">VALUES</span> (</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a> <span class="st">&#39;HVPN-P3-211&#39;</span>,<span class="st">&#39;HVPN-P3-E21&#39;</span>,<span class="st">&#39;P3&#39;</span>,<span class="st">&#39;task&#39;</span>,</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a> <span class="st">&#39;HarmonyOS Network Kit VpnExtensionAbility + lifecycle + kill-switch wiring&#39;</span>,</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a> <span class="st">&#39;ArkTS VpnExtensionAbility opens the Network Kit tunnel fd, hands it to the helix-core .so over NAPI, and drives connect/disconnect/kill-switch from the core status stream; proven by tunnel UP carrying traffic on a real device.&#39;</span>,</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a> <span class="st">&#39;Feature&#39;</span>,<span class="st">&#39;Critical&#39;</span>,<span class="st">&#39;E21&#39;</span>,<span class="st">&#39;shims/harmonyos&#39;</span>,<span class="st">&#39;G21&#39;</span>,</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a> <span class="st">&#39;[&quot;HVPN-P3-210&quot;,&quot;HVPN-P3-201&quot;]&#39;</span>,</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a> <span class="st">&#39;shims/harmonyos/entry/src/main/ets/HelixVpnAbility.ets + napi bridge&#39;</span>,</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a> <span class="st">&#39;PENDING_DEVICE: on a HarmonyOS NEXT device, enroll-&gt;UP-&gt;curl reaches authorized LAN host; window-scoped MP4 + DevEco heap capture; §11.4.3 SKIP hardware_not_present until G20 provisions a device.&#39;</span>,</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a> <span class="fl">8.0</span>,<span class="st">&#39;[&quot;UNIT&quot;,&quot;INT&quot;,&quot;E2E&quot;,&quot;MEM&quot;,&quot;UX&quot;,&quot;REC&quot;,&quot;CHAL&quot;]&#39;</span>,<span class="st">&#39;[&quot;G21&quot;]&#39;</span>,<span class="st">&#39;[&quot;04_UI §6.1&quot;,&quot;04_ARCH §5.7&quot;]&#39;</span>,</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a> <span class="st">&#39;2026-06-26T12:00:00Z&#39;</span>,<span class="st">&#39;2026-06-26T12:00:00Z&#39;</span>);</span></code></pre></div>
+<hr />
+<h2 id="5-the-114148-integrity-contract-status--type--id-everywhere">5.
+The §11.4.148 integrity contract (status + type + id, everywhere)</h2>
+<p>§11.4.148 binds the workable-item discipline into one DB↔︎docs↔︎tracker
+integrity contract. The five clauses, instantiated for HelixVPN:</p>
+<ul>
+<li><strong>D1 — no item without a valid status + type + id, on ALL
+surfaces.</strong> The DDL enforces <code>atm_id</code> (PK, NOT NULL),
+<code>status</code> (NOT NULL, closed CHECK set), and <code>type</code>
+(NOT NULL, closed CHECK set). The loader rejects a WBS leaf missing any
+of the three; the <code>db-to-md</code> regen always emits all three;
+the external tracker push (D5) carries all three. The id is the
+cross-surface binding key.</li>
+<li><strong>D2 — comprehensive structured description.</strong>
+<code>description</code> ≥ 40 chars (§11.4.91) carrying WHAT +
+HOW-it-manifests + acceptance intent. The <em>reproduce</em> and
+<em>acceptance-criteria</em> facets live in <code>acceptance</code> (a
+falsifiable captured-evidence assertion per §11.4.5/.69/.107). The
+loader rejects §11.4.91 anti-pattern fragments
+(<code>Composes with</code>, bare <code>Critical</code>, a §-letter
+alone).</li>
+<li><strong>D3 — BLOCKED items carry WHY + enumerated unblock
+CHOICES.</strong> Any <code>Operator-blocked</code> item (§11.4.21) MUST
+have an <code>operator_block_details</code> row enumerating the closed
+list of unblock choices (<code>[A]…·[B]…·[C]…</code>, §11.4.66 shape).
+Phase 3 is the heaviest user: <code>HVPN-P3-211/221</code> carry
+<code>unblock = &quot;provision a HarmonyOS NEXT / Aurora device + add to the §11.4.128 tracked-device set&quot;</code>;
+<code>HVPN-P3-252</code> (audit engagement) carries
+<code>unblock = &quot;fund + contract an independent audit firm (§11.4.101 spend block)&quot;</code>.</li>
+<li><strong>D4 — never-missed bidirectional DB↔︎docs↔︎tracker
+sync</strong> — §7 below.</li>
+<li><strong>D5 — generic idempotent external-tracker push</strong> —
+statuses (collapsed onto the tracker&#39;s native set per §11.4.33/.112,
+precise value preserved in a header), types, assignee (§11.4.104 handle
+from a project env var, never hardcoded/logged §11.4.10), and per-item
+sub-tasks; match-by-stable-key <code>[HVPN-Pn-NNN]</code>,
+present⇒UPDATE/absent⇒CREATE, sink-side
+<code>created=N updated=M failed=0</code> proof (§11.4.69). The tracker,
+list/board id, and field map are consumer-registered at runtime
+(§11.4.28 decoupling), never hardcoded.</li>
+</ul>
+<p>A release tag is blocked while any item violates D1–D3
+(<code>07-…</code> §3 anti-bluff note; §11.4.148 release-blocker
+clause).</p>
+<hr />
+<h2 id="6-the-114149-per-item-test-diary">6. The §11.4.149 per-item test
+diary</h2>
+<p>§11.4.149 mandates an append-only <strong>testing diary</strong> —
+one row per test <em>run</em> against an item — distinct from
+<code>item_history</code> (lifecycle state transitions). The schema
+(already declared in <code>07-…</code> §3 and <code>08-…</code> §3,
+restated canonically):</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> <span class="cf">IF</span> <span class="kw">NOT</span> <span class="kw">EXISTS</span> test_diary (</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">id</span>            <span class="dt">INTEGER</span> <span class="kw">PRIMARY</span> <span class="kw">KEY</span> AUTOINCREMENT,</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  atm_id        TEXT <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">REFERENCES</span> items(atm_id),</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  date_time     TEXT <span class="kw">NOT</span> <span class="kw">NULL</span>,                                  <span class="co">-- ISO-8601 UTC</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  tested_by     TEXT <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">CHECK</span> (tested_by <span class="kw">IN</span> (<span class="st">&#39;User&#39;</span>,<span class="st">&#39;Operator&#39;</span>,<span class="st">&#39;AI-agent&#39;</span>,<span class="st">&#39;HelixQA&#39;</span>)),</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  result        TEXT <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">CHECK</span> (result <span class="kw">IN</span> (<span class="st">&#39;PASS&#39;</span>,<span class="st">&#39;FAIL&#39;</span>,<span class="st">&#39;SKIP&#39;</span>)),  <span class="co">-- §11.4.45 vocab</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  test_type     TEXT <span class="kw">NOT</span> <span class="kw">NULL</span>,                                  <span class="co">-- one §11.4.169 code</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  evidence_path TEXT,                                           <span class="co">-- qa-results/&lt;run-id&gt;/…</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  feature_class TEXT,                                           <span class="co">-- §11.4.69 sink-side taxonomy class</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>  action_taken  TEXT <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> <span class="st">&#39;&#39;</span>,</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>  status_changed TEXT <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> <span class="st">&#39;&#39;</span>,                      <span class="co">-- from→to if this run flipped status</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>  observations  TEXT <span class="kw">NOT</span> <span class="kw">NULL</span>,                                  <span class="co">-- in-depth, facts or UNCONFIRMED: (§11.4.6)</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- THE anti-bluff constraint: a PASS row is impossible without captured evidence.</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>  <span class="kw">CHECK</span> (result <span class="op">&lt;&gt;</span> <span class="st">&#39;PASS&#39;</span> <span class="kw">OR</span> (evidence_path <span class="kw">IS</span> <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">AND</span> <span class="fu">length</span>(evidence_path) <span class="op">&gt;</span> <span class="dv">0</span>))</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>);</span></code></pre></div>
+<p>The <code>CHECK (result &lt;&gt; &#39;PASS&#39; OR evidence_path …)</code>
+clause makes a PASS-bluff <em>mechanically impossible at the schema
+layer</em>: SQLite itself rejects a PASS row with no evidence path
+(<code>07-…</code> §3, §11.4.149(a)). The diary feeds §11.4.132
+risk-ordered validation (most-recently-tested / most-reopened first) and
+the per-item <code>Diary</code>/<code>Diary_Summary</code> four-format
+exports (§11.4.65, §11.4.149(c)).</p>
+<p><strong>Tooling is minimal-LLM and deterministic</strong>
+(§11.4.149(e)): the <code>observations</code> prose is authored by
+whoever ran the test; the tooling only stores / renders / pushes /
+validates. The external-tracker SUB-TASK lifecycle
+(<code>TODO|In-progress|Completed</code>, §11.4.149(d)) reuses the D5
+idempotent push.</p>
+<hr />
+<h2 id="7-docsdb-sync-via-docs-chain-114106">7. Docs↔︎DB sync via Docs
+Chain (§11.4.106)</h2>
+<p>The WBS Markdown ⇄ DB ⇄ exports round-trip is mechanized by
+<strong>Docs Chain</strong> (<code>vasic-digital/docs_chain</code>,
+§11.4.106) — the canonical bidirectional document-and-database
+propagation engine, consumed <strong>by reference</strong> (never
+copied) and configured as data via
+<code>.docs_chain/contexts/wbs.yaml</code> (<code>07-…</code> §20
+HVPN-P1-150, <code>08-…</code> §16 HVPN-P2-300, <code>09-…</code> §12
+HVPN-P3-272).</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># .docs_chain/contexts/wbs.yaml  (consumer-owned, §11.4.28 decoupling)</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">context</span><span class="kw">:</span><span class="at"> helixvpn-wbs</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sources</span><span class="kw">:</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">path</span><span class="kw">:</span><span class="at"> docs/research/mvp/final/06-phase0-spike-wbs.md</span><span class="co">     # leaf blocks → items(phase=P0)</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">path</span><span class="kw">:</span><span class="at"> docs/research/mvp/final/07-phase1-mvp-wbs.md</span><span class="co">       #            → items(phase=P1)</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">path</span><span class="kw">:</span><span class="at"> docs/research/mvp/final/08-phase2-parity-wbs.md</span><span class="co">    #            → items(phase=P2)</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">path</span><span class="kw">:</span><span class="at"> docs/research/mvp/final/09-phase3-reach-wbs.md</span><span class="co">     #            → items(phase=P3)</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">path</span><span class="kw">:</span><span class="at"> docs/research/mvp/final/v07-execution/subtask-deepening-p1.md</span><span class="co">  # .k subtasks</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">path</span><span class="kw">:</span><span class="at"> docs/research/mvp/final/v07-execution/subtask-deepening-p2.md</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">path</span><span class="kw">:</span><span class="at"> docs/research/mvp/final/v07-execution/subtask-deepening-p3.md</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="fu">db</span><span class="kw">:</span><span class="at">    docs/workable_items.db</span><span class="co">                                 # git-tracked (§11.4.95)</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="fu">exports</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">html</span><span class="kw">,</span><span class="at"> pdf</span><span class="kw">]</span><span class="co">                                          # §11.4.65 siblings; DOCX added for Status set (§11.4.153)</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a><span class="fu">change_detection</span><span class="kw">:</span><span class="at"> content-hash</span><span class="co">                                # §11.4.86 (NOT mtime)</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a><span class="fu">on_conflict</span><span class="kw">:</span><span class="at"> surface</span><span class="co">                                          # §11.4.6 — never silent-merge</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a><span class="fu">evidence_dir</span><span class="kw">:</span><span class="at"> qa-results/docs_chain/&lt;run-id&gt;/</span><span class="co">                 # §11.4.69 captured per run</span></span></code></pre></div>
+<p>Docs Chain guarantees (§11.4.106): content-hash change detection
+(§11.4.86, not mtime), atomic-rename + SQLite-txn commit + rollback
+(§9.2), both-dirty <code>sync</code> → conflict-surfaced-not-merged
+(§11.4.6), <code>verify</code> as the deterministic pre-build gate
+(§11.4.50), per-run captured evidence (§11.4.69), and an honest typed
+<code>ToolAbsentError</code> + §11.4.3 SKIP when pandoc/weasyprint is
+missing (never a fake transform). The <code>meta.integrity_hash</code>
+(sha256 of the sorted item keyset, §11.4.86) is the drift-proof
+fingerprint the freshness gate compares.</p>
+<hr />
+<h2 id="8-the-loader-contract-cmdworkable-items-hvpn-p1-150">8. The
+loader contract (<code>cmd/workable-items/</code>, HVPN-P1-150)</h2>
+<p>A deterministic Go binary (NOT LLM-driven in the data path,
+§11.4.149(e)) implements the projection. It lives in the constitution
+submodule for cross-project reuse (§11.4.74, §11.4.93). Subcommands:</p>
+<table>
+<thead>
+<tr>
+<th>Subcommand</th>
+<th>Behaviour</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>md-to-db</code></td>
+<td>parse every WBS leaf block → upsert
+<code>items</code>/<code>item_history</code> by <code>atm_id</code>;
+reject §11.4.91/.148-D1/D2 violations</td>
+</tr>
+<tr>
+<td><code>db-to-md</code></td>
+<td>regenerate the leaf blocks from the DB — <strong>byte-identical
+round-trip</strong> (§11.4.93, closed-set whitespace/section-order
+tolerance)</td>
+</tr>
+<tr>
+<td><code>diff</code></td>
+<td>show md↔︎db divergence; non-empty diff blocks commit
+(<code>commit_all.sh</code> refuses, §11.4.93)</td>
+</tr>
+<tr>
+<td><code>validate</code></td>
+<td>run in the pre-build sweep — enforce id uniqueness/monotonicity
+(§11.4.54), dependency-DAG acyclicity, status/type closed sets, the
+§11.4.149 PASS-needs-evidence constraint</td>
+</tr>
+<tr>
+<td><code>add</code> / <code>close</code></td>
+<td>structured mutation that stages+commits+pushes the DB alongside the
+MD regen (§11.4.95, §2.1 multi-upstream) with a WAL checkpoint before
+stage</td>
+</tr>
+</tbody>
+</table>
+<p>The loader is itself 100% test-covered (§11.4.27): unit
+(parse/regen), integration (against a real SQLite + a real external
+tracker with an honest §11.4.3 SKIP when the token is absent), the
+byte-identical round-trip property test (§11.4.93), export, a HelixQA
+Challenge (<code>CME-WORKABLE-ITEMS-001</code>-class), and a paired §1.1
+mutation (corrupt a row → <code>validate</code> FAILs).</p>
+<hr />
+<h2 id="9-gates-anti-bluff-and-what-complete-means">9. Gates,
+anti-bluff, and what &quot;complete&quot; means</h2>
+<p>The <code>gates</code> sibling table (verbatim from <code>06-…</code>
+§0.3 + <code>09-…</code> §3) tracks the phase exit gates that
+unblock/close work, with their own evidence path:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> <span class="cf">IF</span> <span class="kw">NOT</span> <span class="kw">EXISTS</span> gates (</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">id</span>            TEXT <span class="kw">PRIMARY</span> <span class="kw">KEY</span>,                       <span class="co">-- &#39;G1&#39;..&#39;G6&#39;,&#39;G20&#39;..&#39;G26&#39;</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  question      TEXT <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  go_no_go_bar  TEXT <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  section       TEXT <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  owning_epic   TEXT,</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  outcome       TEXT <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> <span class="st">&#39;pending&#39;</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>                <span class="kw">CHECK</span> (outcome <span class="kw">IN</span> (<span class="st">&#39;pending&#39;</span>,<span class="st">&#39;pass&#39;</span>,<span class="st">&#39;fail&#39;</span>,<span class="st">&#39;rust&#39;</span>,<span class="st">&#39;go&#39;</span>,</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>                                   <span class="st">&#39;pending_device&#39;</span>,<span class="st">&#39;operator_blocked&#39;</span>)),</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>  evidence_path TEXT</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>);</span></code></pre></div>
+<p>A leaf is <code>complete</code> only when (<code>07-…</code> §0
+anti-bluff note, §11.4.93/.149):</p>
+<ol type="1">
+<li>its required §11.4.169 <code>test_types</code> are all green
+<strong>with</strong> a <code>test_diary</code> row per type carrying a
+non-empty <code>evidence_path</code> (the schema CHECK enforces this for
+PASS rows);</li>
+<li>where it has a user-visible surface, a window-scoped MP4
+(§11.4.154/.155) vision-verified through the §11.4.163 media-validation
+pipeline exists;</li>
+<li>its lifecycle reached a terminal <code>status</code>
+(<code>Fixed</code>/<code>Implemented</code>/<code>Completed (→ Fixed.md)</code>)
+with an <code>item_history</code> closure row (§11.4.34
+By/Reason/Evidence);</li>
+<li>its gate (if any) has <code>outcome IN (&#39;pass&#39;,&#39;rust&#39;,&#39;go&#39;)</code> —
+or, for Phase-3 device-/engagement-gated items, an honest
+<code>pending_device</code>/<code>operator_blocked</code> with the
+§11.4.148 D3 unblock condition, <strong>never</strong> a faked pass
+(§11.4.6, <code>09-…</code> §13 honest-gap rule).</li>
+</ol>
+<p>Metadata-only / config-only / grep-without-runtime PASS is forbidden
+(§11.4 / §11.4.1). The §11.4.147 agent registry treats any
+non-<code>complete</code> item as work still owed; the §11.4.126
+endless-loop done-condition cannot read satisfied while any item is
+non-terminal.</p>
+<hr />
+<h2 id="10-worked-end-to-end-example-p0-leaf--row--diary--export">10.
+Worked end-to-end example (P0 leaf → row → diary → export)</h2>
+<p>Tracing <code>HVPN-P0-010</code> (loopback echo soak,
+<code>06-…</code> §3) through the whole model:</p>
+<pre class="mermaid"><code>sequenceDiagram
+  participant WBS as 06-phase0-spike-wbs.md (leaf HVPN-P0-010)
+  participant LD as cmd/workable-items (md-to-db)
+  participant DB as docs/workable_items.db (items + test_diary)
+  participant DC as docs_chain verify
+  participant EX as HVPN-P0-010.{html,pdf}
+  WBS-&gt;&gt;LD: parse leaf block (title/desc/deps/acceptance/test_types)
+  LD-&gt;&gt;DB: upsert items row (atm_id=HVPN-P0-010, status=Queued)
+  Note over DB: test run lands a diary row
+  DB-&gt;&gt;DB: INSERT test_diary(result=PASS, test_type=BENCH,&lt;br/&gt;evidence_path=qa-results/.../loopback.csv)  -- CHECK passes
+  DB-&gt;&gt;DB: item_history(by=AI, to_status=Completed, evidence=…)
+  DC-&gt;&gt;DB: verify — md↔db round-trip byte-identical? integrity_hash matches?
+  DC-&gt;&gt;EX: regenerate HTML/PDF siblings (§11.4.65); evidence to qa-results/docs_chain/&lt;run-id&gt;/</code></pre>
+<ol type="1">
+<li>The leaf in <code>06-…</code> §3 declares
+<code>acceptance: 0 lost @ loopback; deterministic over N=3 (§11.4.50)</code>
+and <code>test_types: [IT, CONC, BENCH, FA]</code>.</li>
+<li><code>md-to-db</code> upserts the <code>items</code> row with
+<code>status=&#39;Queued&#39;</code>, <code>phase=&#39;P0&#39;</code>,
+<code>parent_id=&#39;HVPN-P0-008&#39;</code>.</li>
+<li>A real run captures
+<code>qa-results/&lt;run-id&gt;/loopback_echo.csv</code>; a
+<code>test_diary</code> row records
+<code>result=&#39;PASS&#39;, test_type=&#39;BENCH&#39;, evidence_path=…</code> — the
+schema CHECK admits it <em>only because</em> the evidence path is
+non-empty.</li>
+<li>The N=3 determinism (§11.4.50) lands three identical-hash diary
+rows; an <code>item_history</code> row flips
+<code>status → &#39;Completed (→ Fixed.md)&#39;</code>.</li>
+<li><code>docs_chain verify</code> confirms the md↔︎db round-trip is
+byte-identical and the <code>meta.integrity_hash</code> matches, then
+regenerates the HTML/PDF siblings.</li>
+</ol>
+<p>The same flow applies to every leaf across all four phases; the three
+deepening docs in this volume author the <code>.k</code> subtask leaves
+that feed it.</p>
+<hr />
+<h2 id="sources-verified">Sources verified</h2>
+<ul>
+<li><code>06-phase0-spike-wbs.md</code> (Phase 0 WBS, §0.3 DDL, §0.4
+test-type map, gates table) — read 2026-06-26.</li>
+<li><code>07-phase1-mvp-wbs.md</code> (§3 items/test_diary DDL + sample
+row, §0 field contract, §20 HVPN-P1-150 loader, §22 effort caveat) —
+read 2026-06-26.</li>
+<li><code>08-phase2-parity-wbs.md</code> (§3 DDL with <code>phase</code>
+discriminator + sample row, §16 HVPN-P2-300) — read 2026-06-26.</li>
+<li><code>09-phase3-reach-wbs.md</code> (§3 DDL + seed row, §12
+HVPN-P3-272, §13 honest-gap rule, §14 risk register) — read
+2026-06-26.</li>
+<li><code>REFINEMENT_NOTES.md</code> R5 (subtask-tier asymmetry / DB
+import driver) — read 2026-06-26.</li>
+<li>Constitution <code>CLAUDE.md</code> anchors
+§11.4.34/.54/.65/.74/.86/.90/.91/.93/.95/.104/.106/.132/.147/.148/.149/.169
+— project context, read 2026-06-26.</li>
+</ul>
+<blockquote>
+<p>Honest boundary (§11.4.6): this document specifies the model and the
+loader contract; it does <strong>not</strong> assert the loader is
+implemented (that is the open work-item <code>HVPN-P1-150</code>). All
+effort/duration figures are sizing-only <code>TARGET</code>s per the
+phase docs&#39; no-commitment caveat.</p>
+</blockquote>
+</body>
+</html>

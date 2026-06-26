@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Success Metrics (KPIs) — counts-only, no-flow-by-construction</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Success Metrics (KPIs) — counts-only,
+no-flow-by-construction</h1>
+</header>
+<h1 id="success-metrics-kpis--counts-only-no-flow-by-construction">Success
+Metrics (KPIs) — counts-only, no-flow-by-construction</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-06-26T12:00:00Z</p>
+<blockquote>
+<p><strong>Document role.</strong> This is the Volume 1 (Product &amp;
+Requirements) nano-detail spec defining HelixVPN&#39;s product
+<strong>KPIs</strong> and the <strong>telemetry that derives
+them</strong> — strictly <strong>counts and aggregates only</strong>.
+The defining constraint of this document is that it is bound by
+<code>v05-security/no-logging-as-code.md</code>: a KPI we
+<em>cannot</em> measure without a per-user flow, a destination, or a
+timestamp-of-use is a KPI we <strong>deliberately do not have</strong> —
+and that absence is a <em>product feature</em>, not a gap. Every KPI
+names its counts-only metric source (citing
+<code>v03-control-plane/svc-telemetry.md</code>) and the privacy
+boundary it respects.</p>
+<p><strong>Document is a SPEC.</strong> It states <em>what we measure,
+from which counts-only series, against which target, within which
+privacy boundary</em>; it does not build the product. Every numeric
+target is a TARGET marked <code>UNVERIFIED</code> per §11.4.6 — a
+product KPI threshold is a business target, not a measured fact, until
+the instrumented series produces data.</p>
+<p><strong>Evidence base.</strong> Cross-references the Volume 1
+overview (principles P7 no-logging, parity F14; differentiators X1–X5;
+the MVP DoD §10.2), the telemetry counts-only metric registry and its
+forbidden-label cardinality bound
+(<code>v03-control-plane/svc-telemetry.md</code> §3), the coordinator
+convergence SLO (<code>v03-control-plane/svc-coordinator.md</code> §7),
+and the no-logging invariant
+(<code>v05-security/no-logging-as-code.md</code> §2 the
+stored-vs-never-stored partition).</p>
+</blockquote>
+<hr />
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#1-the-measurement-charter-the-privacy-boundary-is-the-design">1.
+The measurement charter (the privacy boundary is the design)</a></li>
+<li><a href="#2-what-we-can-measure-vs-what-we-deliberately-cannot">2.
+What we can measure vs what we deliberately cannot</a></li>
+<li><a href="#3-adoption--reach-kpis-counts-only">3. Adoption &amp;
+reach KPIs (counts-only)</a></li>
+<li><a href="#4-reliability--performance-kpis-slo-derived">4.
+Reliability &amp; performance KPIs (SLO-derived)</a></li>
+<li><a href="#5-privacy-integrity-kpis-the-guarantee-is-itself-a-kpi">5.
+Privacy-integrity KPIs (the guarantee is itself a KPI)</a></li>
+<li><a href="#6-censorship-resistance-kpis-aggregate-ladder-outcomes">6.
+Censorship-resistance KPIs (aggregate ladder outcomes)</a></li>
+<li><a href="#7-self-host-adoption-kpis-the-differentiator">7. Self-host
+adoption KPIs (the differentiator)</a></li>
+<li><a href="#8-the-deliberately-absent-metrics-and-why-each-absence-is-a-feature">8.
+The deliberately-absent metrics (and why each absence is a
+feature)</a></li>
+<li><a href="#9-kpi--metric-source--privacy-boundary-traceability">9.
+KPI → metric source → privacy-boundary traceability</a></li>
+<li><a href="#sources-verified">Sources verified</a></li>
+</ul>
+<hr />
+<h2 id="1-the-measurement-charter-the-privacy-boundary-is-the-design">1.
+The measurement charter (the privacy boundary is the design)</h2>
+<p>Most products measure success with per-user funnels, destination
+analytics, and session timelines. HelixVPN <strong>cannot</strong> — by
+construction (P7 / S6): no durable connection/traffic/flow/session table
+exists, the event bus carries no src/dst/bytes/dns field, and
+<code>/metrics</code> forbids any
+<code>tenant_id</code>/<code>device_id</code>/ip label. Every KPI in
+this document is therefore derived from <strong>aggregate counters, SLO
+histograms, and bounded gauges</strong> — never from a per-user
+trail.</p>
+<p>The charter, stated as three rules every KPI obeys:</p>
+<ol type="1">
+<li><strong>Counts and aggregates only.</strong> A KPI&#39;s source is a
+Prometheus counter, histogram, or bounded gauge from the telemetry
+registry (<code>svc-telemetry.md</code> §3), or an aggregate roll-up of
+those — never a per-user row (there is none).</li>
+<li><strong>No forbidden label.</strong> A KPI may slice by a
+<em>bounded</em> label (<code>action</code>, <code>event_type</code>,
+<code>stream</code>, build <code>version</code>) but
+<strong>never</strong> by <code>tenant_id</code>,
+<code>device_id</code>, <code>overlay_ip</code>, or any
+traffic/PII-shaped key — that label set is forbidden by the cardinality
+guard (<code>svc-telemetry.md</code> §3.1).</li>
+<li><strong>The absence is a feature.</strong> Where a conventional KPI
+would need a per-user flow / destination / timestamp-of-use, HelixVPN
+has no such KPI <strong>on purpose</strong> (§8). &quot;We can&#39;t tell you
+which sites a user visited or when they were online&quot; is the product
+promise, surfaced as a measurement boundary.</li>
+</ol>
+<pre class="mermaid"><code>flowchart TD
+  SRC[telemetry registry · counts-only series] --&gt; KPI[product KPIs]
+  GUARD{forbidden label?&lt;br/&gt;tenant_id/device_id/ip} -- yes --&gt; REJECT[NOT a KPI · privacy boundary]
+  GUARD -- no --&gt; KPI
+  NOFLOW[no durable connection/flow/session table] --&gt; ABSENT[deliberately-absent KPIs §8]
+  ABSENT --&gt; FEATURE[the absence IS the product promise P7]
+  KPI --&gt; TARGET[each KPI: definition · source · TARGET UNVERIFIED · boundary]</code></pre>
+<blockquote>
+<p><strong>§11.4.6 honesty.</strong> Every numeric target below is a
+<em>business TARGET</em> marked <code>UNVERIFIED</code> — KPI thresholds
+are goals, not measurements. A KPI is &quot;met&quot; only when its named
+counts-only series produces data showing it; the threshold written here
+is never asserted as already achieved.</p>
+</blockquote>
+<hr />
+<h2 id="2-what-we-can-measure-vs-what-we-deliberately-cannot">2. What we
+can measure vs what we deliberately cannot</h2>
+<p>The closed partition, drawn directly from the no-logging
+stored-vs-never-stored model (<code>no-logging-as-code.md</code> §2)
+projected onto the KPI layer:</p>
+<table>
+<thead>
+<tr>
+<th>Measurable (counts/aggregates exist)</th>
+<th>Deliberately NOT measurable (no data exists)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Total devices enrolled (registry count)</td>
+<td>Which destinations any device reached</td>
+</tr>
+<tr>
+<td>Devices currently online (bounded presence gauge, aggregate)</td>
+<td>When a specific user was online (no session timeline;
+<code>last_seen_at</code> coarse ≥ 5 min)</td>
+</tr>
+<tr>
+<td>Total connectors / advertised networks (topology count)</td>
+<td>Which user used which network at which time</td>
+</tr>
+<tr>
+<td>Handshakes total, by transport-kind (aggregate counter)</td>
+<td>Per-user transport history / per-user flow</td>
+</tr>
+<tr>
+<td>Convergence/revoke SLO percentiles (histograms)</td>
+<td>Per-user latency or per-destination latency</td>
+</tr>
+<tr>
+<td>Aggregate bytes-total (no per-peer, no per-user)</td>
+<td>Per-user / per-destination byte counts</td>
+</tr>
+<tr>
+<td>Audit control-action counts, by <code>action</code> (bounded)</td>
+<td>Any traffic event (none is audited — none exists)</td>
+</tr>
+<tr>
+<td>Ladder escalation outcomes, aggregate by rung</td>
+<td>Which user escalated on which network (no SSID, no endpoint,
+I5)</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>The right column is not &quot;unimplemented&quot; — it is
+<strong>architecturally impossible</strong> to measure because the data
+is never written (S6). This is the §11.4.112 structural property turned
+into a product virtue: the metric cannot be reconstructed because there
+is nothing to reconstruct it from.</p>
+</blockquote>
+<hr />
+<h2 id="3-adoption--reach-kpis-counts-only">3. Adoption &amp; reach KPIs
+(counts-only)</h2>
+<table>
+<thead>
+<tr>
+<th>KPI</th>
+<th>Definition</th>
+<th>Counts-only source</th>
+<th>Target</th>
+<th>Privacy boundary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>K-ADOPT-1 Devices enrolled</strong></td>
+<td>total devices ever enrolled per tenant (and global aggregate)</td>
+<td>registry row count; <code>device.enrolled</code> audit counter
+(<code>helix_audit_events_total{action=&quot;device.enrolled&quot;}</code>)</td>
+<td><strong>TARGET</strong> growth curve — <code>UNVERIFIED</code></td>
+<td>aggregate count; <code>/metrics</code> exposes the global counter,
+per-tenant only behind authenticated <code>/v1/stats</code> (no
+<code>tenant_id</code> label on scrape)</td>
+</tr>
+<tr>
+<td><strong>K-ADOPT-2 Active devices</strong></td>
+<td>devices currently online</td>
+<td><code>helix_presence_online_devices</code> (bounded gauge,
+reconciled from <code>SCARD</code>)</td>
+<td><strong>TARGET</strong> — <code>UNVERIFIED</code></td>
+<td>aggregate gauge; no per-device identity; cannot reconstruct
+<em>who</em> or <em>when-historically</em></td>
+</tr>
+<tr>
+<td><strong>K-ADOPT-3 Networks joined</strong></td>
+<td>total connectors attached + advertised prefixes (the X1
+multi-network differentiator)</td>
+<td>registry/topology counts (<code>advertised_prefixes</code>
+rows)</td>
+<td><strong>TARGET</strong> — <code>UNVERIFIED</code></td>
+<td>topology count (a connector&#39;s <em>offered</em> network), never a
+<em>visited</em> destination</td>
+</tr>
+<tr>
+<td><strong>K-ADOPT-4 Multi-network reach</strong></td>
+<td>distribution of networks-reachable-per-user (the
+<code>1 user → N nets</code> headline)</td>
+<td>derived aggregate from compiled-policy <code>VisibleTo</code>
+cardinality (counts, not identities)</td>
+<td><strong>TARGET</strong> — <code>UNVERIFIED</code></td>
+<td>a <em>count</em> of granted networks per role/group, never a
+per-user destination log</td>
+</tr>
+<tr>
+<td><strong>K-ADOPT-5 Apps in use</strong></td>
+<td>which of the three app classes (Access/Connector/Console) are
+active</td>
+<td><code>helix_build_info</code> + open-stream class aggregate</td>
+<td><strong>TARGET</strong> — <code>UNVERIFIED</code></td>
+<td>aggregate by app flavor; no per-install identity</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>K-ADOPT-2 boundary (§11.4.6).</strong> &quot;Active devices&quot; is an
+<em>instantaneous</em> aggregate count derived from the ephemeral
+presence set — it deliberately cannot answer &quot;was device X online
+yesterday at 14:00&quot; because presence is TTL&#39;d and
+<code>last_seen_at</code> is coarsened to ≥ 5 min and carries no
+destination (no-logging §2.2). The point-in-time count is the metric;
+the timeline is the deliberately-absent one (§8).</p>
+</blockquote>
+<hr />
+<h2 id="4-reliability--performance-kpis-slo-derived">4. Reliability
+&amp; performance KPIs (SLO-derived)</h2>
+<p>These KPIs are roll-ups of the SLO histograms the coordinator +
+telemetry already expose (<code>svc-coordinator.md</code> §7,
+<code>svc-telemetry.md</code> §3.2). They measure <em>system</em>
+quality, never <em>user</em> behaviour.</p>
+<table>
+<thead>
+<tr>
+<th>KPI</th>
+<th>Definition</th>
+<th>Counts-only source</th>
+<th>Target</th>
+<th>Privacy boundary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>K-REL-1 Convergence SLO attainment</strong></td>
+<td>% of time <code>p99(helix_reconcile_seconds) &lt; 1 s</code></td>
+<td><code>helix_reconcile_seconds</code> histogram</td>
+<td><strong>TARGET p99 &lt; 1 s</strong> (DoD-5) —
+<code>UNVERIFIED</code></td>
+<td>histogram has no per-user/tenant label; pure system latency</td>
+</tr>
+<tr>
+<td><strong>K-REL-2 Revoke SLO attainment</strong></td>
+<td>% of revokes enforced &lt; 1 s</td>
+<td><code>helix_revoke_enforce_seconds</code> histogram</td>
+<td><strong>TARGET &lt; 1 s</strong> — <code>UNVERIFIED</code></td>
+<td>aggregate revoke timing; no per-device label</td>
+</tr>
+<tr>
+<td><strong>K-REL-3 Availability (fail-static)</strong></td>
+<td>tunnel-drops attributable to control-plane outages</td>
+<td>chaos-test outcome + <code>helix_presence_backend_up</code>
+gauge</td>
+<td><strong>TARGET 0</strong> drops on control-plane outage
+(NFR-200)</td>
+<td>system gauge; no per-tunnel identity</td>
+</tr>
+<tr>
+<td><strong>K-REL-4 Event-pipeline health</strong></td>
+<td>DLQ accumulation + stream backlog</td>
+<td><code>helix_events_dlq_total</code>,
+<code>helix_stream_pending_entries</code></td>
+<td><strong>TARGET</strong> DLQ flat, backlog bounded —
+<code>UNVERIFIED</code></td>
+<td>stream/group labels only (bounded)</td>
+</tr>
+<tr>
+<td><strong>K-REL-5 No-leak resource posture</strong></td>
+<td>coordinator memory slope over soak</td>
+<td><code>process_resident_memory_bytes</code> deriv</td>
+<td><strong>TARGET slope ≈ 0</strong> over 24 h (NFR-101)</td>
+<td>process gauge; no user data</td>
+</tr>
+<tr>
+<td><strong>K-REL-6 Handshake success rate</strong></td>
+<td>successful WG handshakes / attempts (aggregate)</td>
+<td>aggregate handshake counter (edge <code>/metrics</code>)</td>
+<td><strong>TARGET</strong> — <code>UNVERIFIED</code></td>
+<td>aggregate by transport-kind, never per-user</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>K-REL-1 is the product&#39;s flagship quality KPI.</strong> It is
+the parity-grade real-time promise (P4) made into a falsifiable series.
+It carries <strong>no</strong> tenant or device label (§3.1 cardinality
+guard), so it measures the <em>system&#39;s</em> convergence, never any
+user&#39;s activity.</p>
+</blockquote>
+<hr />
+<h2 id="5-privacy-integrity-kpis-the-guarantee-is-itself-a-kpi">5.
+Privacy-integrity KPIs (the guarantee is itself a KPI)</h2>
+<p>The most important KPIs invert the usual relationship: the
+<em>strength of the privacy guarantee</em> is measured, and any erosion
+is a release-blocking failure.</p>
+<table>
+<thead>
+<tr>
+<th>KPI</th>
+<th>Definition</th>
+<th>Counts-only source</th>
+<th>Target</th>
+<th>Privacy boundary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>K-PRIV-1 No-logging gate green</strong></td>
+<td>schema-lint exit-0 against migrations AND the deployed DB</td>
+<td><code>schemalint</code> exit code (pre-build + post-deploy runtime
+signature)</td>
+<td><strong>TARGET 100 %</strong> green (NFR-300/308)</td>
+<td>meta-only; the gate proves <em>absence</em>, stores nothing</td>
+</tr>
+<tr>
+<td><strong>K-PRIV-2 Lint not a tautology</strong></td>
+<td>paired §1.1 mutation: planted <code>flows</code> table → lint
+FAIL</td>
+<td>meta-test result</td>
+<td><strong>TARGET</strong> golden-bad FAILs every build (NFR-301)</td>
+<td>meta-only</td>
+</tr>
+<tr>
+<td><strong>K-PRIV-3 Bus payload clean</strong></td>
+<td>zero traffic-shaped field in any event payload</td>
+<td>payload-lint result</td>
+<td><strong>TARGET 0</strong> forbidden fields (NFR-302)</td>
+<td>meta-only</td>
+</tr>
+<tr>
+<td><strong>K-PRIV-4 Audit control-only</strong></td>
+<td>audit rows are control actions only; meta-shape guard active</td>
+<td><code>helix_audit_events_total{action}</code> (closed vocab) +
+reject counter</td>
+<td><strong>TARGET</strong> 0 traffic-shaped meta rejected-into-store
+(NFR-303)</td>
+<td>bounded <code>action</code> label only</td>
+</tr>
+<tr>
+<td><strong>K-PRIV-5 Metric cardinality bound</strong></td>
+<td>every collector&#39;s label set ⊆ allow-list</td>
+<td>label-audit unit test</td>
+<td><strong>TARGET 100 %</strong> pass (NFR-306)</td>
+<td>the KPI <em>enforces</em> the boundary it lives under</td>
+</tr>
+<tr>
+<td><strong>K-PRIV-6 Anonymous-enroll availability</strong></td>
+<td>tenants can enroll devices with no email/SSO</td>
+<td>integration test result</td>
+<td><strong>TARGET</strong> available (NFR-307, F15)</td>
+<td>the feature that makes the boundary user-meaningful</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>K-PRIV-5 is reflexive.</strong> It measures that the KPI
+layer itself never grew a forbidden label — the success metric for &quot;we
+did not accidentally start tracking users&quot; is itself a counts-only,
+label-bounded check. A green K-PRIV-1..6 is the captured-evidence proof
+(§11.4.69) that the privacy promise is mechanically intact, not merely
+asserted.</p>
+</blockquote>
+<hr />
+<h2 id="6-censorship-resistance-kpis-aggregate-ladder-outcomes">6.
+Censorship-resistance KPIs (aggregate ladder outcomes)</h2>
+<p>The transport ladder records <strong>aggregate, no-per-user</strong>
+escalation outcomes (I5) — exactly enough to know &quot;is obfuscation
+working in aggregate&quot; without ever knowing <em>who</em> escalated
+<em>where</em>.</p>
+<table>
+<thead>
+<tr>
+<th>KPI</th>
+<th>Definition</th>
+<th>Counts-only source</th>
+<th>Target</th>
+<th>Privacy boundary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>K-CENS-1 Obfuscation success rate</strong></td>
+<td>% of connect attempts that reach a working rung (aggregate)</td>
+<td>aggregate ladder-outcome counter by terminal rung</td>
+<td><strong>TARGET</strong> high — <code>UNVERIFIED</code></td>
+<td>aggregate by rung-kind; no SSID, no endpoint, no per-user (I5)</td>
+</tr>
+<tr>
+<td><strong>K-CENS-2 DPI-survival throughput</strong></td>
+<td>obfuscated throughput as % of plain (the Phase-0 G2 bar)</td>
+<td>benchmark capture (netns DPI rig)</td>
+<td><strong>TARGET ≥ 50 %</strong> of plain (NFR-002) —
+<code>UNVERIFIED</code> until G2</td>
+<td>benchmark, not production user data</td>
+</tr>
+<tr>
+<td><strong>K-CENS-3 Escalation-depth distribution</strong></td>
+<td>how far up the ladder attempts go, in aggregate</td>
+<td>histogram of terminal-rung index (counts)</td>
+<td><strong>TARGET</strong> — <code>UNVERIFIED</code></td>
+<td>aggregate distribution; no per-network identity (fingerprint hash
+only)</td>
+</tr>
+<tr>
+<td><strong>K-CENS-4 Time-to-working-rung</strong></td>
+<td>aggregate latency to a successful WG handshake under escalation</td>
+<td>aggregate timing histogram</td>
+<td><strong>TARGET</strong> bounded (NFR-006) —
+<code>UNVERIFIED</code></td>
+<td>aggregate timing; no per-user trace</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>K-CENS boundary (§11.4.6).</strong> The ladder&#39;s per-network
+memory persists a fingerprint <em>hash</em> + rung index — so K-CENS-3
+can report &quot;X% of networks needed MASQUE&quot; in aggregate but
+<strong>cannot</strong> name a network, an SSID, or a user. The
+escalation event trace is the captured evidence (L-I9) and carries no
+destination.</p>
+</blockquote>
+<hr />
+<h2 id="7-self-host-adoption-kpis-the-differentiator">7. Self-host
+adoption KPIs (the differentiator)</h2>
+<p>Self-hostability (P6 / X3) is the product&#39;s reason to exist; its
+success is measured by deployment-shape counts, never by reaching into
+deployed instances (a self-hoster&#39;s instance is theirs — HelixVPN cannot
+and must not phone home per-user data).</p>
+<table>
+<thead>
+<tr>
+<th>KPI</th>
+<th>Definition</th>
+<th>Counts-only source</th>
+<th>Target</th>
+<th>Privacy boundary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>K-SELF-1 Self-host bootstrap success</strong></td>
+<td>a clean VPS reaches a working deployment via
+<code>helixvpnctl init</code> (DoD-1)</td>
+<td>bootstrap test / Challenge outcome</td>
+<td><strong>TARGET 100 %</strong> on the supported path —
+<code>UNVERIFIED</code></td>
+<td>test outcome; no telemetry from operator instances by default</td>
+</tr>
+<tr>
+<td><strong>K-SELF-2 8-criteria DoD attainment</strong></td>
+<td>how many of the MVP DoD criteria pass on a clean self-host</td>
+<td>DoD acceptance-suite result (8 criteria)</td>
+<td><strong>TARGET 8/8</strong> — <code>UNVERIFIED</code></td>
+<td>acceptance evidence, not user data</td>
+</tr>
+<tr>
+<td><strong>K-SELF-3 Single-pod resource fit</strong></td>
+<td>the self-host pod runs within homelab resource bounds + the §12.6 60
+% ceiling</td>
+<td>host resource sampler (§11.4.24)</td>
+<td><strong>TARGET</strong> within budget — <code>UNVERIFIED</code></td>
+<td>host-side metric on the <em>test</em> host, not operator
+instances</td>
+</tr>
+<tr>
+<td><strong>K-SELF-4 Image-set parity</strong></td>
+<td>the same OCI image set serves self-host and fleet (no code
+fork)</td>
+<td>build/artifact check</td>
+<td><strong>TARGET</strong> one image set — <code>UNVERIFIED</code></td>
+<td>artifact metadata, not user data</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>No phone-home by default (§11.4.6 / P7).</strong> A
+self-hosted instance does not emit per-user telemetry to any
+HelixVPN-operated endpoint; K-SELF KPIs are measured from the
+<em>project&#39;s own</em> acceptance suite and test hosts, never by
+harvesting operator deployments. A managed SKU may collect
+<em>aggregate</em> operational counters from its <em>own</em> fleet
+under the same counts-only boundary — never per-user flows.</p>
+</blockquote>
+<hr />
+<h2 id="8-the-deliberately-absent-metrics-and-why-each-absence-is-a-feature">8.
+The deliberately-absent metrics (and why each absence is a feature)</h2>
+<p>This is the document&#39;s thesis table: the conventional KPIs HelixVPN
+<strong>deliberately does not have</strong>, each paired with the
+product promise its absence encodes.</p>
+<table>
+<thead>
+<tr>
+<th>Conventional KPI we do NOT have</th>
+<th>Why it cannot exist</th>
+<th>The feature the absence encodes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Destinations per user / &quot;top sites&quot;</strong></td>
+<td>no durable destination column anywhere (S6)</td>
+<td>&quot;we never know where you go&quot; — the core privacy promise</td>
+</tr>
+<tr>
+<td><strong>Per-user session timeline / &quot;usage hours&quot;</strong></td>
+<td>presence is ephemeral TTL; <code>last_seen_at</code> coarse ≥ 5 min,
+no destination</td>
+<td>&quot;we can&#39;t reconstruct when you were online&quot;</td>
+</tr>
+<tr>
+<td><strong>Per-user bandwidth / data-cap analytics</strong></td>
+<td>no per-user/per-peer byte counts; only aggregate bytes-total</td>
+<td>&quot;we don&#39;t meter or profile your traffic&quot;</td>
+</tr>
+<tr>
+<td><strong>Per-user transport history</strong></td>
+<td>ladder memory is a fingerprint hash + rung index, no per-user link
+(I5)</td>
+<td>&quot;we don&#39;t track which networks you fought censorship on&quot;</td>
+</tr>
+<tr>
+<td><strong>DNS query analytics / &quot;popular domains&quot;</strong></td>
+<td>no DNS query log table (S6)</td>
+<td>&quot;we never log your DNS&quot; (F13)</td>
+</tr>
+<tr>
+<td><strong>Funnel/cohort analysis keyed to a person</strong></td>
+<td>no <code>tenant_id</code>/<code>device_id</code> label on metrics;
+no PII-linked event</td>
+<td>&quot;you can be fully anonymous (F15)&quot;</td>
+</tr>
+<tr>
+<td><strong>Per-tenant breakdown on public
+<code>/metrics</code></strong></td>
+<td>forbidden labels; per-tenant only behind authenticated
+<code>/v1/stats</code></td>
+<td>&quot;your population is not leaked to a scraper&quot;</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>§11.4.112 framing.</strong> Each absence is a <em>structural
+impossibility</em>, not a backlog item: the data is never written, so
+the metric is unreconstructable. Reintroducing any of these would
+require adding a forbidden table/column/label that the schema-lint +
+payload-lint + cardinality guard would <em>fail the build</em> over
+(K-PRIV-1..5). The absence is therefore self-enforcing.</p>
+</blockquote>
+<hr />
+<h2 id="9-kpi--metric-source--privacy-boundary-traceability">9. KPI →
+metric source → privacy-boundary traceability</h2>
+<table>
+<thead>
+<tr>
+<th>KPI family</th>
+<th>Counts-only source</th>
+<th>Principle / parity</th>
+<th>Privacy guard that bounds it</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Adoption (K-ADOPT)</td>
+<td>registry counts, presence gauge, audit counters</td>
+<td>X1 multi-network</td>
+<td>no <code>tenant_id</code>/<code>device_id</code> label; per-tenant
+only behind <code>/v1/stats</code></td>
+</tr>
+<tr>
+<td>Reliability (K-REL)</td>
+<td>SLO histograms, process gauges</td>
+<td>P4 push, P1 fail-static</td>
+<td>no per-user/tenant label on histograms</td>
+</tr>
+<tr>
+<td>Privacy-integrity (K-PRIV)</td>
+<td>lint exit codes, label-audit tests</td>
+<td>P7 no-logging, F15</td>
+<td>the KPIs <em>are</em> the boundary enforcers</td>
+</tr>
+<tr>
+<td>Censorship (K-CENS)</td>
+<td>aggregate ladder-outcome counters</td>
+<td>F2/F6/F7</td>
+<td>fingerprint hash only; no SSID/endpoint/user (I5)</td>
+</tr>
+<tr>
+<td>Self-host (K-SELF)</td>
+<td>acceptance-suite + build checks</td>
+<td>P6/X3</td>
+<td>no phone-home; test-host metrics only</td>
+</tr>
+</tbody>
+</table>
+<pre class="mermaid"><code>flowchart LR
+  subgraph Sources[counts-only telemetry]
+    C1[registry counts]
+    C2[presence gauge aggregate]
+    C3[SLO histograms]
+    C4[audit counters bounded]
+    C5[ladder-outcome aggregate]
+    C6[lint exit codes]
+  end
+  C1 --&gt; KA[K-ADOPT]
+  C2 --&gt; KA
+  C3 --&gt; KR[K-REL]
+  C4 --&gt; KP[K-PRIV]
+  C5 --&gt; KC[K-CENS]
+  C6 --&gt; KP
+  KA --&gt; B{privacy boundary:&lt;br/&gt;no forbidden label&lt;br/&gt;no per-user flow}
+  KR --&gt; B
+  KP --&gt; B
+  KC --&gt; B
+  B --&gt; OUT[every KPI is counts-only · the absence is the promise]</code></pre>
+<blockquote>
+<p><strong>Closing honesty (§11.4.6).</strong> No target in §3–§7 is a
+measured result; each is a business TARGET marked
+<code>UNVERIFIED</code> and met only when its named counts-only series
+produces data. And by design, no KPI anywhere in this document can be
+computed from a per-user flow, a destination, or a timestamp-of-use —
+because that data never exists (P7 / S6). The measurement boundary
+<em>is</em> the product.</p>
+</blockquote>
+<hr />
+<h2 id="sources-verified">Sources verified</h2>
+<ul>
+<li><code>docs/research/mvp/final/00-product-scope-and-principles.md</code>
+— principle P7 (no-logging by construction §8), parity F13/F14/F15 (§9),
+differentiators X1/X3 (§9), the 8-criteria MVP DoD (§10.2).</li>
+<li><code>docs/research/mvp/final/v03-control-plane/svc-telemetry.md</code>
+§3 — the complete counts-only Prometheus registry
+(<code>helix_reconcile_seconds</code>,
+<code>helix_revoke_enforce_seconds</code>,
+<code>helix_events_dlq_total</code>,
+<code>helix_stream_pending_entries</code>,
+<code>helix_presence_online_devices</code>,
+<code>helix_audit_events_total{action}</code>,
+<code>helix_build_info</code>,
+<code>process_resident_memory_bytes</code>); §3.1 the forbidden-label
+cardinality bound (no <code>tenant_id</code>/<code>device_id</code>/ip
+label); §5 ephemeral presence; the per-tenant <code>/v1/stats</code> vs
+public <code>/metrics</code> split.</li>
+<li><code>docs/research/mvp/final/v03-control-plane/svc-coordinator.md</code>
+§7 — the convergence &lt; 1 s and revoke &lt; 1 s SLO histograms feeding
+K-REL.</li>
+<li><code>docs/research/mvp/final/v05-security/no-logging-as-code.md</code>
+— the stored-vs-never-stored partition (§2), coarse
+<code>last_seen_at</code> (§2.2), the schema-lint + payload-lint +
+meta-shape guard + paired §1.1 mutation feeding K-PRIV, the
+deliberately-absent data classes (§8) and the structural-impossibility
+framing.</li>
+<li><code>docs/research/mvp/final/v02-data-plane/transport-selection-ladder.md</code>
+— the aggregate, no-per-user ladder telemetry (I5) and per-network
+fingerprint-hash memory feeding K-CENS.</li>
+</ul>
+<p><em>Constitution bindings applied: §11.4.44 (revision header),
+§11.4.6 (no-guessing — every KPI target marked <code>UNVERIFIED</code>,
+never asserted as measured), §11.4.69 (KPIs derived only from captured
+counts-only series), §11.4.112 (the deliberately-absent metrics framed
+as structural impossibilities, not backlog), the no-logging covenant (P7
+/ S6) bounding what any KPI may measure, §11.4.65/§11.4.153
+(HTML+PDF[+DOCX] exports follow in refinement).</em></p>
+</body>
+</html>

@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Use Cases &amp; End-to-End Journeys</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Use Cases &amp; End-to-End Journeys</h1>
+</header>
+<h1 id="use-cases--end-to-end-journeys">Use Cases &amp; End-to-End
+Journeys</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-06-26T12:00:00Z</p>
+<blockquote>
+<p><strong>Document role.</strong> This is the Volume 1 (Product &amp;
+Requirements) nano-detail spec enumerating HelixVPN&#39;s primary
+<strong>end-to-end use cases</strong>, each rendered as a step-by-step
+<strong>journey</strong> with a Mermaid sequence diagram, explicit
+preconditions and postconditions, and the exact <strong>components and
+APIs</strong> exercised. It turns the three roles, seven principles, and
+parity matrix of the Volume 1 overview
+(<code>00-product-scope-and-principles.md</code>) into runnable
+narratives that the §11.4.169 test types and the 8-criteria MVP DoD
+trace onto.</p>
+<p><strong>Document is a SPEC.</strong> It describes <em>what the user
+does and what the system does in response</em>; it does not build the
+product. Each journey is a candidate e2e / full-automation test scenario
+(§11.4.98 — fully self-driving, no manual step after start) and is
+written so its postconditions are captured-evidence assertions, not
+prose claims (§11.4 / §11.4.69).</p>
+<p><strong>Evidence base.</strong> Cross-references the Volume 1
+overview (roles §3, two-way / multi-network §4, parity matrix §9, scope
+§10, decisions D1/D4/D6), the coordinator streaming contract
+(<code>v03-control-plane/svc-coordinator.md</code> —
+<code>WatchNetworkMap</code>, the &lt; 1 s convergence + revoke SLOs,
+the reaction table), the telemetry presence + audit model
+(<code>v03-control-plane/svc-telemetry.md</code>), the no-logging
+invariant (<code>v05-security/no-logging-as-code.md</code>), and the
+transport escalation ladder
+(<code>v02-data-plane/transport-selection-ladder.md</code>). Research is
+cited by the overview&#39;s ids (<code>[04_ARCH §N]</code>,
+<code>[04_P1]</code>). Anything unproven is marked
+<code>UNVERIFIED</code> per §11.4.6.</p>
+</blockquote>
+<hr />
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#1-use-case-catalogue--actor-model">1. Use-case catalogue
+&amp; actor model</a></li>
+<li><a href="#2-uc-01--consumer-first-connect-privacy-exit">2. UC-01 —
+Consumer first connect (privacy exit)</a></li>
+<li><a href="#3-uc-02--switch-exit--server">3. UC-02 — Switch exit /
+server</a></li>
+<li><a href="#4-uc-03--enable-multihop">4. UC-03 — Enable
+multihop</a></li>
+<li><a href="#5-uc-04--business-admin-enrolls-a-device--sets-policy">5.
+UC-04 — Business admin enrolls a device &amp; sets policy</a></li>
+<li><a href="#6-uc-05--connector-advertises-a-route">6. UC-05 —
+Connector advertises a route</a></li>
+<li><a href="#7-uc-06--censorship-evade-via-transport-escalation">7.
+UC-06 — Censorship-evade via transport escalation</a></li>
+<li><a href="#8-uc-07--kill-switch-trips-on-network-drop">8. UC-07 —
+Kill-switch trips on network drop</a></li>
+<li><a href="#9-cross-cutting-postcondition-invariants">9. Cross-cutting
+postcondition invariants</a></li>
+<li><a href="#10-use-case--component--api--test-traceability">10.
+Use-case → component → API → test traceability</a></li>
+<li><a href="#sources-verified">Sources verified</a></li>
+</ul>
+<hr />
+<h2 id="1-use-case-catalogue--actor-model">1. Use-case catalogue &amp;
+actor model</h2>
+<p>The actors are the three roles of the overview plus the human
+personas (<code>00-...</code> §3, §5).</p>
+<table>
+<thead>
+<tr>
+<th>Actor</th>
+<th>Role / persona</th>
+<th>App</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>End user</strong></td>
+<td>Mullvad-style privacy/lab user</td>
+<td>Helix Access</td>
+</tr>
+<tr>
+<td><strong>Network operator</strong></td>
+<td>exposes a LAN safely</td>
+<td>Helix Connector (daemon)</td>
+</tr>
+<tr>
+<td><strong>Admin</strong></td>
+<td>manages tenants/users/devices/policy</td>
+<td>Helix Console</td>
+</tr>
+<tr>
+<td><strong>Gateway control plane</strong></td>
+<td>Go
+(identity/registry/ipam/pki/policy/coordinator/events/telemetry/api)</td>
+<td>server</td>
+</tr>
+<tr>
+<td><strong>Gateway edge</strong></td>
+<td>Rust data plane (transports + WireGuard)</td>
+<td>server</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th>UC</th>
+<th>Title</th>
+<th>Primary actor</th>
+<th>Phase</th>
+<th>Parity / differentiator</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>UC-01</td>
+<td>Consumer first connect (privacy exit)</td>
+<td>End user</td>
+<td>MVP</td>
+<td>F1, F7, F14</td>
+</tr>
+<tr>
+<td>UC-02</td>
+<td>Switch exit / server</td>
+<td>End user</td>
+<td>MVP</td>
+<td>F1, X1</td>
+</tr>
+<tr>
+<td>UC-03</td>
+<td>Enable multihop</td>
+<td>End user</td>
+<td>P2</td>
+<td>F10</td>
+</tr>
+<tr>
+<td>UC-04</td>
+<td>Admin enrolls a device &amp; sets policy</td>
+<td>Admin</td>
+<td>MVP</td>
+<td>F15, F17, X1</td>
+</tr>
+<tr>
+<td>UC-05</td>
+<td>Connector advertises a route</td>
+<td>Network operator</td>
+<td>MVP</td>
+<td>X1, X2</td>
+</tr>
+<tr>
+<td>UC-06</td>
+<td>Censorship-evade via transport escalation</td>
+<td>End user</td>
+<td>MVP</td>
+<td>F2, F6, F7, F8</td>
+</tr>
+<tr>
+<td>UC-07</td>
+<td>Kill-switch trips on network drop</td>
+<td>End user</td>
+<td>MVP</td>
+<td>F11, F13</td>
+</tr>
+</tbody>
+</table>
+<p>Each journey below maps to the MVP Definition-of-Done acceptance
+criteria of the overview §10.2 where applicable, and each is a
+§11.4.98-compliant fully-automatable e2e scenario (no human step after
+start; non-introspectable UI falls back to the §11.4.117 pixel
+oracle).</p>
+<hr />
+<h2 id="2-uc-01--consumer-first-connect-privacy-exit">2. UC-01 —
+Consumer first connect (privacy exit)</h2>
+<p><strong>Goal.</strong> A new end user installs Access, enrolls
+anonymously (no email), and gets a full-tunnel privacy exit to the
+internet — the Mullvad use case.</p>
+<p><strong>Preconditions.</strong></p>
+<ul>
+<li>A reachable Gateway (self-hosted or managed) with a public
+endpoint.</li>
+<li>An enrollment token (anonymous device-token path, no PII) OR an OIDC
+login.</li>
+<li>Access app installed on a supported platform (iOS/Android/Linux for
+MVP).</li>
+</ul>
+<p><strong>Postconditions (captured-evidence assertions).</strong></p>
+<ul>
+<li>The device holds an overlay IP and a short-lived mTLS device
+cert.</li>
+<li>A WireGuard tunnel is established; the chosen exit carries the
+device&#39;s internet traffic (full-tunnel).</li>
+<li>A <code>presence:{tenant}:{device}</code> key exists in Redis
+(TTL&#39;d); <strong>no</strong> durable connection row exists (NFR-300 /
+no-logging).</li>
+<li>An <code>device.enrolled</code> audit row exists (control action);
+<strong>no</strong> traffic audit.</li>
+</ul>
+<p><strong>Components / APIs exercised.</strong> <code>identity</code>
+(enroll), <code>pki</code> (device cert), <code>registry</code> (device
++ overlay-IP), <code>ipam</code> (overlay IP), <code>coordinator</code>
+(<code>WatchNetworkMap</code>), <code>helix-core</code> (tunnel +
+ladder), gateway <code>edge</code> (transport</p>
+<ul>
+<li>WG), <code>telemetry</code> (presence + audit).</li>
+</ul>
+<pre class="mermaid"><code>sequenceDiagram
+  autonumber
+  participant U as Access app (helix-core)
+  participant ID as identity/pki
+  participant REG as registry/ipam
+  participant CO as coordinator
+  participant ED as edge (Rust+WG)
+  participant TEL as telemetry
+  U-&gt;&gt;U: generate WG keypair on-device (private NEVER leaves, C6)
+  U-&gt;&gt;ID: enroll(token | OIDC) + WG pubkey
+  ID-&gt;&gt;ID: validate token; issue short-lived mTLS device cert
+  ID-&gt;&gt;REG: register device; allocate overlay IP (ipam, ULA/48)
+  ID--&gt;&gt;U: device cert + overlay IP
+  U-&gt;&gt;CO: WatchNetworkMap(mTLS, known_version=0)
+  CO--&gt;&gt;U: snapshot {self overlay IP, gateway endpoint, transport order, peers per policy}
+  U-&gt;&gt;ED: dial transport (ladder: plain-udp first) → WG handshake
+  ED--&gt;&gt;U: WG handshake complete → tunnel up
+  U-&gt;&gt;ED: full-tunnel internet traffic via exit
+  U-&gt;&gt;TEL: heartbeat → MarkOnline (presence TTL); device.enrolled audited
+  Note over U,TEL: postcondition: tunnel up + presence key + NO durable connection row</code></pre>
+<p><strong>Honest boundary (§11.4.6).</strong> On iOS the tunnel runs
+inside the NE memory ceiling (NFR-500) — first-connect on iOS is gated
+by Phase-0 G3 and is <code>UNVERIFIED</code> until that on-device
+capture exists. The journey&#39;s logic is platform-neutral; the iOS
+resource fit is the open risk, not the flow.</p>
+<hr />
+<h2 id="3-uc-02--switch-exit--server">3. UC-02 — Switch exit /
+server</h2>
+<p><strong>Goal.</strong> A connected user picks a different exit
+(privacy server) or a different joined network, and traffic re-routes
+without dropping the app session.</p>
+<p><strong>Preconditions.</strong> UC-01 complete (device connected, has
+overlay IP + cert). The target exit/network is one the device&#39;s policy
+grants (need-to-know, C4).</p>
+<p><strong>Postconditions.</strong></p>
+<ul>
+<li>The new exit/network carries traffic; the old one no longer
+does.</li>
+<li>Convergence to the new route is <strong>&lt; 1 s</strong> (NFR-003)
+via a <code>MapDelta</code>, with <strong>no</strong> client restart
+(DoD-5 spirit).</li>
+<li>The kill-switch never opens a leak during the transition
+(NFR-404).</li>
+</ul>
+<p><strong>Components / APIs.</strong> Access UI (<code>helix-ui</code>
+ExitPicker), <code>helix-core</code> (re-pin/reconnect),
+<code>coordinator</code> (delta), <code>edge</code> (re-route),
+<code>policy</code> (VisibleTo / AllowedIPs).</p>
+<pre class="mermaid"><code>sequenceDiagram
+  autonumber
+  participant U as Access app
+  participant CO as coordinator
+  participant ED as edge
+  U-&gt;&gt;U: user selects new exit/network in ExitPicker
+  U-&gt;&gt;CO: (re)WatchNetworkMap / pin selection
+  CO-&gt;&gt;CO: recompute self map (need-to-know filter, C4)
+  CO--&gt;&gt;U: MapDelta (upsert new peer/exit, remove old) version++
+  Note over CO,U: NFR-003 p99 &lt; 1 s, no restart
+  U-&gt;&gt;ED: reconcile WG peers to new exit
+  ED--&gt;&gt;U: traffic now via new exit; old peer removed
+  Note over U: kill-switch holds — no off-tunnel leak during switch (NFR-404)</code></pre>
+<blockquote>
+<p><strong>Need-to-know enforcement (C4).</strong> The user can only
+switch to an exit/network their compiled policy grants — a non-granted
+target never appears in the snapshot (NFR-402), so the UI cannot offer
+it. This is the multi-network (X1) differentiator surfacing as a routing
+choice.</p>
+</blockquote>
+<hr />
+<h2 id="4-uc-03--enable-multihop">4. UC-03 — Enable multihop</h2>
+<p><strong>Goal.</strong> A privacy-conscious user enables entry/exit
+separation (multihop) so the entry node never sees the exit destination
+and vice-versa (parity F10). Phase 2.</p>
+<p><strong>Preconditions.</strong> P2 multihop available; user connected
+(UC-01). The tenant&#39;s policy/topology offers ≥2 hops in distinct
+jurisdictions.</p>
+<p><strong>Postconditions.</strong></p>
+<ul>
+<li>Traffic traverses nested WireGuard (entry → exit), control-plane
+orchestrated.</li>
+<li>No single hop holds both the user identity and the destination.</li>
+<li>Latency rises (extra hop) within the obfuscation-aware budget
+(NFR-007) — exact added latency <code>UNVERIFIED</code> (P2 benchmark
+owns it).</li>
+</ul>
+<p><strong>Components / APIs.</strong> Access UI (multihop toggle),
+<code>helix-core</code> (nested WG), <code>coordinator</code> (per-hop
+keys in the map), <code>policy</code> (hop authorization),
+<code>edge</code>.</p>
+<pre class="mermaid"><code>sequenceDiagram
+  autonumber
+  participant U as Access app
+  participant CO as coordinator
+  participant E1 as entry hop
+  participant E2 as exit hop
+  U-&gt;&gt;U: enable multihop (entry, exit) toggle
+  U-&gt;&gt;CO: WatchNetworkMap (multihop request in policy)
+  CO--&gt;&gt;U: map with per-hop keys (entry pubkey, exit pubkey) [P2]
+  U-&gt;&gt;E1: nested WG: outer tunnel to entry
+  E1-&gt;&gt;E2: inner tunnel entry→exit (entry cannot read inner dest)
+  E2--&gt;&gt;U: internet via exit
+  Note over E1,E2: entry sees user, not dest; exit sees dest, not user (F10)</code></pre>
+<blockquote>
+<p><strong>Phase boundary (§11.4.6).</strong> Multihop is explicitly OUT
+of MVP scope (overview §10.2 → P2). This journey is the P2 contract; its
+postconditions are <code>UNVERIFIED</code> until the P2 nested-WG
+implementation and its e2e capture exist.</p>
+</blockquote>
+<hr />
+<h2 id="5-uc-04--business-admin-enrolls-a-device--sets-policy">5. UC-04
+— Business admin enrolls a device &amp; sets policy</h2>
+<p><strong>Goal.</strong> An admin (Console) creates a user/device
+enrollment, then writes a default-deny ACL granting a group access to a
+specific network/port — reflected on the edge in <strong>&lt; 1
+s</strong> with no restart.</p>
+<p><strong>Preconditions.</strong> Admin authenticated to Console (RBAC
+<code>admin</code>/<code>operator</code>). A tenant exists; at least one
+connector has advertised a network (UC-05).</p>
+<p><strong>Postconditions.</strong></p>
+<ul>
+<li>An enrollment token is minted (audited
+<code>enroll_token.mint</code>); the device enrolls (UC-01) and appears
+in the registry.</li>
+<li>A policy edit
+(<code>group:contractors → net:warehouse:554/tcp</code>) compiles to
+per-peer <code>AllowedIPs</code> + an edge verdict map and reaches
+affected agents in <strong>&lt; 1 s</strong> (NFR-003 / DoD-5).</li>
+<li>Audit holds <code>policy.create</code> +
+<code>policy.activate</code> control rows; <strong>no</strong>
+traffic.</li>
+</ul>
+<p><strong>Components / APIs.</strong> Console (<code>helix-ui</code>
+admin + REST <code>/v1/...</code>), <code>api</code> (Gin REST +
+WS/SSE), <code>identity</code> (enroll token), <code>policy</code>
+(compiler), <code>coordinator</code> (fan-out), <code>telemetry</code>
+(audit).</p>
+<pre class="mermaid"><code>sequenceDiagram
+  autonumber
+  participant AD as Console (admin)
+  participant API as api (Gin REST)
+  participant POL as policy compiler
+  participant BUS as events bus
+  participant CO as coordinator
+  participant ED as edge
+  AD-&gt;&gt;API: POST /v1/enroll-tokens (mint) → audited enroll_token.mint
+  API--&gt;&gt;AD: token (shown once; never logged §11.4.10)
+  AD-&gt;&gt;API: PUT /v1/policy (group:contractors → net:warehouse:554/tcp)
+  API-&gt;&gt;POL: compile (default-deny, fail-closed)
+  POL-&gt;&gt;BUS: events:policy {policy.compiled, version}
+  BUS--&gt;&gt;CO: deliver
+  CO-&gt;&gt;CO: projectionDiff → minimal affected set
+  CO-&gt;&gt;ED: MapDelta (AllowedIPs + verdict map) version++
+  Note over CO,ED: NFR-003 p99 &lt; 1 s, no restart (DoD-5)
+  AD-&gt;&gt;API: GET /v1/audit → policy.create + policy.activate rows (control-only)</code></pre>
+<blockquote>
+<p><strong>Authorization boundary.</strong> <code>GET /v1/audit</code>
+requires <code>admin</code>/<code>operator</code>; <code>member</code>
+is denied; RLS is the floor so even a mis-scoped query returns only the
+caller&#39;s tenant rows (NFR-408). The minted token is shown once and never
+logged (§11.4.10).</p>
+</blockquote>
+<hr />
+<h2 id="6-uc-05--connector-advertises-a-route">6. UC-05 — Connector
+advertises a route</h2>
+<p><strong>Goal.</strong> A network operator installs the Connector
+daemon inside a private LAN; it dials <strong>outbound</strong> to the
+Gateway and advertises the LAN&#39;s CIDRs — no inbound port-forward, ever
+(P3 / X2).</p>
+<p><strong>Preconditions.</strong> Connector daemon installed on a host
+inside the LAN. An enrollment token for the connector. Outbound
+reachability to the Gateway.</p>
+<p><strong>Postconditions.</strong></p>
+<ul>
+<li>The connector holds a device cert + overlay identity and an attached
+<code>site</code> (4via6 site id, D4).</li>
+<li>Its advertised CIDRs are registered; authorized users&#39; maps gain
+reachable peers/routes for that network.</li>
+<li>Overlapping RFC1918 ranges across connectors are disambiguated by
+the overlay addressing scheme (ULA /48 + 4via6 / per-network NAT
+fallback, D4).</li>
+<li><strong>No</strong> inbound port was opened on the LAN&#39;s router (P3
+assertion).</li>
+</ul>
+<p><strong>Components / APIs.</strong> Connector
+(<code>helix-core</code> advertise/route mode), <code>identity</code>
+/<code>pki</code>, <code>registry</code>
+(<code>route.advertised</code>), <code>ipam</code> (site),
+<code>coordinator</code> (reaction <code>connector.attached</code> /
+<code>connector.prefixes.changed</code>), <code>policy</code>.</p>
+<pre class="mermaid"><code>sequenceDiagram
+  autonumber
+  participant CN as Connector daemon (in LAN)
+  participant ID as identity/pki
+  participant REG as registry/ipam
+  participant CO as coordinator
+  participant U as authorized Access user
+  CN-&gt;&gt;ID: outbound dial + enroll(token) + WG pubkey
+  ID--&gt;&gt;CN: device cert; overlay identity; site id (4via6, D4)
+  CN-&gt;&gt;REG: advertise CIDRs (route.advertised)
+  REG-&gt;&gt;CO: events {connector.attached, connector.prefixes.changed}
+  CO-&gt;&gt;CO: recompute maps for nodes whose policy grants these CIDRs
+  CO--&gt;&gt;U: MapDelta (new reachable network via this connector)
+  Note over CN: NO inbound port opened on the LAN router (P3 / X2)
+  Note over CO,U: overlapping 192.168.x ranges disambiguated by D4 overlay addressing</code></pre>
+<blockquote>
+<p><strong>Conflict handling (§11.4.6).</strong> Two connectors
+advertising the same RFC1918 range raise
+<code>route.conflict.detected</code>; the coordinator does
+<strong>not</strong> push a delta for it — the conflict surfaces to
+Console and 4via6 site disambiguation resolves it (D4). The concrete
+addressing scheme is frozen in the Phase-1 IPAM design; until then the
+collision resolution detail is <code>UNVERIFIED</code>.</p>
+</blockquote>
+<hr />
+<h2 id="7-uc-06--censorship-evade-via-transport-escalation">7. UC-06 —
+Censorship-evade via transport escalation</h2>
+<p><strong>Goal.</strong> A user on a censored network where plain
+WireGuard/UDP is blocked automatically escalates the transport ladder
+until an obfuscated rung (MASQUE/QUIC) carries the WG handshake —
+Mullvad&#39;s &quot;automatic obfuscation&quot; (F7), looking like ordinary web
+traffic.</p>
+<p><strong>Preconditions.</strong> Device enrolled (UC-01). The current
+network blocks plain-UDP WG (DPI / UDP block). The ladder order is the
+default or a coordinator-pushed regional prior.</p>
+<p><strong>Postconditions.</strong></p>
+<ul>
+<li>The ladder advances monotonically within the attempt (L-I8) until a
+rung completes a <strong>WG handshake</strong> (carrier-connect alone is
+not success, I2).</li>
+<li>The working rung is remembered per-network (fingerprint hash + rung
+index, <strong>no</strong> SSID plaintext, <strong>no</strong> endpoint,
+no per-connection log — I5).</li>
+<li>Aggregate escalation telemetry is recorded (counts only, no per-user
+flow).</li>
+<li>Throughput on the obfuscated rung meets the DPI-survival bar
+(NFR-002 ≥ 50 % of plain — TARGET <code>UNVERIFIED</code> until
+G2).</li>
+</ul>
+<p><strong>Components / APIs.</strong> <code>helix-core</code> ladder
+(<code>ladder.rs</code>), <code>helix-transport</code> (plain-udp / lwo
+/ masque-h3 / …), <code>edge</code> (transport termination),
+<code>coordinator</code> (<code>TransportPolicy.order</code> regional
+prior), <code>telemetry</code> (aggregate ladder outcomes).</p>
+<pre class="mermaid"><code>flowchart TD
+  Start([connect on censored network]) --&gt; Seed{seed cursor:&lt;br/&gt;per-net memory →&lt;br/&gt;regional prior → default}
+  Seed --&gt; D0[dial plain-udp]
+  D0 --&gt; H0{WG handshake&lt;br/&gt;within budget?}
+  H0 -- no, UDP blocked --&gt; E1[escalate: cursor+1 · emit Reconnecting]
+  E1 --&gt; D1[dial lwo]
+  D1 --&gt; H1{WG handshake?}
+  H1 -- no --&gt; E2[escalate cursor+1]
+  E2 --&gt; D2[dial masque-h3 / CONNECT-UDP HTTP-3]
+  D2 --&gt; H2{WG handshake?}
+  H2 -- yes --&gt; R[remember fingerprint→rung · Connected]
+  H0 -- yes --&gt; R
+  H1 -- yes --&gt; R
+  R --&gt; T[aggregate ladder telemetry · counts only · no per-user flow I5]</code></pre>
+<blockquote>
+<p><strong>No-logging on the evade path (§11.4.6).</strong> Per-network
+memory persists only a fingerprint <em>hash</em> + last-good rung index
+— never the SSID, never the server endpoint, never a timestamped
+per-connection record (I5). The escalation event trace IS the captured
+evidence (L-I9), and it carries no destination. The ≥ 50 % DPI-survival
+throughput is a TARGET pending Phase-0 G2.</p>
+</blockquote>
+<hr />
+<h2 id="8-uc-07--kill-switch-trips-on-network-drop">8. UC-07 —
+Kill-switch trips on network drop</h2>
+<p><strong>Goal.</strong> The user&#39;s underlying network drops (or the
+tunnel fails); the kill-switch blocks all off-tunnel traffic so nothing
+leaks, and DNS stays forced through the tunnel (F11 + F13).</p>
+<p><strong>Preconditions.</strong> Device connected with kill-switch
+enabled (default-on for the privacy posture). The OS firewall
+integration is active (<code>helix-core</code> state machine + per-OS
+firewall driver).</p>
+<p><strong>Postconditions.</strong></p>
+<ul>
+<li>On tunnel-down, <strong>0</strong> packets traverse the physical
+interface off-tunnel (NFR-404 leak test).</li>
+<li><strong>0</strong> plaintext DNS queries escape off-tunnel
+(NFR-405).</li>
+<li>On reconnect (ladder re-runs, UC-06), the kill-switch lifts only
+once a tunnel is re-established — never a leak-window during the
+gap.</li>
+</ul>
+<p><strong>Components / APIs.</strong> <code>helix-core</code>
+(kill-switch + DNS state machine), per-OS firewall shim (nftables/WFP/NE
+rules), <code>coordinator</code> (reconnect map), <code>edge</code>.</p>
+<pre class="mermaid"><code>stateDiagram-v2
+  [*] --&gt; Connected
+  Connected --&gt; TunnelDown: network drop / handshake loss
+  TunnelDown --&gt; Locked: kill-switch engages (firewall blocks off-tunnel + plaintext :53)
+  Locked --&gt; Locked: any app traffic dropped (0 leak, NFR-404/405)
+  Locked --&gt; Reconnecting: ladder re-runs (UC-06)
+  Reconnecting --&gt; Connected: WG handshake re-established → kill-switch lifts
+  note right of Locked
+    No off-tunnel packet and no plaintext DNS escapes
+    during the gap — the leak window is closed by construction.
+  end note</code></pre>
+<blockquote>
+<p><strong>Verification (§11.4.69).</strong> The kill-switch
+postconditions are proven by a packet-capture leak test on the physical
+interface during a forced tunnel-drop: a non-zero off-tunnel packet
+count is a FAIL. The capture IS the evidence; &quot;no leak observed&quot; without
+the capture is a PASS-bluff (§11.4).</p>
+</blockquote>
+<hr />
+<h2 id="9-cross-cutting-postcondition-invariants">9. Cross-cutting
+postcondition invariants</h2>
+<p>Every journey above, regardless of actor, must leave the system in a
+state that satisfies these invariants — they are the union of the seven
+principles and the no-logging guarantee surfacing as per-journey
+postconditions:</p>
+<table>
+<thead>
+<tr>
+<th>Invariant</th>
+<th>Holds in every journey because</th>
+<th>Verified by</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Fail-static (P1)</strong></td>
+<td>the edge forwards from a cached verdict map; a control-plane blip
+during any journey never drops an established tunnel</td>
+<td>chaos (kill control plane mid-journey)</td>
+</tr>
+<tr>
+<td><strong>Outbound-only (P3)</strong></td>
+<td>every actor <em>dials out</em>; the gateway is the only public
+listener</td>
+<td>security (no-inbound assertion)</td>
+</tr>
+<tr>
+<td><strong>Need-to-know (C4)</strong></td>
+<td>every map a journey delivers is policy-filtered; a non-granted peer
+never appears</td>
+<td>meta-test (skip-filter mutation FAILs)</td>
+</tr>
+<tr>
+<td><strong>&lt; 1 s convergence (P4)</strong></td>
+<td>every map change in a journey is a minimal
+<code>MapDelta</code></td>
+<td>performance (<code>helix_reconcile_seconds</code>)</td>
+</tr>
+<tr>
+<td><strong>No-logging (P7)</strong></td>
+<td>no journey writes a durable connection/traffic row; presence is
+ephemeral; audit is control-only</td>
+<td>security (schema-lint, deployed DB)</td>
+</tr>
+<tr>
+<td><strong>Anonymous identity (F15)</strong></td>
+<td>first-connect (UC-01) needs no email/SSO</td>
+<td>integration (anonymous enroll)</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Anti-bluff coupling (§11.4 / §11.4.98).</strong> Each journey
+is authored as a fully self-driving e2e scenario: no human action after
+start, deterministic across re-runs (§11.4.50), captured evidence per
+postcondition. A journey that &quot;passes&quot; without its postcondition
+captures (presence key present, no durable row, delta on wire, zero
+leak) is a PASS-bluff at the use-case layer.</p>
+</blockquote>
+<hr />
+<h2 id="10-use-case--component--api--test-traceability">10. Use-case →
+component → API → test traceability</h2>
+<table>
+<thead>
+<tr>
+<th>UC</th>
+<th>Components</th>
+<th>Key APIs / streams</th>
+<th>DoD / NFR</th>
+<th>§11.4.169 test type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>UC-01</td>
+<td>identity, pki, registry, ipam, coordinator, core, edge,
+telemetry</td>
+<td>enroll; <code>WatchNetworkMap</code>; transport dial</td>
+<td>DoD-1/2, NFR-307/304</td>
+<td>e2e / full-automation</td>
+</tr>
+<tr>
+<td>UC-02</td>
+<td>core, coordinator, edge, policy</td>
+<td><code>WatchNetworkMap</code> delta</td>
+<td>DoD-5, NFR-003/402</td>
+<td>e2e</td>
+</tr>
+<tr>
+<td>UC-03</td>
+<td>core, coordinator, edge, policy</td>
+<td>map w/ per-hop keys (P2)</td>
+<td>F10, NFR-007</td>
+<td>e2e (P2)</td>
+</tr>
+<tr>
+<td>UC-04</td>
+<td>api, identity, policy, coordinator, telemetry</td>
+<td>REST <code>/v1/...</code>; events:policy; audit</td>
+<td>DoD-3/5, NFR-003/408</td>
+<td>e2e + integration</td>
+</tr>
+<tr>
+<td>UC-05</td>
+<td>core, identity, pki, registry, ipam, coordinator, policy</td>
+<td><code>route.advertised</code>; <code>connector.attached</code></td>
+<td>X1/X2, NFR-103/104</td>
+<td>e2e + integration</td>
+</tr>
+<tr>
+<td>UC-06</td>
+<td>core (ladder), transport, edge, coordinator, telemetry</td>
+<td>ladder; <code>TransportPolicy.order</code></td>
+<td>DoD-4, NFR-002/410/006</td>
+<td>e2e (DPI-sim)</td>
+</tr>
+<tr>
+<td>UC-07</td>
+<td>core (kill-switch/DNS), firewall shim, coordinator, edge</td>
+<td>firewall state machine</td>
+<td>DoD-7, NFR-404/405</td>
+<td>security / e2e (leak test)</td>
+</tr>
+</tbody>
+</table>
+<pre class="mermaid"><code>flowchart LR
+  subgraph Actors
+    EU[End user]
+    OP[Network operator]
+    AD[Admin]
+  end
+  EU --&gt; UC01[UC-01 connect] --&gt; CORE[helix-core + edge]
+  EU --&gt; UC02[UC-02 switch] --&gt; COORD[coordinator]
+  EU --&gt; UC06[UC-06 evade] --&gt; LAD[ladder + transport]
+  EU --&gt; UC07[UC-07 kill-switch] --&gt; FW[firewall shim]
+  OP --&gt; UC05[UC-05 advertise] --&gt; REG[registry/ipam]
+  AD --&gt; UC04[UC-04 enroll+policy] --&gt; POL[policy + api]
+  COORD --&gt; SLO[&lt; 1 s convergence SLO]
+  LAD --&gt; NL[no-logging: counts only]
+  FW --&gt; LEAK[zero-leak capture]</code></pre>
+<blockquote>
+<p><strong>Phase honesty (§11.4.6).</strong> UC-01/02/04/05/06/07 are
+MVP-scoped; UC-03 (multihop) is P2. P2/P3 postconditions are
+<code>UNVERIFIED</code> until their phase&#39;s implementation and captured
+e2e evidence exist — they are the forward contract, never asserted as
+already working.</p>
+</blockquote>
+<hr />
+<h2 id="sources-verified">Sources verified</h2>
+<ul>
+<li><code>docs/research/mvp/final/00-product-scope-and-principles.md</code>
+— three roles + control relationships (§3), two-way / multi-network
+exact meaning (§4), personas + app classes (§5), Mullvad-parity matrix
+F1–F17 + X1–X5 (§9), phase scope + 8-criteria MVP DoD (§10), decisions
+D1 (MASQUE)/D4 (ULA+4via6)/D6 (asymmetric per-leg) (§11).</li>
+<li><code>docs/research/mvp/final/v03-control-plane/svc-coordinator.md</code>
+— the <code>WatchNetworkMap</code> streaming handler,
+<code>known_version</code> resume, the reaction table
+(<code>device.enrolled</code>/<code>device.revoked</code>/<code>connector.attached</code>/
+<code>connector.prefixes.changed</code>/<code>policy.compiled</code>),
+need-to-know <code>VisibleTo</code> filtering (C4), the &lt; 1 s
+convergence + &lt; 1 s revoke SLOs (§7).</li>
+<li><code>docs/research/mvp/final/v03-control-plane/svc-telemetry.md</code>
+— ephemeral Redis presence (MarkOnline/Refresh/Offline, TTL), the
+control-action audit vocabulary
+<ul>
+<li>meta-shape guard, counts-only metrics.</li>
+</ul></li>
+<li><code>docs/research/mvp/final/v05-security/no-logging-as-code.md</code>
+— the no-logging postcondition invariants (no durable connection row,
+presence ephemeral, audit control-only) every journey must satisfy.</li>
+<li><code>docs/research/mvp/final/v02-data-plane/transport-selection-ladder.md</code>
+— the escalation ladder behind UC-06 (seed order, monotonic cursor L-I8,
+WG-handshake success criterion I2, per-network memory + no-logging I5,
+aggregate telemetry).</li>
+</ul>
+<p><em>Constitution bindings applied: §11.4.44 (revision header),
+§11.4.6 (no-guessing — P2/P3 postconditions + unproven targets marked
+<code>UNVERIFIED</code>), §11.4.98 (every journey authored as a fully
+self-driving e2e scenario, no manual step after start), §11.4.50
+(deterministic re-run), §11.4.69/§11.4.107 (each postcondition is a
+captured-evidence assertion), §11.4.117 (pixel-oracle fallback for
+non-introspectable UIs), §11.4.25 (use-case → component → test coverage
+ledger §10), §11.4.65/§11.4.153 (HTML+PDF[+DOCX] exports follow in
+refinement).</em></p>
+</body>
+</html>
