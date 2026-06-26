@@ -143,6 +143,35 @@ else
 fi
 
 # ---------------------------------------------------------------------------
+# Inv7: workable-items DB exists and has items (§11.4.93/.95)
+# ---------------------------------------------------------------------------
+DB_PATH="${REPO_ROOT}/docs/workable_items.db"
+if [ -f "${DB_PATH}" ]; then
+    item_count=$(sqlite3 "${DB_PATH}" "SELECT COUNT(*) FROM items;" 2>/dev/null || echo "0")
+    if [ "${item_count}" -gt 0 ]; then
+        check "Inv7" "workable-items DB present (${item_count} items)" "ok" ""
+    else
+        check "Inv7" "workable-items DB present" "fail" \
+            "DB exists but has 0 items"
+    fi
+else
+    check "Inv7" "workable-items DB present" "fail" \
+        "file not found: ${DB_PATH}"
+fi
+
+# ---------------------------------------------------------------------------
+# Inv8: docs_chain contexts exist (§11.4.106)
+# ---------------------------------------------------------------------------
+DC_DIR="${REPO_ROOT}/.docs_chain/contexts"
+if [ -d "${DC_DIR}" ] && [ "$(ls -1 "${DC_DIR}"/*.yaml 2>/dev/null | wc -l)" -gt 0 ]; then
+    ctx_count=$(ls -1 "${DC_DIR}"/*.yaml 2>/dev/null | wc -l | tr -d ' ')
+    check "Inv8" "docs_chain contexts present (${ctx_count} contexts)" "ok" ""
+else
+    check "Inv8" "docs_chain contexts present" "fail" \
+        "no .yaml files found in ${DC_DIR}"
+fi
+
+# ---------------------------------------------------------------------------
 # Summary
 # ---------------------------------------------------------------------------
 echo ""
