@@ -20,7 +20,7 @@
 4. ✅ §11.4.106 docs_chain wired — 2 contexts, doctor OK, sync in-sync
 5. ✅ §11.4.65 HTML/PDF exports — all docs have synced siblings
 6. ✅ §11.4.153 DOCX exports — pipeline updated, generating DOCX alongside HTML/PDF
-7. ⏳ Go workable-items binary (HVPN-P1-150) — subagent building
+7. ✅ Go workable-items binary (HVPN-P1-150) — DONE, all 6 commands verified
 8. ⏳ vasic-digital component repos — subagent creating on GitHub+GitLab
 9. ✅ Pre-build gate updated — Inv7 (DB) + Inv8 (docs_chain) added
 10. ✅ .gitignore-meta regen mechanisms created (§11.4.77)
@@ -65,8 +65,7 @@
 2. **D-OD-1** — OpenDesign interpretation (authoring layer + decoupled token export); awaits operator confirm
 
 ### In progress (subagents)
-3. **Go workable-items binary** (`cmd/workable-items/`) — HVPN-P1-150, subagent building
-4. **vasic-digital component repos** (GitHub+GitLab) — subagent creating
+3. **vasic-digital component repos** (GitHub+GitLab) — subagent creating
 
 ### Deferred
 5. **Implementation phase** — spec-only mandate; no code until operator directs

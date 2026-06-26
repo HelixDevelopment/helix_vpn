@@ -5,12 +5,13 @@
 # ============================================================================
 #
 # Purpose:
-#   Generate synchronized .html + .pdf sibling artifacts for every Markdown
-#   document under docs/research/mvp/final/ (recursive), closing the
+#   Generate synchronized .html + .pdf + .docx sibling artifacts for every
+#   Markdown document under docs/research/mvp/final/ (recursive), closing the
 #   §11.4.65 Universal Markdown export gap for the HelixVPN spec tree.
 #   Each source .md gets:
 #     - <name>.html  (pandoc, standalone, embedded CSS, title from H1)
 #     - <name>.pdf   (weasyprint, rendered from the generated HTML)
+#     - <name>.docx  (pandoc, gfm → docx, title from H1)
 #
 # Usage:
 #   bash scripts/testing/sync_all_markdown_exports.sh [PATH_PREFIX] [--force]
@@ -30,12 +31,12 @@
 #   - pandoc (HTML generation), weasyprint (PDF generation) on PATH
 #
 # Outputs:
-#   - Sibling <name>.html and <name>.pdf next to each source <name>.md
+#   - Sibling <name>.html, <name>.pdf, and <name>.docx next to each source <name>.md
 #   - A summary line on stdout: "generated=N skipped=M failed=K"
 #   - Exit 0 if no failures, exit 1 if any file/format failed.
 #
 # Side-effects:
-#   - Writes .html / .pdf files into the spec tree (siblings only; never
+#   - Writes .html / .pdf / .docx files into the spec tree (siblings only; never
 #     modifies any .md source). Runs sequentially (concurrency = 1) to
 #     respect the §12.6 60% memory ceiling. timeout 60 per file per format.
 #
@@ -170,15 +171,18 @@ while IFS= read -r md; do
     base="${md%.md}"
     html="$base.html"
     pdf="$base.pdf"
+    docx="$base.docx"
 
     need_html=1
     need_pdf=1
+    need_docx=1
     if [ "$FORCE" -eq 0 ]; then
         if is_newer_than "$html" "$md"; then need_html=0; fi
         if is_newer_than "$pdf" "$md"; then need_pdf=0; fi
+        if is_newer_than "$docx" "$md"; then need_docx=0; fi
     fi
 
-    if [ "$need_html" -eq 0 ] && [ "$need_pdf" -eq 0 ]; then
+    if [ "$need_html" -eq 0 ] && [ "$need_pdf" -eq 0 ] && [ "$need_docx" -eq 0 ]; then
         SKIPPED=$((SKIPPED + 1))
         continue
     fi
@@ -238,6 +242,20 @@ while IFS= read -r md; do
         else
             file_failed=1
             echo "FAIL (pdf): $md (no HTML to render from)" >&2
+        fi
+    fi
+
+    # --- DOCX via pandoc (§11.4.153 design-doc class) ------------------------
+    if [ "$need_docx" -eq 1 ]; then
+        if run_with_timeout 60 pandoc "$pandoc_src" \
+                --metadata title="$title" \
+                -f gfm \
+                -o "$docx" 2>/tmp/_sync_md_err.$$; then
+            : # ok
+        else
+            file_failed=1
+            echo "FAIL (docx): $md" >&2
+            sed 's/^/    /' /tmp/_sync_md_err.$$ >&2 2>/dev/null || true
         fi
     fi
 
