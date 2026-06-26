@@ -186,6 +186,7 @@ Each composes with — and none overrides — the spine register D1–D8.
 
 - **Question.** Flat single-CA, or a two-tier (offline/KMS root → online issuing intermediate)?
 - **Recommendation (MVP default).** A **single online issuing CA under an offline/KMS root** — i.e. spine option B (two-tier, root offline, short-lived online intermediate). The `ca_chain` delivered at enroll has length ≥ 1 so clients pin a chain from day one; promoting topology (adding a second regional intermediate) is *additive* — the chain grows, never reshapes (§11.4.6). (`v05-security/pki-and-certs.md` §2.1; carried from `04-security-privacy-pki.md` §4.2)
+- **OPERATOR CONFIRMED (2026-06-26).** Two-tier issuing CA accepted as the MVP default. Proceed with the recommendation.
 - **Resolved by.** `v05-security/pki-and-certs.md` is binding; an integration test proves cross-tenant cert validation fails (FR-108) and chain pinning holds.
 - **Reversal.** Operational evidence the single online issuing CA is a throughput/availability bottleneck → add a second intermediate (additive, no client break).
 
@@ -228,7 +229,7 @@ Each composes with — and none overrides — the spine register D1–D8.
 
 - **The finding.** Live web research (§11.4.99) found `nexu-io/open-design` is a **local-first generative-design authoring/refinement app** (DESIGN.md + tokens.css + `od` CLI + MCP) — **not** an npm token-dependency, and it does **not** emit Dart/Swift/Compose/ArkTS/C-Qt. This does not match §11.4.162's literal "install as a project dependency / use its design tokens" phrasing.
 - **Safe default adopted (reversible — docs only, §11.4.101).** OpenDesign = the mandatory design *authoring/refinement* layer; the decoupled `vasic-digital/helix_design` submodule owns the canonical tiered JSON token source + the polyglot exporters OpenDesign cannot produce. §11.4.162's **intent** (OpenDesign as the design system) is satisfied.
-- **Operator options (surfaced, non-blocking).** (a) confirm this interpretation; (b) direct extending OpenDesign upstream (§11.4.74) to add token-export; (c) flag the §11.4.162 wording for a §11.4.26 constitution refinement.
+- **OPERATOR CONFIRMED (2026-06-26).** Option (a) confirmed — the safe default interpretation is accepted. OpenDesign as the authoring/refinement layer + `helix_design` as the token source + exporter is the approved architecture.
 - **Owning doc / record.** `v10-design/opendesign-foundation.md`; [`../REFINEMENT_NOTES.md`](../REFINEMENT_NOTES.md) D-OD-1.
 - **Reversal.** Operator picks (b) or (c); the docs-only default makes reversal cheap.
 
