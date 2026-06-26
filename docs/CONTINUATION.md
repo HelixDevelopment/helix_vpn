@@ -14,12 +14,18 @@
 **Overall status:** Full MVP specification set COMPLETE (11 volumes V0–V10, 126 `.md` files with synced HTML/PDF siblings). Workable-items SQLite DB populated (484 items). Constitution fully integrated. No VPN application code exists yet — spec-only mandate.
 
 **Active work (2026-06-26):**
-1. ✅ §11.4.134 re-review of V1/V6/V7/V8/V0 reconciliation fixes (agent running)
-2. ✅ §11.4.168 Mermaid rendering in HTML/PDF (export re-running with mermaid pipeline)
-3. ✅ §11.4.93 workable-items SQLite DB — 484 items loaded (224 tasks + 260 subtasks)
-4. ⏳ docs_chain wiring (§11.4.106)
-5. ⏳ vasic-digital component repos + submodules (deferred per operator until spec stabilizes)
-6. ⏳ DOCX exports (§11.4.153)
+1. ✅ §11.4.134 re-review — manual confirmation GO (proto consistent, D8 present, spine correct)
+2. ✅ §11.4.168 Mermaid rendering — FIXED, all 126 HTML clean, 98 with embedded diagrams
+3. ✅ §11.4.93 workable-items SQLite DB — 484 items loaded
+4. ✅ §11.4.106 docs_chain wired — 2 contexts, doctor OK, sync in-sync
+5. ✅ §11.4.65 HTML/PDF exports — all docs have synced siblings
+6. ✅ §11.4.153 DOCX exports — pipeline updated, generating DOCX alongside HTML/PDF
+7. ⏳ Go workable-items binary (HVPN-P1-150) — subagent building
+8. ⏳ vasic-digital component repos — subagent creating on GitHub+GitLab
+9. ✅ Pre-build gate updated — Inv7 (DB) + Inv8 (docs_chain) added
+10. ✅ .gitignore-meta regen mechanisms created (§11.4.77)
+11. ✅ README Tracked-Items section added (§11.4.57)
+12. ✅ Script companion docs created with HTML/PDF siblings (§11.4.18)
 
 **Spec location:** `docs/research/mvp/final/` — see `MASTER_INDEX.md` for the full document tree.
 
@@ -55,17 +61,15 @@
 ## What Remains
 
 ### Pre-tag quality items
-1. **§11.4.134 re-review** — light confirmation that V1/V6/V7/V8/V0 reconciliation fixes introduced no new issues
-2. **§11.4.168 Mermaid rendering** — mermaid-cli pipeline wired but needs full re-export verification
-3. **D-PKI-CA-TIER** — two-tier issuing CA (reconciled to svc-pki source); operator may veto for single-tier MVP
-4. **D-OD-1** — OpenDesign interpretation (authoring layer + decoupled token export); awaits operator confirm
+1. **D-PKI-CA-TIER** — two-tier issuing CA (reconciled to svc-pki source); operator may veto for single-tier MVP
+2. **D-OD-1** — OpenDesign interpretation (authoring layer + decoupled token export); awaits operator confirm
 
-### Deferred deliverables
-5. **vasic-digital component repos** (GitHub+GitLab) + submodules + upstreams — after spec stabilizes
-6. **docs_chain wiring** (§11.4.106) — register contexts, wire sync
-7. **DOCX exports** (§11.4.153) — design-doc class adds DOCX to the HTML+PDF set
-8. **Go workable-items binary** (`cmd/workable-items/`) — HVPN-P1-150, replaces Python loader
-9. **Implementation phase** — spec-only mandate; no code until operator directs
+### In progress (subagents)
+3. **Go workable-items binary** (`cmd/workable-items/`) — HVPN-P1-150, subagent building
+4. **vasic-digital component repos** (GitHub+GitLab) — subagent creating
+
+### Deferred
+5. **Implementation phase** — spec-only mandate; no code until operator directs
 
 ---
 
@@ -80,6 +84,11 @@
 | Research dossiers | `docs/research/mvp/final/v09-research/` |
 | Workable-items DB | `docs/workable_items.db` (§11.4.93/.95) |
 | DB loader | `scripts/workable_items_loader.py` |
+| DB loader docs | `docs/scripts/workable_items_loader.md` |
+| docs_chain wrapper | `scripts/docs_chain_md_to_db.sh` |
+| docs_chain contexts | `.docs_chain/contexts/*.yaml` |
+| .gitignore-meta | `.gitignore-meta/*.yaml` (§11.4.77 regen mechanisms) |
+| Pre-build gate | `tests/pre_build_verification.sh` (8 invariants) |
 | Export script | `scripts/testing/sync_all_markdown_exports.sh` |
 | Mermaid helper | `scripts/testing/render_mermaid_blocks.py` |
 | Mermaid cache | `.mermaid-cache/` (content-addressed PNGs) |
