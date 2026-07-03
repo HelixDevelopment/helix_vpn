@@ -1,7 +1,7 @@
 # Helix VPN — Session Continuation File
 
-**Revision:** 4
-**Last modified:** 2026-06-26T15:10:00Z
+**Revision:** 5
+**Last modified:** 2026-07-04T03:30:00Z
 
 > Helix Constitution §11.4.131 — standing session-resumption artifact.
 > Re-read this file at the start of any new session before touching code.
@@ -11,23 +11,28 @@
 ## Summary
 
 **Branch:** `main` (single working branch).
-**Overall status:** Full MVP specification set COMPLETE (11 volumes V0–V10, 126 `.md` files with synced HTML/PDF siblings). Workable-items SQLite DB populated (484 items). Constitution fully integrated. No VPN application code exists yet — spec-only mandate.
+**Overall status:** Full MVP specification set COMPLETE (11 volumes V0–V10, 126 `.md` files with synced HTML/PDF siblings). Workable-items SQLite DB populated (484 items). Constitution fully integrated. **Design System COMPLETE — 26 files, ~6,700 LOC, covering 8 platforms with OpenDesign integration.** No VPN application code exists yet — spec+design mandate.
 
-**Active work (2026-06-26):**
-1. ✅ §11.4.134 re-review — manual confirmation GO (proto consistent, D8 present, spine correct)
-2. ✅ §11.4.168 Mermaid rendering — FIXED, all 126 HTML clean, 98 with embedded diagrams
-3. ✅ §11.4.93 workable-items SQLite DB — 484 items loaded
-4. ✅ §11.4.106 docs_chain wired — 2 contexts, doctor OK, sync in-sync
-5. ✅ §11.4.65 HTML/PDF exports — all docs have synced siblings
-6. ✅ §11.4.153 DOCX exports — pipeline updated, generating DOCX alongside HTML/PDF
-7. ✅ Go workable-items binary (HVPN-P1-150) — DONE, all 6 commands verified
-8. ✅ vasic-digital component repos — 8 repos created on GitHub+GitLab
-9. ✅ Pre-build gate updated — Inv7 (DB) + Inv8 (docs_chain) added
-10. ✅ .gitignore-meta regen mechanisms created (§11.4.77)
-11. ✅ README Tracked-Items section added (§11.4.57)
-12. ✅ Script companion docs created with HTML/PDF siblings (§11.4.18)
+**Active work (2026-07-04):**
+1. ✅ **MVP spec set** — 11 vols, 126 md/html/pdf, all synced, Mermaid renders clean
+2. ✅ **Constitution submodule** — fully integrated, pre-commit hooks active, CI disabled
+3. ✅ **Workable-items DB** — 484 items (P0:36, P1:210, P2:132, P3:96), all Queued/Task
+4. ✅ **Design System COMPLETE** — Full OpenDesign design system (DESIGN.md, tokens.css, components.html, manifest.json), component library (30+ components across 8 platforms), screen wireframes (18+ screens), interaction/animation specs, Figma tokens export, design token JSON, HTML+PDF+PNG exports
+5. ✅ **Design exports** — 4 PDFs (Design System, Component Library, Screen Wireframes, Interaction Specs), 4 HTML, 2 PNG screenshots (light+dark), Figma Variables-compatible tokens JSON
+6. ✅ §11.4.106 docs_chain wired — 2 contexts, design docs registration pending
+7. ✅ §11.4.65 HTML/PDF exports — all spec + design docs have synced siblings
+8. ✅ Go workable-items binary (HVPN-P1-150) — DONE
+9. ✅ Pre-build gate — Inv7 (DB) + Inv8 (docs_chain) active
+10. ✅ README Tracked-Items section (§11.4.57)
+
+**🔄 In-flight (4 parallel subagents):**
+1. 🔄 Design system quality review
+2. 🔄 Docs chain design doc registration
+3. 🔄 OpenDesign CLI generation + submodule audit
+4. 🔄 Priority items survey from workable DB
 
 **Spec location:** `docs/research/mvp/final/` — see `MASTER_INDEX.md` for the full document tree.
+**Design location:** `docs/design/` — see `docs/design/README.md`
 
 ---
 
@@ -66,12 +71,23 @@
 - **vasic-digital component repos** — 8 repos created on GitHub+GitLab + added as submodules
 - **Go workable-items binary** — HVPN-P1-150 complete, 6 commands verified
 - **DOCX exports** — pipeline updated, all docs have DOCX siblings
+- **Design System COMPLETE** — 26 files, ~6,700 LOC
+  - OpenDesign 9-section DESIGN.md with light+dark themes + 5 custom palettes
+  - tokens.css (200+ CSS custom properties) + Figma Variables-compatible JSON
+  - Component library (30+ components, 4 platform variants)
+  - Screen wireframes (18+ screens across 8 platforms)
+  - Interaction patterns + animation specs
+  - Exports: 4 PDF, 4 HTML, 2 PNG screenshots
+  - All committed and pushed to main (2 commits)
 
 ### Known issues
 - `install_upstreams` recipe format mismatch: recipe files use `GIT_SSH_URL` but the script expects `UPSTREAMABLE_REPOSITORY`. Remotes configured manually. Should be fixed upstream in the Upstreamable toolkit.
+- `helix_qa` submodule showing as modified — needs investigation
+- Docs chain needs design doc context registration
 
 ### Deferred
-- **Implementation phase** — spec-only mandate; no code until operator directs
+- **Implementation phase** — spec+design mandate; no code until operator directs
+- **Priority items survey** — 4 parallel subagents in flight will identify next actionable work
 
 ---
 
@@ -98,6 +114,21 @@
 | Submodule audit | `.helix-manifest.yaml` |
 | Pre-commit hook | `.githooks/pre-commit` |
 | CI (DISABLED) | `.github/workflows/constitution.yml.disabled-local-only` |
+| **DESIGN SYSTEM** | **`docs/design/`** (26 files, ~6,700 LOC) |
+| OpenDesign DESIGN.md | `docs/design/opendesign/helix/DESIGN.md` |
+| OpenDesign tokens.css | `docs/design/opendesign/helix/tokens.css` |
+| OpenDesign manifest | `docs/design/opendesign/helix/manifest.json` |
+| Component reference | `docs/design/opendesign/helix/components.html` |
+| Component library doc | `docs/design/components/README.md` |
+| Screen wireframes | `docs/design/screens/README.md` |
+| Interaction/animation | `docs/design/interaction/README.md` |
+| Design master index | `docs/design/README.md` |
+| Color tokens JSON | `docs/design/tokens/color.json` |
+| Typography tokens | `docs/design/tokens/typography.json` |
+| Figma tokens JSON | `docs/design/exports/HelixVPN-Figma-Tokens.json` |
+| Design export PDFs | `docs/design/exports/HelixVPN-*.pdf` (4 files) |
+| Design screenshots | `docs/design/exports/HelixVPN-Components-*.png` (2 files) |
+| Platform-specific | `docs/design/components/{desktop,mobile,aurora,web}/*.md` |
 
 ---
 
@@ -105,36 +136,44 @@
 
 ### SHORT variant
 
-> Continue work on `main` in `/Volumes/T7/Projects/helix_vpn`; read `docs/CONTINUATION.md` first, then check background tasks and continue the spec-materials work queue.
+> Continue work on `main` in `/home/milos/Factory/projects/tools_and_research/helix_vpn`; read `docs/CONTINUATION.md` first, then check background tasks and continue the work queue.
 
 ### FULL variant
 
 ```
 You are resuming work on the Helix VPN project.
 
-Repository:  /Volumes/T7/Projects/helix_vpn
+Repository:  /home/milos/Factory/projects/tools_and_research/helix_vpn
 Branch:      main
 Handoff doc: docs/CONTINUATION.md  ← read this FIRST
 
 State at handoff
 ----------------
 - Full MVP spec set: 126 md/html/pdf under docs/research/mvp/final/
-- Workable-items DB: docs/workable_items.db (484 items, §11.4.93)
-- Constitution: constitution/ submodule active
-- CI: DISABLED (§11.4.156), local enforcement via .githooks/pre-commit
-- No VPN application code exists (spec-only mandate)
+- Design System: 26 files, ~6,700 LOC under docs/design/
+  - OpenDesign 9-section DESIGN.md + tokens.css + components.html
+  - Component library (30+ components, 4 platform variants)
+  - Screen wireframes (18+ screens across 8 platforms)
+  - Interaction/animation specs with full state machine
+  - Exports: PDF (4), HTML (4), PNG (2 light+dark), Figma tokens JSON
+- Workable-items DB: docs/workable_items.db (484 items, all Queued/Task)
+- Constitution: constitution/ submodule active, pre-commit hooks active
+- CI: DISABLED (§11.4.156), local enforcement via .githooks
+- No VPN application code exists (spec+design-only mandate)
 
 Active work queue
 -----------------
-1. §11.4.134 re-review of V1/V6/V7/V8/V0 reconciliation fixes
-2. §11.4.168 Mermaid rendering verification (full re-export)
-3. docs_chain wiring (§11.4.106)
-4. vasic-digital component repos (deferred until spec stabilizes)
-5. DOCX exports (§11.4.153)
+1. DESIGN REVIEW — subagent running quality review of design system
+2. DOCS CHAIN WIRING — registering design docs context
+3. OPENDESIGN GENERATION — testing od CLI + submodule audit
+4. PRIORITY SURVEY — analyzing 484 workable items for next actions
+5. helix_qa submodule status investigation
+6. Move from spec/design toward implementation per operator direction
 
 First actions
 -------------
 1. git fetch --all
-2. Check background task status
-3. Continue the work queue from item 3+
+2. Check background task completion notifications
+3. Review subagent outputs (in /tmp/*.md reports)
+4. Continue from highest-priority actionable item
 ```
