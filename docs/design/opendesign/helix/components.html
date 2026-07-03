@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Helix VPN — Component Reference</title>
+  <link rel="stylesheet" href="tokens.css">
+  <style>
+    body { font-family: var(--hx-font-sans); background: var(--hx-bg-primary); color: var(--hx-text-primary); padding: 40px; margin: 0; }
+    .comp-section { margin-bottom: 60px; max-width: 800px; }
+    .comp-section h2 { font-size: var(--hx-fs-headline); font-weight: var(--hx-fw-semibold); margin-bottom: 24px; color: var(--hx-primary-500); }
+    .comp-section h3 { font-size: var(--hx-fs-title-lg); font-weight: var(--hx-fw-medium); margin-bottom: 16px; }
+    .comp-row { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; margin-bottom: 24px; }
+    .comp-label { font-size: var(--hx-fs-body-sm); color: var(--hx-text-tertiary); margin-bottom: 4px; }
+
+    /* Buttons */
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+           height: var(--hx-btn-height-standard); padding: 0 var(--hx-btn-padding-x);
+           border-radius: var(--hx-btn-radius); border: none;
+           font-family: var(--hx-font-sans); font-size: var(--hx-fs-body-md); font-weight: var(--hx-fw-medium);
+           cursor: pointer; transition: all var(--hx-duration-fast) var(--hx-easing-out); }
+    .btn-primary { background: var(--hx-primary-500); color: white; }
+    .btn-primary:hover { background: var(--hx-primary-600); }
+    .btn-secondary { background: transparent; color: var(--hx-primary-500); border: 1px solid var(--hx-primary-500); }
+    .btn-secondary:hover { background: var(--hx-overlay-hover); }
+    .btn-ghost { background: transparent; color: var(--hx-text-primary); }
+    .btn-ghost:hover { background: var(--hx-overlay-hover); }
+    .btn-danger { background: var(--hx-semantic-error); color: white; }
+    .btn-danger:hover { background: #B71C1C; }
+    .btn:disabled { opacity: 0.38; cursor: not-allowed; }
+    .btn-compact { height: var(--hx-btn-height-compact); padding: 0 16px; }
+    .btn-pill { height: 48px; padding: 0 32px; border-radius: var(--hx-radius-full); }
+
+    /* Connection Toggle */
+    .connect-toggle { width: 140px; height: 140px; border-radius: 50%; display: flex;
+                      align-items: center; justify-content: center; border: 4px solid;
+                      font-size: 48px; cursor: pointer; transition: all 300ms ease;
+                      position: relative; }
+    .connect-toggle.connected { background: var(--hx-primary-500); border-color: var(--hx-semantic-connected);
+                                box-shadow: 0 0 20px rgba(76,175,80,0.3); color: white; }
+    .connect-toggle.connecting { background: var(--hx-primary-600); border-color: var(--hx-semantic-connecting);
+                                 box-shadow: 0 0 20px rgba(255,152,0,0.3); animation: spin 1.5s linear infinite; color: white; }
+    .connect-toggle.disconnected { background: var(--hx-semantic-disconnected); border-color: var(--hx-semantic-disconnected);
+                                   color: white; }
+
+    /* Server List Item */
+    .server-item { display: flex; align-items: center; height: var(--hx-server-item-height); padding: 0 16px;
+                   cursor: pointer; transition: background var(--hx-duration-fast) var(--hx-easing-out);
+                   border-bottom: 1px solid var(--hx-border-subtle); gap: 12px; }
+    .server-item:hover { background: var(--hx-overlay-hover); }
+    .server-item.selected { background: var(--hx-overlay-selected); }
+    .server-flag { width: 36px; height: 36px; border-radius: 8px; background: var(--hx-primary-100);
+                   display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .server-info { flex: 1; min-width: 0; }
+    .server-name { font-size: var(--hx-fs-body-lg); font-weight: var(--hx-fw-medium); }
+    .server-meta { font-size: var(--hx-fs-body-sm); color: var(--hx-text-secondary); }
+
+    /* Protocol Badge */
+    .protocol-badge { display: inline-flex; align-items: center; height: 20px; padding: 0 6px;
+                       background: var(--hx-overlay-selected); color: var(--hx-primary-500);
+                       font-size: var(--hx-fs-caption); font-weight: var(--hx-fw-medium);
+                       border-radius: var(--hx-radius-sm); }
+
+    /* Latency Indicator */
+    .latency { display: inline-flex; align-items: center; gap: 4px; }
+    .latency-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .latency.excellent .latency-dot { background: var(--hx-latency-excellent); box-shadow: 0 0 4px var(--hx-latency-excellent); }
+    .latency.good .latency-dot { background: var(--hx-latency-good); }
+    .latency.fair .latency-dot { background: var(--hx-latency-fair); }
+    .latency.poor .latency-dot { background: var(--hx-latency-poor); }
+    .latency-value { font-size: var(--hx-fs-body-sm); color: var(--hx-text-secondary); }
+
+    /* Card */
+    .card { background: var(--hx-bg-secondary); border-radius: var(--hx-card-radius); padding: var(--hx-card-padding);
+            box-shadow: var(--hx-shadow-sm); }
+    .card-header { font-size: var(--hx-fs-title-sm); font-weight: var(--hx-fw-medium); margin-bottom: 12px; }
+    .card-row { display: flex; align-items: center; height: 48px; padding: 0 4px;
+                border-bottom: 1px solid var(--hx-border-subtle); }
+    .card-row:last-child { border-bottom: none; }
+
+    /* Input */
+    .input { height: var(--hx-input-height); padding: 0 16px; border-radius: var(--hx-input-radius);
+             border: 1px solid var(--hx-border-default); background: var(--hx-bg-primary);
+             font-family: var(--hx-font-sans); font-size: var(--hx-fs-body-md); color: var(--hx-text-primary);
+             width: 100%; box-sizing: border-box; transition: border-color var(--hx-duration-base); }
+    .input:focus { outline: none; border-color: var(--hx-border-focus); box-shadow: 0 0 0 2px var(--hx-overlay-selected); }
+    .input.error { border-color: var(--hx-border-error); }
+    .input-group { margin-bottom: 16px; }
+    .input-label { font-size: var(--hx-fs-body-sm); font-weight: var(--hx-fw-medium); margin-bottom: 4px; display: block; }
+
+    /* Toggle */
+    .toggle { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
+    .toggle-track { width: 44px; height: 24px; border-radius: 12px; background: var(--hx-border-default);
+                    position: relative; transition: background var(--hx-duration-base); }
+    .toggle.active .toggle-track { background: var(--hx-primary-500); }
+    .toggle-thumb { width: 20px; height: 20px; border-radius: 50%; background: white;
+                    position: absolute; top: 2px; left: 2px; transition: transform var(--hx-duration-base);
+                    box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+    .toggle.active .toggle-thumb { transform: translateX(20px); }
+
+    /* Toast */
+    .toast { display: inline-flex; align-items: center; gap: 8px; height: var(--hx-toast-height);
+             padding: 0 16px; background: var(--hx-bg-elevated); border-radius: var(--hx-toast-radius);
+             box-shadow: var(--hx-shadow-md); border-left: 4px solid var(--hx-semantic-connected);
+             font-size: var(--hx-fs-body-md); }
+    .toast.error { border-left-color: var(--hx-semantic-error); }
+
+    /* Sparkline / Speed Graph */
+    .sparkline { height: var(--hx-graph-height); width: 300px; background: var(--hx-bg-secondary);
+                 border-radius: var(--hx-card-radius); padding: 8px; position: relative; }
+    .sparkline-svg { width: 100%; height: 100%; }
+    .sparkline-dl { fill: none; stroke: var(--hx-primary-500); stroke-width: var(--hx-graph-stroke); }
+    .sparkline-ul { fill: none; stroke: var(--hx-accent-400); stroke-width: var(--hx-graph-stroke); stroke-dasharray: 4 2; }
+
+    /* Dark theme preview toggle */
+    .theme-toggle { position: fixed; top: 16px; right: 16px; z-index: 1000; }
+  </style>
+</head>
+<body>
+  <h1>Helix VPN — Component Reference</h1>
+  <p style="color: var(--hx-text-secondary); margin-bottom: 48px;">Complete component library for all platforms. Toggle dark/light with the button above.</p>
+
+  <!-- BUTTONS -->
+  <section class="comp-section">
+    <h2>Buttons</h2>
+    <div class="comp-label">Variants</div>
+    <div class="comp-row">
+      <button class="btn btn-primary">Connect</button>
+      <button class="btn btn-secondary">Cancel</button>
+      <button class="btn btn-ghost">Skip</button>
+      <button class="btn btn-danger">Disconnect</button>
+      <button class="btn btn-primary" disabled>Connecting…</button>
+    </div>
+    <div class="comp-label">Sizes</div>
+    <div class="comp-row">
+      <button class="btn btn-primary">Standard</button>
+      <button class="btn btn-primary btn-compact">Compact</button>
+      <button class="btn btn-primary btn-pill">Pill</button>
+    </div>
+  </section>
+
+  <!-- CONNECTION TOGGLE -->
+  <section class="comp-section">
+    <h2>Connection Toggle (Hero Component)</h2>
+    <div class="comp-row">
+      <div class="connect-toggle connected">⏻</div>
+      <div class="connect-toggle connecting">⏻</div>
+      <div class="connect-toggle disconnected">⏻</div>
+    </div>
+    <div class="comp-label">States: Connected (green glow) · Connecting (amber spin) · Disconnected (red static)</div>
+  </section>
+
+  <!-- SERVER LIST -->
+  <section class="comp-section">
+    <h2>Server List Item</h2>
+    <div class="card" style="padding:0; overflow:hidden;">
+      <div class="server-item selected">
+        <div class="server-flag">🇺🇸</div>
+        <div class="server-info">
+          <div class="server-name">US East — New York</div>
+          <div class="server-meta">
+            <span class="latency excellent"><span class="latency-dot"></span>23ms</span>
+            &nbsp;·&nbsp; 34% load
+          </div>
+        </div>
+        <div class="latency excellent"><span class="latency-dot"></span></div>
+        <span class="protocol-badge">WG</span>
+        <span style="color:var(--hx-text-tertiary);font-size:20px;">★</span>
+      </div>
+      <div class="server-item">
+        <div class="server-flag">🇬🇧</div>
+        <div class="server-info">
+          <div class="server-name">UK — London</div>
+          <div class="server-meta">
+            <span class="latency good"><span class="latency-dot"></span>67ms</span>
+            &nbsp;·&nbsp; 52% load
+          </div>
+        </div>
+        <span class="protocol-badge">SS</span>
+        <span style="color:var(--hx-text-tertiary);font-size:20px;">☆</span>
+      </div>
+      <div class="server-item">
+        <div class="server-flag">🇯🇵</div>
+        <div class="server-info">
+          <div class="server-name">Japan — Tokyo</div>
+          <div class="server-meta">
+            <span class="latency poor"><span class="latency-dot"></span>198ms</span>
+            &nbsp;·&nbsp; 78% load
+          </div>
+        </div>
+        <span class="protocol-badge">MQ</span>
+        <span style="color:var(--hx-text-tertiary);font-size:20px;">☆</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- CARDS -->
+  <section class="comp-section">
+    <h2>Settings Card</h2>
+    <div class="card" style="max-width:400px;">
+      <div class="card-header">Connection</div>
+      <div class="card-row">
+        <span>Auto-connect on untrusted networks</span>
+        <span style="margin-left:auto;">
+          <div class="toggle active"><div class="toggle-track"><div class="toggle-thumb"></div></div></div>
+        </span>
+      </div>
+      <div class="card-row">
+        <span>Kill Switch</span>
+        <span style="margin-left:auto;">
+          <div class="toggle active"><div class="toggle-track"><div class="toggle-thumb"></div></div></div>
+        </span>
+      </div>
+      <div class="card-row">
+        <span>Split Tunneling</span>
+        <span style="margin-left:auto;">
+          <div class="toggle"><div class="toggle-track"><div class="toggle-thumb"></div></div></div>
+        </span>
+      </div>
+    </div>
+  </section>
+
+  <!-- INPUTS -->
+  <section class="comp-section">
+    <h2>Input Fields</h2>
+    <div class="input-group">
+      <label class="input-label">Server Address</label>
+      <input class="input" type="text" placeholder="Enter server address" style="max-width:400px;">
+    </div>
+    <div class="input-group">
+      <label class="input-label">Port (error state)</label>
+      <input class="input error" type="text" value="invalid" style="max-width:400px;">
+      <span style="font-size:var(--hx-fs-body-sm);color:var(--hx-semantic-error);margin-top:4px;display:block;">Invalid port number</span>
+    </div>
+  </section>
+
+  <!-- TOAST -->
+  <section class="comp-section">
+    <h2>Toast Notifications</h2>
+    <div class="comp-row" style="flex-direction:column;align-items:stretch;">
+      <div class="toast">✓ Connected to US East</div>
+      <div class="toast" style="margin-top:8px;">⟳ Reconnecting…</div>
+      <div class="toast error" style="margin-top:8px;">✕ Connection failed</div>
+    </div>
+  </section>
+
+  <!-- SPARKLINE -->
+  <section class="comp-section">
+    <h2>Speed Graph / Sparkline</h2>
+    <div class="sparkline">
+      <svg class="sparkline-svg" viewBox="0 0 284 64" preserveAspectRatio="none">
+        <polyline class="sparkline-dl" points="0,48 20,40 40,52 60,30 80,35 100,20 120,28 140,15 160,10 180,18 200,8 220,12 240,5 260,8 284,6"/>
+        <polyline class="sparkline-ul" points="0,55 20,52 40,56 60,48 80,50 100,45 120,48 140,40 160,42 180,38 200,35 220,38 240,32 260,30 284,28"/>
+      </svg>
+    </div>
+    <div class="comp-label" style="margin-top:8px;">Download (solid teal) · Upload (dashed cyan)</div>
+  </section>
+
+  <!-- BADGES & TAGS -->
+  <section class="comp-section">
+    <h2>Protocol Badges</h2>
+    <div class="comp-row">
+      <span class="protocol-badge">WG</span>
+      <span class="protocol-badge">SS</span>
+      <span class="protocol-badge">MQ</span>
+      <span class="protocol-badge">OV</span>
+      <span class="protocol-badge">IK</span>
+    </div>
+  </section>
+
+  <!-- MODAL -->
+  <section class="comp-section">
+    <h2>Dialog / Modal</h2>
+    <div class="card" style="max-width:420px; box-shadow:var(--hx-shadow-lg); position:relative;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <div class="card-header" style="margin:0;">Confirm Disconnect</div>
+        <span style="font-size:20px; color:var(--hx-text-tertiary); cursor:pointer;">✕</span>
+      </div>
+      <p style="color:var(--hx-text-secondary); margin-bottom:24px;">Your VPN tunnel will be closed and your traffic will be unencrypted. Are you sure?</p>
+      <div style="display:flex; gap:8px; justify-content:flex-end;">
+        <button class="btn btn-ghost">Cancel</button>
+        <button class="btn btn-danger">Disconnect</button>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    // Simple dark/light toggle
+    document.querySelector('.theme-toggle')?.remove();
+    const tb = document.createElement('button');
+    tb.className = 'theme-toggle btn btn-secondary btn-compact';
+    tb.textContent = 'Toggle Dark';
+    document.body.prepend(tb);
+    tb.addEventListener('click', () => {
+      const html = document.documentElement;
+      html.dataset.theme = html.dataset.theme === 'dark' ? 'light' : 'dark';
+      tb.textContent = html.dataset.theme === 'dark' ? 'Toggle Light' : 'Toggle Dark';
+    });
+  </script>
+</body>
+</html>
