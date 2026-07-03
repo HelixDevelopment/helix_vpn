@@ -58,6 +58,8 @@ Accent-500: #00ACC1    Accent hover
 Accent-600: #0097A7    Accent pressed
 ```
 
+> **Color rationale:** Teal (#00897B) was chosen as the primary brand color for its strong associations with trust, security, and technological sophistication — the core brand values of a VPN service. It sits at the intersection of blue (trust, corporate security) and green (safety, permission), avoiding the coldness of pure blue or the alert-like quality of pure green. Teal also performs well across both light and dark themes with adequate WCAG 2.1 AA contrast ratios against the selected surface backgrounds, and supports a wide range of accent and custom palette seeds.
+
 ### 2.2 Semantic States (Connection-Driven)
 
 ```
@@ -101,6 +103,7 @@ Accent-600: #0097A7    Accent pressed
 --hx-border-default:   #C8D8E4
 --hx-border-subtle:    #E2EBF2
 --hx-border-focus:     #00897B    /* Primary focus ring */
+--hx-border-error:     #D32F2F    /* Error border */
 ```
 
 ### 2.4 Dark Theme
@@ -166,6 +169,14 @@ The token system supports _any_ brand seed color at build time via the `helix_de
 | **Body Small** | 12px / 0.75rem | 400 | 1.5 | 0.4px | Captions, metadata |
 | **Caption** | 11px / 0.6875rem | 500 | 1.4 | 0.5px | Labels, timestamps |
 | **Overline** | 10px / 0.625rem | 600 | 1.4 | 1.5px | Category labels (all-caps) |
+
+**Line-height token mapping:** The per-style line heights above map to four canonical `--hx-lh-*` tokens in the design system:
+- `--hx-lh-tight: 1.2` — Display
+- `--hx-lh-heading: 1.3` — Headline, Title Large
+- `--hx-lh-body: 1.4` — Title Medium, Title Small, Caption, Overline
+- `--hx-lh-relaxed: 1.5` — Body Large, Body Medium, Body Small
+
+These four line-height tokens cover all typography variants. Use the per-style value from the table when implementing; the named tokens ensure consistent vertical rhythm across platforms.
 
 ### 3.2 Monospace (Technical Data)
 

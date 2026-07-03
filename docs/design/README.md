@@ -82,7 +82,7 @@ Both themes are **authored** — every color token is explicitly set. Dark mode 
 |---------|-------|------|
 | App background | `#F0F4F8` | `#0A1929` |
 | Cards/panels | `#FFFFFF` | `#132F4C` |
-| Elevated (modal) | `#E8EDF2` | `#1E4976` |
+| Elevated surfaces (bg-tertiary) | `#E8EDF2` | `#1E4976` |
 | Modals/dialogs | `#FFFFFF` | `#243B55` |
 | Primary text | `#0A1929` | `#F0F4F8` |
 | Secondary text | `#4A6375` | `#8BA3B8` |
@@ -224,7 +224,6 @@ docs/design/
 │   ├── color.json                      ← Color token definitions
 │   ├── typography.json                 ← Type scale token definitions
 │   ├── spacing.json                    ← Spacing scale definitions
-│   └── ...                             ← Per-category token defs
 ├── components/
 │   ├── README.md                       ← Component library master
 │   ├── desktop/                        ← Desktop-specific components

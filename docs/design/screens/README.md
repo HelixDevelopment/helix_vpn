@@ -8,6 +8,8 @@
 
 Complete screen specifications for all Helix VPN applications across 8 platforms. Every screen is designed in light + dark theme, with responsive variants where applicable. Wireframes are described in ASCII-art layout form, referencing the component library for detailed component specs.
 
+> **Design token reference:** All visual values (colors, spacing, border radii, elevation, typography sizes and weights) referenced in wireframe annotations correspond to canonical design tokens defined in `opendesign/helix/tokens.css` (for CSS-based platforms) and the platform-specific token mappings (`ThemeData` for Flutter, QML properties for Aurora, etc.). The `--hx-*` prefix indicates the canonical CSS custom property. Always consult `tokens.css` or the DESIGN.md token tables for the authoritative values — never hardcode pixel values from wireframe annotations.
+
 ### Platform Families
 
 | Family | Platforms | UI Framework | Window/Screen Pattern |
