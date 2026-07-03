@@ -1,7 +1,7 @@
 # Helix VPN — Session Continuation File
 
-**Revision:** 6
-**Last modified:** 2026-07-04T03:50:00Z
+**Revision:** 7
+**Last modified:** 2026-07-04T04:00:00Z
 
 > Helix Constitution §11.4.131 — standing session-resumption artifact.
 > Re-read this file at the start of any new session before touching code.
@@ -11,32 +11,32 @@
 ## Summary
 
 **Branch:** `main` (single working branch).
-**Overall status:** Full MVP specification set COMPLETE (11 volumes V0–V10, 126 `.md` files with synced HTML/PDF siblings). **Design System COMPLETE** (26 files, ~6,700 LOC, 8 platforms, OpenDesign). **Phase 0 Implementation BEGUN** — helix_core workspace bootstrapped + Transport trait defined + test rig built + Makefile + bench/spike harness. All committed and pushed.
+**Overall status:** Full MVP specification set COMPLETE. **Design System COMPLETE** (26 files, ~6,700 LOC). **Phase 0 Implementation ADVANCED** — 4 Rust crates, 39 tests passing, submodule pushed.
 
 **Active work (2026-07-04):**
-1. ✅ **MVP spec set** — 11 vols, 126 md/html/pdf, all synced, Mermaid renders clean
-2. ✅ **Constitution submodule** — fully integrated, pre-commit hooks active, CI disabled
-3. ✅ **Workable-items DB** — 484 items, all Queued/Task
-4. ✅ **Design System** — OpenDesign (DESIGN.md, tokens.css, components.html, manifest), 30+ components, 18+ screens, interaction/animation specs, Figma tokens, HTML+PDF+PNG exports
-5. ✅ **docs_chain** — 3 contexts (workable-items, spec-exports, design), all doctor PASS
-6. ✅ **Phase 0: Core Transport** (HVPN-P0-001) — Cargo workspace, Transport trait, cargo check+test PASS
-7. ✅ **Phase 0: Test Rig** (HVPN-P0-022) — 7 scripts, netns+nftables+netem topology
-8. ✅ **Phase 0: Make + Bench + Spike** (HVPN-P0-080/-077) — Makefile (11 targets), bench runner, spike.sh
-9. ✅ **Design review fixes** — connected color mismatch, missing buttons.md, spacing.json, dark border-error
-10. ✅ **Submodules** — helix_core pushed (first Rust code!), containers exec-bit fixes pushed
+1. ✅ MVP spec set — 11 vols, 126 md/html/pdf, all synced
+2. ✅ Constitution — fully integrated, pre-commit hooks active
+3. ✅ Design System — OpenDesign, 30+ components, 18+ screens, 4 exports
+4. ✅ docs_chain — 3 contexts, all doctor PASS
+5. ✅ P0-001: Workspace skeleton — 4 crates, compiled
+6. ✅ P0-022: Test rig — 7 scripts, netns+nftables+netem
+7. ✅ P0-080/-077: Make + Bench + Spike — 11 targets
+8. ✅ P0-004: Transport trait refinement — close(), local_addr(), peer_addr(), mock transport
+9. ✅ P0-008: Plain-UDP transport — UdpTransport, UdpConnection, 12 tests
+10. ✅ P0-015: Linux TUN device — helix-tun crate, 5+1 tests
+11. ✅ P0-011 prep: WireGuard stub — helix-wg crate, 5 modules, 21 tests
+12. ✅ Workspace: 39 tests total — 4 crates, 0 failures, 0 errors
+13. ✅ Design review fixes — F8, F10, F11, PDFs re-exported
+14. ✅ All committed + helix_core submodule advanced
 
-**Next work queue (priority order):**
-1. **HVPN-P0-004** — Transport trait refinement + unit tests
-2. **HVPN-P0-008** — Plain-UDP transport implementation
-3. **HVPN-P0-011** — WireGuard boringtun wrapper
-4. **HVPN-P0-015** — Linux TUN device abstraction
-5. **HVPN-P0-025** — G1 two-way routing reach test
-6. **Design PDF re-export** — with fixes applied
+**Next work queue:**
+1. P0-011: WireGuard boringtun integration — wire boringtun 0.7.1 into helix-wg
+2. P0-018: Orchestrator three-loop core — needs WireGuard + TUN stable
+3. P0-025: G1 routing reach test — plain-UDP echo through the rig
+4. P0-028: QUIC/MASQUE transport — needed for G2
+5. Platform adapters — VpnService, NEPacketTunnelProvider, WFP
 
-**Spec location:** `docs/research/mvp/final/` — see `MASTER_INDEX.md`
-**Design location:** `docs/design/` — see `docs/design/README.md`
-**Rust workspace:** `submodules/helix_core/`
-**Test rig:** `scripts/rig/`
+**Locations:** spec: `docs/research/mvp/final/` | design: `docs/design/` | Rust: `submodules/helix_core/` (4 crates, 39 tests) | rig: `scripts/rig/`
 
 ---
 
@@ -82,11 +82,11 @@
   - Screen wireframes (18+ screens across 8 platforms)
   - Interaction patterns + animation specs
   - Exports: 4 PDF, 4 HTML, 2 PNG screenshots
-- **Phase 0 Implementation — Core Transport** (HVPN-P0-001)
-  - Cargo workspace with 2 member crates, compiled (0 warnings)
-  - Transport trait — the foundational interface (dial/listen/accept)
-  - TransportRegistry with register/resolve
-  - All 6 scripts executable, bash -n clean
+- **Phase 0 Implementation ADVANCED** — 4 Rust crates, 39 tests, all pushed
+  - helix-transport: Transport trait + UDP transport (12 tests)
+  - helix-tun: async Linux TUN device (5+1 tests)
+  - helix-wg: WireGuard stub + timers (21 tests)
+  - helix-core: workspace re-export (0 tests)
 - **Phase 0 Implementation — Test Rig** (HVPN-P0-022)
   - 7 scripts (common, setup, teardown, test_reach, test_firewall, test_netem, README)
   - 3-namespace topology (client/bridge/server) with nftables + netem
@@ -106,9 +106,10 @@
 - Design system: OpenDesign CLI (`od`) is GNU octal dump, not the OpenDesign tool — no local OpenDesign agent for automated Figma generation
 
 ### Deferred
-- **Implementation Phase 0 Remaining Items** — P0-004 (trait refinement), P0-008 (plain-UDP), P0-011 (boringtun), P0-015 (TUN), P0-025 (G1 test), P0-018 (orchestrator)
+- **Phase 0 Remaining (HIGH)** — P0-011 (boringtun wire), P0-018 (orchestrator three-loop), P0-025 (G1 test with rig), P0-028 (QUIC/MASQUE)
 - **Figma design file generation** — requires OpenDesign CLI install or Figma MCP authentication
 - **UI implementation** — requires core transport layer stable first
+- **Platform adapters** — Android VpnService, iOS NEPacketTunnelProvider, Windows WFP, Linux nftables — each needs helix_core FFI stable
 
 ---
 
@@ -172,34 +173,26 @@ State at handoff
 ----------------
 - Full MVP spec set: 126 md/html/pdf under docs/research/mvp/final/
 - Design System: 26 files, ~6,700 LOC under docs/design/
-  - OpenDesign 9-section DESIGN.md + tokens.css + components.html
-  - Component library (30+ components, 4 platform variants)
-  - Screen wireframes (18+ screens across 8 platforms)
-  - Interaction/animation specs with full state machine
-  - Exports: PDF (4), HTML (4), PNG (2), Figma tokens JSON
-- Phase 0 Implementation BEGUN:
-  - HELIX_CORE workspace: submodules/helix_core/ — Transport trait, cargo check PASS
-  - Test rig: scripts/rig/ — 7 scripts, netns+nftables+netem topology
-  - Infra: Makefile (11 targets), scripts/spike.sh, scripts/bench/
+- Phase 0 Implementation — 4 Rust crates, 39 tests PASS, all compiled
+  - helix_core workspace at submodules/helix_core/ (edition 2024, Rust 1.96.1)
+  - Crates: helix-transport (UDP+trait), helix-tun (TUN device), helix-wg (WG stub), helix-core (wrapper)
+- Test rig: scripts/rig/ (7 scripts, bash -n clean)
+- Infra: Makefile (11 targets), scripts/bench/ (benchmark harness), scripts/spike.sh
 - Workable-items DB: docs/workable_items.db (484 items)
-- Constitution: constitution/ submodule active, pre-commit hooks active
-- CI: DISABLED (§11.4.156)
-- Latest commit: f33c282 — "feat: Implementation Phase 0"
-  (28 files, 1296 insertions — pushed to all upstreams)
+- Latest commit: 2c8577c — "feat: Design fixes + helix_core submodule pointer"
+- helix_core submodule: 6ecd3b8 — "feat: Implement UDP transport + TUN + WG stub"
 
 Active work queue
 -----------------
-1. Transport trait refinement + unit tests (HVPN-P0-004)
-2. Plain-UDP transport implementation (HVPN-P0-008)
-3. WireGuard boringtun wrapper (HVPN-P0-011)
-4. Linux TUN device abstraction (HVPN-P0-015)
-5. G1 two-way routing reach test (HVPN-P0-025)
-6. Design PDF re-export with fixes applied
+1. WireGuard boringtun integration (P0-011) — wire boringtun 0.7.1 into helix-wg
+2. Orchestrator three-loop core (P0-018) — needs WG + TUN
+3. G1 routing reach test (P0-025) — plain-UDP echo through rig
+4. QUIC/MASQUE transport (P0-028) — needed for G2
 
 First actions
 -------------
 1. git fetch --all --prune
-2. Read docs/CONTINUATION.md fully
-3. Read any pending /tmp/*.md subagent reports
+2. cd submodules/helix_core && git fetch --all --prune
+3. Read docs/CONTINUATION.md fully
 4. Continue from highest-priority workable item
 ```
