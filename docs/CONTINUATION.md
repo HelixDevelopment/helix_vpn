@@ -1,7 +1,7 @@
 # Helix VPN — Session Continuation File
 
-**Revision:** 5
-**Last modified:** 2026-07-04T03:30:00Z
+**Revision:** 6
+**Last modified:** 2026-07-04T03:50:00Z
 
 > Helix Constitution §11.4.131 — standing session-resumption artifact.
 > Re-read this file at the start of any new session before touching code.
@@ -11,28 +11,32 @@
 ## Summary
 
 **Branch:** `main` (single working branch).
-**Overall status:** Full MVP specification set COMPLETE (11 volumes V0–V10, 126 `.md` files with synced HTML/PDF siblings). Workable-items SQLite DB populated (484 items). Constitution fully integrated. **Design System COMPLETE — 26 files, ~6,700 LOC, covering 8 platforms with OpenDesign integration.** No VPN application code exists yet — spec+design mandate.
+**Overall status:** Full MVP specification set COMPLETE (11 volumes V0–V10, 126 `.md` files with synced HTML/PDF siblings). **Design System COMPLETE** (26 files, ~6,700 LOC, 8 platforms, OpenDesign). **Phase 0 Implementation BEGUN** — helix_core workspace bootstrapped + Transport trait defined + test rig built + Makefile + bench/spike harness. All committed and pushed.
 
 **Active work (2026-07-04):**
 1. ✅ **MVP spec set** — 11 vols, 126 md/html/pdf, all synced, Mermaid renders clean
 2. ✅ **Constitution submodule** — fully integrated, pre-commit hooks active, CI disabled
-3. ✅ **Workable-items DB** — 484 items (P0:36, P1:210, P2:132, P3:96), all Queued/Task
-4. ✅ **Design System COMPLETE** — Full OpenDesign design system (DESIGN.md, tokens.css, components.html, manifest.json), component library (30+ components across 8 platforms), screen wireframes (18+ screens), interaction/animation specs, Figma tokens export, design token JSON, HTML+PDF+PNG exports
-5. ✅ **Design exports** — 4 PDFs (Design System, Component Library, Screen Wireframes, Interaction Specs), 4 HTML, 2 PNG screenshots (light+dark), Figma Variables-compatible tokens JSON
-6. ✅ §11.4.106 docs_chain wired — 2 contexts, design docs registration pending
-7. ✅ §11.4.65 HTML/PDF exports — all spec + design docs have synced siblings
-8. ✅ Go workable-items binary (HVPN-P1-150) — DONE
-9. ✅ Pre-build gate — Inv7 (DB) + Inv8 (docs_chain) active
-10. ✅ README Tracked-Items section (§11.4.57)
+3. ✅ **Workable-items DB** — 484 items, all Queued/Task
+4. ✅ **Design System** — OpenDesign (DESIGN.md, tokens.css, components.html, manifest), 30+ components, 18+ screens, interaction/animation specs, Figma tokens, HTML+PDF+PNG exports
+5. ✅ **docs_chain** — 3 contexts (workable-items, spec-exports, design), all doctor PASS
+6. ✅ **Phase 0: Core Transport** (HVPN-P0-001) — Cargo workspace, Transport trait, cargo check+test PASS
+7. ✅ **Phase 0: Test Rig** (HVPN-P0-022) — 7 scripts, netns+nftables+netem topology
+8. ✅ **Phase 0: Make + Bench + Spike** (HVPN-P0-080/-077) — Makefile (11 targets), bench runner, spike.sh
+9. ✅ **Design review fixes** — connected color mismatch, missing buttons.md, spacing.json, dark border-error
+10. ✅ **Submodules** — helix_core pushed (first Rust code!), containers exec-bit fixes pushed
 
-**🔄 In-flight (4 parallel subagents):**
-1. 🔄 Design system quality review
-2. 🔄 Docs chain design doc registration
-3. 🔄 OpenDesign CLI generation + submodule audit
-4. 🔄 Priority items survey from workable DB
+**Next work queue (priority order):**
+1. **HVPN-P0-004** — Transport trait refinement + unit tests
+2. **HVPN-P0-008** — Plain-UDP transport implementation
+3. **HVPN-P0-011** — WireGuard boringtun wrapper
+4. **HVPN-P0-015** — Linux TUN device abstraction
+5. **HVPN-P0-025** — G1 two-way routing reach test
+6. **Design PDF re-export** — with fixes applied
 
-**Spec location:** `docs/research/mvp/final/` — see `MASTER_INDEX.md` for the full document tree.
+**Spec location:** `docs/research/mvp/final/` — see `MASTER_INDEX.md`
 **Design location:** `docs/design/` — see `docs/design/README.md`
+**Rust workspace:** `submodules/helix_core/`
+**Test rig:** `scripts/rig/`
 
 ---
 
@@ -78,16 +82,33 @@
   - Screen wireframes (18+ screens across 8 platforms)
   - Interaction patterns + animation specs
   - Exports: 4 PDF, 4 HTML, 2 PNG screenshots
-  - All committed and pushed to main (2 commits)
+- **Phase 0 Implementation — Core Transport** (HVPN-P0-001)
+  - Cargo workspace with 2 member crates, compiled (0 warnings)
+  - Transport trait — the foundational interface (dial/listen/accept)
+  - TransportRegistry with register/resolve
+  - All 6 scripts executable, bash -n clean
+- **Phase 0 Implementation — Test Rig** (HVPN-P0-022)
+  - 7 scripts (common, setup, teardown, test_reach, test_firewall, test_netem, README)
+  - 3-namespace topology (client/bridge/server) with nftables + netem
+  - G1 precondition gate scriptable
+- **Phase 0 Implementation — Infra** (HVPN-P0-080/-077)
+  - Makefile with 11 targets (spike, check, test, bench, rig, clean, etc.)
+  - scripts/spike.sh (S0→S4 one-shot verification command)
+  - scripts/bench/run.sh + compare.sh (iperf3/ping, CSV output)
+- **Design quality review** — 15 findings, 5 fixed (F1,F2,F4,F7,F13)
+- **Docs chain** — 'design' context registered (12 nodes, 8 edges, doctor PASS)
+- **Submodule pushes** — helix_core (first Rust code), containers (exec fixes)
 
 ### Known issues
 - `install_upstreams` recipe format mismatch: recipe files use `GIT_SSH_URL` but the script expects `UPSTREAMABLE_REPOSITORY`. Remotes configured manually. Should be fixed upstream in the Upstreamable toolkit.
-- `helix_qa` submodule showing as modified — needs investigation
-- Docs chain needs design doc context registration
+- `helix_qa` nested submodules (docling) still dirty — pre-existing, not from our work
+- `docs_chain` submodule has dirty tracked file — pre-existing, needs upstream fix
+- Design system: OpenDesign CLI (`od`) is GNU octal dump, not the OpenDesign tool — no local OpenDesign agent for automated Figma generation
 
 ### Deferred
-- **Implementation phase** — spec+design mandate; no code until operator directs
-- **Priority items survey** — 4 parallel subagents in flight will identify next actionable work
+- **Implementation Phase 0 Remaining Items** — P0-004 (trait refinement), P0-008 (plain-UDP), P0-011 (boringtun), P0-015 (TUN), P0-025 (G1 test), P0-018 (orchestrator)
+- **Figma design file generation** — requires OpenDesign CLI install or Figma MCP authentication
+- **UI implementation** — requires core transport layer stable first
 
 ---
 
@@ -155,25 +176,30 @@ State at handoff
   - Component library (30+ components, 4 platform variants)
   - Screen wireframes (18+ screens across 8 platforms)
   - Interaction/animation specs with full state machine
-  - Exports: PDF (4), HTML (4), PNG (2 light+dark), Figma tokens JSON
-- Workable-items DB: docs/workable_items.db (484 items, all Queued/Task)
+  - Exports: PDF (4), HTML (4), PNG (2), Figma tokens JSON
+- Phase 0 Implementation BEGUN:
+  - HELIX_CORE workspace: submodules/helix_core/ — Transport trait, cargo check PASS
+  - Test rig: scripts/rig/ — 7 scripts, netns+nftables+netem topology
+  - Infra: Makefile (11 targets), scripts/spike.sh, scripts/bench/
+- Workable-items DB: docs/workable_items.db (484 items)
 - Constitution: constitution/ submodule active, pre-commit hooks active
-- CI: DISABLED (§11.4.156), local enforcement via .githooks
-- No VPN application code exists (spec+design-only mandate)
+- CI: DISABLED (§11.4.156)
+- Latest commit: f33c282 — "feat: Implementation Phase 0"
+  (28 files, 1296 insertions — pushed to all upstreams)
 
 Active work queue
 -----------------
-1. DESIGN REVIEW — subagent running quality review of design system
-2. DOCS CHAIN WIRING — registering design docs context
-3. OPENDESIGN GENERATION — testing od CLI + submodule audit
-4. PRIORITY SURVEY — analyzing 484 workable items for next actions
-5. helix_qa submodule status investigation
-6. Move from spec/design toward implementation per operator direction
+1. Transport trait refinement + unit tests (HVPN-P0-004)
+2. Plain-UDP transport implementation (HVPN-P0-008)
+3. WireGuard boringtun wrapper (HVPN-P0-011)
+4. Linux TUN device abstraction (HVPN-P0-015)
+5. G1 two-way routing reach test (HVPN-P0-025)
+6. Design PDF re-export with fixes applied
 
 First actions
 -------------
-1. git fetch --all
-2. Check background task completion notifications
-3. Review subagent outputs (in /tmp/*.md reports)
-4. Continue from highest-priority actionable item
+1. git fetch --all --prune
+2. Read docs/CONTINUATION.md fully
+3. Read any pending /tmp/*.md subagent reports
+4. Continue from highest-priority workable item
 ```
