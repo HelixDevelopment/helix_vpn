@@ -183,7 +183,7 @@ Theme/appearance setting: System (default) · Light · Dark · Custom (with pale
 - [x] Full design documentation index (this document)
 
 ### Phase 7: Export & Validation
-- [ ] Export DESING.md → PDF
+- [ ] Export DESIGN.md → PDF
 - [ ] Export components.html → PNG screenshots
 - [ ] Export all documentation to PDF/HTML
 - [ ] Visual regression golden screenshots

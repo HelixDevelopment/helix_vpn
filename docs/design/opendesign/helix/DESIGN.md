@@ -61,8 +61,8 @@ Accent-600: #0097A7    Accent pressed
 ### 2.2 Semantic States (Connection-Driven)
 
 ```
-◆ Connected       #4CAFCA    Green — tunnel active, traffic protected
-   Background:     rgba(76, 175, 80, 0.12)
+◆ Connected       #4CAF50    Green — tunnel active, traffic protected
+   Background:     rgba(76, 175, 80, 0.12)  /* Dark theme: 0.18 */
 
 ◆ Connecting      #FF9800    Amber — handshake in progress
    Background:     rgba(255, 152, 0, 0.12)
@@ -122,6 +122,7 @@ Accent-600: #0097A7    Accent pressed
 --hx-border-default:   #1E4976
 --hx-border-subtle:    #132F4C
 --hx-border-focus:     #00897B
+--hx-border-error:     #F87171
 ```
 
 ### 2.5 Latency Color Coding (Traffic Light)
