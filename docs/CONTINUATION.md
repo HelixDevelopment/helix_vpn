@@ -1,10 +1,83 @@
 # Helix VPN — Session Continuation File
 
-**Revision:** 9
-**Last modified:** 2026-07-04T16:00:00Z
+**Revision:** 10
+**Last modified:** 2026-07-04T18:10:00Z
 
 > Helix Constitution §11.4.131 — standing session-resumption artifact.
 > Re-read this file at the start of any new session before touching code.
+
+---
+
+## ROUND 2.1 — post-completion cleanup (2026-07-04T18:10-19:30, DONE, IN FLIGHT TO LAND)
+
+After round 2 was declared complete, two more real, operator-directed
+fixes landed across the submodule fleet (main repo's own commit for
+this is NOT yet made — main repo's huge round-2 push is still
+uploading; the pointer bumps for these submodules will land in the
+NEXT main-repo commit):
+
+1. **"Lava §6.AD" dangling cross-project reference** — removed from
+   19 submodules' `CLAUDE.md`/`AGENTS.md`/`CONSTITUTION.md` (a stray
+   sentence claiming this project's root CLAUDE.md has a "§6.AD" about
+   incorporating an unrelated project called "Lava" — it does not).
+   **Important sub-finding**: 4 submodules (`doc_processor`,
+   `llm_orchestrator`, `llm_provider`, `vision_engine`) have a LOCAL
+   checkout on an independently-diverged `master`-lineage branch vs.
+   their `origin/main` — confirmed via `merge-base --is-ancestor`
+   (NOT corruption; operator confirmed this is expected/known). Fixed
+   directly on `origin/main` (the branch that matters) via a clean
+   detached worktree for the one repo that needed it there
+   (`llm_provider` — the other 3's `main` was already clean of this
+   specific issue); did NOT touch/merge/push the diverged `master`
+   lineage for any of the 4. `llm_provider`'s `vasic-digital` mirror
+   (github+gitlab) additionally rejected the push as non-fast-forward
+   (yet another independent divergence) — left untouched, same
+   "expected divergence" class per operator confirmation.
+2. **Decoupling violation — hardcoded "Helix VPN" project name** —
+   found (operator mandate: "Keep all Submodules fully decoupled! No
+   Submodule can be parent project aware!!!") in the 8 freshly-created
+   submodules' governance files AND in `helix_core`'s REAL source
+   metadata (`Cargo.toml` `description` fields, `lib.rs` doc comments,
+   `README.md` — pre-existing from an earlier session, not this
+   round's governance work). Fixed all of it generically (e.g. "a
+   consuming VPN/networking product"); verified `cargo check
+   --workspace` still compiles clean (0 new warnings) after the
+   text-only changes. Comprehensive fleet-wide `git grep` sweep across
+   all 19 submodules' TRACKED files confirms zero remaining
+   "helix vpn"/"helix_vpn" references anywhere.
+
+All 9 affected submodules (`docs_chain` + the 8 fresh ones, plus
+`llm_provider`'s main separately) committed + pushed to their primary
+remotes. **Main repo's submodule-pointer bump for all of this is
+still pending** — do not forget it in the next main-repo commit.
+
+## ROUND 2 STATUS: COMPLETE (2026-07-04T18:10:00Z)
+
+MVP gap-analysis/hardening round 2 (see full detail retained below) is
+**DONE**: all 3 MVP corpora hardened + unified, independent review gate
+passed (after a real fix cycle — 8 critical findings fixed, not
+rubber-stamped), governance propagated to all 19 owned submodules (9
+newly fixed, all committed+pushed to their own remotes), workable-items
+DB reconciled with real `cargo test` evidence, all exports regenerated
+(0 failures after fixing 4 real mermaid defects + 1 Puppeteer/Chrome
+launch bug), main repo committed
+(`feat: MVP gap-analysis + enterprise hardening round...`), push to all
+main-repo upstreams running detached per §11.4.88 (check
+`qa-results/push_failures/` for any failure log — absence = success).
+**Task #6 (anti-bluff constitution propagation) is also now COMPLETE**:
+root project was already compliant; all 19 owned submodules now carry
+proper CLAUDE.md/AGENTS.md/QWEN.md/CONSTITUTION.md with the inheritance
+pattern; the project's real Rust tests were confirmed genuine (not
+mocked) during the DB-reconciliation work. **Nothing from this round's
+scope remains open** except the explicitly-flagged, intentionally
+out-of-scope items in §5 below (operator decisions) and the low-priority
+"Lava §6.AD" fleet-wide cleanup item (tracked, not urgent).
+
+**If resuming fresh: verify the push actually succeeded**
+(`git log --oneline HEAD..@{u}` for each remote should be empty, or
+check `qa-results/push_failures/` for a failure log) before assuming
+this round is 100% externally visible — the commit itself is durable
+either way.
 
 ---
 
