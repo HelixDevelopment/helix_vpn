@@ -1,10 +1,194 @@
 # Helix VPN — Session Continuation File
 
-**Revision:** 10
-**Last modified:** 2026-07-04T18:10:00Z
+**Revision:** 13
+**Last modified:** 2026-07-05T03:10:00Z
 
 > Helix Constitution §11.4.131 — standing session-resumption artifact.
 > Re-read this file at the start of any new session before touching code.
+
+---
+
+## ROUND 3: FULLY LANDED (2026-07-05T03:10:00Z, verified)
+
+All Round 3 work is committed and pushed, verified via `git rev-parse`
+equality against every remote (never trusted a push-log message alone,
+per §11.4.88):
+
+- `helix_core` — `992e1be` (engineering batch), pushed to `origin/main`.
+- `helix_edge` — `08d6e18` (first real crate), pushed to `origin/main`.
+- `helix_go` — `57d4972` (first real Go module + a `.gitignore` fix —
+  a stray `/pkg/` ignore rule, copied from a non-Go template, was
+  silently excluding the entire `pkg/masqueedge` package from version
+  control; caught before push, not after), pushed to `origin/main`.
+- `llm_orchestrator` — `bf0ce58` (CLAUDE.md/AGENTS.md fix) +  `ef73c3a`
+  (CONSTITUTION.md full rewrite — a code review caught the first fix as
+  incomplete: only 3 literal strings were touched while ~430 lines of a
+  different project's constitution survived), pushed to `master` on all
+  3 remotes (this repo's parent-tracked lineage is `master`, not `main`
+  — the same expected divergence pattern as `llm_provider`/`vision_engine`
+  /`doc_processor`).
+- `vision_engine` — `2f22942`, reviewed GO, already pushed.
+- `llms_verifier` — `9281cae2` (HelixCode contamination fully removed;
+  the leftover "Lava" section confirmed gone), pushed to `origin/main`
+  on `github`+`gitlab`+`origin`+`upstream`.
+- `panoptic` — `31aaceb` (cascaded CONST-048/050/051/052/056 boilerplate
+  sections fixed — the top-level sections had been fixed correctly the
+  first time, only the deeper mirrored sections were missed), pushed to
+  `origin/main`.
+- `containers` — `a432efa` (real `os.UserHomeDir()` fix + a regression
+  test specifically designed to fail against the original bug even on
+  this same machine, plus a 33-package doc-table correction), already
+  pushed, independently re-verified in this round.
+- `helix_qa` — `c1c2513` (routine nested opensource-tool submodule
+  pointer advancement — confirmed via `git diff --submodule=log` to be
+  ordinary upstream drift, not corruption), pushed to all 5 remotes.
+- Main repo — `4d338cb` (13-submodule pointer bump) + `e96410b`
+  (workable-items DB closures) + `f1de366` (final llms_verifier +
+  panoptic pointer bump), all confirmed on `github`/`origin`/`upstream`.
+
+Every commit above passed an independent adversarial code-review pass
+(§11.4.125/§11.4.134) before being accepted — two rounds initially
+returned NO-GO (llm_orchestrator's CONSTITUTION.md, and the first
+llms_verifier+panoptic HelixCode pass) and were re-fixed + re-reviewed
+until clean, per the iterate-until-GO mandate.
+
+`docs/workable_items.db`: HVPN-P0-018/028/031/039/042/071 closed
+`Completed (→ Fixed.md)` with real evidence citations (the `-020/021`
+etc. sub-numbers referenced in commit messages are descriptive labels
+within these primary items, not separate DB rows). `validate`: PASS,
+484 items, 0 issues.
+
+**Remaining queued (not yet dispatched, carried forward to a later
+round)** — see "§4 findings" immediately below: broken
+`[Constitution.md](Constitution.md)` self-links in `docs_chain`
+(llms_verifier/panoptic already fixed as part of this round's rewrite);
+stale package tables in `challenges`/`security` (`containers`'s was
+fixed this round); PascalCase `GitHub.sh`/`GitLab.sh` upstream scripts
+in 11 "borrowed" submodules (§11.4.29 violation).
+
+---
+
+## ROUND 3 — Phase-0 Rust/Go engineering + fleet decoupling audit (historical log, landed above)
+
+Round 2 (MVP gap-analysis) + Round 2.1 (decoupling audit) are complete
+and pushed — see "ROUND 2 + 2.1: FULLY LANDED" below. Round 3 landed
+real Phase-0 engineering across two submodules plus a second, deeper
+fleet-wide decoupling audit that surfaced serious findings now being
+remediated in parallel.
+
+### Landed and independently reviewed GO (uncommitted, staged for one batch)
+
+All in `submodules/helix_core` unless noted:
+
+- **HVPN-P0-018/020/021** (orchestrator client/connector binaries) —
+  real WireGuard Noise IK handshake over loopback via `helix-wg`/
+  boringtun, driven by new `crates/helix-core/src/bin/{helix-client,
+  helix-connector}.rs` + `crates/helix-orch/src/wg_session.rs`. First
+  review returned **NO-GO** (2 findings: a false "nft/iptables not
+  installed" claim — both ARE installed, `nft` runs unprivileged
+  inside an isolated netns; a private key accepted via `--private-key`
+  CLI argv, leaking via `ps`/`/proc/<pid>/cmdline`). Both fixed
+  (env-var-only key resolution via new `cli::read_private_key_from_env`;
+  corrected doc comment/runtime message to the real constraint — root-
+  owned namespace access to the host's actual LAN NIC, not missing
+  tooling). Re-review: **GO**.
+- **HVPN-P0-028/029/030** (quinn+h3 QUIC connection) —
+  `crates/helix-masque/src/quic.rs` taken from stub to real: genuine
+  `quinn::Endpoint` client+server, real hostname/SAN cert verification
+  (no skip-verification shortcut), RFC 9221 datagram round-trip.
+  Review: **GO**.
+- **HVPN-P0-031/032/033** (MASQUE CONNECT-UDP + HTTP-Datagram framing)
+  — new `crates/helix-masque/src/{datagram,connect}.rs`. Deep-researched
+  `h3`'s real RFC 9298 support (found genuinely immature — open bugs in
+  its own datagram/quarter-stream-ID handling) and honestly built a
+  labeled simplified stand-in instead of claiming false RFC compliance.
+  Not yet independently reviewed as a standalone item (folded into the
+  same batch as P0-018/028, which were).
+- **HVPN-P0-071/072/073** (map.json schema + reconciler) — new
+  `crates/helix-core/src/map.rs`. Pure diff engine, idempotent, panic-
+  free on adversarial malformed/duplicate-peer inputs. Review: **GO**
+  (two non-blocking follow-ups noted for Phase-1: canonicalize
+  `allowed_ips` ordering before live wiring; add an explicit CONC/RACE
+  test per the WBS's own declared test-types).
+- **HVPN-P0-042/043/044** (Go edge, `quic-go`+`masque-go`) — bootstrapped
+  `submodules/helix_go`'s first real Go module (`pkg/masqueedge` +
+  `cmd/go-edge`). `masque-go` proved genuinely turnkey (real CONNECT-UDP
+  server+client wired from its own test-suite pattern, no hand-rolled
+  framing needed) — concrete evidence for the Go-vs-Rust edge-language
+  decision, in Go's favor for this specific protocol layer. Not yet
+  independently reviewed.
+- **HVPN-P0-039/040/041** (Rust edge `helix-edge`) — bootstrapped
+  `submodules/helix_edge`'s first real Cargo binary, path-depending on
+  the sibling `helix_core` crates. A **complete real WireGuard
+  handshake traverses MASQUE-client → edge-relay →
+  `helix_orch::wg_session` responder**. A genuine bug was found and
+  fixed during TDD: `send_datagram()` only enqueues (doesn't flush) —
+  an early test closed the connection immediately after, racing
+  quinn's async flush and dropping the handshake's 3rd message; fixed
+  by removing the premature close, stable across 5 reruns. A decoy
+  HTML responder coexists with the real MASQUE flow on the same port
+  number (TCP vs UDP/QUIC — independent kernel namespaces). Review
+  in progress.
+- Fixed a real, pre-existing (predates this session, from commit
+  `405db88`) decoupling violation the earlier audit missed:
+  `helix-masque`'s `MasqueConfig`/`QuicConfig` default values hardcoded
+  `proxy.helixvpn.io` — directly contradicting the submodule's own
+  README/CLAUDE.md claim of "no HelixVPN-specific hostnames." Fixed to
+  the generic `proxy.example` (RFC 2606) across all 6 occurrences;
+  27/27 `helix-masque` tests still pass.
+- Fixed a bare-pinned `hex = "0.4"` dependency (used identically by two
+  crates, `helix-wg` and `helix-core`) into `[workspace.dependencies]`
+  per this project's own written convention ("never a separately-
+  pinned version") — flagged by the map.rs reviewer as a minor
+  drive-by finding from the P0-018 batch.
+
+**Honest environment constraint** (re-confirmed multiple times this
+round via direct probes, never assumed): no passwordless sudo
+(`sudo -n true` fails) → real kernel WireGuard, real network
+namespaces reaching the host's actual LAN interface, and binding
+privileged port 443 are NOT autonomously achievable here. Every item
+above is honestly scoped to what's provable via loopback + unprivileged
+high ports, exactly as this project's own anti-bluff discipline
+requires — no faked privilege, no silently-skipped acceptance criteria.
+
+### Second fleet-wide decoupling audit — severe findings, remediation in progress
+
+A deeper audit (beyond Round 2.1's pass) found:
+
+1. **Wrong-project contamination (worse than the earlier "Lava §6.AD"
+   dangling-sentence bug)**: `llm_orchestrator`, `vision_engine`,
+   `llms_verifier`, `panoptic` have their ENTIRE `CLAUDE.md`/`AGENTS.md`
+   /`CONSTITUTION.md` bodies describing a different, unrelated project
+   called "HelixCode" (22-62 grep hits each) — nonexistent directories,
+   wrong package structures, wrong Makefile targets, wrong module
+   names. Each submodule's own `README.md` is correct and was used as
+   ground truth for the fix. Remediation dispatched (2 parallel
+   subagents, one per submodule pair).
+2. **`llms_verifier` still carries leftover "Lava"-project content**
+   beyond what the earlier session-wide fix removed — a full section
+   ("§6.X — Container-Submodule Emulator Wiring Mandate") explicitly
+   referencing "the parent Lava repo." Being removed/genericized as
+   part of the same remediation pass.
+3. **`containers/pkg/remote/compose_detector.go:76` hardcodes this
+   operator's home directory in PRODUCTION CODE** (not just docs) as
+   a `podman-compose` lookup candidate — silently never matches on any
+   other machine. Fix dispatched: real `os.UserHomeDir()` resolution +
+   a test that would have caught the original bug.
+4. Broken `[Constitution.md](Constitution.md)` self-links (should be
+   `CONSTITUTION.md`, uppercase) in `docs_chain`/`llms_verifier`/
+   `panoptic`; stale package tables in `challenges`/`containers`/
+   `security` (missing 3-16 real packages each); PascalCase
+   `GitHub.sh`/`GitLab.sh` upstream scripts in 11 "borrowed" submodules
+   (violates §11.4.29 lowercase-snake_case) — queued for a follow-up
+   round, not yet dispatched.
+
+### Next actions — all of Round 3's own steps are DONE; see "Remaining
+queued" above for the one carried-forward follow-up round.
+
+Milestones S4-S8's remaining subtasks (bench.sh A/B harness, decoy/
+DPI-survival gates, FFI/mobile work) remain `Queued` — most are gated
+behind the edge-implementation work above, which has now landed and
+reviewed cleanly, so these are unblocked for a future round.
 
 ---
 
@@ -476,7 +660,7 @@ and are no longer next-up):**
 
 ### SHORT variant
 
-> Continue work on `main` in `/run/media/milosvasic/DATA4TB/Projects/helix_vpn`; read `docs/CONTINUATION.md` first (esp. the "CURRENT ROUND" section at the top), check whether the 4 dispatched MVP gap-analysis/hardening subagents have returned, synthesize + commit + push their work, then address the queued anti-bluff constitution-propagation follow-up.
+> Continue work on `main` in `/run/media/milosvasic/DATA4TB/Projects/helix_vpn`; read `docs/CONTINUATION.md` first (esp. "ROUND 3: FULLY LANDED" at the top — Rounds 1-3 are all complete and pushed). Pick up the queued follow-up round: broken `Constitution.md` self-links in `docs_chain`, stale package tables in `challenges`/`security`, and PascalCase `GitHub.sh`/`GitLab.sh` upstream scripts in 11 submodules (§11.4.29) — or await new operator instructions (mvp4).
 
 ### FULL variant
 
@@ -485,44 +669,47 @@ You are resuming work on the Helix VPN project.
 
 Repository:  /run/media/milosvasic/DATA4TB/Projects/helix_vpn
 Branch:      main
-Handoff doc: docs/CONTINUATION.md  ← read this FIRST, especially the
-             "CURRENT ROUND (2026-07-04, round 2)" section at the top —
-             it has live task-by-task next actions.
+Handoff doc: docs/CONTINUATION.md  ← read this FIRST, especially
+             "ROUND 3: FULLY LANDED" at the top.
 
-State at handoff (2026-07-04, round 2 in flight)
---------------------------------------------------
-- Round 1 (complete): full MVP spec set (126 md/html/pdf under
-  docs/research/mvp/final/), OpenDesign system (26 files under
-  docs/design/), Phase 0 Rust implementation (4 crates, 39 tests
-  passing under submodules/helix_core/), workable-items DB (484 items).
-- Round 2 (IN PROGRESS at handoff): operator asked for a full gap
-  analysis + enterprise-grade hardening of all 3 MVP corpora
-  (mvp/, mvp2/, mvp3+mvp_final), unified into one unambiguous phase
-  roadmap, then commit+push everything. 4 parallel subagents were
-  dispatched (disjoint file scopes, no git operations delegated to
-  them — conductor commits centrally):
-    A: docs/research/mvp/**            (Phase 0/1 control-plane hardening)
-    B: docs/research/mvp2/**           (Phase 2 client-apps hardening)
-    C: docs/research/mvp3/, mvp_final/, + new UNIFIED_PHASE_ROADMAP.md
-    D: new docs/research/CROSS_CUTTING_GAP_ANALYSIS.md (recommendations only)
-- A queued follow-up mandate (anti-bluff testing/Challenges covenant
-  propagation into this project's own root Constitution.md/CLAUDE.md/
-  AGENTS.md/QWEN.md + every owned submodule, per §11.4.26/§11.4.35
-  HelixConstitution inheritance rules) is explicitly NOT to be
-  dropped — action it right after round 2 lands.
+State at handoff (2026-07-05, Rounds 1-3 all complete and pushed)
+-------------------------------------------------------------------
+- Round 1 (complete): full MVP spec set, OpenDesign system, Phase-0
+  Rust scaffolding, workable-items DB.
+- Round 2 (complete): full gap-analysis + enterprise hardening across
+  mvp/mvp2/mvp3/final docs, unified phase roadmap. Main repo commits
+  e46a710/20dc9a4/212e56c.
+- Round 2.1 (complete): first fleet-wide decoupling audit — removed
+  hardcoded "Helix VPN" project-name references from 19 submodules'
+  governance files + helix_core's real Rust source metadata.
+- Round 3 (complete): real Phase-0 engineering — helix_core WG CLI
+  binaries + quinn/h3 QUIC + MASQUE framing + map.json reconciler
+  (992e1be); helix_edge's first real crate, a genuine WG handshake
+  traversing MASQUE-client -> edge-relay -> wg_session responder
+  (08d6e18); helix_go's first real Go module, a MASQUE/CONNECT-UDP
+  edge spike (57d4972, plus a .gitignore bugfix that was silently
+  excluding pkg/ from version control). A second, deeper decoupling
+  audit found llm_orchestrator/vision_engine/llms_verifier/panoptic's
+  ENTIRE governance docs described an unrelated project ("HelixCode")
+  — all four fixed and independently re-reviewed to a clean GO
+  (bf0ce58+ef73c3a, 2f22942, 9281cae2, 31aaceb). containers'
+  compose_detector.go hardcoded an operator home directory in
+  production code — fixed with a real os.UserHomeDir() resolution +
+  a regression test (a432efa). Every fix passed independent adversarial
+  code review before being accepted, iterating to a clean GO where the
+  first pass was incomplete (§11.4.125/§11.4.134).
 
-First actions
--------------
+What's next
+-----------
 1. git fetch --all --prune && git submodule foreach --recursive 'git fetch --all --prune --quiet'
-2. Read docs/CONTINUATION.md fully, starting at "CURRENT ROUND"
-3. Check for completed/pending background subagents from round 2
-   (if none are live, their work is either done — verify via
-   git status / new files under docs/research/mvp3, mvp_final,
-   docs/research/UNIFIED_PHASE_ROADMAP.md, CROSS_CUTTING_GAP_ANALYSIS.md
-   — or was never dispatched in this session, in which case dispatch
-   per the CURRENT ROUND section's Agent A-D briefs)
-4. Follow the "Next actions once all 4 agents return" checklist in
-   the CURRENT ROUND section verbatim
-5. After round 2 is committed+pushed and the operator is notified,
-   pick up the queued anti-bluff-propagation follow-up
+2. Read docs/CONTINUATION.md fully, starting at "ROUND 3: FULLY LANDED"
+3. Nothing from Rounds 1-3 is outstanding. The one carried-forward
+   follow-up round (not yet dispatched): broken
+   [Constitution.md](Constitution.md) self-links (should be uppercase
+   CONSTITUTION.md) in docs_chain; stale package tables in
+   challenges/security; PascalCase GitHub.sh/GitLab.sh upstream
+   scripts in 11 "borrowed" submodules (§11.4.29 lowercase-snake_case
+   violation).
+4. Otherwise, await new operator instructions (the operator indicated
+   mvp4 work would follow full Round 2/3 completion).
 ```
