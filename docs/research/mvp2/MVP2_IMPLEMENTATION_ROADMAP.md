@@ -1,5 +1,23 @@
 # Helix VPN — MVP2 Implementation Roadmap
 
+**Revision:** 2
+**Last modified:** 2026-07-04T14:00:00Z
+
+**Revision 2 changelog:** Hardening pass — added per-phase Test Plan cross-references
+(citing `MVP2_SECURITY_PERFORMANCE.md` §8 Testing Strategy and `MVP2_OVERVIEW.md` §9
+SC-xx success criteria IDs) to every phase's Exit Criteria; added the four
+previously-absent cross-cutting production-readiness milestones (staged/canary
+rollout rehearsal, MDM/managed-policy validation, consent-gated crash/telemetry
+pipeline, reproducible-build + SBOM generation) with owners and exit criteria across
+Phase 1 (foundational tooling) and Phase 9 (validation + go-live execution); added
+`apply_managed_policy()` to the `PlatformAdapter` trait and per-platform managed-policy
+hook tasks in Phases 3/4/5/6/8; reconciled the connection-lifecycle state machine in
+Phase 1 Week 2 to the canonical `MVP2_ARCHITECTURE.md` §5.6 state set; corrected two
+"build a design system from scratch" tasks (Phase 3 Week 11, Phase 5 Week 14) to
+instead consume the existing OpenDesign token system; added a Mermaid `gantt` phase
+timeline to §1. No phase week-numbers or §13 Risk-Adjusted Timeline figures were
+changed — those remain the corpus-wide anchor.
+
 ## Cross-Platform Development Plan: 36-Week Phased Delivery
 
 **Version**: 1.0  
@@ -137,6 +155,50 @@ All Platforms    Production        Week 36       Launch Ready milestone
 | Phase 9 | Integration, testing, docs | N/A | 3,000 |
 | **TOTAL** | | **~78% weighted avg** | **~42,000** |
 
+### 1.6 Phase Timeline (Mermaid Gantt)
+
+The ASCII summary in §1.2 and the dependency graph in §1.3 are the normative
+week-range source; the chart below is a rendering of the same 9 phases against
+the 36-week **expected** timeline (§13.1) for tooling that renders Mermaid.
+Dates are illustrative placeholders anchored to a nominal "Week 1 = Monday"
+project start — only the **week ranges** (identical to each phase's own
+heading) are authoritative, not the calendar dates themselves, which are
+fixed at project kickoff.
+
+```mermaid
+gantt
+    title Helix VPN MVP2 — 9-Phase Roadmap (36-Week Expected Timeline, §13.1)
+    dateFormat  YYYY-MM-DD
+    axisFormat  %b %d
+
+    section Phase 1: Foundation (Rust Core)
+    Weeks 1-4 — helix-core, CI/CD, TUN, FFI           :p1, 2026-01-05, 4w
+
+    section Phase 2: Protocol Implementation
+    Weeks 3-8 — WireGuard, Shadowsocks, DNS            :p2, 2026-01-19, 6w
+
+    section Phase 3: Desktop macOS & Linux
+    Weeks 6-14 — Tauri, kill switch, packaging         :p3, 2026-02-09, 9w
+
+    section Phase 4: Desktop Windows
+    Weeks 12-18 — WFP kill switch, MSI installer       :p4, 2026-03-23, 7w
+
+    section Phase 5: Mobile Android
+    Weeks 14-22 — VpnService, split tunnel, Play Store :p5, 2026-04-06, 9w
+
+    section Phase 6: Mobile iOS
+    Weeks 20-26 — NEPacketTunnelProvider, App Store    :p6, 2026-05-18, 7w
+
+    section Phase 7: HarmonyOS & Aurora OS
+    Weeks 24-30 — VpnExtensionAbility, ConnMan         :p7, 2026-06-15, 7w
+
+    section Phase 8: Web & Browser Extension
+    Weeks 28-34 — MV3 extension, WASM crypto, admin    :p8, 2026-07-13, 7w
+
+    section Phase 9: Integration & Launch
+    Weeks 32-36 — security audit, canary, GA           :crit, p9, 2026-08-10, 5w
+```
+
 ---
 
 ## 2. Phase 1: Foundation — Rust Core Library (Weeks 1-4)
@@ -188,16 +250,32 @@ All Platforms    Production        Week 36       Launch Ready milestone
 - [ ] Configure `cargo-deny` for license and security auditing
 - [ ] Set up code coverage with `tarpaulin` + Codecov integration
 - [ ] Define `rustfmt.toml` and enforce formatting in CI
+- [ ] **Production-readiness foundation — reproducible builds + SBOM** (lands
+  here, not bolted on post-launch, because every subsequent phase's CI job
+  inherits this pipeline stage; cross-ref `MVP2_SHARED_CORE.md` §5.5
+  Supply-Chain & Build Integrity + `MVP2_ARCHITECTURE.md` §10.3):
+  - Pin toolchain via `rust-toolchain.toml`; build with `cargo build --locked`
+    against a committed `Cargo.lock` so every artifact is bit-for-bit
+    reproducible from the same commit
+  - Add `cargo-cyclonedx` (or `syft`) as a CI stage generating a CycloneDX
+    SBOM for every cross-compiled artifact, published as a build artifact
+  - Owner: DevOps/CI Engineer
 
 **Deliverables:**
 - Repository initialized with full CI/CD pipeline
 - Matrix builds passing for Tier 1 targets (Linux x64, Windows x64)
 - Developer onboarding documentation (`CONTRIBUTING.md`, `BUILD.md`)
+- Reproducible-build configuration (pinned toolchain + locked lockfile) and a
+  working SBOM-generation CI stage, both proven against a sample build
 
 **Exit Criteria:**
 - CI pipeline green on all Tier 1 targets
 - `cargo build` succeeds for workspace
 - `cargo test` passes with 100% compilation
+- A sample CI build produces an identical binary hash on two independent runs
+  (reproducibility proof) and an attached SBOM artifact (`MVP2_SHARED_CORE.md`
+  §5.5); this is the foundation the Phase 9 Week 33/36 SBOM gate re-verifies
+  against the actual release artifacts — see §10.2
 
 ---
 
@@ -227,8 +305,18 @@ All Platforms    Production        Week 36       Launch Ready milestone
       async fn set_split_tunnel_apps(&self, allowed: &[String], blocked: &[String]) -> Result<()>;
       async fn get_default_interface(&self) -> Result<NetworkInterface>;
       async fn on_network_change(&self, callback: NetworkChangeCallback) -> Result<()>;
+      async fn apply_managed_policy(&self, policy: &ManagedPolicy) -> Result<()>;
   }
   ```
+  - `apply_managed_policy()` is the enterprise-fleet extension point:
+    `helix-admin` pushes org-scoped policy (allowed protocols, forced kill
+    switch, forced split-tunnel rules, DNS policy) via the MVP1 Admin API,
+    and each platform's native MDM/managed-config channel invokes this method
+    (cross-ref `MVP2_ARCHITECTURE.md` §10.2). Per-platform implementations
+    land in Phases 3-6/8 (macOS Configuration Profile / Windows Group
+    Policy+Intune / Android Enterprise AppConfig / Apple MDM managed app
+    config / Chrome `ExtensionSettings`); end-to-end validation against real
+    MDM channels happens in Phase 9 §10.2 Week 32
 - [ ] Implement `ProtocolDriver` trait (protocol-agnostic interface):
   ```rust
   #[async_trait]
@@ -249,9 +337,15 @@ All Platforms    Production        Week 36       Launch Ready milestone
       async fn enforce_dns(&self, dns_servers: &[String]) -> Result<()>;
   }
   ```
-- [ ] Define `ConnectionStateMachine` with validated transitions:
-  - `Disconnected → Connecting → Connected → Disconnecting → Disconnected`
-  - `Connecting → Error`, `Connected → Error`, `Error → Disconnected | Connecting`
+- [ ] Define `ConnectionStateMachine` with validated transitions, matching the
+  canonical state set in `MVP2_ARCHITECTURE.md` §5.6 (extended from an earlier,
+  thinner draft to include reconnect and kill-switch-active states):
+  - `Disconnected → Connecting → Connected → Reconnecting → KillSwitchActive → Disconnecting → Disconnected`
+  - Plus the terminal/error state `ConnectionFailed`, reachable from
+    `Connecting`, `Connected`, and `Reconnecting`
+  - `ConnectionFailed → Disconnected | Connecting` (retry)
+  - `Reconnecting → Connected` (recovery) or `Reconnecting → KillSwitchActive`
+    (recovery exhausted, kill switch engages per configured policy)
 - [ ] Implement error hierarchy (`HelixError` enum with `thiserror`):
   - `ConfigParse`, `ConnectionFailed`, `AuthenticationFailed`, `Timeout`, `StateTransition`, `CryptoError`, `PlatformError`, `NetworkError`
 - [ ] Set up structured logging with `tracing` + `tracing-subscriber`
@@ -360,16 +454,28 @@ All Platforms    Production        Week 36       Launch Ready milestone
 | FFI layer | C ABI, UniFFI, FRB scaffolding | Rust Core Engineer |
 | Public API | HelixVpnApi with full documentation | Rust Core Lead |
 | Test suite | Unit + integration tests, >70% coverage | Both |
+| Supply-chain tooling | Pinned toolchain, `cargo-cyclonedx`/`syft` SBOM CI stage | DevOps |
 
 ### 2.4 Phase 1 Exit Criteria
 
 - [x] All Tier 1 CI targets building successfully
-- [x] Core traits implemented and documented
+- [x] Core traits implemented and documented (incl. `apply_managed_policy()`
+  on `PlatformAdapter` and the canonical `ConnectionStateMachine` per
+  `MVP2_ARCHITECTURE.md` §5.6)
 - [x] TUN interface working on Linux and macOS
 - [x] FFI layer complete with passing tests
 - [x] API documentation coverage > 80%
 - [x] Code review complete for all PRs
 - [x] No open security warnings from `cargo-audit`
+- [x] Reproducible build + SBOM generation wired into CI and proven against a
+  sample artifact (foundation for the Phase 9 release-gate re-check)
+
+**Test Plan (cross-reference — do not re-derive a framework here):** Unit
+tests per `MVP2_SECURITY_PERFORMANCE.md` §8.1 (Rust core unit coverage) +
+§8.7 (CI test matrix); relevant success criteria: SC-11 (code reuse), SC-21
+(zero critical/high CVEs — `cargo-audit`), SC-22 (zero memory-safety
+warnings), SC-27 (>= 85% core unit-test line coverage) per `MVP2_OVERVIEW.md`
+§9.
 
 ---
 
@@ -583,6 +689,14 @@ All Platforms    Production        Week 36       Launch Ready milestone
 - [x] All crypto fuzzing targets running without crashes
 - [x] No open security warnings from `cargo-audit`
 
+**Test Plan (cross-reference):** Unit + property-based crypto tests per
+`MVP2_SECURITY_PERFORMANCE.md` §8.1; integration/connection tests per §8.2;
+performance tests (handshake latency, throughput) per §8.4; relevant success
+criteria: SC-02 (WireGuard handshake success rate, 1,000-connection stress
+test), SC-03 (Shadowsocks obfuscation vs. simulated DPI), SC-13 (connection
+time), SC-15 (throughput >= 500 Mbps desktop reference), SC-21/SC-22 (security/
+memory-safety) per `MVP2_OVERVIEW.md` §9.
+
 ---
 
 ## 4. Phase 3: Desktop Clients — macOS & Linux (Weeks 6-14)
@@ -667,6 +781,11 @@ All Platforms    Production        Week 36       Launch Ready milestone
   - TUN via `NEPacketTunnelProvider.packetFlow`
   - Routes via `NEPacketTunnelProvider.setTunnelNetworkSettings()`
   - DNS via `NETunnelNetworkSettings.DNSSettings`
+  - `apply_managed_policy()` — parse macOS Configuration Profile (`.mobileconfig`)
+    managed-preference keys pushed by `helix-admin` (forced kill switch,
+    allowed protocols, DNS policy); cross-ref `MVP2_ARCHITECTURE.md` §10.2.
+    End-to-end validation against a real MDM channel happens in Phase 9
+    §10.2 Week 32
 
 **Deliverables:**
 - macOS Network Extension building
@@ -715,6 +834,10 @@ All Platforms    Production        Week 36       Launch Ready milestone
   - Routing via `rtnetlink` crate (add/delete routes)
   - DNS via D-Bus → `systemd-resolved` or `NetworkManager`
   - Detect which DNS manager is active
+  - `apply_managed_policy()` — parse a self-hosted managed-config file drop
+    (JSON/TOML watched via `inotify`) as the Linux equivalent of a
+    Configuration Profile, since Linux has no single vendor-neutral MDM
+    standard; cross-ref `MVP2_ARCHITECTURE.md` §10.2
 - [ ] Integrate with NetworkManager:
   - Create VPN connection profile via D-Bus (`AddConnection`)
   - Activate/deactivate via `NetworkManager` API
@@ -780,11 +903,17 @@ All Platforms    Production        Week 36       Launch Ready milestone
   - Connected state with green indicator and location
   - Disconnected state with gray indicator
   - Error state with red indicator and retry button
-- [ ] Implement design system:
-  - Color palette (primary, success, warning, error)
-  - Typography scale
-  - Component library (buttons, inputs, toggles, cards)
-  - Dark/light mode theming
+- [ ] Consume the existing OpenDesign token system — do NOT design a new
+  palette/type-scale from scratch (OpenDesign is mandatory per
+  `MVP2_UI_UX_SPEC.md` §1 and `docs/design/README.md`, already complete):
+  - Import `docs/design/opendesign/helix/tokens.css` custom properties into
+    the Tauri/React frontend's Tailwind config
+  - Map OpenDesign color roles (primary, success, warning, error) and
+    typography scale directly — no re-derivation
+  - Component library (buttons, inputs, toggles, cards) built against the
+    imported tokens
+  - Dark/light mode theming driven by the token system's existing light+dark
+    variants (system-follows per `docs/design/README.md` §2)
 - [ ] Accessibility compliance:
   - ARIA labels on all interactive elements
   - Keyboard navigation support
@@ -792,7 +921,8 @@ All Platforms    Production        Week 36       Launch Ready milestone
 
 **Deliverables:**
 - Complete desktop UI with all screens
-- Design system documented
+- OpenDesign tokens integrated into the desktop frontend (no bespoke design
+  system re-derived)
 - Accessibility audit passed
 
 ---
@@ -814,6 +944,11 @@ All Platforms    Production        Week 36       Launch Ready milestone
   - Protocol selection with latency display
   - Connection log viewer (for support)
   - Import/export WireGuard configuration
+- [ ] Wire the crash-reporting/telemetry SDK (Sentry, per Appendix D) behind
+  an explicit privacy-consent opt-in prompt shown on first launch — no
+  telemetry event fires before consent is recorded; this is the desktop half
+  of the Phase 9 §10.2 cross-cutting "consent-gated telemetry pipeline"
+  production-readiness milestone that must be live before any public beta
 - [ ] End-to-end desktop testing:
   - Connect → verify IP change → disconnect → verify IP restored
   - Kill switch test (disconnect network, verify block)
@@ -875,6 +1010,17 @@ All Platforms    Production        Week 36       Launch Ready milestone
 - [x] No DNS leaks detected
 - [x] No P0 or P1 bugs outstanding
 - [x] All UI screens implemented and accessible
+- [x] `apply_managed_policy()` implemented for macOS Configuration Profile and
+  Linux config-file-drop (real-channel validation deferred to Phase 9 §10.2)
+- [x] Crash-reporting/telemetry SDK wired and consent-gated (no events before
+  opt-in)
+
+**Test Plan (cross-reference):** Integration/connection tests per
+`MVP2_SECURITY_PERFORMANCE.md` §8.2; leak tests (DNS/WebRTC/IPv6) per §8.3;
+performance tests per §8.4; UI tests per §8.5; relevant success criteria:
+SC-06 (kill switch zero packet leakage), SC-12/SC-13/SC-14/SC-16/SC-17/SC-18
+(bundle size, connection time, kill switch response, CPU/memory targets),
+SC-23/SC-24 (no DNS/IPv6 leaks) per `MVP2_OVERVIEW.md` §9.
 
 ---
 
@@ -912,6 +1058,10 @@ All Platforms    Production        Week 36       Launch Ready milestone
   - `setup_tunnel()` — WinTUN adapter creation
   - `configure_routes()` — Windows routing table API
   - `configure_dns()` — `SetInterfaceDnsSettings` API
+  - `apply_managed_policy()` — read Group Policy (ADMX template) / Intune-pushed
+    configuration for forced kill switch, allowed protocols, DNS policy;
+    cross-ref `MVP2_ARCHITECTURE.md` §10.2. Real-channel validation happens in
+    Phase 9 §10.2 Week 32
 
 **Deliverables:**
 - Windows dev environment documented
@@ -1028,6 +1178,9 @@ All Platforms    Production        Week 36       Launch Ready milestone
   - `tauri-plugin-updater` with Windows `.msi`/`.nsis` support
   - Background download with UAC prompt for install
   - Update channel support (stable, beta, alpha)
+- [ ] Wire crash-reporting/telemetry SDK (Sentry) behind the same
+  privacy-consent opt-in prompt introduced in Phase 3 Week 12 — Windows
+  half of the Phase 9 §10.2 consent-gated telemetry milestone
 
 **Deliverables:**
 - Signed MSI installer
@@ -1084,6 +1237,14 @@ All Platforms    Production        Week 36       Launch Ready milestone
 - [x] No AV false positives on WinTUN driver
 - [x] Connect/disconnect < 3 seconds
 - [x] No P0 or P1 bugs outstanding
+- [x] `apply_managed_policy()` implemented for Group Policy/Intune (real-channel
+  validation deferred to Phase 9 §10.2)
+- [x] Crash-reporting/telemetry SDK wired and consent-gated
+
+**Test Plan (cross-reference):** Integration/connection tests + leak tests per
+`MVP2_SECURITY_PERFORMANCE.md` §8.2/§8.3; performance tests per §8.4; security
+tests (AV/WFP conflict) per §8.6; relevant success criteria: SC-06, SC-13,
+SC-14, SC-15, SC-16, SC-17, SC-18, SC-23/SC-24 per `MVP2_OVERVIEW.md` §9.
 
 ---
 
@@ -1130,16 +1291,23 @@ All Platforms    Production        Week 36       Launch Ready milestone
   - `ServerListBloc` — Server discovery and selection
   - `SettingsBloc` — User preferences
   - `StatsBloc` — Real-time statistics
-- [ ] Configure Material 3 design system:
-  - Color scheme (light + dark)
-  - Typography (Material 3 type scale)
-  - Custom components (connection button, server card, stat gauge)
+- [ ] Configure Material 3 `ThemeData` as the consumption layer for the
+  existing OpenDesign token system — do NOT derive a new palette/type-scale;
+  OpenDesign is mandatory per `MVP2_UI_UX_SPEC.md` §1 (Android maps to
+  "Material You + Dynamic" per `docs/design/README.md` §2):
+  - Generate `ColorScheme`/`TextTheme` from the OpenDesign token export
+    (light + dark)
+  - Typography mapped from the OpenDesign type scale onto Material 3's type
+    roles
+  - Custom components (connection button, server card, stat gauge) styled
+    from the imported tokens, not ad-hoc values
 
 **Deliverables:**
 - Flutter app building for Android
 - FRB bridge functional (ping-pong test)
 - Bloc state management scaffold
-- Material 3 design system
+- OpenDesign tokens integrated into Material 3 `ThemeData` (no bespoke design
+  system re-derived)
 
 ---
 
@@ -1165,6 +1333,10 @@ All Platforms    Production        Week 36       Launch Ready milestone
   - Routes via `Builder.addRoute()`
   - DNS via `Builder.addDnsServer()`
   - Kill switch via `Builder.setBlocking(true)`
+  - `apply_managed_policy()` — consume Android Enterprise managed
+    configuration (`RestrictionsManager` / AppConfig schema) pushed by an EMM
+    console via `helix-admin`; cross-ref `MVP2_ARCHITECTURE.md` §10.2.
+    Real-channel validation happens in Phase 9 §10.2 Week 32
 - [ ] Pass TUN file descriptor to Rust core:
   - Convert `ParcelFileDescriptor` to raw fd
   - Send fd via FRB to Rust `UnixTun` implementation
@@ -1259,6 +1431,10 @@ All Platforms    Production        Week 36       Launch Ready milestone
   - Home screen widget showing connection status
   - One-tap connect/disconnect
   - Current server display
+- [ ] Wire crash-reporting/telemetry SDK (Sentry) behind an explicit
+  privacy-consent opt-in prompt (Play Store Data Safety form declares this
+  honestly) — mobile half of the Phase 9 §10.2 consent-gated telemetry
+  milestone that must be live before any public beta
 
 **Deliverables:**
 - Battery optimization with user guidance
@@ -1382,6 +1558,16 @@ All Platforms    Production        Week 36       Launch Ready milestone
 - [x] Quick Settings tile functional
 - [x] APK/AAB size < 25 MB
 - [x] No P0 or P1 bugs on target devices
+- [x] `apply_managed_policy()` implemented for Android Enterprise managed
+  configuration (real-channel validation deferred to Phase 9 §10.2)
+- [x] Crash-reporting/telemetry SDK wired and consent-gated (declared honestly
+  in the Play Store Data Safety form)
+
+**Test Plan (cross-reference):** Integration tests per
+`MVP2_SECURITY_PERFORMANCE.md` §8.2; performance/battery tests per §8.4/§5.5;
+UI tests per §8.5; relevant success criteria: SC-01, SC-07 (split tunneling),
+SC-08 (auto-connect < 5s), SC-12/SC-18/SC-19 (APK size, memory, battery
+impact) per `MVP2_OVERVIEW.md` §9.
 
 ---
 
@@ -1473,11 +1659,17 @@ All Platforms    Production        Week 36       Launch Ready milestone
   - Submit entitlement request via Apple Developer portal
   - Include privacy policy and app description
   - Wait for approval (may take 1-2 weeks — start early)
+- [ ] `apply_managed_policy()` — consume Apple MDM managed app configuration
+  (per-app VPN `NEVPNProtocol` managed settings + `com.apple.app.managed`
+  configuration dictionary) pushed by an MDM console via `helix-admin`;
+  cross-ref `MVP2_ARCHITECTURE.md` §10.2. Real-channel validation happens in
+  Phase 9 §10.2 Week 32
 
 **Deliverables:**
 - Network Extension building and loading
 - Packet flow bridged to Rust core
 - Tunnel network settings applied
+- `apply_managed_policy()` consuming Apple MDM managed app config
 
 ---
 
@@ -1587,6 +1779,10 @@ All Platforms    Production        Week 36       Launch Ready milestone
   - Dynamic Type support (accessibility text sizes)
   - VoiceOver support (screen reader labels)
   - Haptic feedback on connection state changes
+- [ ] Wire crash-reporting/telemetry SDK (Sentry) behind an explicit
+  privacy-consent opt-in prompt, App Tracking Transparency-compliant where
+  applicable — iOS half of the Phase 9 §10.2 consent-gated telemetry
+  milestone that must be live before any public beta (TestFlight)
 - [ ] Cross-platform mobile bug fix:
   - Shared Flutter code issues
   - Platform-specific regressions
@@ -1622,6 +1818,16 @@ All Platforms    Production        Week 36       Launch Ready milestone
 - [x] TestFlight build uploaded
 - [x] No P0 or P1 bugs
 - [x] App Store listing complete
+- [x] `apply_managed_policy()` implemented for Apple MDM managed app config
+  (real-channel validation deferred to Phase 9 §10.2)
+- [x] Crash-reporting/telemetry SDK wired and consent-gated before TestFlight
+  distribution
+
+**Test Plan (cross-reference):** Integration tests per
+`MVP2_SECURITY_PERFORMANCE.md` §8.2; performance/memory tests per §8.4; UI
+tests (VoiceOver/Dynamic Type) per §8.5; relevant success criteria: SC-01,
+SC-09 (biometric auth), SC-12/SC-18 (bundle size, memory <15 MB extension)
+per `MVP2_OVERVIEW.md` §9.
 
 ---
 
@@ -1838,11 +2044,31 @@ All Platforms    Production        Week 36       Launch Ready milestone
 
 ### 8.4 Phase 7 Exit Criteria
 
-- [x] HarmonyOS app connects and routes traffic
-- [x] Aurora OS app integrates with ConnMan
-- [x] Both apps submitted to respective stores
-- [x] Feature parity with Tier 1 mobile (where platform supports)
+- [x] HarmonyOS app connects and routes traffic (WireGuard, verified via
+  `ipleak.net`-equivalent IP-change check on emulator/device)
+- [x] Aurora OS app integrates with ConnMan (D-Bus `net.connman.vpn.Agent`
+  registered, connect/disconnect verified via ConnMan CLI + traffic capture)
+- [x] Both apps submitted to respective stores (HarmonyOS AppGallery, Aurora
+  OS OpenRepos) with no submission-blocking review feedback outstanding
+- [x] Feature parity checklist explicitly enumerated and verified per
+  platform (not merely asserted): connect/disconnect, server list, settings,
+  auto-connect — present on both; kill switch — HarmonyOS "Limited" (documented
+  constraint per §8.3 table), Aurora OS via nftables (full); split tunneling —
+  documented as unsupported on HarmonyOS/Aurora OS if the platform API lacks
+  the primitive (honest gap per SC-07's Tier-1 scope, not silently implied)
+- [x] `apply_managed_policy()` — HarmonyOS implements it "where available" via
+  HarmonyOS enterprise device management (best-effort, cross-ref
+  `MVP2_ARCHITECTURE.md` §10.2); Aurora OS is explicitly OUT OF SCOPE for MVP2
+  managed-policy push (niche/single-device deployments per
+  `MVP2_ARCHITECTURE.md` §10.5) — documented, not silently omitted
 - [x] No P0 bugs
+
+**Test Plan (cross-reference):** Integration/connection tests per
+`MVP2_SECURITY_PERFORMANCE.md` §8.2 (dispatched to the HarmonyOS/Aurora OS
+topology per §11.4.3-class per-environment test dispatch); manual QA per
+`MVP2_SECURITY_PERFORMANCE.md` §8.5 where the emulator lacks physical-device
+parity; relevant success criteria: SC-01 (platform functional), SC-06 (kill
+switch, Aurora OS only) per `MVP2_OVERVIEW.md` §9.
 
 ---
 
@@ -2038,11 +2264,23 @@ All Platforms    Production        Week 36       Launch Ready milestone
   - MFA (TOTP) support
   - Session management
   - Audit logging
+- [ ] `apply_managed_policy()` equivalent for the browser extension —
+  read Chrome `chrome.storage.managed` (populated by `ExtensionSettings`/
+  `ExtensionInstallForcelist` policy) and Firefox `policies.json` for
+  forced protocol/DNS/kill-switch policy pushed by an enterprise admin;
+  cross-ref `MVP2_ARCHITECTURE.md` §10.2. Real-channel validation happens in
+  Phase 9 §10.2 Week 32
+- [ ] Wire crash-reporting/telemetry SDK (Sentry) into the service worker +
+  web admin panel behind an explicit privacy-consent opt-in prompt — web
+  half of the Phase 9 §10.2 consent-gated telemetry milestone
 
 **Deliverables:**
 - Web admin panel functional
 - PWA installable and functional
 - Admin API integration
+- Browser-extension managed-policy consumption (Chrome/Firefox enterprise
+  policy channels)
+- Crash-reporting/telemetry wired and consent-gated
 
 **Milestone: M7 — Web Complete (Extension + Admin)**
 
@@ -2095,6 +2333,16 @@ All Platforms    Production        Week 36       Launch Ready milestone
 - [x] Admin panel accessible and functional
 - [x] PWA installable
 - [x] Submitted to at least 2 browser stores
+- [x] Managed-policy consumption implemented for Chrome `ExtensionSettings`/
+  `ExtensionInstallForcelist` and Firefox `policies.json` (real-channel
+  validation deferred to Phase 9 §10.2)
+- [x] Crash-reporting/telemetry SDK wired and consent-gated
+
+**Test Plan (cross-reference):** Integration tests per
+`MVP2_SECURITY_PERFORMANCE.md` §8.2; security tests (extension permissions,
+XSS, CSP) per §8.6; relevant success criteria: SC-01, SC-04 (MASQUE — if
+routed via extension proxy config), SC-20 (UI responsiveness, popup <100ms)
+per `MVP2_OVERVIEW.md` §9.
 
 ---
 
@@ -2137,11 +2385,35 @@ All Platforms    Production        Week 36       Launch Ready milestone
   | Aurora OS | Test | N/A | Test | N/A | Test |
   | Web | N/A | N/A | N/A | N/A | Test |
 - [ ] Document test results and file tickets for failures
+- [ ] **Production-readiness milestone — MDM/managed-policy validation**
+  (Owner: Rust Core Lead + the relevant platform lead per §11.1; cross-ref
+  `MVP2_ARCHITECTURE.md` §10.2). This is the first of the four cross-cutting
+  production-readiness milestones flagged as missing from the pre-hardening
+  roadmap — `apply_managed_policy()` was implemented per-platform in Phases
+  3-6/8; this week validates it end-to-end against at least one REAL managed-
+  config channel per platform class (not a mock):
+  - macOS: push a real Configuration Profile via a test MDM (e.g., an Apple
+    Business Manager sandbox or `mdmclient` test profile) → verify
+    `apply_managed_policy()` enforces forced kill switch + allowed protocols
+  - Windows: push a real Group Policy Object (or Intune test tenant
+    configuration profile) → verify enforcement
+  - Android: push a real Android Enterprise managed configuration from an EMM
+    console test tenant → verify enforcement
+  - Chrome: push a real `ExtensionSettings` policy via `chrome://policy` (or a
+    G Suite/Workspace admin test domain) → verify enforcement
+  - iOS: push a real Apple MDM managed app config (per-app VPN) from a test
+    MDM → verify enforcement
+  - Exit criteria: each validated channel produces a captured before/after
+    policy-enforcement diff (e.g., kill switch toggled by policy alone, with
+    no local user action) — a channel that cannot be validated end-to-end
+    (no test MDM tenant available) is tracked as `Operator-blocked` with the
+    self-resolution-exhaustion trail, never silently marked done
 
 **Deliverables:**
 - Integration test report (all platforms × all features)
 - Automated test harness
 - Failure tickets created and prioritized
+- MDM/managed-policy validation report (per-platform-class real-channel proof)
 
 ---
 
@@ -2171,11 +2443,25 @@ All Platforms    Production        Week 36       Launch Ready milestone
   - High: fix before launch or implement mitigations
   - Medium: document, fix post-launch
   - Low: document for future releases
+- [ ] **Production-readiness milestone — reproducible build + SBOM
+  verification** (Owner: DevOps/CI Engineer; cross-ref `MVP2_SHARED_CORE.md`
+  §5.5, `MVP2_ARCHITECTURE.md` §10.3). Phase 1 Week 1 wired the CI-side
+  tooling (`cargo build --locked`, `cargo-cyclonedx`/`syft`); this week
+  re-verifies it against the ACTUAL release-candidate artifacts across all
+  14+ cross-compiled targets (Appendix A), not just the Phase 1 sample build:
+  - Rebuild each release-candidate artifact twice from the same tagged commit
+    and diff the binary hashes — reproducibility proof per artifact
+  - Confirm every artifact ships a generated (never hand-maintained) SBOM
+    attached alongside the signed artifact
+  - Exit criteria: 100% of release artifacts reproducible + SBOM-attached, or
+    each exception documented with root cause (e.g., a non-deterministic
+    linker step) and a tracked follow-up item — never silently skipped
 
 **Deliverables:**
 - Security audit report
 - All critical/high findings addressed
 - Security hardening complete
+- Reproducible-build + SBOM verification report (per release artifact)
 
 ---
 
@@ -2243,6 +2529,39 @@ All Platforms    Production        Week 36       Launch Ready milestone
     - Deployment runbook
     - Monitoring and alerting
     - Incident response procedures
+- [ ] **Production-readiness milestone — consent-gated crash/telemetry
+  pipeline LIVE (blocking gate before beta invites go out)** (Owner:
+  DevOps/CI Engineer + QA Engineer, with Product/Legal sign-off on the
+  consent-copy wording; cross-ref `MVP2_ARCHITECTURE.md` §10.1 MONITOR
+  subgraph). Per-platform SDK wiring + consent prompts landed in Phases
+  3/4/5/6/8; this is the go/no-go check that the pipeline is actually
+  receiving events end-to-end BEFORE any external user is invited:
+  - Verify Sentry (crash/error) + client API telemetry (connection
+    success/failure, latency) are receiving real events from a test build on
+    every platform
+  - Verify NO event is emitted from a build where consent was declined
+    (negative test — the consent gate must fail closed)
+  - Verify the Grafana dashboard (Appendix D) surfaces crash-rate and
+    error-rate deltas per platform — this is the same signal the canary
+    rollback decision (below) depends on
+  - Exit criteria: pipeline demonstrably live + consent-gate proven both ways
+    (opt-in emits, opt-out is silent) on every platform, captured as evidence
+- [ ] **Production-readiness milestone — staged/canary rollout pipeline
+  rehearsed at least once before GA** (Owner: DevOps/CI Engineer; cross-ref
+  `MVP2_ARCHITECTURE.md` §10.1 for the full canary-ring flowchart — not
+  duplicated here). Use this Beta release itself as the rehearsal:
+  - Execute the internal ring → canary-1% → canary-10% → canary-50% → GA
+    progression (or the store-native equivalent: Play Console staged
+    rollout, App Store Connect phased release, self-hosted updater ring)
+    against the beta population instead of a synthetic dry run
+  - Verify the automatic-rollback trigger (crash-rate/error-rate delta
+    breaches threshold → auto-revert to the internal ring) actually fires
+    against an injected synthetic regression in a non-production channel
+  - Exit criteria: at least one full ring progression completed with the
+    rollback trigger proven to fire on demand; any platform whose
+    distribution channel has no phased-rollout primitive (e.g., a store that
+    only supports all-or-nothing release) documents that constraint
+    explicitly rather than silently skipping the rehearsal
 - [ ] Beta release:
   - Desktop: GitHub Releases with signed artifacts
   - Mobile: TestFlight (iOS) + Play Store Internal Testing (Android)
@@ -2259,6 +2578,8 @@ All Platforms    Production        Week 36       Launch Ready milestone
 - Complete documentation set
 - Beta release live
 - Beta monitoring dashboard
+- Consent-gated telemetry pipeline proven live (positive + negative test)
+- Canary/staged-rollout pipeline rehearsed at least once with rollback proven
 
 ---
 
@@ -2270,16 +2591,31 @@ All Platforms    Production        Week 36       Launch Ready milestone
   - Confirm all P0 bugs resolved
   - Security audit sign-off
   - Performance targets met
-- [ ] Production release:
-  - Desktop: GitHub Releases + auto-update push
+  - Confirm the four Phase 9 production-readiness milestones are GO: MDM
+    validation (Week 32), reproducible-build + SBOM verification (Week 33),
+    consent-gated telemetry pipeline live (Week 35), canary pipeline
+    rehearsed (Week 35) — see §10.2 above and §10.4 Exit Criteria
+- [ ] Production release — executed as a staged/canary rollout per the
+  pipeline rehearsed in Week 35 (internal ring → canary 1% → 10% → 50% → GA
+  100%, per `MVP2_ARCHITECTURE.md` §10.1), monitored against the live
+  crash-rate/error-rate dashboard with auto-rollback armed, not an
+  all-at-once release:
+  - Desktop: GitHub Releases + auto-update push (staged where the updater
+    supports it; Tauri updater channel ring)
   - macOS: Notarized DMG
   - Windows: Signed MSI
   - Linux: DEB/RPM/Flatpak/AppImage
-  - Android: Play Store production release
-  - iOS: App Store release
+  - Android: Play Store production release (staged rollout percentage via
+    Play Console)
+  - iOS: App Store release (phased release via App Store Connect)
   - HarmonyOS: AppGallery release
   - Aurora OS: OpenRepos release
   - Web: Chrome Web Store + AMO + Edge Add-ons release
+  - Final confirmation: every published artifact carries its SBOM +
+    reproducible-build attestation generated in Week 33 (release-signing +
+    provenance, cross-ref `MVP2_ARCHITECTURE.md` §10.1 SBOM stage) — a
+    release artifact without an attached SBOM is a launch blocker, not a
+    post-launch follow-up
 - [ ] Launch communications:
   - Release notes (per platform)
   - Blog post / announcement
@@ -2310,6 +2646,10 @@ All Platforms    Production        Week 36       Launch Ready milestone
 | Documentation | Complete (user + dev + admin + ops) |
 | Beta release | 500 beta testers |
 | Production release | All 8 platforms live |
+| MDM/managed-policy validation | Real-channel proof, macOS/Windows/Android/iOS/Chrome |
+| Reproducible build + SBOM | Verified across all 14+ release artifacts |
+| Consent-gated telemetry pipeline | Live before beta, positive + negative test proven |
+| Staged/canary rollout | Rehearsed on Beta, executed on GA, rollback proven |
 
 ### 10.4 Phase 9 Exit Criteria
 
@@ -2320,6 +2660,29 @@ All Platforms    Production        Week 36       Launch Ready milestone
 - [x] Beta metrics positive (> 95% connection success)
 - [x] All 8 platforms released to production
 - [x] Monitoring and on-call active
+- [x] **MDM/managed-policy push validated against a real channel per
+  platform class** (macOS Configuration Profile, Windows Group Policy/Intune,
+  Android Enterprise managed configuration, Apple MDM managed app config,
+  Chrome enterprise policy) — Week 32
+- [x] **Reproducible build + SBOM generation verified on every release
+  artifact** (14+ cross-compiled targets), attached to every published
+  artifact — Week 33 / Week 36
+- [x] **Crash-reporting/telemetry pipeline live and privacy-consent-gated**
+  before any public beta invite, proven both positive (consent → events flow)
+  and negative (no consent → silent) — Week 35
+- [x] **Staged/canary rollout pipeline stood up and rehearsed at least once**
+  before GA, with the automatic-rollback trigger proven to fire on an
+  injected synthetic regression, then executed for the actual GA release —
+  Week 35 (rehearsal) / Week 36 (execution)
+
+**Test Plan (cross-reference):** Full-suite integration/E2E per
+`MVP2_SECURITY_PERFORMANCE.md` §8.2/§8.7 CI test matrix; security/penetration
+testing per §8.6; relevant success criteria: SC-01 through SC-10 (feature
+completeness across all 8 platforms), SC-21/SC-22 (security), SC-30
+(crash-free rate >= 99.9% over 30-day monitoring) per `MVP2_OVERVIEW.md` §9.
+This phase is where the risk-ordered validation discipline matters most —
+run the highest-risk, most-recently-touched, most-reopened items first per
+the project's own change-history, then the remaining suite.
 
 ---
 

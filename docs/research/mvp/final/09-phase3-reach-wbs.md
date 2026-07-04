@@ -1,7 +1,13 @@
 # Phase 3 (Extended Reach) — Work Breakdown: phases → tasks → subtasks
 
-**Revision:** 1
-**Last modified:** 2026-06-25T00:00:00Z
+**Revision:** 2
+**Last modified:** 2026-07-04T12:00:00Z
+**Rev 2 (hardening pass):** Added §0.1 cross-reference to
+`v07-execution/subtask-deepening-p3.md` (closes REFINEMENT_NOTES.md R5 for
+Phase 3 — this was already substantively addressed by that companion doc; this
+revision makes the pointer explicit in the WBS itself rather than leaving it
+implicit); added §2.2 phase-gate-failure protocol for the two device-gated
+tracks (E21/E22).
 
 > Master technical specification — document 09 of the HelixVPN set. Scope: the
 > **complete Work Breakdown Structure (WBS)** for **Phase 3 — Extended Reach &
@@ -43,6 +49,7 @@
 - [0. How to read this WBS (and the DB schema it populates)](#0-how-to-read-this-wbs-and-the-db-schema-it-populates)
 - [1. Required‑test‑types vocabulary (§11.4.169)](#1-requiredtesttypes-vocabulary-1114169)
 - [2. Phase‑3 entry condition + the go/no‑go gates G20–G26](#2-phase3-entry-condition--the-gonogo-gates-g20g26)
+- [2.2 Phase-gate-failure protocol](#22-phase-gate-failure-protocol)
 - [3. Workable‑item schema (§11.4.93 DB‑ready)](#3-workableitem-schema-1114193-dbready)
 - [4. Epic map + dependency graph](#4-epic-map--dependency-graph)
 - [5. E20 — Phase‑3 readiness gate + reach CI fabric](#5-e20--phase3-readiness-gate--reach-ci-fabric)
@@ -67,6 +74,14 @@ network‑map protocol, coordinator federation, and the `TunnelPlatform` shim
 pattern already accommodate every Phase‑3 surface. The *UI* ports for free across
 the new platforms (one Dart tree, §6 [04_UI]); the *tunnel shim* does **not** —
 that native‑shim delta is the whole risk and the bulk of the budget.
+
+### 0.1a PR-sized subtask breakdown (closes R5)
+
+Every task `HVPN-P3-NNN` below decomposes one level further into falsifiable,
+PR-sized subtasks `HVPN-P3-NNN.k` in the companion
+[`v07-execution/subtask-deepening-p3.md`](v07-execution/subtask-deepening-p3.md)
+— the third and final part of the R5 closure (`REFINEMENT_NOTES.md`), alongside
+`subtask-deepening-p1.md` and `-p2.md`.
 
 ### 0.1 Decomposition hierarchy
 
@@ -184,6 +199,27 @@ graph LR
 | **G24** | Can we meter + entitle tenants **without** breaking no‑logging? | Per‑tenant aggregate metering + plan/quota enforcement + optional payment adapter; CI schema‑lint still fails on any durable connection/traffic table; billing OFF by default = zero behaviour change. | E24 |
 | **G25** | Does an independent third party confirm the security claims? | A scoped external audit (crypto, control plane, shims, WASM) completes; **zero unresolved Critical/High**; report published; remediation loop closed per §11.4.134. | E25 |
 | **G26** | Can a user verify the binaries match the source? | Two independent rebuilds of every shipped artefact (Go control plane, Rust edge/core, Flutter apps, .so/.hap/.rpm/.wasm) are **bit‑identical**; a public verification script reproduces them; divergences root‑caused to zero [04_P2 §11]. | E26 |
+
+### 2.2 Phase-gate-failure protocol
+
+Phase 3's failure modes split cleanly along the honesty stance already built
+into §0.3/§13 — most gates degrade to an honest non-blocking status rather than
+stalling the whole release:
+
+| Failure class | Response | Cross-reference |
+|---|---|---|
+| G21/G22 (device-gated native shims) cannot be exercised — no hardware/CI access yet | Gate stays `pending_device` (§11.4.3 `hardware_not_present`) — this is **not** a Phase‑3 release blocker for the *other* gates; the release notes state plainly which reach targets are certified vs built-but-pending-device (§13). Reach targets ship independently as their gates clear. | §13 honest-gap rule; risk register R‑P3‑1/R‑P3‑2 |
+| G25 (third-party audit) stalls on unfunded engagement | Status `Operator-blocked` with the §11.4.21 unblock detail (fund the engagement); does not block G20/G23/G24/G26 which are self-provisionable. | HVPN-P3-252; §11.4.101 |
+| G25 finds unresolved Critical/High findings past the remediation loop | Release-blocking for the *audited surfaces* specifically — a surface with an open Critical/High does not ship even if its own functional gate (G21/G22/G23) is green; iterate §11.4.134 to zero findings before that surface's release. | HVPN-P3-253; §11.4.134 |
+| G26 (reproducible builds) — a fork toolchain (OHOS/Aurora) is not yet deterministic | `PENDING_TOOLCHAIN:` keeps that one artefact's row open honestly; does not block the rest of the artefact matrix from certifying bit-identical. | HVPN-P3-262 |
+| A **huge-blocker** surfaces during Phase‑3 validation (e.g. a regression in a Phase‑1/2 seam Phase‑3 depends on) | Execute §11.4.129 in full — this is the one case where Phase 3's per-gate independence does NOT apply, because the regression is in shared infrastructure every gate depends on. | §11.4.129 |
+
+The distinguishing rule vs Phases 1–2: because Phase‑3's gates are largely
+**independent reach targets** (a HarmonyOS delay does not block the WASM proxy
+or reproducible-builds work), a single gate's honest non-pass is *not* by
+default a whole-phase blocker — only a cross-cutting regression (shared
+seam, or an audit finding blocking multiple surfaces) escalates to a
+phase-wide stop.
 
 ---
 

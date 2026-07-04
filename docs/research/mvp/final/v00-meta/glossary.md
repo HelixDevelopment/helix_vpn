@@ -1,8 +1,16 @@
 # HelixVPN — Master Glossary (every term, acronym, protocol, RFC)
 
-**Revision:** 2
-**Last modified:** 2026-06-26T12:00:00Z
+**Revision:** 3
+**Last modified:** 2026-07-04T12:00:00Z
 **Status:** active — Volume 0 (Spine, meta & governance) nano-detail document
+**Rev 3:** Independent gap-analysis pass (enterprise-hardening audit). Added four entries the
+cross-reference sweep found used-but-undefined: **API Gateway** (the `api-gateway` service named
+in `SPEC` §5.1 and `04_ARCH` §4.1 had no glossary entry despite `Gin`, `Coordinator`, and `Control
+plane` all citing it), **Rate limiting / token bucket** (named once in `04_ARCH` §4.6 with no
+dedicated NFR yet — cross-referenced to the new GAP-6 in `requirements-traceability.md`), **RBAC**
+(used as a parenthetical test-type annotation on HVPN-FR-601 but never defined), and **Tenant /
+multi-tenancy** (the root isolation unit implied by every "per-tenant"/"tenant isolation" entry but
+never itself defined). No existing entry's meaning changed; this is pure additive coverage.
 **Rev 2:** Added `challenges` (vasic-digital/challenges, §11.4.27) + `containers` (vasic-digital/containers, §11.4.76/.161) submodule entries; added a `HelixError` entry cross-referencing its R7 rename to the canonical `CoreError`.
 **Authority:** Subordinate to [`../SPECIFICATION.md`](../SPECIFICATION.md) §11 (the spine glossary, which this document expands). Where this glossary disagrees with the spine on a term's meaning, the spine wins until amended per §11.4.73.
 
@@ -61,6 +69,7 @@ mirrors [SPEC §10] and [MASTER_INDEX]:
 - **Anycast** — a routing technique announcing one IP from many regions (BGP) so a client reaches the nearest PoP; the D-GW-SELECT option (b) for latency-critical HA fleets. (`v06-deploy/ha-and-multiregion.md`; D-GW-SELECT)
 - **Anonymous device token** — an enrollment credential that requires no email/SSO/PII; a tenant mints it so a device enrolls with `users.email = NULL`, `oidc_sub = NULL`. Mullvad-parity row F15. (`v05-security/identity-and-enrollment.md`; `v03-control-plane/svc-identity.md`; FR-102; HVPN-NFR-307)
 - **Anti-bluff covenant** — the constitution's §11.4 family of rules: a PASS requires positive captured evidence that the feature works for the end user; metadata/config/absence-of-error/grep-only PASS is forbidden. The governing doctrine of Volume 8. (10; §11.4)
+- **API Gateway (`api-gateway` / `svc-api`)** — the Gin + Connect-Go fan-in service serving REST (apps CRUD) + gRPC/Connect (agent `WatchNetworkMap`) + WS/SSE (live UI) on one HTTP/2+HTTP/3 listener; the only control-plane component apps and agents talk to directly. (SPEC §5.1 C4 diagram; 04_ARCH §4.1/§4.2; `v03-control-plane/svc-api.md`)
 - **ArkTS** — the TypeScript-based application language of HarmonyOS/OpenHarmony; the HarmonyOS shim bridges ArkTS → NAPI → the Rust `.so`. (`v04-client/shim-harmonyos.md`; FR-1009)
 - **Aurora OS** — the OMP-Russia Sailfish-derived mobile OS; HelixVPN targets it via the omprussia Flutter fork + a Qt/C++ tun shim + signed RPM (an enterprise SKU, Russian-hosted toolchain). (09; `v04-client/shim-aurora.md`; FR-1010)
 - **Audit events (`audit_events`)** — the durable, append-only table recording **control** actions only (who-did-what to identity/policy/devices) — never traffic/destinations/flows. Append-only enforced by `REVOKE UPDATE,DELETE`. (`v05-security/audit-and-compliance.md`; `v03-control-plane/svc-telemetry.md`; FR-605)
@@ -240,6 +249,8 @@ mirrors [SPEC §10] and [MASTER_INDEX]:
 
 ## R
 
+- **Rate limiting / token bucket** — the API-gateway abuse-control mechanism: a per-API-key token bucket held in Redis, throttling enrollment/policy-write calls. Currently named only in `04_ARCH` §4.6 ("Redis usage"); **no dedicated FR/NFR traces to it yet and no test type (incl. the `DDOS` tag in `requirements-traceability.md` §1) is mapped to it** — see `requirements-traceability.md` GAP-6 (an honest enterprise-hardening gap, not a hidden one). (04_ARCH §4.6; `v03-control-plane/svc-api.md`; GAP-6)
+- **RBAC (Role-Based Access Control)** — the per-tenant role model (`users.role`: `admin | operator | member`) gating Console CRUD; currently surfaced only as a parenthetical test-type annotation on HVPN-FR-601 ("INT + E2E (RBAC)"), not as its own FR with acceptance criteria — see `requirements-traceability.md` GAP-6. Distinct from **RLS** (which isolates *across* tenants; RBAC governs roles *within* one). (04_ARCH §4.5; `v03-control-plane/svc-identity.md`; `v03-control-plane/data-model-ddl.md`; FR-601; GAP-6)
 - **Reconciler** — the `helix-core` loop that drives the local state to the pushed network map (desired-state, no polling); reconnection state machine lives here. (`v02-data-plane/orchestrator-and-state.md`; FR-015; G6)
 - **Redis / Redis Streams** — the MVP event bus + ephemeral KV (TTL presence); consumer groups + `XAUTOCLAIM` DLQ; swapped to NATS at scale (D3). (02; `v03-control-plane/svc-events.md`; D3)
 - **Reverse tunnel** — the founding topology: internal hosts dial *outbound* to a public gateway, which relays/routes — no inbound port-forward on any private network. (00; SPEC §1; X2)
@@ -271,6 +282,7 @@ mirrors [SPEC §10] and [MASTER_INDEX]:
 
 - **Tailscale** — the prior-art coordination model HelixVPN borrows from (network-map / MapResponse, 4via6, ACL grammar); HelixVPN is the self-hosted Mullvad-grade union. (00; SPEC §1)
 - **Telemetry** — the counts-only health/audit service (Prometheus metrics, audit_events); carries no flows/destinations; label set ⊆ allow-list (no `tenant_id`/`device_id`/`*_ip`). (`v03-control-plane/svc-telemetry.md`; FR-803; HVPN-NFR-306)
+- **Tenant / multi-tenancy** — the root isolation unit every table in the data model carries as `tenant_id` (`04_ARCH` §4.5), enforced at the database by **RLS** and, within a tenant, subdivided by **RBAC** roles. One self-hoster may run multiple tenants (e.g. an MSP running networks for several clients); tenant creation/administration is a Console (`FR-6xx`) capability. Every "per-tenant"/"tenant isolation" reference elsewhere in this glossary implies this entry. (04_ARCH §4.5; `v03-control-plane/data-model-ddl.md`; RLS; RBAC; FR-110/606)
 - **Terraform** — the IaC tool for the multi-region/DR provisioning + region-failover runbook (Phase-2/DR). (`v06-deploy/disaster-recovery.md`; 99 G1)
 - **`Transport` trait** — the single Rust abstraction beneath WireGuard: `connect`/`accept` yield a `TransportConn` (send/recv WG datagrams + health). One implementation, three consumers. (SPEC §7.1; `v02-data-plane/transport-trait.md`; FR-003)
 - **`TransportConn`** — a live carrier passing WG datagrams in/out plus the `CarrierHealth` the auto-ladder reads. (SPEC §7.1; `v02-data-plane/transport-trait.md`)
@@ -340,6 +352,8 @@ research; the *interop* claim each one underpins is the owning doc's gate to pro
 - [`../v01-product/functional-requirements.md`](../v01-product/functional-requirements.md) and [`nonfunctional-requirements.md`](../v01-product/nonfunctional-requirements.md) (FR/NFR ids cross-referenced per term).
 - The volume nano-detail docs cited inline: `v02-data-plane/*` (transports, WG, routing, DAITA, ladder), `v03-control-plane/*` (coordinator, events, ipam, pki, policy, telemetry, ddl, protobuf), `v04-client/*` (ffi-surface, helix-core-rust, shims, web-console), `v05-security/*` (threat-model, pki-and-certs, no-logging, kill-switch, post-quantum, audit), `v06-deploy/*` (codegen, podman-quadlets, kubernetes, ha-and-multiregion, helixvpnctl, helix-ecosystem-integration), `v10-design/*` (opendesign-foundation, design-tokens).
 - [`../99-source-coverage-ledger.md`](../99-source-coverage-ledger.md) (the rejected-alternative terms: sing-box G2, Fyne G3, KMP, CGNAT/100.64).
+- `04_VPN_CLD/HelixVPN-Architecture-Refined.md` §4.1 (control-plane service table → **API Gateway**), §4.5 (Postgres data-model sketch → **Tenant**, **RBAC** `role` column), §4.6 (Redis usage → **Rate limiting / token bucket**) — Rev 3 additions.
+- [`requirements-traceability.md`](requirements-traceability.md) GAP-6 (the RBAC/rate-limiting/DDoS traceability gap the Rev 3 entries cross-reference).
 
 *Constitution bindings: §11.4.44 (revision header), §11.4.6 (no-guessing — `UNVERIFIED` on terms whose numeric/interop claim awaits a named gate; no term invented), §11.4.65/.153 (HTML+PDF[+DOCX] exports follow in refinement), §11.4.35 (this glossary is the consumer-side reference; the spine glossary §11 is canonical for the 20 spine terms).*
 

@@ -1,12 +1,23 @@
 # Helix VPN — MVP2 Architecture & Technology Stack Document
 
+**Revision:** 2
+**Last modified:** 2026-07-04T12:00:00Z
+
 ## Cross-Platform Client Architecture: Rust Core + Multi-Platform UI
 
-**Version**: 1.0  
-**Date**: July 2025  
+**Version**: 1.1
+**Date**: July 2025 (Revision 2: 2026-07-04)
 **Status**: Architecture Decision Record (ADR) — Approved  
 **Audience**: Engineering Leads, Platform Teams, DevOps, Security Review  
 **Classification**: Internal — Engineering Confidential
+
+> **Revision 2 changelog:** added the Connection Lifecycle State Machine
+> diagram (§5.6), a cross-platform Enterprise Hardening & Production
+> Readiness overview (§10), and reconciled the §7.1 phase table against the
+> risk-adjusted schedule in `MVP2_IMPLEMENTATION_ROADMAP.md`. This document
+> remains the shared source of truth for cross-platform architectural
+> contracts (FFI boundaries, protocol list, platform adapter trait, code
+> reuse percentages) — platform-specific documents defer to it on conflict.
 
 ---
 
@@ -21,6 +32,7 @@
 7. [Implementation Roadmap](#7-implementation-roadmap)
 8. [Risk Assessment & Mitigation](#8-risk-assessment--mitigation)
 9. [Appendices](#9-appendices)
+10. [Enterprise Hardening & Production Readiness](#10-enterprise-hardening--production-readiness)
 
 ---
 
@@ -972,8 +984,82 @@ pub trait PlatformAdapter: Send + Sync {
 
     /// Register for network change callbacks
     async fn on_network_change(&self, callback: NetworkChangeCallback) -> Result<()>;
+
+    /// Apply an enterprise-pushed managed policy (§10.2) received from the
+    /// helix-admin control plane. No-op on consumer builds with no MDM
+    /// enrollment. Added in Revision 2 to make the §10.2 policy-push
+    /// contract concrete rather than aspirational prose.
+    async fn apply_managed_policy(&self, policy: &ManagedPolicy) -> Result<()>;
 }
 ```
+
+### 5.6 Connection Lifecycle State Machine
+
+`helix-vpn-engine` owns a single canonical connection state machine shared by
+every platform — no platform UI is permitted to invent its own connection
+states or transition rules; each UI layer only *renders* the state emitted by
+the core. This closes a gap in the previous revision, where kill-switch and
+reconnect behavior were described only through narrative prose and
+per-platform sequence diagrams (§5.3), with no single authoritative state
+diagram platform teams could implement against.
+
+```mermaid
+stateDiagram-v2
+    [*] --> Disconnected
+
+    Disconnected --> Connecting: user connects /\nauto-connect trigger
+    Connecting --> Connected: handshake_complete
+    Connecting --> ConnectionFailed: timeout / handshake error
+    ConnectionFailed --> Disconnected: user dismisses /\nauto-retry exhausted
+    ConnectionFailed --> Connecting: auto-retry\n(exponential backoff)
+
+    Connected --> Disconnecting: user disconnects
+    Connected --> Reconnecting: keepalive timeout /\nnetwork interface change
+    Connected --> Connected: split-tunnel rule update\n(no tunnel teardown)
+
+    Reconnecting --> Connected: handshake_complete\n(new session keys)
+    Reconnecting --> KillSwitchActive: kill switch enabled AND\nreconnect exceeds grace period
+    Reconnecting --> Disconnected: kill switch disabled AND\nreconnect exhausted
+
+    KillSwitchActive --> Reconnecting: connectivity restored,\nretry handshake
+    KillSwitchActive --> Disconnecting: user forces disconnect\n(explicit override)
+
+    Disconnecting --> Disconnected: teardown_complete\n(routes/DNS/firewall restored)
+
+    Disconnected --> [*]
+
+    note right of KillSwitchActive
+        Fail-closed: ALL non-VPN traffic
+        blocked at the platform firewall
+        layer (PF / WFP / nftables /
+        VpnService.setBlocking / NE
+        includeRoutes / ConnMan policy).
+        Entered only when Kill Switch
+        is user-enabled; see
+        MVP2_SECURITY_PERFORMANCE.md §2.
+    end note
+
+    note left of Reconnecting
+        Auto-connect on untrusted
+        network transitions (§7.4,
+        MVP2_OVERVIEW.md) re-enters
+        this state directly from
+        Disconnected on network
+        interface change events.
+    end note
+```
+
+**State ownership contract:** every platform adapter (§5.5) reports
+low-level events (`handshake_complete`, `keepalive_timeout`,
+`network_interface_changed`, `teardown_complete`) up to
+`helix-vpn-engine`; the engine — never the adapter, never the UI — decides
+the next state. This is the same "decision engine, not enforcement" split
+already established for split tunneling and kill switch logic in §4.4. Every
+platform's Enterprise Hardening section (added in this revision — see
+`MVP2_DESKTOP_APPS.md`, `MVP2_MOBILE_APPS.md`, `MVP2_AURORA_CLIENT.md`,
+`MVP2_WEB_CLIENT.md`) MUST reference this exact state set; a platform UI
+introducing its own ad-hoc state (e.g., a bespoke "Suspended" state not
+present here) is an architectural contract violation.
 
 ---
 
@@ -1139,6 +1225,20 @@ Flutter's desktop support is less mature than its mobile implementation. Impelle
 | **P3: Web Extension** | 3 weeks | Browser extension; WASM crypto; proxy mode; native messaging |
 | **P3: Polish** | 3 weeks | Admin dashboard; OTA updates; telemetry; security audit |
 
+> **Reconciliation note (Revision 2):** the table above sums to 30 weeks — an
+> unbuffered, best-case estimate with no contingency for entitlement/store
+> review latency or cross-compilation friction. `MVP2_IMPLEMENTATION_ROADMAP.md`
+> is the authoritative, risk-adjusted, 9-phase schedule: it treats this table's
+> 30-week figure as the 20%-probability best case, and derives a 36-week
+> expected case (60% probability, the number used for staffing commitments —
+> see `MVP2_OVERVIEW.md` §2.4) and a 44-week worst case (20% probability). The
+> phase groupings also differ slightly: the roadmap splits "P0: Desktop MVP"
+> into separate macOS/Linux (Phase 3) and Windows (Phase 4) phases because
+> WFP/WinTUN integration proved to warrant independent scheduling and exit
+> criteria. Treat this table as the high-level architectural sequencing
+> (which platform depends on which core milestone) and the roadmap document
+> as the authoritative calendar.
+
 ### 7.2 Dependency Graph
 
 ```mermaid
@@ -1252,6 +1352,121 @@ strip = "symbols"
 
 ---
 
-*Document compiled: July 2025*  
-*Based on research from 25+ independent sources including official framework documentation, open-source VPN client analysis, and cross-platform development benchmarks.*  
+## 10. Enterprise Hardening & Production Readiness
+
+This section is the cross-platform index for concerns the original MVP2
+draft treated unevenly or omitted entirely. It does not duplicate
+platform-specific detail — it defines the shared architectural contract that
+every platform's own "Enterprise Hardening" section (added in this revision)
+must honor, and points to where the full detail lives.
+
+### 10.1 Deployment & Release Pipeline Across 8 Platforms
+
+```mermaid
+flowchart LR
+    subgraph DEV["Development"]
+        MAIN["main branch\n(single trunk)"]
+    end
+
+    subgraph CI["Unified CI/CD (per MVP2_SECURITY_PERFORMANCE.md §7)"]
+        BUILD["Cross-compile\n14+ target triples"]
+        SIGN["Code signing\n(per-platform certs/keys)"]
+        SBOM["SBOM + reproducible\nbuild attestation"]
+    end
+
+    subgraph CANARY["Staged / Canary Rollout"]
+        INTERNAL["Internal ring\n(dogfood)"]
+        C1["Canary 1%"]
+        C10["Canary 10%"]
+        C50["Canary 50%"]
+        GA["General Availability\n100%"]
+    end
+
+    subgraph MONITOR["Rollout Health Monitor"]
+        CRASH["Crash-rate delta\n(Sentry/equivalent)"]
+        ERR["Error-rate delta\n(Client API telemetry)"]
+        DECIDE{"Regression\ndetected?"}
+    end
+
+    subgraph STORES["Distribution Channels"]
+        APPSTORES["App Store / Play /\nAppGallery / Aurora Store"]
+        SELFHOST["Self-hosted updater\n(Tauri updater, RPM repo)"]
+        EXT["Extension stores\n(Chrome/Firefox/Edge/Safari)"]
+    end
+
+    MAIN --> BUILD --> SIGN --> SBOM --> INTERNAL
+    INTERNAL --> C1 --> C10 --> C50 --> GA
+    C1 --> CRASH
+    C10 --> CRASH
+    C50 --> CRASH
+    CRASH --> DECIDE
+    ERR --> DECIDE
+    DECIDE -- "yes: auto-rollback" --> INTERNAL
+    DECIDE -- "no: proceed" --> C10
+    GA --> APPSTORES
+    GA --> SELFHOST
+    GA --> EXT
+
+    style CANARY fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+    style MONITOR fill:#fce4ec,stroke:#c62828,stroke-width:2px
+```
+
+Full mechanism detail (canary ring percentages, automatic rollback triggers,
+per-platform update transport) is specified in `MVP2_SECURITY_PERFORMANCE.md`
+§10 (new in this revision). Every platform document's Enterprise Hardening
+section states which parts of this pipeline it can implement natively
+(e.g., Tauri's built-in updater supports staged rollout; app-store-distributed
+platforms are constrained to the store's own phased-release mechanism).
+
+### 10.2 Centralized Policy Push from the Phase-1 Control Plane
+
+`helix-admin` (§2.2.6) is the enterprise fleet-management surface. It pushes
+org-scoped policy — allowed protocols, forced kill switch, forced split-tunnel
+rules, DNS policy, SSO enforcement — to enrolled devices via the MVP1 Admin
+API. Each platform adapter (§2.3, §5.5) exposes a `apply_managed_policy(policy: ManagedPolicy)`
+extension point on `PlatformAdapter` that platform-native MDM/policy channels
+invoke:
+
+| Platform | Managed-Config Transport |
+|----------|--------------------------|
+| macOS / Windows / Linux | MDM Configuration Profiles / Group Policy (ADMX) + Intune / self-hosted config file drop — detailed in `MVP2_DESKTOP_APPS.md` Enterprise Hardening |
+| Android | Android Enterprise managed configuration (AppConfig) — detailed in `MVP2_MOBILE_APPS.md` Enterprise Hardening |
+| iOS | Apple MDM managed app config (per-app VPN) — detailed in `MVP2_MOBILE_APPS.md` Enterprise Hardening |
+| HarmonyOS | HarmonyOS enterprise device management (where available) — detailed in `MVP2_MOBILE_APPS.md` Enterprise Hardening |
+| Aurora OS | Out of scope for MVP2 — niche/government deployments typically single-device; noted explicitly (not silently omitted) in `MVP2_AURORA_CLIENT.md` Enterprise Hardening |
+| Web | Chrome `ExtensionSettings`/`ExtensionInstallForcelist`, Firefox `policies.json` — detailed in `MVP2_WEB_CLIENT.md` Enterprise Hardening |
+
+### 10.3 Supply-Chain Security (Architectural Contract)
+
+Every one of the 14+ cross-compiled artifacts (Appendix A) MUST be
+reproducible from the pinned `Cargo.lock` + `rust-toolchain.toml`, and MUST
+ship with a generated SBOM. This is an architectural requirement on the
+build system, not an optional CI nicety — see `MVP2_SHARED_CORE.md` §5.5
+(new) for the concrete tooling (`cargo --locked`, `cargo-cyclonedx`) and
+`MVP2_SECURITY_PERFORMANCE.md` §10 for the release-signing and provenance
+attestation process.
+
+### 10.4 Cross-Platform Design-System Consistency
+
+All UI layers (§2.2, §5.2) MUST consume the OpenDesign token system
+(`docs/design/README.md`) rather than platform-local ad-hoc styling — see
+`MVP2_UI_UX_SPEC.md` §1 for the binding statement. This ensures the "Platform
+Native" design principle (§1.3, Principle 4 note in `MVP2_OVERVIEW.md` §6)
+does not regress into visual inconsistency across the 8 platforms.
+
+### 10.5 What Remains Explicitly Out of Scope for MVP2
+
+To avoid scope-creep bluffing, the following enterprise concerns are
+acknowledged but **deliberately deferred to Phase 3 (MVP3 — Enterprise
+Features & Ecosystem)** per `MVP2_OVERVIEW.md` §3.1: multi-tenant white-label
+branding, SCIM-based automated user provisioning, dedicated single-tenant
+server infrastructure, and custom on-premises control-plane deployment for
+enterprise customers. MVP2 delivers the client-side SSO/MDM/policy-push
+*consumption* contracts; MVP3 owns the full enterprise administration
+product surface.
+
+---
+
+*Document compiled: July 2025 (Revision 2: 2026-07-04)*
+*Based on research from 25+ independent sources including official framework documentation, open-source VPN client analysis, and cross-platform development benchmarks.*
 *Next review: August 2025 (post-implementation kickoff)*

@@ -1,0 +1,1982 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Mobile Platform VPN Implementation Research</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Mobile Platform VPN Implementation Research</h1>
+</header>
+<h1 id="mobile-platform-vpn-implementation-research">Mobile Platform VPN
+Implementation Research</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-07-04T14:00:00Z</p>
+<blockquote>
+<p><strong>Editorial note (added during the 2026-07-04 MVP2
+gap-analysis/hardening pass):</strong> raw research brief preserved as
+historical input, not a living spec. The final mobile specification,
+including the reconciled product-supported minimum OS versions (Android
+API 26+, iOS 15+, HarmonyOS NEXT 5.0+/API 12+) and Enterprise Hardening
+detail (app-store review, MDM, background-execution limits), lives in
+<code>../MVP2_MOBILE_APPS.md</code> and
+<code>../MVP2_ARCHITECTURE.md</code> — where this brief&#39;s figures
+differ, those documents are authoritative.</p>
+</blockquote>
+<h2 id="deep-analysis-android-ios-and-harmonyos-vpn-client-development">Deep
+Analysis: Android, iOS, and HarmonyOS VPN Client Development</h2>
+<p><strong>Research Date:</strong> July 2025 <strong>Scope:</strong>
+Native integration, background execution, battery optimization,
+cross-platform code sharing strategies <strong>Phase Context:</strong>
+Flutter and React Native are mature for mobile. Tauri v2 mobile is
+emerging. HarmonyOS NEXT supports Flutter, React Native, uni-app, Taro,
+ArkUI-X with varying maturity levels.</p>
+<hr />
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li><a href="#1-android-vpn-development">Android VPN
+Development</a></li>
+<li><a href="#2-android-background-execution">Android Background
+Execution</a></li>
+<li><a href="#3-ios-vpn-development">iOS VPN Development</a></li>
+<li><a href="#4-ios-constraints--considerations">iOS Constraints &amp;
+Considerations</a></li>
+<li><a href="#5-harmonyos-vpn-development">HarmonyOS VPN
+Development</a></li>
+<li><a href="#6-harmonyos-cross-platform-strategy">HarmonyOS
+Cross-Platform Strategy</a></li>
+<li><a href="#7-mobile-rust-core-integration">Mobile Rust Core
+Integration</a></li>
+<li><a href="#8-mobile-ui-patterns-for-vpn-apps">Mobile UI Patterns for
+VPN Apps</a></li>
+<li><a href="#9-push-notifications-for-vpn-apps">Push Notifications for
+VPN</a></li>
+<li><a href="#10-biometric-authentication">Biometric
+Authentication</a></li>
+<li><a href="#11-mobile-performance-optimization">Mobile Performance
+Optimization</a></li>
+<li><a href="#12-real-world-mobile-vpn-app-architectures">Real-World
+Mobile VPN App Architectures</a></li>
+<li><a href="#13-platform-comparison-matrix">Platform Comparison
+Matrix</a></li>
+<li><a href="#14-mobile-specific-danger-zones">Mobile-Specific Danger
+Zones</a></li>
+<li><a href="#15-recommended-architecture">Recommended
+Architecture</a></li>
+</ol>
+<hr />
+<h2 id="1-android-vpn-development">1. Android VPN Development</h2>
+<h3 id="11-vpnservice-architecture">1.1 VpnService Architecture</h3>
+<p>Android VPN development centers on the <code>VpnService</code> class,
+which applications extend to create and manage VPN tunnels. The system
+provides a <code>Builder</code> inner class to configure VPN interface
+parameters.</p>
+<blockquote>
+<p>&quot;The primary API for implementing your custom tunneling protocols in
+<code>NEPacketTunnelProvider</code>, that allows you to tunnel traffic
+on an IP layer. They run as app extensions in the background handling
+network traffic.&quot; [^129^]</p>
+</blockquote>
+<h3 id="12-builder-pattern-configuration">1.2 Builder Pattern
+Configuration</h3>
+<p>The <code>VpnService.Builder</code> provides a fluent API for
+configuring the VPN tunnel:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode kotlin"><code class="sourceCode kotlin"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> <span class="va">builder</span> <span class="op">=</span> Builder<span class="op">().</span>apply <span class="op">{</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    setSession<span class="op">(</span><span class="st">&quot;MyVPN&quot;</span><span class="op">)</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    addAddress<span class="op">(</span><span class="st">&quot;10.0.0.2&quot;</span><span class="op">,</span> <span class="dv">32</span><span class="op">)</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    addDnsServer<span class="op">(</span><span class="st">&quot;8.8.8.8&quot;</span><span class="op">)</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    addRoute<span class="op">(</span><span class="st">&quot;0.0.0.0&quot;</span><span class="op">,</span> <span class="dv">0</span><span class="op">)</span>  <span class="co">// Route all traffic</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    setMtu<span class="op">(</span><span class="dv">1500</span><span class="op">)</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Split tunneling</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    addAllowedApplication<span class="op">(</span><span class="st">&quot;com.example.app&quot;</span><span class="op">)</span>  <span class="co">// Only this app uses VPN</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    <span class="co">// OR</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    addDisallowedApplication<span class="op">(</span><span class="st">&quot;com.example.banking&quot;</span><span class="op">)</span>  <span class="co">// This app bypasses VPN</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> <span class="va">vpnInterface</span> <span class="op">=</span> builder<span class="op">.</span>establish<span class="op">()</span></span></code></pre></div>
+<p>Key Builder methods [^25^]:</p>
+<ul>
+<li><code>addAddress(String address, int prefixLength)</code>: Sets the
+VPN interface IP address</li>
+<li><code>addRoute(String address, int prefixLength)</code>: Routes
+traffic through the VPN</li>
+<li><code>addDnsServer(String address)</code>: Configures DNS servers
+for the VPN</li>
+<li><code>setMtu(int mtu)</code>: Sets the Maximum Transmission Unit
+(default 1500)</li>
+<li><code>addAllowedApplication(String packageName)</code>: Whitelist
+apps for VPN (mutually exclusive with disallowed)</li>
+<li><code>addDisallowedApplication(String packageName)</code>: Blacklist
+apps from VPN</li>
+<li><code>allowBypass()</code>: Allows apps to bypass the VPN using
+<code>bindProcessToNetwork</code></li>
+<li><code>setBlocking(boolean blocking)</code>: Controls file descriptor
+blocking mode</li>
+</ul>
+<h3 id="13-mtu-configuration">1.3 MTU Configuration</h3>
+<p>MTU configuration is critical for VPN performance. The default MTU of
+1500 bytes may need adjustment based on the VPN protocol overhead:</p>
+<blockquote>
+<p>&quot;builder.setSession(getString(R.string.app_name)).addAddress(&#39;10.0.0.1&#39;,
+24).addDnsServer(&#39;8.8.8.8&#39;).addRoute(&#39;0.0.0.0&#39;, 0).setMtu(1500)&quot;
+[^27^]</p>
+</blockquote>
+<p>For WireGuard, a typical MTU of 1420 is recommended (1500 - 80 bytes
+WireGuard overhead). For OpenVPN over UDP, 1400-1420 is common.</p>
+<h3 id="14-dns-configuration">1.4 DNS Configuration</h3>
+<p>DNS leak prevention requires explicit DNS server configuration:</p>
+<blockquote>
+<p>&quot;You need to set your own DNS servers inside the VpnService.Builder
+on Android and the NEPacketTunnelNetworkSettings on iOS. Many devs miss
+this step and ship apps that leak DNS even when the tunnel is up.&quot;
+[^115^]</p>
+</blockquote>
+<p>Android 10+ supports HTTP proxy via
+<code>VpnService.Builder.setHttpProxy()</code>:</p>
+<blockquote>
+<p>&quot;In Android 10, VPN apps can set an HTTP proxy for their VPN
+connection. To add an HTTP proxy, the VPN app must first configure a
+<code>ProxyInfo</code> instance with the host and port, then call
+<code>VpnService.Builder.setHttpProxy()</code>.&quot; [^165^]</p>
+</blockquote>
+<h3 id="15-split-tunneling">1.5 Split Tunneling</h3>
+<p>Android provides two mutually exclusive approaches for split
+tunneling [^25^][^29^]:</p>
+<p><strong>Allowed Applications (Whitelist Mode):</strong></p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode kotlin"><code class="sourceCode kotlin"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>builder<span class="op">.</span>addAllowedApplication<span class="op">(</span><span class="st">&quot;com.example.app1&quot;</span><span class="op">)</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>builder<span class="op">.</span>addAllowedApplication<span class="op">(</span><span class="st">&quot;com.example.app2&quot;</span><span class="op">)</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Only these apps use VPN; all others bypass</span></span></code></pre></div>
+<p><strong>Disallowed Applications (Blacklist Mode):</strong></p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode kotlin"><code class="sourceCode kotlin"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>builder<span class="op">.</span>addDisallowedApplication<span class="op">(</span><span class="st">&quot;com.bank.app&quot;</span><span class="op">)</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co">// This app bypasses VPN; all others use it</span></span></code></pre></div>
+<blockquote>
+<p>&quot;A Builder may have only a set of allowed applications OR a set of
+disallowed ones, but not both. Calling this method after
+addDisallowedApplication has already been called, or vice versa, will
+throw an UnsupportedOperationException.&quot; [^25^]</p>
+</blockquote>
+<p>For IP-based split tunneling (Android 33+),
+<code>builder.excludeRoute()</code> is available:</p>
+<blockquote>
+<p>&quot;For Android 33+, we used builder.excludeRoute to exclude the desired
+IPs from the VPN. For versions below Android 33, we relied on
+builder.addRoute and included the required IP addresses calculated using
+the WireGuard AllowedIPs Calculator.&quot; [^21^]</p>
+</blockquote>
+<h3 id="16-always-on-vpn-and-lockdown-mode">1.6 Always-On VPN and
+Lockdown Mode</h3>
+<p>Android supports always-on VPN starting from API 24 (Android
+7.0):</p>
+<blockquote>
+<p>&quot;Always-on VPN, available since Android 7.0, starts the VPN service
+automatically on device boot and keeps it running. The connection
+persists across reboots and app updates without user interaction.&quot;
+[^26^]</p>
+</blockquote>
+<p>Lockdown mode (API 29+/Android 10+) blocks all non-VPN traffic:</p>
+<blockquote>
+<p>&quot;When <code>lockdownEnabled</code> is <code>true</code>, all network
+traffic is blocked if the VPN is not connected. No traffic can leak to
+the open internet.&quot; [^26^]</p>
+</blockquote>
+<p>Programmatic detection:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode kotlin"><code class="sourceCode kotlin"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Check if running as always-on VPN</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> <span class="va">isAlwaysOn</span> <span class="op">=</span> isAlwaysOn<span class="op">()</span>  <span class="co">// VpnService method (API 29+)</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Check if lockdown mode is active</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> <span class="va">isLockdown</span> <span class="op">=</span> isLockdownEnabled<span class="op">()</span>  <span class="co">// VpnService method (API 29+)</span></span></code></pre></div>
+<p>MDM/Enterprise configuration via
+<code>DevicePolicyManager.setAlwaysOnVpnPackage()</code>:</p>
+<blockquote>
+<p>&quot;Lockdown mode ensures that all network traffic from Android
+endpoints passes through the Prisma Access Agent app, thereby enforcing
+security policies and preventing unauthorized access. When enabled, it
+blocks all network traffic on the endpoint until a connection to the
+Prisma Access Agent is established.&quot; [^160^]</p>
+</blockquote>
+<h3 id="17-enterprisemdm-vpn-configuration">1.7 Enterprise/MDM VPN
+Configuration</h3>
+<p>Android Enterprise supports various VPN types via MDM [^161^]:</p>
+<ul>
+<li>Cisco AnyConnect</li>
+<li>SonicWall Mobile Connect</li>
+<li>F5 Access</li>
+<li>Pulse Secure</li>
+<li>Microsoft Tunnel</li>
+<li>Palo Alto Networks</li>
+</ul>
+<p>Always-On VPN requires Device Owner provisioning for enterprise
+scenarios [^162^]:</p>
+<blockquote>
+<p>&quot;Always On can be configured only for devices provisioned as Device
+Owner.&quot;</p>
+</blockquote>
+<hr />
+<h2 id="2-android-background-execution">2. Android Background
+Execution</h2>
+<h3 id="21-foreground-service-requirement">2.1 Foreground Service
+Requirement</h3>
+<p>Android VPN services must run as foreground services with persistent
+notifications:</p>
+<blockquote>
+<p>&quot;Your service needs to run as a foreground service with a
+notification. Background battery optimization can kill your service --
+handle this with PowerManager.WakeLock carefully.&quot; [^115^]</p>
+</blockquote>
+<div class="sourceCode" id="cb5"><pre class="sourceCode kotlin"><code class="sourceCode kotlin"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> MyVpnService <span class="op">:</span> <span class="dt">VpnService</span><span class="op">()</span> <span class="op">{</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">override</span> <span class="kw">fun</span> <span class="fu">onStartCommand</span><span class="op">(</span><span class="va">intent</span><span class="op">:</span> <span class="dt">Intent</span><span class="op">?,</span> <span class="va">flags</span><span class="op">:</span> <span class="dt">Int</span><span class="op">,</span> <span class="va">startId</span><span class="op">:</span> <span class="dt">Int</span><span class="op">):</span> <span class="dt">Int</span> <span class="op">{</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Create notification channel (Android 26+)</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>        <span class="kw">val</span> <span class="va">channel</span> <span class="op">=</span> NotificationChannel<span class="op">(</span><span class="st">&quot;vpn&quot;</span><span class="op">,</span> <span class="st">&quot;VPN Service&quot;</span><span class="op">,</span> </span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>            NotificationManager<span class="op">.</span>IMPORTANCE_LOW<span class="op">)</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>        getSystemService<span class="op">(</span>NotificationManager<span class="op">::</span><span class="kw">class</span>.java).createNotificationChannel<span class="op">(</span><span class="va">channel</span><span class="op">)</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Build persistent notification</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>        <span class="kw">val</span> notification = NotificationCompat.Builder<span class="op">(</span><span class="va">this</span><span class="op">,</span> &quot;<span class="va">vpn</span>&quot;<span class="op">)</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>            .setContentTitle<span class="op">(</span>&quot;<span class="va">VPN</span> <span class="va">Connected</span>&quot;<span class="op">)</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>            .setContentText<span class="op">(</span>&quot;<span class="va">Securing</span> <span class="va">your</span> <span class="va">connection</span>&quot;<span class="op">)</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>            .setSmallIcon<span class="op">(</span><span class="va">R</span>.<span class="va">drawable</span>.<span class="va">vpn_icon</span><span class="op">)</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>            .setOngoing<span class="op">(</span><span class="va">true</span><span class="op">)</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>            .build<span class="op">()</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Start as foreground service</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>        startForeground<span class="op">(</span>1<span class="op">,</span> <span class="va">notification</span><span class="op">)</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>        <span class="kw">return</span> START_STICKY  <span class="co">// Restart if killed</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="22-doze-mode-and-app-standby">2.2 Doze Mode and App Standby</h3>
+<p>Doze mode (introduced in Android 6.0) affects VPN background
+operation:</p>
+<blockquote>
+<p>&quot;Doze mode and App Standby may temporarily suspend network and
+background execution for your app when it goes to background and the
+phone is idle.&quot; [^78^]</p>
+</blockquote>
+<blockquote>
+<p>&quot;An app that is whitelisted can use the network and hold partial wake
+locks during Doze and App Standby. However, other restrictions still
+apply to the whitelisted app, just as they do to other apps.&quot; [^87^]</p>
+</blockquote>
+<h3 id="23-battery-optimization-whitelisting">2.3 Battery Optimization
+Whitelisting</h3>
+<p>Apps can request exemption from battery optimizations:</p>
+<blockquote>
+<p>&quot;Apps that meet acceptable use cases can call an intent with
+ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS to allow users to add the
+app directly to the exemption list without going to system settings.&quot;
+[^84^]</p>
+</blockquote>
+<div class="sourceCode" id="cb6"><pre class="sourceCode kotlin"><code class="sourceCode kotlin"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Check if already whitelisted</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> <span class="va">powerManager</span> <span class="op">=</span> getSystemService<span class="op">(</span>Context<span class="op">.</span>POWER_SERVICE<span class="op">)</span> <span class="kw">as</span> PowerManager</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> <span class="va">isIgnoring</span> <span class="op">=</span> powerManager<span class="op">.</span>isIgnoringBatteryOptimizations<span class="op">(</span>packageName<span class="op">)</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="co">// Request whitelist (for non-Play Store apps)</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="op">(!</span>isIgnoring<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">val</span> <span class="va">intent</span> <span class="op">=</span> Intent<span class="op">(</span>Settings<span class="op">.</span>ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS<span class="op">)</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    intent<span class="op">.</span><span class="kw">data</span> <span class="op">=</span> Uri<span class="op">.</span>parse<span class="op">(</span><span class="st">&quot;package:</span><span class="ss">$packageName</span><span class="st">&quot;</span><span class="op">)</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    startActivity<span class="op">(</span>intent<span class="op">)</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><strong>Important Play Store restriction:</strong></p>
+<blockquote>
+<p>&quot;Please DO NOT use the above solution if you are distributing your
+app through Google Play, as it will most likely lead to app suspension.&quot;
+[^78^]</p>
+</blockquote>
+<p>For Play Store apps, use
+<code>ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS</code> instead, which
+opens settings for manual user action.</p>
+<h3 id="24-workmanager-for-periodic-tasks">2.4 WorkManager for Periodic
+Tasks</h3>
+<p>WorkManager can be used for periodic VPN health checks and
+reconnection attempts, though it&#39;s subject to Doze mode deferrals on API
+23 and below.</p>
+<h3 id="25-manufacturer-specific-optimizations">2.5
+Manufacturer-Specific Optimizations</h3>
+<blockquote>
+<p>&quot;This is particularly important with manufacturers like OnePlus and
+Nokia (HMD Global) who customize Android to do aggressive battery
+optimization, keeping the device in Doze mode longer than intended.&quot;
+[^81^]</p>
+</blockquote>
+<hr />
+<h2 id="3-ios-vpn-development">3. iOS VPN Development</h2>
+<h3 id="31-network-extension-framework">3.1 Network Extension
+Framework</h3>
+<p>iOS VPN development uses the NetworkExtension framework, specifically
+<code>NEPacketTunnelProvider</code> for custom VPN protocols:</p>
+<blockquote>
+<p>&quot;The Network Extension framework is how an iOS app reaches into the
+network stack: building a VPN, a content filter, or a DNS proxy that can
+see and route the device&#39;s traffic.&quot; [^187^]</p>
+</blockquote>
+<h3 id="32-nepackettunnelprovider-implementation">3.2
+NEPacketTunnelProvider Implementation</h3>
+<p>The core of an iOS VPN is the <code>NEPacketTunnelProvider</code>
+subclass:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode swift"><code class="sourceCode swift"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> PacketTunnelProvider<span class="op">:</span> <span class="dt">NEPacketTunnelProvider</span> <span class="op">{</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">override</span> <span class="kw">func</span> <span class="fu">startTunnel</span><span class="op">(</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>        <span class="va">options</span><span class="op">:</span> [<span class="dt">String</span><span class="op">:</span> <span class="dt">NSObject</span>]?<span class="op">,</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>        <span class="va">completionHandler</span><span class="op">:</span> @<span class="dt">escaping</span> (<span class="va">Error</span>?<span class="op">)</span> -&gt; <span class="fu">Void</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">)</span> <span class="op">{</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Read configuration</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">guard</span> <span class="kw">let</span> <span class="va">proto</span> <span class="op">=</span> protocolConfiguration <span class="kw">as</span><span class="op">?</span> NETunnelProviderProtocol <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>            completionHandler<span class="op">(</span>NEVPNError<span class="op">(.</span>configurationInvalid<span class="op">))</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>            <span class="kw">return</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Extract configuration from providerConfiguration</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> <span class="va">wgQuickConfig</span> <span class="op">=</span> proto<span class="op">.</span>providerConfiguration<span class="op">?[</span><span class="st">&quot;wgQuickConfig&quot;</span><span class="op">]</span> <span class="kw">as</span><span class="op">?</span> String</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Setup tunnel network settings</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> <span class="va">settings</span> <span class="op">=</span> NEPacketTunnelNetworkSettings<span class="op">(</span>tunnelRemoteAddress<span class="op">:</span> serverAddress<span class="op">)</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>        settings<span class="op">.</span>ipv4Settings <span class="op">=</span> NEIPv4Settings<span class="op">(</span>addresses<span class="op">:</span> <span class="op">[</span><span class="st">&quot;10.0.0.2&quot;</span><span class="op">],</span> subnetMasks<span class="op">:</span> <span class="op">[</span><span class="st">&quot;255.255.255.0&quot;</span><span class="op">])</span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>        settings<span class="op">.</span>dnsSettings <span class="op">=</span> NEDNSSettings<span class="op">(</span>servers<span class="op">:</span> <span class="op">[</span><span class="st">&quot;1.1.1.1&quot;</span><span class="op">,</span> <span class="st">&quot;8.8.8.8&quot;</span><span class="op">])</span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>        setTunnelNetworkSettings<span class="op">(</span>settings<span class="op">)</span> <span class="op">{</span> error <span class="cf">in</span></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>            completionHandler<span class="op">(</span>error<span class="op">)</span></span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a>    <span class="kw">override</span> <span class="kw">func</span> <span class="fu">stopTunnel</span><span class="op">(</span></span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a>        <span class="va">with</span> <span class="va">reason</span><span class="op">:</span> <span class="dt">NEProviderStopReason</span><span class="op">,</span></span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a>        <span class="va">completionHandler</span><span class="op">:</span> @<span class="dt">escaping</span> (<span class="op">)</span> -&gt; <span class="fu">Void</span></span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a>    <span class="op">)</span> <span class="op">{</span></span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Cleanup</span></span>
+<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a>        completionHandler<span class="op">()</span></span>
+<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>From the WireGuard Flutter integration [^126^]:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode swift"><code class="sourceCode swift"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">final</span> <span class="kw">class</span> PacketTunnelProvider<span class="op">:</span> <span class="dt">NEPacketTunnelProvider</span> <span class="op">{</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">private</span> <span class="kw">var</span> <span class="va">adapter</span><span class="op">:</span> WireGuardAdapter<span class="op">?</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">override</span> <span class="kw">func</span> <span class="fu">startTunnel</span><span class="op">(</span><span class="va">options</span><span class="op">:</span> [<span class="dt">String</span> <span class="op">:</span> <span class="dt">NSObject</span>]?<span class="op">,</span> <span class="va">completionHandler</span><span class="op">:</span> @<span class="dt">escaping</span> (<span class="va">Error</span>?<span class="op">)</span> -&gt; <span class="fu">Void</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">guard</span> <span class="kw">let</span> <span class="va">proto</span> <span class="op">=</span> protocolConfiguration <span class="kw">as</span><span class="op">?</span> NETunnelProviderProtocol<span class="op">,</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>              <span class="kw">let</span> <span class="va">wgQuick</span> <span class="op">=</span> proto<span class="op">.</span>providerConfiguration<span class="op">?[</span><span class="st">&quot;wgQuickConfig&quot;</span><span class="op">]</span> <span class="kw">as</span><span class="op">?</span> String <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>            completionHandler<span class="op">(</span>NSError<span class="op">(</span>domain<span class="op">:</span> <span class="st">&quot;WG&quot;</span><span class="op">,</span> code<span class="op">:</span> <span class="op">-</span><span class="dv">1</span><span class="op">))</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>            <span class="kw">return</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">do</span> <span class="op">{</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>            <span class="kw">let</span> <span class="va">cfg</span> <span class="op">=</span> <span class="cf">try</span> TunnelConfiguration<span class="op">(</span>fromWgQuickConfig<span class="op">:</span> wgQuick<span class="op">,</span> called<span class="op">:</span> <span class="kw">nil</span><span class="op">)</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>            adapter <span class="op">=</span> WireGuardAdapter<span class="op">(</span>with<span class="op">:</span> <span class="kw">self</span><span class="op">)</span> <span class="op">{</span> _<span class="op">,</span> msg <span class="cf">in</span> NSLog<span class="op">(</span><span class="st">&quot;[WireGuard] %@&quot;</span><span class="op">,</span> msg<span class="op">)</span> <span class="op">}</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>            adapter<span class="op">?.</span>start<span class="op">(</span>tunnelConfiguration<span class="op">:</span> cfg<span class="op">)</span> <span class="op">{</span> err <span class="cf">in</span> completionHandler<span class="op">(</span>err<span class="op">)</span> <span class="op">}</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span> <span class="cf">catch</span> <span class="op">{</span> completionHandler<span class="op">(</span>error<span class="op">)</span> <span class="op">}</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="33-netunnelprovidermanager">3.3 NETunnelProviderManager</h3>
+<p>The main app uses <code>NETunnelProviderManager</code> to configure
+and control the VPN:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode swift"><code class="sourceCode swift"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>NETunnelProviderManager<span class="op">.</span>loadAllFromPreferences <span class="op">{</span> managers<span class="op">,</span> error <span class="cf">in</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">// managers: [NETunnelProviderManager] - existing configurations</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Key operations:</p>
+<ul>
+<li><code>loadAllFromPreferences()</code>: Load saved VPN
+configurations</li>
+<li><code>saveToPreferences()</code>: Save VPN configuration to system
+settings</li>
+<li><code>connection.startVPNTunnel()</code>: Start the VPN tunnel</li>
+<li><code>connection.stopVPNTunnel()</code>: Stop the VPN tunnel</li>
+</ul>
+<h3 id="34-network-on-demand-rules">3.4 Network On-Demand Rules</h3>
+<p>VPN On-Demand automatically connects/disconnects based on network
+conditions:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode swift"><code class="sourceCode swift"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> <span class="va">onDemandRule</span> <span class="op">=</span> NEOnDemandRuleConnect<span class="op">()</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>onDemandRule<span class="op">.</span>interfaceTypeMatch <span class="op">=</span> <span class="op">.</span>any</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>manager<span class="op">.</span>isOnDemandEnabled <span class="op">=</span> <span class="kw">true</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>manager<span class="op">.</span>onDemandRules <span class="op">=</span> <span class="op">[</span>onDemandRule<span class="op">]</span></span></code></pre></div>
+<p>Wi-Fi specific on-demand [^64^]:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode swift"><code class="sourceCode swift"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> <span class="va">onDemandRule</span> <span class="op">=</span> NEOnDemandRuleConnect<span class="op">()</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>onDemandRule<span class="op">.</span>interfaceTypeMatch <span class="op">=</span> <span class="op">.</span>wiFi</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>onDemandRule<span class="op">.</span>ssidMatch <span class="op">=</span> <span class="op">[</span><span class="st">&quot;OfficeNetwork&quot;</span><span class="op">]</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>manager<span class="op">.</span>onDemandRules <span class="op">=</span> <span class="op">[</span>onDemandRule<span class="op">]</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>manager<span class="op">.</span>isOnDemandEnabled <span class="op">=</span> <span class="kw">true</span></span></code></pre></div>
+<blockquote>
+<p>&quot;VPN On Demand is one of the options of NETunnelProviderManager that
+allows the system to automatically start or stop a VPN connection based
+on various criteria.&quot; [^131^]</p>
+</blockquote>
+<h3 id="35-keychain-integration-for-credentials">3.5 Keychain
+Integration for Credentials</h3>
+<p>iOS VPN credentials should be stored securely in the Keychain:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode swift"><code class="sourceCode swift"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Store password reference in Keychain</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> <span class="va">query</span><span class="op">:</span> <span class="op">[</span>String<span class="op">:</span> Any<span class="op">]</span> <span class="op">=</span> <span class="op">[</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    kSecClass <span class="kw">as</span> String<span class="op">:</span> kSecClassGenericPassword<span class="op">,</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    kSecAttrAccount <span class="kw">as</span> String<span class="op">:</span> account<span class="op">,</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    kSecReturnPersistentRef <span class="kw">as</span> String<span class="op">:</span> <span class="kw">true</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="op">]</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="kw">var</span> <span class="va">item</span><span class="op">:</span> CFTypeRef<span class="op">?</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> <span class="va">status</span> <span class="op">=</span> SecItemCopyMatching<span class="op">(</span>query <span class="kw">as</span> CFDictionary<span class="op">,</span> <span class="op">&amp;</span>item<span class="op">)</span></span></code></pre></div>
+<blockquote>
+<p>&quot;Store necessary connection info in App Group shared storage for
+recovery.&quot; [^64^]</p>
+</blockquote>
+<h3 id="36-personal-vpn-vs-network-extensions">3.6 Personal VPN vs
+Network Extensions</h3>
+<p>Apple provides two paths for VPN development [^64^]:</p>
+<p><strong>Personal VPN</strong> (<code>NEVPNManager</code>):</p>
+<ul>
+<li>Uses built-in IPsec or IKEv2 protocols</li>
+<li>Simpler implementation</li>
+<li>Consumer-facing VPN services</li>
+<li>System-wide traffic routing</li>
+</ul>
+<p><strong>Network Extensions</strong>
+(<code>NEPacketTunnelProvider</code>):</p>
+<ul>
+<li>Custom VPN protocols (WireGuard, OpenVPN, etc.)</li>
+<li>Content filtering capabilities</li>
+<li>Custom DNS solutions</li>
+<li>Low-level traffic inspection</li>
+</ul>
+<blockquote>
+<p>&quot;Choose Personal VPN when: Your primary goal is to provide a standard
+VPN connection using the widely supported IPsec or IKEv2 protocols.
+Choose Network Extensions when: You need to implement a custom VPN
+protocol that is not IPsec or IKEv2.&quot; [^64^]</p>
+</blockquote>
+<hr />
+<h2 id="4-ios-constraints--considerations">4. iOS Constraints &amp;
+Considerations</h2>
+<h3 id="41-memory-limits-15mb">4.1 Memory Limits (~15MB)</h3>
+<p>The most critical constraint for iOS VPN Network Extensions is the
+strict memory limit:</p>
+<blockquote>
+<p>&quot;The library increasingly uses memory and breaks the limit of 15MB of
+NEPacketTunnelProvider limit. This causes the extension process to be
+killed by the ios. Thread 14: EXC_RESOURCE (RESOURCE_TYPE_MEMORY: high
+watermark memory limit exceeded) (limit=15 MB)&quot; [^83^]</p>
+</blockquote>
+<blockquote>
+<p>&quot;Apple technical support has confirmed that there is a 5-6MB memory
+limit for network extensions, raised to 15MB in iOS 10 Beta 2.&quot;
+[^90^]</p>
+</blockquote>
+<p>This 15MB limit encompasses ALL memory used by the extension process
+including:</p>
+<ul>
+<li>Protocol implementation</li>
+<li>Encryption/decryption buffers</li>
+<li>Connection state tracking</li>
+<li>Logging</li>
+</ul>
+<p><strong>Mitigation strategies:</strong></p>
+<ul>
+<li>Use native Rust/Go implementations with minimal Swift wrapper
+overhead</li>
+<li>Limit buffer sizes and connection tracking state</li>
+<li>Avoid excessive logging in production</li>
+<li>Use shared App Groups for state that doesn&#39;t need to be in the
+extension</li>
+<li>Implement zero-copy strategies where possible</li>
+</ul>
+<h3 id="42-background-execution-rules">4.2 Background Execution
+Rules</h3>
+<p>iOS Network Extensions run as separate system processes, independent
+of the host app:</p>
+<blockquote>
+<p>&quot;The answer is a resounding yes, and this capability is a cornerstone
+of the Network Extension framework&#39;s design. Apple has engineered this
+framework to allow VPN connections to operate at a system level,
+independent of the lifecycle of the application that configured them.&quot;
+[^64^]</p>
+</blockquote>
+<p>Key behaviors:</p>
+<ul>
+<li>VPN persists even when main app is terminated</li>
+<li>Extension is managed by the OS kernel</li>
+<li>Sleep/wake events must be handled to restore state</li>
+<li>App Groups shared storage for recovery data</li>
+</ul>
+<h3 id="43-app-store-review-considerations">4.3 App Store Review
+Considerations</h3>
+<p>Apple scrutinizes VPN apps heavily:</p>
+<blockquote>
+<p>&quot;A traffic-handling component holds high trust: it can inspect or
+route traffic. Using it is a serious responsibility: scrutinized in App
+Store review.&quot; [^187^]</p>
+</blockquote>
+<p>Key requirements [^186^]:</p>
+<ul>
+<li><strong>Privacy Policy</strong>: Must accurately describe data
+collection, use, and retention</li>
+<li><strong>Network Extension Entitlement</strong>: Requires
+Apple-granted capability</li>
+<li><strong>Battery Impact</strong>: Apps that drain battery may be
+rejected; WireGuard typically passes</li>
+<li><strong>ATT (App Tracking Transparency)</strong>: Applies if
+collecting tracking data</li>
+<li><strong>User Authorization</strong>: User must explicitly approve
+VPN configuration</li>
+</ul>
+<blockquote>
+<p>&quot;Network Extension API: VPN apps use this to create the tunnel. Apple
+reviews how the extension behaves -- background usage, battery impact,
+and whether it complies with their network extension guidelines.&quot;
+[^186^]</p>
+</blockquote>
+<p>Common rejection reasons:</p>
+<ul>
+<li>Incomplete or vague privacy policy</li>
+<li>Misleading claims (e.g., &quot;military-grade&quot; without basis)</li>
+<li>Metadata that doesn&#39;t match app functionality</li>
+<li>Network extension behavior that violates guidelines</li>
+</ul>
+<h3 id="44-entitlements">4.4 Entitlements</h3>
+<p>Required entitlements for packet tunnel VPN:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode xml"><code class="sourceCode xml"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>&lt;<span class="kw">key</span>&gt;com.apple.developer.networking.networkextension&lt;/<span class="kw">key</span>&gt;</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>&lt;<span class="kw">array</span>&gt;</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    &lt;<span class="kw">string</span>&gt;packet-tunnel-provider&lt;/<span class="kw">string</span>&gt;</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>&lt;/<span class="kw">array</span>&gt;</span></code></pre></div>
+<blockquote>
+<p>&quot;You don&#39;t need a Personal VPN entitlement which allows apps to
+create and control a custom system VPN configuration using NEVPNManager.
+The Packet Tunnel Provider entitlements are classified as enterprise
+VPNs and only require Network Extension entitlement.&quot; [^131^]</p>
+</blockquote>
+<hr />
+<h2 id="5-harmonyos-vpn-development">5. HarmonyOS VPN Development</h2>
+<h3 id="51-vpnextensionability-api">5.1 VpnExtensionAbility API</h3>
+<p>HarmonyOS NEXT introduces <code>VpnExtensionAbility</code> for
+third-party VPN development [^77^]:</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { VpnExtensionAbility } <span class="im">from</span> <span class="st">&#39;@kit.NetworkKit&#39;</span><span class="op">;</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { Want } <span class="im">from</span> <span class="st">&#39;@kit.AbilityKit&#39;</span><span class="op">;</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> MyVpnExtAbility <span class="kw">extends</span> VpnExtensionAbility {</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">onCreate</span>(want<span class="op">:</span> Want) {</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>        <span class="bu">console</span><span class="op">.</span><span class="fu">info</span>(<span class="st">&#39;MyVpnExtAbility onCreate&#39;</span>)<span class="op">;</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Initialize VPN resources</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">onDestroy</span>() {</span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>        <span class="bu">console</span><span class="op">.</span><span class="fu">info</span>(<span class="st">&#39;MyVpnExtAbility onDestroy&#39;</span>)<span class="op">;</span></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Cleanup VPN resources</span></span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>Key HarmonyOS VPN APIs:</p>
+<ul>
+<li><code>VpnExtensionAbility</code>: Lifecycle callbacks for VPN
+creation/destruction</li>
+<li><code>VpnExtensionContext</code>: Context for the VPN extension</li>
+<li><code>vpnExtension.createVpnConnection(context)</code>: Create VPN
+connection</li>
+<li><code>vpnConnection.create(vpnConfig)</code>: Establish VPN with
+configuration</li>
+</ul>
+<h3 id="52-native-n-api-bridge">5.2 Native N-API Bridge</h3>
+<p>HarmonyOS uses Node-API (N-API) to bridge ArkTS with native C/C++
+code:</p>
+<blockquote>
+<p>&quot;HarmonyOSNext Node-API bridges ArkTS/JS and native C/C++ modules
+with a stable, cross-platform API. Developed based on Node.js 12.x LTS
+Node-API.&quot; [^130^]</p>
+</blockquote>
+<p>Key N-API functions for native interop:</p>
+<ul>
+<li><code>napi_wrap</code>: Binds ArkTS object to native C++
+instance</li>
+<li><code>napi_unwrap</code>: Retrieves native C++ object from wrapped
+ArkTS counterpart</li>
+<li><code>napi_create_function</code>: Exposes C++ functions to
+ArkTS</li>
+</ul>
+<h3 id="53-native-c-integration">5.3 Native C++ Integration</h3>
+<p>From the Hey VPN project [^22^], the HarmonyOS VPN native path:</p>
+<pre><code>User connects
+  -&gt; vpnExtension.startVpnExtensionAbility(...)
+  -&gt; HeyVpnAbility.onCreate(want)
+  -&gt; vpnExtension.createVpnConnection(context)
+  -&gt; vpnConnection.create(vpnConfig)
+  -&gt; TUN fd
+  -&gt; libheyvpn.so dlopen(libxray.so)
+  -&gt; CGoSetTunFd(tunFd)
+  -&gt; CGoRunXrayFromJSON(config)
+  -&gt; Xray native TUN inbound reads the Harmony VPN fd
+  -&gt; Xray outbound</code></pre>
+<h3 id="54-deveco-studio-development">5.4 DevEco Studio Development</h3>
+<p>HarmonyOS development uses DevEco Studio:</p>
+<blockquote>
+<p>&quot;DevEco Studio: supports app and service development of the HarmonyOS
+NEXT Developer Preview version. It offers new features like
+reconstruction of codes, visual analysis of construction, multiple
+in-depth tuning, app physical examination, and ARM version of the local
+simulator.&quot; [^30^]</p>
+</blockquote>
+<p>Key requirements:</p>
+<ul>
+<li>DevEco Studio / HarmonyOS SDK 6.1.1, API 24</li>
+<li>Stage model (not FA model)</li>
+<li>Native C++ projects use CMake for build configuration</li>
+</ul>
+<h3 id="55-harmonyos-next-specifics">5.5 HarmonyOS NEXT Specifics</h3>
+<p>Key differences from Android/iOS:</p>
+<ul>
+<li><strong>No global app enumeration</strong>: HarmonyOS NEXT restricts
+listing all installed apps, affecting per-app proxy features [^22^]</li>
+<li><strong>VPN Authorization</strong>: Some emulator/system images do
+not include the VPN authorization component [^22^]</li>
+<li><strong>Stage Model</strong>: Apps use EntryAbility, VPN Extension
+Ability, and backup ability architecture</li>
+<li><strong>Native Libraries</strong>: Uses <code>.so</code> files
+packaged in <code>entry/src/main/cpp/prebuilt/arm64-v8a/</code></li>
+</ul>
+<hr />
+<h2 id="6-harmonyos-cross-platform-strategy">6. HarmonyOS Cross-Platform
+Strategy</h2>
+<h3 id="61-framework-comparison">6.1 Framework Comparison</h3>
+<table>
+<thead>
+<tr>
+<th>Solution</th>
+<th>Owner</th>
+<th>Language</th>
+<th>Maturity</th>
+<th>Code Reuse</th>
+<th>Performance</th>
+<th>Maintenance</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Flutter</strong></td>
+<td>Google</td>
+<td>Dart</td>
+<td>Most mature for HarmonyOS</td>
+<td>~85-90%</td>
+<td>High (Skia/Impeller)</td>
+<td>Active community</td>
+</tr>
+<tr>
+<td><strong>React Native</strong></td>
+<td>Meta</td>
+<td>JS/TS</td>
+<td>Community-maintained OHOS</td>
+<td>~75-80%</td>
+<td>Medium (Native components)</td>
+<td>Moderate</td>
+</tr>
+<tr>
+<td><strong>uni-app x</strong></td>
+<td>DCloud</td>
+<td>Vue/UTS</td>
+<td>Thousands of plugins</td>
+<td>~90%+</td>
+<td>Fast (Native rendering)</td>
+<td>DCloud official</td>
+</tr>
+<tr>
+<td><strong>ArkUI-X</strong></td>
+<td>Huawei</td>
+<td>ArkTS</td>
+<td>Official, cross-device</td>
+<td>N/A (HarmonyOS-first)</td>
+<td>Highest</td>
+<td>Huawei</td>
+</tr>
+<tr>
+<td><strong>Taro</strong></td>
+<td>JD</td>
+<td>React/Vue</td>
+<td>C-API version available</td>
+<td>High</td>
+<td>Good</td>
+<td>JD</td>
+</tr>
+<tr>
+<td><strong>Kuikly</strong></td>
+<td>Tencent</td>
+<td>Kotlin</td>
+<td>Kotlin/Native solution</td>
+<td>High</td>
+<td>Very fast (122ms FCP)</td>
+<td>Tencent</td>
+</tr>
+</tbody>
+</table>
+<p>[^3^] [^89^]</p>
+<h3 id="62-recommended-framework-choice-for-vpn-apps">6.2 Recommended
+Framework Choice for VPN Apps</h3>
+<p><strong>For VPN apps targeting HarmonyOS</strong>, the analysis
+suggests:</p>
+<ol type="1">
+<li><p><strong>Flutter (Recommended for cross-platform)</strong>:</p>
+<blockquote>
+<p>&quot;Flutter, RN, and uni are relatively mature cross-platform solutions
+for HarmonyOS, and many large enterprises and central enterprises have
+used them in their APPs.&quot; [^3^]</p>
+</blockquote>
+<ul>
+<li>Released version 3.22.0-ohos, deeply integrated with HarmonyOS NEXT
+API16</li>
+<li>Supports dual rendering engines: Skia/Impeller</li>
+<li>Best for teams with existing Flutter expertise</li>
+</ul></li>
+<li><p><strong>ArkUI-X (Recommended for HarmonyOS-first)</strong>:</p>
+<ul>
+<li>Native HarmonyOS integration with ArkTS</li>
+<li>Best performance on HarmonyOS devices</li>
+<li>ArkUI-X extends to Android/iOS</li>
+</ul></li>
+<li><p><strong>uni-app x (Recommended for Vue teams)</strong>:</p>
+<blockquote>
+<p>&quot;Fast startup, low memory usage, native components + native rendering
+performance close to native, logic layer and view layer share native
+process for rapid response.&quot; [^3^]</p>
+</blockquote>
+<ul>
+<li>Thousands of plugins for HarmonyOS NEXT</li>
+<li>Well-known e-commerce app cases</li>
+</ul></li>
+</ol>
+<h3 id="63-code-reuse-strategy">6.3 Code Reuse Strategy</h3>
+<p>For maximum code reuse across Android, iOS, and HarmonyOS:</p>
+<pre><code>Shared Rust Core (VPN protocol, encryption, state machine)
+  |-- JNI -- Android (Kotlin) -- Flutter/React Native UI
+  |-- FFI -- iOS (Swift) -- Flutter/React Native UI
+  |-- N-API -- HarmonyOS (ArkTS) -- ArkUI/Flutter UI</code></pre>
+<h3 id="64-huawei-appgallery-requirements">6.4 Huawei AppGallery
+Requirements</h3>
+<ul>
+<li>Apps must be signed with Huawei certificates</li>
+<li>HAP (HarmonyOS Ability Package) format</li>
+<li>Requires Huawei Developer account</li>
+<li>Security review for VPN apps (similar to Apple/Google scrutiny)</li>
+</ul>
+<hr />
+<h2 id="7-mobile-rust-core-integration">7. Mobile Rust Core
+Integration</h2>
+<h3 id="71-architecture-overview">7.1 Architecture Overview</h3>
+<p>Using Rust as a shared core for mobile VPN apps is a proven pattern.
+Mullvad VPN exemplifies this architecture:</p>
+<blockquote>
+<p>&quot;The client consists of two main parts - the daemon and the GUI, but
+there&#39;s also a CLI. The daemon is the process that&#39;s responsible for
+upholding the security guarantees of the client, it consists of an actor
+system so that it can drive many processes asynchronously.&quot; [^23^]</p>
+</blockquote>
+<pre><code>Rust Daemon (VPN core)
+  |-- JNI -- Android Frontend (Kotlin/Java)
+  |-- gRPC -- Desktop Frontend
+  |-- FFI/iOS -- iOS Frontend (Swift)</code></pre>
+<h3 id="72-android-jnindk-bindings">7.2 Android: JNI/NDK Bindings</h3>
+<p><strong>Using cargo-ndk for cross-compilation:</strong></p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Install cargo-ndk</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> install cargo-ndk</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Add Android targets</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="ex">rustup</span> target add <span class="dt">\</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>    aarch64-linux-android <span class="dt">\</span></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>    armv7-linux-androideabi <span class="dt">\</span></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>    i686-linux-android <span class="dt">\</span></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>    x86_64-linux-android</span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Build shared libraries</span></span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> ndk <span class="at">-o</span> ./app/src/main/jniLibs <span class="dt">\</span></span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">--manifest-path</span> ./Cargo.toml <span class="dt">\</span></span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">-t</span> armeabi-v7a <span class="dt">\</span></span>
+<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">-t</span> arm64-v8a <span class="dt">\</span></span>
+<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">-t</span> x86 <span class="dt">\</span></span>
+<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">-t</span> x86_64 <span class="dt">\</span></span>
+<span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a>    build <span class="at">--release</span></span></code></pre></div>
+<p>[^79^]</p>
+<p><strong>JNI integration:</strong></p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode kotlin"><code class="sourceCode kotlin"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Kotlin calling Rust through JNI</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="kw">external</span> <span class="kw">fun</span> <span class="fu">nativeStartTunnel</span><span class="op">(</span><span class="va">config</span><span class="op">:</span> <span class="dt">String</span><span class="op">):</span> <span class="dt">Int</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="kw">external</span> <span class="kw">fun</span> <span class="fu">nativeStopTunnel</span><span class="op">():</span> <span class="dt">Int</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="kw">external</span> <span class="kw">fun</span> <span class="fu">nativeGetStats</span><span class="op">():</span> <span class="dt">TunnelStats</span></span></code></pre></div>
+<h3 id="73-ios-ffic-bindings">7.3 iOS: FFI/C-Bindings</h3>
+<p><strong>Using cargo-lipo for universal libraries:</strong></p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Add iOS targets</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="ex">rustup</span> target add aarch64-apple-ios</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="ex">rustup</span> target add aarch64-apple-ios-sim</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Build for device and simulator</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> build <span class="at">--target</span> aarch64-apple-ios <span class="at">--release</span></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> build <span class="at">--target</span> aarch64-apple-ios-sim <span class="at">--release</span></span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Create universal binary with lipo</span></span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a><span class="ex">lipo</span> <span class="at">-create</span> <span class="dt">\</span></span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>    target/aarch64-apple-ios/release/libmyvpn.a <span class="dt">\</span></span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a>    target/aarch64-apple-ios-sim/release/libmyvpn.a <span class="dt">\</span></span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">-output</span> libmyvpn.a</span></code></pre></div>
+<p>[^85^]</p>
+<h3 id="74-uniffi-for-cross-platform-bindings">7.4 UniFFI for
+Cross-Platform Bindings</h3>
+<p>UniFFI generates bindings for both Android (Kotlin) and iOS
+(Swift):</p>
+<div class="sourceCode" id="cb21"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Rust library with UniFFI</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="pp">uniffi::setup_scaffolding!</span>()<span class="op">;</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span><span class="pp">uniffi::</span>export<span class="at">]</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">fn</span> start_tunnel(config<span class="op">:</span> <span class="dt">String</span>) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>TunnelState<span class="op">,</span> VpnError<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Implementation</span></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span><span class="pp">uniffi::</span>export<span class="at">]</span></span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">fn</span> stop_tunnel() <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">,</span> VpnError<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Implementation</span></span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><strong>Generating Swift bindings:</strong></p>
+<div class="sourceCode" id="cb22"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> run <span class="at">--bin</span> uniffi-bindgen generate <span class="dt">\</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--library</span> ./target/debug/libswitzerland.dylib <span class="dt">\</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--language</span> swift <span class="dt">\</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--out-dir</span> ./bindings</span></code></pre></div>
+<p>[^82^]</p>
+<p><strong>Generated Swift code:</strong></p>
+<div class="sourceCode" id="cb23"><pre class="sourceCode swift"><code class="sourceCode swift"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Generated by UniFFI</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span> <span class="kw">func</span> <span class="fu">neutralGreeting</span><span class="op">()</span> -&gt; <span class="fu">String</span>  <span class="op">{</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">return</span> <span class="cf">try</span><span class="op">!</span> FfiConverterString<span class="op">.</span>lift<span class="op">(</span><span class="cf">try</span><span class="op">!</span> rustCall<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>        uniffi_switzerland_fn_func_neutral_greeting<span class="op">(</span>$<span class="dv">0</span><span class="op">)</span></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">})</span></span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>[^82^]</p>
+<h3 id="75-mullvads-gotatun-rust-wireguard-in-production">7.5 Mullvad&#39;s
+GotaTun: Rust WireGuard in Production</h3>
+<p>Mullvad recently replaced wireguard-go with GotaTun (Rust
+implementation):</p>
+<blockquote>
+<p>&quot;GotaTun is a WireGuard implementation written in Rust aimed at being
+fast, efficient and reliable. GotaTun is a fork of the BoringTun project
+from Cloudflare.&quot; [^62^]</p>
+</blockquote>
+<p>Results after Android rollout:</p>
+<ul>
+<li><strong>User-perceived crash rate: 0.40% -&gt; 0.01%</strong></li>
+<li><strong>Not a single crash</strong> has stemmed from GotaTun</li>
+<li><strong>Better speeds and lower battery usage</strong> reported by
+users</li>
+</ul>
+<blockquote>
+<p>&quot;Since rolling out GotaTun on Android with version 2025.10 in the end
+of November we&#39;ve seen a big drop in the metric user-perceived crash
+rate, from 0.40% to 0.01%.&quot; [^62^]</p>
+</blockquote>
+<p><strong>Why Rust over Go for mobile:</strong></p>
+<blockquote>
+<p>&quot;Another challenge we have faced is interoperating Rust and Go. Since
+Go is a managed language with its own separate runtime, how it executes
+is opaque to the Rust code. If wireguard-go were to hang or crash,
+recovering stacktraces is not always possible which makes debugging the
+code cumbersome.&quot; [^62^]</p>
+</blockquote>
+<h3 id="76-react-native-uniffi-integration">7.6 React Native UniFFI
+Integration</h3>
+<p>For React Native apps, <code>uniffi-bindgen-react-native</code>
+provides TurboModule integration:</p>
+<blockquote>
+<p>&quot;uniffi-bindgen-react-native is configured to generate Swift bindings
+but fails to do so silently, leaving only C++/Objective-C++ files that
+don&#39;t properly integrate with React Native&#39;s New Architecture
+TurboModule system.&quot; [^28^]</p>
+</blockquote>
+<p>Key considerations:</p>
+<ul>
+<li>New Architecture (TurboModules) required</li>
+<li>Swift bindings may need manual integration</li>
+<li>Android integration via JNI is more mature</li>
+</ul>
+<hr />
+<h2 id="8-mobile-ui-patterns-for-vpn-apps">8. Mobile UI Patterns for VPN
+Apps</h2>
+<h3 id="81-common-vpn-mobile-ui-patterns">8.1 Common VPN Mobile UI
+Patterns</h3>
+<p>Standard VPN app UI components:</p>
+<ul>
+<li><strong>Connection Button</strong>: Large, prominent
+connect/disconnect toggle</li>
+<li><strong>Server Selection List</strong>: Searchable list with latency
+indicators</li>
+<li><strong>Connection Stats</strong>: Real-time upload/download speeds,
+data usage</li>
+<li><strong>Settings</strong>: Protocol selection, kill switch, split
+tunneling</li>
+<li><strong>Quick Connect</strong>: Connect to optimal server with one
+tap</li>
+</ul>
+<h3 id="82-flutter-vpn-ui-architecture">8.2 Flutter VPN UI
+Architecture</h3>
+<p>Example from wireguard_flutter_plus [^119^]:</p>
+<div class="sourceCode" id="cb24"><pre class="sourceCode dart"><code class="sourceCode dart"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> _MyAppState <span class="kw">extends</span> State<span class="op">&lt;</span>MyApp<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>    <span class="at">final</span> wireguard <span class="op">=</span> WireGuardFlutter<span class="op">.</span>instance;</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">String</span> vpnState <span class="op">=</span> VpnEngine<span class="op">.</span>vpnDisconnected;</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>    StreamSubscription<span class="op">?</span> _vpnStatusSubscription;</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>    StreamSubscription<span class="op">?</span> _vpnTraffic;</span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Traffic stats</span></span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">String</span> downloadCount <span class="op">=</span> <span class="st">&quot;0.0 B/s&quot;</span>;</span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">String</span> uploadCount <span class="op">=</span> <span class="st">&quot;0.0 B/s&quot;</span>;</span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">String</span> totalDownload <span class="op">=</span> <span class="st">&quot;0 B&quot;</span>;</span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a>    <span class="dt">String</span> totalUpload <span class="op">=</span> <span class="st">&quot;0 B&quot;</span>;</span>
+<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a>    <span class="dt">String</span> duration <span class="op">=</span> <span class="st">&quot;00:00:00&quot;</span>;</span>
+<span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb24-14"><a href="#cb24-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">@override</span></span>
+<span id="cb24-15"><a href="#cb24-15" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> initState() <span class="op">{</span></span>
+<span id="cb24-16"><a href="#cb24-16" aria-hidden="true" tabindex="-1"></a>        <span class="kw">super</span><span class="op">.</span>initState();</span>
+<span id="cb24-17"><a href="#cb24-17" aria-hidden="true" tabindex="-1"></a>        _vpnTraffic <span class="op">=</span> wireguard<span class="op">.</span>trafficSnapshot<span class="op">.</span>listen((data) <span class="op">{</span></span>
+<span id="cb24-18"><a href="#cb24-18" aria-hidden="true" tabindex="-1"></a>            setState(() <span class="op">{</span></span>
+<span id="cb24-19"><a href="#cb24-19" aria-hidden="true" tabindex="-1"></a>                downloadCount <span class="op">=</span> formatSpeed(data[<span class="st">&quot;downloadSpeed&quot;</span>]);</span>
+<span id="cb24-20"><a href="#cb24-20" aria-hidden="true" tabindex="-1"></a>                uploadCount <span class="op">=</span> formatSpeed(data[<span class="st">&quot;uploadSpeed&quot;</span>]);</span>
+<span id="cb24-21"><a href="#cb24-21" aria-hidden="true" tabindex="-1"></a>                totalDownload <span class="op">=</span> formatBytes(data[<span class="st">&quot;totalDownload&quot;</span>]);</span>
+<span id="cb24-22"><a href="#cb24-22" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span>);</span>
+<span id="cb24-23"><a href="#cb24-23" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span>);</span>
+<span id="cb24-24"><a href="#cb24-24" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb24-25"><a href="#cb24-25" aria-hidden="true" tabindex="-1"></a>        _vpnStatusSubscription <span class="op">=</span> wireguard<span class="op">.</span>vpnStageSnapshot<span class="op">.</span>listen((event) <span class="op">{</span></span>
+<span id="cb24-26"><a href="#cb24-26" aria-hidden="true" tabindex="-1"></a>            setState(() <span class="op">{</span> vpnState <span class="op">=</span> event<span class="op">.</span>name; <span class="op">}</span>);</span>
+<span id="cb24-27"><a href="#cb24-27" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span>);</span>
+<span id="cb24-28"><a href="#cb24-28" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb24-29"><a href="#cb24-29" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="83-android-quick-settings-tile">8.3 Android Quick Settings
+Tile</h3>
+<p>Android supports custom Quick Settings tiles for VPN toggle:</p>
+<p>Requirements from QuickTile Settings [^122^]:</p>
+<div class="sourceCode" id="cb25"><pre class="sourceCode xml"><code class="sourceCode xml"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>&lt;<span class="kw">uses-permission</span> <span class="ot">android:name=</span><span class="st">&quot;android.permission.FOREGROUND_SERVICE&quot;</span> /&gt;</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>&lt;<span class="kw">uses-permission</span> <span class="ot">android:name=</span><span class="st">&quot;android.permission.FOREGROUND_SERVICE_SPECIAL_USE&quot;</span> /&gt;</span></code></pre></div>
+<p>Implementation requires:</p>
+<ol type="1">
+<li>Extend <code>TileService</code> class</li>
+<li>Register in AndroidManifest.xml with
+<code>BIND_QUICK_SETTINGS_TILE</code> action</li>
+<li>Handle click events to toggle VPN connection</li>
+<li>Update tile state (active/inactive) based on VPN status</li>
+</ol>
+<h3 id="84-ios-control-center-integration">8.4 iOS Control Center
+Integration</h3>
+<p>iOS VPN apps appear in Settings &gt; VPN and can be toggled from
+Control Center when added. The system handles the UI; the app
+provides:</p>
+<ul>
+<li>VPN configuration via <code>NETunnelProviderManager</code></li>
+<li>Connection state via <code>NEVPNStatusDidChange</code>
+notifications</li>
+<li>On-demand rules for automatic connection</li>
+</ul>
+<h3 id="85-persistent-notifications">8.5 Persistent Notifications</h3>
+<p>Android VPN apps must show persistent notifications:</p>
+<div class="sourceCode" id="cb26"><pre class="sourceCode kotlin"><code class="sourceCode kotlin"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> <span class="va">notification</span> <span class="op">=</span> NotificationCompat<span class="op">.</span>Builder<span class="op">(</span>context<span class="op">,</span> VPN_CHANNEL_ID<span class="op">)</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>setContentTitle<span class="op">(</span><span class="st">&quot;VPN Connected&quot;</span><span class="op">)</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>setContentText<span class="op">(</span><span class="st">&quot;Server: </span><span class="ss">$serverLocation</span><span class="st"> | Protocol: </span><span class="ss">$protocol</span><span class="st">&quot;</span><span class="op">)</span></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>setSmallIcon<span class="op">(</span>R<span class="op">.</span>drawable<span class="op">.</span>ic_vpn_connected<span class="op">)</span></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>setOngoing<span class="op">(</span><span class="kw">true</span><span class="op">)</span>  <span class="co">// Cannot be dismissed</span></span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>setPriority<span class="op">(</span>NotificationCompat<span class="op">.</span>PRIORITY_LOW<span class="op">)</span></span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>addAction<span class="op">(</span>R<span class="op">.</span>drawable<span class="op">.</span>disconnect<span class="op">,</span> <span class="st">&quot;Disconnect&quot;</span><span class="op">,</span> disconnectPendingIntent<span class="op">)</span></span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>build<span class="op">()</span></span></code></pre></div>
+<hr />
+<h2 id="9-push-notifications-for-vpn-apps">9. Push Notifications for VPN
+Apps</h2>
+<h3 id="91-connection-status-notifications">9.1 Connection Status
+Notifications</h3>
+<p>VPN apps use notifications for:</p>
+<ul>
+<li>Connection established/terminated events</li>
+<li>Reconnection attempts</li>
+<li>Server maintenance alerts</li>
+<li>Subscription expiry warnings</li>
+</ul>
+<h3 id="92-fcm-firebase-cloud-messaging-for-android">9.2 FCM (Firebase
+Cloud Messaging) for Android</h3>
+<blockquote>
+<p>&quot;FCM can deliver a message to an Android device instantly (push)
+without the app itself having to be running or the device having to poll
+-- the &#39;always-on&#39; connection is the conduit.&quot; [^164^]</p>
+</blockquote>
+<p>Key characteristics:</p>
+<ul>
+<li>Single persistent TCP connection shared across all FCM apps</li>
+<li>Negligible battery impact when idle</li>
+<li>High-priority messages can wake device in Doze mode</li>
+</ul>
+<h3 id="93-apns-apple-push-notification-service-for-ios">9.3 APNs (Apple
+Push Notification Service) for iOS</h3>
+<p>iOS uses APNs for push delivery:</p>
+<ul>
+<li>Device maintains persistent connection to APNs</li>
+<li>System (not app) receives notification</li>
+<li>App can be woken to process notification</li>
+</ul>
+<h3 id="94-keep-alive-via-on-demand-rules-ios">9.4 Keep-Alive via
+On-Demand Rules (iOS)</h3>
+<p>Instead of push notifications, iOS VPN apps typically use On-Demand
+rules for reconnection:</p>
+<blockquote>
+<p>&quot;Disabling keep-alive will not result in any data leak outside of the
+VPN, as the on-demand rules will automatically re-establish the VPN
+tunnel before any network traffic starts on the device.&quot; [^124^]</p>
+</blockquote>
+<p>Trade-offs:</p>
+<ul>
+<li><strong>Keep-alive ON</strong>: Maintains persistent tunnel, faster
+response but more battery drain</li>
+<li><strong>Keep-alive OFF</strong>: Better battery life, but occasional
+delays for reconnection</li>
+</ul>
+<hr />
+<h2 id="10-biometric-authentication">10. Biometric Authentication</h2>
+<h3 id="101-android-biometricprompt">10.1 Android BiometricPrompt</h3>
+<p>Android provides <code>BiometricPrompt</code> for fingerprint/face
+authentication:</p>
+<div class="sourceCode" id="cb27"><pre class="sourceCode kotlin"><code class="sourceCode kotlin"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> <span class="va">biometricPrompt</span> <span class="op">=</span> BiometricPrompt<span class="op">(</span>activity<span class="op">,</span> executor<span class="op">,</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">object</span> <span class="op">:</span> <span class="dt">BiometricPrompt</span>.<span class="dt">AuthenticationCallback</span><span class="op">()</span> <span class="op">{</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>        <span class="kw">override</span> <span class="kw">fun</span> <span class="fu">onAuthenticationSucceeded</span><span class="op">(</span></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>            <span class="va">result</span><span class="op">:</span> <span class="dt">AuthenticationResult</span></span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>        <span class="op">)</span> <span class="op">{</span></span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>            <span class="co">// Unlock VPN credentials</span></span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">})</span></span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> <span class="va">promptInfo</span> <span class="op">=</span> BiometricPrompt<span class="op">.</span>PromptInfo<span class="op">.</span>Builder<span class="op">()</span></span>
+<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>setTitle<span class="op">(</span><span class="st">&quot;Authenticate to Connect VPN&quot;</span><span class="op">)</span></span>
+<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>setSubtitle<span class="op">(</span><span class="st">&quot;Verify your identity&quot;</span><span class="op">)</span></span>
+<span id="cb27-13"><a href="#cb27-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>setAllowedAuthenticators<span class="op">(</span></span>
+<span id="cb27-14"><a href="#cb27-14" aria-hidden="true" tabindex="-1"></a>        BIOMETRIC_STRONG or DEVICE_CREDENTIAL</span>
+<span id="cb27-15"><a href="#cb27-15" aria-hidden="true" tabindex="-1"></a>    <span class="op">)</span></span>
+<span id="cb27-16"><a href="#cb27-16" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>build<span class="op">()</span></span>
+<span id="cb27-17"><a href="#cb27-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-18"><a href="#cb27-18" aria-hidden="true" tabindex="-1"></a>biometricPrompt<span class="op">.</span>authenticate<span class="op">(</span>promptInfo<span class="op">)</span></span></code></pre></div>
+<h3 id="102-ios-face-id--touch-id">10.2 iOS Face ID / Touch ID</h3>
+<p>iOS uses <code>LocalAuthentication</code> framework and Keychain
+<code>SecAccessControl</code>:</p>
+<div class="sourceCode" id="cb28"><pre class="sourceCode swift"><code class="sourceCode swift"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> <span class="va">context</span> <span class="op">=</span> LAContext<span class="op">()</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>context<span class="op">.</span>evaluatePolicy<span class="op">(.</span>deviceOwnerAuthenticationWithBiometrics<span class="op">,</span></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>    localizedReason<span class="op">:</span> <span class="st">&quot;Authenticate to access VPN&quot;</span><span class="op">)</span> <span class="op">{</span> success<span class="op">,</span> error <span class="cf">in</span></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> success <span class="op">{</span></span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Access Keychain-protected credentials</span></span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="103-secure-credential-storage-with-biometrics">10.3 Secure
+Credential Storage with Biometrics</h3>
+<p><strong>Android</strong>: Use <code>CryptoObject</code> to bind
+biometric authentication to KeyStore keys:</p>
+<blockquote>
+<p>&quot;When we call the authenticate function with a non-null cipher value
+and authenticationValidityDurationSeconds == -1, then the
+BiometricPrompt is called with the CryptoObject wrapping our cipher.&quot;
+[^192^]</p>
+</blockquote>
+<div class="sourceCode" id="cb29"><pre class="sourceCode kotlin"><code class="sourceCode kotlin"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Cipher protected by biometric authentication</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> <span class="va">cipher</span> <span class="op">=</span> cipherForMode<span class="op">()</span>  <span class="co">// Requires biometric auth</span></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>prompt<span class="op">.</span>authenticate<span class="op">(</span>promptBuilder<span class="op">.</span>build<span class="op">(),</span> BiometricPrompt<span class="op">.</span>CryptoObject<span class="op">(</span>cipher<span class="op">))</span></span></code></pre></div>
+<p><strong>iOS</strong>: Use <code>SecAccessControl</code> with
+biometric constraints:</p>
+<blockquote>
+<p>&quot;For iOS implementation, the security access control is defined with
+<code>kSecAttrAccessibleWhenPasscodeSetThisDeviceOnly</code> and
+<code>biometryCurrentSet</code>&quot; [^192^]</p>
+</blockquote>
+<h3 id="104-flutter-biometric-storage">10.4 Flutter Biometric
+Storage</h3>
+<p>The <code>biometric_storage</code> plugin provides cross-platform
+biometric-protected storage:</p>
+<div class="sourceCode" id="cb30"><pre class="sourceCode dart"><code class="sourceCode dart"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="at">final</span> authStorage <span class="op">=</span> <span class="at">await</span> BiometricStorage()<span class="op">.</span>getStorage(</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;authenticated_storage&#39;</span><span class="op">,</span></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>    options<span class="op">:</span> StorageFileInitOptions(</span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>        authenticationValidityDurationSeconds<span class="op">:</span> <span class="op">-</span><span class="dv">1</span><span class="op">,</span></span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>        authenticationRequired<span class="op">:</span> <span class="cn">true</span><span class="op">,</span></span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>        androidBiometricOnly<span class="op">:</span> <span class="cn">true</span><span class="op">,</span></span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>    )<span class="op">,</span></span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a><span class="co">// Write with biometric protection</span></span>
+<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a><span class="at">await</span> authStorage<span class="op">?.</span>write(secretData);</span>
+<span id="cb30-12"><a href="#cb30-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-13"><a href="#cb30-13" aria-hidden="true" tabindex="-1"></a><span class="co">// Read with biometric authentication</span></span>
+<span id="cb30-14"><a href="#cb30-14" aria-hidden="true" tabindex="-1"></a><span class="at">final</span> data <span class="op">=</span> <span class="at">await</span> authStorage<span class="op">?.</span>read();  <span class="co">// Triggers biometric prompt</span></span></code></pre></div>
+<p>[^192^]</p>
+<hr />
+<h2 id="11-mobile-performance-optimization">11. Mobile Performance
+Optimization</h2>
+<h3 id="111-battery-impact-by-protocol">11.1 Battery Impact by
+Protocol</h3>
+<table>
+<thead>
+<tr>
+<th>Protocol</th>
+<th>Battery Impact</th>
+<th>Idle Behavior</th>
+<th>Reconnection</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>WireGuard</strong></td>
+<td>+1-3%/hr</td>
+<td>Silent when sleeping</td>
+<td>Instant (&lt;1 sec)</td>
+</tr>
+<tr>
+<td><strong>IKEv2</strong></td>
+<td>+2-5%/hr</td>
+<td>Minimal keepalives</td>
+<td>Fast (1-2 sec)</td>
+</tr>
+<tr>
+<td><strong>OpenVPN UDP</strong></td>
+<td>+5-8%/hr</td>
+<td>Periodic keepalives</td>
+<td>Slow (5-15 sec)</td>
+</tr>
+<tr>
+<td><strong>OpenVPN TCP</strong></td>
+<td>+8-12%/hr</td>
+<td>Frequent keepalives</td>
+<td>Slowest (10-20 sec)</td>
+</tr>
+</tbody>
+</table>
+<p>[^123^]</p>
+<blockquote>
+<p>&quot;WireGuard is also more efficient when your phone is just sitting in
+your pocket. Older protocols like OpenVPN are more chatty and send
+keepalive packets to hold the connection open, which can keep waking
+your phone&#39;s cellular radio.&quot; [^123^]</p>
+</blockquote>
+<h3 id="112-battery-optimization-strategies">11.2 Battery Optimization
+Strategies</h3>
+<ol type="1">
+<li><strong>Use WireGuard</strong>: Most battery-efficient protocol</li>
+<li><strong>Smart Keep-Alive</strong>: Disable keep-alive during sleep;
+rely on on-demand rules (iOS)</li>
+<li><strong>Wi-Fi Preference</strong>: VPN on Wi-Fi drains significantly
+less than on cellular</li>
+<li><strong>Hardware Acceleration</strong>: Modern phones (2022+) have
+AES/ChaCha20 hardware acceleration</li>
+<li><strong>Idle Connection Handling</strong>: Reduce heartbeat
+frequency when idle</li>
+</ol>
+<blockquote>
+<p>&quot;Disabling keep-alive will improve battery consumption when the
+device is in sleep mode, but the drawback is you might experience
+occasional slowdowns due to wake-up reconnections.&quot; [^124^]</p>
+</blockquote>
+<h3 id="113-connection-idle-handling">11.3 Connection Idle Handling</h3>
+<p>Best practices for idle connection management:</p>
+<ul>
+<li>Implement adaptive keepalive intervals (longer when idle)</li>
+<li>Use WireGuard&#39;s silent-when-idle design</li>
+<li>Configure PersistentKeepalive only when behind NAT</li>
+<li>Implement smart reconnection on network changes</li>
+</ul>
+<h3 id="114-smart-reconnection-strategies">11.4 Smart Reconnection
+Strategies</h3>
+<div class="sourceCode" id="cb31"><pre class="sourceCode kotlin"><code class="sourceCode kotlin"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Android: Monitor network changes</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> <span class="va">connectivityManager</span> <span class="op">=</span> getSystemService<span class="op">(</span>ConnectivityManager<span class="op">::</span><span class="kw">class</span>.java)</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>connectivityManager.registerDefaultNetworkCallback<span class="op">(</span><span class="kw">object</span> <span class="op">:</span> <span class="dt">NetworkCallback</span>(<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">override</span> <span class="kw">fun</span> <span class="fu">onAvailable</span><span class="op">(</span><span class="va">network</span><span class="op">:</span> <span class="dt">Network</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Rebind tunnel to new network</span></span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>        rebindTunnel<span class="op">(</span>network<span class="op">)</span></span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">override</span> <span class="kw">fun</span> <span class="fu">onLost</span><span class="op">(</span><span class="va">network</span><span class="op">:</span> <span class="dt">Network</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb31-10"><a href="#cb31-10" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Tunnel will use default network</span></span>
+<span id="cb31-11"><a href="#cb31-11" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb31-12"><a href="#cb31-12" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span></code></pre></div>
+<p>From React Native WireGuard implementation [^190^]:</p>
+<div class="sourceCode" id="cb32"><pre class="sourceCode kotlin"><code class="sourceCode kotlin"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="kw">private</span> <span class="kw">val</span> <span class="va">netCb</span> <span class="op">=</span> <span class="kw">object</span> <span class="op">:</span> <span class="dt">ConnectivityManager</span>.<span class="dt">NetworkCallback</span><span class="op">()</span> <span class="op">{</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">override</span> <span class="kw">fun</span> <span class="fu">onAvailable</span><span class="op">(</span><span class="va">n</span><span class="op">:</span> <span class="dt">Network</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>        Log<span class="op">.</span>d<span class="op">(</span>TAG<span class="op">,</span> <span class="st">&quot;Network available -&gt; rebind&quot;</span><span class="op">)</span></span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>        rebind<span class="op">(</span>n<span class="op">)</span></span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">override</span> <span class="kw">fun</span> <span class="fu">onLost</span><span class="op">(</span><span class="va">n</span><span class="op">:</span> <span class="dt">Network</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a>        Log<span class="op">.</span>d<span class="op">(</span>TAG<span class="op">,</span> <span class="st">&quot;Network lost -&gt; rebind to default&quot;</span><span class="op">)</span></span>
+<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a>        rebind<span class="op">(</span><span class="kw">null</span><span class="op">)</span></span>
+<span id="cb32-9"><a href="#cb32-9" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb32-10"><a href="#cb32-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<hr />
+<h2 id="12-real-world-mobile-vpn-app-architectures">12. Real-World
+Mobile VPN App Architectures</h2>
+<h3 id="121-mullvad-vpn">12.1 Mullvad VPN</h3>
+<p><strong>Architecture</strong>: Rust daemon + platform-specific
+frontend</p>
+<pre><code>Rust Daemon (talpid-core + mullvad-daemon)
+  |-- JNI --&gt; Android (Kotlin UI)
+  |-- Unix Domain Socket --&gt; Desktop
+  |-- FFI/NetworkExtension --&gt; iOS (Swift UI)</code></pre>
+<p>[^23^]</p>
+<p><strong>Key technical decisions:</strong></p>
+<ul>
+<li><strong>Daemon pattern</strong>: Unprivileged frontend + privileged
+system service</li>
+<li><strong>WireGuard protocol</strong>: Using GotaTun (Rust) on
+Android, wireguard-go on iOS</li>
+<li><strong>Frontend communication</strong>: gRPC (desktop), JNI
+(Android)</li>
+<li><strong>Offline detection</strong>: ConnectivityManager on Android,
+NWPathMonitor on iOS</li>
+</ul>
+<p><strong>Android implementation details:</strong></p>
+<blockquote>
+<p>&quot;The frontend communicates with the daemon via the management
+interface and these are serviced asynchronously via the daemon.
+Frontends can also subscribe to messages from the daemon, to receive
+updates about the tunnel state, new settings, new relay lists, version
+information and device events.&quot; [^23^]</p>
+</blockquote>
+<blockquote>
+<p>&quot;To detect connectivity on Android, the app relies on
+<code>ConnectivityManager</code> by listening for changes to the
+availability of non-VPN networks that provide internet connectivity.&quot;
+[^23^]</p>
+</blockquote>
+<p><strong>iOS implementation details:</strong></p>
+<blockquote>
+<p>&quot;The iOS app uses WireGuard kit&#39;s offline detection, which in turn
+uses <code>NWPathMonitor</code> to listen for changes to the route table
+and assumes connectivity if a default route exists.&quot; [^23^]</p>
+</blockquote>
+<p><strong>Protocols used:</strong></p>
+<ul>
+<li>WireGuard (primary): WireGuardNT (Windows), GotaTun (Android),
+wireguard-go (iOS/macOS)</li>
+<li>OpenVPN: Recently removed from desktop, still on some mobile</li>
+<li>TLS 1.3 with Rustls for API communication</li>
+<li>Certificate pinning to prevent MitM</li>
+</ul>
+<p>[^20^]</p>
+<h3 id="122-expressvpn--nordvpn">12.2 ExpressVPN / NordVPN</h3>
+<p>These commercial VPNs typically use:</p>
+<ul>
+<li><strong>Native development</strong>: Swift (iOS), Kotlin/Java
+(Android)</li>
+<li><strong>WireGuard or custom protocols</strong>: NordVPN uses
+NordLynx (WireGuard-based)</li>
+<li><strong>Custom UI</strong>: Native platform UI components</li>
+<li><strong>Lightway</strong>: ExpressVPN&#39;s custom protocol optimized
+for mobile</li>
+</ul>
+<h3 id="123-flutter-based-vpn-apps">12.3 Flutter-Based VPN Apps</h3>
+<p>Emerging pattern for cross-platform VPN apps:</p>
+<blockquote>
+<p>&quot;To develop a Flutter VPN mobile app, use Flutter for the UI, server
+selection, login, subscriptions, and app state, while handling the
+actual VPN tunnel through native Android VpnService and iOS
+NetworkExtension using platform channels.&quot; [^115^]</p>
+</blockquote>
+<p>Architecture:</p>
+<pre><code>Flutter UI Layer (Dart)
+  |-- MethodChannel --&gt; Android VpnService (Kotlin)
+  |-- MethodChannel --&gt; iOS NetworkExtension (Swift)
+  |-- Dart FFI --&gt; Shared Rust Core (optional)</code></pre>
+<p>Development timeline estimate:</p>
+<blockquote>
+<p>&quot;Realistically: 3-4 months for a small team with mobile experience.
+6+ months if the team is learning the VPN stack for the first time. Most
+of the time goes to native code, edge cases, and App Store approvals --
+not the Flutter UI.&quot; [^115^]</p>
+</blockquote>
+<h3 id="124-react-native-vpn-apps">12.4 React Native VPN Apps</h3>
+<p>React Native VPN modules exist but require significant native
+development:</p>
+<blockquote>
+<p>&quot;React-Native does not have a networking extension library, so I had
+to write an extension that supports iOS.&quot; [^191^]</p>
+</blockquote>
+<p>Available packages:</p>
+<ul>
+<li><code>react-native-wireguard-vpn-connect</code>: WireGuard for
+iOS/Android [^188^]</li>
+<li><code>react-native-wireguard-vpn</code>: WireGuard with Expo config
+plugin [^189^]</li>
+</ul>
+<hr />
+<h2 id="13-platform-comparison-matrix">13. Platform Comparison
+Matrix</h2>
+<h3 id="131-vpn-feature-comparison">13.1 VPN Feature Comparison</h3>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Android</th>
+<th>iOS</th>
+<th>HarmonyOS NEXT</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>VPN API</strong></td>
+<td><code>VpnService</code></td>
+<td><code>NEPacketTunnelProvider</code></td>
+<td><code>VpnExtensionAbility</code></td>
+</tr>
+<tr>
+<td><strong>Protocol Support</strong></td>
+<td>Any (custom)</td>
+<td>Any via NetworkExtension</td>
+<td>Any via native bridge</td>
+</tr>
+<tr>
+<td><strong>Split Tunneling</strong></td>
+<td><code>addAllowedApplication()</code> /
+<code>addDisallowedApplication()</code></td>
+<td>Per-app via routing rules</td>
+<td>Per-app proxy (limited)</td>
+</tr>
+<tr>
+<td><strong>Always-On VPN</strong></td>
+<td>Yes (API 24+)</td>
+<td>Via On-Demand rules</td>
+<td>Via system settings</td>
+</tr>
+<tr>
+<td><strong>Lockdown Mode</strong></td>
+<td>Yes (API 29+)</td>
+<td><code>includeAllNetworks</code></td>
+<td>Limited</td>
+</tr>
+<tr>
+<td><strong>Foreground Service</strong></td>
+<td>Required</td>
+<td>N/A (extension runs independently)</td>
+<td>Extension ability</td>
+</tr>
+<tr>
+<td><strong>Background Persistence</strong></td>
+<td><code>START_STICKY</code> + foreground</td>
+<td>System-managed extension</td>
+<td>System-managed</td>
+</tr>
+<tr>
+<td><strong>Memory Limit</strong></td>
+<td>~200MB+ (device dependent)</td>
+<td>~15MB (Network Extension)</td>
+<td>Unknown</td>
+</tr>
+<tr>
+<td><strong>Quick Toggle</strong></td>
+<td>Quick Settings Tile</td>
+<td>Control Center (Settings)</td>
+<td>Form-based control card</td>
+</tr>
+<tr>
+<td><strong>Battery Optimization</strong></td>
+<td>REQUEST_IGNORE_BATTERY_OPTIMIZATIONS</td>
+<td>N/A (system manages)</td>
+<td>System-managed</td>
+</tr>
+<tr>
+<td><strong>Biometric Auth</strong></td>
+<td><code>BiometricPrompt</code></td>
+<td><code>LocalAuthentication</code> + Keychain</td>
+<td>System biometric API</td>
+</tr>
+<tr>
+<td><strong>Credential Storage</strong></td>
+<td>Android Keystore</td>
+<td>iOS Keychain</td>
+<td>HUKS (Huawei Universal Keystore)</td>
+</tr>
+<tr>
+<td><strong>Push Notifications</strong></td>
+<td>FCM</td>
+<td>APNs</td>
+<td>HMS Push Kit</td>
+</tr>
+<tr>
+<td><strong>Rust Integration</strong></td>
+<td>JNI/NDK</td>
+<td>FFI/C-bindings</td>
+<td>N-API bridge</td>
+</tr>
+<tr>
+<td><strong>Code Signing</strong></td>
+<td>APK/AAB signing</td>
+<td>Apple certificates</td>
+<td>Huawei HAP signing</td>
+</tr>
+<tr>
+<td><strong>Simulator Support</strong></td>
+<td>Emulator (limited VPN)</td>
+<td>Physical device only</td>
+<td>ARM simulator</td>
+</tr>
+</tbody>
+</table>
+<h3 id="132-development-complexity-comparison">13.2 Development
+Complexity Comparison</h3>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Android</th>
+<th>iOS</th>
+<th>HarmonyOS</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Setup Complexity</strong></td>
+<td>Medium</td>
+<td>High (entitlements, provisioning)</td>
+<td>Medium (DevEco Studio)</td>
+</tr>
+<tr>
+<td><strong>Native Code Required</strong></td>
+<td>Kotlin/Java</td>
+<td>Swift/Objective-C</td>
+<td>ArkTS + C++</td>
+</tr>
+<tr>
+<td><strong>Debugging</strong></td>
+<td>Android Studio + logcat</td>
+<td>Xcode + device required</td>
+<td>DevEco Studio</td>
+</tr>
+<tr>
+<td><strong>App Store Review</strong></td>
+<td>Moderate</td>
+<td>Strict (VPN scrutiny)</td>
+<td>Moderate</td>
+</tr>
+<tr>
+<td><strong>Documentation</strong></td>
+<td>Excellent</td>
+<td>Good</td>
+<td>Growing</td>
+</tr>
+<tr>
+<td><strong>Community</strong></td>
+<td>Very large</td>
+<td>Large</td>
+<td>Growing</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="14-mobile-specific-danger-zones">14. Mobile-Specific Danger
+Zones</h2>
+<h3 id="141-critical-issues">14.1 Critical Issues</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Danger Zone</th>
+<th>Impact</th>
+<th>Mitigation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><strong>iOS 15MB Memory Limit</strong></td>
+<td>Extension killed, VPN disconnects</td>
+<td>Minimal Swift/ObjC code; delegate to Rust/C; zero-copy buffers</td>
+</tr>
+<tr>
+<td>2</td>
+<td><strong>Android Doze Mode</strong></td>
+<td>Background service killed</td>
+<td>Foreground service + notification; battery whitelist request</td>
+</tr>
+<tr>
+<td>3</td>
+<td><strong>Manufacturer Battery Optimizations</strong></td>
+<td>(OnePlus, Samsung, Xiaomi) Aggressive app killing</td>
+<td>Guide users to disable optimizations; use foreground service</td>
+</tr>
+<tr>
+<td>4</td>
+<td><strong>iOS Network Extension Entitlement</strong></td>
+<td>Cannot develop without Apple approval</td>
+<td>Apply for entitlement early; use paid developer account</td>
+</tr>
+<tr>
+<td>5</td>
+<td><strong>DNS Leaks</strong></td>
+<td>DNS traffic bypasses VPN</td>
+<td>Explicit DNS configuration on both platforms</td>
+</tr>
+<tr>
+<td>6</td>
+<td><strong>Split Tunneling Misconfiguration</strong></td>
+<td>Traffic leaks outside VPN</td>
+<td>Thorough testing with multiple route configurations</td>
+</tr>
+<tr>
+<td>7</td>
+<td><strong>Credential Storage</strong></td>
+<td>Private keys exposed</td>
+<td>Android Keystore / iOS Keychain with biometric protection</td>
+</tr>
+<tr>
+<td>8</td>
+<td><strong>Protocol Battery Drain</strong></td>
+<td>Excessive battery usage</td>
+<td>Use WireGuard; optimize keepalive intervals</td>
+</tr>
+<tr>
+<td>9</td>
+<td><strong>App Store VPN Rejection</strong></td>
+<td>App rejected or removed</td>
+<td>Clear privacy policy; no misleading claims; minimal analytics</td>
+</tr>
+<tr>
+<td>10</td>
+<td><strong>Rust FFI Complexity</strong></td>
+<td>Memory safety issues at boundaries</td>
+<td>Use UniFFI; careful memory management; extensive testing</td>
+</tr>
+<tr>
+<td>11</td>
+<td><strong>HarmonyOS App Enumeration</strong></td>
+<td>Cannot list all apps for split tunneling</td>
+<td>Use preset app list; manual package entry</td>
+</tr>
+<tr>
+<td>12</td>
+<td><strong>Network Change Handling</strong></td>
+<td>Tunnel drops on WiFi/cellular switch</td>
+<td>Implement network callback rebind logic</td>
+</tr>
+</tbody>
+</table>
+<h3 id="142-platform-specific-gotchas">14.2 Platform-Specific
+Gotchas</h3>
+<p><strong>Android:</strong></p>
+<ul>
+<li><code>BIND_VPN_SERVICE</code> permission requires system dialog
+(cannot bypass)</li>
+<li>Always-on VPN conflicts with other VPN apps</li>
+<li>16KB page sizes on Android 15+ require library recompilation</li>
+<li>Work profile / personal profile VPN separation on enterprise
+devices</li>
+</ul>
+<p><strong>iOS:</strong></p>
+<ul>
+<li>Network Extension requires <strong>physical device</strong> for
+testing (simulator not supported)</li>
+<li>Memory limit is <strong>hard</strong> -- no way to increase it</li>
+<li>Extension bundle ID must be prefixed with app bundle ID</li>
+<li><code>NSExtensionPrincipalClass</code> in Info.plist must match
+class name</li>
+<li><code>loadFromPreferences</code> bug requires double-call before
+starting tunnel [^131^]</li>
+</ul>
+<p><strong>HarmonyOS:</strong></p>
+<ul>
+<li>VPN authorization component may not be present on emulators</li>
+<li>Cannot enumerate all installed apps (privacy restriction)</li>
+<li>N-API bridge has learning curve</li>
+<li>Smaller ecosystem for third-party libraries</li>
+</ul>
+<hr />
+<h2 id="15-recommended-architecture">15. Recommended Architecture</h2>
+<h3 id="151-optimal-cross-platform-vpn-architecture">15.1 Optimal
+Cross-Platform VPN Architecture</h3>
+<p>Based on research findings, the recommended architecture for a
+cross-platform VPN app:</p>
+<pre><code>                    +------------------+
+                    |  Flutter UI      |
+                    |  (Dart)          |
+                    +--------+---------+
+                             |
+              +--------------+--------------+
+              |                             |
+       +------v------+            +--------v-------+
+       |  Shared     |            |  Shared State  |
+       |  Business   |            |  Management    |
+       |  Logic      |            |  (Riverpod/Bloc)|
+       +------+------+            +----------------+
+              |
+       +------v------+
+       |  Rust Core  |
+       |  (UniFFI)   |
+       |             |
+       | - WireGuard |
+       | - Protocol  |
+       | - Crypto    |
+       | - State     |
+       | - Machine   |
+       +------+------+
+              |
+    +---------+----------+
+    |          |          |
++---v---+  +---v----+  +--v-----+
+| JNI   |  | FFI    |  | N-API  |
+|Android|  | iOS    |  |Harmony |
++---+---+  +---+----+  +--+-----+
+    |          |          |
++---v--------+ +---v----+ +--v--------+
+| VpnService | |NEPacket|  |VpnExtension|
+| (Kotlin)   | |Tunnel  |  |Ability     |
+|            | |Provider|  |(ArkTS)     |
++------------+ +--------+ +-----------+</code></pre>
+<h3 id="152-technology-stack-recommendations">15.2 Technology Stack
+Recommendations</h3>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Recommendation</th>
+<th>Rationale</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>UI Framework</strong></td>
+<td>Flutter</td>
+<td>85-90% code reuse, mature ecosystem, good native bridge</td>
+</tr>
+<tr>
+<td><strong>VPN Core</strong></td>
+<td>Rust (GotaTun/Custom)</td>
+<td>Memory safety, performance, unified codebase</td>
+</tr>
+<tr>
+<td><strong>Android Native</strong></td>
+<td>Kotlin + JNI</td>
+<td>Platform idiomatic, good Rust interop</td>
+</tr>
+<tr>
+<td><strong>iOS Native</strong></td>
+<td>Swift + FFI</td>
+<td>Minimal wrapper due to 15MB limit</td>
+</tr>
+<tr>
+<td><strong>HarmonyOS Native</strong></td>
+<td>ArkTS + N-API</td>
+<td>Official language, native C++ bridge</td>
+</tr>
+<tr>
+<td><strong>Bindings</strong></td>
+<td>UniFFI</td>
+<td>Automated Kotlin/Swift generation</td>
+</tr>
+<tr>
+<td><strong>State Management</strong></td>
+<td>Riverpod (Flutter)</td>
+<td>Reactive, testable</td>
+</tr>
+<tr>
+<td><strong>Protocol</strong></td>
+<td>WireGuard</td>
+<td>Best battery efficiency, modern crypto</td>
+</tr>
+<tr>
+<td><strong>Credentials</strong></td>
+<td>Platform Keystore</td>
+<td>OS-level security</td>
+</tr>
+<tr>
+<td><strong>Auth</strong></td>
+<td>BiometricPrompt (Android) / LocalAuthentication (iOS)</td>
+<td>Standard platform APIs</td>
+</tr>
+</tbody>
+</table>
+<h3 id="153-implementation-priority">15.3 Implementation Priority</h3>
+<ol type="1">
+<li><strong>Phase 1</strong>: Rust core with WireGuard implementation +
+UniFFI bindings</li>
+<li><strong>Phase 2</strong>: Android VpnService integration with Kotlin
+JNI</li>
+<li><strong>Phase 3</strong>: iOS NetworkExtension with Swift (watch
+memory!)</li>
+<li><strong>Phase 4</strong>: Flutter UI layer with platform
+channels</li>
+<li><strong>Phase 5</strong>: HarmonyOS VpnExtensionAbility with N-API
+bridge</li>
+<li><strong>Phase 6</strong>: Biometric auth, push notifications, quick
+settings tiles</li>
+<li><strong>Phase 7</strong>: Battery optimization, enterprise features
+(always-on, lockdown)</li>
+</ol>
+<h3 id="154-key-success-factors">15.4 Key Success Factors</h3>
+<ol type="1">
+<li><strong>Rust core must be lean</strong> -- iOS memory limit is the
+hardest constraint</li>
+<li><strong>Native code must handle network changes gracefully</strong>
+-- rebind on every network transition</li>
+<li><strong>DNS configuration is critical</strong> -- never rely on
+system DNS when VPN is active</li>
+<li><strong>Battery optimization is a feature</strong> -- users will
+uninstall battery-draining VPNs</li>
+<li><strong>App Store compliance from day one</strong> -- privacy
+policy, minimal permissions, no misleading claims</li>
+<li><strong>Test on real devices</strong> -- emulators don&#39;t reflect
+real-world networking behavior</li>
+<li><strong>Always-on VPN support</strong> -- enterprise users expect
+this; consumer users benefit from it</li>
+</ol>
+<hr />
+<h2 id="sources-and-references">Sources and References</h2>
+<ul>
+<li>[^21^] Stack Overflow - Android VPN Split Tunneling: <a href="https://stackoverflow.com/questions/79207428/">https://stackoverflow.com/questions/79207428/</a></li>
+<li>[^22^] Hey VPN - HarmonyOS VPN Client (GitHub): <a href="https://github.com/popsiclelmlm/Hey">https://github.com/popsiclelmlm/Hey</a></li>
+<li>[^23^] Mullvad VPN Architecture (GitHub): <a href="https://github.com/mullvad/mullvadvpn-app/blob/main/docs/architecture.md">https://github.com/mullvad/mullvadvpn-app/blob/main/docs/architecture.md</a></li>
+<li>[^25^] Android VpnService.java Source: <a href="https://android.googlesource.com/platform/frameworks/base/+/refs/heads/main/core/java/android/net/VpnService.java">https://android.googlesource.com/platform/frameworks/base/+/refs/heads/main/core/java/android/net/VpnService.java</a></li>
+<li>[^26^] Jason Bayton - Android Enterprise VPN: <a href="https://bayton.org/android/android-enterprise-faq/global-vpn-support/">https://bayton.org/android/android-enterprise-faq/global-vpn-support/</a></li>
+<li>[^27^] Medium - Android VPN Service Guide: <a href="https://medium.com/@satish.nada98/complete-guide-to-implementing-a-vpn-service-in-android">https://medium.com/@satish.nada98/complete-guide-to-implementing-a-vpn-service-in-android</a></li>
+<li>[^28^] UniFFI React Native Integration Issue: <a href="https://github.com/jhugman/uniffi-bindgen-react-native/issues/278">https://github.com/jhugman/uniffi-bindgen-react-native/issues/278</a></li>
+<li>[^29^] Android Developer - VPN Guide: <a href="https://developer.android.com/develop/connectivity/vpn">https://developer.android.com/develop/connectivity/vpn</a></li>
+<li>[^30^] Huawei Central - HarmonyOS NEXT: <a href="https://www.huaweicentral.com/harmonyos-next-developer-preview-official-website-highlights-key-features/">https://www.huaweicentral.com/harmonyos-next-developer-preview-official-website-highlights-key-features/</a></li>
+<li>[^3^] DEV Community - HarmonyOS Cross-Platform Solutions: <a href="https://dev.to/georgegcs/harmonyos-5-detailed-explanation-of-harmonyos-cross-platform-development-solutions-part-1-30pn">https://dev.to/georgegcs/harmonyos-5-detailed-explanation-of-harmonyos-cross-platform-development-solutions-part-1-30pn</a></li>
+<li>[^62^] Mullvad GotaTun Announcement: <a href="https://mullvad.net/en/blog/announcing-gotatun-the-future-of-wireguard-at-mullvad-vpn">https://mullvad.net/en/blog/announcing-gotatun-the-future-of-wireguard-at-mullvad-vpn</a></li>
+<li>[^64^] iOS Network Extensions Guide: <a href="https://antongubarenko.substack.com/p/ios-personal-vpn-and-network-extensions">https://antongubarenko.substack.com/p/ios-personal-vpn-and-network-extensions</a></li>
+<li>[^77^] HarmonyOS VpnExtensionAbility API: <a href="https://developer.huawei.com/consumer/en/doc/harmonyos-references/js-apis-vpnextensionability">https://developer.huawei.com/consumer/en/doc/harmonyos-references/js-apis-vpnextensionability</a></li>
+<li>[^78^] Pushy - Android Doze Mode: <a href="https://support.pushy.me/hc/en-us/articles/360043423332">https://support.pushy.me/hc/en-us/articles/360043423332</a></li>
+<li>[^79^] UniFFI Android Binding Guide: <a href="https://jans.io/docs/v1.7.0/cedarling/uniffi/cedarling-android/">https://jans.io/docs/v1.7.0/cedarling/uniffi/cedarling-android/</a></li>
+<li>[^81^] Sentiance - Android Battery Optimization: <a href="https://docs.sentiance.com/important-topics/sdk/appendix/android/android-battery-optimization">https://docs.sentiance.com/important-topics/sdk/appendix/android/android-battery-optimization</a></li>
+<li>[^82^] Multiplatform with Rust on iOS: <a href="https://mobilesystemdesign.substack.com/p/multiplatform-with-rust-on-ios-2c4">https://mobilesystemdesign.substack.com/p/multiplatform-with-rust-on-ios-2c4</a></li>
+<li>[^83^] hev-socks5-tunnel iOS Memory Issue: <a href="https://github.com/heiher/hev-socks5-tunnel/issues/109">https://github.com/heiher/hev-socks5-tunnel/issues/109</a></li>
+<li>[^84^] Android Doze and App Standby: <a href="https://developer.android.com/training/monitoring-device-state/doze-standby">https://developer.android.com/training/monitoring-device-state/doze-standby</a></li>
+<li>[^85^] Cross-Platform Rust for Web, Android, iOS: <a href="https://artificialworlds.net/blog/2022/07/06/building-cross-platform-rust-for-web-android-and-ios-a-minimal-example/">https://artificialworlds.net/blog/2022/07/06/building-cross-platform-rust-for-web-android-and-ios-a-minimal-example/</a></li>
+<li>[^87^] Stack Overflow - Doze Mode Foreground Services: <a href="https://stackoverflow.com/questions/56866806/doze-mode-do-foreground-services-continue-to-run">https://stackoverflow.com/questions/56866806/doze-mode-do-foreground-services-continue-to-run</a></li>
+<li>[^89^] HarmonyOS Developer - Cross-Platform Frameworks: <a href="https://developer.harmonyos.cool/docs/resources/cross-platform/overview">https://developer.harmonyos.cool/docs/resources/cross-platform/overview</a></li>
+<li>[^90^] Open Radar - iOS Network Extension Memory Limit: <a href="http://www.openradar.appspot.com/27660401">http://www.openradar.appspot.com/27660401</a></li>
+<li>[^115^] Flutter VPN App Development: <a href="https://appilian.com/flutter-vpn-mobile-app-development/">https://appilian.com/flutter-vpn-mobile-app-development/</a></li>
+<li>[^119^] wireguard_flutter_plus Example: <a href="https://pub.dev/packages/wireguard_flutter_plus/example">https://pub.dev/packages/wireguard_flutter_plus/example</a></li>
+<li>[^122^] QuickTile Settings - F-Droid: <a href="https://f-droid.org/en/packages/com.rbn.qtsettings/">https://f-droid.org/en/packages/com.rbn.qtsettings/</a></li>
+<li>[^123^] Windscribe - VPN Battery Usage: <a href="https://windscribe.com/blog/does-vpn-drain-battery/">https://windscribe.com/blog/does-vpn-drain-battery/</a></li>
+<li>[^124^] IVPN - Battery Drain: <a href="https://www.ivpn.net/knowledgebase/troubleshooting/the-battery-on-my-phone-drains-too-fast-while-using-ivpn-why/">https://www.ivpn.net/knowledgebase/troubleshooting/the-battery-on-my-phone-drains-too-fast-while-using-ivpn-why/</a></li>
+<li>[^126^] Flutter + WireGuard VPN: <a href="https://medium.com/@mdazadhossain95/flutter-wireguard-vpn-one-codebase-android-and-ios-dedb9d4286ec">https://medium.com/@mdazadhossain95/flutter-wireguard-vpn-one-codebase-android-and-ios-dedb9d4286ec</a></li>
+<li>[^129^] Kean.blog - Packet Tunnel Provider: <a href="https://kean.blog/post/packet-tunnel-provider">https://kean.blog/post/packet-tunnel-provider</a></li>
+<li>[^130^] Node-API on HarmonyOS: <a href="https://medium.com/huawei-developers/node-api-part-1-introduction-to-node-api-wrapping-native-c-objects-in-arkts-on-0a743f5cc175">https://medium.com/huawei-developers/node-api-part-1-introduction-to-node-api-wrapping-native-c-objects-in-arkts-on-0a743f5cc175</a></li>
+<li>[^131^] VPN Configuration Manager: <a href="https://github.com/kean/articles/blob/master/2020-05-24-vpn-configuration-manager.markdown">https://github.com/kean/articles/blob/master/2020-05-24-vpn-configuration-manager.markdown</a></li>
+<li>[^160^] Palo Alto Networks - Lockdown Mode: <a href="https://docs.paloaltonetworks.com/">https://docs.paloaltonetworks.com/</a></li>
+<li>[^161^] Microsoft Intune - Android VPN: <a href="https://learn.microsoft.com/en-us/intune/device-configuration/templates/ref-vpn-settings-android-enterprise">https://learn.microsoft.com/en-us/intune/device-configuration/templates/ref-vpn-settings-android-enterprise</a></li>
+<li>[^164^] Push Notification Internals: <a href="https://blog.clix.so/how-push-notification-delivery-works-internally/">https://blog.clix.so/how-push-notification-delivery-works-internally/</a></li>
+<li>[^165^] Android 10 Enterprise Features: <a href="https://developer.android.com/work/versions/android-10">https://developer.android.com/work/versions/android-10</a></li>
+<li>[^186^] VPN App Store Publishing: <a href="https://klox.app/vpn-app-store-publishing">https://klox.app/vpn-app-store-publishing</a></li>
+<li>[^187^] iOS Network Extension Security: <a href="https://ptkd.com/journal/ios-network-extension-vpn-entitlement-security">https://ptkd.com/journal/ios-network-extension-vpn-entitlement-security</a></li>
+<li>[^188^] react-native-wireguard-vpn-connect: <a href="https://www.npmjs.com/package/react-native-wireguard-vpn-connect">https://www.npmjs.com/package/react-native-wireguard-vpn-connect</a></li>
+<li>[^189^] react-native-wireguard-vpn: <a href="https://github.com/usama7365/react-native-wireguard-vpn">https://github.com/usama7365/react-native-wireguard-vpn</a></li>
+<li>[^190^] React Native WireGuard Turbo Module: <a href="https://medium.com/@igor.khlyupin/react-native-wireguard-turbo-module-5f2817a24eff">https://medium.com/@igor.khlyupin/react-native-wireguard-turbo-module-5f2817a24eff</a></li>
+<li>[^192^] Secure Mobile Biometric Authentication: <a href="https://blog.ostorlab.co/secure-mobile-biometric-authentication.html">https://blog.ostorlab.co/secure-mobile-biometric-authentication.html</a></li>
+<li>[^20^] Mullvad VPN Technical Details: <a href="https://mullvad.net/en/why-mullvad-vpn">https://mullvad.net/en/why-mullvad-vpn</a></li>
+</ul>
+<hr />
+<p><em>This research document was compiled from 15+ independent web
+searches across official documentation, GitHub repositories, technical
+blogs, and community forums. All citations use [^number^] format with
+source URLs provided in the Sources section.</em></p>
+</body>
+</html>

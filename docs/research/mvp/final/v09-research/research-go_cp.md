@@ -1,5 +1,8 @@
 # RESEARCH go_cp
 
+**Revision:** 1
+**Last modified:** 2026-07-04T12:00:00Z
+
 Go control-plane stack for a Mullvad-parity self-hosted VPN. Latest authoritative
 versions + best practices, as of **2026-06-25** (access date for every source below).
 Per §11.4.99/§11.4.150: every claim is cited; latest official docs/releases preferred

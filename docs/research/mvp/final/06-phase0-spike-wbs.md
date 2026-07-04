@@ -1,7 +1,17 @@
 # Phase 0 (Spike) — Work Breakdown: phases → tasks → subtasks
 
-**Revision:** 1
-**Last modified:** 2026-06-25T00:00:00Z
+**Revision:** 2
+**Last modified:** 2026-07-04T12:00:00Z
+**Rev 2:** Independent gap-analysis pass (§14 risk register now cross-references
+`v00-meta/decision-register.md`'s per-decision reversal criteria so a gate failure's
+architectural consequence is traceable to the exact decision it re-opens, not just
+a prose fallback). No contradictions found against `HelixVPN-Phase0-Spike.md` (the
+original CLD source) or `v07-execution/{workable-items-model,dependency-graph,
+subtask-deepening-p1}.md` — this WBS's 3-tier epic→task→subtask breakdown, gate
+evidence methodology (§12), and risk register (§14) were independently verified
+already concrete (falsifiable acceptance + captured-evidence method per item);
+R5 (task/subtask tier asymmetry, `REFINEMENT_NOTES.md`) does not apply to this
+document — Phase 0 was always the 3-tier side of the asymmetry.
 
 > Master technical specification — document 06 of the HelixVPN set.
 > Scope: the **complete Work Breakdown Structure (WBS)** for **Phase 0 — the Spike**:
@@ -1113,13 +1123,21 @@ WantedBy=default.target
 
 ## 14. Phase-0 risks + pre-planned fallbacks [04_P0 §13]
 
-| Risk | Likelihood | Fallback | Item(s) |
-|---|---|---|---|
-| MASQUE/CONNECT-UDP in Rust over budget | med-high | Prototype MASQUE first in Go (`masque-go`) to unblock G2, then port — and let that inform G4 toward Go | HVPN-P0-031/-042 |
-| boringtun quirks / maintenance gaps | med | Swap to `wireguard-go` via cgo for the spike, or kernel WG on Linux for non-iOS gates | HVPN-P0-011 |
-| iOS NE memory fails | med | §6.4 ladder; worst case iOS ships plain-WG + on-path obfs only in v1 | HVPN-P0-067 |
-| `h3` immaturity blocks datagrams | med | Pin versions; if blocked, carry WG over a QUIC *stream* as a stopgap (accept HoL blocking) purely to pass G2, flag non-final | HVPN-P0-028 |
-| Time-box blown | — | Stop; the unfinished gate **is** the finding — escalate the architectural decision with partial data (§11.4.6) rather than overrun silently | HVPN-P0-078 |
+| Risk | Likelihood | Fallback | Item(s) | Decision re-opened (reversal criteria) |
+|---|---|---|---|---|
+| MASQUE/CONNECT-UDP in Rust over budget | med-high | Prototype MASQUE first in Go (`masque-go`) to unblock G2, then port — and let that inform G4 toward Go | HVPN-P0-031/-042 | **D5** (edge language) — reversal fires if this pushes G4 toward Go per `decision-register.md` §2 D5 |
+| boringtun quirks / maintenance gaps | med | Swap to `wireguard-go` via cgo for the spike, or kernel WG on Linux for non-iOS gates | HVPN-P0-011 | none registered (implementation swap, not a D-decision) |
+| iOS NE memory fails | med | §6.4 ladder; worst case iOS ships plain-WG + on-path obfs only in v1 | HVPN-P0-067 | **D2** (Rust core, make-or-break) — a captured G3 fail re-opens D2 and the whole client strategy per `decision-register.md` §2 D2 / §6 |
+| `h3` immaturity blocks datagrams | med | Pin versions; if blocked, carry WG over a QUIC *stream* as a stopgap (accept HoL blocking) purely to pass G2, flag non-final | HVPN-P0-028 | **D1** (MASQUE primary) — a stopgap-stream G2 pass is provisional; genuine reversal needs a captured G2 fail per `decision-register.md` §2 D1 |
+| Time-box blown | — | Stop; the unfinished gate **is** the finding — escalate the architectural decision with partial data (§11.4.6) rather than overrun silently | HVPN-P0-078 | whichever gate's decision (D1/D2/D5) is left unresolved stays a recommendation, never a resolution, per `decision-register.md` §0 |
+
+> **Traceability note.** This risk register names the *operational* fallback per
+> item; `v00-meta/decision-register.md` §1/§2/§6 is the *canonical* record of which
+> program-level decision (D1/D2/D5) each Phase-0 gate resolves and the exact
+> captured-evidence condition that would re-open it. The two documents are
+> deliberately non-duplicative: this table is "what do we do Monday morning if a
+> gate fails," the decision register is "which cross-cutting architectural call
+> does that failure re-open, and under what evidence."
 
 ---
 

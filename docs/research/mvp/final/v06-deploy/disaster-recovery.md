@@ -1,7 +1,11 @@
 # Disaster recovery (RTO/RPO, backup & region-failover runbook)
 
-**Revision:** 1
-**Last modified:** 2026-06-25T12:00:00Z
+**Revision:** 2
+**Last modified:** 2026-07-04T12:00:00Z
+**Rev 2:** Reviewed against the Volume-6 enterprise-hardening pass (2026-07-04); no gaps found in
+scope (RTO/RPO, backup/restore, region-failover, restore verification are already comprehensive
+and cross-checked against `ha-and-multiregion.md`) — revision bumped for the pass, no content
+change beyond this header.
 
 > Master technical specification — Volume 6 (Deployment, Tooling & Operations), nano-detail
 > document `disaster-recovery.md`. **This document CLOSES source-coverage ledger gap G1**

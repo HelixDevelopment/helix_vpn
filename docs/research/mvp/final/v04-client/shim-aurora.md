@@ -1,7 +1,10 @@
 # Aurora OS shim (Qt/C++ tun)
 
-**Revision:** 1
-**Last modified:** 2026-06-25T00:00:00Z
+**Revision:** 2
+**Last modified:** 2026-07-04T12:00:00Z
+**Rev 2:** Added a distribution/certification compliance note to §12 (Aurora Store /
+enterprise MDM channels) — closing a gap identified in an independent
+enterprise-hardening pass over Volume 4.
 
 > Volume 4 (Clients) nano-detail specification — deepens the **Aurora OS** row of
 > the per-platform shim matrix in doc 03 [03-client §5, §5.6] into an
@@ -913,6 +916,21 @@ flowchart LR
 - **No active CI** (§11.4.156): the "matrix" is the **local** melos + Aurora-SDK
   build ritual + the operator's pre-tag sweep (§11.4.40); any preserved workflow
   is `*.disabled-local-only`.
+
+### 12.1 Distribution + certification (engineering-relevant subset)
+
+Aurora OS is primarily a government/enterprise platform (AI3); distribution differs
+structurally from consumer app stores and this shapes the Phase-3 rollout plan:
+
+| Channel | Note |
+|---|---|
+| Aurora Store / RuStore-class store | consumer-facing distribution exists but is secondary for this platform's target segment; a store listing (if pursued) would carry a review comparable in spirit to Apple/Google's — privacy/data-handling disclosure consistent with `v05-security/no-logging-as-code.md` |
+| Enterprise MDM / direct RPM deployment | the **primary expected channel** for Aurora given its government/enterprise positioning (Architecture-Refined §5.7) — signed RPM (§12) pushed via an organization's MDM or direct install, no store review gate, but the signing chain (§12) and Mos.Hub-hosted toolchain access are themselves the operational dependency to schedule for |
+| Toolchain/account access lead time | the omprussia GitLab + Mos.Hub-hosted signing infrastructure is a separate credential/access request with its own lead time (`UNVERIFIED` exact process — a Phase-3 operational item, not a code dependency) — budget this into `09-phase3-reach-wbs.md` alongside the shim implementation effort, mirroring the HarmonyOS AppGallery scheduling note |
+
+Recommendation: plan for enterprise MDM/direct-RPM as the Phase-3 primary
+distribution path; treat a public Aurora Store listing as an optional, separately-gated
+follow-on, not a Phase-3 exit-gate dependency.
 
 ---
 

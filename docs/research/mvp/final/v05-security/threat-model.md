@@ -1,7 +1,10 @@
 # Threat Model — STRIDE + LINDDUN
 
-**Revision:** 2
-**Last modified:** 2026-06-26T12:00:00Z
+**Revision:** 3
+**Last modified:** 2026-07-04T12:00:00Z
+**Rev 3:** Closed a dangling residual-risk reference — T-CONN-S-1 cited "§10 R-CONN" but no
+`R-CONN` row existed in the §10 residual-risk register; added it (compromised connector lying
+about served CIDRs — attributable via audit, Phase-2 attestation hardening tracked, not MVP).
 
 > Master technical specification — Volume 5 (Security & Privacy), nano-detail document
 > **threat-model**. Deepens [`04-security-privacy-pki.md`] (the security spine: zero-trust,
@@ -433,6 +436,7 @@ mitigations, each with its honest boundary and the planned/possible strengthenin
 | **R-CENSOR** | A determined network can block the protocol entirely | No inside-the-tunnel mitigation beats a full network block | Pluggable transports / domain-fronting research (doc 01 carriers) |
 | **R-DOS** | Authenticated abuse (compile-bomb, enroll/handshake flood) | Rate limits bound it; a large legitimate tenant is the measured ceiling | Upstream DDoS scrubbing (deployment doc 09); adaptive rate limits |
 | **R-FORK** | A self-host operator can run a *forked* build that re-adds logging | S6 is a build property of the *published* build; forks are out of our control | Reproducible signed builds (S8 Phase-3) let users verify the binary matches the no-log source |
+| **R-CONN** | A compromised (but still-authenticated) connector lies about which CIDRs it actually serves, or advertises a CIDR it is enrolled for but does not truly control | The connector authenticates via device cert (T-CONN-S-1) — auth proves *which enrolled connector* is speaking, not that its advertised prefixes are *true*; the control plane has no independent oracle for "what a LAN actually contains" | MVP: `advertised_prefixes` changes are audited (`connector.prefixes.changed`, S7) so a lying connector is at least attributable after the fact; a policy admin who grants reach to a connector's CIDR is trusting that connector's operator. Phase-2: an optional out-of-band prefix-attestation/verification step (e.g. a challenge-response probe of the advertised CIDR) before a new prefix is eligible for policy grants — **not MVP**, tracked as a hardening item, never silently assumed solved |
 
 > **Honest summary (§11.4.6):** the MVP closes every *retrospective* confidentiality and every
 > *lateral-movement* threat with mechanical, two-layer enforcement. The surviving residuals are

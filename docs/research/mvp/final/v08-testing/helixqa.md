@@ -1,7 +1,13 @@
 # HelixQA Autonomous Sessions — HelixVPN nano-detail spec (Volume 8 · §11.4.169 type 6)
 
-**Revision:** 2
-**Last modified:** 2026-06-26T12:00:00Z
+**Revision:** 3
+**Last modified:** 2026-07-04T12:00:00Z
+
+> **Rev 3 (2026-07-04):** independently re-verified during a corpus-wide gap-analysis
+> pass. Confirmed honest framing: `helix_qa` is described throughout as a planned,
+> owned-by-reference ecosystem submodule (`HelixDevelopment/helix_qa`, per
+> `SPECIFICATION.md` §6) to be incorporated during the build phase — not as an
+> already-operational tool in this repo today. No contradictions found.
 
 > **Reconciled (§11.4.35, 2026-06-26):** the MVP Definition-of-Done set has **NINE**
 > acceptance criteria (AC1–AC9) per the canonical overview
@@ -71,7 +77,7 @@ The **written test banks** are organised per surface:
 |---|---|---|
 | `helix_qa/banks/control_plane.yaml` | the Go services | enrollment, RLS, reconcile, revoke, events, API authz (drives INT + CHAL) |
 | `helix_qa/banks/data_plane.yaml` | `helix-core` + edge | reach, default-deny, escalation, kill-switch, liveness (drives E2E + SEC) |
-| `helix_qa/banks/clients_<platform>.yaml` | per-platform app | connect flow, status UI, exit picker — one per platform (Access/Connector/Console × iOS/Android/Linux/Windows/macOS/Web; HarmonyOS/Aurora Phase 3) | drives UI + REC |
+| `helix_qa/banks/clients_<platform>.yaml` | per-platform app | connect flow, status UI, exit picker — one per platform (Access/Connector/Console × iOS/Android/Linux/Windows/macOS/Web; HarmonyOS/Aurora Phase 3) (drives UI + REC) |
 | `helix_qa/banks/mvp_dod.yaml` | the release gate | the 9 ACs ([challenges.md §8](challenges.md)) |
 
 > **`UNVERIFIED`:** the exact bank-file naming and the per-platform split granularity

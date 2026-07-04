@@ -1,5 +1,24 @@
 # Helix VPN — Phase 2 (MVP2) Comprehensive Client Apps Plan
 
+**Revision:** 2
+**Last modified:** 2026-07-04T12:00:00Z
+
+> **Revision 2 note (2026-07-04):** this is the original research/planning
+> brief that kicked off MVP2 documentation generation; it is preserved as a
+> historical record and not rewritten. Two reconciliation facts for anyone
+> reading it after the fact: (1) Stage 3 originally scoped **16** standalone
+> documents; the delivered set consolidated to **10** (`MVP2_SECURITY.md` +
+> `MVP2_PERFORMANCE.md` merged into `MVP2_SECURITY_PERFORMANCE.md`;
+> `MVP2_TECHNOLOGY_STACK.md`, `MVP2_BUILD_SYSTEM.md`, `MVP2_TESTING_QA.md`,
+> `MVP2_API_REFERENCE.md`, and `MVP2_DEVELOPMENT_GUIDE.md` content was folded
+> into `MVP2_ARCHITECTURE.md`, `MVP2_SHARED_CORE.md`, and
+> `MVP2_SECURITY_PERFORMANCE.md`) — see `MVP2_OVERVIEW.md` §8.1 for the
+> as-delivered registry. (2) A 2026-07-04 gap-analysis + hardening pass added
+> Enterprise Hardening / Production Readiness sections and Mermaid diagrams
+> to every delivered document; that work is out of this plan's original
+> scope and is tracked via each document's own Revision 2 changelog instead
+> of by editing this historical plan further.
+
 ## Objective
 Create comprehensive Phase 2 documentation for Helix VPN client applications covering all operating systems (macOS, Windows, Linux, Android, iOS, Harmony OS, Aurora OS) and all platforms (Web, Desktop, Mobile) with maximal codebase reusability, performance, and minimal footprint.
 

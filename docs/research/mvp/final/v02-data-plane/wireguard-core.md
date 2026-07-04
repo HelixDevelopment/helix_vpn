@@ -1,7 +1,15 @@
 # WireGuard Core (helix-wg)
 
-**Revision:** 1
-**Last modified:** 2026-06-25T00:00:00Z
+**Revision:** 2
+**Last modified:** 2026-07-04T12:00:00Z
+
+> **Rev 2 (enterprise-hardening audit, 2026-07-04):** independently reviewed against the
+> parent gap-analysis checklist (key rotation, resource exhaustion, MTU/fragmentation).
+> §6 (per-device key generation + rotation, including the make-before-break state
+> machine at §6.4) and §14.3 (handshake anti-DoS / cookie-reply rate limiting) already
+> satisfy this checklist in full depth — no addition made here to avoid duplicating
+> already-thorough content. No consistency issue found against
+> [`transport-trait.md`](transport-trait.md) or [`01-data-plane.md`](../01-data-plane.md).
 
 > Volume 2, document 01 of the HelixVPN master technical specification — the
 > nano-detail deepening of the **WireGuard Core (`helix-wg`)** section of the

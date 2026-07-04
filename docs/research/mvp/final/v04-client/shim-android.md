@@ -1,7 +1,12 @@
 # Android shim (VpnService + JNI)
 
-**Revision:** 1
-**Last modified:** 2026-06-25T00:00:00Z
+**Revision:** 2
+**Last modified:** 2026-07-04T12:00:00Z
+**Rev 2:** Added §7.5 (battery-optimization / Doze / OEM-aggressive-killer mitigation —
+the foreground-service priority §7 already secures is necessary but not sufficient
+against OEM-specific background-kill behavior on MIUI/EMUI/One UI-class skins) and
+§14.1 (Google Play VPN-policy compliance requirements) — closing a gap identified in
+an independent enterprise-hardening pass over Volume 4.
 
 > Volume 4 (Clients) nano-detail specification — deepens the **Android
 > `TunnelPlatform` shim** sketched in the pass-1 client overview [03 §5.2] into an
@@ -631,6 +636,34 @@ private fun buildPersistentNotification(): Notification {
 > bounds buffer pools in the core (size receive buffers to MTU+headroom
 > [research-ios_android §3, §4]) because the **same lean Rust core** ships on both.
 
+### 7.5 Battery-optimization / Doze / OEM-aggressive-killer mitigation
+
+§7's foreground-service + persistent-notification discipline is AOSP's own
+background-kill defense and is **necessary but not sufficient**: several major OEM
+Android skins (commonly cited: Xiaomi MIUI, Huawei EMUI/HarmonyOS-for-phones,
+Samsung One UI, OPPO ColorOS, Vivo FuntouchOS) ship an **additional, non-AOSP
+battery-management layer** that can kill or freeze a foreground service — including
+a VPN foreground service — despite AOSP Doze/App-Standby already exempting active
+VPN sessions. This is a well-known, real-world class of complaint for VPN apps
+specifically (a foreground "Protected" notification stays visible while the tunnel
+is silently frozen by the OEM layer) and MUST be mitigated, not merely documented as
+a known limitation:
+
+| Mitigation | Mechanism | Note |
+|---|---|---|
+| Request battery-optimization exemption | `Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)` (AOSP-standard, requires the `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` manifest permission — a Google Play policy-sensitive permission, §14.1) | shown once during onboarding with an honest explanation of *why* (not a generic "improve performance" dialog — CI5-consistent honesty); user can decline, app functions but is warned it may be OEM-killed |
+| Detect OEM skin + surface a targeted deep link | `Build.MANUFACTURER`/`Build.BRAND` sniff (closed, maintained list) → deep-link to the OEM's own "autostart"/"protected apps"/"battery saver whitelist" settings screen (package+activity names are OEM- and OS-version-specific, `UNVERIFIED` — maintain a small, tested per-OEM table, degrade to the generic Android battery-settings screen if the OEM-specific intent is not resolvable) | this is the actual fix for MIUI/EMUI-class killers — the AOSP exemption alone does not disable the OEM's separate autostart/protected-apps gate |
+| Detect a suspected OEM-kill post-hoc | if the shim transitions `Up → Restarting` (§9.3) with **no** corresponding user action AND no `onRevoke`/network-loss signal, classify as `suspected_oem_kill` rather than a generic restart, and surface a one-time in-app notice pointing the user back to the OEM settings deep link | honest, evidence-based classification (§11.4.6 — never a guess dressed as fact; the classification is a heuristic on an observable state transition, tagged as such) |
+| Reconnect after an OEM-kill | on `Restarting` with a persisted last-good `TunnelConfig` (§9.3), reconnect automatically if the user's last intent was "connected" — same rule as D-ANDROID-4, so an OEM-kill and a plain process-death recover identically | §9.3 |
+
+This closes the operational reality that "foreground service" is a *necessary*
+survival mechanism (§7) but the *sufficient* one on OEM-modified Android requires an
+explicit exemption request + a per-OEM escape hatch; shipping only the AOSP-standard
+foreground service and calling the background-kill risk "handled" would be an
+enterprise-hardening gap for the very OEM skins that are common in several of
+HelixVPN's target markets (self-hosted/home-lab operators on consumer Android
+devices).
+
 ---
 
 ## 8. Status & event flow (the two channels)
@@ -860,6 +893,25 @@ Error-classification rule (§11.4.6): the shim never labels a failure
 - UniFFI Kotlin bindings + frb Dart bindings are **generated and drift-checked**
   in the local `melos` build (no active CI per §11.4.156 [SYN §9]); a binding
   drift vs the Rust `helix-ffi` source is a build-blocking finding [03 §11].
+
+### 14.1 Google Play VPN-policy compliance (engineering-relevant subset)
+
+Google Play applies a dedicated review policy to any app declaring
+`BIND_VPN_SERVICE` — this is a build/ship dependency the WBS must schedule for,
+not a detail discovered at submission time:
+
+| Requirement | What it means for this shim |
+|---|---|
+| Prominent disclosure + in-app disclosure of VPN behavior | the onboarding flow (Volume 10 `v10-design/ux-flows-and-interaction.md`) must state what the app does before first connect — consistent with the no-logging-as-code privacy stance this project already leads with, so disclosure is a documentation task, not a design conflict |
+| Data-safety form (Play Console) accuracy | must match the ACTUAL data handled — `no durable connection/traffic log` (per `v05-security/no-logging-as-code.md`) is a claim the Play Store data-safety form must reflect precisely; a mismatch between the form and shipped behavior is a policy violation independent of code correctness |
+| `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` permission scrutiny | Play policy restricts this permission to apps with a legitimate need; a VPN foreground service (§7.5) is an accepted use case, but the permission request flow must present the honest justification dialog (§7.5) rather than a generic one, since Play reviewers evaluate the user-facing justification text |
+| Foreground service type declaration (API 34+) | the manifest `foregroundServiceType` (§14, `UNVERIFIED` exact constant) must be one Play accepts for a VPN class service — verify against the current Play Console policy + Android docs together (§11.4.99), not Android docs alone, since Play policy can be stricter than the platform API surface |
+| Repeated policy-violation risk | a VPN app that is later found to log traffic content despite claiming not to is a Play *policy* strike, not merely a bug — this is additional motivation (beyond the architectural `no-logging-as-code` mandate) for the CI schema-lint in `v05-security/no-logging-as-code.md` to stay green at every release |
+
+This does not change any technical design in this document; it is recorded here so
+`06-phase0-spike-wbs.md`/`07-phase1-mvp-wbs.md` schedule the Play Console
+data-safety-form + policy-review lead time as a real dependency of the Phase-1 MVP
+ship date.
 
 ---
 

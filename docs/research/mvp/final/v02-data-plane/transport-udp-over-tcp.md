@@ -1,7 +1,15 @@
 # UDP-over-TCP Transport
 
-**Revision:** 1
-**Last modified:** 2026-06-25T00:00:00Z
+**Revision:** 2
+**Last modified:** 2026-07-04T12:00:00Z
+
+> **Rev 2 (enterprise-hardening audit, 2026-07-04):** independently reviewed against the
+> parent gap-analysis checklist. This document already contains the deepest
+> resource-exhaustion treatment in Volume 2 — §9 E8 (slow-loris) / E12 (huge-`LEN`
+> buffer-cap) edge cases and §12 S5 (reassembly-buffer DoS bound by `max_acc_bytes`) — no
+> addition made here to avoid duplicating already-thorough content. No consistency issue
+> found against [`transport-trait.md`](transport-trait.md) or
+> [`01-data-plane.md`](../01-data-plane.md).
 
 > Master technical specification — Volume 2 (Data Plane), nano-detail document.
 > Deepens the *`udp-over-tcp` — last resort when all UDP is blocked* section (`§3.6`) of

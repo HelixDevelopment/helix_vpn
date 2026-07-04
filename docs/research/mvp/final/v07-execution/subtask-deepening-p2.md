@@ -1,7 +1,10 @@
 # Phase 2 (Parity + Reach) Subtask Deepening — epic → task → subtask (closes R5)
 
-**Revision:** 1
-**Last modified:** 2026-06-26T12:00:00Z
+**Revision:** 2
+**Last modified:** 2026-07-04T12:00:00Z
+**Rev 2:** Independent gap-analysis pass — structure and id-convention verified
+consistent with `subtask-deepening-p1.md` and `08-phase2-parity-wbs.md`. No
+contradictions found.
 
 > Volume 7 (Phase Execution), document 4 of 5. Companion to
 > `subtask-deepening-p1.md`, applying the same R5 deepening

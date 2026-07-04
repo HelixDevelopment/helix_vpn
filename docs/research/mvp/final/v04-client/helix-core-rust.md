@@ -1,7 +1,7 @@
 # helix-core (Rust client/connector core)
 
-**Revision:** 1
-**Last modified:** 2026-06-25T00:00:00Z
+**Revision:** 2
+**Last modified:** 2026-07-04T12:00:00Z
 
 > Master technical specification — **Volume 4 (Clients)**, nano-detail deep-dive.
 > This document **deepens** the `helix-core` (Rust client/connector core) part of
@@ -297,11 +297,44 @@ strip         = true    # strip symbols (Rust 1.59+), ~3–8% extra reduction
 
 `panic = "abort"` is doubly motivated: it shrinks the binary AND removes
 unwinding, which the FFI boundary requires anyway — **a Rust `panic!` must never
-unwind across the C-ABI into Swift/Kotlin/Dart** (UB). The `helix-ffi` entry
-points additionally wrap their bodies in `std::panic::catch_unwind`-equivalent
-guards that convert any caught panic into a `CoreError::Internal` (§10) before it
-reaches the boundary; with `panic=abort` a genuine bug aborts the process rather
-than corrupting the FFI — the honest, safe failure [research-ios_android §2].
+unwind across the C-ABI into Swift/Kotlin/Dart** (UB) [research-ios_android §2].
+
+> **Corrected panic-boundary contract (fixes a self-contradiction, §11.4.6).** An
+> earlier draft of this section claimed the `helix-ffi` entry points wrap their
+> bodies in `std::panic::catch_unwind`-equivalent guards that convert a caught
+> panic into `CoreError::Internal`. **This is impossible under `panic=abort`:**
+> `catch_unwind` requires the *unwind* panic strategy to have anything to catch;
+> under `abort`, the process terminates at the panic site before any unwinding
+> (and therefore any catching) can occur. The two cannot coexist in one profile —
+> the corrected, honest contract is:
+> 1. **No panic is ever caught at the FFI boundary.** With `panic=abort` set
+>    workspace-wide (§1.2), a `panic!` anywhere in `helix-core`/`helix-ffi`
+>    terminates the **entire hosting process** — the iOS NE extension, the
+>    Android app process, the Windows service, or the edge binary. This is a
+>    real availability risk (an aborted NE extension is not guaranteed a prompt
+>    OS-triggered relaunch), not a caught-and-recovered error.
+> 2. **The mitigation is defensive-coding rigor at the boundary, not runtime
+>    recovery.** Every `helix-ffi` entry point (§4.1) MUST validate
+>    externally-supplied input and return a typed `CoreError` variant
+>    (`Config`/`BadFd`/`Auth`/…) instead of ever reaching a `.unwrap()`/
+>    `.expect()`/panicking-index/`unreachable!()` on FFI-boundary data. A
+>    `CoreError` is the ONLY sanctioned way an FFI call reports failure — a
+>    panic is by definition a bug, not an expected error path.
+> 3. **Enforced mechanically, not by convention.** `helix-ffi` (and any crate an
+>    FFI entry point calls into on the hot path) carries a `clippy.toml`/lint
+>    config denying `unwrap_used`, `expect_used`, `panic`, `unimplemented`,
+>    `todo`, and `indexing_slicing` — a pre-build gate (§11.4.4(b) layer 1),
+>    with a paired §1.1 mutation (reintroduce a denied lint call → the gate
+>    FAILs).
+> 4. **Accepted tradeoff, stated honestly.** A genuine internal-invariant
+>    violation (a real bug, not user error) aborts the host process. This is
+>    the deliberate, accepted cost of the `panic=abort` size optimization
+>    (this section); the alternative (`panic=unwind` + a real `catch_unwind`)
+>    would re-admit the unwinding machinery §3.2's `build-std` reduction
+>    removes, undermining the iOS memory budget (§3.3) this whole strategy
+>    exists to protect. The lint-enforced no-panic-on-boundary-data discipline
+>    (point 3) is what keeps this an acceptable risk rather than a routine
+>    crash surface.
 
 ### 3.2 iOS-only: `build-std` for the largest reduction
 
@@ -483,7 +516,11 @@ static ORCH:    OnceCell<Mutex<Option<helix_core::Orchestrator>>> = OnceCell::ne
 
 // Every async fn body is dispatched on RUNTIME and guarded:
 //   - frb v2 marshals async Rust to a Dart Future; a Rust Err becomes a Dart exception.
-//   - with panic=abort (§3.1) a genuine bug ABORTS rather than unwinds across the C-ABI (safe).
+//   - with panic=abort (§3.1) a genuine bug ABORTS the process — it is NEVER caught
+//     at this boundary (no catch_unwind is possible under abort; see §3.1's corrected
+//     panic-boundary contract). "Guarded" here means INPUT-VALIDATED, not panic-caught:
+//     every body validates its arguments and returns CoreError on anything unexpected,
+//     so the only path left to an abort is a genuine internal-invariant bug, not bad input.
 //   - CoreError (§10) is the structured, surfaced failure; never a silent bluff (§11.4.6).
 ```
 

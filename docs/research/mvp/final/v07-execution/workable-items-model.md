@@ -1,7 +1,13 @@
 # Workable-Items Model — every WBS task/subtask → the §11.4.93 SQLite single source of truth
 
-**Revision:** 2
-**Last modified:** 2026-06-26T12:00:00Z
+**Revision:** 3
+**Last modified:** 2026-07-04T12:00:00Z
+**Rev 3:** Independent gap-analysis pass — verified against `06-phase0-spike-wbs.md`,
+`07/08/09-…-wbs.md`, and the three `subtask-deepening-p*.md` docs; no schema or
+id-convention contradictions found. §1's R5 reconciliation (Phase-0 fresh-id-per-subtask
+vs Phase-1..3 dotted `.k` form) confirmed accurate against the now-complete
+`subtask-deepening-p1/2/3.md` (all three exist, deepen every parent task, and are cited
+correctly in the `.docs_chain/contexts/wbs.yaml` source list §7).
 
 > Volume 7 (Phase Execution), document 1 of 5. This spec defines the **mechanical
 > contract** by which every Work-Breakdown-Structure leaf in the four phase WBS

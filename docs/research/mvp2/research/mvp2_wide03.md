@@ -1,5 +1,15 @@
 # VPN Protocol Implementations & Rust Ecosystem - Comprehensive Research Report
 
+**Revision:** 1
+**Last modified:** 2026-07-04T14:00:00Z
+
+> **Editorial note (added during the 2026-07-04 MVP2 gap-analysis/hardening
+> pass):** raw research brief preserved as historical input, not a living
+> spec. The final protocol selection (WireGuard primary; Shadowsocks and
+> MASQUE secondary; Multi-Hop advanced; OpenVPN reserved/unimplemented) is
+> authoritatively specified in `../MVP2_SHARED_CORE.md` §1.5/§2.3/§4 — where
+> this brief's evaluation differs, that document is authoritative.
+
 **Date**: 2026-01-20
 **Scope**: Evaluation of VPN protocol implementations available in Rust and other languages, with focus on embedding into a shared cross-platform core library.
 **Searches Performed**: 15 independent web searches across 12 topic areas

@@ -1,7 +1,10 @@
 # helixvpnctl — the operator CLI (Cobra)
 
-**Revision:** 1
-**Last modified:** 2026-06-25T12:00:00Z
+**Revision:** 2
+**Last modified:** 2026-07-04T12:00:00Z
+**Rev 2:** Reviewed against the Volume-6 enterprise-hardening pass (2026-07-04); command surface,
+exit-code discipline, and credential handling already comprehensive. No gap found in scope.
+Revision bumped for the pass.
 
 > Master technical specification — Volume 6 (Deployment, Tooling & Operations), nano-detail
 > document. Scope: the **`helixvpnctl` operator CLI** — the Cobra command binary that is both the

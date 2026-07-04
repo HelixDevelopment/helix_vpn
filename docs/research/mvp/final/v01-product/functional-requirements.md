@@ -1,7 +1,15 @@
 # Functional Requirements (HVPN-FR-NNN)
 
-**Revision:** 2
-**Last modified:** 2026-06-26T12:00:00Z
+**Revision:** 3
+**Last modified:** 2026-07-04T12:00:00Z
+
+> **Rev 3 (2026-07-04, independent gap-analysis pass).** Added HVPN-FR-609
+> (scoped, exportable audit slice for incident-response/compliance reporting) to
+> back the MSP-operator incident-response journey added to
+> [`personas-and-roles.md`](personas-and-roles.md) §2.2 (sibling file in this
+> same `v01-product/` directory — relative link, not `v01-product/…` again).
+> No other FR changed; the §M DoD-traceability and §N parity-coverage tables are
+> unaffected (FR-609 is additive, not DoD/parity-mapped).
 
 > **Reconciled (§11.4.35, 2026-06-26):** FR-101's RBAC role set is aligned to the
 > authoritative `svc-identity.md` enum `{member, operator, admin}` (no "tenant
@@ -222,6 +230,7 @@ Persona: business-admin / tenant-owner [00 §5.3].
 | HVPN-FR-606 | The Console MUST support multi-tenant management with strict per-tenant isolation. | An admin of tenant A cannot see tenant B's resources. `[evidence]` | `web-console.md`, RLS | MVP |
 | HVPN-FR-607 | The Console MAY provide optional multi-tenant billing. | Billing flows function for the managed SKU when enabled; absent by default. | `web-console.md` | P3 |
 | HVPN-FR-608 | The Console MUST be responsive across phone/tablet/desktop and ship light + dark themes from the OpenDesign system. | Visual-regression suite passes light+dark; no element overlap/overlay (§11.4.162). `[evidence]` | `web-console.md`, Volume 10 | MVP |
+| HVPN-FR-609 | The Console MUST let an admin/operator filter and export a control-action audit slice (device/user/time-window/tenant-scoped) for incident-response or compliance reporting, containing zero traffic/destination data and zero rows outside the caller's authorized tenant scope. | An exported slice for tenant A + a time window contains only tenant-A control-action rows (RLS-bounded export, not just RLS-bounded live view); the export itself is an audited control action. `[evidence]` | `audit-and-compliance.md`, `svc-telemetry.md` | MVP |
 
 ---
 

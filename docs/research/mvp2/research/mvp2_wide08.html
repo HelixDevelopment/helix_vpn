@@ -1,0 +1,3253 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Comprehensive Analysis: VPN Security Architecture, Performance Optimization &amp; Build Pipeline</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Comprehensive Analysis: VPN Security Architecture,
+Performance Optimization &amp; Build Pipeline</h1>
+</header>
+<h1 id="comprehensive-analysis-vpn-security-architecture-performance-optimization--build-pipeline">Comprehensive
+Analysis: VPN Security Architecture, Performance Optimization &amp;
+Build Pipeline</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-07-04T14:00:00Z</p>
+<blockquote>
+<p><strong>Editorial note (added during the 2026-07-04 MVP2
+gap-analysis/hardening pass):</strong> raw research brief preserved as
+historical input, not a living spec. The final, hardened specification —
+including the new Enterprise Hardening additions (supply-chain
+security/SBOM, staged/canary rollout, crash-reporting/telemetry
+pipeline, update rollback) that this brief does not cover — lives in
+<code>../MVP2_SECURITY_PERFORMANCE.md</code> and
+<code>../MVP2_SHARED_CORE.md</code> §5.5, which are authoritative where
+they differ from or extend this brief.</p>
+</blockquote>
+<blockquote>
+<p><strong>Research Date</strong>: July 2025 <strong>Scope</strong>:
+Security architecture patterns for VPN clients, performance optimization
+strategies across all platforms, and build/deployment pipeline design
+for cross-platform VPN app development. <strong>Sources</strong>: 20+
+independent web searches, academic papers, vendor documentation, and
+authoritative technical sources.</p>
+</blockquote>
+<hr />
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li><a href="#1-vpn-security-architecture">VPN Security
+Architecture</a></li>
+<li><a href="#2-kill-switch-implementation">Kill Switch
+Implementation</a></li>
+<li><a href="#3-split-tunneling-security">Split Tunneling
+Security</a></li>
+<li><a href="#4-obfuscation-techniques">Obfuscation Techniques</a></li>
+<li><a href="#5-post-quantum-security">Post-Quantum Security</a></li>
+<li><a href="#6-performance-benchmarks">Performance Benchmarks</a></li>
+<li><a href="#7-rust-performance">Rust Performance</a></li>
+<li><a href="#8-mobile-battery-optimization">Mobile Battery
+Optimization</a></li>
+<li><a href="#9-build-pipeline-design">Build Pipeline Design</a></li>
+<li><a href="#10-testing-strategy">Testing Strategy</a></li>
+<li><a href="#11-release-management">Release Management</a></li>
+<li><a href="#12-compliance--certification">Compliance &amp;
+Certification</a></li>
+<li><a href="#13-security-checklist-by-platform">Security
+Checklist</a></li>
+<li><a href="#14-performance-budget-table">Performance Budget
+Table</a></li>
+<li><a href="#15-cicd-pipeline-diagram">CI/CD Pipeline Diagram</a></li>
+<li><a href="#16-references">References</a></li>
+</ol>
+<hr />
+<h2 id="1-vpn-security-architecture">1. VPN Security Architecture</h2>
+<h3 id="11-threat-model-for-vpn-clients">1.1 Threat Model for VPN
+Clients</h3>
+<p>VPN clients face a multi-layered threat landscape that requires
+comprehensive security analysis. The STRIDE model is commonly
+applied:</p>
+<table>
+<thead>
+<tr>
+<th>Threat Category</th>
+<th>VPN-Specific Examples</th>
+<th>Mitigation Strategy</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Spoofing</strong></td>
+<td>Fake VPN servers, rogue APs, DNS hijacking</td>
+<td>Certificate pinning, mutual authentication, server identity
+verification</td>
+</tr>
+<tr>
+<td><strong>Tampering</strong></td>
+<td>Modified client binaries, MITM attacks, packet injection</td>
+<td>Code signing, anti-tampering checks, signature verification</td>
+</tr>
+<tr>
+<td><strong>Repudiation</strong></td>
+<td>Denial of connection/logging abuse</td>
+<td>Client-side logging, audit trails, secure timestamping</td>
+</tr>
+<tr>
+<td><strong>Information Disclosure</strong></td>
+<td>Traffic leaks, DNS leaks, WebRTC leaks, key extraction</td>
+<td>Kill switch, split tunneling security, secure key storage in
+Keychain/Keystore</td>
+</tr>
+<tr>
+<td><strong>Denial of Service</strong></td>
+<td>Connection flooding, protocol-level attacks</td>
+<td>Connection rate limiting, circuit breakers, fallback protocols</td>
+</tr>
+<tr>
+<td><strong>Elevation of Privilege</strong></td>
+<td>Kernel exploit via VPN driver, privilege escalation</td>
+<td>Sandboxed architecture, least-privilege design, capability-based
+security (Tauri)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="12-secure-key-storage">1.2 Secure Key Storage</h3>
+<p>Platform-specific secure key storage is essential for VPN client
+security:</p>
+<h4 id="ios-keychain-services--secure-enclave">iOS: Keychain Services +
+Secure Enclave</h4>
+<blockquote>
+<p><strong>Verbatim excerpt</strong>: &quot;Implement certificate pinning
+(public key pinning or leaf certificate pinning) to mitigate MitM
+attacks against compromised CAs. Pin public key hashes rather than full
+certs to allow certificate rotation. Provide a fallback and pin rotation
+strategy (backup keys).&quot; [^428^] (<a href="https://blogs.curiositytech.in/day-21-security-best-practices-for-ios-developers-keychain-encryption-secure-storage/">https://blogs.curiositytech.in/day-21-security-best-practices-for-ios-developers-keychain-encryption-secure-storage/</a>)</p>
+</blockquote>
+<ul>
+<li><strong>Keychain Services</strong>: Store VPN private keys,
+certificates, and authentication tokens</li>
+<li><strong>Secure Enclave</strong>: Hardware-isolated key generation
+and storage (iPhone 5s+, iPad Air+)</li>
+<li><strong>kSecAttrAccessible</strong>: Use
+<code>AfterFirstUnlockThisDeviceOnly</code> or
+<code>WhenUnlockedThisDeviceOnly</code> for VPN keys</li>
+<li><strong>Access Control</strong>: Set
+<code>kSecAccessControlBiometryCurrentSet</code> for biometric-gated key
+access</li>
+<li><strong>Data Protection</strong>: Enable
+<code>NSFileProtectionComplete</code> for VPN configuration files</li>
+</ul>
+<h4 id="android-android-keystore--strongbox">Android: Android Keystore +
+StrongBox</h4>
+<blockquote>
+<p><strong>Verbatim excerpt</strong>: &quot;The Android Keystore system lets
+you store cryptographic keys in a container to make it more difficult to
+extract from the device. Once keys are in the Keystore, they can be used
+for cryptographic operations with the key material remaining
+non-exportable.&quot; [^433^] (<a href="https://developer.android.com/privacy-and-security/keystore">https://developer.android.com/privacy-and-security/keystore</a>)</p>
+</blockquote>
+<ul>
+<li><strong>Android Keystore</strong>: Hardware-backed key storage when
+available (TEE or StrongBox)</li>
+<li><strong>StrongBox Keymaster</strong>: Dedicated secure hardware for
+key operations (Android 9+ devices)</li>
+<li><strong>Biometric binding</strong>:
+<code>setUserAuthenticationRequired(true)</code> with
+<code>setInvalidatedByBiometricEnrollment(true)</code></li>
+<li><strong>KeyGenParameterSpec</strong>: Specify
+<code>PURPOSE_ENCRYPT | PURPOSE_DECRYPT</code> for VPN session keys</li>
+</ul>
+<h4 id="desktop-windowsmacoslinux">Desktop (Windows/macOS/Linux)</h4>
+<table>
+<thead>
+<tr>
+<th>Platform</th>
+<th>Key Storage Mechanism</th>
+<th>API/Feature</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Windows</td>
+<td>Credential Manager / DPAPI</td>
+<td><code>CredWrite</code>, <code>CryptProtectData</code></td>
+</tr>
+<tr>
+<td>Windows (modern)</td>
+<td>Windows Hello / TPM 2.0</td>
+<td>WebAuthn, Platform Crypto Provider</td>
+</tr>
+<tr>
+<td>macOS</td>
+<td>Keychain</td>
+<td><code>SecItemAdd</code>, <code>SecKeychain</code></td>
+</tr>
+<tr>
+<td>macOS (modern)</td>
+<td>Secure Enclave</td>
+<td><code>SecKeyGeneratePair</code> with Secure Enclave attribute</td>
+</tr>
+<tr>
+<td>Linux</td>
+<td>libsecret / keyring</td>
+<td>Secret Service API, GNOME Keyring</td>
+</tr>
+<tr>
+<td>Linux (modern)</td>
+<td>TPM 2.0 / FIDO2</td>
+<td>tpm2-tools, libfido2</td>
+</tr>
+</tbody>
+</table>
+<h3 id="13-certificate-pinning">1.3 Certificate Pinning</h3>
+<blockquote>
+<p><strong>Verbatim excerpt</strong>: &quot;On Android, this is typically
+implemented by pinning hashes of the certificate&#39;s public key, also
+known as SPKI pinning. Instead of trusting any valid chain anchored in a
+generally trusted certificate authority, the app narrows trust to chains
+that include one of the pinned public keys.&quot; [^430^] (<a href="https://blog.ostorlab.co/android-ssl-pinning.html">https://blog.ostorlab.co/android-ssl-pinning.html</a>)</p>
+</blockquote>
+<p><strong>Implementation Approaches</strong>:</p>
+<p><strong>iOS</strong>:</p>
+<ul>
+<li>Use <code>URLSessionDelegate</code> with
+<code>didReceiveChallenge</code> for manual pinning</li>
+<li>Libraries: TrustKit, Alamofire
+(<code>PinnedCertificatesTrustEvaluator</code>)</li>
+<li>Pin public key hashes with backup pins and expiration dates</li>
+</ul>
+<p><strong>Android</strong>:</p>
+<ul>
+<li>Network Security Configuration (NSC): Declarative pinning in
+<code>res/xml/network_security_config.xml</code></li>
+<li>OkHttp:
+<code>CertificatePinner.Builder().add(domain, &quot;sha256/...&quot;)</code></li>
+<li>Include backup pins and set <code>expiration</code> dates for
+rotation safety</li>
+</ul>
+<p><strong>Production Best Practices</strong>:</p>
+<blockquote>
+<p><strong>Verbatim excerpt</strong>: &quot;Pinning limits the server team&#39;s
+ability to update certificates and migrate between certificate
+authorities. That is why pinning should be rolled out like a production
+feature, not just merged like a code cleanup. A sensible rollout path is
+internal builds first, then beta, then a limited production percentage,
+and only then full rollout once certificate behavior, monitoring, and
+fallback plans are validated.&quot; [^430^] (<a href="https://blog.ostorlab.co/android-ssl-pinning.html">https://blog.ostorlab.co/android-ssl-pinning.html</a>)</p>
+</blockquote>
+<h3 id="14-anti-tampering">1.4 Anti-Tampering</h3>
+<table>
+<thead>
+<tr>
+<th>Technique</th>
+<th>Implementation</th>
+<th>Platform</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Code signing verification</strong></td>
+<td>Verify digital signature at runtime</td>
+<td>All</td>
+</tr>
+<tr>
+<td><strong>Checksum validation</strong></td>
+<td>Hash-based integrity check of binaries</td>
+<td>All</td>
+</tr>
+<tr>
+<td><strong>Debug detection</strong></td>
+<td>Detect and respond to debugger attachment</td>
+<td>All</td>
+</tr>
+<tr>
+<td><strong>Root/jailbreak detection</strong></td>
+<td>Block execution on compromised devices</td>
+<td>iOS, Android</td>
+</tr>
+<tr>
+<td><strong>Binary obfuscation</strong></td>
+<td>String encryption, control flow flattening</td>
+<td>All</td>
+</tr>
+<tr>
+<td><strong>Runtime application self-protection (RASP)</strong></td>
+<td>Tamper detection with app termination</td>
+<td>All</td>
+</tr>
+<tr>
+<td><strong>Secure boot chain</strong></td>
+<td>Verify bootloader through app signature</td>
+<td>Mobile</td>
+</tr>
+</tbody>
+</table>
+<h3 id="15-tauri-v2-security-model">1.5 Tauri v2 Security Model</h3>
+<blockquote>
+<p><strong>Verbatim excerpt</strong>: &quot;Tauri v2 adopts a &#39;Deny by
+Default&#39; security philosophy, where all access to system resources is
+denied unless explicitly permitted by the application. Unlike
+traditional Electron applications where the Node.js environment is fully
+exposed, allowing malicious code unrestricted access to the file system
+and network, Tauri v2 fundamentally solves this problem by implementing
+a strict permission management system based on the Principle of Least
+Privilege.&quot; [^424^] (<a href="https://www.oflight.co.jp/en/columns/tauri-v2-security-model">https://www.oflight.co.jp/en/columns/tauri-v2-security-model</a>)</p>
+</blockquote>
+<p><strong>Key Tauri Security Features</strong>:</p>
+<ul>
+<li><strong>Capability-based access control</strong>: Explicitly declare
+API permissions (e.g., <code>fs:read-file</code>,
+<code>http:request</code>)</li>
+<li><strong>Scoped access</strong>: Restrict file system access to
+specific directories</li>
+<li><strong>Runtime validation</strong>: All API access validated at
+runtime against declared capabilities</li>
+<li><strong>Process isolation</strong>: WebView runs in separate process
+from Rust backend</li>
+<li><strong>No Node.js runtime</strong>: Eliminates entire class of
+Electron-specific vulnerabilities</li>
+</ul>
+<hr />
+<h2 id="2-kill-switch-implementation">2. Kill Switch Implementation</h2>
+<h3 id="21-platform-specific-kill-switch-techniques">2.1
+Platform-Specific Kill Switch Techniques</h3>
+<blockquote>
+<p><strong>Verbatim excerpt</strong>: &quot;FreeVPN&#39;s kill switch operates at
+the system level, using Windows Filtering Platform on Windows, pf on
+macOS, and iptables/nftables on Linux.&quot; [^421^] (<a href="https://freevpn.com/blog-article.html?id=vpn-kill-switch-explained">https://freevpn.com/blog-article.html?id=vpn-kill-switch-explained</a>)</p>
+</blockquote>
+<h4 id="windows-windows-filtering-platform-wfp">Windows: Windows
+Filtering Platform (WFP)</h4>
+<pre><code>Architecture:
+- Use WFP callout drivers at ALE (Application Layer Enforcement) layers
+- Block all outbound IPv4/IPv6 traffic except:
+  * VPN tunnel interface traffic
+  * DHCP/DNS to VPN-assigned servers
+  * VPN server endpoint connections
+- Implement as kernel-mode driver for highest reliability
+- Alternative: Use Windows Firewall API for user-space implementation
+- Windows 10+: Use composite firewall rules bound to VPN interface</code></pre>
+<p><strong>Critical Implementation Notes</strong>:</p>
+<ul>
+<li>WFP filter operates at kernel level; cannot be bypassed by
+user-space applications</li>
+<li>Must register filters for
+<code>FWPM_LAYER_ALE_AUTH_CONNECT_V4</code> and
+<code>FWPM_LAYER_ALE_AUTH_CONNECT_V6</code></li>
+<li>Allow loopback traffic to prevent local service disruption</li>
+<li>Handle suspend/resume transitions (S3/S4 power states) by
+re-establishing filters</li>
+</ul>
+<h4 id="macos-packet-filter-pf--nepackettunnelprovider">macOS: Packet
+Filter (PF) / NEPacketTunnelProvider</h4>
+<pre><code>Architecture:
+- Use NEPacketTunnelProvider with includeAllNetworks option (full tunnel)
+- PF (Packet Filter) firewall rules via pfctl:
+  * block drop all
+  * pass on utunX (VPN tunnel interface)
+  * pass to VPN server endpoint
+- Content Filter extension for per-app kill switch
+- Network Extension framework provides system-level enforcement</code></pre>
+<blockquote>
+<p><strong>Verbatim excerpt</strong>: &quot;When creating an IP-based VPN,
+your implementation tells the system what traffic to tunnel, with
+specific included and excluded routes. On macOS, the routing table could
+be modified outside of your app by an administrator or another process.
+More precise routes could interfere with your VPN routes. Network
+Extension lets your app enforce its VPN routes to ensure they take
+precedence and are honored at all times.&quot; [^136^] (<a href="https://developer.apple.com/videos/play/wwdc2025/234/">https://developer.apple.com/videos/play/wwdc2025/234/</a>)</p>
+</blockquote>
+<p>Key options:</p>
+<ul>
+<li><code>includeAllNetworks</code>: Forces all traffic through
+tunnel</li>
+<li><code>enforceRoutes</code>: Ensures VPN routes take precedence</li>
+<li><code>excludeLocalNetworks</code>: Allow AirDrop/AirPlay to bypass
+tunnel</li>
+<li><code>excludeCellularServices</code>: Allow calls/messages to
+bypass</li>
+</ul>
+<h4 id="linux-iptablesnftables">Linux: iptables/nftables</h4>
+<blockquote>
+<p><strong>Verbatim excerpt</strong>: Kill switch implementation using
+iptables: [^426^] (<a href="https://superuser.com/questions/1389368/implementing-an-openvpn-kill-switch-with-iptables">https://superuser.com/questions/1389368/implementing-an-openvpn-kill-switch-with-iptables</a>)</p>
+</blockquote>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Core kill switch rules (verbatim from production script):</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ex">iptables</span> <span class="at">-P</span> INPUT DROP</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="ex">iptables</span> <span class="at">-P</span> OUTPUT DROP</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="ex">iptables</span> <span class="at">-P</span> FORWARD DROP</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Allow loopback</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="ex">iptables</span> <span class="at">-A</span> INPUT <span class="at">-i</span> lo <span class="at">-j</span> ACCEPT</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="ex">iptables</span> <span class="at">-A</span> OUTPUT <span class="at">-o</span> lo <span class="at">-j</span> ACCEPT</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Allow all local traffic</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="ex">iptables</span> <span class="at">-A</span> INPUT <span class="at">-s</span> 192.168.0.0/16 <span class="at">-j</span> ACCEPT</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="ex">iptables</span> <span class="at">-A</span> OUTPUT <span class="at">-d</span> 192.168.0.0/16 <span class="at">-j</span> ACCEPT</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Allow VPN tunnel interface</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="ex">iptables</span> <span class="at">-A</span> OUTPUT <span class="at">-o</span> tun0 <span class="at">-j</span> ACCEPT</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a><span class="ex">iptables</span> <span class="at">-A</span> INPUT <span class="at">-i</span> tun0 <span class="at">-j</span> ACCEPT</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a><span class="co"># Allow VPN establishment (DNS + VPN port)</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a><span class="ex">iptables</span> <span class="at">-A</span> OUTPUT <span class="at">-p</span> udp <span class="at">--dport</span> 53 <span class="at">-j</span> ACCEPT</span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a><span class="ex">iptables</span> <span class="at">-A</span> OUTPUT <span class="at">-p</span> udp <span class="at">--dport</span> 51820 <span class="at">-j</span> ACCEPT</span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a><span class="co"># IPv6 - drop everything</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a><span class="ex">ip6tables</span> <span class="at">-P</span> INPUT DROP</span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a><span class="ex">ip6tables</span> <span class="at">-P</span> OUTPUT DROP</span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a><span class="ex">ip6tables</span> <span class="at">-P</span> FORWARD DROP</span></code></pre></div>
+<p><strong>Modern nftables approach</strong>:</p>
+<pre><code>table inet killswitch {
+    chain output {
+        type filter hook output priority 0; policy drop;
+        oif &quot;lo&quot; accept
+        oifname &quot;utun*&quot; accept
+        ip daddr $VPN_SERVER_IP accept
+        udp dport { 53, 51820 } accept
+    }
+}</code></pre>
+<h4 id="ios-nepackettunnelprovider-kill-switch">iOS:
+NEPacketTunnelProvider Kill Switch</h4>
+<ul>
+<li>Use <code>includeAllNetworks = true</code> in
+<code>NEPacketTunnelNetworkSettings</code></li>
+<li>System automatically blocks traffic outside tunnel when enabled</li>
+<li><code>disconnectOnSleep</code> option for sleep behavior</li>
+<li><code>On-Demand VPN</code> rules to auto-reconnect on any network
+access attempt</li>
+<li>Keychain-secured VPN credentials persist across reconnections</li>
+</ul>
+<h4 id="android-always-on-vpn--lockdown-mode">Android: Always-On VPN +
+Lockdown Mode</h4>
+<ul>
+<li>Android 7.0+: Built-in &quot;Always-on VPN&quot; in system settings</li>
+<li><code>VpnService.Builder.setBlocking(true)</code> for lockdown
+mode</li>
+<li><code>VpnService</code> calls <code>onRevoke()</code> when another
+VPN takes over</li>
+<li>Background service must promote to foreground service (notification
+required)</li>
+<li><code>START_STICKY</code> to ensure service restarts on
+termination</li>
+</ul>
+<h3 id="22-kill-switch-response-time-benchmarks">2.2 Kill Switch
+Response Time Benchmarks</h3>
+<table>
+<thead>
+<tr>
+<th>Provider</th>
+<th>Kill Switch Response Time</th>
+<th>Measurement Method</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Proton VPN, Mullvad, IVPN</td>
+<td>87-112 ms</td>
+<td>tcpdump + kernel timestamping [^398^]</td>
+</tr>
+<tr>
+<td>Industry average</td>
+<td>100-500 ms</td>
+<td>Varies by implementation</td>
+</tr>
+<tr>
+<td>Poor implementations</td>
+<td>1-2+ seconds</td>
+<td>User-space packet filtering</td>
+</tr>
+</tbody>
+</table>
+<h3 id="23-traffic-leak-prevention-during-reconnection">2.3 Traffic Leak
+Prevention During Reconnection</h3>
+<ol type="1">
+<li><strong>Pre-establish firewall rules</strong> before any network
+connection</li>
+<li><strong>Drop-all default policy</strong> (fail-closed, not
+fail-open)</li>
+<li><strong>Block IPv6 entirely</strong> unless explicitly tunneled</li>
+<li><strong>Intercept all DNS queries</strong> and route through VPN DNS
+only</li>
+<li><strong>Enforce on system boot</strong> before network stack
+initializes (requires OS-level integration)</li>
+<li><strong>Handle edge cases</strong>: sleep/wake, network change,
+airplane mode, cellular&lt;-&gt;WiFi handoff</li>
+</ol>
+<hr />
+<h2 id="3-split-tunneling-security">3. Split Tunneling Security</h2>
+<h3 id="31-dns-leak-prevention">3.1 DNS Leak Prevention</h3>
+<blockquote>
+<p><strong>Verbatim excerpt</strong>: &quot;Launch Surfshark on a phone,
+laptop, or smart TV and it silently swaps your OS to Surfshark-owned
+DNS, blocks IPv6, and flips on a kill switch; no setup screens required.
+We stress-tested ten servers across North America, Europe, and Asia.
+Every packet capture showed zero DNS or IPv6 leaks.&quot; [^406^] (<a href="https://www.tmcnet.com/topics/articles/2026/06/23/463784-which-vpns-have-best-dns-leak-protection-built.htm">https://www.tmcnet.com/topics/articles/2026/06/23/463784-which-vpns-have-best-dns-leak-protection-built.htm</a>)</p>
+</blockquote>
+<p><strong>DNS Leak Prevention Techniques</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Technique</th>
+<th>Implementation</th>
+<th>Effectiveness</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Custom DNS assignment</strong></td>
+<td>Push VPN provider&#39;s DNS via DHCP options</td>
+<td>Base layer</td>
+</tr>
+<tr>
+<td><strong>DNS-over-HTTPS (DoH)</strong></td>
+<td>Route DNS through HTTPS tunnel</td>
+<td>High</td>
+</tr>
+<tr>
+<td><strong>DNS-over-TLS (DoT)</strong></td>
+<td>Encrypted DNS channel</td>
+<td>High</td>
+</tr>
+<tr>
+<td><strong>Firewall-based DNS interception</strong></td>
+<td>Block all UDP/53 except to VPN DNS</td>
+<td>Critical</td>
+</tr>
+<tr>
+<td><strong>IPv6 DNS blocking</strong></td>
+<td>Block AAAA queries or IPv6 entirely</td>
+<td>Critical</td>
+</tr>
+</tbody>
+</table>
+<h3 id="32-webrtc-leak-prevention">3.2 WebRTC Leak Prevention</h3>
+<blockquote>
+<p><strong>Verbatim excerpt</strong>: &quot;WebRTC is a technology that
+allows browsers to communicate directly with each other, but it can also
+expose your real IP address even when you&#39;re using a VPN.&quot; [^402^] (<a href="https://thebestvpn.com/dns-leaks-causes-fixes/">https://thebestvpn.com/dns-leaks-causes-fixes/</a>)</p>
+</blockquote>
+<p><strong>Mitigation Strategies</strong>:</p>
+<ul>
+<li>Block WebRTC at the application level for in-app browsers</li>
+<li>For system VPN: use <code>disallowUnmatchedInputs</code> or route
+all traffic through tunnel</li>
+<li>Firefox: <code>media.peerconnection.enabled = false</code></li>
+<li>Chrome: WebRTC Network Limiter extension or group policy</li>
+<li>In Tauri WebView: Disable WebRTC via WebView preferences if not
+needed</li>
+</ul>
+<h3 id="33-ipv6-leak-handling">3.3 IPv6 Leak Handling</h3>
+<blockquote>
+<p><strong>Verbatim excerpt</strong>: &quot;If your VPN provider doesn&#39;t
+explicitly support IPv6, look for options to block IPv6 traffic in your
+VPN&#39;s settings. Most modern VPN applications now include this feature to
+prevent IPv6 leaks.&quot; [^402^] (<a href="https://thebestvpn.com/dns-leaks-causes-fixes/">https://thebestvpn.com/dns-leaks-causes-fixes/</a>)</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>Approach</th>
+<th>Method</th>
+<th>Security Level</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>IPv6 blocking</strong></td>
+<td>Disable IPv6 stack entirely</td>
+<td>Highest</td>
+</tr>
+<tr>
+<td><strong>IPv6 through tunnel</strong></td>
+<td>Route all IPv6 through VPN</td>
+<td>High</td>
+</tr>
+<tr>
+<td><strong>IPv6 local only</strong></td>
+<td>Block external IPv6, allow link-local</td>
+<td>Medium</td>
+</tr>
+<tr>
+<td><strong>No handling</strong></td>
+<td>IPv6 traffic bypasses VPN</td>
+<td>Vulnerable</td>
+</tr>
+</tbody>
+</table>
+<p>Platform-specific IPv6 disabling:</p>
+<ul>
+<li><strong>Windows</strong>:
+<code>Get-NetAdapterBinding | Disable-NetAdapterBinding -ComponentID ms_tcpip6</code></li>
+<li><strong>macOS</strong>:
+<code>networksetup -setv6off Wi-Fi</code></li>
+<li><strong>Linux</strong>:
+<code>sysctl -w net.ipv6.conf.all.disable_ipv6=1</code></li>
+<li><strong>iOS</strong>: Blocked automatically by
+<code>includeAllNetworks</code> with system exceptions</li>
+<li><strong>Android</strong>: Block via
+<code>VpnService.Builder.allowFamily(AF_INET6)</code> = false</li>
+</ul>
+<h3 id="34-per-app-routing-security">3.4 Per-App Routing Security</h3>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>iOS Implementation</th>
+<th>Android Implementation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Per-app VPN</strong></td>
+<td>Not supported by system</td>
+<td><code>VpnService.Builder.addAllowedApplication()</code> /
+<code>addDisallowedApplication()</code></td>
+</tr>
+<tr>
+<td><strong>Split tunneling</strong></td>
+<td>Per-IP/route based</td>
+<td>Per-app or per-route based</td>
+</tr>
+<tr>
+<td><strong>Domain-based routing</strong></td>
+<td>Custom NEDNSSettings</td>
+<td>Custom DNS resolver logic</td>
+</tr>
+<tr>
+<td><strong>Browser-only VPN</strong></td>
+<td>Route to browser process only</td>
+<td>Add only browser app to allowed</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="4-obfuscation-techniques">4. Obfuscation Techniques</h2>
+<h3 id="41-protocol-comparison-for-dpi-resistance">4.1 Protocol
+Comparison for DPI Resistance</h3>
+<blockquote>
+<p><strong>Verbatim excerpt</strong>: &quot;WireGuard is famous for its
+minimal codebase, exceptional performance, and modern cryptography.
+However, the WireGuard protocol is transparently designed with a fixed
+packet format and lacks built-in traffic obfuscation. Its unique
+handshake pattern and consistent packet structure make it relatively
+easy for DPI to identify and block via pattern matching.&quot; [^397^] (<a href="https://www.zhuquejiasu.com/en/blog/balancing-performance-and-stealth-how-leading-vpn-proxy-protocols-perform-against-deep-packet-2">https://www.zhuquejiasu.com/en/blog/balancing-performance-and-stealth-how-leading-vpn-proxy-protocols-perform-against-deep-packet-2</a>)</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>Protocol</th>
+<th>DPI Resistance (Basic)</th>
+<th>DPI Resistance (Configured)</th>
+<th>Config Complexity</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>OpenVPN</td>
+<td>Weak</td>
+<td>Strong</td>
+<td>High</td>
+</tr>
+<tr>
+<td>WireGuard</td>
+<td>Weak</td>
+<td>Medium</td>
+<td>Low</td>
+</tr>
+<tr>
+<td>Shadowsocks</td>
+<td>Medium</td>
+<td>Strong</td>
+<td>Low</td>
+</tr>
+<tr>
+<td>V2Ray/Xray</td>
+<td>Strong</td>
+<td>Very Strong</td>
+<td>High</td>
+</tr>
+</tbody>
+</table>
+<h3 id="42-obfuscation-methods">4.2 Obfuscation Methods</h3>
+<p><strong>UDP over TCP/TLS Tunneling</strong>:</p>
+<ul>
+<li>Encapsulate WireGuard UDP in TCP/TLS using <code>udp2raw</code> or
+<code>bore</code></li>
+<li>Makes traffic resemble HTTPS; passes most basic DPI</li>
+<li>Performance penalty: 10-30% throughput reduction</li>
+</ul>
+<p><strong>Shadowsocks with Plugins</strong>:</p>
+<blockquote>
+<p><strong>Verbatim excerpt</strong>: &quot;Shadowsocks was designed
+specifically to bypass network censorship. It uses simple symmetric
+encryption (e.g., AES-GCM, ChaCha20-Poly1305) and disguises encrypted
+data as a stream of random bytes. The protocol itself has no obvious
+handshake signature, and packet length and timing are randomized to some
+degree, making it resistant to simple signature-based DPI.&quot; [^397^] (<a href="https://www.zhuquejiasu.com/en/blog/balancing-performance-and-stealth-how-leading-vpn-proxy-protocols-perform-against-deep-packet-2">https://www.zhuquejiasu.com/en/blog/balancing-performance-and-stealth-how-leading-vpn-proxy-protocols-perform-against-deep-packet-2</a>)</p>
+</blockquote>
+<ul>
+<li>Plugins: <code>v2ray-plugin</code>, <code>obfs-local</code>
+(disguises as WebSocket/HTTP)</li>
+<li>OTA (One-Time Authentication): Resists replay attacks</li>
+</ul>
+<p><strong>V2Ray/VMess/VLESS with XTLS</strong>:</p>
+<blockquote>
+<p><strong>Verbatim excerpt</strong>: &quot;V2Ray and its fork Xray represent
+a class of modular, highly configurable proxy platforms. Their core
+transport protocols, VMess and VLESS, feature built-in dynamic port
+allocation, metadata obfuscation, and optional full TLS encapsulation.&quot;
+[^397^] (<a href="https://www.zhuquejiasu.com/en/blog/balancing-performance-and-stealth-how-leading-vpn-proxy-protocols-perform-against-deep-packet-2">https://www.zhuquejiasu.com/en/blog/balancing-performance-and-stealth-how-leading-vpn-proxy-protocols-perform-against-deep-packet-2</a>)</p>
+</blockquote>
+<p>Key features:</p>
+<ul>
+<li>Transport layer multiplexing over single TCP connection</li>
+<li><code>WebSocket + TLS + Web</code> or <code>gRPC + TLS</code>
+camouflage</li>
+<li>XTLS Vision: Identifies and directly transmits application data
+after TLS handshake</li>
+<li>REALITY protocol: &quot;borrows&quot; TLS certificate fingerprints from
+popular websites</li>
+</ul>
+<p><strong>Domain Fronting</strong>:</p>
+<ul>
+<li>Route traffic through CDN edge nodes with different SNI and Host
+headers</li>
+<li>Effectively blocked by major CDNs (CloudFront, CloudFlare, Fastly)
+since 2018-2020</li>
+<li>Limited practical value for modern VPN implementations</li>
+</ul>
+<p><strong>Traffic Morphing &amp; Steganography</strong>:</p>
+<blockquote>
+<p><strong>Verbatim excerpt</strong>: &quot;Steganography can also be
+utilized in VPN obfuscation. This method provides a way around DPI
+systems by embedding VPN traffic inside regular data streams.
+Steganography enables regular web traffic, like audio or video streams,
+to conceal VPN packets, making it difficult for DPI tools to discern
+between encrypted and regular traffic.&quot; [^407^] (<a href="https://ratsif.tsi.lv/wp-content/uploads/2024/12/Example_abstract_RaTSif.pdf">https://ratsif.tsi.lv/wp-content/uploads/2024/12/Example_abstract_RaTSif.pdf</a>)</p>
+</blockquote>
+<h3 id="43-practical-selection-guide">4.3 Practical Selection Guide</h3>
+<blockquote>
+<p><strong>Verbatim excerpt</strong>: &quot;For Light Censorship
+Environments: For ultimate speed and low latency, choose WireGuard
+(coupled with dynamic ports). For Moderate Censorship Environments: For
+a balance of speed and stealth, Shadowsocks with simple-obfs or V2Ray
+(WebSocket+TLS) are reliable choices. For Heavy Censorship Environments
+(e.g., China, Iran): Highly camouflaged protocols are essential.
+V2Ray/Xray (VLESS+Vision+Reality) or Trojan-Go are currently among the
+most effective solutions.&quot; [^397^] (<a href="https://www.zhuquejiasu.com/en/blog/balancing-performance-and-stealth-how-leading-vpn-proxy-protocols-perform-against-deep-packet-2">https://www.zhuquejiasu.com/en/blog/balancing-performance-and-stealth-how-leading-vpn-proxy-protocols-perform-against-deep-packet-2</a>)</p>
+</blockquote>
+<hr />
+<h2 id="5-post-quantum-security">5. Post-Quantum Security</h2>
+<h3 id="51-nist-post-quantum-standards-finalized-august-2024">5.1 NIST
+Post-Quantum Standards (Finalized August 2024)</h3>
+<blockquote>
+<p><strong>Verbatim excerpt</strong>: &quot;In August 2024, NIST finalized
+three post-quantum cryptographic standards after an eight-year global
+evaluation process. These standards replace the mathematical foundations
+that quantum computers can break.&quot; [^403^] (<a href="https://www.cyberfenceplatform.com/blog/quantum-computing-vpn-encryption">https://www.cyberfenceplatform.com/blog/quantum-computing-vpn-encryption</a>)</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>Standard</th>
+<th>Algorithm</th>
+<th>Former Name</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>FIPS 203</strong></td>
+<td>ML-KEM</td>
+<td>CRYSTALS-Kyber</td>
+<td>Key encapsulation (replaces RSA/ECDH)</td>
+</tr>
+<tr>
+<td><strong>FIPS 204</strong></td>
+<td>ML-DSA</td>
+<td>CRYSTALS-Dilithium</td>
+<td>Digital signatures (replaces RSA/ECDSA)</td>
+</tr>
+<tr>
+<td><strong>FIPS 205</strong></td>
+<td>SLH-DSA</td>
+<td>SPHINCS+</td>
+<td>Backup digital signatures</td>
+</tr>
+</tbody>
+</table>
+<h3 id="52-quantum-threats-to-vpns">5.2 Quantum Threats to VPNs</h3>
+<blockquote>
+<p><strong>Verbatim excerpt</strong>: &quot;VPNs rely on cryptographic
+protocols to ensure confidentiality and integrity. However, quantum
+computers threaten the security foundations of VPNs: Key Exchange
+Vulnerabilities: Protocols like Diffie-Hellman and ECDH are vulnerable
+to quantum attacks. Authentication Risks: Quantum algorithms can break
+RSA and ECDSA signatures, undermining authentication. Data Exposure:
+Encrypted VPN traffic could be decrypted retroactively.&quot; [^399^] (<a href="https://www.onlinehashcrack.com/guides/post-quantum-crypto/pq-vpn-setup-wireguard-open-quantum-safe.php">https://www.onlinehashcrack.com/guides/post-quantum-crypto/pq-vpn-setup-wireguard-open-quantum-safe.php</a>)</p>
+</blockquote>
+<p><strong>Harvest Now, Decrypt Later (HNDL)</strong>: Adversaries may
+collect encrypted VPN traffic today to decrypt once quantum computers
+become available.</p>
+<h3 id="53-post-quantum-wireguard-integration">5.3 Post-Quantum
+WireGuard Integration</h3>
+<blockquote>
+<p><strong>Verbatim excerpt</strong>: &quot;PQ-WireGuard uses a combination
+of two KEMs, namely Classic McEliece and a passively secure variant of
+Saber. One advantage of this solution for actual applications is that
+most security properties are guaranteed by the Classic McEliece scheme,
+considered by many as the most conservative choice among all NIST
+candidates.&quot; [^404^] (<a href="https://eprint.iacr.org/2020/379.pdf">https://eprint.iacr.org/2020/379.pdf</a>)</p>
+</blockquote>
+<p><strong>Open Quantum Safe (OQS) Integration</strong>:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Generate hybrid keys (classical + post-quantum)</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="ex">wg</span> genkey <span class="at">--oqs-algorithm</span> kyber768 <span class="op">&gt;</span> pq_private.key</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="ex">wg</span> pubkey <span class="op">&lt;</span> pq_private.key <span class="op">&gt;</span> pq_public.key</span></code></pre></div>
+<blockquote>
+<p><strong>Verbatim excerpt</strong>: &quot;OQS supports a range of
+post-quantum algorithms under evaluation by NIST, including: Key
+Encapsulation Mechanisms (KEMs): Kyber, NTRU, SABER, BIKE, FrodoKEM, and
+more. Digital Signatures: Dilithium, Falcon, SPHINCS+, etc.&quot; [^399^] (<a href="https://www.onlinehashcrack.com/guides/post-quantum-crypto/pq-vpn-setup-wireguard-open-quantum-safe.php">https://www.onlinehashcrack.com/guides/post-quantum-crypto/pq-vpn-setup-wireguard-open-quantum-safe.php</a>)</p>
+</blockquote>
+<h3 id="54-pq-wireguard-performance">5.4 PQ-WireGuard Performance</h3>
+<blockquote>
+<p><strong>Verbatim excerpt</strong>: &quot;A PQ-WireGuard handshake is less
+than 60% slower than a WireGuard handshake, is more than 5 times faster
+than an IPsec handshake using Curve25519, and more than 1000 times
+faster than an OpenVPN handshake.&quot; [^404^] (<a href="https://eprint.iacr.org/2020/379.pdf">https://eprint.iacr.org/2020/379.pdf</a>)</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>Handshake Type</th>
+<th>Relative Performance</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>WireGuard (classical)</td>
+<td>Baseline (1x)</td>
+</tr>
+<tr>
+<td>PQ-WireGuard</td>
+<td>~1.6x slower than baseline</td>
+</tr>
+<tr>
+<td>IPsec with Curve25519</td>
+<td>~5x slower than PQ-WireGuard</td>
+</tr>
+<tr>
+<td>OpenVPN</td>
+<td>~1000x slower than PQ-WireGuard</td>
+</tr>
+</tbody>
+</table>
+<h3 id="55-recommendations-for-implementation">5.5 Recommendations for
+Implementation</h3>
+<blockquote>
+<p><strong>Verbatim excerpt</strong>: &quot;Use AES-256 encryption — AES-128
+is effectively weakened to 64-bit security against quantum attacks.
+AES-256 restores adequate security. Prefer WireGuard — WireGuard uses
+ChaCha20 and Curve25519. The symmetric component (ChaCha20-Poly1305) is
+quantum-resistant at its key length. The key exchange (Curve25519) is
+not — but WireGuard&#39;s design makes swapping the key exchange mechanism
+cleaner than legacy protocols.&quot; [^403^] (<a href="https://www.cyberfenceplatform.com/blog/quantum-computing-vpn-encryption">https://www.cyberfenceplatform.com/blog/quantum-computing-vpn-encryption</a>)</p>
+</blockquote>
+<hr />
+<h2 id="6-performance-benchmarks">6. Performance Benchmarks</h2>
+<h3 id="61-vpn-protocol-throughput-comparison">6.1 VPN Protocol
+Throughput Comparison</h3>
+<blockquote>
+<p><strong>Verbatim excerpt</strong>: &quot;On modern hardware, WireGuard
+typically delivers the highest throughput and lowest CPU overhead; IPsec
+with hardware acceleration is close behind; OpenVPN is generally slower
+under high encryption load.&quot; [^417^] (<a href="https://www.waveteliot.com/post/ipsec-vpn-in-industrial-networks-how-it-works-and-a-comparison-with-openvpn-and-wireguard">https://www.waveteliot.com/post/ipsec-vpn-in-industrial-networks-how-it-works-and-a-comparison-with-openvpn-and-wireguard</a>)</p>
+</blockquote>
+<h4 id="benchmark-1-voxihost-vps-1-gbps-fiber">Benchmark 1: VoxiHost VPS
+(1 Gbps fiber)</h4>
+<table>
+<thead>
+<tr>
+<th>Protocol</th>
+<th>Throughput</th>
+<th>VPS CPU Usage</th>
+<th>Avg Ping (RTT)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>No VPN (baseline)</td>
+<td>940 Mbps</td>
+<td>~5%</td>
+<td>12.4 ms</td>
+</tr>
+<tr>
+<td><strong>WireGuard (UDP)</strong></td>
+<td><strong>875 Mbps</strong></td>
+<td><strong>~18-20%</strong></td>
+<td><strong>12.6 ms</strong></td>
+</tr>
+<tr>
+<td>OpenVPN (UDP, AES-256-GCM)</td>
+<td>320 Mbps</td>
+<td>100% (single-core)</td>
+<td>15.2 ms</td>
+</tr>
+<tr>
+<td>OpenVPN (TCP, AES-256-GCM)</td>
+<td>185 Mbps</td>
+<td>100% (single-core)</td>
+<td>18.9 ms</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Source</strong>: [^418^] (<a href="https://voxihost.pl/blog/wireguard-vs-openvpn/">https://voxihost.pl/blog/wireguard-vs-openvpn/</a>)</p>
+</blockquote>
+<h4 id="benchmark-2-cloud-environment-tests">Benchmark 2: Cloud
+Environment Tests</h4>
+<table>
+<thead>
+<tr>
+<th>Protocol</th>
+<th>Single-Thread TCP</th>
+<th>Multi-Thread TCP</th>
+<th>Latency Overhead</th>
+<th>CPU at 500 Mbps</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>WireGuard</strong></td>
+<td>892 Mbps</td>
+<td>~line rate</td>
+<td>+0.8 ms</td>
+<td>~12%</td>
+</tr>
+<tr>
+<td>IPsec (IKEv2)</td>
+<td>655 Mbps</td>
+<td>~900 Mbps</td>
+<td>+2.1 ms</td>
+<td>~28%</td>
+</tr>
+<tr>
+<td>OpenVPN (UDP)</td>
+<td>412 Mbps</td>
+<td>~600 Mbps</td>
+<td>+5.5 ms</td>
+<td>~45%</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Source</strong>: [^420^] (<a href="https://www.zhuquejiasu.com/en/blog/performance-comparison-test-how-major-vpn-protocols-wireguard-ipsec-openvpn-perform-in-cloud-env">https://www.zhuquejiasu.com/en/blog/performance-comparison-test-how-major-vpn-protocols-wireguard-ipsec-openvpn-perform-in-cloud-env</a>)</p>
+</blockquote>
+<h4 id="benchmark-3-university-of-amsterdam-1-gbits-environment">Benchmark
+3: University of Amsterdam (1 Gbit/s environment)</h4>
+<table>
+<thead>
+<tr>
+<th>Protocol</th>
+<th>UDP Goodput (max packet)</th>
+<th>TCP Goodput (max packet)</th>
+<th>Median Latency</th>
+<th>Initiation Time</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>strongSwan (AES-GCM)</td>
+<td>921 Mbit/s</td>
+<td>906 Mbit/s</td>
+<td>0.21 ms</td>
+<td>31.8-33.6 ms</td>
+</tr>
+<tr>
+<td><strong>WireGuard-C</strong></td>
+<td><strong>917 Mbit/s</strong></td>
+<td><strong>901 Mbit/s</strong></td>
+<td><strong>0.42 ms</strong></td>
+<td><strong>6.9 ms</strong></td>
+</tr>
+<tr>
+<td>WireGuard-Go</td>
+<td>916 Mbit/s</td>
+<td>892 Mbit/s</td>
+<td>0.73 ms</td>
+<td>10.6 ms</td>
+</tr>
+<tr>
+<td>OpenVPN (AES-GCM)</td>
+<td>922 Mbit/s</td>
+<td>875 Mbit/s</td>
+<td>0.39 ms</td>
+<td>954.9-1152.7 ms</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Source</strong>: [^423^] (<a href="https://rp.os3.nl/2019-2020/p71/report.pdf">https://rp.os3.nl/2019-2020/p71/report.pdf</a>)</p>
+</blockquote>
+<h4 id="benchmark-4-cloud--virtualized-environments">Benchmark 4: Cloud
+&amp; Virtualized Environments</h4>
+<table>
+<thead>
+<tr>
+<th>Environment</th>
+<th>Metric</th>
+<th>WireGuard</th>
+<th>OpenVPN</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Azure Cloud</td>
+<td>TCP Throughput</td>
+<td>281.76 Mbps</td>
+<td>290.77 Mbps</td>
+</tr>
+<tr>
+<td>Azure Cloud</td>
+<td>UDP Throughput</td>
+<td>878.80 Mbps</td>
+<td>880.22 Mbps</td>
+</tr>
+<tr>
+<td>Azure Cloud</td>
+<td>CPU Utilization</td>
+<td>32.52%</td>
+<td>32.51%</td>
+</tr>
+<tr>
+<td>VMware</td>
+<td>TCP Throughput</td>
+<td>210.64 Mbps</td>
+<td>110.34 Mbps</td>
+</tr>
+<tr>
+<td>VMware</td>
+<td>UDP Throughput</td>
+<td>285.28 Mbps</td>
+<td>154.88 Mbps</td>
+</tr>
+<tr>
+<td>VMware</td>
+<td>Packet Loss</td>
+<td>12.35%</td>
+<td>47.01%</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Source</strong>: [^425^] (<a href="https://www.mdpi.com/2073-431X/14/8/326">https://www.mdpi.com/2073-431X/14/8/326</a>)</p>
+</blockquote>
+<h4 id="benchmark-5-hardware-ipsec-performance">Benchmark 5: Hardware
+IPSec Performance</h4>
+<table>
+<thead>
+<tr>
+<th>Hardware</th>
+<th>IPSec Throughput (AES256-SHA512)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>VP2410</td>
+<td>888 Mbps</td>
+</tr>
+<tr>
+<td>VP2420</td>
+<td>1.99 Gbps</td>
+</tr>
+<tr>
+<td>VP2440</td>
+<td>3.64 Gbps</td>
+</tr>
+<tr>
+<td>VP6650</td>
+<td>3.82 Gbps</td>
+</tr>
+<tr>
+<td>VP6670</td>
+<td>4.30 Gbps</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Source</strong>: [^427^] (<a href="https://kb.protectli.com/kb/vpn-performance-results/">https://kb.protectli.com/kb/vpn-performance-results/</a>)</p>
+</blockquote>
+<h3 id="62-performance-summary">6.2 Performance Summary</h3>
+<pre><code>Throughput Ranking (typical):
+1. WireGuard (kernel) &gt; 2. IPsec (AES-GCM, hardware-accelerated) &gt; 3. OpenVPN (UDP) &gt; 4. OpenVPN (TCP)
+
+Latency Ranking (lowest first):
+1. IPsec (AES-GCM) &lt; 2. WireGuard &lt; 3. OpenVPN
+
+Connection Speed Ranking:
+1. WireGuard (~7ms) &lt; 2. IPsec (~32ms) &lt; 3. OpenVPN (~1000ms)
+
+CPU Efficiency Ranking:
+1. IPsec (AES-GCM with AES-NI) &lt; 2. WireGuard (ChaCha20) &lt; 3. OpenVPN</code></pre>
+<hr />
+<h2 id="7-rust-performance">7. Rust Performance</h2>
+<h3 id="71-zero-cost-abstractions">7.1 Zero-Cost Abstractions</h3>
+<blockquote>
+<p><strong>Verbatim excerpt</strong>: &quot;Rust&#39;s async/await is designed
+for maximum efficiency and zero runtime surprises. When you write an
+async function in Rust, the compiler transforms it into a state machine
+at compile time. No runtime interpreter. No dynamic allocations. Just a
+lean, mean, state-machine machine.&quot; [^409^] (<a href="https://dev.to/pranta/zero-cost-abstractions-in-rust-asynchronous-programming-without-breaking-a-sweat-221b">https://dev.to/pranta/zero-cost-abstractions-in-rust-asynchronous-programming-without-breaking-a-sweat-221b</a>)</p>
+</blockquote>
+<p><strong>Key Performance Characteristics</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Rust Implementation</th>
+<th>Runtime Cost</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Async/await</strong></td>
+<td>State machine at compile time</td>
+<td>Zero overhead</td>
+</tr>
+<tr>
+<td><strong>Futures</strong></td>
+<td>Stackless, lazy polling</td>
+<td>No allocation until polled</td>
+</tr>
+<tr>
+<td><strong>Zero-copy networking</strong></td>
+<td><code>bytes</code> crate reference counting</td>
+<td>Reference count increment only</td>
+</tr>
+<tr>
+<td><strong>Iterator chains</strong></td>
+<td>LLVM optimized to loops</td>
+<td>Often completely inlined</td>
+</tr>
+<tr>
+<td><strong>Trait objects</strong></td>
+<td>Static dispatch by default (monomorphization)</td>
+<td>Zero (for static dispatch)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="72-async-runtime-tokio">7.2 Async Runtime: Tokio</h3>
+<blockquote>
+<p><strong>Verbatim excerpt</strong>: &quot;Futures are zero-cost, meaning
+they do not create any overhead. It costs nothing for a program to use
+Futures, compared to OS threads, which are expensive. Futures are
+stackless. They do not carry any extra memory with them and can use the
+stack they are executed on, addressing variables by reference.&quot; [^414^]
+(<a href="https://medium.com/@OlegKubrakov/practical-guide-to-async-rust-and-tokio-99e818c11965">https://medium.com/@OlegKubrakov/practical-guide-to-async-rust-and-tokio-99e818c11965</a>)</p>
+</blockquote>
+<p><strong>Tokio for VPN Applications</strong>:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Tokio provides:</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="co">// - epoll/kqueue/IOCP-based async I/O</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="co">// - Multi-threaded work-stealing scheduler</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co">// - Timer support for keepalive</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="co">// - UDP/TCP socket support for WireGuard</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="co">// Key tokio features for VPN:</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="pp">tokio::net::</span>UdpSocket    <span class="co">// WireGuard transport</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="pp">tokio::time::</span>interval    <span class="co">// Keepalive timer</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="pp">tokio::</span>spawn             <span class="co">// Per-connection tasks</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="pp">tokio::select!</span>           <span class="co">// Cancellation and timeout</span></span></code></pre></div>
+<p><strong>Tokio vs async-std for VPN use cases</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Tokio</th>
+<th>async-std</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Ecosystem maturity</td>
+<td>Dominant (8x more usage)</td>
+<td>Smaller</td>
+</tr>
+<tr>
+<td>UDP socket support</td>
+<td>Excellent (zero-copy ready)</td>
+<td>Good</td>
+</tr>
+<tr>
+<td>Timer precision</td>
+<td>Microsecond</td>
+<td>Millisecond</td>
+</tr>
+<tr>
+<td>Thread pool</td>
+<td>Work-stealing</td>
+<td>Less optimized</td>
+</tr>
+<tr>
+<td>Production usage</td>
+<td>Extensive</td>
+<td>Limited</td>
+</tr>
+<tr>
+<td><strong>Recommendation</strong></td>
+<td><strong>Use Tokio</strong></td>
+<td>Not recommended for VPN</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Verbatim excerpt</strong>: &quot;Tokio 1 is the only async runtime
+used in production at scale, there&#39;s very little reason to use anything
+else. So you can seek out libraries that use tokio 1 and ignore anything
+else.&quot; [^413^] (<a href="https://news.ycombinator.com/item?id=32119002">https://news.ycombinator.com/item?id=32119002</a>)</p>
+</blockquote>
+<h3 id="73-memory-allocation-strategies-for-vpn">7.3 Memory Allocation
+Strategies for VPN</h3>
+<blockquote>
+<p><strong>Verbatim excerpt</strong>: &quot;Zero-copy reduces memory
+allocations, CPU cycles, and improves CPU cache utilization, leading to
+better performance, especially with large data sets. The main challenge
+lies in lifetime management: how to ensure that references remain
+valid?&quot; [^445^] (<a href="https://coinsbench.com/zero-copy-in-rust-challenges-and-solutions-c0d38a6468e9">https://coinsbench.com/zero-copy-in-rust-challenges-and-solutions-c0d38a6468e9</a>)</p>
+</blockquote>
+<p><strong>Zero-Copy Techniques for VPN Packet Processing</strong>:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co">// 1. Bytes crate for reference-counted buffers</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">bytes::</span>Bytes<span class="op">;</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Multiple packet handlers can share the same buffer</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="co">// without copying</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="co">// 2. zerocopy crate for structured network packets</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">zerocopy::</span><span class="op">{</span>AsBytes<span class="op">,</span> FromBytes<span class="op">,</span> FromZeroes<span class="op">};</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span>AsBytes<span class="op">,</span> FromBytes<span class="op">,</span> FromZeroes<span class="at">)]</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>repr<span class="at">(</span>C<span class="at">)]</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> WireGuardPacket <span class="op">{</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>    header<span class="op">:</span> <span class="dt">u32</span><span class="op">,</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>    payload_len<span class="op">:</span> <span class="dt">u16</span><span class="op">,</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>    flags<span class="op">:</span> <span class="dt">u16</span><span class="op">,</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a><span class="co">// 3. Cow (Clone-on-Write) for conditional allocation</span></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::borrow::</span>Cow<span class="op">;</span></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a><span class="co">// Only allocates when mutation is needed</span></span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a><span class="co">// 4. Object pooling for packet buffers</span></span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a><span class="co">// Pre-allocate buffer pool to avoid runtime allocation</span></span></code></pre></div>
+<blockquote>
+<p><strong>Verbatim excerpt</strong>: &quot;The bytes crate facilitates
+zero-copy network programming by allowing multiple Bytes objects to
+point to the same underlying memory. This is managed by using a
+reference count to track when the memory is no longer needed and can be
+freed.&quot; [^443^] (<a href="https://users.rust-lang.org/t/what-does-the-bytes-crate-do/91590">https://users.rust-lang.org/t/what-does-the-bytes-crate-do/91590</a>)</p>
+</blockquote>
+<h3 id="74-boringtun-rust-wireguard-implementation">7.4 BoringTun: Rust
+WireGuard Implementation</h3>
+<blockquote>
+<p><strong>Verbatim excerpt</strong>: &quot;BoringTun is a userspace
+implementation of the WireGuard protocol written in Rust. The simplicity
+of the protocol means it is more robust than old, unmaintainable
+codebases, and can also be implemented relatively quickly.&quot; [^59^] (<a href="https://blog.cloudflare.com/boringtun-userspace-wireguard-rust/">https://blog.cloudflare.com/boringtun-userspace-wireguard-rust/</a>)</p>
+</blockquote>
+<p><strong>BoringTun Performance Characteristics</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Implementation</th>
+<th>Upload</th>
+<th>Download</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>WireSock VPN Client (BoringTun-based)</td>
+<td>879 Mbps</td>
+<td>892 Mbps</td>
+<td>User-space Rust</td>
+</tr>
+<tr>
+<td>WireGuard for Windows (kernel driver)</td>
+<td>892 Mbps</td>
+<td>719 Mbps</td>
+<td>Kernel-space</td>
+</tr>
+<tr>
+<td>WireGuard for Windows (WinTun)</td>
+<td>288 Mbps</td>
+<td>325 Mbps</td>
+<td>User-space Go</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Source</strong>: [^171^] (<a href="https://www.ntkernel.com/boringtun-based-wireguard-client-for-windows/">https://www.ntkernel.com/boringtun-based-wireguard-client-for-windows/</a>)</p>
+</blockquote>
+<blockquote>
+<p><strong>Verbatim excerpt</strong>: &quot;Kernel-mode WireGuard exhibits
+performance dips during session ramp-up and teardown phases, whereas
+user-space implementations such as BoringTun maintain stable
+performance.&quot; [^452^] (<a href="https://www.sciencedirect.com/science/article/pii/S2352711025002808">https://www.sciencedirect.com/science/article/pii/S2352711025002808</a>)</p>
+</blockquote>
+<p>Key advantages of Rust-based VPN implementation:</p>
+<ul>
+<li><strong>Memory safety</strong>: No buffer overflows, use-after-free,
+or race conditions</li>
+<li><strong>Zero-cost abstractions</strong>: High-level code compiles to
+efficient machine code</li>
+<li><strong>Fearless concurrency</strong>: Safe parallel packet
+processing</li>
+<li><strong>Small binary size</strong>: No garbage collector runtime
+overhead</li>
+<li><strong>CPU efficiency</strong>: BoringTun achieves
+near-kernel-level performance in userspace</li>
+</ul>
+<hr />
+<h2 id="8-mobile-battery-optimization">8. Mobile Battery
+Optimization</h2>
+<h3 id="81-vpn-battery-impact-analysis">8.1 VPN Battery Impact
+Analysis</h3>
+<blockquote>
+<p><strong>Verbatim excerpt</strong>: &quot;WireGuard&#39;s codebase is roughly
+15-25 times smaller than OpenVPN&#39;s, its cryptographic operations are
+faster, and its connection design allows the tunnel to sleep cleanly
+between packets. Real-world tests consistently show 20-30% lower battery
+consumption with WireGuard compared to OpenVPN under equivalent
+conditions.&quot; [^419^] (<a href="https://encapsulated.network/does-a-vpn-drain-your-battery/">https://encapsulated.network/does-a-vpn-drain-your-battery/</a>)</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>Factor</th>
+<th>Impact on Battery</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Protocol choice (WireGuard vs OpenVPN)</td>
+<td>20-30% difference</td>
+</tr>
+<tr>
+<td>Network type (5G vs Wi-Fi)</td>
+<td>~2x more on 5G</td>
+</tr>
+<tr>
+<td>Keepalive frequency</td>
+<td>Direct linear correlation</td>
+</tr>
+<tr>
+<td>Idle connection handling</td>
+<td>Significant with proper sleep</td>
+</tr>
+<tr>
+<td>Radio state management</td>
+<td>Critical for cellular</td>
+</tr>
+</tbody>
+</table>
+<h3 id="82-platform-specific-battery-optimization">8.2 Platform-Specific
+Battery Optimization</h3>
+<h4 id="ios">iOS</h4>
+<blockquote>
+<p><strong>Verbatim excerpt</strong>: &quot;When the screen turns off and no
+active traffic is flowing, iOS will frequently &#39;freeze&#39; the VPN
+encryption engine to save power — it doesn&#39;t terminate the tunnel, but
+it pauses processing until data is needed again. This is excellent for
+battery life, and in everyday use it&#39;s largely seamless.&quot; [^419^] (<a href="https://encapsulated.network/does-a-vpn-drain-your-battery/">https://encapsulated.network/does-a-vpn-drain-your-battery/</a>)</p>
+</blockquote>
+<p><strong>iOS Optimization Strategies</strong>:</p>
+<ul>
+<li>Use <code>NEPacketTunnelProvider</code> with
+<code>disconnectOnSleep = false</code></li>
+<li>Leverage iOS&#39;s automatic encryption engine freezing</li>
+<li>Disable keepalive on sleep (reconnect on demand)</li>
+<li>Use WireGuard for lower baseline CPU usage</li>
+<li>Minimize background processing in Network Extension</li>
+</ul>
+<blockquote>
+<p><strong>Verbatim excerpt</strong>: &quot;Disabling keep-alive will not
+result in any data leak outside of the VPN, as the on-demand rules will
+automatically re-establish the VPN tunnel before any network traffic
+starts on the device. Keep-alive, when on, makes sure that the VPN
+tunnel is active even when the device is in sleep mode. By disabling it,
+the VPN tunnel is reconnected only when the device needs to make network
+requests.&quot; [^124^] (<a href="https://www.ivpn.net/knowledgebase/troubleshooting/the-battery-on-my-phone-drains-too-fast-while-using-ivpn-why/">https://www.ivpn.net/knowledgebase/troubleshooting/the-battery-on-my-phone-drains-too-fast-while-using-ivpn-why/</a>)</p>
+</blockquote>
+<h4 id="android">Android</h4>
+<blockquote>
+<p><strong>Verbatim excerpt</strong>: &quot;Android gives VPN apps more
+direct access to system-level networking features — native kill switch
+integration, Always-On VPN modes, and more granular control over how
+traffic is routed. The downside is that a running VPN process can pull
+the device out of Doze Mode more often than on iOS.&quot; [^419^] (<a href="https://encapsulated.network/does-a-vpn-drain-your-battery/">https://encapsulated.network/does-a-vpn-drain-your-battery/</a>)</p>
+</blockquote>
+<p><strong>Android Optimization Strategies</strong>:</p>
+<ul>
+<li>Request battery optimization exemption (required for reliable
+VPN)</li>
+<li>Use <code>setUnderlyingNetworks()</code> to hint system about
+network usage</li>
+<li>Implement efficient keepalive (WireGuard default: off, only when
+needed for NAT)</li>
+<li>Use foreground service with minimal notification updates</li>
+<li>Handle Doze Mode and App Standby gracefully</li>
+<li>Reduce keepalive frequency during deep sleep</li>
+</ul>
+<h3 id="83-battery-optimization-best-practices">8.3 Battery Optimization
+Best Practices</h3>
+<table>
+<thead>
+<tr>
+<th>Strategy</th>
+<th>Expected Savings</th>
+<th>Implementation Complexity</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Use WireGuard instead of OpenVPN</td>
+<td>20-30% battery reduction</td>
+<td>Low (protocol selection)</td>
+</tr>
+<tr>
+<td>Disable keepalive on sleep</td>
+<td>5-15% idle battery reduction</td>
+<td>Medium</td>
+</tr>
+<tr>
+<td>Smart reconnection (exponential backoff)</td>
+<td>10-20% reduction in poor signal</td>
+<td>Medium</td>
+</tr>
+<tr>
+<td>Batch background operations</td>
+<td>5-10% reduction</td>
+<td>Medium</td>
+</tr>
+<tr>
+<td>Adaptive MTU sizing</td>
+<td>2-5% reduction</td>
+<td>Low</td>
+</tr>
+<tr>
+<td>Connection coalescing</td>
+<td>5-15% for multi-app</td>
+<td>High</td>
+</tr>
+</tbody>
+</table>
+<h3 id="84-radio-state-management">8.4 Radio State Management</h3>
+<p><strong>Cellular Radio States</strong> (RRC protocol):</p>
+<pre><code>RRC_IDLE -&gt; RRC_CONNECTED (data transfer)
+            |
+            v
+    Inactivity Timer (typically 5-20s)
+            |
+            v
+    RRC_IDLE (low power)</code></pre>
+<p>VPN Impact:</p>
+<ul>
+<li>Every VPN keepalive packet keeps radio in RRC_CONNECTED (high
+power)</li>
+<li>WireGuard&#39;s lack of default keepalive allows radio to reach idle
+state</li>
+<li>Minimize small packets; batch when possible</li>
+<li>Use longer keepalive intervals on cellular vs Wi-Fi</li>
+</ul>
+<hr />
+<h2 id="9-build-pipeline-design">9. Build Pipeline Design</h2>
+<h3 id="91-github-actions-multi-platform-build">9.1 GitHub Actions
+Multi-Platform Build</h3>
+<blockquote>
+<p><strong>Verbatim excerpt</strong>: &quot;This guide shows how to build,
+sign, and publish Electron apps using GitHub Actions for all three
+platforms (macOS, Windows, Linux).&quot; [^410^] (<a href="https://www.electron.build/docs/features/github-actions/">https://www.electron.build/docs/features/github-actions/</a>)</p>
+</blockquote>
+<p><strong>Recommended Matrix Strategy</strong>:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">strategy</span><span class="kw">:</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">matrix</span><span class="kw">:</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">include</span><span class="kw">:</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">os</span><span class="kw">:</span><span class="at"> macos-latest</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">platform</span><span class="kw">:</span><span class="at"> mac</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">target</span><span class="kw">:</span><span class="at"> x86_64-apple-darwin, aarch64-apple-darwin</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">os</span><span class="kw">:</span><span class="at"> windows-latest</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">platform</span><span class="kw">:</span><span class="at"> win</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">target</span><span class="kw">:</span><span class="at"> x86_64-pc-windows-msvc</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">os</span><span class="kw">:</span><span class="at"> ubuntu-latest</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">platform</span><span class="kw">:</span><span class="at"> linux</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">target</span><span class="kw">:</span><span class="at"> x86_64-unknown-linux-gnu</span></span></code></pre></div>
+<h3 id="92-code-signing">9.2 Code Signing</h3>
+<h4 id="apple-code-signing">Apple Code Signing</h4>
+<blockquote>
+<p><strong>Verbatim excerpt</strong>: &quot;Pass CSC_LINK and
+CSC_KEY_PASSWORD directly — electron-builder creates and manages a
+temporary keychain automatically.&quot; [^410^] (<a href="https://www.electron.build/docs/features/github-actions/">https://www.electron.build/docs/features/github-actions/</a>)</p>
+</blockquote>
+<div class="sourceCode" id="cb11"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># macOS signing setup</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="fu">env</span><span class="kw">:</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">CSC_LINK</span><span class="kw">:</span><span class="at"> ${{ secrets.MAC_CSC_LINK }}</span><span class="co">          # base64-encoded .p12</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">CSC_KEY_PASSWORD</span><span class="kw">:</span><span class="at"> ${{ secrets.MAC_CSC_KEY_PASSWORD }}</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">APPLE_ID</span><span class="kw">:</span><span class="at"> ${{ secrets.APPLE_ID }}</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">APPLE_APP_SPECIFIC_PASSWORD</span><span class="kw">:</span><span class="at"> ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">APPLE_TEAM_ID</span><span class="kw">:</span><span class="at"> ${{ secrets.APPLE_TEAM_ID }}</span></span></code></pre></div>
+<p><strong>Apple Signing Requirements</strong>:</p>
+<ul>
+<li>Apple Developer Program membership ($99/year)</li>
+<li>Developer ID Application certificate for distribution</li>
+<li>Notarization required for macOS 10.15+ (Gatekeeper)</li>
+<li>Hardened Runtime entitlement mandatory</li>
+<li>For iOS: Distribution certificate + provisioning profile</li>
+</ul>
+<h4 id="windows-code-signing">Windows Code Signing</h4>
+<blockquote>
+<p><strong>Verbatim excerpt</strong>: &quot;Since June 2023, Microsoft
+requires software to be signed with an &#39;extended validation&#39;
+certificate, also called an &#39;EV code signing certificate&#39;. The new EV
+certificates are required to be stored on a hardware storage module
+compliant with FIPS 140 Level 2, Common Criteria EAL 4+ or equivalent.&quot;
+[^441^] (<a href="https://github.com/electron/electron/blob/main/docs/tutorial/code-signing.md">https://github.com/electron/electron/blob/main/docs/tutorial/code-signing.md</a>)</p>
+</blockquote>
+<p><strong>Windows Signing Options</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Cost</th>
+<th>CI-Friendly</th>
+<th>SmartScreen</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>EV Certificate (USB HSM)</td>
+<td>$300-700/year</td>
+<td>No (physical token)</td>
+<td>Instant trust</td>
+</tr>
+<tr>
+<td>EV Cloud Signing</td>
+<td>$300-700/year</td>
+<td>Yes (DigiCert KeyLocker, etc.)</td>
+<td>Instant trust</td>
+</tr>
+<tr>
+<td>Azure Trusted Signing</td>
+<td>Pay-per-use</td>
+<td>Yes (native GitHub Actions)</td>
+<td>Builds over time</td>
+</tr>
+<tr>
+<td>Self-signed</td>
+<td>Free</td>
+<td>Yes</td>
+<td>Warning shown</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Verbatim excerpt</strong>: &quot;At the time of writing,
+Electron&#39;s own apps use DigiCert KeyLocker, but any provider that
+provides a command line tool for signing files will be compatible.&quot;
+[^441^] (<a href="https://github.com/electron/electron/blob/main/docs/tutorial/code-signing.md">https://github.com/electron/electron/blob/main/docs/tutorial/code-signing.md</a>)</p>
+</blockquote>
+<p><strong>Azure Trusted Signing (Recommended for CI)</strong>:</p>
+<blockquote>
+<p><strong>Verbatim excerpt</strong>: &quot;Set environment variables:
+AZURE_TENANT_ID, AZURE_CLIENT_ID, AZURE_CLIENT_SECRET. These values come
+from your Azure Active Directory app registration.&quot; [^448^] (<a href="https://hendrik-erz.de/post/code-signing-with-azure-trusted-signing-on-github-actions">https://hendrik-erz.de/post/code-signing-with-azure-trusted-signing-on-github-actions</a>)</p>
+</blockquote>
+<h4 id="android-signing">Android Signing</h4>
+<div class="sourceCode" id="cb12"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Android signing (Google Play)</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Upload key: Used to sign APK/AAB uploaded to Play Store</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Signing key: Managed by Google Play App Signing</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="fu">env</span><span class="kw">:</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">ANDROID_KEYSTORE_BASE64</span><span class="kw">:</span><span class="at"> ${{ secrets.ANDROID_KEYSTORE }}</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">ANDROID_KEY_PASSWORD</span><span class="kw">:</span><span class="at"> ${{ secrets.ANDROID_KEY_PASSWORD }}</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">ANDROID_KEY_ALIAS</span><span class="kw">:</span><span class="at"> ${{ secrets.ANDROID_KEY_ALIAS }}</span></span></code></pre></div>
+<h3 id="93-reproducible-builds">9.3 Reproducible Builds</h3>
+<blockquote>
+<p><strong>Verbatim excerpt</strong>: &quot;Reproducible builds, also known
+as deterministic compilation, is a process of building software which
+ensures the resulting binary code can be reproduced. Source code
+compiled deterministically will always output the same binary.&quot; [^455^]
+(<a href="https://en.wikipedia.org/wiki/Reproducible_builds">https://en.wikipedia.org/wiki/Reproducible_builds</a>)</p>
+</blockquote>
+<blockquote>
+<p><strong>Verbatim excerpt</strong>: &quot;For security-related tools, this
+means high confidence that your data and communications are protected
+against hidden backdoors or vulnerabilities.&quot; [^453^] (<a href="https://reproducible-builds.org/">https://reproducible-builds.org/</a>)</p>
+</blockquote>
+<p><strong>Reproducible Build Requirements</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Factor</th>
+<th>Requirement</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Build path</strong></td>
+<td>Normalized (e.g., <code>/build</code>)</td>
+</tr>
+<tr>
+<td><strong>Timestamps</strong></td>
+<td>Fixed (<code>SOURCE_DATE_EPOCH</code>)</td>
+</tr>
+<tr>
+<td><strong>Compiler</strong></td>
+<td>Pin exact version</td>
+</tr>
+<tr>
+<td><strong>Dependencies</strong></td>
+<td>Lock file with checksums (Cargo.lock)</td>
+</tr>
+<tr>
+<td><strong>Build order</strong></td>
+<td>Deterministic</td>
+</tr>
+<tr>
+<td><strong>Locale</strong></td>
+<td>Fixed (<code>LC_ALL=C</code>)</td>
+</tr>
+<tr>
+<td><strong>Timezone</strong></td>
+<td>Fixed (<code>TZ=UTC</code>)</td>
+</tr>
+<tr>
+<td><strong>Architecture</strong></td>
+<td>Documented and consistent</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Rust-specific</strong>:</p>
+<ul>
+<li>Use <code>CARGO_NET_OFFLINE=true</code> for reproducibility</li>
+<li>Pin Rust toolchain: <code>rust-toolchain.toml</code> with exact
+version</li>
+<li>Use <code>cargo auditable</code> for SBOM generation</li>
+<li>Consider <code>cargo-repro</code> for deterministic builds</li>
+</ul>
+<hr />
+<h2 id="10-testing-strategy">10. Testing Strategy</h2>
+<h3 id="101-unit-testing-rust-core">10.1 Unit Testing Rust Core</h3>
+<div class="sourceCode" id="cb13"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Core Rust modules to test:</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="co">// 1. Crypto operations (X25519, ChaCha20-Poly1305)</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="co">// 2. Packet encoding/decoding</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="co">// 3. State machine transitions</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="co">// 4. Configuration parsing</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="co">// 5. Rate limiting and timing</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>cfg<span class="at">(</span>test<span class="at">)]</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a><span class="kw">mod</span> tests <span class="op">{</span></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">use</span> <span class="kw">super</span><span class="pp">::</span><span class="op">*;</span></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>test<span class="at">]</span></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> test_handshake_initiation() <span class="op">{</span></span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Test Noise protocol handshake</span></span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>test<span class="at">]</span></span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> test_packet_encryption_roundtrip() <span class="op">{</span></span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Encrypt then decrypt, verify plaintext matches</span></span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>test<span class="at">]</span></span>
+<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> test_key_derivation() <span class="op">{</span></span>
+<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Verify HKDF output matches test vectors</span></span>
+<span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb13-26"><a href="#cb13-26" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="102-integration-testing-per-platform">10.2 Integration Testing
+Per Platform</h3>
+<table>
+<thead>
+<tr>
+<th>Test Category</th>
+<th>Test Cases</th>
+<th>Tools</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Connection establishment</strong></td>
+<td>Successful connect, auth failure, timeout</td>
+<td>Custom test harness</td>
+</tr>
+<tr>
+<td><strong>Reconnection</strong></td>
+<td>Network change, sleep/wake, airplane mode</td>
+<td>XCTest/ Espresso</td>
+</tr>
+<tr>
+<td><strong>Kill switch</strong></td>
+<td>Disconnect mid-transfer, verify no leaks</td>
+<td>tcpdump, Wireshark</td>
+</tr>
+<tr>
+<td><strong>DNS handling</strong></td>
+<td>DNS leak test, custom DNS, DoH</td>
+<td>dnsleaktest.com, dig</td>
+</tr>
+<tr>
+<td><strong>IPv6 handling</strong></td>
+<td>IPv6 disabled, IPv6 tunneled</td>
+<td>ping6, tcpdump</td>
+</tr>
+<tr>
+<td><strong>Split tunneling</strong></td>
+<td>Included routes, excluded routes</td>
+<td>route/netstat</td>
+</tr>
+<tr>
+<td><strong>Performance</strong></td>
+<td>Throughput, latency, CPU usage</td>
+<td>iperf3, ping, top</td>
+</tr>
+</tbody>
+</table>
+<h3 id="103-automated-ui-testing">10.3 Automated UI Testing</h3>
+<p><strong>Desktop (Tauri)</strong>:</p>
+<ul>
+<li>Use WebDriver with Tauri&#39;s <code>tauri-driver</code></li>
+<li>Test connection/disconnect flow</li>
+<li>Verify UI state matches tunnel state</li>
+<li>Test settings persistence</li>
+</ul>
+<p><strong>Mobile</strong>:</p>
+<ul>
+<li>iOS: XCTest + XCUITest for UI automation</li>
+<li>Android: Espresso + UI Automator</li>
+<li>Test: Connect button, server selection, protocol toggle</li>
+</ul>
+<h3 id="104-vpn-connection-testing-in-ci">10.4 VPN Connection Testing in
+CI</h3>
+<div class="sourceCode" id="cb14"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># CI Test Matrix</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="fu">jobs</span><span class="kw">:</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">test</span><span class="kw">:</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">strategy</span><span class="kw">:</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">matrix</span><span class="kw">:</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">os</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">ubuntu-latest</span><span class="kw">,</span><span class="at"> macos-latest</span><span class="kw">,</span><span class="at"> windows-latest</span><span class="kw">]</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">protocol</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">wireguard</span><span class="kw">,</span><span class="at"> openvpn</span><span class="kw">,</span><span class="at"> ikev2</span><span class="kw">]</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">test_type</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">unit</span><span class="kw">,</span><span class="at"> integration</span><span class="kw">,</span><span class="at"> leak</span><span class="kw">]</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">steps</span><span class="kw">:</span></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Run connection tests</span></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">run</span><span class="kw">:</span><span class="at"> cargo test --features ${{ matrix.protocol }}</span></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a><span class="at">      </span></span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> DNS leak test</span></span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">run</span><span class="kw">:</span><span class="at"> ./scripts/test_dns_leak.sh</span></span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a><span class="at">      </span></span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Kill switch test</span></span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">run</span><span class="kw">:</span><span class="at"> ./scripts/test_kill_switch.sh</span></span>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a><span class="at">      </span></span>
+<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> IPv6 leak test  </span></span>
+<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">run</span><span class="kw">:</span><span class="at"> ./scripts/test_ipv6_leak.sh</span></span></code></pre></div>
+<h3 id="105-ci-test-matrix">10.5 CI Test Matrix</h3>
+<table>
+<thead>
+<tr>
+<th>Platform</th>
+<th>Unit Tests</th>
+<th>Integration</th>
+<th>E2E</th>
+<th>Security Tests</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Linux</td>
+<td>cargo test</td>
+<td>Docker-based</td>
+<td>Selenium</td>
+<td>Daily</td>
+</tr>
+<tr>
+<td>macOS</td>
+<td>cargo test</td>
+<td>NEPacketTunnel</td>
+<td>XCUITest</td>
+<td>Daily</td>
+</tr>
+<tr>
+<td>Windows</td>
+<td>cargo test</td>
+<td>WFP integration</td>
+<td>WinAppDriver</td>
+<td>Daily</td>
+</tr>
+<tr>
+<td>iOS</td>
+<td>cargo test (sim)</td>
+<td>Device farm</td>
+<td>XCTest</td>
+<td>Weekly</td>
+</tr>
+<tr>
+<td>Android</td>
+<td>cargo test</td>
+<td>Emulator</td>
+<td>Espresso</td>
+<td>Weekly</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="11-release-management">11. Release Management</h2>
+<h3 id="111-versioning-strategy">11.1 Versioning Strategy</h3>
+<p><strong>Semantic Versioning for VPN Software</strong>:</p>
+<pre><code>MAJOR.MINOR.PATCH[-PRERELEASE]
+
+Example: 2.4.1-beta.2
+
+MAJOR: Breaking protocol changes, architecture updates
+MINOR: New features, new protocol support, UI improvements
+PATCH: Bug fixes, security patches, performance improvements
+PRERELEASE: alpha, beta, rc for staged testing</code></pre>
+<h3 id="112-over-the-air-updates">11.2 Over-the-Air Updates</h3>
+<blockquote>
+<p><strong>Verbatim excerpt</strong>: &quot;Releases activated using a staged
+rollout can be used to limit the amount of devices that will download a
+specific Release, reducing the risk of shipping bugs to a greater
+portion of the fleet.&quot; [^432^] (<a href="https://docs.memfault.com/docs/platform/ota">https://docs.memfault.com/docs/platform/ota</a>)</p>
+</blockquote>
+<p><strong>OTA Architecture for VPN Client</strong>:</p>
+<pre><code>[Client] ---(version check)--&gt; [Update Server]
+              &lt;--(update available + signature)--
+[Client] ---(download + verify)--&gt; [CDN]
+[Client] ---(install + restart)--&gt; [New Version]</code></pre>
+<p>Security requirements:</p>
+<ul>
+<li><strong>Code signing</strong>: All updates signed with offline
+release key</li>
+<li><strong>Signature verification</strong>: Client verifies signature
+before installation</li>
+<li><strong>Downgrade prevention</strong>: Version check prevents
+rollback attacks</li>
+<li><strong>HTTPS only</strong>: All update communications over TLS</li>
+<li><strong>Hash verification</strong>: SHA-256 checksum verification
+post-download</li>
+</ul>
+<h3 id="113-staged-rollouts">11.3 Staged Rollouts</h3>
+<blockquote>
+<p><strong>Verbatim excerpt</strong>: &quot;Staged rollouts provide a
+controlled way to release updates, improving app quality and keeping
+users happy. By meeting Google Play&#39;s requirements, developers can take
+full advantage of this approach while staying compliant.&quot; [^437^] (<a href="https://capgo.app/blog/google-play-staged-rollouts-how-it-works/">https://capgo.app/blog/google-play-staged-rollouts-how-it-works/</a>)</p>
+</blockquote>
+<p><strong>Staged Rollout Strategy</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Stage</th>
+<th>Percentage</th>
+<th>Duration</th>
+<th>Criteria to Advance</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Internal</td>
+<td>Team only</td>
+<td>1-2 days</td>
+<td>No crashes, all features work</td>
+</tr>
+<tr>
+<td>Alpha</td>
+<td>5%</td>
+<td>2-3 days</td>
+<td>Crash rate &lt; 0.1%</td>
+</tr>
+<tr>
+<td>Beta</td>
+<td>20%</td>
+<td>3-5 days</td>
+<td>Crash rate &lt; 0.05%, no critical bugs</td>
+</tr>
+<tr>
+<td>Production</td>
+<td>50%</td>
+<td>5-7 days</td>
+<td>All metrics nominal</td>
+</tr>
+<tr>
+<td>Full</td>
+<td>100%</td>
+<td>-</td>
+<td>Confirmed stable</td>
+</tr>
+</tbody>
+</table>
+<h3 id="114-emergency-security-update-pipeline">11.4 Emergency Security
+Update Pipeline</h3>
+<pre><code>[Security Alert] 
+    |
+    v
+[Impact Assessment] (1-4 hours)
+    |
+    v
+[Patch Development] (4-24 hours)
+    |
+    v
+[QA Regression] (2-8 hours, parallel with dev if critical)
+    |
+    v
+[Fast-track Release] (skip staged rollout)
+    |
+    v
+[Force Update] (for critical vulnerabilities)</code></pre>
+<p><strong>Emergency Pipeline Requirements</strong>:</p>
+<ul>
+<li>Dedicated CI pipeline with priority queue</li>
+<li>Pre-built test environments (no environment setup time)</li>
+<li>Automated security regression test suite</li>
+<li>Hot-swap capability for critical fixes</li>
+<li>Direct push notification to all users for mandatory update</li>
+<li>Consider certificate/key rotation if credentials compromised</li>
+</ul>
+<hr />
+<h2 id="12-compliance--certification">12. Compliance &amp;
+Certification</h2>
+<h3 id="121-soc-2-for-vpn-software">12.1 SOC 2 for VPN Software</h3>
+<p><strong>SOC 2 Trust Service Criteria Applicable to VPN</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Criteria</th>
+<th>VPN-Specific Controls</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Security</strong></td>
+<td>Encryption standards, access controls, vulnerability management</td>
+</tr>
+<tr>
+<td><strong>Availability</strong></td>
+<td>Uptime monitoring, redundancy, failover mechanisms</td>
+</tr>
+<tr>
+<td><strong>Processing Integrity</strong></td>
+<td>Accurate packet routing, no data corruption, protocol
+compliance</td>
+</tr>
+<tr>
+<td><strong>Confidentiality</strong></td>
+<td>Encryption in transit, key management, secure protocols</td>
+</tr>
+<tr>
+<td><strong>Privacy</strong></td>
+<td>No-logs policy, minimal data collection, user consent</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Implementation Requirements</strong>:</p>
+<ul>
+<li>Documented security policies and procedures</li>
+<li>Change management with approval workflows</li>
+<li>Incident response plan with defined SLAs</li>
+<li>Regular vulnerability scanning and penetration testing</li>
+<li>Access logging (for infrastructure, not user traffic)</li>
+<li>Employee background checks and security training</li>
+</ul>
+<h3 id="122-iso-27001-considerations">12.2 ISO 27001 Considerations</h3>
+<table>
+<thead>
+<tr>
+<th>ISO 27001 Control</th>
+<th>VPN Implementation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A.8.1 (User endpoint devices)</td>
+<td>Secure client distribution, device posture check</td>
+</tr>
+<tr>
+<td>A.8.2 (Information deletion)</td>
+<td>Secure key wipe on uninstall</td>
+</tr>
+<tr>
+<td>A.8.6 (Capacity management)</td>
+<td>Server capacity monitoring, auto-scaling</td>
+</tr>
+<tr>
+<td>A.10.1 (Cryptographic controls)</td>
+<td>AES-256-GCM, ChaCha20-Poly1305, X25519</td>
+</tr>
+<tr>
+<td>A.12.1 (Network security management)</td>
+<td>Firewall rules, network segmentation</td>
+</tr>
+<tr>
+<td>A.12.4 (Logging and monitoring)</td>
+<td>Infrastructure monitoring (not user activity)</td>
+</tr>
+<tr>
+<td>A.13.1 (Network security)</td>
+<td>TLS 1.3, certificate pinning, mutual auth</td>
+</tr>
+<tr>
+<td>A.14.2 (Secure development)</td>
+<td>SAST/DAST in CI, code review requirements</td>
+</tr>
+</tbody>
+</table>
+<h3 id="123-gdpr-compliance">12.3 GDPR Compliance</h3>
+<blockquote>
+<p><strong>Verbatim excerpt</strong>: &quot;Regulations like GDPR and CCPA
+influence how businesses deploy and manage VPNs to comply with data
+protection and privacy laws. Robust encryption, access controls, and
+logging mechanisms are essential for safeguarding sensitive
+information.&quot; [^442^] (<a href="https://sase.checkpoint.com/blog/network/vpn-logging-policies">https://sase.checkpoint.com/blog/network/vpn-logging-policies</a>)</p>
+</blockquote>
+<p><strong>GDPR Requirements for VPN</strong>:</p>
+<ul>
+<li><strong>Lawful basis</strong>: Legitimate interest (security) or
+consent</li>
+<li><strong>Data minimization</strong>: Collect only what&#39;s necessary
+for service</li>
+<li><strong>Purpose limitation</strong>: Data used only for VPN service
+delivery</li>
+<li><strong>Storage limitation</strong>: Delete data when no longer
+needed</li>
+<li><strong>Security</strong>: Encryption, integrity, confidentiality
+measures</li>
+<li><strong>No-logs policy</strong>: No traffic content logs, no
+connection metadata logs</li>
+</ul>
+<h3 id="124-no-logs-verification">12.4 No-Logs Verification</h3>
+<blockquote>
+<p><strong>Verbatim excerpt</strong>: &quot;In rigorous lab testing across 17
+major providers (2023-2024), only Proton VPN, Mullvad, and IVPN
+consistently prevented DNS, WebRTC, and IPv6 leaks during active
+transfers — and only when users manually disabled IPv6, enforced split
+tunneling exclusion for file-sharing apps, and selected WireGuard over
+OpenVPN. All three passed independent audits (Cure53, Syss, Assured)
+confirming no persistent logs of connection timestamps, IP addresses, or
+transferred file metadata.&quot; [^398^] (<a href="https://lifetips.alibaba.com/tech-efficiency/which-vpn-providers-really-protect-your-file-sharing-ac">https://lifetips.alibaba.com/tech-efficiency/which-vpn-providers-really-protect-your-file-sharing-ac</a>)</p>
+</blockquote>
+<p><strong>No-Logs Verification Approach</strong>:</p>
+<ol type="1">
+<li><strong>Infrastructure audit</strong>: Verify no logging
+servers/infrastructure</li>
+<li><strong>Code audit</strong>: Verify client and server don&#39;t create
+logs</li>
+<li><strong>Network audit</strong>: Verify no telemetry or analytics
+traffic</li>
+<li><strong>Third-party assessment</strong>: Independent security firm
+audit</li>
+<li><strong>Continuous monitoring</strong>: Ongoing verification of
+no-logs compliance</li>
+<li><strong>Jurisdiction selection</strong>: Operate in privacy-friendly
+jurisdictions</li>
+</ol>
+<hr />
+<h2 id="13-security-checklist-by-platform">13. Security Checklist by
+Platform</h2>
+<h3 id="131-required-security-features-desktop-windowsmacoslinux">13.1
+Required Security Features: Desktop (Windows/macOS/Linux)</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Feature</th>
+<th>Priority</th>
+<th>Implementation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Kill switch (system-level)</td>
+<td>CRITICAL</td>
+<td>WFP (Win), PF (mac), nftables (Linux)</td>
+</tr>
+<tr>
+<td>2</td>
+<td>DNS leak protection</td>
+<td>CRITICAL</td>
+<td>Firewall-based + custom DNS</td>
+</tr>
+<tr>
+<td>3</td>
+<td>IPv6 leak protection</td>
+<td>CRITICAL</td>
+<td>Disable IPv6 or tunnel all</td>
+</tr>
+<tr>
+<td>4</td>
+<td>WebRTC leak protection</td>
+<td>HIGH</td>
+<td>Block in browsers, route all traffic</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Secure key storage</td>
+<td>CRITICAL</td>
+<td>DPAPI/Keychain/libsecret</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Certificate pinning</td>
+<td>HIGH</td>
+<td>Public key pinning with backup</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Auto-connect on untrusted Wi-Fi</td>
+<td>MEDIUM</td>
+<td>Network detection logic</td>
+</tr>
+<tr>
+<td>8</td>
+<td>Split tunneling (secure)</td>
+<td>MEDIUM</td>
+<td>Route-based with DNS enforcement</td>
+</tr>
+<tr>
+<td>9</td>
+<td>Code signing verification</td>
+<td>HIGH</td>
+<td>Verify signatures at runtime</td>
+</tr>
+<tr>
+<td>10</td>
+<td>Crash reporting (no PII)</td>
+<td>MEDIUM</td>
+<td>Scrub all sensitive data</td>
+</tr>
+<tr>
+<td>11</td>
+<td>Update signature verification</td>
+<td>CRITICAL</td>
+<td>Ed25519 signature on updates</td>
+</tr>
+<tr>
+<td>12</td>
+<td>Anti-debug/tamper detection</td>
+<td>MEDIUM</td>
+<td>RASP integration</td>
+</tr>
+<tr>
+<td>13</td>
+<td>Post-quantum key exchange</td>
+<td>LOW</td>
+<td>ML-KEM hybrid (future)</td>
+</tr>
+<tr>
+<td>14</td>
+<td>Perfect forward secrecy</td>
+<td>CRITICAL</td>
+<td>Ephemeral key per session</td>
+</tr>
+</tbody>
+</table>
+<h3 id="132-required-security-features-mobile-iosandroid">13.2 Required
+Security Features: Mobile (iOS/Android)</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Feature</th>
+<th>Priority</th>
+<th>Implementation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Kill switch (system-level)</td>
+<td>CRITICAL</td>
+<td>includeAllNetworks / Always-On VPN</td>
+</tr>
+<tr>
+<td>2</td>
+<td>DNS leak protection</td>
+<td>CRITICAL</td>
+<td>Custom DNS + firewall rules</td>
+</tr>
+<tr>
+<td>3</td>
+<td>IPv6 leak protection</td>
+<td>CRITICAL</td>
+<td>Block IPv6 through tunnel</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Secure key storage</td>
+<td>CRITICAL</td>
+<td>iOS Keychain + Secure Enclave / Android Keystore + StrongBox</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Certificate pinning</td>
+<td>HIGH</td>
+<td>NSC (Android), TrustKit/Alamofire (iOS)</td>
+</tr>
+<tr>
+<td>6</td>
+<td>On-demand VPN rules</td>
+<td>HIGH</td>
+<td>Auto-connect on network change</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Jailbreak/root detection</td>
+<td>MEDIUM</td>
+<td>Block or warn on compromised devices</td>
+</tr>
+<tr>
+<td>8</td>
+<td>Biometric auth for VPN keys</td>
+<td>MEDIUM</td>
+<td>Face ID / Touch ID / Fingerprint</td>
+</tr>
+<tr>
+<td>9</td>
+<td>Split tunneling (per-app)</td>
+<td>MEDIUM</td>
+<td>Android: per-app routing</td>
+</tr>
+<tr>
+<td>10</td>
+<td>Background execution</td>
+<td>CRITICAL</td>
+<td>Foreground service (Android), NE extension (iOS)</td>
+</tr>
+<tr>
+<td>11</td>
+<td>Update via official stores</td>
+<td>HIGH</td>
+<td>App Store / Play Store only</td>
+</tr>
+<tr>
+<td>12</td>
+<td>Certificate transparency</td>
+<td>MEDIUM</td>
+<td>CT log verification</td>
+</tr>
+<tr>
+<td>13</td>
+<td>Lock screen VPN control</td>
+<td>LOW</td>
+<td>Widget / notification actions</td>
+</tr>
+<tr>
+<td>14</td>
+<td>Battery-optimized keepalive</td>
+<td>HIGH</td>
+<td>Adaptive keepalive intervals</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="14-performance-budget-table">14. Performance Budget Table</h2>
+<h3 id="141-target-metrics-by-platform">14.1 Target Metrics by
+Platform</h3>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Windows</th>
+<th>macOS</th>
+<th>Linux</th>
+<th>iOS</th>
+<th>Android</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Throughput (WireGuard)</strong></td>
+<td>500+ Mbps</td>
+<td>500+ Mbps</td>
+<td>500+ Mbps</td>
+<td>100+ Mbps</td>
+<td>100+ Mbps</td>
+</tr>
+<tr>
+<td><strong>Throughput (OpenVPN)</strong></td>
+<td>200+ Mbps</td>
+<td>200+ Mbps</td>
+<td>200+ Mbps</td>
+<td>50+ Mbps</td>
+<td>50+ Mbps</td>
+</tr>
+<tr>
+<td><strong>Connection time (WireGuard)</strong></td>
+<td>&lt; 100 ms</td>
+<td>&lt; 100 ms</td>
+<td>&lt; 100 ms</td>
+<td>&lt; 200 ms</td>
+<td>&lt; 200 ms</td>
+</tr>
+<tr>
+<td><strong>Connection time (OpenVPN)</strong></td>
+<td>&lt; 2 s</td>
+<td>&lt; 2 s</td>
+<td>&lt; 2 s</td>
+<td>&lt; 3 s</td>
+<td>&lt; 3 s</td>
+</tr>
+<tr>
+<td><strong>CPU usage (idle)</strong></td>
+<td>&lt; 1%</td>
+<td>&lt; 1%</td>
+<td>&lt; 1%</td>
+<td>&lt; 2%</td>
+<td>&lt; 2%</td>
+</tr>
+<tr>
+<td><strong>CPU usage (500 Mbps)</strong></td>
+<td>&lt; 25%</td>
+<td>&lt; 25%</td>
+<td>&lt; 20%</td>
+<td>&lt; 40%</td>
+<td>&lt; 40%</td>
+</tr>
+<tr>
+<td><strong>Memory usage</strong></td>
+<td>&lt; 100 MB</td>
+<td>&lt; 100 MB</td>
+<td>&lt; 80 MB</td>
+<td>&lt; 50 MB</td>
+<td>&lt; 50 MB</td>
+</tr>
+<tr>
+<td><strong>Battery impact (hourly)</strong></td>
+<td>N/A</td>
+<td>N/A</td>
+<td>N/A</td>
+<td>&lt; 5%</td>
+<td>&lt; 5%</td>
+</tr>
+<tr>
+<td><strong>Kill switch response</strong></td>
+<td>&lt; 100 ms</td>
+<td>&lt; 100 ms</td>
+<td>&lt; 100 ms</td>
+<td>&lt; 200 ms</td>
+<td>&lt; 200 ms</td>
+</tr>
+<tr>
+<td><strong>App launch time</strong></td>
+<td>&lt; 3 s</td>
+<td>&lt; 3 s</td>
+<td>&lt; 2 s</td>
+<td>&lt; 2 s</td>
+<td>&lt; 2 s</td>
+</tr>
+<tr>
+<td><strong>Reconnect time</strong></td>
+<td>&lt; 2 s</td>
+<td>&lt; 2 s</td>
+<td>&lt; 2 s</td>
+<td>&lt; 3 s</td>
+<td>&lt; 3 s</td>
+</tr>
+<tr>
+<td><strong>Binary size</strong></td>
+<td>&lt; 80 MB</td>
+<td>&lt; 80 MB</td>
+<td>&lt; 60 MB</td>
+<td>&lt; 40 MB</td>
+<td>&lt; 40 MB</td>
+</tr>
+</tbody>
+</table>
+<h3 id="142-protocol-specific-performance-targets">14.2
+Protocol-Specific Performance Targets</h3>
+<table>
+<thead>
+<tr>
+<th>Protocol</th>
+<th>Target Latency Overhead</th>
+<th>Target Throughput</th>
+<th>Target CPU at Max</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>WireGuard</td>
+<td>&lt; 1 ms</td>
+<td>&gt; 80% of line rate</td>
+<td>&lt; 20% single core</td>
+</tr>
+<tr>
+<td>OpenVPN (UDP)</td>
+<td>&lt; 5 ms</td>
+<td>&gt; 30% of line rate</td>
+<td>&lt; 50% single core</td>
+</tr>
+<tr>
+<td>IKEv2/IPsec</td>
+<td>&lt; 3 ms</td>
+<td>&gt; 60% of line rate</td>
+<td>&lt; 30% single core</td>
+</tr>
+<tr>
+<td>Shadowsocks</td>
+<td>&lt; 2 ms</td>
+<td>&gt; 70% of line rate</td>
+<td>&lt; 25% single core</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="15-cicd-pipeline-diagram">15. CI/CD Pipeline Diagram</h2>
+<h3 id="151-pipeline-architecture">15.1 Pipeline Architecture</h3>
+<pre><code>                                  CI/CD PIPELINE OVERVIEW
+===================================================================================
+
+  [Developer Push]
+        |
+        v
+  +-------------------+
+  |  Trigger Filter   |  &lt;-- Only build on main, release/*, tags
+  +--------+----------+
+           |
+           v
+  +--------+------------------------------------------+
+  |           SECRETS SCAN &amp; LINT                     |
+  |  - cargo audit (vulnerable deps)                  |
+  |  - cargo clippy (lint)                            |
+  |  - cargo fmt (format check)                       |
+  |  - secret detection (gitleaks)                    |
+  +--------+------------------------------------------+
+           |
+           v
+  +--------+------------------------------------------+
+  |           UNIT TESTS (Rust Core)                  |
+  |  - Protocol tests (WireGuard, OpenVPN)            |
+  |  - Crypto tests (X25519, ChaCha20)                |
+  |  - State machine tests                            |
+  |  - Memory safety tests (Miri)                     |
+  +--------+------------------------------------------+
+           |
+           v
+  +--------+------------------------------------------+
+  |         CROSS-PLATFORM BUILD MATRIX               |
+  |                                                   |
+  |   +-----------+ +----------+ +----------+        |
+  |   |  Linux    | |  macOS   | | Windows  |        |
+  |   |  Build    | |  Build   | |  Build   |        |
+  |   |           | |          | |          |        |
+  |   | - x86_64  | | - x86_64 | | - x86_64 |        |
+  |   | - aarch64 | | - arm64  | | - aarch64|        |
+  |   +-----+-----+ +-----+----+ +-----+----+        |
+  |         |             |              |             |
+  |         v             v              v             |
+  |   +-----+-----+ +-----+----+ +-----+----+        |
+  |   | Code Sign | | Code Sign| | Code Sign|        |
+  |   | (GPG)     | | (Apple)  | | (Azure)  |        |
+  |   +-----+-----+ +-----+----+ +-----+----+        |
+  +--------+-------------+--------------+-------------+
+           |             |              |
+           v             v              v
+  +--------+------------------------------------------+
+  |         INTEGRATION &amp; SECURITY TESTS              |
+  |                                                   |
+  |   +------------------+  +-------------------+     |
+  |   |  Leak Tests      |  |  Kill Switch Test |     |
+  |   |  - DNS leak      |  |  - WFP/PF/nftables|     |
+  |   |  - WebRTC leak   |  |  - Response time  |     |
+  |   |  - IPv6 leak     |  |  - Fail-closed    |     |
+  |   +------------------+  +-------------------+     |
+  |                                                   |
+  |   +------------------+  +-------------------+     |
+  |   |  Protocol Tests  |  |  Performance Test |     |
+  |   |  - Handshake     |  |  - Throughput     |     |
+  |   |  - Rekey         |  |  - Latency        |     |
+  |   |  - Roaming       |  |  - CPU/Memory     |     |
+  |   +------------------+  +-------------------+     |
+  +--------+------------------------------------------+
+           |
+           v
+  +--------+------------------------------------------+
+  |           UI &amp; E2E TESTS                          |
+  |   - Desktop (Tauri WebDriver)                     |
+  |   - iOS (XCUITest on Simulator)                   |
+  |   - Android (Espresso on Emulator)                |
+  +--------+------------------------------------------+
+           |
+           v
+  +--------+------------------------------------------+
+  |           ARTIFACT PUBLISHING                     |
+  |                                                   |
+  |   [Internal Channel] &lt;-- Every main build         |
+  |        |                                          |
+  |        v                                          |
+  |   [Alpha Channel]  &lt;-- Manual trigger             |
+  |        |                                          |
+  |        v                                          |
+  |   [Beta Channel]   &lt;-- After 48h alpha stable     |
+  |        |                                          |
+  |        v                                          |
+  |   [Production]     &lt;-- After 5 days beta stable   |
+  |        |                                          |
+  |        +-----&gt; [Emergency Hotfix] (skip stages)   |
+  +---------------------------------------------------+</code></pre>
+<h3 id="152-pipeline-configuration-summary">15.2 Pipeline Configuration
+Summary</h3>
+<table>
+<thead>
+<tr>
+<th>Stage</th>
+<th>Duration</th>
+<th>Parallel</th>
+<th>Gate</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Lint &amp; Scan</td>
+<td>2-5 min</td>
+<td>Yes</td>
+<td>Must pass</td>
+</tr>
+<tr>
+<td>Unit Tests</td>
+<td>5-10 min</td>
+<td>Yes</td>
+<td>Must pass</td>
+</tr>
+<tr>
+<td>Build (all platforms)</td>
+<td>15-30 min</td>
+<td>Per-platform</td>
+<td>Must pass</td>
+</tr>
+<tr>
+<td>Code Signing</td>
+<td>5 min</td>
+<td>Per-platform</td>
+<td>Must pass</td>
+</tr>
+<tr>
+<td>Integration Tests</td>
+<td>10-15 min</td>
+<td>Yes</td>
+<td>Must pass</td>
+</tr>
+<tr>
+<td>Security Tests</td>
+<td>10-15 min</td>
+<td>Yes</td>
+<td>Must pass</td>
+</tr>
+<tr>
+<td>E2E Tests</td>
+<td>15-30 min</td>
+<td>Per-platform</td>
+<td>Must pass</td>
+</tr>
+<tr>
+<td>Deploy Internal</td>
+<td>2 min</td>
+<td>No</td>
+<td>Auto</td>
+</tr>
+<tr>
+<td>Deploy Alpha</td>
+<td>2 min</td>
+<td>No</td>
+<td>Manual trigger</td>
+</tr>
+<tr>
+<td>Deploy Beta/Prod</td>
+<td>2 min</td>
+<td>No</td>
+<td>Staged approval</td>
+</tr>
+</tbody>
+</table>
+<h3 id="153-key-pipeline-security-practices">15.3 Key Pipeline Security
+Practices</h3>
+<ol type="1">
+<li><strong>Least-privilege CI runners</strong>: Minimal permissions for
+build agents</li>
+<li><strong>Encrypted secrets</strong>: All signing keys in GitHub
+Secrets or HashiCorp Vault</li>
+<li><strong>Ephemeral builds</strong>: Fresh environment per build, no
+cached state leakage</li>
+<li><strong>SBOM generation</strong>: <code>cargo auditable</code> or
+<code>cargo cyclonedx</code> for every build</li>
+<li><strong>Artifact signing</strong>: GPG-sign all release
+artifacts</li>
+<li><strong>Reproducible builds</strong>: Documented build environment,
+pinned dependencies</li>
+<li><strong>Audit logging</strong>: All CI access and deployments
+logged</li>
+<li><strong>Branch protection</strong>: Require PR + review for main
+branch</li>
+<li><strong>Dependabot</strong>: Automated dependency update PRs</li>
+<li><strong>Vulnerability scanning</strong>: Container and binary
+scanning in CI</li>
+</ol>
+<hr />
+<h2 id="16-references">16. References</h2>
+<h3 id="search-results-cited">Search Results Cited</h3>
+<table>
+<thead>
+<tr>
+<th>Citation</th>
+<th>Source</th>
+<th>Topic</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>[^398^]</td>
+<td><a href="https://lifetips.alibaba.com/">https://lifetips.alibaba.com/</a></td>
+<td>DNS/WebRTC/IPv6 leak testing</td>
+</tr>
+<tr>
+<td>[^399^]</td>
+<td><a href="https://www.onlinehashcrack.com/">https://www.onlinehashcrack.com/</a></td>
+<td>PQ VPN Setup with WireGuard &amp; OQS</td>
+</tr>
+<tr>
+<td>[^400^]</td>
+<td><a href="https://www.scitepress.org/">https://www.scitepress.org/</a></td>
+<td>Open-Source Post-Quantum Encryptor</td>
+</tr>
+<tr>
+<td>[^402^]</td>
+<td><a href="https://thebestvpn.com/">https://thebestvpn.com/</a></td>
+<td>DNS Leaks: Causes and Fixes</td>
+</tr>
+<tr>
+<td>[^403^]</td>
+<td><a href="https://www.cyberfenceplatform.com/">https://www.cyberfenceplatform.com/</a></td>
+<td>NIST PQ Standards for VPN</td>
+</tr>
+<tr>
+<td>[^404^]</td>
+<td><a href="https://eprint.iacr.org/">https://eprint.iacr.org/</a></td>
+<td>Post-quantum WireGuard paper</td>
+</tr>
+<tr>
+<td>[^405^]</td>
+<td><a href="https://www.appviewx.com/">https://www.appviewx.com/</a></td>
+<td>Next-Gen Quantum-Safe VPN</td>
+</tr>
+<tr>
+<td>[^406^]</td>
+<td><a href="https://www.tmcnet.com/">https://www.tmcnet.com/</a></td>
+<td>VPN DNS Leak Protection Ranking</td>
+</tr>
+<tr>
+<td>[^407^]</td>
+<td><a href="https://ratsif.tsi.lv/">https://ratsif.tsi.lv/</a></td>
+<td>Analysis of VPN Obfuscation Methods</td>
+</tr>
+<tr>
+<td>[^408^]</td>
+<td><a href="https://thenewstack.io/">https://thenewstack.io/</a></td>
+<td>Async Programming in Rust</td>
+</tr>
+<tr>
+<td>[^409^]</td>
+<td><a href="https://dev.to/">https://dev.to/</a></td>
+<td>Zero-Cost Abstractions in Rust</td>
+</tr>
+<tr>
+<td>[^410^]</td>
+<td><a href="https://www.electron.build/">https://www.electron.build/</a></td>
+<td>GitHub Actions CI/CD</td>
+</tr>
+<tr>
+<td>[^412^]</td>
+<td><a href="https://www.reddit.com/">https://www.reddit.com/</a></td>
+<td>Rust async runtime performance</td>
+</tr>
+<tr>
+<td>[^413^]</td>
+<td><a href="https://news.ycombinator.com/">https://news.ycombinator.com/</a></td>
+<td>Async Rust runtime internals</td>
+</tr>
+<tr>
+<td>[^414^]</td>
+<td><a href="https://medium.com/">https://medium.com/</a></td>
+<td>Practical Guide to Async Rust and Tokio</td>
+</tr>
+<tr>
+<td>[^416^]</td>
+<td><a href="https://corrode.dev/">https://corrode.dev/</a></td>
+<td>The State of Async Rust</td>
+</tr>
+<tr>
+<td>[^417^]</td>
+<td><a href="https://www.waveteliot.com/">https://www.waveteliot.com/</a></td>
+<td>IPsec vs OpenVPN vs WireGuard</td>
+</tr>
+<tr>
+<td>[^418^]</td>
+<td><a href="https://voxihost.pl/">https://voxihost.pl/</a></td>
+<td>WireGuard vs OpenVPN benchmarks</td>
+</tr>
+<tr>
+<td>[^419^]</td>
+<td><a href="https://encapsulated.network/">https://encapsulated.network/</a></td>
+<td>VPN Battery Guide 2026</td>
+</tr>
+<tr>
+<td>[^420^]</td>
+<td><a href="https://www.zhuquejiasu.com/">https://www.zhuquejiasu.com/</a></td>
+<td>VPN Protocol Performance Comparison</td>
+</tr>
+<tr>
+<td>[^421^]</td>
+<td><a href="https://freevpn.com/">https://freevpn.com/</a></td>
+<td>VPN Kill Switch Explained</td>
+</tr>
+<tr>
+<td>[^423^]</td>
+<td><a href="https://rp.os3.nl/">https://rp.os3.nl/</a></td>
+<td>University of Amsterdam VPN benchmarks</td>
+</tr>
+<tr>
+<td>[^424^]</td>
+<td><a href="https://www.oflight.co.jp/">https://www.oflight.co.jp/</a></td>
+<td>Tauri v2 Security Model</td>
+</tr>
+<tr>
+<td>[^425^]</td>
+<td><a href="https://www.mdpi.com/">https://www.mdpi.com/</a></td>
+<td>Empirical WireGuard vs OpenVPN Analysis</td>
+</tr>
+<tr>
+<td>[^426^]</td>
+<td><a href="https://superuser.com/">https://superuser.com/</a></td>
+<td>OpenVPN Kill Switch with iptables</td>
+</tr>
+<tr>
+<td>[^427^]</td>
+<td><a href="https://kb.protectli.com/">https://kb.protectli.com/</a></td>
+<td>Hardware VPN Performance Results</td>
+</tr>
+<tr>
+<td>[^428^]</td>
+<td><a href="https://blogs.curiositytech.in/">https://blogs.curiositytech.in/</a></td>
+<td>iOS Security Best Practices</td>
+</tr>
+<tr>
+<td>[^429^]</td>
+<td><a href="https://medium.com/">https://medium.com/</a></td>
+<td>SSL Pinning on iOS</td>
+</tr>
+<tr>
+<td>[^430^]</td>
+<td><a href="https://blog.ostorlab.co/">https://blog.ostorlab.co/</a></td>
+<td>SSL Pinning on Android</td>
+</tr>
+<tr>
+<td>[^432^]</td>
+<td><a href="https://docs.memfault.com/">https://docs.memfault.com/</a></td>
+<td>OTA Updates Best Practices</td>
+</tr>
+<tr>
+<td>[^433^]</td>
+<td><a href="https://developer.android.com/">https://developer.android.com/</a></td>
+<td>Android Keystore System</td>
+</tr>
+<tr>
+<td>[^434^]</td>
+<td><a href="https://zimperium.com/">https://zimperium.com/</a></td>
+<td>Certificate Pinning Glossary</td>
+</tr>
+<tr>
+<td>[^435^]</td>
+<td><a href="https://dev.to/">https://dev.to/</a></td>
+<td>SSL Pinning Mobile Guide</td>
+</tr>
+<tr>
+<td>[^436^]</td>
+<td><a href="https://capgo.app/">https://capgo.app/</a></td>
+<td>SSL Pinning Implementation Tools</td>
+</tr>
+<tr>
+<td>[^437^]</td>
+<td><a href="https://capgo.app/">https://capgo.app/</a></td>
+<td>Google Play Staged Rollouts</td>
+</tr>
+<tr>
+<td>[^438^]</td>
+<td><a href="https://techkoalainsights.com/">https://techkoalainsights.com/</a></td>
+<td>Zero-Copy Deserialization Rust</td>
+</tr>
+<tr>
+<td>[^439^]</td>
+<td><a href="https://www.electron.build/">https://www.electron.build/</a></td>
+<td>Code Signing Guide</td>
+</tr>
+<tr>
+<td>[^441^]</td>
+<td><a href="https://github.com/electron/">https://github.com/electron/</a></td>
+<td>Electron Code Signing</td>
+</tr>
+<tr>
+<td>[^442^]</td>
+<td><a href="https://sase.checkpoint.com/">https://sase.checkpoint.com/</a></td>
+<td>VPN Logging Policies and Compliance</td>
+</tr>
+<tr>
+<td>[^443^]</td>
+<td><a href="https://users.rust-lang.org/">https://users.rust-lang.org/</a></td>
+<td>Bytes Crate Explanation</td>
+</tr>
+<tr>
+<td>[^444^]</td>
+<td><a href="https://www.tracycodes.com/">https://www.tracycodes.com/</a></td>
+<td>Zero-Copy in Rust</td>
+</tr>
+<tr>
+<td>[^445^]</td>
+<td><a href="https://coinsbench.com/">https://coinsbench.com/</a></td>
+<td>Zero-Copy Challenges and Solutions</td>
+</tr>
+<tr>
+<td>[^447^]</td>
+<td><a href="https://contabo.com/">https://contabo.com/</a></td>
+<td>WireGuard Performance Tuning</td>
+</tr>
+<tr>
+<td>[^448^]</td>
+<td><a href="https://hendrik-erz.de/">https://hendrik-erz.de/</a></td>
+<td>Azure Trusted Signing on GitHub Actions</td>
+</tr>
+<tr>
+<td>[^450^]</td>
+<td><a href="https://www.volcengine.com/">https://www.volcengine.com/</a></td>
+<td>iOS Network Extension Setup</td>
+</tr>
+<tr>
+<td>[^451^]</td>
+<td><a href="https://learn.microsoft.com/">https://learn.microsoft.com/</a></td>
+<td>Android VpnService Class</td>
+</tr>
+<tr>
+<td>[^452^]</td>
+<td><a href="https://www.sciencedirect.com/">https://www.sciencedirect.com/</a></td>
+<td>Hardware-based WireGuard Encryption</td>
+</tr>
+<tr>
+<td>[^453^]</td>
+<td><a href="https://reproducible-builds.org/">https://reproducible-builds.org/</a></td>
+<td>Reproducible Builds Project</td>
+</tr>
+<tr>
+<td>[^455^]</td>
+<td><a href="https://en.wikipedia.org/">https://en.wikipedia.org/</a></td>
+<td>Reproducible Builds Wikipedia</td>
+</tr>
+<tr>
+<td>[^59^]</td>
+<td><a href="https://blog.cloudflare.com/">https://blog.cloudflare.com/</a></td>
+<td>BoringTun Rust WireGuard</td>
+</tr>
+<tr>
+<td>[^124^]</td>
+<td><a href="https://www.ivpn.net/">https://www.ivpn.net/</a></td>
+<td>IVPN Battery Optimization</td>
+</tr>
+<tr>
+<td>[^129^]</td>
+<td><a href="https://kean.blog/">https://kean.blog/</a></td>
+<td>Packet Tunnel Provider Guide</td>
+</tr>
+<tr>
+<td>[^136^]</td>
+<td><a href="https://developer.apple.com/">https://developer.apple.com/</a></td>
+<td>WWDC25 NetworkExtension</td>
+</tr>
+<tr>
+<td>[^171^]</td>
+<td><a href="https://www.ntkernel.com/">https://www.ntkernel.com/</a></td>
+<td>BoringTun WireGuard Windows</td>
+</tr>
+<tr>
+<td>[^183^]</td>
+<td><a href="https://news.ycombinator.com/">https://news.ycombinator.com/</a></td>
+<td>BoringTun Discussion</td>
+</tr>
+<tr>
+<td>[^27^]</td>
+<td><a href="https://medium.com/">https://medium.com/</a></td>
+<td>Android VPN Service Guide</td>
+</tr>
+<tr>
+<td>[^397^]</td>
+<td><a href="https://www.zhuquejiasu.com/">https://www.zhuquejiasu.com/</a></td>
+<td>VPN Protocol DPI Resistance</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="appendix-a-rust-vpn-development-crate-selection">Appendix A:
+Rust VPN Development Crate Selection</h2>
+<table>
+<thead>
+<tr>
+<th>Crate</th>
+<th>Purpose</th>
+<th>Recommendation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>tokio</code></td>
+<td>Async runtime</td>
+<td><strong>Required</strong> - Standard for async I/O</td>
+</tr>
+<tr>
+<td><code>boringtun</code></td>
+<td>WireGuard in Rust</td>
+<td><strong>Recommended</strong> - Cloudflare&#39;s implementation</td>
+</tr>
+<tr>
+<td><code>rustls</code></td>
+<td>TLS implementation</td>
+<td><strong>Recommended</strong> - Memory-safe TLS</td>
+</tr>
+<tr>
+<td><code>ring</code></td>
+<td>Cryptographic primitives</td>
+<td><strong>Required</strong> - AES, ChaCha20, X25519</td>
+</tr>
+<tr>
+<td><code>x25519-dalek</code></td>
+<td>X25519 key exchange</td>
+<td><strong>Required</strong> - WireGuard key exchange</td>
+</tr>
+<tr>
+<td><code>bytes</code></td>
+<td>Zero-copy buffers</td>
+<td><strong>Required</strong> - Packet processing</td>
+</tr>
+<tr>
+<td><code>serde</code></td>
+<td>Serialization</td>
+<td><strong>Required</strong> - Config, protocol messages</td>
+</tr>
+<tr>
+<td><code>zeroize</code></td>
+<td>Secure memory clearing</td>
+<td><strong>Required</strong> - Key cleanup</td>
+</tr>
+<tr>
+<td><code>secrecy</code></td>
+<td>Secret types</td>
+<td><strong>Recommended</strong> - Prevent accidental logging</td>
+</tr>
+<tr>
+<td><code>ipnet</code></td>
+<td>IP network types</td>
+<td><strong>Recommended</strong> - Route management</td>
+</tr>
+<tr>
+<td><code>pnet</code></td>
+<td>Packet manipulation</td>
+<td><strong>Optional</strong> - Raw packet handling</td>
+</tr>
+<tr>
+<td><code>socket2</code></td>
+<td>Advanced socket options</td>
+<td><strong>Recommended</strong> - Low-level socket control</td>
+</tr>
+</tbody>
+</table>
+<h2 id="appendix-b-glossary">Appendix B: Glossary</h2>
+<table>
+<thead>
+<tr>
+<th>Term</th>
+<th>Definition</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>DPI</strong></td>
+<td>Deep Packet Inspection - Advanced network traffic analysis</td>
+</tr>
+<tr>
+<td><strong>HNDL</strong></td>
+<td>Harvest Now, Decrypt Later - Attack storing traffic for future
+decryption</td>
+</tr>
+<tr>
+<td><strong>KEM</strong></td>
+<td>Key Encapsulation Mechanism - Post-quantum key exchange</td>
+</tr>
+<tr>
+<td><strong>ML-KEM</strong></td>
+<td>Module-Lattice-based KEM - NIST post-quantum standard</td>
+</tr>
+<tr>
+<td><strong>NE</strong></td>
+<td>Network Extension - Apple&#39;s VPN framework (iOS/macOS)</td>
+</tr>
+<tr>
+<td><strong>PQ</strong></td>
+<td>Post-Quantum - Cryptography resistant to quantum attacks</td>
+</tr>
+<tr>
+<td><strong>RASP</strong></td>
+<td>Runtime Application Self-Protection - In-app tamper detection</td>
+</tr>
+<tr>
+<td><strong>SPKI</strong></td>
+<td>Subject Public Key Info - Format for public key pinning</td>
+</tr>
+<tr>
+<td><strong>WFP</strong></td>
+<td>Windows Filtering Platform - Windows firewall API</td>
+</tr>
+<tr>
+<td><strong>XTS</strong></td>
+<td>XEX-based Tweaked CodeBook with CipherText Stealing - Disk
+encryption mode</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<p><em>Document generated from comprehensive research including 20+
+independent web searches across academic papers, vendor documentation,
+open-source projects, and authoritative technical sources. All citations
+use [^number^] format with inline source URLs.</em></p>
+</body>
+</html>

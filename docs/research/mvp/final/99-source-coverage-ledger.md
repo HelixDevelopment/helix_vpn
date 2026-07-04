@@ -1,7 +1,13 @@
 # HelixVPN MVP — Source-Coverage Ledger (§11.4.118 proof-of-completeness)
 
-**Revision:** 1
-**Last modified:** 2026-06-25T00:00:00Z
+**Revision:** 2
+**Last modified:** 2026-07-04T12:00:00Z
+**Rev 2 (2026-07-04):** Gap **G1** (disaster-recovery completeness, `[03_ZAI]`) marked RESOLVED —
+`v06-deploy/disaster-recovery.md` (a Volume-6 nano-detail doc that did not exist when this ledger
+was first written) now consolidates the named DR posture (RTO/RPO budget, Terraform-driven
+region-failover runbook) this ledger's original G1 entry called for; independently re-verified
+during the 2026-07-04 hardening pass and found comprehensive, not merely present. G2/G3
+(deliberate-divergence rationales for sing-box/Fyne) are unchanged.
 **Status:** active
 **Authority:** Constitution §11.4.118 (discovery-pressure / enumerated-coverage), §11.4.6 (no-guessing — gaps surfaced, never hidden)
 **Scope:** Enumerated proof that every one of the 16 source research documents under
@@ -75,12 +81,14 @@ surfaced here per §11.4.6/§11.4.118 (no silent omission) rather than hidden. E
 **deliberate-divergence** (consciously not adopted; rationale exists) or **open-gap** (should
 be added/recorded in a future revision).
 
-- **G1 — [03_ZAI] Disaster-recovery completeness — partial / open-gap.**
-  ZAI's KMS-encrypted automated backups landed (04, 02, 07) and an RTO target appears in
-  04-security, but ZAI's *named* DR posture — explicit **RTO/RPO budget**, Terraform-driven
-  region-failover runbook, and "disaster recovery" as a first-class operational section — is
-  not consolidated anywhere; the pieces are scattered. **Recommendation:** add an explicit
-  HA/DR + RTO/RPO subsection to 08-Phase-2 (or 05-tooling) citing `[03_ZAI]`.
+- **G1 — [03_ZAI] Disaster-recovery completeness — ✅ RESOLVED (2026-07-04).**
+  ZAI's KMS-encrypted automated backups (04, 02, 07) and RTO target (04-security) are now joined
+  by a first-class, consolidated DR document: `v06-deploy/disaster-recovery.md` (explicit RTO/RPO
+  budget, backup/restore runbook, Terraform-driven region-failover drill checklist), which did not
+  exist when this gap was first recorded. Independently re-verified during the 2026-07-04
+  hardening pass (a dedicated review of the whole Volume-6 deploy/ops cluster) and found
+  comprehensive — not merely present, but already covering the RTO/RPO budget, backup/restore
+  runbook, and region-failover drill this gap called for. No further action needed.
 
 - **G2 — [06_GRK] sing-box transport framework — deliberate-divergence (record the rationale).**
   GRK proposed **sing-box** as the universal transport-multiplexer (Hysteria2/Shadowsocks/

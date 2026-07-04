@@ -1,7 +1,13 @@
 # The Network Test Rig — netns topology, nftables DPI/censor sim, tc-netem, iperf3, leak harness (§11.4.169 / §11.4.69)
 
-**Revision:** 2
-**Last modified:** 2026-06-26T12:00:00Z
+**Revision:** 3
+**Last modified:** 2026-07-04T12:00:00Z
+
+> **Rev 3 (2026-07-04):** independently re-verified against `SPECIFICATION.md` /
+> `e2e.md` / `security.md` during a corpus-wide gap-analysis pass; confirmed this
+> document is genuinely the single canonical definition of the four-namespace rig
+> topology and the `killswitch_drop.sh` driver (no divergent redefinitions found in
+> sibling docs). Revision bumped for the audit pass itself.
 
 > **Reconciled (§11.4.35, 2026-06-26):** this document's four-namespace rig
 > (`client` / `censor` / `gateway` / `exit`, DPI in a distinct `censor-ns` middlebox)

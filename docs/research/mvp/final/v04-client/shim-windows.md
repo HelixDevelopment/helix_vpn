@@ -1,7 +1,9 @@
 # Windows shim (wireguard-nt + service)
 
-**Revision:** 1
-**Last modified:** 2026-06-25T00:00:00Z
+**Revision:** 2
+**Last modified:** 2026-07-04T12:00:00Z
+**Rev 2:** Added §9.3 (Microsoft Store vs direct-distribution compliance note) —
+closing a gap identified in an independent enterprise-hardening pass over Volume 4.
 
 > Volume 4 (Clients) nano-detail specification — deepens the **Windows row** of the
 > per-platform shim matrix in the pass-1 client overview [04_UI §5/§6, 03-client §5.3].
@@ -736,6 +738,23 @@ is the captured evidence (§12 `SEC`).
 Signing proves **provenance + integrity** (the binary is ours, untampered) and is required for
 the driver to load + for SmartScreen/UAC trust. It does **not** prove the code is *correct* or
 *leak-free* — that is the §12 test matrix's job. Do not conflate "signed" with "safe".
+
+### 9.3 Microsoft Store vs direct-distribution (engineering-relevant subset)
+
+Windows has no App-Review-class gate equivalent to Apple/Google's for a
+directly-signed (non-Store) install — the EV/OV Authenticode signature (§9.1) plus a
+standard installer is sufficient for direct distribution, which is the **recommended
+MVP distribution path** (simplest for a self-hosted product's operator-installed
+model). Optional **Microsoft Store (MSIX) distribution** is a Phase-2+ reach
+decision with its own constraints worth recording now so the WBS does not assume it
+is free: MSIX packaging requires the installed service + driver combination to pass
+Store certification (a privileged `LocalSystem` service + a kernel-adjacent
+`wintun`/`wireguard-nt` driver dependency is a non-trivial certification case,
+`UNVERIFIED` — a Phase-2 evaluation, not assumed), and Store submissions are subject
+to a Microsoft content/policy review comparable in spirit to Apple/Google's (privacy
+disclosure, functional-claim verification). Recommendation: ship direct-distribution
+signed installer for the Phase-1 MVP; evaluate MSIX/Store submission as a Phase-2
+reach item once the service+driver certification path is confirmed.
 
 ---
 

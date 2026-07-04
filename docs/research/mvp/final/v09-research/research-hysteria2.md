@@ -1,5 +1,8 @@
 # RESEARCH hysteria2
 
+**Revision:** 1
+**Last modified:** 2026-07-04T12:00:00Z
+
 Deep web research for a Mullvad-parity self-hosted VPN spec. Topic: Hysteria2 +
 Salamander vs MASQUE; sing-box; AmneziaWG; udp2tcp/Shadowsocks; which obfuscation
 survives which censorship regime. All facts cite a source URL + access date.

@@ -1,8 +1,37 @@
 # HelixVPN — Master Specification Index (the full document tree)
 
-**Revision:** 4
-**Last modified:** 2026-06-26T12:00:00Z
+**Revision:** 5
+**Last modified:** 2026-07-04T12:00:00Z
 **Status:** active — the navigation + generation blueprint for the full HelixVPN technical specification
+**Rev 5 (2026-07-04 hardening pass):** Independent deep gap-analysis + direct hardening executed
+across **every** volume (V0–V10, ~140 nano-detail docs + the 16 top-level `final/` chapters + all 5
+`04_VPN_CLD` source docs) via 16 parallel review-and-fix passes, closing the previously-owed
+adversarial reviews for V0/V1/V6/V7/V8 (V2/V3/V4/V5/V10 had already passed review pre-Rev-5; this
+pass re-verified them independently rather than trusting the "GO" label, and found + fixed several
+real defects even in the already-reviewed volumes — see below). Real cross-document defects found
+and fixed (not padding): (1) a security-relevant PKI bug — CA rotation had conflated *scheduled*
+rotation with *compromise-triggered* rotation, meaning a compromised issuing CA would have stayed
+trusted for up to 24h (`v03-control-plane/svc-pki.md`, now split into two distinct paths); (2) a
+real Rust contradiction — the FFI boundary claimed both `catch_unwind` panic recovery *and*
+workspace-wide `panic=abort`, which are mutually exclusive (`v04-client/helix-core-rust.md`, now an
+honest corrected contract); (3) a missing QUIC anti-amplification limit on the public MASQUE edge
+listener — a real DDoS-vector gap (`v02-data-plane/transport-masque-quic.md`); (4) a dangling
+reconcile-reliability gap — no schema existed to prevent a silently-dropped reconcile trigger on a
+crash between the Postgres commit and the Redis `XADD` (`v03-control-plane/data-model-ddl.md`, now
+an `outbox` table + sweeper); (5) rate-limiting/DDoS resilience and a resource-sizing/cost model
+were genuinely absent anywhere in the 131-file corpus — both added
+(`05-repo-layout-tooling-and-helix-ecosystem.md`, `v06-deploy/ha-and-multiregion.md`); (6) R5
+(Phase 1–3 WBS task/subtask tier asymmetry, tracked in `REFINEMENT_NOTES.md`) resolved — the
+already-existing `v07-execution/subtask-deepening-p1/p2/p3.md` docs were orphaned (nothing in
+`07/08/09-*-wbs.md` pointed to them); now cross-referenced; (7) `D-PKI-CA-TIER` and `D-OD-1` (both
+noted below as open in Rev 3/4) are **operator-confirmed** per `v00-meta/decision-register.md`
+Rev 2 — the Rev-3/4 notes below are superseded, kept for history; (8) a numeric contradiction
+between `SPECIFICATION.md` §8.2 ("< 30s" failover) and `08-phase2-parity-wbs.md`'s measured
+**P2-SLO3** ("< 3s") reconciled in `SPECIFICATION.md` Rev 2 (the WBS's tighter, instrumented figure
+wins). Every touched file carries its own Revision bump recording its specific changes; consult
+each file's header for the full per-doc changelog. `§11.4.168` Mermaid-pandoc-render tooling gap
+(item (b) below) remains open — it is a build-tooling fix, not a markdown-content fix, and stays
+out of this pass's scope.
 **Rev 4:** Re-marked the generated `vNN-*` nano-detail rows `[GEN]`→`[DONE]` across Volumes 0–10 (the
 expansion docs now exist on disk with synced siblings); added the `[DONE]` status to the legend. The
 `[P1]` overview rows stay `[P1]`; `[RES]` preserved (e.g. `[DONE][RES]`).
@@ -202,8 +231,25 @@ pushed; an adversarial review gates each volume. Wave order (resumed 2026-06-25)
 
 **Generation COMPLETE (2026-06-26): all 11 volumes (V0–V10) expanded** — ~140 nano-detail docs,
 every `.md` carrying synced `.html`+`.pdf` siblings (§11.4.65, via `scripts/testing/sync_all_markdown_exports.sh`).
-**Outstanding quality items (tracked, pre-tag):** (a) adversarial reviews still owed for V1/V6/V7/V8/V0
-(V2/V3/V4/V5/V10 reviewed); (b) §11.4.168 — Mermaid fences render as raw source in HTML/PDF (needs a pandoc
-mermaid filter); (c) V9 per-angle research dossiers — only `research-wireguard.md` split out, rest consolidated
-in `11-deep-research-appendix.md`; (d) D-PKI-CA-TIER (two-tier issuing CA as MVP) is a reversible reconciliation
-— operator may veto in favour of single-tier-MVP velocity.
+
+**Outstanding quality items — updated 2026-07-04 (Rev 5 hardening pass):**
+- (a) **RESOLVED.** Adversarial reviews for V1/V6/V7/V8/V0 completed 2026-07-04 (independent
+  gap-analysis + direct hardening, not a rubber-stamp — see Rev 5 changelog above for the specific
+  defects found and fixed). All 11 volumes (V0–V10) are now independently reviewed at least once.
+- (b) **STILL OPEN.** §11.4.168 — Mermaid fences render as raw source in HTML/PDF (needs a pandoc
+  mermaid filter). This is a build/export-tooling gap, not a markdown-content gap, and is out of
+  scope for a documentation hardening pass — tracked for whoever owns the `docs_chain`/pandoc
+  export pipeline.
+- (c) **RESOLVED (was already stale by 2026-07-04).** All 10 `v09-research/research-<angle>.md`
+  per-angle dossiers exist on disk (confirmed by direct inspection during this pass), each with a
+  `Revision` header (9 of 10 were missing the header and got it added in this pass) — this item's
+  premise ("only wireguard split out") no longer matched the actual repository state.
+- (d) **RESOLVED.** D-PKI-CA-TIER (two-tier issuing CA as MVP) is **operator-confirmed** per
+  `v00-meta/decision-register.md` §4 (confirmed 2026-06-26, one day after this line was written —
+  this Outstanding-items list had simply not been updated since). No veto exercised; proceed with
+  the two-tier design as binding for MVP.
+- (e) **NEW, tracked for a future pass.** `v03-control-plane/svc-coordinator.md` §10.1 (added in
+  this hardening pass) surfaces a genuinely open design question for Phase-2 multi-replica
+  coordinators: fan-out vs. graph-apply consumption semantics for the shared event log. Not
+  resolved here — correctly left open per the no-guessing discipline (needs a Phase-2 spike, not a
+  documentation-pass decision).

@@ -1,11 +1,49 @@
 # MVP2: Web Client & Browser Extension Technical Specification
 
+**Revision:** 3
+**Last modified:** 2026-07-04T16:30:00Z
+
+> **Revision 3 changelog:** added §10.6 "Roadmap Reconciliation Against
+> `UNIFIED_PHASE_ROADMAP.md`" (the missing roadmap-reconciliation note flagged
+> by the mid-session crash) and corrected §11.10's "MVP1, already complete"
+> framing so this document does not perpetuate the inflated Phase-1-completion
+> claim `docs/research/UNIFIED_PHASE_ROADMAP.md` §4.2 flags in
+> `MVP2_OVERVIEW.md` §3.1; strengthened the §7.2 OpenDesign reconciliation
+> note with the explicit canonical hex and the `docs/design/tokens/color.json`
+> cross-reference (`docs/research/CROSS_CUTTING_GAP_ANALYSIS.md` §1.2).
+
+> **Revision 2 changelog:** reconciled this document against the canonical
+> cross-platform contracts in `MVP2_ARCHITECTURE.md` §2.2.5/§5.6 and
+> `MVP2_SHARED_CORE.md`: named the three operating modes (Proxy Mode /
+> Native Bridge / P2P Mode) explicitly with a new §1.5 and a Mermaid
+> decision-flow diagram, documented the in-browser `helix-crypto` WASM
+> module (§2.9 — crypto only, no in-browser WireGuard tunnel) and fixed the
+> MV3 CSP snippets to permit it (`'wasm-unsafe-eval'`), corrected the
+> Connection Lifecycle State Machine (§3.5) to the canonical state set with
+> an explicit, honest reconciliation of why `KillSwitchActive` does not
+> apply to Proxy/P2P Mode, removed three residual `OpenVPN`-as-supported
+> mentions (§2.6, §3.3, §3.4 — OpenVPN is a reserved/unimplemented
+> placeholder per `MVP2_SHARED_CORE.md`; the real protocol set is
+> WireGuard/Shadowsocks/MASQUE), disambiguated this document's "Web Admin
+> Panel" (§4) from the separate Tauri-based `helix-admin` fleet-management
+> app, added a design-tokens reconciliation note (§7.2) pointing at the
+> canonical OpenDesign `tokens.css`, reconciled the internal Phase 1-5 week
+> numbering in §10 against the authoritative `MVP2_IMPLEMENTATION_ROADMAP.md`
+> Phase 8 (calendar Weeks 28-34), and added a new §11 Enterprise Hardening
+> & Production Readiness section (extension store review, auto-update,
+> rollback honesty, crash/error telemetry, consent flow, offline/degraded-
+> network behavior, enterprise policy push with a Mermaid sequence diagram,
+> accessibility, i18n, license/entitlement checks, multi-account).
+
 ## Helix VPN - Hybrid Web Platform Architecture
 
 **Document Version**: 1.0.0-MVP2
-**Last Updated**: July 2025
+**Last Updated**: July 2025 (Revision 2: 2026-07-04)
 **Status**: Technical Specification (DRAFT)
-**Target Platforms**: Chrome, Firefox, Safari, Edge | Web | PWA
+**Target Platforms**: Chrome 90+, Firefox 88+, Edge 90+, Safari 15+ | Web | PWA
+**Platform Tier**: Tier 4 / P3 — lowest priority of all 8 MVP2 platforms; a companion for browser-level protection, NOT a full-device VPN replacement (`MVP2_OVERVIEW.md` §4.2)
+**Code Reuse**: ~45% (lowest of any platform — browsers cannot create TUN interfaces or raw sockets)
+**Bundle Target**: <5 MB (extension) / <3 MB (PWA)
 
 ---
 
@@ -21,6 +59,7 @@
 8. [Security Considerations](#8-security-considerations)
 9. [Build & Distribution](#9-build--distribution)
 10. [Implementation Roadmap](#10-implementation-roadmap)
+11. [Enterprise Hardening & Production Readiness](#11-enterprise-hardening--production-readiness)
 
 ---
 
@@ -92,6 +131,65 @@ Based on framework research (see `mvp2_wide01.md`), the web layer uses:
 - **Styling**: Tailwind CSS + shadcn/ui component primitives
 - **State Management**: Zustand (lightweight, extension-friendly)
 
+### 1.5 Three Operating Modes (Browser Extension)
+
+Per the canonical cross-platform architecture (`MVP2_ARCHITECTURE.md`
+§2.2.5), the Browser Extension product (Product A, §1.2 above) itself
+operates in exactly three mutually-exclusive modes. This is a different
+axis from the "three web products" positioning in §1.2 — both taxonomies
+co-exist: §1.2 answers "which of our three web products is this?", §1.5
+answers "how is the Browser Extension product currently getting VPN
+protection?"
+
+| Mode | Capability | Requirements | Where it's implemented in this document |
+|------|-----------|---------------|-------------------------------------------|
+| **Proxy Mode** | Routes browser traffic through a VPN gateway via a PAC script + `chrome.proxy` / `browser.proxy` API | VPN gateway with HTTP proxy support | §2.7, §2.8 |
+| **Native Bridge** | Full device VPN by delegating to the `helix-desktop` Tauri app over the browser's Native Messaging API | `helix-desktop` installed on the same machine | §3 (entire section) |
+| **P2P Mode** | WebRTC `RTCDataChannel`-based tunnel to a WebRTC-compatible VPN server (**experimental**) | A WebRTC-compatible VPN server endpoint | §1.5.1 below |
+
+```mermaid
+flowchart TD
+    Start([Extension starts /\nuser clicks Connect]) --> DetectNative{helix-desktop\nreachable via\nNative Messaging?}
+    DetectNative -- "Yes" --> NativeBridge[/"Native Bridge Mode\nFull device VPN via\nhelix-desktop (Tauri)"/]
+    DetectNative -- "No" --> DetectGateway{"Selected VPN gateway\nsupports HTTP proxy\n(Proxy Mode)?"}
+    DetectGateway -- "Yes" --> ProxyMode[/"Proxy Mode\nPAC script + chrome.proxy /\nbrowser.proxy API\n(browser traffic only)"/]
+    DetectGateway -- "No" --> DetectP2P{Server advertises a\nWebRTC-compatible endpoint\nAND user opted into\nExperimental Features?}
+    DetectP2P -- "Yes" --> P2PMode[/"P2P Mode (EXPERIMENTAL)\nWebRTC RTCDataChannel tunnel\n(browser traffic only)"/]
+    DetectP2P -- "No" --> Unavailable[["No mode available —\nprompt user to install\nhelix-desktop or pick a\nProxy Mode-capable gateway"]]
+
+    NativeBridge --> KillSwitchYes["Kill switch: SUPPORTED\n(enforced by helix-desktop's\nplatform firewall layer)"]
+    ProxyMode --> KillSwitchNo["Kill switch: N/A\n(browser proxy scope only —\nsee §3.5 reconciliation note)"]
+    P2PMode --> KillSwitchNo2["Kill switch: N/A\n(same browser proxy-scope\nconstraint as Proxy Mode)"]
+```
+
+**Mode selection is automatic and re-evaluated on every connect attempt.**
+The background service worker (§2.3) probes for `helix-desktop` first —
+Native Bridge is strictly more capable (full-device coverage, kill switch
+support per §3.5) — falls back to Proxy Mode, and only offers P2P Mode
+when the user has explicitly opted into experimental features AND the
+selected server advertises a WebRTC-compatible endpoint. A user may pin a
+preferred mode in Options (§2.6) to skip the probe.
+
+#### 1.5.1 P2P Mode (Experimental)
+
+P2P Mode is the least mature of the three modes and is gated behind an
+explicit "Experimental Features" opt-in toggle in Options (§2.6). It
+establishes an `RTCDataChannel` to a WebRTC-compatible Helix VPN server,
+using the same WASM crypto module (§2.9) for key exchange as the other two
+modes. Known limitations, stated honestly rather than omitted:
+
+- No kill switch (same architectural constraint as Proxy Mode — §3.5).
+- No split tunneling below the domain-based PAC granularity Proxy Mode
+  uses; P2P Mode is effectively all-or-nothing for the browser's traffic.
+- WebRTC's own leak-prevention concerns (§2.5) apply doubly here since the
+  tunnel itself is WebRTC-based — the content script's `WebRTCBlocker`
+  (§2.5) is applied only to third-party page connections, NOT to the
+  tunnel's own control-plane `RTCPeerConnection`.
+- Not covered by the store-review "core VPN functionality" justification
+  the same way Proxy Mode is (§11.1) — reviewers may ask additional
+  questions about the experimental WebRTC tunnel; the store listing MUST
+  disclose it as experimental.
+
 ---
 
 ## 2. Browser Extension Architecture
@@ -160,10 +258,19 @@ All browser extensions target **Manifest V3 (MV3)** for maximum compatibility an
     "128": "icons/icon-128.png"
   },
   "content_security_policy": {
-    "extension_pages": "script-src 'self'; object-src 'self'; connect-src 'self' https://api.helixvpn.io wss://*.helixvpn.io;"
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'; connect-src 'self' https://api.helixvpn.io wss://*.helixvpn.io;"
   }
 }
 ```
+
+**Note on `'wasm-unsafe-eval'`**: MV3's default extension-pages CSP
+(`script-src 'self'`) does **not** permit `WebAssembly.instantiate()`.
+Since Chrome 103 / equivalent Firefox and Edge releases, the
+`'wasm-unsafe-eval'` keyword-source must be added explicitly to
+`script-src` for any extension that loads a WASM module — required here
+for the `helix-crypto` WASM module (§2.9). Omitting it does not fail
+loudly at build time; it silently breaks WASM instantiation at runtime,
+so this is called out explicitly rather than left implicit.
 
 ### 2.2 Cross-Browser Extension Architecture
 
@@ -503,7 +610,7 @@ Options Page (800px x 600px, responsive to full window)
 | [ ] Show desktop notifications                             |
 |                                                            |
 | Protocol Preference:                                       |
-| ( ) WireGuard    (*) Auto    ( ) OpenVPN                   |
+| ( ) WireGuard    (*) Auto    ( ) Shadowsocks  ( ) MASQUE   |
 |                                                            |
 | Theme:                                                     |
 | ( ) Light    (*) Dark    ( ) System                        |
@@ -515,6 +622,18 @@ Options Page (800px x 600px, responsive to full window)
 |                  [Save Changes] [Reset Defaults]           |
 +-----------------------------------------------------------+
 ```
+
+> **Protocol note**: `OpenVPN` intentionally does not appear as a
+> selectable option. It is a reserved, unimplemented placeholder protocol
+> enum variant in `helix-crypto`/`helix-vpn-engine` (see
+> `MVP2_SHARED_CORE.md`) — there is no `helix-openvpn` crate and the
+> `openvpn` Cargo feature flag is an empty placeholder. The real
+> multi-protocol set is WireGuard, Shadowsocks, and MASQUE. Selecting a
+> protocol here only affects Native Bridge mode's request to
+> `helix-desktop` (§3.3 `CONNECT` command `protocol` field); Proxy Mode and
+> P2P Mode (§1.5) are protocol-transparent from the browser's perspective —
+> the VPN gateway/server, not the extension, terminates the tunnel
+> protocol.
 
 ### 2.7 Proxy Configuration (Standalone Mode)
 
@@ -726,6 +845,69 @@ interface SplitTunnelConfig {
   };
 }
 ```
+
+### 2.9 WASM Crypto Module (`helix-crypto`)
+
+**Critical scoping note**: the browser extension does **not** run a
+WireGuard (or Shadowsocks/MASQUE) tunnel in-browser. Tunnel establishment
+happens server-side (Proxy Mode's gateway, P2P Mode's server endpoint) or
+inside the paired `helix-desktop` native app (Native Bridge mode, §1.5).
+What DOES run in-browser is a WASM build of `helix-crypto` — the shared
+Rust crypto-primitives crate — compiled via `wasm-bindgen` + `wasm-pack`
+(per `MVP2_ARCHITECTURE.md` §2.2.5, target `wasm32-unknown-unknown`),
+used for:
+
+- X25519 keypair generation and Diffie-Hellman shared-secret derivation
+  (client-side key material handed to `helix-desktop` for the Native
+  Bridge handshake, and for P2P Mode's WebRTC DataChannel encryption
+  layer).
+- ChaCha20-Poly1305 AEAD encrypt/decrypt (payload confidentiality where
+  the extension itself needs to encrypt/decrypt — e.g. P2P Mode's data
+  channel).
+- HKDF key derivation and BLAKE2s hashing (session key-schedule support).
+
+```typescript
+// crypto/wasmCrypto.ts
+import init, {
+  generate_keypair,
+  derive_shared_secret,
+  encrypt_chacha20poly1305,
+  decrypt_chacha20poly1305,
+} from '../wasm/helix_crypto_wasm';
+
+let wasmReady: Promise<void> | null = null;
+
+async function ensureWasmLoaded(): Promise<void> {
+  if (!wasmReady) {
+    // init() fetches and instantiates the .wasm binary bundled with the
+    // extension (not a network fetch) — MUST be awaited before any
+    // exported function is called, including on every MV3 service worker
+    // cold start (§2.3 — the worker is ephemeral, so this runs often).
+    wasmReady = init().then(() => undefined);
+  }
+  return wasmReady;
+}
+
+export async function generateSessionKeypair(): Promise<{ publicKey: Uint8Array; privateKey: Uint8Array }> {
+  await ensureWasmLoaded();
+  try {
+    const kp = generate_keypair();
+    return { publicKey: kp.public_key, privateKey: kp.private_key };
+  } catch (err) {
+    // WASM panics surface as JS exceptions via wasm-bindgen's panic hook.
+    // Catch-and-report bridge feeds the error telemetry pipeline (§11.4).
+    reportWasmPanic('generate_keypair', err);
+    throw err;
+  }
+}
+```
+
+**Performance target**: key generation < 10ms in WASM (per
+`MVP2_IMPLEMENTATION_ROADMAP.md` Phase 8, Week 31). **Honest limitation**:
+the WASM module is subject to the same ephemeral MV3 service-worker
+lifetime as the rest of the background context (§2.3) — it is
+re-initialized (a fast, bundle-local re-fetch, not a network round-trip)
+on every service-worker wake rather than held warm indefinitely.
 
 ---
 
@@ -963,7 +1145,7 @@ type CommandType =
   "payload": {
     "filters": {
       "regions": ["us-east", "us-west", "eu-west"],
-      "protocols": ["wireguard", "openvpn"],
+      "protocols": ["wireguard", "shadowsocks", "masque"],  // NOT "openvpn" — reserved/unimplemented placeholder, see §2.6
       "capabilities": ["p2p", "streaming"]
     },
     "includeLatency": true
@@ -1057,7 +1239,7 @@ type CommandType =
 | `CONNECTION_FAILED` | General connection failure | Yes | Retry with different server |
 | `AUTHENTICATION_ERROR` | Invalid credentials | No | Re-authenticate user |
 | `SERVER_UNAVAILABLE` | Target server offline | Yes | Select different server |
-| `PROTOCOL_ERROR` | WireGuard/OpenVPN error | Yes | Switch protocol |
+| `PROTOCOL_ERROR` | WireGuard/Shadowsocks/MASQUE handshake or transport error (OpenVPN is a reserved, unimplemented placeholder — never returned here) | Yes | Switch protocol |
 | `TIMEOUT` | Connection timed out | Yes | Retry |
 | `RATE_LIMITED` | Too many connection attempts | Yes | Wait and retry |
 | `TUNNEL_ERROR` | TUN interface creation failed | No | Restart desktop app |
@@ -1067,35 +1249,84 @@ type CommandType =
 
 ### 3.5 Connection Lifecycle State Machine
 
+> **Reconciliation note (Revision 2, 2026-07-04):** the diagram below was
+> previously a bespoke ad-hoc state machine (`IDLE` / `CONNECTING` /
+> `CONNECTED` / `DISCONNECTING` / `ERROR`) that did not match the canonical
+> state machine `helix-vpn-engine` exposes to every platform UI
+> (`MVP2_ARCHITECTURE.md` §5.6). It is corrected here to the exact
+> canonical state names — `Disconnected`, `Connecting`, `Connected`,
+> `Reconnecting`, `Disconnecting`, `ConnectionFailed`, plus
+> `KillSwitchActive` — because §5.6 explicitly states that "a platform UI
+> introducing its own ad-hoc state ... is an architectural contract
+> violation."
+>
+> **`KillSwitchActive` is a real state in the canonical machine but is
+> architecturally inapplicable to this platform's Proxy Mode and P2P
+> Mode** — per `MVP2_OVERVIEW.md` §7.2: "Web: N/A (browser extension
+> operates in proxy scope only)." A browser extension cannot fail-closed
+> the entire host's network stack; it can only stop proxying its own
+> browser traffic. This document does NOT invent a fake kill-switch state
+> to paper over that gap. Instead:
+>
+> - **Proxy Mode / P2P Mode** (§1.5): the popup/options UI renders ONLY the
+>   subset of the canonical state machine meaningful in browser scope —
+>   `Disconnected` → `Connecting` → `Connected` → `Reconnecting` →
+>   `Disconnecting` → `Disconnected`, plus `ConnectionFailed`.
+>   `KillSwitchActive` is never entered or rendered in these two modes.
+> - **Native Bridge mode** (§1.5, §3 entire section): the FULL canonical
+>   state machine applies, INCLUDING `KillSwitchActive`, because
+>   `helix-desktop` (the paired native app) implements the real
+>   platform-firewall-level kill switch described in
+>   `MVP2_SECURITY_PERFORMANCE.md` §2. The extension's popup, in this
+>   mode, is a thin renderer of the state `helix-desktop` reports over
+>   Native Messaging (`GET_STATUS` / `STATUS_CHANGE`, §3.3) — it does not
+>   decide the state itself.
+> - **User-facing guidance**: a user who needs kill-switch guarantees from
+>   the browser extension alone cannot get them from Proxy/P2P Mode; the
+>   Options page (§2.6) and the PWA (§5) both surface this explicitly:
+>   "Kill switch requires Native Bridge mode — install the Helix desktop
+>   app for full-device kill-switch protection."
+
+```mermaid
+stateDiagram-v2
+    [*] --> Disconnected
+
+    Disconnected --> Connecting: user connects /\nauto-connect trigger
+    Connecting --> Connected: handshake_complete
+    Connecting --> ConnectionFailed: timeout / handshake error
+    ConnectionFailed --> Disconnected: user dismisses /\nauto-retry exhausted
+    ConnectionFailed --> Connecting: auto-retry\n(exponential backoff)
+
+    Connected --> Disconnecting: user disconnects
+    Connected --> Reconnecting: native host keepalive timeout /\nnetwork interface change
+    Connected --> Connected: split-tunnel rule update\n(no proxy teardown)
+
+    Reconnecting --> Connected: handshake_complete\n(new session keys)
+    Reconnecting --> Disconnected: reconnect exhausted\n(Proxy Mode / P2P Mode —\nno kill switch available)
+    Reconnecting --> KillSwitchActive: kill switch enabled AND\nreconnect exceeds grace period\n(Native Bridge mode ONLY)
+
+    KillSwitchActive --> Reconnecting: connectivity restored,\nretry handshake
+    KillSwitchActive --> Disconnecting: user forces disconnect\n(explicit override)
+
+    Disconnecting --> Disconnected: teardown_complete\n(proxy settings cleared /\nWebRTC channel closed)
+
+    Disconnected --> [*]
+
+    note right of KillSwitchActive
+        Native Bridge mode ONLY.
+        Enforced by helix-desktop's
+        platform firewall layer, not
+        by the browser extension
+        itself. See MVP2_OVERVIEW.md
+        §7.2 and
+        MVP2_SECURITY_PERFORMANCE.md §2.
+    end note
 ```
-                    +-----------+
-                    |  IDLE     |
-                    +-----+-----+
-                          | CONNECT
-                          v
-                    +-----+-----+
-           +-------> CONNECTING|<-----+
-           |        +-----+-----+      |
-           |              |            |
-           | RETRY        | SUCCESS    | FAILURE
-           |              v            |
-           |        +-----+-----+      |
-           +--------+  CONNECTED|      |
-                    +-----+-----+      |
-                          |            |
-                    DISCONNECT         |
-                          v            |
-                    +-----+-----+      |
-                    |DISCONNECTING     |
-                    +-----+-----+      |
-                          |            |
-                          +------------+
-                          | ERROR
-                          v
-                    +-----+-----+
-                    |   ERROR   | -----> (auto-retry if recoverable)
-                    +-----------+
-```
+
+This is the same canonical state set as `MVP2_ARCHITECTURE.md` §5.6; the
+only platform-specific addition is that the two outbound transitions from
+`Reconnecting` (to `KillSwitchActive` vs. straight to `Disconnected`) are
+conditioned on which operating mode (§1.5) is currently active.
 
 ### 3.6 Implementation: Native Host (Rust)
 
@@ -1342,6 +1573,17 @@ export class NativeMessagingHost extends EventEmitter {
 ---
 
 ## 4. Web Admin Panel
+
+> **Disambiguation note (Revision 2):** this "Web Admin Panel" (Product B,
+> §1.2/§1.3 — a browser-based Next.js application on Vercel) is a
+> **separate, additional surface** from `helix-admin`, the Tauri-based
+> fleet-management desktop app defined in `MVP2_ARCHITECTURE.md` §2.2.6.
+> Both consume the same MVP1 Admin API (§4.5 below); administrators may
+> use whichever surface fits their workflow (browser-only access vs. an
+> installed desktop app). This is not an architectural conflict, but the
+> similar naming is confusing without this note — do not assume "Web
+> Admin Panel" and "`helix-admin`" are the same product when cross-
+> referencing other MVP2 documents.
 
 ### 4.1 Purpose & Scope
 
@@ -2073,6 +2315,29 @@ packages/
 
 ### 7.2 Design Tokens
 
+> **Reconciliation note (Revision 2):** the CSS custom properties below
+> are illustrative and predate the canonical OpenDesign token system now
+> published at `docs/design/opendesign/helix/tokens.css` (see
+> `docs/design/README.md`, mandatory per `MVP2_OVERVIEW.md` §7.8
+> "Design-System Consistency"). Implementers MUST import the canonical
+> `--hx-*` tokens (e.g. `--hx-primary-500`, `--hx-semantic-connected`,
+> `--hx-semantic-connecting`, `--hx-semantic-disconnected`,
+> `--hx-semantic-error`) from that file rather than reintroducing a
+> parallel `--helix-*` brand-color palette as shown below — the brand seed
+> color and exact hex values are owned by `docs/design/README.md`, not by
+> this document (they differ: the canonical palette is teal/cyan, not the
+> blue/purple shown here). **The canonical brand primary is teal
+> `#00897B`** (`--hx-primary-500`), defined once in
+> `docs/design/tokens/color.json` (`primary.500`) and compiled to
+> `docs/design/opendesign/helix/tokens.css` — every platform-specific
+> palette (this file's `--helix-primary`/`--helix-secondary` included)
+> MUST derive from those two files, never invent its own brand hex
+> (`docs/research/CROSS_CUTTING_GAP_ANALYSIS.md` §1.2 finding #1). The
+> token *categories* below (semantic connection-state colors, spacing
+> scale, radii, transitions) remain a valid reference for what the
+> extension/PWA need; only the concrete `--helix-*` names/values are
+> superseded.
+
 ```css
 /* styles/theme.css */
 @layer base {
@@ -2282,7 +2547,7 @@ export const Toggle: React.FC<ToggleProps> = ({
 // Extension CSP (set in manifest.json)
 const extensionCSP = {
   "extension_pages": "default-src 'self'; " +
-    "script-src 'self'; " +
+    "script-src 'self' 'wasm-unsafe-eval'; " +  // wasm-unsafe-eval required for the §2.9 helix-crypto WASM module
     "style-src 'self' 'unsafe-inline'; " +  // Tailwind requires unsafe-inline
     "connect-src 'self' https://api.helixvpn.io wss://*.helixvpn.io; " +
     "img-src 'self' data: https://cdn.helixvpn.io; " +
@@ -2600,6 +2865,28 @@ Referrer-Policy = "strict-origin-when-cross-origin"
 
 ## 10. Implementation Roadmap
 
+> **Reconciliation note (Revision 2, 2026-07-04):** the "Week N" labels in
+> this section are **relative, dependency-ordered sprint numbers internal
+> to the Web workstream** (Phase 1 through Phase 5 below, 17 relative
+> weeks total) — they are NOT absolute calendar weeks of the overall MVP2
+> program. The single authoritative absolute placement is
+> `MVP2_IMPLEMENTATION_ROADMAP.md` **Phase 8: Web & Browser Extension**,
+> scheduled at **calendar Weeks 28-34** (7 weeks, 1 Web Developer, ~5,000
+> lines, 45% core reuse) of the 36-week expected-case program (30 weeks
+> best case / 44 weeks worst case; see `MVP2_OVERVIEW.md` §2.4). The
+> compression from 17 relative weeks to a 7-week calendar allocation is
+> real, not a typo — it reflects (a) a single dedicated Web Developer
+> working the whole track rather than the multi-phase, multi-engineer
+> cadence implied by the Phase 1-5 breakdown below, (b) heavy reuse of the
+> shared `ui-components` package and the canonical OpenDesign token system
+> (§7.2) rather than building Admin Panel/PWA UI from scratch, and (c) the
+> Web Admin Panel (§4, disambiguated from `helix-admin` above) sharing
+> substantial groundwork with `helix-admin`'s own React/Tauri admin
+> dashboard (`MVP2_ARCHITECTURE.md` §2.2.6). Treat the Phase 1-5 / Week
+> 1-17 table below as the **internal task breakdown and dependency order**
+> for sprint planning; defer to `MVP2_IMPLEMENTATION_ROADMAP.md` for
+> calendar commitments.
+
 ### 10.1 Phase 1: Browser Extension - Standalone Proxy (MVP2-A)
 
 **Timeline**: Weeks 1-4
@@ -2696,6 +2983,648 @@ Referrer-Policy = "strict-origin-when-cross-origin"
 - [x] Cross-browser QA (Chrome, Firefox, Safari, Edge)
 - [x] Performance audit and optimization
 - [x] Store submissions (all platforms)
+
+### 10.6 Roadmap Reconciliation Against `UNIFIED_PHASE_ROADMAP.md`
+
+**Reconciliation note (added this pass).** `docs/research/UNIFIED_PHASE_ROADMAP.md`
+is the single canonical index reconciling all four `docs/research/` document
+generations (`mvp/`, `mvp2/`, `mvp3/`, `mvp_final/`). Under its canonical
+numbering (`UNIFIED_PHASE_ROADMAP.md` §1), this entire document — including
+the internal "Phase 1" through "Phase 5" (MVP2-A…MVP2-E) breakdown in
+§10.1–§10.5 above — sits *entirely inside* the unified roadmap's single
+**Phase 2 — Client application suite** (depends on Phase 1 — Control-plane
+MVP, precedes Phase 3 — Enterprise & Scale). Do not read this section's own
+"Phase 1"/"Phase 2"/etc. labels as the same axis as the unified roadmap's
+Phase 0–Final numbering — they are a purely-internal Web-workstream
+sub-phasing, exactly as the Week-N-vs-calendar-week reconciliation note at
+the top of §10 already establishes for the relative-vs-absolute-week axis.
+
+`UNIFIED_PHASE_ROADMAP.md` §4.2 (open decision R-2, §5) also flags, as a
+real and still-uncorrected inconsistency, that `docs/research/mvp2/
+MVP2_OVERVIEW.md` §3.1–§3.2 describes "Phase 1 (MVP1): Server Infrastructure
+& Admin Backend `[COMPLETED]`" — including a claimed "globally distributed
+WireGuard server fleet" and a completed "Billing Integration" — a framing
+that does **not** match the actual Phase 0/Phase 1 specification
+(`docs/research/mvp/final/SPECIFICATION.md` §8.1): a single self-hostable
+control-plane MVP that has not yet been built, with billing explicitly out
+of scope until the Phase-3 "billing-optional" epic (`mvp/final/
+09-phase3-reach-wbs.md`). That inconsistency belongs to `MVP2_OVERVIEW.md`
+and stays out of this document's edit scope — `UNIFIED_PHASE_ROADMAP.md`'s
+R-2 assigns the correction to the mvp2/ workstream owner as a standalone
+fix, not something a sibling document should silently patch around.
+
+What this document *does* do is make sure it does not itself repeat the
+same inflated claim: the one place this file echoed that optimistic
+framing — §11.10's former "Subscription/plan-tier check against the Client
+API (MVP1, already complete)" — has been corrected below to describe the
+Client API as an assumed backend *design contract/interface* this Web
+client is built against, not a claim that the MVP1 backend has actually
+shipped or that a global server fleet is already live.
+
+---
+
+## 11. Enterprise Hardening & Production Readiness
+
+This section closes the enterprise-operations and production-hardening
+gaps identified in the cross-document gap analysis (see
+`MVP2_OVERVIEW.md` §7.8 and `MVP2_ARCHITECTURE.md` §10 for the
+cross-platform summary tables this section fulfils for the Web
+platform).
+
+### 11.1 Extension Store Review Requirements
+
+§9.4 and §9.5 already cover the core Chrome Web Store and Firefox AMO
+submission mechanics. This subsection adds the remaining stores and the
+review-scrutiny detail those two omitted.
+
+**Chrome Web Store (MV3 policy compliance):**
+- **No remote code execution**: all JS MUST be bundled in the package —
+  `content_security_policy.extension_pages` (§2.1) enforces `script-src
+  'self' 'wasm-unsafe-eval'`, which structurally forbids remotely hosted
+  scripts. The WASM module (§2.9) is bundled, not fetched at runtime,
+  which satisfies this even though WASM is technically "code" beyond the
+  bundled JS.
+- **`proxy` permission review scrutiny**: `proxy` (combined with
+  `host_permissions: <all_urls>` and `webRequest`) is in Chrome Web
+  Store's "powerful permissions" category and draws additional reviewer
+  scrutiny and a mandatory permission-justification field per permission
+  in the Developer Dashboard's Privacy Practices tab:
+
+```json
+{
+  "proxy": "Helix VPN routes the user's browser traffic through a VPN gateway; this is the extension's single, core purpose (not incidental use).",
+  "storage": "Persists user preferences (selected server, split-tunnel rules, theme) locally; never used for tracking.",
+  "alarms": "MV3 service workers terminate after ~30s idle; alarms are the only mechanism to keep a proxy connection's keepalive/auth-refresh cycle running.",
+  "nativeMessaging": "Optional bridge to the companion helix-desktop app for full-device VPN (Native Bridge mode, §1.5); the extension functions without it in Proxy Mode.",
+  "webRequest": "Required to intercept HTTP 407 proxy-authentication challenges via webRequestAuthProvider — no request bodies are read or modified.",
+  "host_permissions <all_urls>": "The VPN proxy must apply to all sites the user visits; a narrower host pattern would defeat the product's purpose."
+}
+```
+
+**Firefox AMO (addons.mozilla.org):** §9.5 already covers the source-code
+submission requirement for minified/bundled code and the 1-5 business day
+review window; add that AMO reviewers specifically re-derive the
+production build from the submitted source and diff it against the
+uploaded artifact — the build MUST be reproducible (pinned
+`package-lock.json`, documented `npm run build:firefox` command) or the
+submission is rejected.
+
+**Edge Add-ons store:** Edge is Chromium-based, so its review process
+largely mirrors the Chrome Web Store's MV3 policy (same permission
+scrutiny, same no-remote-code rule), but submission goes through
+Microsoft Partner Center rather than the Chrome Web Store Developer
+Dashboard, with its own certification queue (automated security/policy
+scan plus manual review) and its own developer account registration —
+fee schedule and exact turnaround change over time; verify current terms
+in Partner Center at submission time rather than relying on a cached
+figure (per the project's latest-source-verification discipline).
+
+**Safari App Extension review** — architecturally different from the
+other three: Safari Web Extensions ship **bundled inside a macOS/iOS
+host app**, not as a standalone store listing. §6.3 already documents the
+`safari-web-extension-converter` conversion tooling and the resulting
+`.appex` bundle structure; the App Store review therefore applies to the
+**whole host app**, not just the extension — the extension's
+`manifest.json` permissions are reviewed as part of the general app
+review (Apple's App Store Review Guidelines, not a separate
+"extension policy" document), and the app MUST expose a way to enable the
+extension from Safari Preferences per Apple's Safari Web Extension
+guidelines. Turnaround follows standard App Store review timelines,
+which vary and should be checked at submission time rather than assumed.
+
+### 11.2 Auto-Update Mechanism
+
+| Browser | Mechanism |
+|---------|-----------|
+| Chrome / Edge | Chrome Web Store / Edge Add-ons poll `update_url` + compare the manifest `version` field; the browser auto-installs newer versions on its own periodic check (user can force-check via `chrome://extensions`). |
+| Firefox | AMO-listed extensions auto-update the same way; self-hosted (unlisted) extensions require a signed `update_manifest.json` referenced from `browser_specific_settings.gecko.update_url`. |
+| Safari | Ships inside the host macOS/iOS app — the update mechanism IS the App Store's own app-update mechanism; there is no separate extension-only update channel. |
+
+**Enterprise manual-sideload fallback** (for organizations not using the
+public stores — see §11.7 for the policy-push side of this):
+
+```xml
+<!-- Self-hosted Chrome/Edge update manifest (update.xml) -->
+<?xml version='1.0' encoding='UTF-8'?>
+<gupdate xmlns='http://www.google.com/update2/response' protocol='2.0'>
+  <app appid='helixvpnextensionid0000000000000'>
+    <updatecheck codebase='https://updates.helixvpn.io/chrome/helix-vpn-2.1.0.crx' version='2.1.0' />
+  </app>
+</gupdate>
+```
+
+```json
+// Self-hosted Firefox update manifest (update_manifest.json)
+{
+  "addons": {
+    "helix@helixvpn.io": {
+      "updates": [
+        {
+          "version": "2.1.0",
+          "update_link": "https://updates.helixvpn.io/firefox/helix-vpn-2.1.0.xpi",
+          "update_hash": "sha256:9f8b1c2d3e4f5061728394a5b6c7d8e9f0a1b2c3d4e5f60718293a4b5c6d7e8",
+          "applications": { "gecko": { "strict_min_version": "109.0" } }
+        }
+      ]
+    }
+  }
+}
+```
+
+### 11.3 Rollback / Staged Rollout (Honest Treatment)
+
+**Extension stores generally do NOT support percentage-based staged
+rollout** the way mobile app stores do (Google Play staged rollout,
+Apple's phased release). Chrome Web Store, AMO, Edge Add-ons, and the Mac
+App Store all publish a new version to essentially all auto-updating
+users at once — the only "staging" that happens is the natural fuzz of
+each client's own update-check polling interval, not a deliberate
+percentage-based canary ring. This is a genuine capability gap against
+the cross-platform expectation in `MVP2_OVERVIEW.md` §7.8 ("canary ring:
+internal → 1% → 10% → 50% → 100%"), which Web cannot implement at the
+store-distribution layer.
+
+**Mitigation (two layers):**
+
+1. **Feature-flag kill switch via the MVP1 Utils Service** — new/risky
+   behavior ships behind a remotely-toggleable flag, fetched on startup
+   and on the existing keepalive alarm cadence. A broken feature is
+   disabled server-side without requiring a new extension version:
+
+```typescript
+// background/featureFlags.ts
+import { UtilsServiceClient } from '../shared/UtilsServiceClient';
+
+interface FeatureFlags {
+  p2pModeEnabled: boolean;
+  nativeBridgeAutoDetect: boolean;
+  newSplitTunnelUI: boolean;
+  [key: string]: boolean;
+}
+
+const DEFAULT_FLAGS: FeatureFlags = {
+  p2pModeEnabled: false,       // fail safe: experimental mode OFF by default
+  nativeBridgeAutoDetect: true,
+  newSplitTunnelUI: false,
+};
+
+export async function loadFeatureFlags(): Promise<FeatureFlags> {
+  try {
+    const remote = await UtilsServiceClient.getFeatureFlags('extension');
+    const flags = { ...DEFAULT_FLAGS, ...remote };
+    await chrome.storage.local.set({ featureFlags: flags, flagsFetchedAt: Date.now() });
+    return flags;
+  } catch {
+    // Utils Service unreachable — fall back to the last-known-good cached
+    // flags, never silently assume "everything enabled".
+    const cached = await chrome.storage.local.get('featureFlags');
+    return { ...DEFAULT_FLAGS, ...(cached.featureFlags ?? {}) };
+  }
+}
+```
+
+2. **Rapid-response rollback** — if a shipped version is broken beyond
+   what a feature flag can mask, publish a PATCH version immediately
+   (each store supports an unlisted/private channel usable as an internal
+   hotfix-validation ring before public listing) and, on Chrome Web
+   Store, use the unpublish mechanism to halt further new installs while
+   the fix ships. This does NOT retroactively downgrade already-updated
+   users — it is a stop-the-bleeding action, not a true rollback.
+
+### 11.4 Crash Reporting / Error Telemetry
+
+A browser extension has no OS-level crash reporter — there is no
+process for a native "crashlytics" agent to observe. The approach
+instead: global error/`unhandledrejection` capture in the service worker,
+plus a dedicated catch-and-report bridge for WASM panics from the §2.9
+crypto module, feeding a privacy-scrubbed, opt-in endpoint that reports
+into the MVP1 Utils Service.
+
+```typescript
+// background/errorReporting.ts
+const ERROR_ENDPOINT = 'https://telemetry.helixvpn.io/v1/extension-errors';
+
+interface ScrubbedError {
+  message: string;       // scrubbed: no URLs, no IPs, no tokens
+  stack?: string;        // scrubbed: extension-relative paths only
+  context: string;       // 'service_worker' | 'popup' | 'wasm_panic'
+  extensionVersion: string;
+  browser: string;
+}
+
+function scrub(message: string): string {
+  return message
+    .replace(/https?:\/\/\S+/g, '[url]')
+    .replace(/\b\d{1,3}(\.\d{1,3}){3}\b/g, '[ip]')
+    .replace(/Bearer\s+\S+/gi, 'Bearer [redacted]');
+}
+
+export async function reportError(error: Error, context: string): Promise<void> {
+  const { telemetryOptIn } = await chrome.storage.local.get('telemetryOptIn');
+  if (!telemetryOptIn) return; // opt-in only — never phone home silently
+
+  const payload: ScrubbedError = {
+    message: scrub(error.message),
+    stack: error.stack ? scrub(error.stack) : undefined,
+    context,
+    extensionVersion: chrome.runtime.getManifest().version,
+    browser: navigator.userAgent.includes('Firefox') ? 'firefox' : 'chromium',
+  };
+
+  try {
+    await fetch(ERROR_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+  } catch {
+    // Endpoint unreachable — drop the report rather than queue
+    // indefinitely; see §11.6 for the broader offline-behavior policy.
+  }
+}
+
+self.addEventListener('error', (event) => reportError(event.error, 'service_worker'));
+self.addEventListener('unhandledrejection', (event) => reportError(
+  event.reason instanceof Error ? event.reason : new Error(String(event.reason)),
+  'service_worker_promise'
+));
+
+// WASM panic bridge, referenced from §2.9's generateSessionKeypair()
+export function reportWasmPanic(fn: string, err: unknown): void {
+  reportError(err instanceof Error ? err : new Error(`WASM panic in ${fn}: ${String(err)}`), 'wasm_panic');
+}
+```
+
+### 11.5 Telemetry / Privacy Consent
+
+First-run opt-in with granular toggles (crash/error reporting, anonymized
+usage analytics, performance metrics) — **never** a browsing-history or
+per-site data collection option, none is offered. **Practical constraint**:
+the popup is only 380x520px (§2.4) with essentially no room for a
+multi-screen consent flow. The full consent screen is therefore shown
+once, on install, in a dedicated onboarding **tab** (not the popup):
+
+```typescript
+// background.ts (excerpt) — first-run trigger
+chrome.runtime.onInstalled.addListener((details) => {
+  if (details.reason === 'install') {
+    chrome.tabs.create({ url: chrome.runtime.getURL('onboarding.html') });
+  }
+});
+```
+
+```typescript
+// onboarding/ConsentScreen.tsx
+interface ConsentChoice {
+  crashReporting: boolean;
+  usageAnalytics: boolean;
+  performanceMetrics: boolean;
+}
+
+async function saveConsent(choice: ConsentChoice): Promise<void> {
+  await chrome.storage.local.set({
+    telemetryOptIn: choice.crashReporting || choice.usageAnalytics || choice.performanceMetrics,
+    telemetryGranular: choice,
+    consentGivenAt: Date.now(),
+    consentVersion: 1, // bump + re-prompt if the policy materially changes
+  });
+}
+```
+
+The popup's only persistent surface for this is the existing Options
+page "[x] Collect anonymous analytics to improve service" checkbox
+(§2.6), which links to a "Manage privacy settings" page reopening the
+granular toggles. If a user closes the onboarding tab without choosing,
+NO consent is recorded and NO telemetry is ever sent — opt-in by
+recorded choice, never opt-out-by-omission.
+
+### 11.6 Offline / Degraded-Network Behavior
+
+Two distinct failure surfaces, handled differently:
+
+**(a) Client API / auth server unreachable**: the extension shows the
+cached last-known server list and connection state (from
+`chrome.storage.local`) with a "Offline — showing cached data from
+`<timestamp>`" banner; reconnect/auth actions queue and retry with the
+same exponential backoff helper as `NativeMessagingHost` (§3.7). An
+already-established Proxy Mode connection is NOT torn down just because
+the control-plane API is unreachable — that is a separate reachability
+concern, (b) below.
+
+**(b) The PAC-configured proxy's VPN gateway becomes unreachable —
+decision: fail-closed-with-clear-messaging, not fail-open.** This is a
+genuine security/usability trade-off and is made explicit rather than
+left implicit: a fail-open PAC script (silently falling back to
+`"DIRECT"` when the proxy is unreachable) would send the user's browser
+traffic unprotected with no announcement — the exact "user believes they
+are protected, they are not" failure mode this extension exists to
+prevent. The design instead:
+
+1. A liveness prober (alarm-driven, reusing the §2.7 `proxyKeepalive`
+   cadence) HEAD-checks the gateway's health endpoint and detects an
+   outage within one keepalive interval.
+2. On failure, it immediately clears the PAC proxy config
+   (`chrome.proxy.settings.clear`) — the browser falls back to DIRECT —
+   but ONLY together with a blocking, dismissible notification and a
+   persistent popup banner: "Helix VPN gateway unreachable — your traffic
+   is now UNPROTECTED (direct). Reconnecting..."
+3. It auto-retries the gateway per the `Reconnecting` state (§3.5) and
+   restores the PAC proxy the moment the gateway is healthy again.
+
+**Why not true fail-closed** (silently blocking ALL browser requests
+forever): a browser extension has no OS-level enforcement point — a user
+can always disable or uninstall the extension to escape a stuck
+"blocked" state, unlike an OS firewall rule (Native Bridge's real kill
+switch, §3.5). Faking an inescapable fail-closed would create an
+unrecoverable-looking "the extension is broken" support burden without
+actually being unbypassable. The chosen design fails toward safety (loud
+warning + fast auto-recovery) rather than toward silent insecurity or an
+un-escapable dead end.
+
+```typescript
+// proxy/gatewayLivenessProbe.ts
+const GATEWAY_HEALTH_TIMEOUT_MS = 4000;
+
+async function probeGateway(healthUrl: string): Promise<boolean> {
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), GATEWAY_HEALTH_TIMEOUT_MS);
+    const res = await fetch(healthUrl, { method: 'HEAD', signal: controller.signal });
+    clearTimeout(timer);
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+export async function onGatewayLivenessAlarm(config: ProxyConfig): Promise<void> {
+  const healthy = await probeGateway(config.healthCheckUrl);
+  if (!healthy) {
+    await chrome.proxy.settings.clear({ scope: 'regular' }); // fail back to DIRECT
+    await notifyUnprotected(); // loud, dismissible — never silent
+    scheduleReconnectAttempt(config);
+  }
+}
+```
+
+### 11.7 Enterprise Policy Push
+
+Per the canonical architecture (`MVP2_ARCHITECTURE.md` §10, "Web:
+Chrome `ExtensionSettings`/`ExtensionInstallForcelist`, Firefox
+`policies.json`"), the natural transport for pushing forced-on /
+forced-config extension state to managed browsers is each browser's OWN
+enterprise policy mechanism — `helix-admin` (§4 disambiguation note)
+does not, and cannot, push configuration directly to a browser; it
+produces a policy artifact the ORGANIZATION's own policy engine deploys.
+
+```json
+// Chrome: HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Google\Chrome\ExtensionSettings
+// (Windows Group Policy ADMX) or the equivalent Google Workspace Admin
+// Console "Chrome > Apps & extensions" policy.
+{
+  "helixvpnextensionid0000000000000": {
+    "installation_mode": "force_installed",
+    "update_url": "https://clients2.google.com/service/update2/crx",
+    "toolbar_pin": "force_pinned",
+    "runtime_allowed_hosts": ["*://*/*"],
+    "policy": {
+      "forcedServerRegion": "eu-west",
+      "forceProtocol": "wireguard",
+      "allowP2PMode": false,
+      "allowUserProtocolOverride": false
+    }
+  }
+}
+```
+
+```json
+// Firefox: distribution/policies.json, or the equivalent GPO ADMX /
+// Intune templates per Mozilla's enterprise policy documentation.
+{
+  "policies": {
+    "ExtensionSettings": {
+      "helix@helixvpn.io": {
+        "installation_mode": "force_installed",
+        "install_url": "https://updates.helixvpn.io/firefox/helix-vpn-latest.xpi",
+        "updates_disabled": false
+      }
+    },
+    "3rdparty": {
+      "Extensions": {
+        "helix@helixvpn.io": {
+          "forcedServerRegion": "eu-west",
+          "forceProtocol": "wireguard",
+          "allowP2PMode": false
+        }
+      }
+    }
+  }
+}
+```
+
+The extension reads the pushed policy via `chrome.storage.managed`
+(Chrome/Edge) / `browser.storage.managed` (Firefox) — a READ-ONLY store
+from the extension's perspective, matching the "decision engine, not
+enforcement" split already established for kill switch/split-tunnel
+logic (`MVP2_ARCHITECTURE.md` §5.6):
+
+```typescript
+// background/managedPolicy.ts
+export async function loadManagedPolicy(): Promise<ManagedPolicy | null> {
+  try {
+    const policy = await chrome.storage.managed.get(null);
+    return Object.keys(policy).length > 0 ? (policy as ManagedPolicy) : null;
+  } catch {
+    return null; // no enterprise policy configured — consumer/unmanaged install
+  }
+}
+
+chrome.storage.onChanged.addListener((changes, areaName) => {
+  if (areaName === 'managed') {
+    applyManagedPolicy(changes); // re-applies forced settings live, no restart required
+  }
+});
+```
+
+```mermaid
+sequenceDiagram
+    participant Admin as IT Administrator
+    participant HelixAdmin as helix-admin (Admin API)
+    participant OSPolicy as OS Policy Engine (Google Workspace /\nGPO ADMX / policies.json / Intune)
+    participant Browser as Managed Browser (Chrome / Edge / Firefox)
+    participant Ext as Helix VPN Extension
+
+    Admin->>HelixAdmin: Configure forced policy\n(server region, protocol, allow-P2P)
+    HelixAdmin->>HelixAdmin: PlatformAdapter::apply_managed_policy\n(validates + serializes policy)
+    Note over HelixAdmin,OSPolicy: helix-admin does NOT push to the browser\ndirectly — it hands the admin an\nExtensionSettings/policies.json artifact\nto load into their OWN policy engine.
+    HelixAdmin-->>Admin: Exported ExtensionSettings JSON /\npolicies.json snippet
+    Admin->>OSPolicy: Deploy via Group Policy /\nWorkspace Admin Console / Intune
+    OSPolicy->>Browser: Push ExtensionSettings /\npolicies.json to enrolled devices
+    Browser->>Ext: chrome.storage.managed /\nbrowser.storage.managed (read-only)
+    Ext->>Ext: applyManagedPolicy()\n(force-install, force-pin,\nforce protocol/region,\ndisable user override)
+    Ext-->>Browser: Popup UI reflects locked/forced\nsettings (no override control shown)
+```
+
+### 11.8 Accessibility
+
+§7.4 already covers WCAG 2.1 AA compliance for shared components
+(the accessible `Toggle`, focus-visible outlines, `aria-live` regions,
+screen-reader testing checklist). This subsection adds the enterprise-
+readiness angle: enterprise procurement processes may request VPAT-style
+accessibility conformance documentation, so the §7.4 checklist doubles
+as that evidence trail. One addition not shown in §7.4 — a shared
+`aria-live` status announcer used by both the popup AND the PWA (§5) so
+connection-state changes (which happen without a page reload) are
+announced to screen readers:
+
+```typescript
+// components/ConnectionStatusAnnouncer.tsx
+export function ConnectionStatusAnnouncer({ status }: { status: ConnectionState }) {
+  return (
+    <div role="status" aria-live="polite" aria-atomic="true" className="sr-only">
+      {status === 'connected' && 'Connected to Helix VPN'}
+      {status === 'connecting' && 'Connecting to Helix VPN'}
+      {status === 'reconnecting' && 'Reconnecting to Helix VPN'}
+      {status === 'disconnected' && 'Disconnected from Helix VPN'}
+      {status === 'connectionFailed' && 'Connection failed. Retrying.'}
+    </div>
+  );
+}
+```
+
+Keyboard navigation follows standard web a11y practice: every
+interactive popup/options/PWA element is a real `<button>` /
+`role="switch"` / `<a>` (never a `<div onClick>`), Tab order follows
+visual/DOM order, and modals (PWA, §5.4) trap focus per WCAG 2.1 SC
+2.4.3.
+
+### 11.9 Localization / i18n
+
+Two distinct mechanisms, because the extension and PWA run in different
+environments:
+
+**Extension** — the standard WebExtension i18n mechanism:
+`chrome.i18n.getMessage()` reading from a `_locales/<lang>/messages.json`
+directory, referenced from `manifest.json` via `__MSG_extName__`
+placeholders.
+
+```
+extension/
+├── _locales/
+│   ├── en/messages.json
+│   ├── de/messages.json
+│   ├── ja/messages.json
+│   └── ...
+├── manifest.json   // "name": "__MSG_extName__", "default_locale": "en"
+```
+
+```json
+// _locales/en/messages.json
+{
+  "extName": { "message": "Helix VPN", "description": "Extension name" },
+  "connectButton": { "message": "Connect", "description": "Popup connect button label" },
+  "statusConnected": { "message": "Connected to $SERVER$", "placeholders": { "server": { "content": "$1" } } }
+}
+```
+
+**PWA** — `chrome.i18n` does not exist outside an extension context, so
+the PWA uses a standard web i18n library (`react-intl`, equally
+`i18next` + `react-i18next`):
+
+```typescript
+// pwa/i18n/index.ts
+import { createIntl, createIntlCache } from 'react-intl';
+import en from './locales/en.json';
+import de from './locales/de.json';
+
+const cache = createIntlCache();
+export function getIntl(locale: string) {
+  const messages = { en, de }[locale] ?? en;
+  return createIntl({ locale, messages }, cache);
+}
+```
+
+String keys should stay conceptually aligned between
+`_locales/*/messages.json` (extension) and `pwa/i18n/locales/*.json`
+(PWA) even though the two mechanisms are structurally different, so
+translators work from one shared glossary rather than two divergent
+ones.
+
+### 11.10 License / Entitlement Checks
+
+Subscription/plan-tier check against the Client API — the MVP1 backend
+design contract this Web client is built against, not a claim that MVP1
+has actually shipped (see §10.6's roadmap-reconciliation note: per
+`docs/research/UNIFIED_PHASE_ROADMAP.md`, Phase 1/MVP1 is still a
+self-hostable control-plane spec, not yet built, and billing is explicitly
+out of scope until Phase 3). The background service worker verifies
+entitlement on connect and periodically (same alarm-driven cadence family
+as keepalive, §2.3):
+
+```typescript
+// background/entitlement.ts
+interface Entitlement {
+  planTier: 'free' | 'premium' | 'team' | 'enterprise';
+  expiresAt: number;
+  allowedProtocols: string[];
+  allowP2PMode: boolean;
+}
+
+async function checkEntitlement(): Promise<Entitlement> {
+  try {
+    const res = await fetch('https://api.helixvpn.io/v1/client/entitlement', {
+      headers: { Authorization: `Bearer ${await getSessionToken()}` },
+    });
+    if (!res.ok) throw new Error(`entitlement check failed: ${res.status}`);
+    const entitlement: Entitlement = await res.json();
+    await chrome.storage.local.set({ entitlement, entitlementCheckedAt: Date.now() });
+    return entitlement;
+  } catch {
+    // Offline-grace: honor the last-verified entitlement for a bounded
+    // window rather than instantly disabling protection on a transient
+    // API blip (same fail-safe posture as §11.6's offline handling).
+    const { entitlement, entitlementCheckedAt } = await chrome.storage.local.get(['entitlement', 'entitlementCheckedAt']);
+    const graceMs = 72 * 60 * 60 * 1000; // 72h offline grace
+    if (entitlement && Date.now() - (entitlementCheckedAt ?? 0) < graceMs) {
+      return entitlement;
+    }
+    throw new Error('Entitlement could not be verified and offline grace expired');
+  }
+}
+```
+
+Enforcement point: `connect()` in the background service (§2.3) calls
+`checkEntitlement()` before applying the PAC proxy or initiating a
+Native Messaging `CONNECT`; a `free` tier might cap `allowedProtocols`
+to `['wireguard']` only, or restrict server-region selection. The
+enforcement decision lives server-side (Client API decides) — the
+extension only reflects it, the same "decision engine, not enforcement"
+pattern used for §11.7's managed policy.
+
+### 11.11 Multi-Account
+
+**Honest assessment: low value for this platform**, stated explicitly
+rather than forcing an elaborate design to match the native platforms.
+The popup already has minimal persistent UI real estate (§2.4,
+380x520px), and the extension's state is inherently scoped to a single
+browser profile — Chrome/Firefox/Edge profiles are already the natural
+"switch accounts" boundary. A user with two Helix accounts can simply
+use two separate browser profiles, each running its own instance of the
+extension with its own `chrome.storage.local`. Building an in-extension
+account switcher would duplicate a capability the browser already
+provides, at the cost of popup real estate and added state-management
+complexity for what is a companion product (§1.1).
+
+What IS worth supporting, and is simpler here than on native platforms
+per `MVP2_OVERVIEW.md` §7.8: a plain **sign-out + re-auth** flow in the
+Options "Account" tab — sign out clears `chrome.storage.local`'s cached
+server list, entitlement (§11.10), and session token, after which the
+user signs into a different Helix account within the same profile. There
+is no isolated multi-profile state, no simultaneous-multi-account UI, and
+no per-profile connection history in this document — that richer design
+is `MVP2_DESKTOP_APPS.md` / `MVP2_MOBILE_APPS.md` Enterprise Hardening
+territory; the Web platform's equivalent of "switch accounts" is "use a
+different browser profile."
 
 ---
 

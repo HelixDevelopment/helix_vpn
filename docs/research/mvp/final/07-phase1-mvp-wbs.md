@@ -1,7 +1,12 @@
 # Phase 1 (MVP) — Work Breakdown: phases → tasks → subtasks
 
-**Revision:** 1
-**Last modified:** 2026-06-25T00:00:00Z
+**Revision:** 2
+**Last modified:** 2026-07-04T12:00:00Z
+**Rev 2 (hardening pass):** Added §0 cross-reference to `v07-execution/subtask-deepening-p1.md`
+(closes REFINEMENT_NOTES.md R5 — the PR-sized `.k` subtask breakdown for every
+Phase‑1 task lives there, not duplicated here); added §2.1 Mermaid sequence
+diagram for the enroll→reach→revoke flow (ties AC1/AC2/AC6/SLO2/SLO3 to the
+concrete event sequence); added §2.2 phase‑gate‑failure / rollback protocol.
 
 > This document is the executable spine of the HelixVPN MVP. It decomposes the
 > Phase‑1 self‑hostable MVP into stable, DB‑ready work items
@@ -17,6 +22,14 @@
 > **[04]**; product scope in [`00-product-scope-and-principles.md`](00-product-scope-and-principles.md)
 > **[00]**. Primary research: **[04_P1]** (`HelixVPN-Phase1-MVP.md`), **[04_P0]**
 > (`HelixVPN-Phase0-Spike.md`), **[04_ARCH]**, **[05_YBO]**, **[SYNTHESIS]**.
+>
+> **PR-sized subtask breakdown (closes R5):** every task `HVPN-P1-NNN` below is
+> decomposed one level further — into falsifiable, PR-sized subtasks
+> `HVPN-P1-NNN.k` with their own acceptance/tests/complexity — in the companion
+> [`v07-execution/subtask-deepening-p1.md`](v07-execution/subtask-deepening-p1.md).
+> This WBS stays at task granularity (already concrete: deliverable + acceptance
+> + tests per item); the `.k` decomposition is the R5-closing detail layer that
+> feeds the workable-items DB (§3) at the same granularity Phase 0 uses.
 
 ---
 
@@ -25,6 +38,8 @@
 - [0. How to read this WBS](#0-how-to-read-this-wbs)
 - [1. Required‑test‑types vocabulary (§11.4.169)](#1-requiredtesttypes-vocabulary-1114169)
 - [2. MVP Definition‑of‑Done — the 8 acceptance gates + SLOs](#2-mvp-definitionofdone--the-8-acceptance-gates--slos)
+- [2.1 Enroll → reach → revoke sequence](#21-enroll--reach--revoke-the-ac1ac2ac6slo2slo3-evidence-sequence)
+- [2.2 Phase-gate-failure / rollback protocol](#22-phase-gate-failure--rollback-protocol)
 - [3. Workable‑item schema (§11.4.93 DB‑ready)](#3-workableitem-schema-1114193-dbready)
 - [4. Epic map + dependency graph](#4-epic-map--dependency-graph)
 - [5. Phase 0 — entry gates (prerequisite)](#5-phase-0--entry-gates-prerequisite)
@@ -188,6 +203,77 @@ hand‑written API code). *Evidence:* per‑app UX recordings (§11.4.159).
 | **SLO2** | enroll → first NetworkMap | **< 2 s** | HVPN-P1-031 |
 | **SLO3** | revoke → edge enforcement | **< 1 s** | HVPN-P1-033 |
 | **SLO4** | coordinator memory @ 10k streams | bounded, no leak / 24 h soak | HVPN-P1-074 |
+
+---
+
+## 2.1 Enroll → reach → revoke (the AC1/AC2/AC6/SLO2/SLO3 evidence sequence)
+
+The single sequence that produces the captured evidence for AC1 (self-host),
+AC2 (authorized reach), AC6 (revoke <1s), SLO2 (enroll→map<2s) and SLO3
+(revoke→edge<1s) — restated from the architecture's ASCII sketch
+[`HelixVPN-Architecture-Refined.md`](../04_VPN_CLD/HelixVPN-Architecture-Refined.md)
+§8 as a precise Mermaid sequence diagram, annotated with the implementing
+work-items:
+
+```mermaid
+sequenceDiagram
+  autonumber
+  participant Op as Operator (helixvpnctl)
+  participant API as API/Connect (HVPN-P1-080/081)
+  participant PKI as pki (HVPN-P1-032)
+  participant IPAM as ipam (HVPN-P1-040)
+  participant Reg as registry (HVPN-P1-E04)
+  participant Coord as coordinator (HVPN-P1-070..073)
+  participant Bus as events (HVPN-P1-050)
+  participant Conn as Connector core
+  participant Cli as Client core
+  participant Edge as helix-edge (HVPN-P1-100..102)
+
+  Op->>API: POST /v1/enroll-tokens (kind=connector)
+  Conn->>API: Enroll(token)  [HVPN-P1-031]
+  API->>PKI: issue short-lived device cert
+  API->>IPAM: AllocOverlayIP
+  API->>Reg: create device row
+  Reg-->>Bus: XADD device.enrolled
+  Coord->>Bus: XREADGROUP (consumes device.enrolled)
+  Coord-->>Conn: WatchNetworkMap snapshot   %% SLO2: enroll→first map < 2s
+  Conn->>API: AdvertisePrefixes(10.10.0.0/16)  [HVPN-P1-083]
+  API-->>Bus: XADD route.advertised
+  Coord->>Coord: recompute affected agents (HVPN-P1-073)
+  Coord-->>Edge: push verdict-map delta         %% SLO1: event→delta p99 < 1s
+  Cli->>API: Enroll(token) [same flow, kind=client]
+  Coord-->>Cli: WatchNetworkMap snapshot (peers = policy.PeersVisibleTo)
+  Cli->>Edge: WG handshake (transport=auto ladder)  [HVPN-P1-090/093]
+  Edge->>Conn: relay to authorized LAN host          %% AC2 evidence: curl succeeds
+  Note over Op,Edge: --- later: operator revokes the client device ---
+  Op->>API: DELETE /v1/devices/{id}
+  API->>PKI: Revoke(cert)
+  API-->>Bus: XADD device.revoked
+  Coord->>Coord: recompute maps (drop peer everywhere)
+  Coord-->>Edge: push delta: remove kernel WG peer   %% SLO3: revoke→edge < 1s [HVPN-P1-033/102]
+  Edge--xCli: session torn down, AC3 default-deny now also applies
+```
+
+Implementing items: HVPN-P1-031/032/040/070..073/080..083/090/093/100..102/033.
+Proving items: HVPN-P1-140 (E2E rig), HVPN-P1-141 (SLO histograms), HVPN-P1-144
+(Challenge bank + vision-verified recording).
+
+## 2.2 Phase-gate-failure / rollback protocol
+
+If the Phase‑1 exit gate (all 9 ACs + 4 SLOs, §21) is **not** met on the planned
+schedule, the response is scoped by *which* criterion is red, never a blanket
+timeline extension (§11.4.42 iteration discipline):
+
+| Failure class | Response | Cross-reference |
+|---|---|---|
+| A single AC/SLO red, root cause isolated to one epic (e.g. AC5 SLO1 breach in the coordinator fan-out) | Fix-forward inside the owning epic; re-run **only** the risk-ordered set (§11.4.132) touching that epic + the full DoD sweep before re-declaring green — never spot-validate just the touched item (§11.4.130). | HVPN-P1-145 (release-gate sweep) |
+| A **Phase‑0 gate** (G1–G6, §5) regresses under Phase‑1 load (e.g. G3 iOS memory headroom erodes once the reconciler + kill-switch are added) | Re-open the corresponding decision **D2/D1/D5** per `v00-meta/decision-register.md` §6 reversal criteria — this is a re-open, not a Phase‑1 bug, and follows the same reopen-attribution discipline (§11.4.34) as any other regression. | `v00-meta/decision-register.md` §6 |
+| Scope genuinely cannot close in the planned window (e.g. E12 platform shim effort blew past estimate) | Defer the **lowest-priority** DoD-adjacent item (never a numbered AC/SLO itself — those are the fixed exit bar) to a tracked Phase‑1.1 follow-up; the release does not tag until all 9 ACs + 4 SLOs are green (§11.4.40 full-suite retest is the gate, not a target date). | §22 effort roll-up (identifies the lowest-priority non-critical-path item to defer) |
+| A **huge-blocker** discovered during Phase‑1 release validation (core capability broken, regression reaching multiple epics) | Execute the full §11.4.129 huge-blocker protocol: STOP all testing → fix all discovered issues → process the last recorded session's evidence → author new tests of every required type → rebuild → reflash → **restart** (not resume) full validation from the last tag. | §11.4.129 |
+
+No phase-gate failure is silently absorbed into "ship anyway" — the DoD (§2)
+is the fixed floor; only the *path* to green (fix-forward / decision-reopen /
+scope-defer / huge-blocker-restart) is chosen based on the failure class.
 
 ---
 

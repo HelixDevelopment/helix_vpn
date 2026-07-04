@@ -1,7 +1,12 @@
 # Phase 1 (MVP) Subtask Deepening — epic → task → subtask (closes refinement R5)
 
-**Revision:** 1
-**Last modified:** 2026-06-26T12:00:00Z
+**Revision:** 2
+**Last modified:** 2026-07-04T12:00:00Z
+**Rev 2:** Independent gap-analysis pass — spot-checked subtask acceptance criteria
+against `07-phase1-mvp-wbs.md` parent tasks (E01/E02/E03 sampled in depth); all
+carry falsifiable, captured-evidence acceptance and a §11.4.169 test-type set. No
+placeholder/TBD text found. Confirmed this document is what closes R5 for Phase 1
+(the parent WBS itself stays at epic→task; the third tier lives here, as designed).
 
 > Volume 7 (Phase Execution), document 3 of 5. This spec **closes refinement
 > item R5** (`REFINEMENT_NOTES.md`): Phase 0 (`06-…`) formalizes a full

@@ -1,7 +1,13 @@
 # Apple shim (iOS/macOS NEPacketTunnelProvider)
 
-**Revision:** 1
-**Last modified:** 2026-06-25T00:00:00Z
+**Revision:** 2
+**Last modified:** 2026-07-04T12:00:00Z
+**Rev 2:** Added §6.6 (runtime memory-pressure response — a live in-process reaction to
+memory pressure while the extension is already running, distinct from the §6.3 G3
+profiling-time measurement and the §10/E5 post-hoc OS-kill-then-restart path) and §7.4
+(App Store / platform-store review requirements — the Personal VPN entitlement, its
+review implications, and the macOS System Extension notarization/approval gate) —
+closing a gap identified in an independent enterprise-hardening pass over Volume 4.
 
 > Master technical specification — Volume 4 (Clients), nano-detail deep-dive. This
 > document **deepens** the Apple row of the per-platform shim matrix
@@ -724,6 +730,55 @@ stateDiagram-v2
   CONNECT-UDP negotiation runs in the *app* process and the established carrier is handed to
   the extension via app-extension IPC. Highest complexity; last resort.
 
+### 6.7 Runtime memory-pressure response (post-ship, in-process — distinct from §6.3 profiling)
+
+§6.3 measures the working set **at build/profiling time** on a bench device; §10/E5
+describes what happens **after** the OS has already jetsammed the extension (a
+restart). Neither covers the window in between: a **live** memory-pressure signal
+arriving while the extension is still running on a real user's device, in the field,
+under a memory profile §6.3 never exercised (a low-memory device, a background app
+holding more than the bench rig did, an iOS point-release that lowered the ceiling).
+The extension MUST react to that signal *before* jetsam fires, not only measure for it
+in advance.
+
+- **Signal source.** `NEProvider`/`NEPacketTunnelProvider` does not expose a
+  first-class "memory warning" delegate callback the way `UIApplication` does for the
+  foreground app (`UNVERIFIED` — re-confirm against the current NetworkExtension
+  headers at Phase-0/G3 time, §11.4.99). The two mechanically-available signals are:
+  (a) a **dispatch source** on `DISPATCH_SOURCE_TYPE_MEMORYPRESSURE`
+  (`DISPATCH_MEMORYPRESSURE_WARN`/`.CRITICAL`), which the extension process *can*
+  register like any other process; (b) **self-monitoring** — sample
+  `phys_footprint` (Mach `task_vm_info`, the same counter §6.3 reads under
+  Instruments) on a lightweight periodic timer (e.g. every 5 s) and compare against
+  an internal soft threshold set below the G3-measured ceiling (e.g. trip at 80% of
+  the ≥30%-headroom budget, not at the ceiling itself — the margin exists so the
+  response has time to act before jetsam).
+- **Response ladder (cheapest first, mirrors §6.4's escalation discipline).** On a
+  `.WARN`-class signal or a soft-threshold breach: (1) shrink to the smallest
+  negotiated MTU-sized receive buffer immediately (drop any speculative read-ahead);
+  (2) reduce the active `quinn` QUIC flow-control/stream-receive windows at runtime
+  if the carrier exposes a live-adjustable window (else defer to the next
+  handshake/reconnect, which picks up the iOS build profile's capped windows, §7.2 M2);
+  (3) drop any non-essential cached state (`TransportHealth` history beyond the
+  current carrier, DNS response cache if one exists) — never drop in-flight WG
+  session state or the kill-switch posture. On a `.CRITICAL`-class signal that
+  persists past one sampling interval after step (1)-(3): treat as an imminent-jetsam
+  emergency and proactively emit `Down{reason:"host-fatal"}` (§5.1) *before* the OS
+  kills the process, so the UI and the kill-switch (§3.4 `includeAllNetworks`) reach
+  a known-safe state on the extension's own terms rather than via an uncontrolled
+  kill — this trades one clean, attributable disconnect for the alternative of an
+  OS-timed kill whose exact packet-in-flight state is undefined.
+- **Anti-bluff (§11.4.6/.107).** This response is itself a §12 `SC` (stress/chaos)
+  test point: inject synthetic memory pressure (e.g. `vmmap`/`memory_pressure` CLI-forced
+  `.CRITICAL` on a jailbroken/dev-signed test build, or a debug build-flag that fakes
+  the signal) during a sustained transfer and capture that steps (1)-(3) fire, and
+  that a forced `.CRITICAL` produces a clean `Down{host-fatal}` + kill-switch-still-closed
+  capture rather than an unaccounted process death. `UNVERIFIED`: the exact
+  dispatch-source availability and semantics inside a Network Extension process
+  (as opposed to a normal app process) — verify against the current NetworkExtension
+  + Dispatch documentation at Phase-0 (§11.4.99); if unavailable, the self-monitoring
+  poll (b) is the fallback and MUST be used unconditionally.
+
 ### 6.5 macOS does NOT share this constraint
 
 macOS `NEPacketTunnelProvider` (delivered as a System Extension or app-extension) runs with
@@ -799,6 +854,22 @@ cargo +nightly build --release --target aarch64-apple-ios -p helix-ffi \
   the app's frb core is logic-only). `UNVERIFIED`: whether Phase-1 links the frb core in the
   app at all on iOS, or routes all logic calls through `sendProviderMessage` to the single
   in-extension core — a Phase-0 G5 decision (recommend the latter to keep ONE live core).
+
+### 7.4 App Store / platform-store review requirements (engineering-relevant subset)
+
+A VPN app is a special App Review category on both Apple storefronts; this is a
+build/ship dependency, not just a legal footnote:
+
+| Requirement | iOS | macOS |
+|---|---|---|
+| Entitlement | `com.apple.developer.networking.networkextension` with the `packet-tunnel-provider` value, requested via the Apple Developer Portal (subject to Apple approval before the entitlement is granted, independent of App Review) | same entitlement; System Extension builds additionally need `com.apple.developer.system-extension.install` |
+| Review implication | App Review verifies the app's VPN functionality is real and disclosed (privacy-policy link, data-collection disclosure in App Privacy details) — a stub/placeholder tunnel is a rejection risk | Notarization (mandatory) +, for System Extension packaging, user-visible approval in System Settings (§8) is itself an Apple-mandated UX gate, not an optional polish item |
+| Lead time | entitlement approval + review cycle should be budgeted into the Phase-1 MVP timeline (§07-phase1-mvp-wbs.md) as a non-code dependency with its own lead time, not assumed instantaneous | same, plus first-run System Extension approval friction should be covered by onboarding UX (Volume 10 `v10-design/ux-flows-and-interaction.md`) |
+| TestFlight / notarization gate | TestFlight builds still require the entitlement; a build lacking it cannot be internally distributed for on-device G3 testing (§6.3) | notarization is required even for direct (non-App-Store) distribution |
+
+This does not change any technical design in this document; it is recorded here
+because it is a genuine build/ship dependency an engineering WBS (`06-phase0-spike-wbs.md`,
+`07-phase1-mvp-wbs.md`) must schedule for, not something discovered at submission time.
 
 ---
 

@@ -1,7 +1,20 @@
 # HelixVPN — Master Technical Specification (spine + index)
 
-**Revision:** 1
-**Last modified:** 2026-06-25T00:00:00Z
+**Revision:** 2
+**Last modified:** 2026-07-04T12:00:00Z
+**Rev 2 (2026-07-04 hardening pass):** Reconciled three cross-document drifts surfaced by an
+independent gap-analysis + hardening pass over the full `final/` corpus (16 parallel review
+passes across every volume): (1) §7.1's illustrative `Transport` trait sketch annotated with a
+pointer to the frozen, binding signature in `v02-data-plane/transport-trait.md` §2 (this sketch
+predates that nano-detail deepening and uses renamed/repurposed identifiers — see the note below
+the code block); (2) §8.2's Phase-2 failover exit gate corrected from "< 30 s" to "< 3 s" to match
+the refined, instrumented, measured **P2-SLO3** target in `08-phase2-parity-wbs.md` (the WBS's
+tighter figure is authoritative — the 30 s figure was a coarse roadmap-era placeholder); (3) §6's
+ecosystem-submodule list expanded to match the authoritative, actively-maintained enumeration in
+`v06-deploy/helix-ecosystem-integration.md` (added `panoptic`, `doc_processor`, `llm_provider`,
+`llm_orchestrator`, `llms_verifier` — the spine's list had gone stale as the ecosystem doc grew).
+No other section changed; every subordinate `final/` doc was independently reviewed for its own
+gaps in this same pass (see each doc's own Revision history for what was added/fixed there).
 **Status:** active — authoritative spine for the `docs/research/mvp/final/` document set
 **Authority:** This document is the single entry point and architectural spine for HelixVPN. Every other document in `final/` (00..11 + 99) is subordinate to and indexed from here. Where a subordinate document disagrees with this spine on scope, role definitions, the non-negotiable principles (§4), or the decision register (§9), this spine wins until amended per §11.4.73 (spec versioning).
 **Evidence base:** Synthesized from 16 source research documents under `docs/research/mvp/` (11 LLM analyses `00,01,02,03,05,06,07,08,09,10,11` + the 5 refined `04_VPN_CLD` documents). Citations use source ids: `[04_ARCH §N]` = `04_VPN_CLD/HelixVPN-Architecture-Refined.md`; `[04_P0]` = Phase0-Spike; `[04_P1]` = Phase1-MVP; `[04_P2]` = Phase2-Parity; `[04_UI]` = helix-ui-Flutter; `[05_YBO]` = mandated-stack brief; `[02_QWN] [01_DSK] [07_GMI] [10_KMI] [11_MST]` etc. = per-LLM analyses; `[SYN]` = cross-document synthesis.
@@ -212,7 +225,7 @@ helixvpn/                         # umbrella
 └── submodules/                   # containers, helix_qa, challenges, docs_chain, security, vision_engine …
 ```
 
-Helix-ecosystem submodules that the source research predates and the spec **must** wire in [SYN §8]: `containers` (vasic-digital — the §11.4.76 mandated orchestration + on-demand test infra), `helix_qa` + `challenges` (anti-bluff QA/Challenge layer §11.4.27/.5/.69/.107), `docs_chain` (spec-doc + workable-items sync §11.4.106), `security` (§7 tooling), `vision_engine` (video-evidence QA §11.4.107/.158). Each wired or marked not-applicable-with-reason in **doc 05-repo-layout-tooling-and-helix-ecosystem** (deployment/orchestration integration) **and doc 10-testing-acceptance-and-qa** (helix_qa/challenges QA layer).
+Helix-ecosystem submodules that the source research predates and the spec **must** wire in [SYN §8]: `containers` (vasic-digital — the §11.4.76 mandated orchestration + on-demand test infra), `helix_qa` + `challenges` (anti-bluff QA/Challenge layer §11.4.27/.5/.69/.107), `docs_chain` (spec-doc + workable-items sync §11.4.106), `security` (§7 tooling), `vision_engine` + `panoptic` (video/screenshot evidence + UI-automation capture bridge for Challenges §11.4.107/.158), `doc_processor` (feature-map extraction → per-feature Status ledger cross-check), plus three dev-loop-only members that are never runtime dependencies: `llm_provider` (conditional — binds only if Phase-2 ships LLM-assisted policy authoring per D-LLM-POLICY), `llm_orchestrator` and `llms_verifier` (build-loop subagent orchestration/verification, not shipped in any app or service). Each wired or marked not-applicable-with-reason in **doc 05-repo-layout-tooling-and-helix-ecosystem** (deployment/orchestration integration) **and doc 10-testing-acceptance-and-qa** (helix_qa/challenges QA layer). The authoritative, actively-maintained enumeration (roles, `@<sha>` pins, dev-loop-only vs runtime classification) lives in `v06-deploy/helix-ecosystem-integration.md` — this spine list is a summary and may lag; that doc wins on drift.
 
 ---
 
@@ -246,6 +259,17 @@ pub trait TransportConn: Send + Sync {
     fn health(&self) -> CarrierHealth; // rtt, loss, handshakes_failed → drives escalation
 }
 ```
+
+> **Note (added Rev 2, 2026-07-04).** The sketch above is illustrative only (per §0). The
+> **frozen, binding Phase-0 signature** lives in `v02-data-plane/transport-trait.md` §2
+> (verified byte-for-byte consistent with `01-data-plane.md` §3.1): `Transport` itself exposes
+> `send`/`recv`/`kind`/`effective_mtu`/`health`/`close`, and construction is via a free `dial()`
+> function rather than `connect`/`accept` trait methods. Two names above were also repurposed
+> during the nano-detail pass: `TransportKind` here is `Transport::kind()`'s return type, but in
+> the frozen spec `TransportKind` is the auto-ladder's *policy-ordering* enum
+> (`TransportPolicy.order: Vec<TransportKind>`) while `Transport::kind()` returns `&'static str`
+> for logs/metrics; and `CarrierHealth` here is `TransportHealth` in the frozen spec. Implement
+> against `v02-data-plane/transport-trait.md`, not this sketch.
 
 ### 7.2 The `WatchNetworkMap` stream (protobuf, owning doc: 02-control-plane)
 
@@ -340,7 +364,7 @@ Owning docs: **00/01/03/04/05/06/07/09/10**.
 
 Full transport set (+Shadowsocks, UDP-over-TCP, hardened LWO; auto-ladder with **per-network memory + regional priors**); **DAITA via maybenot**; **direct P2P + NAT traversal** (STUN-like discovery, hole punching, DERP-style `helix-relay` fallback); **multi-hop** nested WG (entry/exit key separation); **post-quantum** handshake (ML-KEM/FIPS-203 PSK, **hybrid never PQ-only**; Rosenpass as alt); desktop apps (Windows `wireguard-nt` + privileged service; macOS Network Extension); policy-as-code / GitOps; HA + multi-region (stateless coordinators, Patroni Postgres, **NATS JetStream** — the D3 Phase-2 swap).
 
-**Exit gates:** full Mullvad feature-parity matrix green [04_ARCH §6]; multi-hop + P2P + relay-fallback proven across a real NAT; PQ handshake interops + measured; failover < 30s with transport preserved; desktop apps pass the same 8 MVP DoD criteria.
+**Exit gates:** full Mullvad feature-parity matrix green [04_ARCH §6]; multi-hop + P2P + relay-fallback proven across a real NAT; PQ handshake interops + measured; failover < 3s (p99, **P2-SLO3** — see `08-phase2-parity-wbs.md`) with transport preserved; desktop apps pass the same 8 MVP DoD criteria.
 
 ### 8.3 Phase 3 — Extended Reach [04_P2 §12, 04_ARCH §12]
 

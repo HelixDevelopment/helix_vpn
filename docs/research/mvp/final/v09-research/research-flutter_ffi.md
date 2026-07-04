@@ -1,5 +1,8 @@
 # RESEARCH flutter_ffi
 
+**Revision:** 1
+**Last modified:** 2026-07-04T12:00:00Z
+
 Scope: driving a Rust VPN core from Flutter for a Mullvad-parity self-hosted VPN
 app. Covers flutter_rust_bridge (frb) v2 vs UniFFI, Rust→Dart event streaming,
 per-platform Rust staticlib/cdylib, Flutter on Aurora OS and HarmonyOS NEXT, and

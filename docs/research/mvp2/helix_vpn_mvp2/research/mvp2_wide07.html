@@ -1,0 +1,2271 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Facet: Shared Core Architecture — Rust as Cross-Platform Foundation for Helix VPN</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Facet: Shared Core Architecture — Rust as
+Cross-Platform Foundation for Helix VPN</h1>
+</header>
+<h1 id="facet-shared-core-architecture--rust-as-cross-platform-foundation-for-helix-vpn">Facet:
+Shared Core Architecture — Rust as Cross-Platform Foundation for Helix
+VPN</h1>
+<h2 id="executive-summary">Executive Summary</h2>
+<p>This research evaluates Rust as a shared core library foundation for
+maximum code reuse across all Helix VPN target platforms: macOS,
+Windows, Linux, Android, iOS, HarmonyOS, Aurora OS, and Web. The
+analysis covers FFI patterns, binding generators (UniFFI,
+flutter_rust_bridge, wasm-bindgen), build systems, real-world case
+studies from Mullvad VPN, Signal, Cloudflare BoringTun, and provides a
+recommended architecture with estimated code reuse percentages per
+platform.</p>
+<p><strong>Key Finding</strong>: A well-architected Rust shared core can
+achieve <strong>75-85% code reuse</strong> across desktop platforms,
+<strong>60-70%</strong> on mobile (Android/iOS), and
+<strong>40-50%</strong> on Web (WASM), with HarmonyOS/Aurora OS
+achieving <strong>60-70%</strong> through Linux-compatible targets.</p>
+<hr />
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li><a href="#1-rust-cross-compilation-target-matrix">Rust
+Cross-Compilation Target Matrix</a></li>
+<li><a href="#2-uniffi-mozillas-multi-language-binding-generator">UniFFI:
+Mozilla&#39;s Multi-Language Binding Generator</a></li>
+<li><a href="#3-ffi-patterns-and-best-practices">FFI Patterns and Best
+Practices</a></li>
+<li><a href="#4-android-rust-integration">Android Rust
+Integration</a></li>
+<li><a href="#5-ios-rust-integration">iOS Rust Integration</a></li>
+<li><a href="#6-desktop-rust-integration">Desktop Rust
+Integration</a></li>
+<li><a href="#7-wasm-target-for-browserextensions">WASM Target for
+Browser/Extensions</a></li>
+<li><a href="#8-real-world-case-studies">Real-World Case
+Studies</a></li>
+<li><a href="#9-vpn-specific-rust-crates">VPN-Specific Rust
+Crates</a></li>
+<li><a href="#10-build-system-integration">Build System
+Integration</a></li>
+<li><a href="#11-binary-size-optimization">Binary Size
+Optimization</a></li>
+<li><a href="#12-harmonyos-and-aurora-os-support">HarmonyOS and Aurora
+OS Support</a></li>
+<li><a href="#13-recommended-architecture-for-helix-vpn">Recommended
+Architecture for Helix VPN</a></li>
+<li><a href="#14-code-reuse-estimates">Code Reuse Estimates</a></li>
+</ol>
+<hr />
+<h2 id="1-rust-cross-compilation-target-matrix">1. Rust
+Cross-Compilation Target Matrix</h2>
+<h3 id="11-supported-target-triples-for-all-platforms">1.1 Supported
+Target Triples for All Platforms</h3>
+<p>Rust&#39;s LLVM-based compiler backend provides first-class
+cross-compilation support. The following target triples are relevant for
+Helix VPN [^342^]:</p>
+<table>
+<thead>
+<tr>
+<th>Platform</th>
+<th>Target Triple</th>
+<th>Tier</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>macOS (Intel)</strong></td>
+<td><code>x86_64-apple-darwin</code></td>
+<td>Tier 2</td>
+<td>Production-ready</td>
+</tr>
+<tr>
+<td><strong>macOS (Apple Silicon)</strong></td>
+<td><code>aarch64-apple-darwin</code></td>
+<td>Tier 2</td>
+<td>Production-ready</td>
+</tr>
+<tr>
+<td><strong>iOS (Device)</strong></td>
+<td><code>aarch64-apple-ios</code></td>
+<td>Tier 2</td>
+<td>Production-ready</td>
+</tr>
+<tr>
+<td><strong>iOS (Simulator - Apple Silicon)</strong></td>
+<td><code>aarch64-apple-ios-sim</code></td>
+<td>Tier 2</td>
+<td>Production-ready</td>
+</tr>
+<tr>
+<td><strong>iOS (Simulator - Intel)</strong></td>
+<td><code>x86_64-apple-ios</code></td>
+<td>Tier 2</td>
+<td>Production-ready</td>
+</tr>
+<tr>
+<td><strong>Windows (x64)</strong></td>
+<td><code>x86_64-pc-windows-msvc</code></td>
+<td>Tier 1</td>
+<td>Full support</td>
+</tr>
+<tr>
+<td><strong>Windows (ARM64)</strong></td>
+<td><code>aarch64-pc-windows-msvc</code></td>
+<td>Tier 2</td>
+<td>Supported</td>
+</tr>
+<tr>
+<td><strong>Linux (x64)</strong></td>
+<td><code>x86_64-unknown-linux-gnu</code></td>
+<td>Tier 1</td>
+<td>Full support</td>
+</tr>
+<tr>
+<td><strong>Linux (ARM64)</strong></td>
+<td><code>aarch64-unknown-linux-gnu</code></td>
+<td>Tier 1</td>
+<td>Full support</td>
+</tr>
+<tr>
+<td><strong>Android (ARM64)</strong></td>
+<td><code>aarch64-linux-android</code></td>
+<td>Tier 2</td>
+<td>Production-ready</td>
+</tr>
+<tr>
+<td><strong>Android (ARMv7)</strong></td>
+<td><code>armv7-linux-androideabi</code></td>
+<td>Tier 2</td>
+<td>Production-ready</td>
+</tr>
+<tr>
+<td><strong>Android (x86_64)</strong></td>
+<td><code>x86_64-linux-android</code></td>
+<td>Tier 2</td>
+<td>Production-ready</td>
+</tr>
+<tr>
+<td><strong>Web/Browser</strong></td>
+<td><code>wasm32-unknown-unknown</code></td>
+<td>Tier 2</td>
+<td>Production-ready</td>
+</tr>
+<tr>
+<td><strong>HarmonyOS</strong></td>
+<td><code>aarch64-unknown-linux-ohos</code></td>
+<td>Tier 2</td>
+<td>Supported with SDK setup</td>
+</tr>
+</tbody>
+</table>
+<h3 id="12-cross-compilation-tools">1.2 Cross-Compilation Tools</h3>
+<h4 id="cross-rs-formerly-cargo-cross">cross-rs (formerly
+cargo-cross)</h4>
+<p>The community-maintained wrapper around <code>cargo</code> that makes
+cross-compilation painless using Docker containers [^367^]:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Install</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> install cross <span class="at">--git</span> https://github.com/cross-rs/cross</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Build for any target</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="ex">cross</span> build <span class="at">--release</span> <span class="at">--target</span> aarch64-linux-android</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="ex">cross</span> build <span class="at">--release</span> <span class="at">--target</span> aarch64-apple-ios</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="ex">cross</span> build <span class="at">--release</span> <span class="at">--target</span> x86_64-pc-windows-msvc</span></code></pre></div>
+<p><strong>Key advantage</strong>: Provides complete cross-compilation
+environments with correct toolchains and system libraries, eliminating
+manual linker configuration [^367^].</p>
+<h4 id="rustup-target-management">rustup Target Management</h4>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Add all required targets for mobile development</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="ex">rustup</span> target add aarch64-apple-ios aarch64-apple-ios-sim x86_64-apple-ios</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="ex">rustup</span> target add aarch64-linux-android armv7-linux-androideabi x86_64-linux-android</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="ex">rustup</span> target add x86_64-pc-windows-msvc aarch64-pc-windows-msvc</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="ex">rustup</span> target add wasm32-unknown-unknown</span></code></pre></div>
+<hr />
+<h2 id="2-uniffi-mozillas-multi-language-binding-generator">2. UniFFI:
+Mozilla&#39;s Multi-Language Binding Generator</h2>
+<h3 id="21-overview">2.1 Overview</h3>
+<p>UniFFI is a toolkit for building cross-platform software components
+in Rust, developed by Mozilla and used extensively in Firefox mobile and
+desktop browsers [^338^]. It automatically generates foreign-language
+bindings, eliminating the need to write FFI plumbing by hand.</p>
+<blockquote>
+<p>&quot;Instead, uniffi does most of the work for us by generating the
+plumbing necessary to transport data across the FFI, including the
+specific language bindings, making it a little easier to write things
+once and a lot easier to maintain multiple supported languages.&quot;
+[^336^]</p>
+</blockquote>
+<h3 id="22-supported-languages">2.2 Supported Languages</h3>
+<table>
+<thead>
+<tr>
+<th>Language</th>
+<th>Support Level</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Kotlin</strong></td>
+<td>Full (1st party)</td>
+<td>Android primary target</td>
+</tr>
+<tr>
+<td><strong>Swift</strong></td>
+<td>Full (1st party)</td>
+<td>iOS/macOS primary target</td>
+</tr>
+<tr>
+<td><strong>Python</strong></td>
+<td>Full (1st party)</td>
+<td>Desktop scripting</td>
+</tr>
+<tr>
+<td><strong>Ruby</strong></td>
+<td>Legacy/partial</td>
+<td>Community maintained</td>
+</tr>
+<tr>
+<td><strong>C#</strong></td>
+<td>3rd party</td>
+<td>Community bindings available</td>
+</tr>
+<tr>
+<td><strong>Go</strong></td>
+<td>3rd party</td>
+<td>Community bindings available</td>
+</tr>
+<tr>
+<td><strong>Dart</strong></td>
+<td>3rd party</td>
+<td>Via flutter_rust_bridge</td>
+</tr>
+<tr>
+<td><strong>JavaScript</strong></td>
+<td>3rd party</td>
+<td>WASM + React Native TurboModules</td>
+</tr>
+</tbody>
+</table>
+<h3 id="23-interface-definition">2.3 Interface Definition</h3>
+<p>UniFFI supports two interface definition approaches [^340^]:</p>
+<p><strong>UDL (UniFFI Definition Language)</strong> - WebIDL-based:</p>
+<pre class="idl"><code>namespace helixvpn {
+    string connect_to_server(string server_address);
+    void disconnect();
+    TunnelState get_tunnel_state();
+};
+
+interface TunnelConfig {
+    constructor(string server_address, u16 port);
+    string get_server_address();
+};
+
+enum TunnelState {
+    &quot;Disconnected&quot;,
+    &quot;Connecting&quot;,
+    &quot;Connected&quot;,
+    &quot;Error&quot;
+};</code></pre>
+<p><strong>Proc-Macro Approach</strong> (modern, preferred):</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span><span class="pp">uniffi::</span>export<span class="at">]</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">fn</span> connect_to_server(server_address<span class="op">:</span> <span class="dt">String</span>) <span class="op">-&gt;</span> <span class="dt">String</span> <span class="op">{</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">// implementation</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="pp">uniffi::</span>Object<span class="at">)]</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> TunnelConfig <span class="op">{</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    server_address<span class="op">:</span> <span class="dt">String</span><span class="op">,</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    port<span class="op">:</span> <span class="dt">u16</span><span class="op">,</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span><span class="pp">uniffi::</span>export<span class="at">]</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> TunnelConfig <span class="op">{</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span><span class="pp">uniffi::</span>constructor<span class="at">]</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">fn</span> new(server_address<span class="op">:</span> <span class="dt">String</span><span class="op">,</span> port<span class="op">:</span> <span class="dt">u16</span>) <span class="op">-&gt;</span> <span class="dt">Self</span> <span class="op">{</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>        <span class="dt">Self</span> <span class="op">{</span> server_address<span class="op">,</span> port <span class="op">}</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="24-maturity-and-production-usage">2.4 Maturity and Production
+Usage</h3>
+<ul>
+<li><strong>Mozilla Firefox</strong>: Used in Glean SDK (telemetry),
+Nimbus SDK (experimentation), and application-services [^336^]
+[^338^]</li>
+<li><strong>Production readiness</strong>: &quot;We consider it ready for
+production use&quot; [^338^]</li>
+<li><strong>Version status</strong>: Pre-1.0, but actively maintained
+with breaking changes minimized for simple consumers</li>
+<li><strong>Community ecosystem</strong>: Third-party bindings for C#,
+Go, Dart, Java, Node.js [^338^]</li>
+</ul>
+<h3 id="25-limitations">2.5 Limitations</h3>
+<ul>
+<li>Async support is evolving: &quot;The futures/async support is quite
+immature&quot; [^334^]</li>
+<li>Advanced features may break between upgrades [^338^]</li>
+<li>Some advanced FFI patterns (e.g., custom tokio runtime management)
+may require manual FFI [^357^]</li>
+</ul>
+<h3 id="26-alternative-boltffi">2.6 Alternative: BoltFFI</h3>
+<p>A newer high-performance alternative claiming significant speed
+improvements [^341^]:</p>
+<ul>
+<li><code>echo_i32</code>: &lt;1 ns vs 1,416 ns (UniFFI) —
+<strong>&gt;1000x faster</strong></li>
+<li>Supports Swift, Kotlin, TypeScript (WASM) with Python planned</li>
+<li>Handles XCFramework generation for Apple platforms natively</li>
+</ul>
+<hr />
+<h2 id="3-ffi-patterns-and-best-practices">3. FFI Patterns and Best
+Practices</h2>
+<h3 id="31-core-principles">3.1 Core Principles</h3>
+<ol type="1">
+<li><strong>Minimize <code>unsafe</code> code</strong>: Isolate unsafe
+to thin FFI boundary layers</li>
+<li><strong>C ABI compatibility</strong>: Use
+<code>#[no_mangle] pub extern &quot;C&quot;</code> for all exported functions</li>
+<li><strong>Memory safety</strong>: Define clear ownership semantics
+across the boundary</li>
+<li><strong>Error handling</strong>: Convert Rust <code>Result</code> to
+language-appropriate error types</li>
+</ol>
+<h3 id="32-async-rust-across-ffi">3.2 Async Rust Across FFI</h3>
+<p>The <code>async-ffi</code> crate provides FFI-compatible Futures
+[^330^]:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">async_ffi::</span><span class="op">{</span>FfiFuture<span class="op">,</span> FutureExt<span class="op">};</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>no_mangle<span class="at">]</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">extern</span> <span class="st">&quot;C&quot;</span> <span class="kw">fn</span> work(arg<span class="op">:</span> <span class="dt">u32</span>) <span class="op">-&gt;</span> FfiFuture<span class="op">&lt;</span><span class="dt">u32</span><span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">async</span> <span class="kw">move</span> <span class="op">{</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> ret <span class="op">=</span> do_some_io(arg)<span class="op">.</span><span class="kw">await</span><span class="op">;</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>        ret</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">}.</span>into_ffi()</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><strong>Key considerations</strong> [^329^] [^333^]:</p>
+<ul>
+<li>Use a static/shared Tokio Runtime rather than creating one per
+call</li>
+<li>Thread-local storage won&#39;t work correctly across dynamic library
+boundaries</li>
+<li>Pass runtime handles explicitly via FFI if needed</li>
+</ul>
+<p><strong>Tokio Runtime pattern for FFI</strong> [^329^]:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::sync::</span>LazyLock<span class="op">;</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">tokio::runtime::</span>Runtime<span class="op">;</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="kw">static</span> RUNTIME<span class="op">:</span> LazyLock<span class="op">&lt;</span>Runtime<span class="op">&gt;</span> <span class="op">=</span> <span class="pp">LazyLock::</span>new(<span class="op">||</span> <span class="op">{</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    <span class="pp">Runtime::</span>new_multi_thread()</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span>worker_threads(<span class="dv">4</span>)</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span>enable_all()</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span>build()</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span>expect(<span class="st">&quot;Failed to create Tokio runtime&quot;</span>)</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>no_mangle<span class="at">]</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">extern</span> <span class="st">&quot;C&quot;</span> <span class="kw">fn</span> vpn_connect(config<span class="op">:</span> <span class="op">*</span><span class="kw">const</span> <span class="dt">c_char</span>) <span class="op">-&gt;</span> <span class="dt">i32</span> <span class="op">{</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> config_str <span class="op">=</span> <span class="kw">unsafe</span> <span class="op">{</span> <span class="pp">CStr::</span>from_ptr(config)<span class="op">.</span>to_string_lossy() <span class="op">};</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">match</span> RUNTIME<span class="op">.</span>block_on(async_connect(config_str<span class="op">.</span>as_ref())) <span class="op">{</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>        <span class="cn">Ok</span>(_) <span class="op">=&gt;</span> <span class="dv">0</span><span class="op">,</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>        <span class="cn">Err</span>(e) <span class="op">=&gt;</span> e<span class="op">.</span>code()<span class="op">,</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="33-error-handling-across-boundaries">3.3 Error Handling Across
+Boundaries</h3>
+<p><strong>Pattern 1: Error codes with thread-local error
+messages</strong> [^331^]:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="pp">thread_local!</span> <span class="op">{</span> <span class="kw">static</span> LAST_ERROR<span class="op">:</span> RefCell<span class="op">&lt;</span><span class="dt">Option</span><span class="op">&lt;</span><span class="dt">String</span><span class="op">&gt;&gt;</span> <span class="op">=</span> <span class="pp">RefCell::</span>new(<span class="cn">None</span>)<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>no_mangle<span class="at">]</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">extern</span> <span class="st">&quot;C&quot;</span> <span class="kw">fn</span> get_last_error() <span class="op">-&gt;</span> <span class="op">*</span><span class="kw">mut</span> <span class="dt">c_char</span> <span class="op">{</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    LAST_ERROR<span class="op">.</span>with(<span class="op">|</span>e<span class="op">|</span> <span class="op">{</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>        e<span class="op">.</span>borrow()<span class="op">.</span>as_ref()</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span>map(<span class="op">|</span>s<span class="op">|</span> <span class="pp">CString::</span>new(s<span class="op">.</span>as_str())<span class="op">.</span>unwrap()<span class="op">.</span>into_raw())</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span>unwrap_or(<span class="pp">std::ptr::</span>null_mut())</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span>)</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><strong>Pattern 2: Return structs with error info</strong>:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>repr<span class="at">(</span>C<span class="at">)]</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> FfiResult<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> data<span class="op">:</span> T<span class="op">,</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> error_code<span class="op">:</span> <span class="dt">i32</span><span class="op">,</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> error_message<span class="op">:</span> <span class="op">*</span><span class="kw">mut</span> <span class="dt">c_char</span><span class="op">,</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><strong>Pattern 3: UniFFI-style (recommended)</strong>: UniFFI
+automatically converts Rust <code>Result&lt;T, E&gt;</code> to
+exceptions/errors in target languages [^340^].</p>
+<h3 id="34-memory-management-best-practices">3.4 Memory Management Best
+Practices</h3>
+<ul>
+<li><strong>String passing</strong>: Rust returns <code>CString</code> →
+foreign language frees via dedicated function</li>
+<li><strong>Object handles</strong>: Use opaque pointer types
+(<code>*mut c_void</code>) with create/destroy functions</li>
+<li><strong>Avoid panics across FFI</strong>: Use
+<code>catch_unwind</code> at the boundary (undefined behavior
+otherwise)</li>
+<li><strong>Zero-copy where possible</strong>: Use
+<code>&amp;[u8]</code> slices for packet data transfer</li>
+</ul>
+<hr />
+<h2 id="4-android-rust-integration">4. Android Rust Integration</h2>
+<h3 id="41-toolchain-cargo-ndk">4.1 Toolchain: cargo-ndk</h3>
+<p><code>cargo-ndk</code> is the standard tool for building Rust for
+Android [^348^]:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Install</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> install cargo-ndk</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Add Android targets</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="ex">rustup</span> target add aarch64-linux-android armv7-linux-androideabi x86_64-linux-android</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Build for all architectures</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> ndk <span class="at">--target</span> aarch64-linux-android <span class="at">--android-platform</span> 33 <span class="at">--</span> build <span class="at">--release</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> ndk <span class="at">--target</span> armv7-linux-androideabi <span class="at">--android-platform</span> 33 <span class="at">--</span> build <span class="at">--release</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> ndk <span class="at">--target</span> x86_64-linux-android <span class="at">--android-platform</span> 33 <span class="at">--</span> build <span class="at">--release</span></span></code></pre></div>
+<p><strong>Key features</strong> [^348^]:</p>
+<ul>
+<li>Automatically finds and sets NDK linker and AR tools</li>
+<li>Handles sysroot configuration</li>
+<li>Supports API level specification</li>
+</ul>
+<h3 id="42-jni-bindings-jni-rs">4.2 JNI Bindings: jni-rs</h3>
+<p>The <code>jni</code> crate (version 0.21+) provides Rust JNI bindings
+[^344^]:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">jni::</span>JNIEnv<span class="op">;</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">jni::objects::</span>JClass<span class="op">;</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">jni::signature::</span>JavaType<span class="op">;</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>no_mangle<span class="at">]</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">extern</span> <span class="st">&quot;C&quot;</span> <span class="kw">fn</span> Java_com_helixvpn_core_RustBridge_connect(</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">mut</span> env<span class="op">:</span> JNIEnv<span class="op">,</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>    _class<span class="op">:</span> JClass<span class="op">,</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>    server_address<span class="op">:</span> JString<span class="op">,</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>) <span class="op">-&gt;</span> jint <span class="op">{</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> addr<span class="op">:</span> <span class="dt">String</span> <span class="op">=</span> env<span class="op">.</span>get_string(<span class="op">&amp;</span>server_address)</span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span>expect(<span class="st">&quot;Invalid string&quot;</span>)</span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span>into()<span class="op">;</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">match</span> vpn_connect(<span class="op">&amp;</span>addr) <span class="op">{</span></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>        <span class="cn">Ok</span>(_) <span class="op">=&gt;</span> <span class="dv">0</span><span class="op">,</span></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>        <span class="cn">Err</span>(e) <span class="op">=&gt;</span> <span class="op">{</span></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>            env<span class="op">.</span>throw_new(<span class="st">&quot;com/helixvpn/core/VpnException&quot;</span><span class="op">,</span> e<span class="op">.</span>to_string())</span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>                <span class="op">.</span>unwrap()<span class="op">;</span></span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>            <span class="op">-</span><span class="dv">1</span></span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="43-gradle-plugin-integration">4.3 Gradle Plugin Integration</h3>
+<p>The Cargo NDK Gradle Plugin automates Rust builds within Android
+projects [^346^]:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode gradle"><code class="sourceCode groovy"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co">// root build.gradle</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>buildscript <span class="op">{</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    dependencies <span class="op">{</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>        classpath <span class="st">&quot;gradle.plugin.com.github.willir.rust:plugin:0.3.4&quot;</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="co">// app/build.gradle</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>apply plugin<span class="op">:</span> <span class="st">&quot;com.github.willir.rust.cargo-ndk-android&quot;</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>cargoNdk <span class="op">{</span></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>    targets <span class="op">=</span> <span class="op">[</span><span class="st">&quot;arm64&quot;</span><span class="op">,</span> <span class="st">&quot;arm&quot;</span><span class="op">,</span> <span class="st">&quot;x86_64&quot;</span><span class="op">]</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>    module <span class="op">=</span> <span class="st">&quot;../rust-core&quot;</span></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>    apiLevel <span class="op">=</span> <span class="dv">24</span></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>    buildTypes <span class="op">{</span></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>        release <span class="op">{</span> buildType <span class="op">=</span> <span class="st">&quot;release&quot;</span> <span class="op">}</span></span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>        debug <span class="op">{</span> buildType <span class="op">=</span> <span class="st">&quot;debug&quot;</span> <span class="op">}</span></span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>This plugin [^346^]:</p>
+<ul>
+<li>Runs automatically during <code>./gradlew assembleDebug</code> /
+<code>assembleRelease</code></li>
+<li>Copies <code>.so</code> files to <code>jniLibs/</code>
+directory</li>
+<li>Supports per-build-type configuration</li>
+<li>Allows target filtering via gradle properties
+(<code>-Prust-target=arm64</code>)</li>
+</ul>
+<h3 id="44-android-ndk-rust-toolchain-support">4.4 Android NDK Rust
+Toolchain Support</h3>
+<ul>
+<li>NDK r23+ provides improved LLVM toolchain compatibility</li>
+<li>Rust Android targets use the NDK&#39;s Clang linker</li>
+<li>Minimum supported API level: 24 (Android 7.0) for full Rust std
+support [^344^]</li>
+</ul>
+<h3 id="45-so-library-packaging">4.5 .so Library Packaging</h3>
+<p>Output structure:</p>
+<pre><code>android/app/src/main/jniLibs/
+├── arm64-v8a/libhelix_core.so       (from aarch64-linux-android)
+├── armeabi-v7a/libhelix_core.so     (from armv7-linux-androideabi)
+├── x86_64/libhelix_core.so          (from x86_64-linux-android)</code></pre>
+<hr />
+<h2 id="5-ios-rust-integration">5. iOS Rust Integration</h2>
+<h3 id="51-modern-approach-xcframework--uniffi">5.1 Modern Approach:
+XCFramework + UniFFI</h3>
+<p>The modern recommended approach uses
+<code>xcodebuild -create-xcframework</code> with UniFFI-generated
+bindings, replacing the deprecated <code>cargo-lipo</code> tool
+[^349^]:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Add iOS targets</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="ex">rustup</span> target add aarch64-apple-ios aarch64-apple-ios-sim</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Build for device</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> build <span class="at">--release</span> <span class="at">--target</span><span class="op">=</span>aarch64-apple-ios</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Build for simulator</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> build <span class="at">--release</span> <span class="at">--target</span><span class="op">=</span>aarch64-apple-ios-sim</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Generate UniFFI bindings</span></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> run <span class="at">--bin</span> uniffi-bindgen generate <span class="dt">\</span></span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">--library</span> ./target/aarch64-apple-ios/release/libhelix.dylib <span class="dt">\</span></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">--language</span> swift <span class="at">--out-dir</span> ./bindings</span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a><span class="co"># 5. Rename modulemap (critical step!)</span></span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a><span class="fu">mv</span> bindings/helixFFI.modulemap bindings/module.modulemap</span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a><span class="co"># 6. Create XCFramework</span></span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a><span class="ex">xcodebuild</span> <span class="at">-create-xcframework</span> <span class="dt">\</span></span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>  <span class="at">-library</span> ./target/aarch64-apple-ios-sim/release/libhelix.a <span class="at">-headers</span> ./bindings <span class="dt">\</span></span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a>  <span class="at">-library</span> ./target/aarch64-apple-ios/release/libhelix.a <span class="at">-headers</span> ./bindings <span class="dt">\</span></span>
+<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a>  <span class="at">-output</span> ios/HelixCore.xcframework</span></code></pre></div>
+<h3 id="52-swift-integration">5.2 Swift Integration</h3>
+<p>After importing the XCFramework and generated Swift file [^82^]:</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode swift"><code class="sourceCode swift"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="im">SwiftUI</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="im">helixFFI</span>  // <span class="im">The</span> <span class="im">generated</span> <span class="im">UniFFI</span> <span class="im">module</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> ContentView<span class="op">:</span> <span class="dt">View</span> <span class="op">{</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">@State</span> <span class="kw">private</span> <span class="kw">var</span> <span class="va">status</span> <span class="op">=</span> <span class="st">&quot;Disconnected&quot;</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">func</span> <span class="fu">connect</span><span class="op">()</span> <span class="op">{</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Call Rust function through UniFFI-generated bindings</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> <span class="va">result</span> <span class="op">=</span> connectToServer<span class="op">(</span>serverAddress<span class="op">:</span> <span class="st">&quot;us-east.helix.vpn&quot;</span><span class="op">)</span></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>        status <span class="op">=</span> <span class="st">&quot;Connected&quot;</span></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="53-legacy-cargo-lipo-deprecated">5.3 Legacy: cargo-lipo
+(Deprecated)</h3>
+<p><code>cargo-lipo</code> was previously used to create universal fat
+binaries but is now deprecated because <code>arm64</code> can represent
+both device and simulator targets [^349^]. Use XCFrameworks instead.</p>
+<h3 id="54-cbindgen-for-c-headers">5.4 cbindgen for C Headers</h3>
+<p>When not using UniFFI, <code>cbindgen</code> generates C headers from
+Rust code:</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> install cbindgencbindgen <span class="at">--output</span> include/helix_core.h</span></code></pre></div>
+<p>Used by Signal&#39;s libsignal for manual bridge layers [^362^].</p>
+<h3 id="55-key-considerations-for-ios">5.5 Key Considerations for
+iOS</h3>
+<ul>
+<li><strong>XCFramework is required</strong> (not optional) for Apple
+Silicon Macs since the same architecture (arm64) is used for both
+devices and simulators [^349^]</li>
+<li><strong>Module map renaming</strong>: Must rename
+<code>xxxFFI.modulemap</code> to <code>module.modulemap</code> for Xcode
+detection [^82^]</li>
+<li><strong>libresolv.tbd</strong>: Must be linked on iOS for DNS
+resolution [^345^]</li>
+<li><strong>Bitcode</strong>: Disabled by default in modern Xcode; Rust
+binaries are not bitcode-compatible</li>
+</ul>
+<hr />
+<h2 id="6-desktop-rust-integration">6. Desktop Rust Integration</h2>
+<h3 id="61-tauri-commands">6.1 Tauri Commands</h3>
+<p>Tauri provides a Rust backend with web frontend, communicating via
+typed commands [^10^]:</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co">// src-tauri/src/main.rs</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span><span class="pp">tauri::</span>command<span class="at">]</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="kw">async</span> <span class="kw">fn</span> vpn_connect(state<span class="op">:</span> <span class="pp">tauri::</span>State<span class="op">&lt;</span><span class="ot">&#39;_</span><span class="op">,</span> VpnState<span class="op">&gt;,</span> server<span class="op">:</span> <span class="dt">String</span>) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span><span class="dt">String</span><span class="op">,</span> <span class="dt">String</span><span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>    state<span class="op">.</span>core<span class="op">.</span>connect(<span class="op">&amp;</span>server)<span class="op">.</span><span class="kw">await</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span>map(<span class="op">|</span>_<span class="op">|</span> <span class="st">&quot;Connected&quot;</span><span class="op">.</span>into())</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span>map_err(<span class="op">|</span>e<span class="op">|</span> e<span class="op">.</span>to_string())</span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>    <span class="pp">tauri::Builder::</span><span class="kw">default</span>()</span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span>manage(<span class="pp">VpnState::</span><span class="kw">default</span>())</span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span>invoke_handler(<span class="pp">tauri::generate_handler!</span>[vpn_connect<span class="op">,</span> vpn_disconnect])</span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span>run(<span class="pp">tauri::generate_context!</span>())</span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span>expect(<span class="st">&quot;error while running tauri application&quot;</span>)<span class="op">;</span></span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><strong>Frontend (TypeScript)</strong>:</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { invoke } <span class="im">from</span> <span class="st">&#39;@tauri-apps/api/core&#39;</span><span class="op">;</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="kw">async</span> <span class="kw">function</span> <span class="fu">connect</span>() {</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> result <span class="op">=</span> <span class="cf">await</span> <span class="fu">invoke</span>(<span class="st">&#39;vpn_connect&#39;</span><span class="op">,</span> { server<span class="op">:</span> <span class="st">&#39;us-east.helix.vpn&#39;</span> })<span class="op">;</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(result)<span class="op">;</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p><strong>Tauri advantages</strong> [^10^]:</p>
+<ul>
+<li>Tiny bundle sizes (2-10 MB)</li>
+<li>Native memory efficiency</li>
+<li>Full OS API access through Rust</li>
+<li>Desktop is production-stable; mobile support in beta</li>
+</ul>
+<h3 id="62-flutter-desktop-with-rust">6.2 Flutter Desktop with Rust</h3>
+<p>Two approaches for Flutter + Rust on desktop:</p>
+<p><strong>Approach A: flutter_rust_bridge (Recommended)</strong></p>
+<p>The <code>flutter_rust_bridge</code> crate is a Flutter Favorite and
+generates high-level bindings [^392^]:</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># One-liner setup</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> install flutter_rust_bridge_codegen <span class="kw">&amp;&amp;</span> <span class="ex">flutter_rust_bridge_codegen</span> create my_app</span></code></pre></div>
+<p><strong>Approach B: Direct FFI via dart:ffi</strong> [^379^]:</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode dart"><code class="sourceCode dart"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Load the Rust library</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="at">final</span> lib <span class="op">=</span> Platform<span class="op">.</span>isAndroid</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">?</span> DynamicLibrary<span class="op">.</span>open(<span class="st">&#39;libhelix_core.so&#39;</span>)</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">:</span> Platform<span class="op">.</span>isIOS</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>        <span class="op">?</span> DynamicLibrary<span class="op">.</span>process()  <span class="co">// Statically linked</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>        <span class="op">:</span> DynamicLibrary<span class="op">.</span>open(<span class="st">&#39;libhelix_core.dylib&#39;</span>);  <span class="co">// macOS</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a><span class="at">final</span> connect <span class="op">=</span> lib<span class="op">.</span>lookupFunction<span class="op">&lt;</span>ConnectNative<span class="op">,</span> ConnectDart<span class="op">&gt;</span>(<span class="st">&#39;rust_connect&#39;</span>);</span></code></pre></div>
+<p><strong>Desktop library locations</strong>:</p>
+<ul>
+<li><strong>macOS</strong>:
+<code>HelixVPN.app/Contents/Frameworks/libhelix_core.dylib</code></li>
+<li><strong>Windows</strong>: Place <code>.dll</code> next to executable
+or in <code>PATH</code></li>
+<li><strong>Linux</strong>: Standard library path or
+<code>LD_LIBRARY_PATH</code></li>
+</ul>
+<h3 id="63-direct-dynamic-library-loading">6.3 Direct Dynamic Library
+Loading</h3>
+<p>For native desktop apps (non-Flutter, non-Tauri):</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Loading Rust core as .so/.dll/.dylib</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>cfg<span class="at">(</span>target_os <span class="op">=</span> <span class="st">&quot;macos&quot;</span><span class="at">)]</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> LIB_PATH<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span> <span class="op">=</span> <span class="st">&quot;libhelix_core.dylib&quot;</span><span class="op">;</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>cfg<span class="at">(</span>target_os <span class="op">=</span> <span class="st">&quot;linux&quot;</span><span class="at">)]</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> LIB_PATH<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span> <span class="op">=</span> <span class="st">&quot;libhelix_core.so&quot;</span><span class="op">;</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>cfg<span class="at">(</span>target_os <span class="op">=</span> <span class="st">&quot;windows&quot;</span><span class="at">)]</span></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> LIB_PATH<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span> <span class="op">=</span> <span class="st">&quot;helix_core.dll&quot;</span><span class="op">;</span></span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> lib <span class="op">=</span> <span class="kw">unsafe</span> <span class="op">{</span> <span class="pp">libloading::Library::</span>new(LIB_PATH)<span class="op">?</span> <span class="op">};</span></span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> connect<span class="op">:</span> Symbol<span class="op">&lt;</span><span class="kw">unsafe</span> <span class="kw">extern</span> <span class="st">&quot;C&quot;</span> <span class="kw">fn</span>(<span class="op">*</span><span class="kw">const</span> <span class="dt">c_char</span>) <span class="op">-&gt;</span> <span class="dt">i32</span><span class="op">&gt;</span> <span class="op">=</span></span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">unsafe</span> <span class="op">{</span> lib<span class="op">.</span>get(<span class="st">b&quot;vpn_connect&quot;</span>)<span class="op">?</span> <span class="op">};</span></span></code></pre></div>
+<hr />
+<h2 id="7-wasm-target-for-browserextensions">7. WASM Target for
+Browser/Extensions</h2>
+<h3 id="71-wasm-bindgen--wasm-pack">7.1 wasm-bindgen + wasm-pack</h3>
+<p>The standard Rust-to-WASM toolchain [^353^] [^354^]:</p>
+<div class="sourceCode" id="cb21"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Install</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="ex">rustup</span> target add wasm32-unknown-unknown</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> install wasm-pack</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Build for browser</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a><span class="ex">wasm-pack</span> build <span class="at">--target</span> web <span class="at">--out-dir</span> pkg/</span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Build for bundler (webpack/rollup)</span></span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a><span class="ex">wasm-pack</span> build <span class="at">--target</span> bundler <span class="at">--out-dir</span> pkg/</span></code></pre></div>
+<h3 id="72-vpn-core-in-webassembly">7.2 VPN Core in WebAssembly</h3>
+<p>For a browser extension or web UI, the Rust VPN core compiles to WASM
+[^354^]:</p>
+<div class="sourceCode" id="cb22"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co">// src/lib.rs</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">wasm_bindgen::prelude::</span><span class="op">*;</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>wasm_bindgen<span class="at">]</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> WasmVpnCore <span class="op">{</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>    inner<span class="op">:</span> VpnCore<span class="op">,</span></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>wasm_bindgen<span class="at">]</span></span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> WasmVpnCore <span class="op">{</span></span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>wasm_bindgen<span class="at">(</span>constructor<span class="at">)]</span></span>
+<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">fn</span> new() <span class="op">-&gt;</span> <span class="dt">Self</span> <span class="op">{</span></span>
+<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a>        <span class="pp">console_error_panic_hook::</span>set_once()<span class="op">;</span></span>
+<span id="cb22-14"><a href="#cb22-14" aria-hidden="true" tabindex="-1"></a>        <span class="dt">Self</span> <span class="op">{</span> inner<span class="op">:</span> <span class="pp">VpnCore::</span>new() <span class="op">}</span></span>
+<span id="cb22-15"><a href="#cb22-15" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb22-16"><a href="#cb22-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-17"><a href="#cb22-17" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> connect(<span class="op">&amp;</span><span class="kw">self</span><span class="op">,</span> server<span class="op">:</span> <span class="dt">String</span>) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>JsValue<span class="op">,</span> JsValue<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb22-18"><a href="#cb22-18" aria-hidden="true" tabindex="-1"></a>        <span class="kw">self</span><span class="op">.</span>inner<span class="op">.</span>connect(<span class="op">&amp;</span>server)<span class="op">.</span><span class="kw">await</span></span>
+<span id="cb22-19"><a href="#cb22-19" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span>map(<span class="op">|</span>state<span class="op">|</span> <span class="pp">JsValue::</span>from_str(<span class="op">&amp;</span><span class="pp">format!</span>(<span class="st">&quot;{:?}&quot;</span><span class="op">,</span> state)))</span>
+<span id="cb22-20"><a href="#cb22-20" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span>map_err(<span class="op">|</span>e<span class="op">|</span> <span class="pp">JsValue::</span>from_str(<span class="op">&amp;</span>e<span class="op">.</span>to_string()))</span>
+<span id="cb22-21"><a href="#cb22-21" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb22-22"><a href="#cb22-22" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="73-web-limitations-for-vpn">7.3 Web Limitations for VPN</h3>
+<p><strong>Critical</strong>: WASM in browsers <strong>cannot</strong>
+create raw network sockets or TUN interfaces due to browser sandboxing.
+For a browser extension VPN:</p>
+<ol type="1">
+<li><strong>Use proxy-based approach</strong>: Configure browser proxy
+settings to route through a VPN gateway</li>
+<li><strong>WebRTC for P2P</strong>: Use WebRTC data channels for VPN
+tunneling</li>
+<li><strong>Native messaging</strong>: Communicate with a native host
+application that runs the actual VPN core</li>
+<li><strong>WASM for crypto</strong>: Use Rust crypto (Noise protocol,
+ChaCha20-Poly1305) in WASM while delegating networking to JavaScript
+APIs</li>
+</ol>
+<h3 id="74-browser-extension-architecture">7.4 Browser Extension
+Architecture</h3>
+<pre><code>Browser Extension Architecture:
+┌─────────────────────────────────────────────────────┐
+│  Popup UI (React/Vue)                               │
+│  └─ Calls WASM crypto functions                     │
+├─────────────────────────────────────────────────────┤
+│  Background Service Worker                          │
+│  └─ chrome.proxy API or Native Messaging            │
+├─────────────────────────────────────────────────────┤
+│  Native Host App (Rust binary, platform-specific)   │
+│  └─ Real TUN interface, WireGuard, etc.             │
+└─────────────────────────────────────────────────────┘</code></pre>
+<h3 id="75-performance-considerations">7.5 Performance
+Considerations</h3>
+<ul>
+<li>WASM has ~1.5-2x overhead vs native Rust [^353^]</li>
+<li>Crypto operations in WASM are still faster than pure JavaScript</li>
+<li>Use <code>wasm-opt</code> (Binaryen) for additional
+optimization</li>
+<li>Enable <code>wee_alloc</code> or <code>dlmalloc</code> as smaller
+WASM allocators</li>
+</ul>
+<hr />
+<h2 id="8-real-world-case-studies">8. Real-World Case Studies</h2>
+<h3 id="81-mullvad-vpn--rust-core-architecture">8.1 Mullvad VPN — Rust
+Core Architecture</h3>
+<p><strong>Repository</strong>:
+<code>github.com/mullvad/mullvadvpn-app</code> (7.3k+ stars) [^155^]</p>
+<h4 id="architecture-overview">Architecture Overview</h4>
+<p>Mullvad&#39;s architecture splits into two distinct layers [^23^]:</p>
+<pre><code>┌─────────────────────────────────────────────────────────────┐
+│                    Mullvad Layer                             │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────┐  │
+│  │ mullvad-daemon│  │ API Client   │  │ Account Manager  │  │
+│  │ (main binary) │  │ (REST/GRPC)  │  │ (subscriptions)  │  │
+│  └──────┬───────┘  └──────────────┘  └──────────────────┘  │
+│         │                                                    │
+│  ┌──────┴─────────────────────────────────────────────────┐ │
+│  │         Management Interface (GRPC over Unix socket)    │ │
+│  └─────────────────────────────────────────────────────────┘ │
+├─────────────────────────────────────────────────────────────┤
+│                    Talpid Layer (Generic VPN)                │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────┐  │
+│  │ talpid-core  │  │ Tunnel State │  │ Routing/DNS      │  │
+│  │ (VPN engine) │  │ Machine      │  │ Firewall         │  │
+│  └──────┬───────┘  └──────────────┘  └──────────────────┘  │
+│         │                                                    │
+│  ┌──────┴─────────────────────────────────────────────────┐ │
+│  │         Platform Abstraction (OS-specific)              │ │
+│  └─────────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────┘</code></pre>
+<h4 id="key-design-principles">Key Design Principles</h4>
+<blockquote>
+<p>&quot;The <code>talpid</code> crates are supposed to be completely
+unrelated to Mullvad specific things. A <code>talpid</code> crate is not
+allowed to know anything about the API through which the daemon fetch
+Mullvad account details or download VPN server lists.&quot; [^23^]</p>
+</blockquote>
+<ul>
+<li><strong>talpid-core</strong>: Generic VPN client library, completely
+Mullvad-agnostic [^155^]</li>
+<li><strong>mullvad-daemon</strong>: Mullvad-specific daemon binary</li>
+<li><strong>Frontend communication</strong>: GRPC over Unix socket
+(desktop), JNI (Android), standalone iOS</li>
+</ul>
+<h4 id="platform-split">Platform Split</h4>
+<table>
+<thead>
+<tr>
+<th>Platform</th>
+<th>Architecture</th>
+<th>Code Reuse</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Desktop (macOS/Windows/Linux)</td>
+<td>Shared <code>mullvad-daemon</code> Rust binary + Electron GUI</td>
+<td>~85%</td>
+</tr>
+<tr>
+<td>Android</td>
+<td>Same Rust core via JNI + Kotlin UI</td>
+<td>~70%</td>
+</tr>
+<tr>
+<td>iOS</td>
+<td>Standalone Swift implementation in <code>ios/</code> directory</td>
+<td>Separate codebase</td>
+</tr>
+</tbody>
+</table>
+<h4 id="gotatun--wireguard-in-rust">GotaTun — WireGuard in Rust</h4>
+<p>Mullvad forked Cloudflare&#39;s BoringTun to create GotaTun [^363^]
+[^61^]:</p>
+<blockquote>
+<p>&quot;GotaTun integrates additional functionality like DAITA and Multihop
+compared to Cloudflare&#39;s BoringTun code... Previously Mullvad was
+relying on a Go language implementation of WireGuard. With the WireGuard
+Go implementation they had encountered crashes while so far &#39;not a
+single crash&#39; has been detected with GotaTun.&quot; [^61^]</p>
+</blockquote>
+<ul>
+<li>Forked from BoringTun (BSD-3-clause → MPL-2.0)</li>
+<li>Adds first-class Android support, DAITA, Multihop</li>
+<li>Replaced WireGuard-Go across all platforms in 2026</li>
+</ul>
+<h3 id="82-signal--libsignal-rust-core">8.2 Signal — libsignal Rust
+Core</h3>
+<p><strong>Repository</strong>:
+<code>github.com/signalapp/libsignal</code> [^362^]</p>
+<h4 id="architecture">Architecture</h4>
+<pre><code>libsignal Architecture:
+┌─────────────────────────────────────────────────────┐
+│  Client Apps (Android/iOS/Desktop)                  │
+├──────────┬──────────────┬───────────────────────────┤
+│  Java    │  Swift       │  TypeScript (Node/Electron)│
+│  (JNI)   │  (C FFI)     │  (N-API)                  │
+├──────────┴──────────────┴───────────────────────────┤
+│  Bridge Layer (language-specific wrappers)          │
+│  java/ │ swift/ │ node/                             │
+├─────────────────────────────────────────────────────┤
+│  Rust Core Crates                                   │
+│  ┌─────────────┐ ┌────────────┐ ┌──────────────┐   │
+│  │ libsignal-  │ │ signal-    │ │ device-      │   │
+│  │ protocol    │ │ crypto     │ │ transfer     │   │
+│  │ (Double     │ │ (AES-GCM,  │ │ (QR codes)   │   │
+│  │  Ratchet)   │ │  primitives)│ │              │   │
+│  └─────────────┘ └────────────┘ └──────────────┘   │
+│  ┌─────────────┐ ┌────────────┐ ┌──────────────┐   │
+│  │ zkgroup     │ │ account-   │ │ usernames    │   │
+│  │ (ZK proofs) │ │ keys       │ │              │   │
+│  └─────────────┘ └────────────┘ └──────────────┘   │
+└─────────────────────────────────────────────────────┘</code></pre>
+<p><strong>Key insight</strong>: Signal uses <strong>manual FFI
+bindings</strong> (not UniFFI) [^357^]:</p>
+<blockquote>
+<p>&quot;Unlike Proton that we studied previously, Signal doesn&#39;t use
+Mozilla&#39;s UniFFI to automatically generate Kotlin and Swift bindings and
+instead rely on manual bindings using FFI (Foreign Function Interface)
+and JNI (Java Native Interface) wrappers.&quot;</p>
+</blockquote>
+<p><strong>Why manual FFI?</strong> [^357^]</p>
+<ul>
+<li>Already had wrapping code from previous
+<code>libsignal-protocol-c</code> library</li>
+<li>Need advanced control over tokio runtime across FFI boundaries</li>
+<li>UniFFI&#39;s async handling may be incompatible with their runtime
+requirements</li>
+</ul>
+<p><strong>Platform support matrix</strong> [^360^]:</p>
+<table>
+<thead>
+<tr>
+<th>Platform</th>
+<th>Architectures</th>
+<th>Interface</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Android</td>
+<td>arm64, armv7, x64</td>
+<td>JNI</td>
+</tr>
+<tr>
+<td>iOS</td>
+<td>arm64</td>
+<td>C FFI + Swift</td>
+</tr>
+<tr>
+<td>macOS</td>
+<td>arm64, x64</td>
+<td>Node N-API</td>
+</tr>
+<tr>
+<td>Linux</td>
+<td>arm64, x64</td>
+<td>Node N-API</td>
+</tr>
+<tr>
+<td>Windows</td>
+<td>x64</td>
+<td>Node N-API</td>
+</tr>
+<tr>
+<td>Web</td>
+<td>WASM</td>
+<td>wasm-bindgen</td>
+</tr>
+</tbody>
+</table>
+<h3 id="83-cloudflare-boringtun">8.3 Cloudflare BoringTun</h3>
+<p><strong>Repository</strong>:
+<code>github.com/cloudflare/boringtun</code> [^49^]</p>
+<blockquote>
+<p>&quot;BoringTun is an implementation of the WireGuard protocol designed
+for portability and speed... successfully deployed on millions of iOS
+and Android consumer devices as well as thousands of Cloudflare Linux
+servers.&quot; [^49^]</p>
+</blockquote>
+<p><strong>Architecture</strong> [^59^]:</p>
+<ul>
+<li>Library (<code>boringtun</code>): Core WireGuard protocol without
+network/tunnel stacks</li>
+<li>CLI (<code>boringtun-cli</code>): Userspace WireGuard for
+Linux/macOS</li>
+<li>Platform-idiomatic tunnel stacks implemented separately</li>
+</ul>
+<p><strong>Supported platforms</strong> [^49^]:</p>
+<table>
+<thead>
+<tr>
+<th>Target</th>
+<th>Binary</th>
+<th>Library</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>x86_64-unknown-linux-gnu</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>aarch64-unknown-linux-gnu</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>x86_64-apple-darwin</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>x86_64-pc-windows-msvc</td>
+<td>No</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>aarch64-apple-ios</td>
+<td>No</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>aarch64-linux-android</td>
+<td>No</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>arm-linux-androideabi</td>
+<td>No</td>
+<td>Yes</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Key insight from Cloudflare</strong> [^59^]:</p>
+<blockquote>
+<p>&quot;After we decided to create a userspace WireGuard implementation,
+there was the small matter of choosing the right language... The obvious
+answer was Rust. Rust is a modern, safe language that is both as fast as
+C++ and is arguably safer than Go.&quot;</p>
+</blockquote>
+<h3 id="84-comparison-summary">8.4 Comparison Summary</h3>
+<table>
+<thead>
+<tr>
+<th>Project</th>
+<th>Rust Core %</th>
+<th>Binding Strategy</th>
+<th>Platforms</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Mullvad VPN</td>
+<td>~85% desktop, ~70% Android</td>
+<td>Manual FFI + JNI + GRPC</td>
+<td>macOS, Win, Linux, Android, iOS</td>
+</tr>
+<tr>
+<td>Signal</td>
+<td>~80%</td>
+<td>Manual FFI + JNI + N-API</td>
+<td>Android, iOS, Desktop, Web</td>
+</tr>
+<tr>
+<td>BoringTun</td>
+<td>~95% (library)</td>
+<td>C ABI + JNI</td>
+<td>Linux, macOS, iOS, Android, Windows</td>
+</tr>
+<tr>
+<td>GotaTun</td>
+<td>~95%</td>
+<td>C ABI + JNI</td>
+<td>All Mullvad platforms</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="9-vpn-specific-rust-crates">9. VPN-Specific Rust Crates</h2>
+<h3 id="91-tuntap-interface-tun-rs">9.1 TUN/TAP Interface: tun-rs</h3>
+<p><strong>Crate</strong>: <code>tun-rs</code> — Cross-platform TUN/TAP
+library [^364^]</p>
+<div class="sourceCode" id="cb26"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">tun_rs::</span>DeviceBuilder<span class="op">;</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Async TUN with Tokio</span></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> dev <span class="op">=</span> <span class="pp">DeviceBuilder::</span>new()</span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>name(<span class="st">&quot;utun7&quot;</span>)</span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>ipv4(<span class="st">&quot;10.0.0.1&quot;</span><span class="op">,</span> <span class="dv">24</span><span class="op">,</span> <span class="cn">None</span>)</span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>mtu(<span class="dv">1400</span>)</span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>build_async()<span class="op">?;</span>  <span class="co">// Returns AsyncDevice</span></span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a><span class="co">// Read packets asynchronously</span></span>
+<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> <span class="kw">mut</span> buf <span class="op">=</span> <span class="pp">vec!</span>[<span class="dv">0</span><span class="op">;</span> <span class="dv">65536</span>]<span class="op">;</span></span>
+<span id="cb26-12"><a href="#cb26-12" aria-hidden="true" tabindex="-1"></a><span class="cf">loop</span> <span class="op">{</span></span>
+<span id="cb26-13"><a href="#cb26-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> len <span class="op">=</span> dev<span class="op">.</span>recv(<span class="op">&amp;</span><span class="kw">mut</span> buf)<span class="op">.</span><span class="kw">await</span><span class="op">?;</span></span>
+<span id="cb26-14"><a href="#cb26-14" aria-hidden="true" tabindex="-1"></a>    process_packet(<span class="op">&amp;</span>buf[<span class="op">..</span>len])<span class="op">.</span><span class="kw">await</span><span class="op">;</span></span>
+<span id="cb26-15"><a href="#cb26-15" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><strong>Platform support</strong>: Windows, Linux, macOS, FreeBSD,
+OpenBSD, NetBSD, Android, iOS, tvOS, and <strong>OpenHarmony</strong>
+[^364^]</p>
+<p><strong>Mobile integration</strong>:</p>
+<div class="sourceCode" id="cb27"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co">// iOS: Use file descriptor from PacketTunnelProvider</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Android: Use fd from VpnService.Builder.establish()</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> fd <span class="op">=</span> obtain_fd_from_platform_vpn_api()<span class="op">;</span></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> dev <span class="op">=</span> <span class="kw">unsafe</span> <span class="op">{</span> <span class="pp">SyncDevice::</span>from_fd(fd)<span class="op">.</span>unwrap() <span class="op">};</span></span></code></pre></div>
+<h3 id="92-wireguard-implementation-boringtun--gotatun">9.2 WireGuard
+Implementation: boringtun / gotatun</h3>
+<p><strong>boringtun</strong> (Cloudflare) [^49^]:</p>
+<div class="sourceCode" id="cb28"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">boringtun::noise::</span><span class="op">{</span>Tunn<span class="op">,</span> TunnResult<span class="op">};</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">boringtun::noise::rate_limiter::</span>RateLimiter<span class="op">;</span></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> peer <span class="op">=</span> <span class="pp">Tunn::</span>new(</span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>    static_private<span class="op">,</span>      <span class="co">// Our private key</span></span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>    peer_public<span class="op">,</span>         <span class="co">// Peer public key</span></span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>    <span class="cn">None</span><span class="op">,</span>                <span class="co">// Preshared key (optional)</span></span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a>    <span class="cn">None</span><span class="op">,</span>                <span class="co">// Rate limiter (optional)</span></span>
+<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a>    <span class="dv">0</span><span class="op">,</span>                   <span class="co">// Index</span></span>
+<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a>    <span class="cn">None</span><span class="op">,</span>                <span class="co">// Option&lt;(os_fd, IPv4, IPv6)&gt;</span></span>
+<span id="cb28-11"><a href="#cb28-11" aria-hidden="true" tabindex="-1"></a>)<span class="op">.</span>unwrap()<span class="op">;</span></span>
+<span id="cb28-12"><a href="#cb28-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-13"><a href="#cb28-13" aria-hidden="true" tabindex="-1"></a><span class="co">// Handle incoming packet</span></span>
+<span id="cb28-14"><a href="#cb28-14" aria-hidden="true" tabindex="-1"></a><span class="cf">match</span> peer<span class="op">.</span>decapsulate(<span class="cn">None</span><span class="op">,</span> <span class="op">&amp;</span>udp_packet<span class="op">,</span> <span class="op">&amp;</span><span class="kw">mut</span> dst) <span class="op">{</span></span>
+<span id="cb28-15"><a href="#cb28-15" aria-hidden="true" tabindex="-1"></a>    <span class="pp">TunnResult::</span>WriteToTunnelV4(packet<span class="op">,</span> addr) <span class="op">=&gt;</span> <span class="op">{</span> <span class="co">/* IP packet */</span> <span class="op">},</span></span>
+<span id="cb28-16"><a href="#cb28-16" aria-hidden="true" tabindex="-1"></a>    <span class="pp">TunnResult::</span>WriteToNetwork(packet) <span class="op">=&gt;</span> <span class="op">{</span> <span class="co">/* Send UDP back */</span> <span class="op">},</span></span>
+<span id="cb28-17"><a href="#cb28-17" aria-hidden="true" tabindex="-1"></a>    <span class="pp">TunnResult::</span>Done <span class="op">=&gt;</span> <span class="op">{</span> <span class="co">/* Keepalive */</span> <span class="op">},</span></span>
+<span id="cb28-18"><a href="#cb28-18" aria-hidden="true" tabindex="-1"></a>    _ <span class="op">=&gt;</span> <span class="op">{}</span></span>
+<span id="cb28-19"><a href="#cb28-19" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><strong>gotatun</strong> (Mullvad fork) [^363^]:</p>
+<ul>
+<li>Drop-in replacement for BoringTun with additional features</li>
+<li>Adds DAITA (defense against AI traffic analysis), Multihop</li>
+<li>First-class Android support</li>
+</ul>
+<h3 id="93-async-runtime-tokio">9.3 Async Runtime: Tokio</h3>
+<p>Tokio is the de facto async runtime for Rust VPN implementations:</p>
+<div class="sourceCode" id="cb29"><pre class="sourceCode toml"><code class="sourceCode toml"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="kw">[dependencies]</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="dt">tokio</span> <span class="op">=</span> <span class="op">{ </span><span class="dt">version</span><span class="op"> =</span> <span class="st">&quot;1&quot;</span><span class="op">, </span><span class="dt">features</span><span class="op"> =</span> <span class="op">[</span><span class="st">&quot;rt-multi-thread&quot;</span><span class="op">,</span> <span class="st">&quot;net&quot;</span><span class="op">,</span> <span class="st">&quot;io-util&quot;</span><span class="op">,</span> <span class="st">&quot;sync&quot;</span><span class="op">,</span> <span class="st">&quot;time&quot;</span><span class="op">] }</span></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a><span class="dt">tokio-tun</span> <span class="op">=</span> <span class="st">&quot;0.11&quot;</span>  <span class="co"># TUN integration for Tokio</span></span></code></pre></div>
+<p><strong>Runtime configuration for VPN</strong>:</p>
+<div class="sourceCode" id="cb30"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> rt <span class="op">=</span> <span class="pp">tokio::runtime::Builder::</span>new_multi_thread()</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>worker_threads(<span class="dv">4</span>)      <span class="co">// Packet processing workers</span></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>max_blocking_threads(<span class="dv">8</span>) <span class="co">// Crypto operations</span></span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>enable_io()</span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>enable_time()</span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>thread_name(<span class="st">&quot;helix-vpn&quot;</span>)</span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>build()<span class="op">?;</span></span></code></pre></div>
+<h3 id="94-cryptographic-primitives">9.4 Cryptographic Primitives</h3>
+<table>
+<thead>
+<tr>
+<th>Crate</th>
+<th>Purpose</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ring</code></td>
+<td>AES-GCM, ChaCha20-Poly1305, X25519</td>
+<td>Most widely used, ~4MB smaller than OpenSSL [^385^]</td>
+</tr>
+<tr>
+<td><code>rustls</code></td>
+<td>TLS implementation</td>
+<td>Modern, memory-safe alternative to OpenSSL</td>
+</tr>
+<tr>
+<td><code>x25519-dalek</code></td>
+<td>X25519 key exchange</td>
+<td>Constant-time, audited</td>
+</tr>
+<tr>
+<td><code>chacha20poly1305</code></td>
+<td>AEAD cipher</td>
+<td>RustCrypto, pure Rust</td>
+</tr>
+<tr>
+<td><code>blake2</code></td>
+<td>Hash function</td>
+<td>For WireGuard key derivation</td>
+</tr>
+<tr>
+<td><code>snow</code></td>
+<td>Noise Protocol Framework</td>
+<td>For custom VPN protocols</td>
+</tr>
+</tbody>
+</table>
+<h3 id="95-packet-processing">9.5 Packet Processing</h3>
+<table>
+<thead>
+<tr>
+<th>Crate</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>pnet</code></td>
+<td>Packet parsing/crafting (low-level)</td>
+</tr>
+<tr>
+<td><code>etherparse</code></td>
+<td>Fast packet parsing</td>
+</tr>
+<tr>
+<td><code>smoltcp</code></td>
+<td>Userspace TCP/IP stack (for custom tunneling)</td>
+</tr>
+<tr>
+<td><code>quinn</code></td>
+<td>QUIC implementation (for QUIC-based VPN)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="10-build-system-integration">10. Build System Integration</h2>
+<h3 id="101-multi-platform-cicd-pipeline">10.1 Multi-Platform CI/CD
+Pipeline</h3>
+<p>A comprehensive GitHub Actions pipeline for building the Rust core
+across all platforms [^386^]:</p>
+<div class="sourceCode" id="cb31"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="fu">name</span><span class="kw">:</span><span class="at"> Helix VPN Core Build</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a><span class="fu">on</span><span class="kw">:</span></span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">push</span><span class="kw">:</span></span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">tags</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&#39;v*&#39;</span><span class="kw">]</span></span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a><span class="fu">jobs</span><span class="kw">:</span></span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">build</span><span class="kw">:</span></span>
+<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">strategy</span><span class="kw">:</span></span>
+<span id="cb31-10"><a href="#cb31-10" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">fail-fast</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span></span>
+<span id="cb31-11"><a href="#cb31-11" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">matrix</span><span class="kw">:</span></span>
+<span id="cb31-12"><a href="#cb31-12" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">platform</span><span class="kw">:</span></span>
+<span id="cb31-13"><a href="#cb31-13" aria-hidden="true" tabindex="-1"></a><span class="co">          # Android</span></span>
+<span id="cb31-14"><a href="#cb31-14" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="kw">-</span><span class="at"> </span><span class="fu">target</span><span class="kw">:</span><span class="at"> aarch64-linux-android</span></span>
+<span id="cb31-15"><a href="#cb31-15" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="fu">os</span><span class="kw">:</span><span class="at"> ubuntu-latest</span></span>
+<span id="cb31-16"><a href="#cb31-16" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="fu">use_cross</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb31-17"><a href="#cb31-17" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="fu">output</span><span class="kw">:</span><span class="at"> libhelix_core.so</span></span>
+<span id="cb31-18"><a href="#cb31-18" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="kw">-</span><span class="at"> </span><span class="fu">target</span><span class="kw">:</span><span class="at"> armv7-linux-androideabi</span></span>
+<span id="cb31-19"><a href="#cb31-19" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="fu">os</span><span class="kw">:</span><span class="at"> ubuntu-latest</span></span>
+<span id="cb31-20"><a href="#cb31-20" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="fu">use_cross</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb31-21"><a href="#cb31-21" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="fu">output</span><span class="kw">:</span><span class="at"> libhelix_core.so</span></span>
+<span id="cb31-22"><a href="#cb31-22" aria-hidden="true" tabindex="-1"></a><span class="co">          # iOS</span></span>
+<span id="cb31-23"><a href="#cb31-23" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="kw">-</span><span class="at"> </span><span class="fu">target</span><span class="kw">:</span><span class="at"> aarch64-apple-ios</span></span>
+<span id="cb31-24"><a href="#cb31-24" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="fu">os</span><span class="kw">:</span><span class="at"> macos-latest</span></span>
+<span id="cb31-25"><a href="#cb31-25" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="fu">use_cross</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span></span>
+<span id="cb31-26"><a href="#cb31-26" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="fu">output</span><span class="kw">:</span><span class="at"> libhelix_core.a</span></span>
+<span id="cb31-27"><a href="#cb31-27" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="kw">-</span><span class="at"> </span><span class="fu">target</span><span class="kw">:</span><span class="at"> aarch64-apple-ios-sim</span></span>
+<span id="cb31-28"><a href="#cb31-28" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="fu">os</span><span class="kw">:</span><span class="at"> macos-latest</span></span>
+<span id="cb31-29"><a href="#cb31-29" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="fu">use_cross</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span></span>
+<span id="cb31-30"><a href="#cb31-30" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="fu">output</span><span class="kw">:</span><span class="at"> libhelix_core.a</span></span>
+<span id="cb31-31"><a href="#cb31-31" aria-hidden="true" tabindex="-1"></a><span class="co">          # Desktop</span></span>
+<span id="cb31-32"><a href="#cb31-32" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="kw">-</span><span class="at"> </span><span class="fu">target</span><span class="kw">:</span><span class="at"> x86_64-pc-windows-msvc</span></span>
+<span id="cb31-33"><a href="#cb31-33" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="fu">os</span><span class="kw">:</span><span class="at"> windows-latest</span></span>
+<span id="cb31-34"><a href="#cb31-34" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="fu">use_cross</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span></span>
+<span id="cb31-35"><a href="#cb31-35" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="fu">output</span><span class="kw">:</span><span class="at"> helix_core.dll</span></span>
+<span id="cb31-36"><a href="#cb31-36" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="kw">-</span><span class="at"> </span><span class="fu">target</span><span class="kw">:</span><span class="at"> x86_64-apple-darwin</span></span>
+<span id="cb31-37"><a href="#cb31-37" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="fu">os</span><span class="kw">:</span><span class="at"> macos-latest</span></span>
+<span id="cb31-38"><a href="#cb31-38" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="fu">use_cross</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span></span>
+<span id="cb31-39"><a href="#cb31-39" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="fu">output</span><span class="kw">:</span><span class="at"> libhelix_core.dylib</span></span>
+<span id="cb31-40"><a href="#cb31-40" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="kw">-</span><span class="at"> </span><span class="fu">target</span><span class="kw">:</span><span class="at"> x86_64-unknown-linux-gnu</span></span>
+<span id="cb31-41"><a href="#cb31-41" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="fu">os</span><span class="kw">:</span><span class="at"> ubuntu-latest</span></span>
+<span id="cb31-42"><a href="#cb31-42" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="fu">use_cross</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span></span>
+<span id="cb31-43"><a href="#cb31-43" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="fu">output</span><span class="kw">:</span><span class="at"> libhelix_core.so</span></span>
+<span id="cb31-44"><a href="#cb31-44" aria-hidden="true" tabindex="-1"></a><span class="co">          # Web</span></span>
+<span id="cb31-45"><a href="#cb31-45" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="kw">-</span><span class="at"> </span><span class="fu">target</span><span class="kw">:</span><span class="at"> wasm32-unknown-unknown</span></span>
+<span id="cb31-46"><a href="#cb31-46" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="fu">os</span><span class="kw">:</span><span class="at"> ubuntu-latest</span></span>
+<span id="cb31-47"><a href="#cb31-47" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="fu">use_cross</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span></span>
+<span id="cb31-48"><a href="#cb31-48" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="fu">output</span><span class="kw">:</span><span class="at"> helix_core.wasm</span></span>
+<span id="cb31-49"><a href="#cb31-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-50"><a href="#cb31-50" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">steps</span><span class="kw">:</span></span>
+<span id="cb31-51"><a href="#cb31-51" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> actions/checkout@v4</span></span>
+<span id="cb31-52"><a href="#cb31-52" aria-hidden="true" tabindex="-1"></a><span class="at">      </span></span>
+<span id="cb31-53"><a href="#cb31-53" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Install Rust</span></span>
+<span id="cb31-54"><a href="#cb31-54" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> dtolnay/rust-toolchain@stable</span></span>
+<span id="cb31-55"><a href="#cb31-55" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">with</span><span class="kw">:</span></span>
+<span id="cb31-56"><a href="#cb31-56" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">targets</span><span class="kw">:</span><span class="at"> ${{ matrix.platform.target }}</span></span>
+<span id="cb31-57"><a href="#cb31-57" aria-hidden="true" tabindex="-1"></a><span class="at">      </span></span>
+<span id="cb31-58"><a href="#cb31-58" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Install cross</span></span>
+<span id="cb31-59"><a href="#cb31-59" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">if</span><span class="kw">:</span><span class="at"> matrix.platform.use_cross</span></span>
+<span id="cb31-60"><a href="#cb31-60" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">run</span><span class="kw">:</span><span class="at"> cargo install cross --git https://github.com/cross-rs/cross</span></span>
+<span id="cb31-61"><a href="#cb31-61" aria-hidden="true" tabindex="-1"></a><span class="at">      </span></span>
+<span id="cb31-62"><a href="#cb31-62" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Build (cross)</span></span>
+<span id="cb31-63"><a href="#cb31-63" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">if</span><span class="kw">:</span><span class="at"> matrix.platform.use_cross</span></span>
+<span id="cb31-64"><a href="#cb31-64" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">run</span><span class="kw">:</span><span class="at"> cross build --release --target ${{ matrix.platform.target }}</span></span>
+<span id="cb31-65"><a href="#cb31-65" aria-hidden="true" tabindex="-1"></a><span class="at">      </span></span>
+<span id="cb31-66"><a href="#cb31-66" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Build (native)</span></span>
+<span id="cb31-67"><a href="#cb31-67" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">if</span><span class="kw">:</span><span class="at"> ${{ !matrix.platform.use_cross }}</span></span>
+<span id="cb31-68"><a href="#cb31-68" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">run</span><span class="kw">:</span><span class="at"> cargo build --release --target ${{ matrix.platform.target }}</span></span>
+<span id="cb31-69"><a href="#cb31-69" aria-hidden="true" tabindex="-1"></a><span class="at">      </span></span>
+<span id="cb31-70"><a href="#cb31-70" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Upload artifacts</span></span>
+<span id="cb31-71"><a href="#cb31-71" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> actions/upload-artifact@v4</span></span>
+<span id="cb31-72"><a href="#cb31-72" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">with</span><span class="kw">:</span></span>
+<span id="cb31-73"><a href="#cb31-73" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">name</span><span class="kw">:</span><span class="at"> helix-core-${{ matrix.platform.target }}</span></span>
+<span id="cb31-74"><a href="#cb31-74" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">path</span><span class="kw">:</span><span class="at"> target/${{ matrix.platform.target }}/release/${{ matrix.platform.output }}</span></span></code></pre></div>
+<h3 id="102-cargo-ndk-for-android">10.2 Cargo NDK for Android</h3>
+<div class="sourceCode" id="cb32"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Build all Android ABIs</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> ndk <span class="at">-t</span> aarch64-linux-android <span class="at">-t</span> armv7-linux-androideabi <span class="dt">\</span></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">-t</span> x86_64-linux-android <span class="at">-o</span> ../android/app/src/main/jniLibs build <span class="at">--release</span></span></code></pre></div>
+<h3 id="103-uniffi-binding-generation-in-ci">10.3 UniFFI Binding
+Generation in CI</h3>
+<div class="sourceCode" id="cb33"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Generate bindings for all languages</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> run <span class="at">--bin</span> uniffi-bindgen generate <span class="dt">\</span></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--library</span> target/release/libhelix_core.dylib <span class="dt">\</span></span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--language</span> kotlin <span class="at">--out-dir</span> bindings/android/</span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> run <span class="at">--bin</span> uniffi-bindgen generate <span class="dt">\</span></span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--library</span> target/release/libhelix_core.dylib <span class="dt">\</span></span>
+<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--language</span> swift <span class="at">--out-dir</span> bindings/ios/</span>
+<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-10"><a href="#cb33-10" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> run <span class="at">--bin</span> uniffi-bindgen generate <span class="dt">\</span></span>
+<span id="cb33-11"><a href="#cb33-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">--library</span> target/release/libhelix_core.dylib <span class="dt">\</span></span>
+<span id="cb33-12"><a href="#cb33-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">--language</span> python <span class="at">--out-dir</span> bindings/desktop/</span></code></pre></div>
+<h3 id="104-cmake-integration">10.4 CMake Integration</h3>
+<p>For projects requiring CMake integration (e.g., C++ VPN clients):</p>
+<div class="sourceCode" id="cb34"><pre class="sourceCode cmake"><code class="sourceCode cmake"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Use corrosion for CMake + Rust integration</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a><span class="kw">include</span>(<span class="im">FetchContent</span>)</span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a><span class="fu">FetchContent_Declare</span>(</span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>    Corrosion</span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>    <span class="ot">GIT_REPOSITORY</span> https://github.com/corrosion-rs/corrosion.git</span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a>    <span class="ot">GIT_TAG</span> v0.4</span>
+<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb34-8"><a href="#cb34-8" aria-hidden="true" tabindex="-1"></a><span class="fu">FetchContent_MakeAvailable</span>(Corrosion)</span>
+<span id="cb34-9"><a href="#cb34-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-10"><a href="#cb34-10" aria-hidden="true" tabindex="-1"></a><span class="fu">corrosion_import_crate</span>(MANIFEST_PATH rust/helix-core/Cargo.toml)</span>
+<span id="cb34-11"><a href="#cb34-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-12"><a href="#cb34-12" aria-hidden="true" tabindex="-1"></a><span class="kw">target_link_libraries</span>(<span class="bn">helix-vpn-app</span> <span class="ot">PRIVATE</span> helix_core)</span></code></pre></div>
+<h3 id="105-flutter_rust_bridge-integration">10.5 flutter_rust_bridge
+Integration</h3>
+<div class="sourceCode" id="cb35"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="co"># pubspec.yaml</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dependencies</span><span class="kw">:</span></span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">flutter_rust_bridge</span><span class="kw">:</span><span class="at"> ^2.0</span></span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a><span class="fu">dev_dependencies</span><span class="kw">:</span></span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">flutter_rust_bridge_codegen</span><span class="kw">:</span><span class="at"> ^2.0</span></span></code></pre></div>
+<div class="sourceCode" id="cb36"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Generate bindings</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a><span class="ex">flutter_rust_bridge_codegen</span> generate</span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Build all platforms</span></span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a><span class="ex">flutter_rust_bridge_codegen</span> build-web     <span class="co"># WASM</span></span>
+<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a><span class="ex">flutter_rust_bridge_codegen</span> build-android <span class="co"># .so</span></span>
+<span id="cb36-7"><a href="#cb36-7" aria-hidden="true" tabindex="-1"></a><span class="ex">flutter_rust_bridge_codegen</span> build-ios     <span class="co"># .a / XCFramework</span></span></code></pre></div>
+<hr />
+<h2 id="11-binary-size-optimization">11. Binary Size Optimization</h2>
+<h3 id="111-optimization-configuration">11.1 Optimization
+Configuration</h3>
+<p><strong>Recommended <code>Cargo.toml</code> profile for
+mobile</strong> [^382^] [^383^] [^384^]:</p>
+<div class="sourceCode" id="cb37"><pre class="sourceCode toml"><code class="sourceCode toml"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="kw">[profile.release]</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a><span class="dt">opt-level</span> <span class="op">=</span> <span class="st">&quot;z&quot;</span>        <span class="co"># Optimize for size (or &quot;s&quot; for size+speed balance)</span></span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a><span class="dt">lto</span> <span class="op">=</span> <span class="cn">true</span>             <span class="co"># Enable Link Time Optimization</span></span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a><span class="dt">codegen-units</span> <span class="op">=</span> <span class="dv">1</span>      <span class="co"># Single codegen unit for max optimization</span></span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a><span class="dt">panic</span> <span class="op">=</span> <span class="st">&quot;abort&quot;</span>        <span class="co"># Remove unwinding code</span></span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a><span class="dt">strip</span> <span class="op">=</span> <span class="st">&quot;symbols&quot;</span>      <span class="co"># Remove all symbol information</span></span>
+<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-8"><a href="#cb37-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Additional Rustflags for aggressive size reduction</span></span>
+<span id="cb37-9"><a href="#cb37-9" aria-hidden="true" tabindex="-1"></a><span class="co"># RUSTFLAGS=&quot;-Zlocation-detail=none&quot;</span></span></code></pre></div>
+<h3 id="112-size-impact-of-each-optimization">11.2 Size Impact of Each
+Optimization</h3>
+<p>Based on real-world measurements [^383^] [^380^]:</p>
+<table>
+<thead>
+<tr>
+<th>Optimization</th>
+<th>Binary Size Impact</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Baseline</td>
+<td>18 MB</td>
+</tr>
+<tr>
+<td><code>strip = true</code></td>
+<td>-4 MB (22% reduction)</td>
+</tr>
+<tr>
+<td><code>opt-level = &quot;z&quot;</code></td>
+<td>-2 MB (additional 11%)</td>
+</tr>
+<tr>
+<td><code>lto = true</code></td>
+<td>-3.9 MB (additional 24%)</td>
+</tr>
+<tr>
+<td><code>codegen-units = 1</code></td>
+<td>-0.2 MB (additional 2%)</td>
+</tr>
+<tr>
+<td><code>panic = &quot;abort&quot;</code></td>
+<td>-0.9 MB (additional 7%)</td>
+</tr>
+<tr>
+<td><strong>Combined</strong></td>
+<td><strong>7 MB (61% total reduction)</strong></td>
+</tr>
+</tbody>
+</table>
+<h3 id="113-advanced-build-std-for-standard-library-optimization">11.3
+Advanced: build-std for Standard Library Optimization</h3>
+<p>For maximum size reduction, build the standard library from source
+[^387^]:</p>
+<div class="sourceCode" id="cb38"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="ex">rustup</span> toolchain install nightly</span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a><span class="ex">rustup</span> component add rust-src <span class="at">--toolchain</span> nightly</span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a><span class="va">RUSTFLAGS</span><span class="op">=</span><span class="st">&quot;-Zlocation-detail=none -Zfmt-debug=none&quot;</span> <span class="dt">\</span></span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> +nightly build <span class="dt">\</span></span>
+<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">-Z</span> build-std=std,panic_abort <span class="dt">\</span></span>
+<span id="cb38-7"><a href="#cb38-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">-Z</span> build-std-features=<span class="st">&quot;optimize_for_size&quot;</span> <span class="dt">\</span></span>
+<span id="cb38-8"><a href="#cb38-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--target</span> aarch64-apple-ios <span class="at">--release</span></span></code></pre></div>
+<p><strong>Additional 15% size reduction</strong> by removing unused
+stdlib components and unwinding code [^380^].</p>
+<h3 id="114-additional-techniques">11.4 Additional Techniques</h3>
+<table>
+<thead>
+<tr>
+<th>Technique</th>
+<th>Expected Savings</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Use <code>ring</code> instead of OpenSSL</td>
+<td>4-6 MB</td>
+<td>[^385^]</td>
+</tr>
+<tr>
+<td><code>wee_alloc</code> (WASM)</td>
+<td>~10 KB</td>
+<td>Smaller allocator for WASM</td>
+</tr>
+<tr>
+<td><code>panic_immediate_abort</code> (unstable)</td>
+<td>Additional ~20 KB</td>
+<td>Removes panic strings</td>
+</tr>
+<tr>
+<td>Dead code stripping with LTO</td>
+<td>Up to 90% of unused code</td>
+<td>[^380^]</td>
+</tr>
+<tr>
+<td><code>cargo-bloat</code> analysis</td>
+<td>Identify size hotspots</td>
+<td><code>cargo install cargo-bloat</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="115-upx-compression">11.5 UPX Compression</h3>
+<p>For desktop platforms, UPX can further compress binaries:</p>
+<div class="sourceCode" id="cb39"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="ex">upx</span> <span class="at">--best</span> <span class="at">--lzma</span> target/release/helix_daemon</span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Typically 30-50% additional compression</span></span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Not recommended for mobile (runtime decompression overhead)</span></span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Some platforms may flag UPX as suspicious</span></span></code></pre></div>
+<hr />
+<h2 id="12-harmonyos-and-aurora-os-support">12. HarmonyOS and Aurora OS
+Support</h2>
+<h3 id="121-harmonyos-openharmony">12.1 HarmonyOS (OpenHarmony)</h3>
+<p>Rust has <strong>Tier 2 support</strong> for OpenHarmony targets
+[^359^]:</p>
+<table>
+<thead>
+<tr>
+<th>Target Triple</th>
+<th>Architecture</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>aarch64-unknown-linux-ohos</code></td>
+<td>ARM64</td>
+<td>Tier 2</td>
+</tr>
+<tr>
+<td><code>armv7-unknown-linux-ohos</code></td>
+<td>ARMv7</td>
+<td>Tier 2</td>
+</tr>
+<tr>
+<td><code>x86_64-unknown-linux-ohos</code></td>
+<td>x86_64</td>
+<td>Tier 2</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Setup requirements</strong> [^359^]:</p>
+<ol type="1">
+<li>Download OpenHarmony SDK (Public SDK package)</li>
+<li>Create wrapper scripts for SDK&#39;s Clang compiler</li>
+<li>Configure Cargo with target-specific linker</li>
+</ol>
+<div class="sourceCode" id="cb40"><pre class="sourceCode toml"><code class="sourceCode toml"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="co"># .cargo/config.toml</span></span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a><span class="kw">[target.aarch64-unknown-linux-ohos]</span></span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a><span class="dt">linker</span> <span class="op">=</span> <span class="st">&quot;/path/to/aarch64-unknown-linux-ohos-clang.sh&quot;</span></span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a><span class="dt">ar</span> <span class="op">=</span> <span class="st">&quot;/path/to/ohos-sdk/llvm/bin/llvm-ar&quot;</span></span></code></pre></div>
+<p><strong>Key considerations</strong> [^358^]:</p>
+<ul>
+<li>Cross-compiling pure Rust code generally works fine</li>
+<li>Some libc functions are purposely not available (security
+design)</li>
+<li>C code compilation requires SDK toolchain wrapper scripts</li>
+<li>Tauri framework has been ported to OpenHarmony [^355^]</li>
+</ul>
+<h3 id="122-aurora-os-sailfish-os">12.2 Aurora OS (Sailfish OS)</h3>
+<p>Aurora OS is a Russian mobile OS based on Sailfish OS (Linux). Rust
+support:</p>
+<ul>
+<li>Uses standard Linux targets (<code>aarch64-unknown-linux-gnu</code>,
+<code>armv7-unknown-linux-gnueabihf</code>)</li>
+<li>Sailfish OS SDK includes cross-compilation toolchain</li>
+<li>Qt-based UI framework; Rust integration via C FFI or Qt&#39;s C++
+bindings</li>
+<li>No special target triple needed — treat as standard Linux ARM</li>
+</ul>
+<h3 id="123-estimated-code-reuse-for-these-platforms">12.3 Estimated
+Code Reuse for These Platforms</h3>
+<table>
+<thead>
+<tr>
+<th>Platform</th>
+<th>Rust Target</th>
+<th>Code Reuse</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>HarmonyOS</td>
+<td><code>aarch64-unknown-linux-ohos</code></td>
+<td>65-75%</td>
+<td>Standard Rust, some libc limitations</td>
+</tr>
+<tr>
+<td>Aurora OS</td>
+<td><code>aarch64-unknown-linux-gnu</code></td>
+<td>70-80%</td>
+<td>Standard Linux target</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="13-recommended-architecture-for-helix-vpn">13. Recommended
+Architecture for Helix VPN</h2>
+<h3 id="131-high-level-architecture">13.1 High-Level Architecture</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────────┐
+│                        PLATFORM UI LAYER                             │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────────────────┐ │
+│  │  iOS     │  │ Android  │  │ Desktop  │  │  Web/Extension       │ │
+│  │  (Swift) │  │ (Kotlin) │  │ (Tauri/  │  │  (WASM + Native      │ │
+│  │          │  │          │  │  Flutter)│  │   Messaging)         │ │
+│  └────┬─────┘  └────┬─────┘  └────┬─────┘  └──────────┬───────────┘ │
+│       │             │             │                    │             │
+│       │ UniFFI      │ UniFFI/JNI  │ flutter_rust_      │ wasm-       │
+│       │ (Swift)     │ (Kotlin)    │ bridge / FFI       │ bindgen     │
+├───────┴─────────────┴─────────────┴────────────────────┴───────────┤
+│                      BINDING GENERATION LAYER                        │
+│  ┌───────────────────────────────────────────────────────────────┐  │
+│  │  UniFFI (proc-macros / UDL)                                   │  │
+│  │  ├── Kotlin bindings for Android                              │  │
+│  │  ├── Swift bindings for iOS                                   │  │
+│  │  └── Python bindings for Desktop scripting                    │  │
+│  └───────────────────────────────────────────────────────────────┘  │
+├─────────────────────────────────────────────────────────────────────┤
+│                       RUST SHARED CORE (helix-core)                  │
+│  ┌───────────────────────────────────────────────────────────────┐  │
+│  │  helix-core-api                                                │  │
+│  │  ├── Connection management (connect/disconnect/status)        │  │
+│  │  ├── Server list &amp; selection (smart routing, latency tests)   │  │
+│  │  ├── Configuration (protocol, encryption, kill switch)        │  │
+│  │  ├── Account/auth (API tokens, subscription status)           │  │
+│  │  └── Events (state changes, statistics, errors)               │  │
+│  └───────────────────────────────────────────────────────────────┘  │
+│  ┌───────────────────────────────────────────────────────────────┐  │
+│  │  helix-vpn-engine (generic, protocol-agnostic)                 │  │
+│  │  ├── Tunnel abstraction (TUN interface management)            │  │
+│  │  ├── Routing (split tunneling, DNS configuration)             │  │
+│  │  ├── Firewall (kill switch, leak protection)                  │  │
+│  │  └── Protocol drivers (WireGuard, OpenVPN future)             │  │
+│  └───────────────────────────────────────────────────────────────┘  │
+│  ┌───────────────────────────────────────────────────────────────┐  │
+│  │  helix-wireguard (based on boringtun/gotatun)                  │  │
+│  │  ├── Noise protocol handshake                                 │  │
+│  │  ├── ChaCha20-Poly1305 encryption                             │  │
+│  │  ├── Key rotation &amp; keepalive                                 │  │
+│  │  └── Packet encapsulation/decapsulation                       │  │
+│  └───────────────────────────────────────────────────────────────┘  │
+│  ┌───────────────────────────────────────────────────────────────┐  │
+│  │  helix-platform-abstraction                                    │  │
+│  │  ├── Platform-specific TUN creation (tun-rs)                  │  │
+│  │  ├── Route management (per-OS)                                │  │
+│  │  ├── DNS setting (per-OS)                                     │  │
+│  │  └── Firewall rules (per-OS)                                  │  │
+│  └───────────────────────────────────────────────────────────────┘  │
+├─────────────────────────────────────────────────────────────────────┤
+│                       INFRASTRUCTURE CRATES                          │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────────────────┐ │
+│  │ tokio    │  │ rustls   │  │ reqwest  │  │ serde/json           │ │
+│  │ (async)  │  │ (TLS)    │  │ (HTTP)   │  │ (serialization)      │ │
+│  └──────────┘  └──────────┘  └──────────┘  └──────────────────────┘ │
+└─────────────────────────────────────────────────────────────────────┘</code></pre>
+<h3 id="132-module-responsibilities">13.2 Module Responsibilities</h3>
+<table>
+<thead>
+<tr>
+<th>Crate</th>
+<th>Purpose</th>
+<th>Platform-Specific?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>helix-core-api</code></td>
+<td>Public API surface for all platforms</td>
+<td>No</td>
+</tr>
+<tr>
+<td><code>helix-vpn-engine</code></td>
+<td>Generic VPN tunnel management</td>
+<td>Minimal (abstracted)</td>
+</tr>
+<tr>
+<td><code>helix-wireguard</code></td>
+<td>WireGuard protocol implementation</td>
+<td>No</td>
+</tr>
+<tr>
+<td><code>helix-platform-macros</code></td>
+<td>Platform-specific implementations</td>
+<td>Yes (cfg-gated)</td>
+</tr>
+<tr>
+<td><code>helix-crypto</code></td>
+<td>Cryptographic utilities wrapper</td>
+<td>No</td>
+</tr>
+<tr>
+<td><code>helix-network</code></td>
+<td>HTTP/API client, latency testing</td>
+<td>No</td>
+</tr>
+</tbody>
+</table>
+<h3 id="133-platform-abstraction-strategy">13.3 Platform Abstraction
+Strategy</h3>
+<p>Use Rust&#39;s <code>cfg</code> attributes for platform-specific
+code:</p>
+<div class="sourceCode" id="cb42"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix-platform-abstraction/src/tun.rs</span></span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>cfg<span class="at">(</span>target_os <span class="op">=</span> <span class="st">&quot;android&quot;</span><span class="at">)]</span></span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">use</span> <span class="pp">android::</span>create_tun<span class="op">;</span></span>
+<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>cfg<span class="at">(</span>target_os <span class="op">=</span> <span class="st">&quot;ios&quot;</span><span class="at">)]</span></span>
+<span id="cb42-6"><a href="#cb42-6" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">use</span> <span class="pp">ios::</span>create_tun<span class="op">;</span></span>
+<span id="cb42-7"><a href="#cb42-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-8"><a href="#cb42-8" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>cfg<span class="at">(</span>target_os <span class="op">=</span> <span class="st">&quot;linux&quot;</span><span class="at">)]</span></span>
+<span id="cb42-9"><a href="#cb42-9" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">use</span> <span class="pp">linux::</span>create_tun<span class="op">;</span></span>
+<span id="cb42-10"><a href="#cb42-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-11"><a href="#cb42-11" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>cfg<span class="at">(</span>target_os <span class="op">=</span> <span class="st">&quot;macos&quot;</span><span class="at">)]</span></span>
+<span id="cb42-12"><a href="#cb42-12" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">use</span> <span class="pp">macos::</span>create_tun<span class="op">;</span></span>
+<span id="cb42-13"><a href="#cb42-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-14"><a href="#cb42-14" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>cfg<span class="at">(</span>target_os <span class="op">=</span> <span class="st">&quot;windows&quot;</span><span class="at">)]</span></span>
+<span id="cb42-15"><a href="#cb42-15" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">use</span> <span class="pp">windows::</span>create_tun<span class="op">;</span></span>
+<span id="cb42-16"><a href="#cb42-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-17"><a href="#cb42-17" aria-hidden="true" tabindex="-1"></a><span class="co">// Generic trait</span></span>
+<span id="cb42-18"><a href="#cb42-18" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">trait</span> TunDevice<span class="op">:</span> <span class="bu">Send</span> <span class="op">+</span> <span class="bu">Sync</span> <span class="op">{</span></span>
+<span id="cb42-19"><a href="#cb42-19" aria-hidden="true" tabindex="-1"></a>    <span class="kw">async</span> <span class="kw">fn</span> read_packet(<span class="op">&amp;</span><span class="kw">self</span><span class="op">,</span> buf<span class="op">:</span> <span class="op">&amp;</span><span class="kw">mut</span> [<span class="dt">u8</span>]) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span><span class="dt">usize</span><span class="op">&gt;;</span></span>
+<span id="cb42-20"><a href="#cb42-20" aria-hidden="true" tabindex="-1"></a>    <span class="kw">async</span> <span class="kw">fn</span> write_packet(<span class="op">&amp;</span><span class="kw">self</span><span class="op">,</span> packet<span class="op">:</span> <span class="op">&amp;</span>[<span class="dt">u8</span>]) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">&gt;;</span></span>
+<span id="cb42-21"><a href="#cb42-21" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> set_mtu(<span class="op">&amp;</span><span class="kw">self</span><span class="op">,</span> mtu<span class="op">:</span> <span class="dt">u16</span>) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">&gt;;</span></span>
+<span id="cb42-22"><a href="#cb42-22" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="134-recommended-binding-strategy-per-platform">13.4 Recommended
+Binding Strategy per Platform</h3>
+<table>
+<thead>
+<tr>
+<th>Platform</th>
+<th>Binding Tool</th>
+<th>Output Artifact</th>
+<th>Integration</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>iOS</strong></td>
+<td>UniFFI + proc-macros</td>
+<td>XCFramework</td>
+<td>Swift Package or direct Xcode import</td>
+</tr>
+<tr>
+<td><strong>Android</strong></td>
+<td>UniFFI + cargo-ndk</td>
+<td><code>.so</code> files</td>
+<td>Gradle with Cargo NDK Plugin</td>
+</tr>
+<tr>
+<td><strong>macOS</strong></td>
+<td>UniFFI / Tauri commands</td>
+<td><code>.dylib</code> / static</td>
+<td>Swift Package or Tauri</td>
+</tr>
+<tr>
+<td><strong>Windows</strong></td>
+<td>UniFFI / Tauri commands</td>
+<td><code>.dll</code></td>
+<td>Direct load or Tauri</td>
+</tr>
+<tr>
+<td><strong>Linux</strong></td>
+<td>UniFFI / Tauri / direct</td>
+<td><code>.so</code></td>
+<td>Package manager or Tauri</td>
+</tr>
+<tr>
+<td><strong>HarmonyOS</strong></td>
+<td>UniFFI (3rd party)</td>
+<td><code>.so</code></td>
+<td>Native NAPI or JNI bridge</td>
+</tr>
+<tr>
+<td><strong>Aurora OS</strong></td>
+<td>Manual FFI</td>
+<td><code>.so</code></td>
+<td>Qt C++ FFI bridge</td>
+</tr>
+<tr>
+<td><strong>Web</strong></td>
+<td>wasm-bindgen</td>
+<td><code>.wasm</code> + <code>.js</code></td>
+<td>Browser extension or web UI</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="14-code-reuse-estimates">14. Code Reuse Estimates</h2>
+<h3 id="141-per-platform-estimates">14.1 Per-Platform Estimates</h3>
+<p>Based on analysis of Mullvad, Signal, and BoringTun
+architectures:</p>
+<table>
+<thead>
+<tr>
+<th>Platform</th>
+<th>Binding Layer</th>
+<th>Platform-Specific Code</th>
+<th>Rust Core Reuse</th>
+<th>Total Reuse</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>macOS</strong></td>
+<td>~5%</td>
+<td>~10% (TUN, routes, firewall)</td>
+<td>~85%</td>
+<td><strong>85%</strong></td>
+</tr>
+<tr>
+<td><strong>Windows</strong></td>
+<td>~5%</td>
+<td>~15% (WFP firewall, TUN)</td>
+<td>~80%</td>
+<td><strong>80%</strong></td>
+</tr>
+<tr>
+<td><strong>Linux</strong></td>
+<td>~5%</td>
+<td>~10% (netlink, nftables)</td>
+<td>~85%</td>
+<td><strong>85%</strong></td>
+</tr>
+<tr>
+<td><strong>Android</strong></td>
+<td>~8% (UniFFI/JNI)</td>
+<td>~20% (VpnService, routes)</td>
+<td>~72%</td>
+<td><strong>72%</strong></td>
+</tr>
+<tr>
+<td><strong>iOS</strong></td>
+<td>~8% (UniFFI/Swift)</td>
+<td>~20% (NEPacketTunnelProvider)</td>
+<td>~72%</td>
+<td><strong>72%</strong></td>
+</tr>
+<tr>
+<td><strong>HarmonyOS</strong></td>
+<td>~10%</td>
+<td>~20%</td>
+<td>~70%</td>
+<td><strong>70%</strong></td>
+</tr>
+<tr>
+<td><strong>Aurora OS</strong></td>
+<td>~10%</td>
+<td>~15%</td>
+<td>~75%</td>
+<td><strong>75%</strong></td>
+</tr>
+<tr>
+<td><strong>Web (WASM)</strong></td>
+<td>~15% (JS glue)</td>
+<td>~40% (no raw networking)</td>
+<td>~45%</td>
+<td><strong>45%</strong></td>
+</tr>
+</tbody>
+</table>
+<h3 id="142-what-counts-as-platform-specific">14.2 What Counts as
+&quot;Platform-Specific&quot;</h3>
+<p><strong>Shared across all platforms (~70-85% of
+codebase)</strong>:</p>
+<ul>
+<li>WireGuard protocol implementation (Noise handshake, crypto)</li>
+<li>Connection state machine</li>
+<li>Server list management and selection logic</li>
+<li>API client for VPN backend communication</li>
+<li>Configuration parsing and validation</li>
+<li>Statistics and logging</li>
+<li>Split tunneling rules (logic, not enforcement)</li>
+</ul>
+<p><strong>Platform-specific per-platform (~15-30%)</strong>:</p>
+<ul>
+<li>TUN interface creation and configuration</li>
+<li>Routing table manipulation</li>
+<li>DNS settings modification</li>
+<li>Firewall rules (kill switch, leak protection)</li>
+<li>OS notification integration</li>
+<li>UI bindings layer</li>
+</ul>
+<p><strong>Web-specific limitations (~55% not reusable)</strong>:</p>
+<ul>
+<li>No TUN interface access</li>
+<li>No raw socket access</li>
+<li>Crypto works in WASM (25% of core)</li>
+<li>Must use proxy-based or WebRTC approach</li>
+<li>Native messaging host for actual VPN functionality</li>
+</ul>
+<h3 id="143-comparison-with-industry-benchmarks">14.3 Comparison with
+Industry Benchmarks</h3>
+<table>
+<thead>
+<tr>
+<th>Project</th>
+<th>Reported Code Reuse</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Mullvad (desktop)</td>
+<td>~85%</td>
+<td>Shared daemon + Electron GUI</td>
+</tr>
+<tr>
+<td>Mullvad (Android)</td>
+<td>~70%</td>
+<td>Same Rust core, Kotlin UI</td>
+</tr>
+<tr>
+<td>Signal (all platforms)</td>
+<td>~80%</td>
+<td>Manual FFI bridges</td>
+</tr>
+<tr>
+<td>BoringTun (library)</td>
+<td>~95%</td>
+<td>Protocol only, no tunnel stack</td>
+</tr>
+<tr>
+<td><strong>Helix VPN (target)</strong></td>
+<td><strong>75-85%</strong></td>
+<td>With UniFFI auto-generated bindings</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="key-recommendations">Key Recommendations</h2>
+<h3 id="1-adopt-uniffi-as-primary-binding-generator">1. Adopt UniFFI as
+Primary Binding Generator</h3>
+<p>Use UniFFI proc-macros for iOS (Swift) and Android (Kotlin) bindings.
+It&#39;s production-proven at Mozilla and eliminates handwritten FFI
+boilerplate [^338^] [^340^].</p>
+<h3 id="2-use-tokio-rs-runtime-pattern">2. Use tokio-rs Runtime
+Pattern</h3>
+<p>Create a single shared Tokio Runtime using <code>LazyLock</code> for
+all async operations across the FFI boundary. Never create runtimes
+per-call [^329^].</p>
+<h3 id="3-forkdepend-on-boringtun-for-wireguard">3. Fork/depend on
+boringtun for WireGuard</h3>
+<p>Use the <code>boringtun</code> crate (or Mullvad&#39;s
+<code>gotatun</code> fork) as the WireGuard protocol foundation. It&#39;s
+deployed on millions of devices and provides portable, safe crypto
+[^49^] [^363^].</p>
+<h3 id="4-use-tun-rs-for-cross-platform-tun">4. Use tun-rs for
+Cross-Platform TUN</h3>
+<p>The <code>tun-rs</code> crate supports all required platforms
+including OpenHarmony, with both sync and async APIs [^364^].</p>
+<h3 id="5-implement-generic-vpn-engine-layer">5. Implement Generic VPN
+Engine Layer</h3>
+<p>Follow Mullvad&#39;s talpid pattern: create a generic VPN engine that
+knows nothing about Helix-specific APIs. This maximizes portability and
+testability [^23^].</p>
+<h3 id="6-binary-size-optimization">6. Binary Size Optimization</h3>
+<p>Apply all size optimizations: <code>opt-level=&quot;z&quot;</code>,
+<code>lto=true</code>, <code>codegen-units=1</code>,
+<code>panic=&quot;abort&quot;</code>, <code>strip=true</code>. Consider
+<code>build-std</code> with <code>optimize_for_size</code> for mobile
+[^382^] [^387^].</p>
+<h3 id="7-cicd-with-github-actions--cross-rs">7. CI/CD with GitHub
+Actions + cross-rs</h3>
+<p>Use <code>cross-rs</code> for ARM/Android builds and native runners
+for desktop. Cache <code>target/</code> directories between builds
+[^386^].</p>
+<h3 id="8-web-strategy-wasm-for-crypto--native-host">8. Web Strategy:
+WASM for Crypto + Native Host</h3>
+<p>For browser extension, compile crypto to WASM but use native
+messaging for actual VPN tunnel. Do not attempt full VPN in WASM due to
+sandboxing [^353^].</p>
+<hr />
+<h2 id="references">References</h2>
+<table>
+<thead>
+<tr>
+<th>Citation</th>
+<th>Source</th>
+<th>URL</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>[^23^]</td>
+<td>Mullvad Architecture</td>
+<td>github.com/mullvad/mullvadvpn-app/blob/main/docs/architecture.md</td>
+</tr>
+<tr>
+<td>[^49^]</td>
+<td>BoringTun GitHub</td>
+<td>github.com/cloudflare/boringtun</td>
+</tr>
+<tr>
+<td>[^59^]</td>
+<td>Cloudflare BoringTun Blog</td>
+<td>blog.cloudflare.com/boringtun-userspace-wireguard-rust/</td>
+</tr>
+<tr>
+<td>[^61^]</td>
+<td>GotaTun Announcement</td>
+<td>phoronix.com/news/GotaTun-Rust-WireGuard-OSS</td>
+</tr>
+<tr>
+<td>[^82^]</td>
+<td>Rust iOS Multiplatform Guide</td>
+<td>mobilesystemdesign.substack.com</td>
+</tr>
+<tr>
+<td>[^155^]</td>
+<td>Mullvad GitHub</td>
+<td>github.com/mullvad/mullvadvpn-app</td>
+</tr>
+<tr>
+<td>[^329^]</td>
+<td>Tokio Runtime FFI</td>
+<td>stackoverflow.com/questions/68317698</td>
+</tr>
+<tr>
+<td>[^330^]</td>
+<td>async-ffi crate</td>
+<td>docs.rs/async-ffi</td>
+</tr>
+<tr>
+<td>[^331^]</td>
+<td>Safe FFI Bindings</td>
+<td>oneuptime.com/blog</td>
+</tr>
+<tr>
+<td>[^334^]</td>
+<td>UniFFI HN Discussion</td>
+<td>news.ycombinator.com/item?id=37071160</td>
+</tr>
+<tr>
+<td>[^336^]</td>
+<td>Mozilla UniFFI Blog</td>
+<td>blog.mozilla.org/data/2020/10/21/uniffi</td>
+</tr>
+<tr>
+<td>[^338^]</td>
+<td>UniFFI GitHub</td>
+<td>github.com/mozilla/uniffi-rs</td>
+</tr>
+<tr>
+<td>[^340^]</td>
+<td>UniFFI User Guide</td>
+<td>mozilla.github.io/uniffi-rs</td>
+</tr>
+<tr>
+<td>[^342^]</td>
+<td>Rust Platform Support</td>
+<td>doc.rust-lang.org/rustc/platform-support</td>
+</tr>
+<tr>
+<td>[^344^]</td>
+<td>Rust Android Guide</td>
+<td>chayanmistry.medium.com</td>
+</tr>
+<tr>
+<td>[^345^]</td>
+<td>Mozilla iOS Rust</td>
+<td>mozilla.github.io/firefox-browser-architecture</td>
+</tr>
+<tr>
+<td>[^346^]</td>
+<td>Cargo NDK Gradle</td>
+<td>github.com/willir/cargo-ndk-android-gradle</td>
+</tr>
+<tr>
+<td>[^348^]</td>
+<td>cargo-ndk</td>
+<td>internals.rust-lang.org</td>
+</tr>
+<tr>
+<td>[^349^]</td>
+<td>Glean iOS Blog</td>
+<td>blog.mozilla.org/data/2022/01/31</td>
+</tr>
+<tr>
+<td>[^353^]</td>
+<td>Rust in Browser</td>
+<td>towardsdatascience.com</td>
+</tr>
+<tr>
+<td>[^354^]</td>
+<td>Chrome Extension Rust+WASM</td>
+<td>dev.to/rimutaka</td>
+</tr>
+<tr>
+<td>[^355^]</td>
+<td>OpenHarmony + Rust</td>
+<td>eclipse.org/newsletter</td>
+</tr>
+<tr>
+<td>[^357^]</td>
+<td>Signal Rust Analysis</td>
+<td>kerkour.com/signal-app-rust</td>
+</tr>
+<tr>
+<td>[^359^]</td>
+<td>OpenHarmony Rust Target</td>
+<td>doc.rust-lang.org/rustc/platform-support/openharmony</td>
+</tr>
+<tr>
+<td>[^362^]</td>
+<td>libsignal GitHub</td>
+<td>github.com/signalapp/libsignal</td>
+</tr>
+<tr>
+<td>[^363^]</td>
+<td>GotaTun GitHub</td>
+<td>github.com/mullvad/gotatun</td>
+</tr>
+<tr>
+<td>[^364^]</td>
+<td>tun-rs crate</td>
+<td>docs.rs/tun-rs</td>
+</tr>
+<tr>
+<td>[^367^]</td>
+<td>Cross-compilation Guide</td>
+<td>medium.com/rust-rock</td>
+</tr>
+<tr>
+<td>[^379^]</td>
+<td>Rust + Flutter</td>
+<td>abibeh.medium.com</td>
+</tr>
+<tr>
+<td>[^380^]</td>
+<td>Binary Size Optimization</td>
+<td>blog.bitdrift.io</td>
+</tr>
+<tr>
+<td>[^382^]</td>
+<td>Rust Compilation Optimization</td>
+<td>dev.to/leapcell</td>
+</tr>
+<tr>
+<td>[^383^]</td>
+<td>Shrinking Rust Binary</td>
+<td>shane-o.dev</td>
+</tr>
+<tr>
+<td>[^385^]</td>
+<td>Reduce Rust Binary Size</td>
+<td>ospfranco.com</td>
+</tr>
+<tr>
+<td>[^386^]</td>
+<td>Rust CI/CD Pipeline</td>
+<td>ahmedjama.com</td>
+</tr>
+<tr>
+<td>[^387^]</td>
+<td>min-sized-rust</td>
+<td>github.com/johnthagen/min-sized-rust</td>
+</tr>
+<tr>
+<td>[^392^]</td>
+<td>flutter_rust_bridge</td>
+<td>github.com/fzyzcjy/flutter_rust_bridge</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<p><em>Research compiled: July 2025</em> <em>Sources: 15+ independent
+web searches across official documentation, GitHub repositories,
+technical blogs, and community discussions</em></p>
+</body>
+</html>

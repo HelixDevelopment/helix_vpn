@@ -1,7 +1,12 @@
 # Phase 2 (Parity + Reach) — Work Breakdown: phases → tasks → subtasks
 
-**Revision:** 1
-**Last modified:** 2026-06-25T00:00:00Z
+**Revision:** 2
+**Last modified:** 2026-07-04T12:00:00Z
+**Rev 2 (hardening pass):** Added §0 cross-reference to
+`v07-execution/subtask-deepening-p2.md` (closes REFINEMENT_NOTES.md R5 for
+Phase 2); added explicit cross-references from E27 (HA + multi-region) to
+`v06-deploy/ha-and-multiregion.md` and `v06-deploy/disaster-recovery.md`; added
+§4.1 phase-gate-failure / rollback protocol.
 
 > This document is the executable spine of HelixVPN **Phase 2 — Parity + Reach**:
 > the additive evolution that takes the Phase‑1 self‑hostable MVP to **full
@@ -29,6 +34,18 @@
 > **[04_P1]**, **[11_MST]**, **[07_GMI]**, **[10_KMI]**, **[SYNTHESIS]**, plus the
 > external‑fact anchors **[research-masque]**, **[research-hysteria2]**,
 > **[research-daita_test]**, **[research-pki_pq_nat]**.
+>
+> **PR-sized subtask breakdown (closes R5):** every task `HVPN-P2-NNN` below
+> decomposes one level further into falsifiable, PR-sized subtasks
+> `HVPN-P2-NNN.k` in the companion
+> [`v07-execution/subtask-deepening-p2.md`](v07-execution/subtask-deepening-p2.md).
+> **HA/DR cross-reference:** E27's fleet topology (§13/§17) is the WBS-level
+> view; the full operational HA + DR treatment (RTO/RPO budget, backup/restore
+> runbook, region-failover drill checklist, Patroni/CloudNativePG operational
+> detail) is owned by
+> [`v06-deploy/ha-and-multiregion.md`](v06-deploy/ha-and-multiregion.md) and
+> [`v06-deploy/disaster-recovery.md`](v06-deploy/disaster-recovery.md) — E27
+> items reference, never duplicate, that detail.
 
 ---
 
@@ -37,6 +54,7 @@
 - [0. How to read this WBS](#0-how-to-read-this-wbs)
 - [1. Required‑test‑types vocabulary (§11.4.169)](#1-requiredtesttypes-vocabulary-1114169)
 - [2. Phase‑2 Definition‑of‑Done — the 8 acceptance gates + 5 SLOs](#2-phase2-definitionofdone--the-8-acceptance-gates--5-slos)
+- [2.1 Phase-gate-failure / rollback protocol](#21-phase-gate-failure--rollback-protocol)
 - [3. Workable‑item schema (§11.4.93 DB‑ready)](#3-workableitem-schema-1114193-dbready)
 - [4. Epic map + dependency graph](#4-epic-map--dependency-graph)
 - [5. Phase‑2 entry condition (Phase 1 shipped)](#5-phase2-entry-condition-phase-1-shipped)
@@ -203,6 +221,16 @@ clients in **< 3 s** with zero policy/identity loss; existing direct‑P2P sessi
 survive untouched. *Evidence:* chaos run capture (region down → reconnect timing
 + post‑recovery state integrity) [04_P2 §8/§10.1].
 
+> **Numeric reconciliation note (found + RESOLVED during hardening pass,
+> 2026-07-04).** `SPECIFICATION.md` §8.2 previously stated the Phase‑2 exit
+> gate as "failover **< 30 s** with transport preserved" — a coarser
+> roadmap-level figure predating this WBS's detailed HA design (§13/§17:
+> Anycast + floating IPs + stateless coordinator re‑pin). This WBS's
+> **P2‑SLO3 (< 3 s, HVPN-P2-274)** is the refined, instrumented, measured
+> target. **`SPECIFICATION.md` §8.2 has already been updated in this same
+> hardening pass** to cite "< 3 s (P2‑SLO3)" — both documents now state the
+> identical number; no further action is needed on this item.
+
 ### SLOs (measured, alert‑on‑breach) — these ARE acceptance
 
 | ID | SLO | Target | Item that wires the metric |
@@ -212,6 +240,28 @@ survive untouched. *Evidence:* chaos run capture (region down → reconnect timi
 | **P2‑SLO3** | gateway failover → client reconnected | **p99 < 3 s** | HVPN-P2-274 |
 | **P2‑SLO4** | cross‑region event propagation | **p99 < 2 s** | HVPN-P2-272 |
 | **P2‑SLO5** | PQ session adoption (capable pairs) | **> 95%** | HVPN-P2-243 |
+
+---
+
+## 2.1 Phase-gate-failure / rollback protocol
+
+If a P2‑AC/P2‑SLO is red at the planned Phase‑2 exit, the response is scoped
+to the failure class — Phase‑2's high-risk tracks are explicitly *parallel*
+(§4) precisely so one track's slip does not block the others (§11.4.58):
+
+| Failure class | Response | Cross-reference |
+|---|---|---|
+| NAT-traversal honesty fails (a false "direct" claim, or symmetric-NAT fallback breaks) | STOP — a false-positive path claim is a §11.4.107 anti-bluff violation, not a schedule problem; root-cause via §11.4.102 before any re-attempt; this is the single non-negotiable gate on the critical path (§4). | §8 E22 acceptance criteria |
+| DAITA efficacy is not *measured* as materially better (the golden-bad no-op machine passes, or accuracy delta is negligible) | Do not ship DAITA as a privacy claim — degrade the DoD row to "shipped as opt-in shaping, efficacy unproven" and re-open a tracked follow-up; never assert P2‑AC2 on an unproven measurement (§11.4.6/.107). | HVPN-P2-213/292 |
+| PQ downgrade-safety fails (any injected failure path yields weaker-than-classical) | Release-blocking — do not ship PQ default-on until the downgrade FSM is proven fail-closed-or-classical; this reopens D-decision review, not a timeline extension. | HVPN-P2-242; `v00-meta/decision-register.md` §4 D-PKI-CA-TIER family |
+| HA/multi-region chaos certification (HVPN-P2-295) fails a specific failure mode | Isolate to the specific component (coordinator/Postgres/NATS/region) per the risk-ordered validation (§11.4.132); re-run **only after** a fix, then the full clean-baseline sweep — never spot-validate the touched component alone (§11.4.130). | `v06-deploy/ha-and-multiregion.md`; `v06-deploy/disaster-recovery.md` |
+| A Phase‑2 D-decision (D1/D6/D3/PQ-KEM-mechanism, §20) needs re-opening on captured evidence | Follow the named reversal criteria in `v00-meta/decision-register.md` §6 verbatim — a decision reversal is evidence-driven, never a schedule-pressure shortcut. | `v00-meta/decision-register.md` §6 |
+| A **huge-blocker** surfaces during Phase‑2 release validation | Execute §11.4.129 in full: STOP → fix all → process recorded evidence → new tests of every required type → rebuild → reflash → **restart** (not resume) the full multi-region validation. | §11.4.129 |
+
+Per §11.4.58, disjoint-scope epics (E20/E25/E26 vs the critical path E27→E22→
+E23→E29) continue in parallel while any single track's gate-failure response
+runs — the whole Phase‑2 release is never blocked on a track that is not
+itself on the critical path.
 
 ---
 
@@ -639,7 +689,13 @@ PR merged  → `helixvpnctl policy apply` (authenticated via tenant API token)
 
 Phase 1 was a single VPS. Phase 2 is a **fleet**: HA control plane, gateways in
 multiple regions, automatic failover — *same images, only topology changes*
-[04_P2 §8]. The full reference topology is in §17.
+[04_P2 §8]. The full reference topology is in §17. **Operational HA/DR detail
+(RTO/RPO budget, backup/restore runbook, region-failover drill checklist) is
+owned by [`v06-deploy/ha-and-multiregion.md`](v06-deploy/ha-and-multiregion.md)
+and [`v06-deploy/disaster-recovery.md`](v06-deploy/disaster-recovery.md) —
+this closes the previously-scattered DR gap G1 tracked in
+`99-source-coverage-ledger.md`; the items below implement the topology those
+docs specify operational procedure for.**
 
 **HVPN-P2-E27 — HA + multi‑region** `epic · module: coordinator, store, events, deploy`
 

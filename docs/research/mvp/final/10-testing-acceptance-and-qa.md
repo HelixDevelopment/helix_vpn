@@ -1,7 +1,29 @@
 # Testing, Acceptance & Anti-Bluff QA Strategy (constitution §11.4.169)
 
-**Revision:** 2
-**Last modified:** 2026-06-26T12:00:00Z
+**Revision:** 3
+**Last modified:** 2026-07-04T12:00:00Z
+
+> **THE ONE-SENTENCE RULE (plain engineering language, no jargon, read this first).**
+> **A green test suite is not proof the feature works. It only counts as proof if a
+> real artifact — a packet capture, a throughput number, a database rowset, a screen
+> recording — was captured *while the feature ran* and shows the user-visible outcome
+> actually happened.** "The assertion returned true" is not evidence. "Here is the
+> pcap showing the SYN-ACK from the server the user was supposed to reach" is
+> evidence. Every test type in this document (unit through security through UI) is
+> built around this one rule; §0 below restates it as the formal doctrine and §3
+> fixes exactly what artifact each feature class must produce. If a test, a review,
+> or a release checklist ever accepts "tests pass" on its own as done, that is a
+> defect in the QA process itself, not an acceptable shortcut — it is precisely the
+> failure mode this whole document exists to make impossible.
+>
+> **Rev 3 (2026-07-04, gap-analysis + hardening pass):** added this explicit
+> plain-language restatement of the anti-bluff bar as the first thing a reader sees
+> (previously the same substance existed only inside the §0 doctrine section,
+> layered under constitution citations — this makes it unmissable and citable on its
+> own). No other normative content changed in this pass; the taxonomy (§2), evidence
+> model (§3), per-type harnesses (§5), coverage ledger (§6), and acceptance gates
+> (§7) were independently re-verified against `SPECIFICATION.md` / `decision-register.md`
+> and found internally consistent — no contradictions found requiring correction.
 
 > **Reconciled (§11.4.35, 2026-06-26):** §2 now states the test-type set consistently
 > as **16 bundled families / 18 enumerated codes** (resolving the prior "Sixteen
@@ -1062,4 +1084,3 @@ Per §11.4.66, decisions the QA layer touches but does not silently resolve:
   §11.4.25/.52/.153 (coverage ledger), §11.4.76/.161 (containers/rootless), §11.4.156
   (no active remote CI), §11.4.75 (local hook layers), §11.4.159/.163/.165 (recorded
   evidence / media validation / independent verification), §11.4.93/.95 (workable-items DB).
-```

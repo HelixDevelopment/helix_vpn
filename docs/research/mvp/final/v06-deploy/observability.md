@@ -1,7 +1,13 @@
 # Observability (Prometheus / Grafana-as-code, SLOs & alerts)
 
-**Revision:** 2
-**Last modified:** 2026-06-26T12:00:00Z
+**Revision:** 3
+**Last modified:** 2026-07-04T12:00:00Z
+**Rev 3:** Cross-referenced the new rate-limiting/DDoS section (`05-repo-layout-tooling-and-helix-
+ecosystem.md §7.5`) — the `429`/ban-event counters it introduces are counts-only (§2.2 class),
+consistent with this document's C3 charter; no series or alert change required, noted for
+completeness so a future reader does not wonder why rate-limit metrics are absent from the
+catalogue (they compose with, but are not yet enumerated in, §2 — flagged as a Phase-2 catalogue
+addition, not a gap in this revision's scope).
 
 > Master technical specification — Volume 6 (Deployment, Tooling & Operations), nano-detail
 > document `observability.md`. Scope: the **operator-facing observability stack** for

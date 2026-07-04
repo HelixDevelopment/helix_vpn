@@ -1,5 +1,15 @@
 # HelixVPN — Phase 2 Build Specification (Parity + Reach)
 
+**Revision:** 2
+**Last modified:** 2026-07-04T12:00:00Z
+**Status:** primary research source — elaborated + made authoritative by
+[`../final/08-phase2-parity-wbs.md`](../final/08-phase2-parity-wbs.md) (the
+executable WBS with `HVPN-P2-NNN` work items, the 8 P2‑AC + 5 P2‑SLO release
+gates, and captured-evidence requirements). Where this document and
+`final/08-phase2-parity-wbs.md` disagree, **`final/` wins** per
+`SPECIFICATION.md` §12 versioning discipline — this document is preserved as
+the cited primary source ([04_P2] throughout `final/`), not re-derived.
+
 **Companion to:** `HelixVPN-Architecture-Refined.md`, `HelixVPN-Phase0-Spike.md`, `HelixVPN-Phase1-MVP.md`.
 **Entry condition:** Phase 1 MVP shipped — self-host from zero, enroll/advertise/policy/reconcile all working, auto transport ladder with plain/LWO/MASQUE, no-logging verified.
 **Goal of Phase 2:** reach **full Mullvad feature parity and surpass it on reach** — the complete obfuscation set, traffic-analysis defense, *direct* peer-to-peer paths (stop always relaying), multi-hop, a post-quantum handshake, desktop apps, policy-as-code/GitOps, and a highly-available multi-region gateway fleet.

@@ -1,7 +1,10 @@
 # Repo Layout, Tooling, Deployment & Helix-Ecosystem Integration
 
-**Revision:** 1
-**Last modified:** 2026-06-25T00:00:00Z
+**Revision:** 2
+**Last modified:** 2026-07-04T12:00:00Z
+**Rev 2:** Added §7.5 (Rate Limiting & DDoS Resilience — control-plane API token buckets +
+data-plane edge volumetric-attack mitigation, closing the gap left by Architecture-Refined.md
+§4.6 mentioning Redis token buckets but no deployment-layer detail existing anywhere in Volume 6).
 **Status:** active — subordinate to `SPECIFICATION.md` (the spine). Where this document disagrees with the spine on roles, principles (spine §4), or the decision register (spine §9), the spine wins until amended per §11.4.73.
 **Authority:** This document owns the **physical engineering substrate** of HelixVPN: the working monorepo, the decoupled reusable-component repos, schema-first codegen, the `helixvpnctl` operator CLI, the three deployment substrates (Podman quadlets / Docker Compose / Kubernetes), and the wiring of every already-incorporated `submodules/` member into its concrete role. It is a **specification**, not the product — interface sketches, manifests, and skeletons are illustrative, not the shipping implementation (2–3 refinement passes follow).
 **Evidence base:** `[04_ARCH §4/§9/§10/§11]` = `04_VPN_CLD/HelixVPN-Architecture-Refined.md`; `[04_P1]` = `HelixVPN-Phase1-MVP.md`; `[04_P0]` = `HelixVPN-Phase0-Spike.md`; `[04_UI]` = `HelixVPN-helix-ui-Flutter.md`; `[05_YBO]` = mandated-stack brief; `[SYNTHESIS]` = `v09-research/_SYNTHESIS.md`; per-LLM ids `[02_QWN] [01_DSK] [07_GMI] [10_KMI] [11_MST]`; `[research-podman_k8s]` = the Podman-Quadlet / `podman kube` / Kubernetes-for-WireGuard deep-research thread (verified against latest official sources per §11.4.99).
@@ -645,6 +648,90 @@ spec:
 | Homelab / single VPS (the primary buyer, spine §2) | **Podman quadlets** | Rootless, no daemon, `helixvpnctl init` one-shot — the §11.4.76/.161 canonical path |
 | "We run Docker" shops | **Docker Compose** | Same images, lowest friction; rootless where their host allows |
 | Multi-region fleet (Phase 2 HA) | **Kubernetes** | DaemonSet edge + stateless `helixd` replicas + Patroni PG = the doc-02 HA story |
+
+---
+
+## 7.5 Rate limiting & DDoS resilience (enterprise hardening)
+
+**Gap closed (this revision).** `04_ARCH §4.6` names "rate limiting (token buckets per API key)"
+as a Redis use, but no document in Volume 6 ever operationalized it, and the **data-plane**
+volumetric-attack surface (the public UDP/443 + UDP/51820 listeners) had no mitigation story at
+all. A public gateway with an unrated API and an un-mitigated UDP listener is not production-grade
+— this section closes both halves. It composes with, and does not replace, host-level cloud DDoS
+scrubbing (Cloudflare Spectrum / AWS Shield / a bare-metal provider's own filtering), which is an
+operator-chosen, infrastructure-layer control outside this spec's scope (§11.4.6 — never assumed
+present; the gateway's own defenses below hold even without it).
+
+### 7.5.1 Control-plane API rate limiting (`helixd:8443`)
+
+Two limiter layers, both backed by the Redis token-bucket primitive already declared for presence
+[`04_ARCH §4.6`]:
+
+| Layer | Key | Bucket | Enforcement point | On exceed |
+|---|---|---|---|---|
+| **Per-API-token** | `ratelimit:token:<token_id>` | 60 req/min sustained, burst 20 (mutating routes tighter: `policy set`/`device revoke` at 10/min) | Gin middleware, before any handler runs | `429 Too Many Requests` + `Retry-After`; **no DB write attempted** |
+| **Per-source-IP (pre-auth)** | `ratelimit:ip:<src_ip_hash>` | 30 req/min to unauthenticated routes (`/v1/enroll-tokens/redeem`, health) | edge-of-Gin middleware, keyed by a **salted hash** of the source IP (never the raw IP, C3 — the hash is rotated daily so it cannot become a durable per-IP profile) | `429`; repeated violation escalates to the transient-ban list (§7.5.2) |
+| **Per-device-cert (agent plane)** | `ratelimit:device:<device_id>` | `WatchNetworkMap` reconnect storms: max 1 reconnect/2s per device (exponential backoff enforced client-side per the reconciler, server-side as a backstop) | Connect-RPC interceptor | connection closed with a structured `RESOURCE_EXHAUSTED` status; the reconciler's own backoff (client-side) is the primary control, this is the belt |
+
+Anti-bluff note (§11.4.69): a `429` decision and its counter are **counts only** — the limiter
+never logs the request body, headers, or the resolved plaintext IP; only the salted-hash bucket
+key and a monotonic counter exist in Redis (TTL'd, same ephemeral-C2 posture as presence). This
+keeps rate-limiting inside the no-logging invariant rather than becoming a side-channel connection
+log.
+
+```mermaid
+sequenceDiagram
+  participant C as caller (app or agent)
+  participant MW as rate-limit middleware
+  participant R as Redis (token bucket, TTL)
+  participant H as handler
+  C->>MW: request (bearer token or device cert)
+  MW->>R: INCR ratelimit:<scope>:<key> (bucket window)
+  R-->>MW: current count
+  alt under limit
+    MW->>H: forward
+    H-->>C: 200/streamed response
+  else over limit
+    MW-->>C: 429 + Retry-After (no handler invoked, no DB touch)
+  end
+```
+
+### 7.5.2 Data-plane edge — volumetric / handshake-flood mitigation
+
+The edge's public listeners (`:443/udp` MASQUE, `:51820/udp` plain-WG) are the classic
+UDP-amplification and handshake-flood target. Concrete, deployable mitigations, layered
+cheapest-first (this is a SPEC — the operator applies the layers their threat model warrants;
+none is claimed sufficient alone):
+
+| Layer | Mechanism | Mitigates | Honest limit |
+|---|---|---|---|
+| **WireGuard's own cookie mechanism** | WG's Noise-IK handshake already includes a stateless cookie-reply under load (upstream WireGuard design, not HelixVPN-specific) — the kernel/`boringtun` implementation rejects malformed/replayed handshake-init packets cheaply, before any per-peer state is allocated | Basic handshake-flood amplification | Does not stop raw bandwidth-saturation floods — that is an upstream-network concern |
+| **Per-source-IP handshake-attempt cap** | The edge counts failed-handshake attempts per source IP (in-memory ring buffer, NOT Redis — this is a data-plane, sub-millisecond hot-path counter, never a durable log) over a short window (e.g. 20 attempts/10s) | Repeated failed-handshake probing (the same class MASQUE detection probes exercise) | In-memory only; a restart clears the counters (acceptable — the counters are a rate-limit, not identity) |
+| **Transient IP ban (fail2ban-equivalent)** | On exceeding the handshake-attempt cap, the edge inserts a short-TTL (default 10 min) nftables/eBPF DROP rule for that source IP — the same verdict-map mechanism the policy compiler already programs (`01-data-plane.md`), reused for a security verdict rather than a policy verdict | Sustained single-source handshake floods | The ban is an IP, not an identity; NAT'd attackers behind a shared IP could collaterally rate-limit a legitimate peer sharing that IP — documented, not silently assumed away |
+| **QUIC/MASQUE initial-packet validation** | `quinn`'s address-validation (Retry packets) is enabled for the MASQUE listener, forcing a round-trip before the server commits per-connection state to an unvalidated source address — this is the QUIC-native analogue of a TCP SYN cookie | QUIC-based amplification/spoofing floods | Adds one RTT to first connect under load; only enabled when the edge is under measured load (a static always-on Retry adds latency for the common case) |
+| **Upstream/infra-layer scrubbing (operator-chosen, out of this spec)** | Cloud provider DDoS protection (AWS Shield, Cloudflare Spectrum for UDP, a bare-metal host's own filtering) in front of the gateway's public IP | Raw volumetric bandwidth floods that no application-layer control can absorb | **Not assumed present.** The edge-level controls above are the floor that holds with zero infra dependency; upstream scrubbing is a recommended addition, never a precondition for the spec's own controls to function |
+
+> **Consistency with C3 (no-logging).** Every counter in this section is a **rate-limit
+> decision counter**, never a connection-content log: the in-memory handshake-attempt ring buffer
+> and the transient-ban nftables rule both hold only `(ip_or_hash, count, expiry)` — no
+> destination, no payload, no duration-of-session. A transient ban list is not a connection log
+> because it records *attempts to authenticate*, not *sessions established* or *traffic carried*,
+> and it self-expires (TTL) rather than accumulating.
+
+### 7.5.3 Anti-bluff evidence plan
+
+| Claim | Captured-evidence proof |
+|---|---|
+| Per-token 429 fires at the stated threshold | load-test driving 2× the bucket rate → `429` responses measured at the exact threshold; Redis bucket key TTL confirmed |
+| Pre-auth per-IP limiter uses a salted hash, never a raw IP | grep the Redis keyspace under load → no plaintext IP present, only hashed keys; paired mutation removing the salt → the same test that inspects the keyspace FAILs (proves the check is real) |
+| Edge handshake-flood cap triggers a transient ban | chaos test: script N rapid failed handshakes from one source → verdict-map DROP rule appears with the expected TTL, then self-expires; captured `nft`/eBPF map dump before/after |
+| QUIC Retry engages under load | load-test past the configured threshold → first-flight packets receive a Retry before connection establishment; packet capture |
+| No rate-limit counter becomes a durable log | `schemalint` (no-logging runtime signature, §11.4.108) stays green with rate-limiting active under load | 
+
+Composes with §11.4.5/.69/.85 (stress+chaos evidence), §11.4.108 (no-logging runtime signature
+unaffected by the new counters), and the existing `01-data-plane.md` verdict-map mechanism (the
+transient-ban rule reuses the same enforcement point as policy verdicts, not a second firewall
+subsystem).
 
 ---
 

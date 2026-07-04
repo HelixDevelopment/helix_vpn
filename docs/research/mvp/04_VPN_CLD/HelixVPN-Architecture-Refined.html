@@ -1,0 +1,1411 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>HelixVPN — Refined Architecture &amp; Engineering Specification</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">HelixVPN — Refined Architecture &amp; Engineering
+Specification</h1>
+</header>
+<h1 id="helixvpn--refined-architecture--engineering-specification">HelixVPN
+— Refined Architecture &amp; Engineering Specification</h1>
+<p><strong>Revision:</strong> 2 <strong>Last modified:</strong>
+2026-07-04T12:00:00Z <strong>Status:</strong> Refining pass over
+<code>Home_VPN.md</code> — <strong>primary architectural source, now
+elaborated by <code>docs/research/mvp/final/</code></strong>
+<strong>Provenance note (added Rev 2, 2026-07-04 hardening
+pass):</strong> This document (<code>[04_ARCH]</code>) is the dominant
+architectural source cited throughout
+<code>docs/research/mvp/final/</code> — <code>SPECIFICATION.md</code>
+§12 names it the primary source, and
+<code>99-source-coverage-ledger.md</code> records it as the most-cited
+source in the corpus. Since this document was written,
+<code>docs/research/mvp/final/</code> has grown into a
+~140-nano-detail-doc specification (<code>SPECIFICATION.md</code> is now
+the architectural <strong>spine</strong>;
+<code>v00-meta/decision-register.md</code> is now the canonical decision
+register expanding §13 below) that elaborates every section of this
+document to phase→task→subtask and near-code granularity, and which
+supersedes this document in point-of-fact detail (exact numeric SLOs,
+DDL, protobuf, per- platform mechanics). <strong>Where this document and
+<code>final/</code> disagree, <code>final/</code> (specifically
+<code>SPECIFICATION.md</code> and
+<code>v00-meta/decision-register.md</code>) wins</strong> — this
+document remains the authoritative <strong>readable narrative
+overview</strong> of the architecture and is not being rewritten
+section-by-section to chase every downstream refinement; it was
+independently re-checked during the 2026-07-04 hardening pass for any
+<em>outright</em> contradiction with <code>final/</code> (none found —
+every open decision/risk in §13 below is still genuinely open or has
+since been resolved consistently with what §13 anticipated, e.g.
+D-PKI-CA-TIER and D-OD-1 are now operator-confirmed per
+<code>decision-register.md</code>, and the Rust-core/Rust-edge
+preference in §13 still awaits gates G3/G4 as this document already said
+it would). <strong>Scope of this document:</strong> Turn the original
+deployment guide (a sysadmin-grade Hysteria2/WireGuard &quot;how to set up a
+VPS tunnel&quot; walkthrough) into a real product/engineering spec for a
+<strong>self-hostable, two-way, multi-network VPN gateway
+platform</strong> with Mullvad-parity privacy features and a
+cross-platform app suite on a shared codebase.</p>
+<hr />
+<h2 id="0-what-this-refinement-changes-gap-analysis-vs-the-original-research">0.
+What this refinement changes (gap analysis vs. the original
+research)</h2>
+<p>The original <code>Home_VPN.md</code> is solid as an <em>ops
+runbook</em> for a single-purpose reverse tunnel. But measured against
+the actual brief, it has structural gaps. This spec closes them.</p>
+<table>
+<thead>
+<tr>
+<th>Brief requirement</th>
+<th>Original doc</th>
+<th>This spec</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>VPS is a <strong>gateway to multiple joined networks</strong>, each
+exposed to end users</td>
+<td>Single home LAN behind one tunnel</td>
+<td>First-class <strong>multi-connector overlay</strong>: N networks
+advertise prefixes, gateway stitches + polices them</td>
+</tr>
+<tr>
+<td><strong>Two-way</strong> VPN (network-side tunnels <em>in</em>,
+users tunnel <em>in</em>, traffic routed <em>between</em>)</td>
+<td>One-way &quot;reverse tunnel for my home&quot;</td>
+<td>Explicit <strong>Connector ⇄ Gateway ⇄ Client</strong> three-role
+model with a control plane</td>
+</tr>
+<tr>
+<td>Apps on <strong>both sides</strong> (end-user access + network-side
+connector) + admin/config apps</td>
+<td>Third-party clients only (Hiddify, Shadowrocket, WireGuard app)</td>
+<td><strong>Three first-party app classes</strong> on one shared
+codebase</td>
+</tr>
+<tr>
+<td><strong>All Mullvad power features</strong>, esp. QUIC
+obfuscation</td>
+<td>Hysteria2 (a <em>different</em> protocol) suggested as the QUIC
+path</td>
+<td>WireGuard core + <strong>MASQUE (RFC 9298) QUIC obfuscation</strong>
+— the <em>actual</em> Mullvad mechanism — plus the full obfuscation
+stack</td>
+</tr>
+<tr>
+<td>Stack: Go / Gin / Postgres / Redis / Podman</td>
+<td>Bash + systemd + Docker only</td>
+<td>Go/Gin control plane, Postgres+RLS, Redis Streams, <strong>Podman
+quadlets</strong> (rootless)</td>
+</tr>
+<tr>
+<td>Cross-platform apps (iOS, Android, Aurora, HarmonyOS, Win, Linux,
+macOS, Web) with <strong>max code reuse, tiny size, fast</strong></td>
+<td>None</td>
+<td><strong>Rust data-plane core + Flutter UI</strong>, the only combo
+reaching all 8 targets</td>
+</tr>
+<tr>
+<td><strong>Event-driven, real-time</strong> end to end</td>
+<td>Polling / cron / manual restarts</td>
+<td>Event bus + persistent control channels + push-based &quot;network map&quot;
+reconciliation</td>
+</tr>
+</tbody>
+</table>
+<p><strong>The single most important correction:</strong> <em>Mullvad&#39;s
+QUIC mode is not a separate protocol — it is WireGuard tunneled over
+MASQUE/HTTP-3.</em> So the design keeps <strong>WireGuard as the
+cryptographic core</strong> and treats
+QUIC/Hysteria/Shadowsocks/UDP-over-TCP as <strong>interchangeable
+obfuscating transports</strong> underneath it. That decision drives
+everything else.</p>
+<hr />
+<h2 id="1-product-definition">1. Product definition</h2>
+<p>HelixVPN is a <strong>self-hosted overlay network with a privacy-VPN
+front end</strong>. One sentence: <em>it is Cloudflare Tunnel + WARP,
+rebuilt as Tailscale-style coordination, with Mullvad&#39;s obfuscation
+stack, fully self-hostable, on one Rust+Flutter app codebase.</em></p>
+<h3 id="11-the-three-roles">1.1 The three roles</h3>
+<pre><code>                          ┌───────────────────────────────────────────┐
+                          │              PUBLIC VPS                     │
+                          │           &quot;HelixVPN Gateway&quot;                │
+   Private Network A      │  ┌─────────────┐      ┌──────────────────┐ │      End users
+  ┌──────────────────┐    │  │ Control     │      │ Data plane (edge)│ │   ┌──────────────┐
+  │ Connector A      │═══▶│  │ plane (Go)  │◀────▶│ Rust transport + │ │◀══│ Access app   │
+  │ advertises       │    │  │ Gin/PG/Redis│      │ kernel WireGuard │ │   │ (iOS/Android │
+  │ 10.10.0.0/16     │    │  └─────────────┘      └──────────────────┘ │   │  /desktop…)  │
+  └──────────────────┘    │         ▲                      ▲           │   └──────────────┘
+   Private Network B      │         │ persistent control   │ obfusc.   │   ┌──────────────┐
+  ┌──────────────────┐    │         │ channel (gRPC/QUIC)   │ tunnels   │◀══│ Access app   │
+  │ Connector B      │═══▶│         │                       │ (QUIC/WG) │   └──────────────┘
+  │ advertises       │    │         └───────────────────────┘           │
+  │ 192.168.50.0/24  │    └───────────────────────────────────────────┘
+  └──────────────────┘
+        outbound dial (no router port-forward needed)        outbound dial</code></pre>
+<ul>
+<li><strong>Connector</strong> (network-side): a first-party agent
+installed on a host <em>inside</em> each private network. It
+<strong>dials outbound</strong> to the gateway (no inbound
+port-forwarding — this preserves the original doc&#39;s core insight),
+authenticates, and <strong>advertises the prefixes</strong> that network
+exposes. It is the in-network half of the &quot;two-way&quot; connection.</li>
+<li><strong>Gateway</strong> (the VPS): the rendezvous hub. It runs a
+<strong>control plane</strong> (Go) and a <strong>data plane</strong>
+(Rust edge + kernel WireGuard). It authenticates connectors and clients,
+maintains the routing/policy table, and <strong>relays/routes</strong>
+traffic between users and the networks they&#39;re authorized to reach.</li>
+<li><strong>Client</strong> (end-user): the access app, Mullvad-style.
+Dials into the gateway, receives an overlay IP, and reaches the subset
+of joined networks its policy allows. Can also use the gateway as a
+plain privacy exit (full-tunnel to internet).</li>
+</ul>
+<p>&quot;Multiple joined networks exposed through it&quot; = multiple connectors,
+each advertising prefixes, stitched into one policed overlay. &quot;Two-way
+VPN&quot; = both halves (connector and client) initiate
+<strong>outbound</strong> tunnels to the gateway, which routes between
+them.</p>
+<h3 id="12-personas--app-classes">1.2 Personas / app classes</h3>
+<table>
+<thead>
+<tr>
+<th>App class</th>
+<th>User</th>
+<th>Primary jobs</th>
+<th>Platforms</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Helix Access</strong></td>
+<td>End user</td>
+<td>Connect, pick exit/network, toggle obfuscation, kill-switch,
+split-tunnel</td>
+<td>iOS, Android, Aurora, HarmonyOS, Windows, Linux, macOS (Web =
+limited, see §5.7)</td>
+</tr>
+<tr>
+<td><strong>Helix Connector</strong></td>
+<td>Network operator</td>
+<td>Onboard a network, advertise CIDRs, set local ACLs, run
+headless</td>
+<td>Linux/Windows/macOS (daemon + optional Flutter UI); Android/embedded
+for appliance use</td>
+</tr>
+<tr>
+<td><strong>Helix Console</strong></td>
+<td>Admin</td>
+<td>Tenants, users, devices, networks, routes, policies, audit,
+billing-optional</td>
+<td>Web (responsive) + Desktop (same Flutter build)</td>
+</tr>
+</tbody>
+</table>
+<p>All three share <strong>one design system, one Dart UI core, one API
+client</strong>. Access + Connector additionally share <strong>one Rust
+VPN/transport core</strong>. (See §5.)</p>
+<h3 id="13-prior-art-and-where-helixvpn-sits">1.3 Prior art and where
+HelixVPN sits</h3>
+<table>
+<thead>
+<tr>
+<th>System</th>
+<th>Self-host</th>
+<th>Obfuscation</th>
+<th>Multi-network overlay</th>
+<th>Cross-platform first-party apps</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Mullvad</td>
+<td>✗ (service)</td>
+<td>✅ best-in-class (QUIC/MASQUE, Shadowsocks, UoT, LWO, DAITA)</td>
+<td>✗ (privacy exit only)</td>
+<td>✅</td>
+<td>The obfuscation + privacy bar to match</td>
+</tr>
+<tr>
+<td>Tailscale</td>
+<td>partial (Headscale)</td>
+<td>✗</td>
+<td>✅ (mesh + subnet routers)</td>
+<td>✅</td>
+<td>The coordination/&quot;network map&quot; model to borrow</td>
+</tr>
+<tr>
+<td>NetBird</td>
+<td>✅</td>
+<td>limited</td>
+<td>✅</td>
+<td>✅</td>
+<td>Closest OSS shape; WireGuard + mgmt/signal server</td>
+</tr>
+<tr>
+<td>Cloudflare Tunnel + WARP</td>
+<td>✗</td>
+<td>MASQUE</td>
+<td>✅</td>
+<td>✅</td>
+<td>The &quot;connector dials out&quot; + MASQUE model</td>
+</tr>
+<tr>
+<td>Twingate / Zscaler</td>
+<td>✗</td>
+<td>n/a</td>
+<td>✅ ZTNA</td>
+<td>✅</td>
+<td>ZTNA policy model</td>
+</tr>
+<tr>
+<td><strong>HelixVPN</strong></td>
+<td>✅</td>
+<td>✅ full Mullvad-parity stack</td>
+<td>✅</td>
+<td>✅ on 8 platforms, one codebase</td>
+<td>Self-hosted union of the above</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Differentiators to lead with:</strong> (1) self-hosted
+<em>and</em> Mullvad-grade obfuscation including MASQUE/QUIC; (2)
+genuine 8-platform reach including Aurora + HarmonyOS that no incumbent
+ships; (3) one shared Rust+Flutter codebase; (4) event-driven real-time
+control plane.</p>
+<hr />
+<h2 id="2-architectural-principles-non-negotiable">2. Architectural
+principles (non-negotiable)</h2>
+<ol type="1">
+<li><strong>Control plane and data plane are strictly
+separated.</strong> The Go services never sit in the packet path. If the
+control plane is down, existing tunnels keep forwarding
+(fail-static).</li>
+<li><strong>WireGuard is the cryptographic core; transports are
+pluggable.</strong> Obfuscation is a swappable layer <em>under</em>
+WireGuard, never a fork of the crypto.</li>
+<li><strong>Outbound-only from edges.</strong> Connectors and clients
+always dial the gateway. No private network ever needs an inbound hole.
+(Carried forward from the original doc — it&#39;s the correct
+foundation.)</li>
+<li><strong>Push, don&#39;t poll.</strong> State changes propagate over
+persistent channels as events; agents reconcile to a declared
+desired-state (&quot;network map&quot;), like Tailscale&#39;s MapResponse. Cron-based
+restart loops from the original doc are replaced by event-driven
+reconciliation + supervised health.</li>
+<li><strong>One core per concern, reused everywhere.</strong> Rust
+transport/VPN core shared by client, connector, <em>and</em> gateway
+edge. Go domain libraries shared across control services. Dart UI core
+shared across all three apps.</li>
+<li><strong>Self-hostable by one person, scalable to many
+gateways.</strong> Single-node <code>podman</code> deploy for a homelab;
+the same images scale to an HA, multi-region fleet.</li>
+<li><strong>No-logging by construction.</strong> Data plane keeps only
+counters and ephemeral routing state; no connection/content logs.
+Privacy is a build property, not a config toggle.</li>
+</ol>
+<hr />
+<h2 id="3-data-plane--tunnels-transports-obfuscation">3. Data plane —
+tunnels, transports, obfuscation</h2>
+<h3 id="31-layering-model">3.1 Layering model</h3>
+<pre><code>   ┌──────────────────────────────────────────────────────────┐
+   │ L4  Application traffic (user&#39;s packets / advertised LAN)  │
+   ├──────────────────────────────────────────────────────────┤
+   │ L3  WireGuard (Noise IK, ChaCha20-Poly1305)  ← CRYPTO CORE │
+   ├──────────────────────────────────────────────────────────┤
+   │ L2  Pluggable transport / obfuscation (one of):            │
+   │      • plain UDP (fast path)                                │
+   │      • MASQUE CONNECT-UDP over HTTP/3  ← the QUIC mode      │
+   │      • Shadowsocks-wrap                                     │
+   │      • UDP-over-TCP                                         │
+   │      • LWO (lightweight WG obfuscation)                     │
+   │      • port-hopping / 443 / 53 disguise                     │
+   ├──────────────────────────────────────────────────────────┤
+   │ L1  IP to the gateway&#39;s public endpoint                    │
+   └──────────────────────────────────────────────────────────┘
+   (optional, orthogonal) DAITA-style traffic shaping: constant packet
+   sizing + cover traffic, applied above WireGuard.</code></pre>
+<p>WireGuard handles confidentiality, integrity, and roaming. The
+<strong>transport layer only changes how the encrypted WG datagrams look
+on the wire</strong> so DPI/censors can&#39;t fingerprint or block them.
+This is exactly Mullvad&#39;s model, and it&#39;s why QUIC support is &quot;wrap WG
+in MASQUE,&quot; not &quot;replace WG with Hysteria.&quot;</p>
+<h3 id="32-transport-matrix">3.2 Transport matrix</h3>
+<table>
+<thead>
+<tr>
+<th>Transport</th>
+<th>Looks like</th>
+<th>Use when</th>
+<th>Library (client+edge, Rust)</th>
+<th>Cost</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Plain WG/UDP</strong></td>
+<td>WireGuard</td>
+<td>Default; unrestricted networks</td>
+<td>kernel WG / <code>boringtun</code></td>
+<td>lowest latency, lowest CPU</td>
+</tr>
+<tr>
+<td><strong>MASQUE CONNECT-UDP / HTTP-3</strong></td>
+<td>HTTPS / web traffic</td>
+<td>Censorship, UDP-throttling, DPI; the <strong>QUIC
+requirement</strong></td>
+<td><code>quinn</code> + <code>h3</code> + masque layer</td>
+<td>moderate; QUIC overhead</td>
+</tr>
+<tr>
+<td><strong>MASQUE CONNECT-IP</strong> (RFC 9484)</td>
+<td>HTTPS</td>
+<td>Native IP-over-HTTP/3 datapath (advanced, no inner WG)</td>
+<td><code>quinn</code> + <code>h3</code></td>
+<td>moderate</td>
+</tr>
+<tr>
+<td><strong>Shadowsocks-wrap</strong></td>
+<td>random/TLS-ish TCP</td>
+<td>QUIC blocked, China-style DPI</td>
+<td><code>shadowsocks-rust</code> core</td>
+<td>moderate</td>
+</tr>
+<tr>
+<td><strong>UDP-over-TCP</strong></td>
+<td>TCP</td>
+<td>UDP fully blocked</td>
+<td>in-house</td>
+<td>higher latency</td>
+</tr>
+<tr>
+<td><strong>LWO (lightweight obfs)</strong></td>
+<td>mangled UDP</td>
+<td>Cheap evasion of naive WG signature blocks</td>
+<td>in-house (XOR/padding scheme)</td>
+<td>near-zero</td>
+</tr>
+<tr>
+<td><strong>Port hopping / 443 / 53</strong></td>
+<td>varies</td>
+<td>Port-based blocks</td>
+<td>edge listener config</td>
+<td>none</td>
+</tr>
+</tbody>
+</table>
+<p>Selection is <strong>automatic with manual override</strong>
+(Mullvad&#39;s exact UX): the client tries plain WG, and after N failed
+handshakes escalates to LWO → QUIC/MASQUE → Shadowsocks → UoT. The user
+can pin any mode.</p>
+<blockquote>
+<p><strong>Implementation reuse win:</strong> all of these live in
+<strong>one Rust crate, <code>helix-transport</code></strong>, consumed
+identically by the client core, the connector, and the gateway edge. The
+QUIC/MASQUE code that obfuscates on the client is the <em>same code</em>
+that de-obfuscates on the gateway. One implementation, three
+consumers.</p>
+</blockquote>
+<h3 id="33-quic--masque-mode-in-detail-the-headline-feature">3.3 QUIC /
+MASQUE mode in detail (the headline feature)</h3>
+<ul>
+<li>Client wraps each WireGuard UDP datagram in an HTTP/3
+<strong>CONNECT-UDP</strong> stream (RFC 9298) to the gateway&#39;s
+<code>:443/udp</code> HTTP/3 listener.</li>
+<li>To any observer (and to most DPI) the flow is indistinguishable from
+a browser talking HTTP/3 to a web server. The gateway edge can
+<strong>masquerade</strong> unmatched/probe traffic as a real website
+(carry forward the original doc&#39;s Nginx-camouflage idea, but native in
+the edge).</li>
+<li>The gateway edge terminates QUIC, unwraps the WG datagrams, and
+hands them to <strong>kernel WireGuard</strong> on the fast path.</li>
+<li>Inherits QUIC&#39;s loss recovery + multiplexing — better than
+UDP-over-TCP on lossy mobile networks, which is precisely why Mullvad
+shipped it for mobile.</li>
+</ul>
+<p>Go is acceptable here (<code>quic-go</code> + <code>masque-go</code>
+are mature), but <strong>Rust (<code>quinn</code>) is chosen for the
+edge</strong> so the obfuscation logic is shared byte-for-byte with the
+clients and to keep the hot path off the GC.</p>
+<h3 id="34-multi-network-routing-and-policy">3.4 Multi-network routing
+and policy</h3>
+<p>This is the part the original doc never addressed.</p>
+<ul>
+<li><strong>Overlay addressing:</strong> every node (client, connector,
+advertised host) gets a stable overlay address. Use a ULA IPv6 /48 per
+tenant (e.g., <code>fd7a:helix:&lt;tenant&gt;::/48</code>); map
+advertised IPv4 LANs via a Tailscale-style <strong>4via6</strong> scheme
+so overlapping <code>192.168.1.0/24</code>s across different connectors
+never collide.</li>
+<li><strong>Prefix advertisement:</strong> connectors advertise their
+served CIDRs to the control plane; the control plane compiles a
+<strong>routing map</strong> (which connector is the next hop for which
+prefix) and pushes it to the gateway edge and to authorized
+clients.</li>
+<li><strong>Policy/ACL engine:</strong> a declarative allow-list
+(<code>group:contractors → net:warehouse-cameras:554/tcp</code>)
+evaluated at the gateway. Default-deny. Compiled to per-peer
+<code>AllowedIPs</code> + an nftables/eBPF verdict map on the edge.</li>
+<li><strong>Overlapping CIDR handling:</strong> when two connectors
+expose the same RFC1918 range, the gateway presents each as a distinct
+overlay prefix and NATs into the connector. Documented as a first-class
+scenario, not an afterthought.</li>
+<li><strong>Split horizon / segmentation:</strong> connectors can&#39;t
+reach each other unless policy says so; clients can&#39;t reach networks
+they&#39;re not granted. Microsegmentation is the default.</li>
+</ul>
+<h3 id="35-multi-hop">3.5 Multi-hop</h3>
+<p>Generalize the original doc&#39;s &quot;chain two VPSes.&quot; A client may route
+Client → Gateway-Entry → Gateway-Exit → {internet | connector}. Entry
+sees the client but not the destination; exit sees the destination but
+not the client. Implemented as nested WireGuard with per-hop keys (the
+Mullvad multi-hop model), orchestrated by the control plane and pushed
+as a multi-hop network map.</p>
+<hr />
+<h2 id="4-control-plane-go--gin--postgres--redis--podman">4. Control
+plane (Go / Gin / Postgres / Redis / Podman)</h2>
+<p>The control plane never touches packets. It is the source of truth
+for identity, devices, networks, routes, and policy, and it distributes
+desired-state to the edges in real time.</p>
+<h3 id="41-services-modular-monolith-first-split-later">4.1 Services
+(modular monolith first, split later)</h3>
+<table>
+<thead>
+<tr>
+<th>Service</th>
+<th>Responsibility</th>
+<th>Tech</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>identity</code></td>
+<td>Tenants, users, SSO/OIDC, device enrollment, API tokens</td>
+<td>Go, Gin, Postgres (RLS)</td>
+</tr>
+<tr>
+<td><code>registry</code></td>
+<td>Devices, connectors, advertised prefixes, overlay IP allocation</td>
+<td>Go, Postgres, Redis (ephemeral presence)</td>
+</tr>
+<tr>
+<td><code>policy</code></td>
+<td>ACL model, compilation to per-peer rule sets</td>
+<td>Go (CUE/Rego-style evaluation)</td>
+</tr>
+<tr>
+<td><code>coordinator</code></td>
+<td>The brain: builds <strong>network maps</strong>, streams
+desired-state to agents, reconciles</td>
+<td>Go, gRPC server-streaming, Redis Streams</td>
+</tr>
+<tr>
+<td><code>pki</code></td>
+<td>WireGuard key registry, short-lived device certs, rotation, PQ
+handshake material</td>
+<td>Go, Postgres, optional KMS/HSM</td>
+</tr>
+<tr>
+<td><code>telemetry</code></td>
+<td>Counters, health, audit events (no traffic logs)</td>
+<td>Go, Prometheus exposition, ClickHouse optional</td>
+</tr>
+<tr>
+<td><code>api-gateway</code></td>
+<td>REST (apps) + gRPC (agents) + WS/SSE (live UI) fan-in</td>
+<td>Gin + Connect-Go</td>
+</tr>
+</tbody>
+</table>
+<p>Start as <strong>one Go binary, many packages</strong> (the original
+doc&#39;s single-VPS reality), deployable as one <code>podman</code>
+container. The service boundaries above are package boundaries from day
+one so they can be split into separate pods when a deployment grows to a
+fleet.</p>
+<h3 id="42-api-surface">4.2 API surface</h3>
+<ul>
+<li><strong>Agents (connectors, client cores):</strong> <strong>gRPC
+over Connect</strong> (HTTP/2, or HTTP/3 to share the QUIC stack). The
+key call is a <strong>server-streaming
+<code>WatchNetworkMap</code></strong> — the agent opens it once and
+receives a snapshot then a delta stream. This replaces all polling.</li>
+<li><strong>Apps (Access/Connector/Console UI):</strong> <strong>REST
+via Gin</strong> for CRUD + <strong>WebSocket/SSE</strong> for live
+updates (device came online, route changed, handshake failing).</li>
+<li><strong>Schema-first:</strong> Protobuf for agent contracts, OpenAPI
+for REST, generated clients for Dart/Go/Rust so the three codebases
+never drift.</li>
+</ul>
+<h3 id="43-event-driven-backbone">4.3 Event-driven backbone</h3>
+<ul>
+<li><strong>Baseline: Redis Streams</strong> (honoring the requested
+stack). One stream per concern (<code>events:devices</code>,
+<code>events:routes</code>, <code>events:policy</code>,
+<code>events:presence</code>), consumer groups per service,
+<code>XADD</code>/<code>XREADGROUP</code>, dead-letter via
+pending-entries list.</li>
+<li><strong>Scale option: NATS JetStream</strong> when you outgrow a
+single Redis (multi-region fan-out, durable subjects). The event
+taxonomy is bus-agnostic so the swap is a transport change, not a
+redesign.</li>
+<li><strong>Event taxonomy (examples):</strong>
+<ul>
+<li><code>device.enrolled</code>, <code>device.online</code>,
+<code>device.offline</code>, <code>device.revoked</code></li>
+<li><code>connector.attached</code>,
+<code>connector.prefixes.changed</code>,
+<code>connector.health.degraded</code></li>
+<li><code>route.advertised</code>, <code>route.withdrawn</code>,
+<code>route.conflict.detected</code></li>
+<li><code>policy.updated</code>, <code>policy.compiled</code></li>
+<li><code>gateway.failover</code>,
+<code>gateway.capacity.warning</code></li>
+</ul></li>
+<li>Every state-changing API write <strong>emits an event</strong>; the
+<code>coordinator</code> consumes events, recomputes affected network
+maps, and pushes deltas. This is the spine that makes &quot;everything
+real-time&quot; true.</li>
+</ul>
+<h3 id="44-real-time-state-distribution-network-map-model">4.4 Real-time
+state distribution (&quot;network map&quot; model)</h3>
+<p>Borrowed from Tailscale, adapted:</p>
+<ol type="1">
+<li>Agent connects, authenticates, opens
+<code>WatchNetworkMap</code>.</li>
+<li>Coordinator sends a <strong>full snapshot</strong> (this agent&#39;s
+overlay IP, peers it may reach, routes, transport policy, DNS,
+kill-switch posture).</li>
+<li>On any relevant event, coordinator computes the <strong>minimal
+delta</strong> for each affected agent and pushes it on the open
+stream.</li>
+<li>Agents are <strong>declarative reconcilers</strong>: they diff
+desired-vs-actual and converge (bring up/down peers, change transport,
+update routes) with zero polling and no restarts.</li>
+</ol>
+<p>Convergence target: a policy or route change is reflected on all
+affected edges in <strong>&lt; 1 second</strong> under normal load.</p>
+<h3 id="45-data-model-postgres-with-row-level-security-per-tenant">4.5
+Data model (Postgres, with Row-Level Security per tenant)</h3>
+<p>Sketch (not exhaustive):</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- every table carries tenant_id and is guarded by RLS</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>tenants(<span class="kw">id</span>, name, created_at)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>users(<span class="kw">id</span>, tenant_id, email, oidc_sub, <span class="kw">role</span>)               <span class="co">-- role: admin|operator|member</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>devices(<span class="kw">id</span>, tenant_id, user_id, kind, pubkey, overlay_ip, <span class="co">-- kind: client|connector</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>        last_seen, enrolled_at, revoked_at)</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>connectors(device_id, tenant_id, site_name)</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>advertised_prefixes(<span class="kw">id</span>, connector_id, cidr, via, enabled)</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>overlay_allocations(tenant_id, cidr, next_ip)             <span class="co">-- IP allocator state</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>policies(<span class="kw">id</span>, tenant_id, spec_jsonb, version, compiled_at)</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>policy_rules(policy_id, src_group, dst_selector, ports, action)</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="kw">groups</span>(<span class="kw">id</span>, tenant_id, name)  group_members(<span class="fu">group_id</span>, device_id)</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>audit_events(<span class="kw">id</span>, tenant_id, actor, action, target, ts, meta_jsonb)</span></code></pre></div>
+<ul>
+<li><strong>RLS</strong> enforces tenant isolation at the database, not
+just the app layer — defense in depth and a clean multi-tenant story for
+the self-hoster who runs networks for multiple clients.</li>
+<li><strong>No <code>connections</code> or <code>traffic</code>
+table.</strong> Live session/presence state lives in
+<strong>Redis</strong> (ephemeral, TTL&#39;d) so the durable store never
+accumulates a connection log. This operationalizes the no-logging
+promise.</li>
+</ul>
+<h3 id="46-redis-usage">4.6 Redis usage</h3>
+<p>Sessions/presence (<code>device:&lt;id&gt;:presence</code>, TTL
+refreshed by heartbeat), the <strong>ephemeral routing table</strong>
+the edge reads, rate limiting (token buckets per API key), pub/sub for
+low-latency intra-node signaling, and the event Streams above.</p>
+<h3 id="47-deployment-substrate--podman-rootless-quadlets">4.7
+Deployment substrate — Podman (rootless quadlets)</h3>
+<ul>
+<li>Ship every component as an OCI image; run with <strong>Podman
+quadlets</strong> (<code>.container</code> units managed by systemd) —
+rootless by default, no Docker daemon, better for a security
+product.</li>
+<li>A <strong>pod</strong> groups gateway-edge + control plane +
+Postgres + Redis for single-node self-host; multi-region splits
+them.</li>
+<li>Provide a <code>helixvpnctl</code> CLI (Go, Cobra) that generates
+quadlets, keys, and the first admin — the modern replacement for the
+original doc&#39;s pile of bash install scripts.</li>
+</ul>
+<hr />
+<h2 id="5-client--app-architecture--the-shared-codebase-strategy">5.
+Client / app architecture — the shared-codebase strategy</h2>
+<p>This is the heart of the brief: <em>all apps, all platforms, maximum
+reuse, tiny, fast.</em> The answer is <strong>two shared cores with thin
+per-platform shims</strong>, not one framework doing everything.</p>
+<h3 id="51-why-two-cores">5.1 Why two cores</h3>
+<p>A VPN client is two very different programs fused together:</p>
+<ol type="1">
+<li>A <strong>data-plane core</strong> that must do crypto, packet I/O,
+and obfuscation at line rate with bounded memory. This
+<strong>cannot</strong> be Dart/Flutter and <strong>must not</strong> be
+reimplemented per platform.</li>
+<li>A <strong>UI/orchestration layer</strong> (screens, settings,
+account, network picker) that benefits enormously from a single
+cross-platform toolkit.</li>
+</ol>
+<p>So:</p>
+<ul>
+<li><strong><code>helix-core</code> (Rust):</strong> WireGuard handling
+(<code>boringtun</code> userspace or kernel control), the
+<code>helix-transport</code> obfuscation crate (§3.2), kill-switch
+logic, DNS handling, network-map reconciliation, FFI surface. Compiled
+to a static lib / <code>cdylib</code> per platform. <strong>This is the
+same precedent as Mullvad (Rust daemon) and Cloudflare (Rust
+connector/WARP).</strong> Exposed to Dart via
+<code>flutter_rust_bridge</code>; exposed to native shims via UniFFI
+where needed.</li>
+<li><strong><code>helix-ui</code> (Flutter/Dart):</strong> every screen,
+the design system, the API/WebSocket client, state management. One
+codebase for all three app classes via flavors.</li>
+</ul>
+<h3 id="52-why-flutter-and-not-compose-multiplatform">5.2 Why Flutter
+(and not Compose Multiplatform)</h3>
+<p>The brief demands <strong>iOS, Android, Aurora, HarmonyOS, Windows,
+Linux, macOS, Web</strong>. Only Flutter reaches all of them:</p>
+<table>
+<thead>
+<tr>
+<th>Target</th>
+<th>Flutter path</th>
+<th>KMP / Compose MP</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>iOS / Android</td>
+<td>mainline</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Windows / Linux / macOS</td>
+<td>mainline</td>
+<td>✅ (Desktop JVM)</td>
+</tr>
+<tr>
+<td>Web</td>
+<td>mainline (CanvasKit/Wasm)</td>
+<td>✅ (Wasm/JS)</td>
+</tr>
+<tr>
+<td><strong>Aurora OS</strong></td>
+<td><strong>OMP Russia fork</strong>
+<code>gitlab.com/omprussia/flutter</code> (<code>flutter-aurora</code>,
+builds signed RPM); plugins by Friflex</td>
+<td>❌ none</td>
+</tr>
+<tr>
+<td><strong>HarmonyOS NEXT</strong></td>
+<td><strong>OpenHarmony SIG fork</strong>
+<code>gitee.com/openharmony-sig/flutter_flutter</code>
+(<code>ohos</code> channel, builds HAP); platform plugins in ArkTS via
+MethodChannel</td>
+<td>❌ none</td>
+</tr>
+</tbody>
+</table>
+<p>HarmonyOS NEXT dropped Android/ART compatibility entirely (native
+ArkTS/ArkUI/DevEco only), and Aurora is Qt/QML-native — so an Android
+APK or a KMP artifact simply will not run on either. The Flutter forks
+are the only realistic single-codebase path, and even the Aurora SDK
+comparison literature concedes Flutter as the cross-platform route.
+<strong>Conclusion: Flutter for UI; KMP is not viable for the full
+target set.</strong></p>
+<h3 id="53-per-platform-tunnel-shims">5.3 Per-platform tunnel shims</h3>
+<p>The Rust core needs an OS-level TUN/packet path, which is always
+platform-native. Thin shims (a few hundred lines each) own only
+that:</p>
+<table>
+<thead>
+<tr>
+<th>Platform</th>
+<th>Tunnel mechanism</th>
+<th>Shim language</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>iOS / macOS</td>
+<td><code>NEPacketTunnelProvider</code> (Network Extension)</td>
+<td>Swift</td>
+</tr>
+<tr>
+<td>Android</td>
+<td><code>VpnService</code> + JNI to <code>helix-core</code></td>
+<td>Kotlin</td>
+</tr>
+<tr>
+<td>Windows</td>
+<td><code>wireguard-nt</code> / <code>wintun</code></td>
+<td>Rust + small C#/Win service</td>
+</tr>
+<tr>
+<td>Linux</td>
+<td>kernel <code>wireguard</code> or <code>tun</code></td>
+<td>Rust</td>
+</tr>
+<tr>
+<td><strong>HarmonyOS NEXT</strong></td>
+<td>Network Kit VPN extension ability</td>
+<td>ArkTS shim → NAPI → <code>helix-core</code></td>
+</tr>
+<tr>
+<td><strong>Aurora OS</strong></td>
+<td>Qt/C++ network backend + <code>tun</code></td>
+<td>C++ shim → <code>helix-core</code></td>
+</tr>
+<tr>
+<td>Web</td>
+<td><strong>no OS tunnel possible</strong> — see §5.7</td>
+<td>Dart + WASM</td>
+</tr>
+</tbody>
+</table>
+<p>Everything above the shim (protocol, obfuscation, reconciliation, UI)
+is shared. Per-platform code is the irreducible minimum.</p>
+<h3 id="54-the-three-app-classes-from-one-tree">5.4 The three app
+classes from one tree</h3>
+<ul>
+<li><strong>Helix Access</strong> = <code>helix-ui</code> (full) +
+<code>helix-core</code> + tunnel shim. The Mullvad-style consumer
+app.</li>
+<li><strong>Helix Connector</strong> = <code>helix-core</code>
+(advertise/route mode) + a <strong>headless daemon</strong> entrypoint +
+an <em>optional</em> slim <code>helix-ui</code> config surface. Same
+Rust core, different run mode (it advertises prefixes and routes LAN
+traffic rather than capturing the device&#39;s traffic).</li>
+<li><strong>Helix Console</strong> = <code>helix-ui</code> (admin
+flavor) + API client only (no <code>helix-core</code>, no tunnel).
+Builds to Web (responsive) and Desktop from the identical Flutter
+project.</li>
+</ul>
+<h3 id="55-reuse-map">5.5 Reuse map</h3>
+<pre><code>helix-core (Rust)        ─┬─► Helix Access (client)
+  ├ helix-transport       ├─► Helix Connector (network side)
+  ├ wireguard control     └─► Gateway edge (server side)   ← SAME crate, 3 consumers
+  └ reconciler
+
+helix-ui (Flutter/Dart)  ─┬─► Helix Access
+  ├ design system         ├─► Helix Connector (config UI)
+  ├ api/ws client (gen)   └─► Helix Console (web + desktop)
+  └ state mgmt
+
+helix-proto (schemas)    ──► generates Dart + Go + Rust clients (no drift)
+helix-go (control plane) ──► all control-plane services share domain libs</code></pre>
+<p>Three reuse pillars: <strong>Rust core</strong> (data plane,
+client+connector+edge), <strong>Flutter UI</strong> (all apps),
+<strong>schema-generated clients</strong> (all languages).</p>
+<h3 id="56-size-memory-speed-strategy">5.6 Size, memory, speed
+strategy</h3>
+<ul>
+<li><strong>No Electron, ever.</strong> Desktop apps are Flutter AOT —
+tens of MB, not hundreds.</li>
+<li>Rust core compiled <code>--release</code> with LTO +
+<code>strip</code>; small static lib, no runtime/GC, bounded memory —
+critical for iOS Network Extension memory limits (historically ~15 MB
+working set) where a Go data plane would be risky.</li>
+<li>Per-ABI split APK/AAB; tree-shaken Flutter; deferred-loaded admin
+screens.</li>
+<li>Kernel WireGuard on the fast path wherever available;
+<code>boringtun</code> userspace only as fallback.</li>
+<li>Target: cold start &lt; 1 s on mid-range mobile, idle RSS for the
+tunnel core in single-digit MB.</li>
+</ul>
+<h3 id="57-honest-platform-caveats-do-not-hand-wave-these">5.7 Honest
+platform caveats (do not hand-wave these)</h3>
+<ul>
+<li><strong>Web cannot run a real device VPN.</strong> Browsers can&#39;t
+open a TUN device. The web build is therefore <strong>Helix Console
+(management) + account/config</strong>, plus an <em>optional</em>
+in-page <strong>WASM MASQUE client</strong> that can proxy <em>the
+browser&#39;s own</em> traffic to a joined network — not a system-wide
+tunnel. State this plainly to users; &quot;fully responsive web app&quot; = the
+console and a browser-scoped proxy, not a full VPN.</li>
+<li><strong>Aurora toolchain is Russian-hosted</strong>
+(<code>gitlab.com/omprussia</code>, Mos.Hub) and Aurora is primarily a
+government/enterprise platform. Plan CI runners and signing accordingly;
+treat it as an enterprise SKU, not a consumer afterthought.</li>
+<li><strong>HarmonyOS Flutter fork lags mainline</strong> Flutter
+versions and needs DevEco signing + ArkTS plugin work for the VPN
+extension. Budget real platform-specific effort for the tunnel ability;
+the <em>UI</em> ports cheaply, the <em>tunnel shim</em> does not.</li>
+<li><strong>iOS Network Extension memory ceiling</strong> is the single
+hardest constraint and the strongest reason the core is Rust.</li>
+</ul>
+<hr />
+<h2 id="6-mullvad-feature-parity-matrix--helixvpn-implementation">6.
+Mullvad feature-parity matrix → HelixVPN implementation</h2>
+<table>
+<thead>
+<tr>
+<th>Mullvad feature</th>
+<th>What it does</th>
+<th>HelixVPN implementation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>WireGuard-only crypto</td>
+<td>Modern, audited tunnel</td>
+<td><code>helix-core</code> WireGuard (kernel fast path,
+<code>boringtun</code> fallback)</td>
+</tr>
+<tr>
+<td><strong>QUIC obfuscation (MASQUE/RFC 9298)</strong></td>
+<td>WG-over-HTTP/3, looks like web</td>
+<td><code>helix-transport</code> CONNECT-UDP via
+<code>quinn</code>+<code>h3</code>; edge terminates on
+<code>:443/udp</code></td>
+</tr>
+<tr>
+<td>Shadowsocks obfuscation</td>
+<td>WG-in-Shadowsocks</td>
+<td><code>helix-transport</code> Shadowsocks wrap</td>
+</tr>
+<tr>
+<td>UDP-over-TCP</td>
+<td>WG when UDP blocked</td>
+<td><code>helix-transport</code> UoT</td>
+</tr>
+<tr>
+<td>LWO (lightweight obfs)</td>
+<td>cheap WG signature evasion</td>
+<td><code>helix-transport</code> LWO scheme</td>
+</tr>
+<tr>
+<td>Automatic obfuscation</td>
+<td>try methods until one works</td>
+<td>client escalation ladder (§3.2), driven by handshake failure
+events</td>
+</tr>
+<tr>
+<td>Custom WG port / 443 / 53</td>
+<td>port-based evasion</td>
+<td>edge multi-listener + port-hopping</td>
+</tr>
+<tr>
+<td><strong>DAITA</strong> (anti traffic-analysis)</td>
+<td>constant packet size + cover traffic</td>
+<td>optional shaping layer above WG (maybenot-style state machine)</td>
+</tr>
+<tr>
+<td>Multi-hop</td>
+<td>entry/exit separation</td>
+<td>nested WG, control-plane orchestrated (§3.5)</td>
+</tr>
+<tr>
+<td>Kill-switch</td>
+<td>no leaks if tunnel drops</td>
+<td>OS firewall rules driven by <code>helix-core</code> state machine
+(carry forward the doc&#39;s nftables/<code>fwmark</code> rules, but managed
+by the core, not hand-edited)</td>
+</tr>
+<tr>
+<td>Split tunneling</td>
+<td>per-app/route bypass</td>
+<td>per-route <code>AllowedIPs</code> + per-app rules on
+Android/desktop</td>
+</tr>
+<tr>
+<td>DNS leak protection</td>
+<td>force tunnel DNS</td>
+<td>core sets tunnel DNS; blocks plaintext :53 off-tunnel</td>
+</tr>
+<tr>
+<td>No-logging</td>
+<td>no connection logs</td>
+<td>architectural: ephemeral Redis presence, no durable connection table
+(§4.5)</td>
+</tr>
+<tr>
+<td>Account # (no email)</td>
+<td>anonymous identity</td>
+<td>optional anonymous device-token enrollment alongside OIDC</td>
+</tr>
+<tr>
+<td>Post-quantum handshake</td>
+<td>PQ-safe key exchange</td>
+<td>WG PQ pre-shared layer / Kyber-style KEM in <code>pki</code> +
+core</td>
+</tr>
+<tr>
+<td>Per-device management</td>
+<td>see/revoke devices</td>
+<td><code>registry</code> + Console; revoke emits
+<code>device.revoked</code> → instant edge enforcement</td>
+</tr>
+</tbody>
+</table>
+<p>This table is the acceptance checklist for &quot;all Mullvad power
+features.&quot; Everything maps to a concrete component; nothing is
+aspirational.</p>
+<hr />
+<h2 id="7-security-architecture">7. Security architecture</h2>
+<ul>
+<li><strong>Zero-trust, default-deny.</strong> No peer reaches anything
+without an explicit compiled policy rule.</li>
+<li><strong>Identity:</strong> OIDC SSO for managed tenants; anonymous
+device tokens for privacy users. Every device has its own keypair and a
+short-lived enrollment cert from <code>pki</code>.</li>
+<li><strong>Transport auth:</strong> mutual auth on the agent control
+channel (device cert + token); WireGuard&#39;s own Noise handshake on the
+data channel.</li>
+<li><strong>Key hierarchy:</strong> per-device WG keys, rotated on
+schedule and on <code>device.revoked</code>; gateway keys rotated
+independently; optional PQ pre-shared layer.</li>
+<li><strong>Edge hardening:</strong> rootless Podman, read-only rootfs,
+seccomp, <code>NET_ADMIN</code> only where required, no SSH on the
+data-plane container (manage via control plane).</li>
+<li><strong>No-logging as code:</strong> the only persistent
+traffic-derived data is aggregate counters for metrics; assert this with
+a schema lint in CI (fail the build if a
+<code>connection</code>/<code>traffic</code>/<code>packet</code> durable
+table appears).</li>
+<li><strong>Audit:</strong> all <em>control</em> actions (not traffic)
+are audited to <code>audit_events</code> and streamed to the Console
+live.</li>
+<li><strong>Carry-forward from original doc, upgraded:</strong>
+fail2ban/SSH-key hardening → replaced by no-public-SSH + WireGuard-only
+management; GPG/KMS encrypted backups (§10) retained; the kill-switch
+<code>iptables</code> rules retained but owned by the core.</li>
+</ul>
+<hr />
+<h2 id="8-event-driven--real-time-flows-sequence-sketches">8.
+Event-driven &amp; real-time flows (sequence sketches)</h2>
+<p><strong>Connector onboarding</strong></p>
+<pre><code>Connector --(enroll token)--&gt; api: POST /connectors
+api --&gt; pki: issue cert + overlay IP        api --&gt; registry: create device
+registry --emit--&gt; connector.attached       coordinator: build map for tenant
+Connector --open--&gt; WatchNetworkMap (gRPC stream)
+coordinator --&gt; Connector: snapshot (peers, routes, transport policy)
+Connector: advertise 10.10.0.0/16 --&gt; registry --emit--&gt; route.advertised
+coordinator: recompute --&gt; push deltas to gateway edge + authorized clients  (&lt;1s)</code></pre>
+<p><strong>Client connect + reach a joined network</strong></p>
+<pre><code>Client app --&gt; core: connect            core --&gt; edge: WG handshake (transport=auto)
+  (auto ladder: plain UDP → LWO → QUIC/MASQUE → Shadowsocks → UoT)
+core --open--&gt; WatchNetworkMap           coordinator --&gt; core: map (allowed prefixes)
+User opens 10.10.5.20 (camera on Network A)
+edge: policy verdict ALLOW --&gt; route via Connector A --&gt; packet delivered
+edge: counters++ (no log)                Console: live &quot;client online&quot; via WS</code></pre>
+<p><strong>Policy change propagation (the real-time proof)</strong></p>
+<pre><code>Admin (Console) revokes group:contractors access to net:warehouse
+api: write policy --emit--&gt; policy.updated
+policy svc: compile --emit--&gt; policy.compiled
+coordinator: diff affected agents --&gt; push deltas
+edge + affected clients: reconcile verdict maps     elapsed: &lt; 1s, no restarts</code></pre>
+<p><strong>Gateway failover</strong></p>
+<pre><code>health probe fails --emit--&gt; gateway.failover
+coordinator: reassign clients to standby gateway (floating IP / Anycast)
+clients: map delta → re-handshake to new endpoint, transport preserved</code></pre>
+<hr />
+<h2 id="9-observability-reframed-from-the-original-doc">9. Observability
+(reframed from the original doc)</h2>
+<p>Keep the original&#39;s Prometheus + Grafana + Alertmanager + Blackbox
+stack — it&#39;s good — but:</p>
+<ul>
+<li>Scrape <strong>per-component</strong> metrics: control-plane (Go
+runtime, event lag, map-push latency), edge (handshakes, transport-mode
+distribution, QUIC retransmits, bytes per peer — <strong>counts, never
+content</strong>), connectors (advertised-prefix health, RTT).</li>
+<li>Add <strong>event-lag</strong> and
+<strong>map-convergence-time</strong> as first-class SLOs (the real-time
+promise must be measurable: alert if convergence p99 &gt; 1 s).</li>
+<li>Grafana dashboards: Fleet Overview, Per-Tenant,
+Transport/Obfuscation Mix, Censorship-Evasion Success Rate (how often
+the auto-ladder had to escalate, by region).</li>
+<li>Ship dashboards as code; deploy the whole stack as Podman quadlets
+alongside the platform (reuse the original doc&#39;s compose, ported to
+quadlets).</li>
+</ul>
+<hr />
+<h2 id="10-deployment-ha-and-dr">10. Deployment, HA, and DR</h2>
+<ul>
+<li><strong>Single-node self-host:</strong> one <code>podman</code> pod
+(edge + control + Postgres + Redis), <code>helixvpnctl init</code>
+bootstraps keys + admin. This is the homelab/original-doc use case,
+modernized.</li>
+<li><strong>Fleet:</strong> multiple gateways (multi-region), shared
+control plane (or regional control planes federating over NATS),
+Postgres primary + replicas, Redis/NATS for cross-region events. Clients
+reach the nearest gateway via Anycast or GeoDNS; floating IPs for fast
+failover (retain the original doc&#39;s DigitalOcean floating-IP
+pattern).</li>
+<li><strong>IaC:</strong> keep the original Terraform for gateway
+provisioning; cloud-init installs Podman + pulls images + joins the
+control plane (replace the bash WG/Hysteria install with a single
+<code>helixvpnctl join</code>).</li>
+<li><strong>GitOps:</strong> the original doc&#39;s sops/git-crypt +
+PR-driven config model maps cleanly onto policy-as-code here — policies
+and network definitions live in Git, CI validates and applies via the
+API.</li>
+<li><strong>Backups &amp; DR:</strong> retain GPG/KMS-encrypted offsite
+backups, restic, 3-2-1, and the quarterly DR drill checklist — but the
+only stateful thing to back up is <strong>Postgres</strong>
+(control-plane truth) and the <strong>PKI root</strong>; data-plane
+nodes are cattle, reprovisioned from IaC in minutes. RPO≈0 (config in
+Git + Postgres PITR), RTO 15–30 min unchanged.</li>
+</ul>
+<hr />
+<h2 id="11-repository-layout-helix-ecosystem-aligned">11. Repository
+layout (Helix-ecosystem aligned)</h2>
+<pre><code>helixvpn/                         # umbrella
+├── helix-core/                   # Rust: WG control, transport, reconciler, FFI
+│   ├── crates/helix-transport/   #   QUIC/MASQUE, Shadowsocks, UoT, LWO  (shared client+edge)
+│   ├── crates/helix-wg/          #   WireGuard control + boringtun fallback
+│   └── crates/helix-ffi/         #   flutter_rust_bridge + UniFFI surface
+├── helix-edge/                   # Rust: gateway data-plane edge (uses helix-transport)
+├── helix-go/                     # Go: control plane (identity/registry/policy/coordinator/pki/telemetry/api)
+├── helix-proto/                  # Protobuf + OpenAPI → generated Dart/Go/Rust clients
+├── helix-ui/                     # Flutter: design system + screens + flavors
+│   ├── app_access/               #   end-user
+│   ├── app_connector/            #   network-side config
+│   └── app_console/              #   admin (web + desktop)
+├── shims/                        # per-platform tunnel providers
+│   ├── apple/ android/ windows/ linux/ harmonyos/ aurora/
+├── deploy/                       # Podman quadlets, Terraform, Grafana-as-code, helixvpnctl
+└── helix-agent-base/             # submodule: shared CLAUDE.md/AGENTS.md/constitution.md</code></pre>
+<p>This slots into your existing <code>helix-agent-base</code> submodule
+convention and the Go-backend / cross-platform-frontend /
+self-hosted-AI-and-infra philosophy already used across HelixGitpx,
+HelixMemory, HelixSpecifier, etc.</p>
+<hr />
+<h2 id="12-phased-roadmap">12. Phased roadmap</h2>
+<p><strong>Phase 0 — Spike (prove the hard parts).</strong> WireGuard
+data path through the gateway edge; <code>helix-transport</code>
+plain-UDP + one QUIC/MASQUE mode; one client (Linux or Android) on
+<code>helix-core</code> reaching one connector&#39;s LAN. Validates the
+whole vertical slice.</p>
+<p><strong>Phase 1 — MVP self-host.</strong> Go control plane (single
+binary), Postgres+RLS, Redis Streams, <code>WatchNetworkMap</code>,
+Console (web), Access app on iOS + Android + Linux, Connector daemon.
+Auto obfuscation ladder with plain/LWO/QUIC. Kill-switch, DNS
+protection, no-logging. <code>podman</code> quadlet deploy +
+<code>helixvpnctl</code>.</p>
+<p><strong>Phase 2 — Parity + reach.</strong> Full obfuscation set
+(Shadowsocks, UoT), DAITA shaping, multi-hop, PQ handshake. Desktop apps
+(Win/macOS). Policy-as-code + GitOps. HA/multi-region gateways +
+failover.</p>
+<p><strong>Phase 3 — Full platform set.</strong> HarmonyOS NEXT and
+Aurora OS builds (forked Flutter + native tunnel shims). Web WASM MASQUE
+proxy mode. Multi-tenant Console, audit, optional billing. Security
+audit + reproducible builds.</p>
+<hr />
+<h2 id="13-key-risks--open-decisions">13. Key risks &amp; open
+decisions</h2>
+<table>
+<thead>
+<tr>
+<th>Risk / decision</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>iOS NE memory ceiling</strong></td>
+<td>Hardest constraint; the reason core is Rust. Profile early in Phase
+0.</td>
+</tr>
+<tr>
+<td><strong>Go vs Rust for the edge QUIC</strong></td>
+<td>Spec says Rust (code reuse with clients). If team velocity favors
+Go, <code>quic-go</code>+<code>masque-go</code> is acceptable — but you
+lose the single-implementation guarantee. Decide in Phase 0.</td>
+</tr>
+<tr>
+<td><strong>HarmonyOS/Aurora effort</strong></td>
+<td>UI ports cheaply; tunnel shims are real native work. Don&#39;t promise
+dates until the shims spike.</td>
+</tr>
+<tr>
+<td><strong>DAITA correctness</strong></td>
+<td>Traffic-analysis defense is subtle; consider adopting the maybenot
+framework rather than rolling your own.</td>
+</tr>
+<tr>
+<td><strong>Overlapping-CIDR UX</strong></td>
+<td>4via6 mapping is powerful but confusing to users; invest in Console
+UX that hides it.</td>
+</tr>
+<tr>
+<td><strong>kernel vs userspace WG</strong></td>
+<td>Kernel is faster but constrains containerization/permissions; ship
+both, default to kernel.</td>
+</tr>
+<tr>
+<td><strong>Self-host vs SaaS positioning</strong></td>
+<td>The same code serves both; decide the licensing (e.g.,
+source-available + commercial) before public release.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="14-what-to-salvage-verbatim-from-the-original-home_vpnmd">14.
+What to salvage verbatim from the original <code>Home_VPN.md</code></h2>
+<p>The original is not wasted — these parts drop straight in:</p>
+<ul>
+<li>The <strong>reverse-tunnel / outbound-dial</strong> core insight
+(now generalized to all connectors).</li>
+<li><strong>WireGuard kill-switch</strong>
+<code>iptables</code>/<code>fwmark</code> rules (now owned by
+<code>helix-core</code>).</li>
+<li><strong>Multi-arch Docker buildx</strong> pipeline (retarget to
+Podman/OCI, same buildx).</li>
+<li><strong>Prometheus/Grafana/Alertmanager/Blackbox</strong> stack and
+dashboards (reframed per §9).</li>
+<li><strong>Terraform</strong> gateway provisioning + floating-IP
+failover (cloud-init now runs <code>helixvpnctl join</code>).</li>
+<li><strong>GPG/KMS encrypted backups, restic, 3-2-1, DR drill</strong>
+checklist (now only Postgres + PKI need backing up).</li>
+<li><strong>GitOps with sops/git-crypt</strong> (becomes
+policy-as-code).</li>
+<li>The Hysteria2 QUIC tuning knobs (receive-window ratios, BBR vs
+Brutal) → useful reference when tuning the <code>quinn</code> MASQUE
+transport.</li>
+</ul>
+<p>What to <strong>drop or demote:</strong> Hysteria2 as the primary
+QUIC path (replaced by WG-over-MASQUE), the cron-restart health loops
+(replaced by event-driven reconciliation), and the assumption of a
+single home LAN (replaced by the multi-connector overlay).</p>
+<hr />
+<p><em>End of refined specification. This document supersedes the
+architecture framing of <code>Home_VPN.md</code> while preserving its
+ops content as implementation reference.</em></p>
+</body>
+</html>

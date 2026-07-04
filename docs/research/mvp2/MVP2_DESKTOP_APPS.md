@@ -1,15 +1,43 @@
 # MVP2 Desktop VPN Client Applications — Technical Specification
 
+**Revision:** 3
+**Last modified:** 2026-07-04T16:30:00Z
+
+> **Revision 3 changelog:** annotated §5.7's "Flat UI Colors" theme palette,
+> which hardcoded an independently-invented accent/background scheme never
+> reconciled against the canonical, already-built OpenDesign token system
+> (`docs/research/CROSS_CUTTING_GAP_ANALYSIS.md` §1.2 finding #1).
+
+> **Revision 2 changelog:** added `## 8. Enterprise Hardening & Production
+> Readiness` (code-signing/notarization/driver-trust summary, MDM/managed-
+> policy push wired to `PlatformAdapter::apply_managed_policy`, signed
+> auto-update rollout + rollback, crash reporting, telemetry consent,
+> offline/degraded-network behavior, accessibility, i18n, multi-account
+> profile isolation, enterprise SSO, and license/entitlement offline-grace
+> caching), with two new Mermaid diagrams (this file previously had zero).
+> Reconciled against `MVP2_ARCHITECTURE.md` and `MVP2_SHARED_CORE.md`:
+> corrected the "Target Protocol" row below (OpenVPN is a reserved,
+> unimplemented `ProtocolType::OpenVPN` placeholder only, not a shipped
+> fallback — see §1.1); expanded §5.4's connection-state table to the full
+> 7-state canonical lifecycle (`MVP2_ARCHITECTURE.md` §5.6) instead of an
+> ad-hoc 5-state subset; corrected §7.4's auto-update mechanism table so
+> `tauri-plugin-updater` (already an Appendix A dependency) is identified
+> as the MVP2-shipped mechanism, with Sparkle/WinSparkle (§2.6/§3.8) noted
+> as an optional native-updater supplement rather than the primary path;
+> and added a reconciliation note under the three per-OS phase-duration
+> tables (§2.8/§3.10/§4.11) cross-referencing the authoritative schedule
+> in `MVP2_IMPLEMENTATION_ROADMAP.md`.
+
 ## Document Information
 
 | Field | Value |
 |-------|-------|
 | **Version** | MVP2-1.0 |
-| **Date** | July 2025 |
+| **Date** | July 2025 (Revision 2: 2026-07-04) |
 | **Status** | Draft for Implementation |
 | **Scope** | macOS, Windows, Linux desktop clients |
 | **Framework** | Tauri v2 (Rust + WebView) |
-| **Target Protocol** | WireGuard (primary), OpenVPN (fallback) |
+| **Target Protocol** | WireGuard (primary); Shadowsocks SIP022 AEAD-2022 + MASQUE (RFC 9298 CONNECT-UDP/HTTP3) secondary; Multi-Hop (chained WireGuard) advanced. **OpenVPN is a reserved, unimplemented placeholder only** — `ProtocolType::OpenVPN` (`MVP2_SHARED_CORE.md` §3.1) is an enum variant backed by an empty `openvpn = []` Cargo feature flag with no `helix-openvpn` crate; selecting it returns `HelixError::UnsupportedProtocol` in MVP2. Not shipped, not a fallback. |
 
 ---
 
@@ -22,6 +50,7 @@
 5. [UI/UX Design for Desktop](#5-uiux-design-for-desktop)
 6. [Desktop-Specific Features](#6-desktop-specific-features)
 7. [Build & Distribution](#7-build--distribution)
+8. [Enterprise Hardening & Production Readiness](#8-enterprise-hardening--production-readiness)
 
 ---
 
@@ -663,6 +692,12 @@ impl PrivilegedHelper {
 
 ### 2.6 Sparkle Framework for Auto-Updates
 
+> **Reconciliation note (Revision 2):** per `MVP2_ARCHITECTURE.md` §3.3,
+> `tauri-plugin-updater` (§7.4, §8.3) is the mechanism MVP2 actually ships
+> for auto-updates; Sparkle below is an optional native-updater supplement
+> some teams wire up later for OS-native delta-update UX, not the shipped
+> default.
+
 Sparkle is the standard macOS auto-updater, supporting delta updates and EdDSA signature verification:
 
 ```xml
@@ -937,6 +972,19 @@ WireGuardNT provides the highest-performance WireGuard implementation on Windows
 | WireGuardNT (kernel) | **892 Mbit/s** | **892 Mbit/s** | **Primary choice** |
 | WireSock VPN Client | 879 Mbit/s | 892 Mbit/s | Alternative |
 | WinTun (userspace) | 288 Mbit/s | 325 Mbit/s | Legacy fallback |
+
+**Driver-signing note (added Revision 2 — see §8.1):** HelixVPN does not
+recompile or re-sign `wireguard.dll` / the `WireGuardNT.sys` kernel
+driver. The upstream `wireguard-nt` releases published by the WireGuard
+Foundation are already Microsoft attestation-signed for kernel-mode
+loading; the build pipeline vendors the exact upstream-released binary,
+pinned by SHA-256 and verified in CI (§7.1) before bundling, rather than
+building it from source. Re-signing it would invalidate the upstream
+signature and require HelixVPN to obtain its own EV/attestation
+driver-signing certificate and Windows Hardware Dev Center submission — a
+materially heavier process than the app/installer EV code-signing already
+covered in §3.9, and one this project deliberately avoids by redistributing
+the upstream binary as-is.
 
 #### Rust Integration
 
@@ -1314,6 +1362,10 @@ The Windows client requires Administrator privileges for:
 ```
 
 ### 3.8 WinSparkle for Auto-Updates
+
+> **Reconciliation note (Revision 2):** as in §2.6, `tauri-plugin-updater`
+> (§7.4, §8.3) is the MVP2-shipped mechanism; WinSparkle below is an
+> optional native-updater supplement, not the shipped default.
 
 WinSparkle provides the Windows equivalent of Sparkle, using the same appcast XML format:
 
@@ -2176,6 +2228,22 @@ table inet {} {{
 | **Phase 5: System Tray** | 1 week | AppIndicator, notifications, MIME types |
 | **Phase 6: Polishing** | 1 week | polkit rules, firewalld compatibility, docs |
 
+**Reconciliation note (Revision 2 — timeline cross-check):** the three
+per-OS phase tables above (§2.8 macOS: 9 weeks solo; §3.10 Windows: 11
+weeks solo; §4.11 Linux: 8 weeks solo) are engineering-effort sizing
+estimates for each platform built in isolation, not independent calendar
+schedules to be summed. The authoritative, resourced schedule is
+`MVP2_IMPLEMENTATION_ROADMAP.md` §4 (Phase 3: macOS + Linux in parallel,
+Weeks 6-14, 2 desktop developers + 1 UI/UX designer — each developer's
+9-week/8-week solo estimate above fits inside that shared 9-week window)
+and §5 (Phase 4: Windows, Weeks 12-18, 1 Windows specialist + the
+already-built shared Rust core and UI patterns from Phase 3 — the 7
+calendar weeks compress the 11-week solo estimate via ~80% code reuse
+from macOS/Linux, per `MVP2_ARCHITECTURE.md` §4.1). Total desktop-track
+duration across all three OSes is bounded by the roadmap's 36-week
+(expected, 60% probability) / 30-week (best case) / 44-week (worst case)
+program-level schedule, not by summing the per-OS tables above.
+
 ---
 
 ## 5. UI/UX Design for Desktop
@@ -2295,13 +2363,32 @@ Menu (Connected):
 
 ### 5.4 Color-Coded Connection States
 
+**Reconciliation note (Revision 2):** the previous revision of this table
+rendered only 5 of the connection-lifecycle states and omitted
+`KillSwitchActive`, `Disconnecting`, and `ConnectionFailed` — a real gap,
+since `KillSwitchActive` in particular is the one state where the UI MUST
+make an active security enforcement (not a transient error) unmistakable
+to the user. The table below is now the full 7-state set owned by
+`helix-vpn-engine` (`MVP2_ARCHITECTURE.md` §5.6, `MVP2_SHARED_CORE.md`
+§3.1 `ConnectionStatus`); the desktop UI renders exactly these states and
+MUST NOT invent an additional one (e.g. a bespoke "Suspended"/"Paused"
+state not in this set).
+
 | State | Color | Icon | Tray | Description |
 |-------|-------|------|------|-------------|
 | **Disconnected** | Red `#E74C3C` | Shield with X | 🔴 Red icon | No VPN connection |
 | **Connecting** | Amber `#F39C12` | Shield with spinner | 🟡 Amber icon + animation | Handshake in progress |
 | **Connected** | Green `#27AE60` | Shield with check | 🟢 Green icon | Secure tunnel active |
-| **Reconnecting** | Blue `#3498DB` | Shield with spinner | 🔵 Blue icon + animation | Connection lost, retrying |
-| **Error** | Red `#C0392B` | Shield with ! | 🔴 Red icon + badge | Connection failed |
+| **Reconnecting** | Blue `#3498DB` | Shield with spinner | 🔵 Blue icon + animation | Handshake/keepalive lost, re-establishing |
+| **KillSwitchActive** | Deep red `#922B21` | Shield with lock | 🔴 Red icon + lock badge | Reconnect exceeded grace period; all non-VPN traffic actively blocked (§6.3) |
+| **Disconnecting** | Amber `#F39C12` | Shield with spinner (reverse) | 🟡 Amber icon + animation | Tearing down routes/DNS/firewall |
+| **ConnectionFailed** | Red `#C0392B` | Shield with ! | 🔴 Red icon + badge | Initial connection attempt failed (timeout/handshake error), prior to ever reaching Connected |
+
+The wire-format `ConnectionStatus` enum also carries generic `Error` /
+`Unknown` fallback variants for genuinely unclassifiable FFI conditions
+(`MVP2_SHARED_CORE.md` §3.1). These are **not** part of the connection
+lifecycle above; if one is ever surfaced to the UI it renders using the
+`ConnectionFailed` treatment rather than inventing a new color/state.
 
 ### 5.5 Keyboard Shortcuts
 
@@ -2350,10 +2437,27 @@ pub fn show_window_on_tray_monitor<R: Runtime>(
 
 ### 5.7 Dark/Light Theme Support
 
+**Reconciliation note (Revision 3):** the `--accent`/`--accent-hover`
+"Flat UI Colors" values below predate the canonical, already-built
+OpenDesign token system and were never reconciled against it — this is
+the "five different primary brand colors" gap named in
+`docs/research/CROSS_CUTTING_GAP_ANALYSIS.md` §1.2 finding #1. **The
+canonical brand primary is teal `#00897B`**, defined once in
+`docs/design/tokens/color.json` (`primary.500`) and compiled to
+`docs/design/opendesign/helix/tokens.css` (`--hx-primary-500`);
+implementers MUST import that stylesheet (or the platform-appropriate
+generated equivalent) rather than hand-maintaining a parallel
+`--accent`/`--bg-primary`/`--status-*` palette that shares neither the
+brand hex nor the `--hx-*` naming convention used elsewhere in the
+project. The block below is left as a structural reference for *which*
+CSS custom properties this Tauri app needs (background/text/border/
+status-state tiers) — only the concrete hex values are superseded.
 Tauri automatically respects the OS theme. CSS media queries handle dark mode:
 
 ```css
-/* styles.css — Dark/Light theme support */
+/* styles.css — Dark/Light theme support (see reconciliation note above:
+   hex values are illustrative/legacy; source real values from
+   docs/design/opendesign/helix/tokens.css) */
 :root {
   --bg-primary: #ffffff;
   --bg-secondary: #f5f6fa;
@@ -3034,13 +3138,25 @@ jobs:
 
 ### 7.4 Update Mechanism
 
-| Platform | Mechanism | Check Interval | Delta Updates |
-|----------|-----------|----------------|---------------|
-| **macOS** | Sparkle | Daily | Yes (BinaryDelta) |
-| **Windows** | WinSparkle | Daily | No (full download) |
-| **Linux** | APT/DNF repo | On system update | Yes (package manager) |
+**Reconciliation note (Revision 2):** the previous revision of this table
+labeled Sparkle/WinSparkle as the primary per-OS mechanism and the Tauri
+updater as a "fallback." Per the canonical cross-platform dependency list
+(`MVP2_ARCHITECTURE.md` §3.3) `tauri-plugin-updater` — already declared in
+this document's own `Cargo.toml` and `tauri.conf.json` (Appendix A, and
+the JSON snippet below) — is the mechanism MVP2 actually ships across all
+three desktop OSes. The table is corrected below; §2.6 (Sparkle) and §3.8
+(WinSparkle) remain documented as an **optional native-updater supplement**
+a platform team may additionally wire up later for OS-native delta-update
+UX, not as the shipped default. See §8.3 for the staged-rollout + rollback
+extension this mechanism needed and previously lacked.
 
-#### Tauri Built-in Updater (Fallback)
+| Platform | Primary mechanism (MVP2-shipped) | Check Interval | Optional native supplement |
+|----------|-----------------------------------|----------------|------------------------------|
+| **macOS** | `tauri-plugin-updater` (signed manifest, below) | Daily | Sparkle (§2.6), if delta-update UX is prioritized post-MVP2 |
+| **Windows** | `tauri-plugin-updater` | Daily | WinSparkle (§3.8), same caveat |
+| **Linux** | `tauri-plugin-updater` (AppImage/generic installs) | Daily | APT/DNF repo (package-manager-driven updates for repo installs) |
+
+#### Tauri Built-in Updater (Canonical Mechanism)
 
 ```json
 // tauri.conf.json — Updater configuration
@@ -3120,6 +3236,831 @@ impl ReleaseChannel {
     }
 }
 ```
+
+---
+
+## 8. Enterprise Hardening & Production Readiness
+
+This section closes eleven production-readiness gaps identified in an
+enterprise-hardening review of the original MVP2 desktop draft (§1-§7):
+supply-chain trust for the Linux packaging channel, enterprise bulk
+deployment, update rollback, crash reporting, telemetry consent, offline
+behavior, accessibility, localization, multi-account isolation, SSO, and
+entitlement verification. Where §2/§3/§4/§7 already specify a concern in
+depth (macOS notarization, Windows EV/SmartScreen, the update-manifest
+format) this section cross-references rather than duplicating and focuses
+on what was net-new. It is the desktop-specific detail layer for
+`MVP2_ARCHITECTURE.md` §10 (the cross-platform index for these same
+concerns) — read that section first for the shared architectural contract
+every platform document honors.
+
+### 8.1 Code-Signing, Notarization & Driver Trust — Cross-Platform Summary
+
+| OS | Mechanism | Status |
+|----|-----------|--------|
+| **macOS** | Developer ID Application cert + hardened-runtime entitlements + `notarytool submit --wait` + `stapler staple` | Fully specified in §2.4 — no changes needed |
+| **Windows** | EV/OV code-signing cert (app + installer + services) for immediate SmartScreen trust | Fully specified in §3.2/§3.9 — see the driver-signing note added to §3.3 |
+| **Linux** | GPG-signed APT/DNF repository metadata + AppImage signing | **Net-new — added below** |
+
+**Linux — GPG-Signed Package Repositories + AppImage Signing.** No signing
+mechanism for the `.deb`/`.rpm` repository metadata or the AppImage bundle
+was previously specified in §4.6 — an unsigned repo or AppImage served
+over an unauthenticated mirror is undetectable tampering, the same class
+of gap notarization closes on macOS and EV signing closes on Windows.
+
+```bash
+#!/bin/bash
+# sign-linux-repo.sh — GPG-sign the APT/DNF repo metadata + the AppImage
+set -euo pipefail
+
+GPG_KEY_ID="${HELIXVPN_GPG_KEY_ID:?set to the release-signing key fingerprint}"
+
+# --- APT (Debian/Ubuntu) repository signing ---
+# Repo layout: repo/dists/stable/{Release,Release.gpg,InRelease}
+cd repo
+apt-ftparchive release dists/stable > dists/stable/Release
+gpg --default-key "$GPG_KEY_ID" -abs -o dists/stable/Release.gpg dists/stable/Release
+gpg --default-key "$GPG_KEY_ID" --clearsign -o dists/stable/InRelease dists/stable/Release
+gpg --export "$GPG_KEY_ID" > helixvpn-archive-keyring.gpg
+# Client install instructions reference this keyring (no apt-key, deprecated):
+#   echo "deb [signed-by=/usr/share/keyrings/helixvpn-archive-keyring.gpg] \
+#     https://apt.helixvpn.com stable main" | sudo tee /etc/apt/sources.list.d/helixvpn.list
+
+# --- RPM (Fedora/openSUSE) package + repo signing ---
+rpm --define "_gpg_name $GPG_KEY_ID" --addsign dist/rpm/*.rpm
+createrepo_c --update dist/rpm/
+gpg --detach-sign --armor dist/rpm/repodata/repomd.xml
+gpg --export -a "$GPG_KEY_ID" > dist/rpm/RPM-GPG-KEY-helixvpn
+
+# --- AppImage signing ---
+# appimagetool embeds a signature block validated by tools that support
+# AppImage's zsync + GPG detached-signature convention.
+./appimagetool --sign --sign-key "$GPG_KEY_ID" \
+  HelixVPN.AppDir HelixVPN-x86_64.AppImage
+gpg --detach-sign --armor HelixVPN-x86_64.AppImage
+# Verification (documented for users / config-management, e.g. Ansible §8.2):
+#   gpg --verify HelixVPN-x86_64.AppImage.asc HelixVPN-x86_64.AppImage
+```
+
+| Channel | Signing mechanism | Trust anchor distributed via |
+|---|---|---|
+| APT repo | `Release`/`InRelease` GPG-signed metadata | `helixvpn-archive-keyring.gpg` shipped in the package + website + keyserver |
+| DNF/RPM repo | `repomd.xml` detached GPG sig + per-package `rpm --addsign` | `RPM-GPG-KEY-helixvpn`, referenced by the `.repo` file's `gpgkey=` |
+| AppImage | `appimagetool --sign` + detached `.asc` | Same GPG key; fingerprint published on the website + release notes |
+| Flatpak / Snap | Store-level signing (Flathub / Snap Store own the signing keys) | N/A — the store handles it |
+
+### 8.2 MDM / Enterprise Bulk Deployment & Managed-Policy Push
+
+`helix-admin` pushes org-scoped policy — allowed protocols, forced kill
+switch, forced split-tunnel rules, forced DNS, SSO enforcement — to
+enrolled devices via the MVP1 Admin API (`MVP2_ARCHITECTURE.md` §10.2).
+Every desktop platform adapter exposes the same extension point:
+
+```rust
+// helix-platform-abstraction — PlatformAdapter trait excerpt
+// (MVP2_ARCHITECTURE.md §5.5, MVP2_SHARED_CORE.md §3.1 ManagedPolicy)
+#[async_trait::async_trait]
+pub trait PlatformAdapter: Send + Sync {
+    // ... existing methods: tunnel, routes, DNS, kill switch ...
+
+    /// Applies org-scoped policy pushed from `helix-admin` via the MVP1
+    /// Admin API. Invoked by each OS's native MDM/policy-watch channel below.
+    async fn apply_managed_policy(&self, policy: &ManagedPolicy) -> Result<()>;
+}
+```
+
+#### macOS — Configuration Profiles (`.mobileconfig`)
+
+Pushed via Apple Business Manager (ABM), JAMF, Intune, or Kandji:
+
+```xml
+<!-- HelixVPN-Enterprise.mobileconfig — pushed via JAMF/Intune/Kandji/ABM -->
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>PayloadContent</key>
+  <array>
+    <!-- Payload 1: native VPN payload (OS-level VPN toggle) -->
+    <dict>
+      <key>PayloadType</key><string>com.apple.vpn.managed</string>
+      <key>VPNType</key><string>VPN</string>
+      <key>VPNSubType</key><string>com.helixvpn.macos</string>
+    </dict>
+    <!-- Payload 2: managed app configuration consumed by helix-desktop -->
+    <dict>
+      <key>PayloadType</key><string>com.apple.app.managed</string>
+      <key>Identifier</key><string>com.helixvpn.macos</string>
+      <key>ManagedAppConfiguration</key>
+      <dict>
+        <key>organization_id</key><string>$ORG_ID</string>
+        <key>allowed_protocols</key><array><string>WireGuard</string><string>Masque</string></array>
+        <key>force_kill_switch</key><true/>
+        <key>forced_dns_servers</key><array><string>10.10.0.1</string></array>
+        <key>require_sso_login</key><true/>
+        <key>policy_version</key><integer>7</integer>
+      </dict>
+    </dict>
+  </array>
+  <key>PayloadIdentifier</key><string>com.helixvpn.macos.enterprise</string>
+  <key>PayloadType</key><string>Configuration</string>
+  <key>PayloadVersion</key><integer>1</integer>
+</dict>
+</plist>
+```
+
+```rust
+// src/platform/macos/managed_policy.rs
+use core_foundation::preferences::CFPreferencesCopyAppValue;
+
+/// JAMF/Intune/Kandji/ABM all write through the same MDM
+/// managed-preferences mechanism — read via CFPreferences, not a
+/// vendor-specific API.
+pub fn read_managed_policy() -> Option<ManagedPolicy> {
+    let raw = CFPreferencesCopyAppValue(
+        "ManagedAppConfiguration".into(),
+        "com.helixvpn.macos".into(),
+    )?;
+    serde_json::from_value(cf_dict_to_json(raw)).ok()
+}
+
+pub async fn watch_and_apply(adapter: &dyn PlatformAdapter) {
+    // FSEventStream on /Library/Managed Preferences/ — an MDM re-push
+    // triggers a file write, which re-triggers this watch loop.
+    loop {
+        if let Some(policy) = read_managed_policy() {
+            let _ = adapter.apply_managed_policy(&policy).await;
+        }
+        tokio::time::sleep(std::time::Duration::from_secs(300)).await;
+    }
+}
+```
+
+#### Windows — Group Policy ADMX + Microsoft Intune
+
+```xml
+<!-- HelixVPN.admx — imported into the Central Store or PolicyDefinitions -->
+<policyDefinitions revision="1.0" schemaVersion="1.0">
+  <policyNamespaces>
+    <target prefix="helixvpn" namespace="HelixVPN.Policies" />
+  </policyNamespaces>
+  <resources minRequiredRevision="1.0" />
+  <categories>
+    <category name="HelixVPN" displayName="$(string.HelixVPN)" />
+  </categories>
+  <policies>
+    <policy name="ForceKillSwitch" class="Machine" displayName="$(string.ForceKillSwitch)"
+            explainText="$(string.ForceKillSwitch_Help)" key="SOFTWARE\Policies\HelixVPN"
+            valueName="ForceKillSwitch">
+      <parentCategory ref="HelixVPN" />
+      <supportedOn ref="SUPPORTED_HelixVPN_1_0" />
+      <enabledValue><decimal value="1" /></enabledValue>
+      <disabledValue><decimal value="0" /></disabledValue>
+    </policy>
+    <policy name="AllowedProtocols" class="Machine" displayName="$(string.AllowedProtocols)"
+            explainText="$(string.AllowedProtocols_Help)" key="SOFTWARE\Policies\HelixVPN"
+            presentation="$(presentation.AllowedProtocols)">
+      <parentCategory ref="HelixVPN" />
+      <supportedOn ref="SUPPORTED_HelixVPN_1_0" />
+      <elements>
+        <text id="AllowedProtocolsCSV" valueName="AllowedProtocolsCSV" required="true" />
+      </elements>
+    </policy>
+    <!-- ForcedDnsServersCSV, RequireSsoLogin, PolicyVersion follow the same pattern -->
+  </policies>
+</policyDefinitions>
+```
+
+Intune ingests this same ADMX directly as an "Administrative Templates"
+configuration profile (supported since 2020), or the equivalent Settings
+Catalog entries for organizations without on-prem AD.
+
+```rust
+// src/platform/windows/managed_policy.rs
+use windows_sys::Win32::System::Registry::*;
+
+pub fn read_managed_policy() -> Option<ManagedPolicy> {
+    // HKLM\SOFTWARE\Policies\HelixVPN — GPO and Intune both write to the
+    // same Policies hive; user-level overrides are intentionally NOT
+    // honored (machine policy always wins for VPN enforcement).
+    let hklm = open_key(HKEY_LOCAL_MACHINE, r"SOFTWARE\Policies\HelixVPN")?;
+    Some(ManagedPolicy {
+        organization_id: read_string(&hklm, "OrganizationId")?,
+        force_kill_switch: read_dword(&hklm, "ForceKillSwitch").unwrap_or(0) != 0,
+        allowed_protocols: parse_protocols_csv(&read_string(&hklm, "AllowedProtocolsCSV")?),
+        forced_dns_servers: split_csv(&read_string(&hklm, "ForcedDnsServersCSV").unwrap_or_default()),
+        require_sso_login: read_dword(&hklm, "RequireSsoLogin").unwrap_or(0) != 0,
+        policy_version: read_dword(&hklm, "PolicyVersion").unwrap_or(0) as u64,
+        force_split_tunnel_rules: None, // read from a sibling key, omitted for brevity
+    })
+}
+
+pub async fn watch_and_apply(adapter: &dyn PlatformAdapter) {
+    // RegNotifyChangeKeyValue blocks until a GPO refresh (gpupdate) or an
+    // Intune sync rewrites the key — event-driven, not polled.
+    loop {
+        wait_for_registry_change(HKEY_LOCAL_MACHINE, r"SOFTWARE\Policies\HelixVPN").await;
+        if let Some(policy) = read_managed_policy() {
+            let _ = adapter.apply_managed_policy(&policy).await;
+        }
+    }
+}
+```
+
+#### Linux — Config File Drop + Ansible/Puppet Fleet Management
+
+```json
+// /etc/helixvpn/managed-policy.json — root:root 0644, dropped by the
+// enterprise package post-install hook (§4.6) or a config-management run
+{
+  "organization_id": "org_8f2a1c",
+  "allowed_protocols": ["WireGuard", "Masque"],
+  "force_kill_switch": true,
+  "forced_dns_servers": ["10.10.0.1"],
+  "require_sso_login": true,
+  "policy_version": 7
+}
+```
+
+```yaml
+# ansible/roles/helixvpn/tasks/main.yml — enterprise Linux fleet rollout
+- name: Deploy HelixVPN managed policy
+  ansible.builtin.template:
+    src: managed-policy.json.j2
+    dest: /etc/helixvpn/managed-policy.json
+    owner: root
+    group: root
+    mode: "0644"
+  notify: reload helixvpn-daemon policy
+
+handlers:
+  - name: reload helixvpn-daemon policy
+    ansible.builtin.systemd:
+      name: helixvpn-daemon
+      state: reloaded   # SIGHUP-triggered re-read, not a full restart
+```
+
+```rust
+// src/platform/linux/managed_policy.rs
+pub async fn watch_and_apply(adapter: &dyn PlatformAdapter) {
+    // inotify watch on /etc/helixvpn/managed-policy.json; a SIGHUP from
+    // `systemctl reload` (the Ansible handler above) also triggers an
+    // immediate re-read, independent of the inotify path.
+    let mut watcher = inotify_watch("/etc/helixvpn/managed-policy.json")?;
+    loop {
+        watcher.next_event().await;
+        if let Ok(text) = std::fs::read_to_string("/etc/helixvpn/managed-policy.json") {
+            if let Ok(policy) = serde_json::from_str::<ManagedPolicy>(&text) {
+                let _ = adapter.apply_managed_policy(&policy).await;
+            }
+        }
+    }
+}
+```
+
+```mermaid
+sequenceDiagram
+    participant Admin as helix-admin (org admin)
+    participant AdminAPI as MVP1 Admin API
+    participant MDM as Native MDM channel<br/>(JAMF/Intune/Kandji/ABM,<br/>GPO/Intune ADMX,<br/>Ansible/Puppet)
+    participant App as helix-desktop (Tauri app)
+    participant Adapter as PlatformAdapter
+    participant Engine as helix-vpn-engine
+
+    Admin->>AdminAPI: Publish ManagedPolicy (policy_version++)
+    AdminAPI->>MDM: Push policy payload (per MVP2_ARCHITECTURE.md §10.2)
+    MDM->>App: Deliver via OS-native channel<br/>(.mobileconfig / registry / config file)
+    App->>App: Detect change (FSEvents / RegNotifyChangeKeyValue / inotify)
+    App->>Adapter: apply_managed_policy(policy)
+    Adapter->>Engine: Enforce (kill switch, allowed protocols,<br/>split-tunnel rules, DNS, SSO requirement)
+    Engine-->>App: New ConnectionStatus / policy ack
+    App-->>AdminAPI: Report applied policy_version (fleet visibility)
+```
+
+### 8.3 Auto-Update: Signed Manifests, Staged Rollout & Rollback
+
+Per §7.4's corrected table, `tauri-plugin-updater` is the MVP2-shipped
+update mechanism. Its signed-manifest format was already specified in
+§7.4; staged/canary rollout percentage and an explicit rollback path were
+not, and are added here.
+
+```json
+{
+  "version": "1.1.0",
+  "rollout_percentage": 10,
+  "pub_date": "2026-07-04T12:00:00Z",
+  "signature": "BASE64_EDDSA_SIGNATURE",
+  "url": "https://releases.helixvpn.com/v1.1.0/HelixVPN-v1.1.0-x86_64.dmg",
+  "min_rollback_safe_version": "1.0.3"
+}
+```
+
+```rust
+// Update server: bucket by a stable per-device hash, not a fresh random
+// draw per poll, so a device consistently lands in the same rollout ring.
+fn is_in_rollout(device_id: &str, rollout_percentage: u8) -> bool {
+    let hash = crc32fast::hash(device_id.as_bytes());
+    (hash % 100) < rollout_percentage as u32
+}
+```
+
+Rollback (net-new): the Tauri updater is one-directional by default, so
+rollback is implemented client-side by caching the previous installer and
+re-invoking a silent install of it when a post-update health check
+regresses.
+
+```rust
+// src/features/update_rollback.rs
+pub struct UpdateHealthMonitor {
+    /// Crash-free session rate in the N minutes immediately after an
+    /// update, sourced from the Sentry release-health API (§8.4).
+    baseline_crash_free_rate: f64,
+    post_update_window: std::time::Duration, // e.g. 15 minutes
+}
+
+impl UpdateHealthMonitor {
+    /// Called once per app start, only when this run is the first launch
+    /// after an update (compares the stored `last_seen_version` to the
+    /// current one).
+    pub async fn check_and_maybe_rollback(&self) -> Result<(), Box<dyn std::error::Error>> {
+        let current_rate = fetch_crash_free_rate(self.post_update_window).await?;
+        let regression = self.baseline_crash_free_rate - current_rate;
+
+        // >5 percentage-point crash-free-rate drop in the post-update
+        // window is treated as a bad rollout.
+        if regression > 0.05 {
+            rollback_to_last_known_good().await?;
+        }
+        Ok(())
+    }
+}
+
+/// Every successful update moves the PREVIOUS installer into a small
+/// rolling cache (keeps N=2) instead of deleting it immediately.
+/// macOS:   ~/Library/Application Support/HelixVPN/previous-versions/
+/// Windows: %LOCALAPPDATA%\HelixVPN\previous-versions\
+/// Linux:   ~/.local/share/helixvpn/previous-versions/
+async fn rollback_to_last_known_good() -> Result<(), Box<dyn std::error::Error>> {
+    let cached = find_newest_cached_installer()?;
+    verify_signature(&cached)?; // same EdDSA pubkey check as forward updates
+    silent_install(&cached).await?; // platform-native silent-install flag
+    mark_version_as_bad(current_version()); // server-side: pulls it out of rollout
+    Ok(())
+}
+```
+
+```mermaid
+flowchart TD
+    A["New version published<br/>rollout_percentage: 10%"] --> B{"Device in rollout<br/>bucket?"}
+    B -- "no" --> Z["Stay on current version,<br/>re-poll next interval"]
+    B -- "yes" --> C["tauri-plugin-updater downloads +<br/>verifies EdDSA signature"]
+    C --> D["Cache current installer to<br/>previous-versions/ (keep N=2)"]
+    D --> E["Install + relaunch"]
+    E --> F["UpdateHealthMonitor watches<br/>crash-free rate for 15 min"]
+    F --> G{"Crash-free rate regression<br/>&gt; 5pp vs baseline?"}
+    G -- "no" --> H["Rollout continues:<br/>10% to 50% to 100%"]
+    G -- "yes" --> I["Auto-rollback: silent-install<br/>cached previous version"]
+    I --> J["Mark version bad server-side<br/>(removed from rollout pool)"]
+    J --> K["Alert release engineer<br/>(Sentry + Admin API)"]
+
+    style G fill:#fce4ec,stroke:#c62828,stroke-width:2px
+    style I fill:#fff3e0,stroke:#e65100,stroke-width:2px
+```
+
+### 8.4 Crash Reporting
+
+A privacy-scrubbed crash reporter wired for both the Rust core (panic
+hook, including the `helix-core-api` FFI boundary) and the Tauri/React
+frontend, with symbol upload added to the CI pipeline already shown in
+§7.1.
+
+```rust
+// src/main.rs — crash reporting init (Tauri backend + embedded helix-core)
+fn init_crash_reporting() -> sentry::ClientInitGuard {
+    sentry::init((
+        std::env::var("HELIXVPN_SENTRY_DSN").unwrap_or_default(),
+        sentry::ClientOptions {
+            release: sentry::release_name!(),
+            environment: Some(build_channel().as_str().into()), // stable/beta/nightly, §7.5
+            before_send: Some(std::sync::Arc::new(scrub_pii)),
+            attach_stacktrace: true,
+            ..Default::default()
+        },
+    ))
+}
+
+/// Privacy scrub: no server private keys, no full home-directory paths, no
+/// raw IP payload bodies — only category + redacted path segments.
+fn scrub_pii(mut event: sentry::protocol::Event<'static>) -> Option<sentry::protocol::Event<'static>> {
+    for exception in event.exception.iter_mut().flat_map(|v| v.values.iter_mut()) {
+        if let Some(stacktrace) = &mut exception.stacktrace {
+            for frame in &mut stacktrace.frames {
+                if let Some(filename) = &frame.filename {
+                    frame.filename = Some(redact_home_dir(filename));
+                }
+            }
+        }
+    }
+    event.user = None; // never attach account/email — device-scoped only
+    Some(event)
+}
+
+fn main() {
+    let _guard = init_crash_reporting();
+    // helix-core-api's FFI boundary additionally wraps every entry point
+    // in std::panic::catch_unwind so a Rust panic in the embedded core
+    // never unwinds across the C ABI into undefined behavior — Sentry's
+    // panic hook captures the event before catch_unwind converts it into
+    // an Err returned to the Tauri command layer.
+    tauri::Builder::default().run(tauri::generate_context!()).expect("error while running tauri application");
+}
+```
+
+```typescript
+// frontend/src/main.tsx
+import * as Sentry from "@sentry/react";
+
+Sentry.init({
+  dsn: import.meta.env.VITE_SENTRY_DSN,
+  environment: import.meta.env.VITE_BUILD_CHANNEL, // stable/beta/nightly
+  tracesSampleRate: 0.1,
+  beforeSend(event) {
+    delete event.user; // device-scoped only, never account-linked (§8.5)
+    return event;
+  },
+});
+```
+
+```yaml
+      # macOS job (extends §7.1) — after "Build universal binary"
+      - name: Upload dSYMs to Sentry
+        run: |
+          sentry-cli debug-files upload --org helixvpn --project helix-desktop \
+            src-tauri/target/*/release/deps/*.dSYM
+
+      # Windows job (extends §7.1) — after "Build"
+      - name: Upload PDBs to Sentry
+        run: |
+          sentry-cli debug-files upload --org helixvpn --project helix-desktop `
+            src-tauri/target/release/*.pdb
+```
+
+### 8.5 Telemetry / Privacy Consent Flow
+
+```typescript
+// frontend/src/views/FirstRunConsent.tsx (simplified)
+interface ConsentChoices {
+  crashReports: boolean;
+  usageAnalytics: boolean;
+  performanceMetrics: boolean;
+}
+
+// Default: everything OFF until the user explicitly opts in (GDPR Art. 6/7
+// lawful-basis-by-consent, not legitimate-interest — a VPN client handles
+// sensitive network-activity-adjacent data).
+const DEFAULT_CONSENT: ConsentChoices = {
+  crashReports: false,
+  usageAnalytics: false,
+  performanceMetrics: false,
+};
+
+async function submitConsent(choices: ConsentChoices) {
+  await invoke("save_consent_preferences", { choices });
+  // Mirrors to the MVP1 Utils Service feature-flag/telemetry endpoint so
+  // server-side telemetry emission respects the same choice (defense in
+  // depth: client-side gating AND server-side enforcement).
+  await fetch(`${CLIENT_API_BASE}/v1/telemetry/consent`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${authToken}` },
+    body: JSON.stringify(choices),
+  });
+}
+```
+
+```rust
+// src/commands/consent.rs — Tauri command; gates telemetry init entirely
+#[tauri::command]
+pub async fn save_consent_preferences(choices: ConsentChoices, state: tauri::State<'_, AppState>) -> Result<(), String> {
+    state.settings.write().await.consent = choices.clone();
+    persist_settings(&state).await.map_err(|e| e.to_string())?;
+
+    if !choices.crash_reports {
+        if let Some(client) = sentry::Hub::current().client() {
+            client.close(Some(std::time::Duration::from_secs(1)));
+        }
+    }
+    Ok(())
+}
+```
+
+GDPR alignment: (a) consent is opt-in and per-category — never an
+all-or-nothing bundled checkbox; (b) a "Change your choice" entry lives
+permanently in Settings → Privacy, not only at first run; (c) withdrawing
+consent takes effect immediately for new events, but does not retroactively
+delete already-sent events — deletion/export data-subject requests are
+handled by the MVP1 Utils Service's existing endpoint, out of scope for
+the desktop client itself; (d) the consent record (choices + timestamp) is
+stored locally and mirrored server-side as the audit trail proving consent
+was actually asked.
+
+### 8.6 Offline / Degraded-Network Behavior
+
+```rust
+// src/features/offline_mode.rs
+
+/// Explicit app-level readiness state shown at launch — distinct from the
+/// core connection-lifecycle state machine (`MVP2_ARCHITECTURE.md` §5.6,
+/// rendered per §5.4 above), which only starts once the user attempts to
+/// connect. This is the state BEFORE that: can the app even reach the
+/// Client API?
+pub enum AppReadinessState {
+    Online,
+    /// Client API unreachable; serving the cached server list + cached
+    /// auth. The user can still attempt Connect against the last-used
+    /// server (dials WireGuard directly; does not require a fresh Client
+    /// API call).
+    OfflineDegraded { cache_age: std::time::Duration },
+    /// The cached auth token's grace window has also expired — Connect is
+    /// blocked until the Client API becomes reachable again.
+    OfflineBlocked,
+}
+
+pub struct OfflineModeManager {
+    cached_server_list: Option<(Vec<ServerConfig>, std::time::SystemTime)>,
+    cached_auth_token: Option<CachedToken>,
+}
+
+impl OfflineModeManager {
+    pub async fn resolve_readiness(&self) -> AppReadinessState {
+        match fetch_server_list_with_timeout(std::time::Duration::from_secs(5)).await {
+            Ok(fresh) => { self.persist_cache(&fresh).await; AppReadinessState::Online }
+            Err(_) => match &self.cached_auth_token {
+                // Grace period: the last-known access token remains usable
+                // for 72h past its stated expiry SOLELY to permit
+                // reconnecting to an already-known server while the Client
+                // API recovers — never to permit a first-time login or a
+                // plan/entitlement change (§8.11 handles the entitlement
+                // side honestly).
+                Some(token) if token.age() < std::time::Duration::from_secs(72 * 3600) => {
+                    AppReadinessState::OfflineDegraded { cache_age: self.cache_age() }
+                }
+                _ => AppReadinessState::OfflineBlocked,
+            },
+        }
+    }
+}
+
+/// Reconnect/backoff for the Client API (distinct from the tunnel-level
+/// Reconnecting state in §5.4/§5.6, which retries the WireGuard handshake,
+/// not the REST API): exponential backoff, base 2s, x2 factor, capped at
+/// 60s, +/-20% jitter to avoid a thundering herd on Client API recovery.
+pub async fn client_api_retry_loop() {
+    let mut delay = std::time::Duration::from_secs(2);
+    loop {
+        if fetch_server_list_with_timeout(std::time::Duration::from_secs(5)).await.is_ok() {
+            return;
+        }
+        let jitter = delay.mul_f64(1.0 + (rand::random::<f64>() - 0.5) * 0.4);
+        tokio::time::sleep(jitter).await;
+        delay = (delay * 2).min(std::time::Duration::from_secs(60));
+    }
+}
+```
+
+| State | UI treatment |
+|---|---|
+| `Online` | Normal UI, live server list + latency |
+| `OfflineDegraded` | Banner: "Showing servers from {cache_age} ago — reconnecting…"; Connect still enabled against the last-used server |
+| `OfflineBlocked` | Banner: "Sign-in required — can't reach HelixVPN"; Connect disabled; a Retry button forces an immediate `client_api_retry_loop` tick |
+
+### 8.7 Accessibility (WCAG 2.1 AA)
+
+Tauri renders via an OS WebView, not a native widget tree, so accessibility
+tree exposure is delegated to that WebView's own bridge — semantic
+HTML/ARIA is the required input on every platform, not optional polish:
+
+| OS | WebView | Accessibility bridge | Screen reader tested |
+|---|---|---|---|
+| macOS | WKWebView | Projects the DOM accessibility tree onto the native macOS Accessibility API (`NSAccessibility`) automatically | VoiceOver |
+| Windows | WebView2 (Chromium) | Exposes the DOM via UI Automation (UIA) through Chromium's built-in accessibility tree | NVDA (+ Narrator smoke check) |
+| Linux | WebKitGTK | Exposes the DOM via AT-SPI2 (the GNOME/GTK accessibility bus) | Orca |
+
+Concrete requirements: every interactive control (Connect button, server
+dropdown, tray-triggered window) uses a real semantic element (`<button>`,
+`<select>`) — never a `<div onClick>` — because all three bridges above
+derive their tree from DOM semantics, not custom Tauri code. An
+`aria-live="polite"` region announces connection-status changes without
+requiring the user to refocus:
+
+```typescript
+// frontend/src/components/ConnectionStatus.tsx
+<div role="status" aria-live="polite" aria-atomic="true">
+  {state === "Connected" ? `Connected to ${serverName}` : state}
+</div>
+```
+
+Full keyboard navigation: every element reachable via `Tab`/`Shift+Tab`
+with a visible focus ring (`:focus-visible`) using the OpenDesign focus
+token; Connect/Disconnect is additionally bound to the `Ctrl/Cmd+Shift+C`
+shortcut already listed in §5.5. Focus order matches visual/DOM order
+top-to-bottom (Status → Server picker → Protocol picker → Connect button →
+Settings/Logs/About), verified by an automated `axe-core` CI check plus a
+manual tab-order walkthrough. Color is never the sole signal: §5.4's
+color-coded states table also carries an icon + text label (WCAG 1.4.1).
+Screen-reader test plan: each release candidate is walked once with
+VoiceOver (macOS), once with NVDA (Windows), once with Orca (Linux)
+through the Connect → Server-switch → Settings → Disconnect journey;
+findings are tracked as normal Issues.md entries, not a separate silo.
+
+### 8.8 Localization / i18n
+
+```typescript
+// frontend/src/i18n/index.ts
+import i18next from "i18next";
+import { initReactI18next } from "react-i18next";
+
+i18next.use(initReactI18next).init({
+  fallbackLng: "en",
+  supportedLngs: ["en", "es", "de", "fr", "pt-BR", "ja", "zh-Hans", "ar"],
+  ns: ["common", "settings", "errors"],
+  interpolation: { escapeValue: false },
+});
+
+// RTL layout: `ar` (Arabic) flips the app shell's logical-property CSS
+// (`margin-inline-start`, not a hardcoded `margin-left`) via `dir="rtl"`
+// set on <html> from the resolved i18next language, per OpenDesign's
+// logical-properties convention (`docs/design/README.md`).
+document.documentElement.dir = i18next.dir();
+```
+
+```yaml
+      - name: Check for missing translation keys
+        run: npx i18next-parser --fail-on-warnings && npx i18n-missing-keys frontend/src/i18n/locales/
+```
+
+Initial launch language list (8 languages): English (`en`, default),
+Spanish (`es`), German (`de`), French (`fr`), Brazilian Portuguese
+(`pt-BR`), Japanese (`ja`), Simplified Chinese (`zh-Hans`), Arabic (`ar`,
+the RTL validation target). Additional languages land post-MVP2 per
+translator-pipeline throughput, tracked as normal Issues.md `Feature`
+items — not a blocker for the initial release.
+
+### 8.9 Multi-Account / Profile Switching
+
+Desktop-side session/keychain isolation only; the quick-switch UI
+affordance itself is specified in `MVP2_UI_UX_SPEC.md`.
+
+```rust
+// src/features/profiles.rs
+/// One isolated profile per Helix account signed into this desktop install
+/// (e.g. a personal account + a team/enterprise account side by side).
+/// Each profile gets its OWN settings store, OWN OS-keychain entry, and
+/// OWN connection history — never shared state, so switching profiles
+/// cannot leak one account's servers/keys/logs into another's UI.
+pub struct ProfileManager {
+    active_profile_id: String,
+    profiles_dir: std::path::PathBuf, // e.g. ~/.config/helixvpn/profiles/<id>/
+}
+
+impl ProfileManager {
+    /// Keychain entry naming is namespaced per profile so the OS-native
+    /// secret store never mixes credentials across profiles:
+    ///   macOS:   Keychain service="com.helixvpn.macos", account="<profile_id>"
+    ///   Windows: Credential Manager target="HelixVPN:<profile_id>"
+    ///   Linux:   Secret Service item, attribute profile_id="<profile_id>"
+    pub fn keychain_account_for(&self, profile_id: &str) -> String {
+        format!("helixvpn:{profile_id}")
+    }
+
+    pub async fn switch_active(&mut self, profile_id: &str) -> Result<(), Box<dyn std::error::Error>> {
+        // 1. Tear down any active tunnel under the OLD profile first —
+        //    never let two profiles' tunnels race on the same TUN device
+        //    / kill-switch firewall anchor.
+        disconnect_active_tunnel().await?;
+        self.active_profile_id = profile_id.to_string();
+        // 2. Settings store, server-list cache, and stats/logging (§6.5)
+        //    all re-point at profiles_dir/<profile_id>/ — no shared file.
+        reload_settings_for_profile(profile_id).await?;
+        Ok(())
+    }
+}
+```
+
+```toml
+# Appendix A addition
+keyring = "3.0"  # macOS Keychain / Windows Credential Manager / Linux Secret Service
+```
+
+Using the `keyring` crate (a cross-platform Keychain/Credential
+Manager/Secret Service wrapper) avoids reinventing per-OS secret storage
+for each profile.
+
+### 8.10 Enterprise SSO
+
+```rust
+// src/features/sso.rs
+use tauri_plugin_shell::ShellExt;
+
+/// Org-configured SSO MUST open the SYSTEM browser, never an embedded
+/// webview — an embedded webview cannot be trusted by the IdP (no way for
+/// the user to verify the URL bar, TLS cert, or password-manager
+/// integration), and several IdPs (Okta, Azure AD, Google Workspace)
+/// explicitly block WebView-embedded OAuth flows for exactly this reason.
+#[tauri::command]
+pub async fn start_sso_login(app: tauri::AppHandle, organization_domain: String) -> Result<(), String> {
+    // 1. Ask the MVP1 Authentication Service (already OAuth2/OIDC-capable)
+    //    for this org's IdP authorize URL + a PKCE code_verifier/challenge.
+    let auth_url = fetch_sso_authorize_url(&organization_domain).await.map_err(|e| e.to_string())?;
+    // 2. Open in the system default browser.
+    app.shell().open(auth_url, None).map_err(|e| e.to_string())?;
+    Ok(())
+}
+```
+
+```rust
+// src-tauri deep-link callback — "deep-link": { "schemes": ["helixvpn"] }
+// in tauri.conf.json, registered on all 3 OSes.
+tauri::Builder::default()
+    .plugin(tauri_plugin_deep_link::init())
+    .setup(|app| {
+        app.deep_link().on_open_url(move |event| {
+            // helixvpn://sso-callback?code=...&state=...
+            for url in event.urls() {
+                if url.path() == "/sso-callback" {
+                    let _ = complete_sso_exchange(url); // -> MVP1 Auth Service token exchange
+                }
+            }
+        });
+        Ok(())
+    });
+```
+
+Per-OS deep-link registration: macOS `CFBundleURLTypes` in `Info.plist`;
+Windows a `HKEY_CLASSES_ROOT\helixvpn` protocol registry entry written at
+install time (WiX `<RegistryKey>` in §3.7's MSI); Linux an
+`x-scheme-handler/helixvpn` MIME association added to the same `.desktop`
+file that already registers config-file MIME types in §4.8. Token exchange
+completes against the existing MVP1 Authentication Service's OAuth2/OIDC
+token endpoint — no new backend surface, only a new client-side entry
+point (system-browser + deep-link instead of a username/password form).
+
+### 8.11 License / Entitlement Verification with Offline-Grace Cache
+
+```rust
+// src/features/entitlement.rs
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct SignedEntitlement {
+    pub plan_tier: String,           // "free" | "personal" | "team" | "enterprise"
+    pub features_allowed: Vec<String>,
+    pub checked_at: std::time::SystemTime,
+    /// Ed25519 signature over the fields above, issued by the Client API
+    /// so a locally cached entitlement cannot be tampered with to silently
+    /// unlock a higher tier or fake continued validity forever.
+    pub signature: Vec<u8>,
+}
+
+impl SignedEntitlement {
+    /// A brief Client API outage MUST NOT silently disable protection for
+    /// an already-paying user: a cached, signature-verified entitlement
+    /// remains valid for a bounded grace window even if the API cannot be
+    /// reached to re-verify it.
+    const OFFLINE_GRACE: std::time::Duration = std::time::Duration::from_secs(7 * 24 * 3600);
+
+    pub fn is_usable(&self, now: std::time::SystemTime) -> Result<bool, &'static str> {
+        if !verify_ed25519(&self.signable_bytes(), &self.signature) {
+            return Err("tampered entitlement cache — rejecting, not silently degrading");
+        }
+        Ok(now.duration_since(self.checked_at).unwrap_or_default() < Self::OFFLINE_GRACE)
+    }
+}
+
+/// Verify against the Client API when reachable (authoritative); fall back
+/// to the signed cache only when unreachable; NEVER fall back to an
+/// unsigned/plaintext "just trust local state" path.
+pub async fn check_entitlement_before_connect() -> Result<SignedEntitlement, String> {
+    match fetch_entitlement_from_client_api().await {
+        Ok(fresh) => { persist_signed_cache(&fresh).await; Ok(fresh) }
+        Err(_) => {
+            let cached = load_signed_cache().await.ok_or("no cached entitlement, and API unreachable")?;
+            match cached.is_usable(std::time::SystemTime::now()) {
+                Ok(true) => Ok(cached),
+                Ok(false) => Err("entitlement grace period expired — reconnect to the internet to re-verify".into()),
+                Err(tamper_reason) => Err(tamper_reason.into()),
+            }
+        }
+    }
+}
+```
+
+Honest boundary: the 7-day grace window trades a small window of "still
+connectable on an expired-but-recently-valid plan" against the failure
+mode it closes — a one-hour Client API outage disconnecting every paying
+customer's VPN protection simultaneously. Tamper detection (the signature
+check) fails closed, not open: a tampered cache is rejected outright,
+never treated as "probably fine" (per the project's no-guessing
+discipline).
 
 ---
 

@@ -1,7 +1,14 @@
 # Unit Testing — HelixVPN nano-detail spec (Volume 8 · §11.4.169 type 1)
 
-**Revision:** 1
-**Last modified:** 2026-06-26T12:00:00Z
+**Revision:** 2
+**Last modified:** 2026-07-04T12:00:00Z
+
+> **Rev 2 (2026-07-04):** independently re-verified against `SPECIFICATION.md` /
+> `decision-register.md` / `10-testing-acceptance-and-qa.md` during a corpus-wide
+> gap-analysis pass; no contradictions or gaps found in this doc's scope (the
+> mock-only-at-unit-layer boundary, the determinism contract, and the §11.4.108
+> SOURCE-layer-only framing were all already correct and consistent). Revision
+> bumped for the audit pass itself.
 
 > Nano-detail expansion of [§5.1 of the Volume-8 overview](../10-testing-acceptance-and-qa.md).
 > Unit testing is the **one and only** layer where mocks, stubs, fakes, placeholders,

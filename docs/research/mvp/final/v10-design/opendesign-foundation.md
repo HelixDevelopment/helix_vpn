@@ -1,7 +1,11 @@
 # OpenDesign integration foundation (§11.4.162)
 
-**Revision:** 1
-**Last modified:** 2026-06-25T12:00:00Z
+**Revision:** 2
+**Last modified:** 2026-07-04T12:00:00Z
+**Rev 2:** Reconciled against `../v00-meta/decision-register.md` §4 (authoritative decision
+record, dated 2026-06-26): **D-OD-1 is OPERATOR CONFIRMED** — this file previously stated
+"open, raise to operator" throughout (§0, §9, §10), which was stale by one day. Updated all
+three references. No other content changed by this pass.
 
 > Master technical specification — Volume 10 (Design System), nano-detail deep-dive.
 > This document is the **foundation** for HelixVPN's mandatory use of **OpenDesign**
@@ -62,13 +66,15 @@ itself produce.** §11.4.162 is still satisfied — OpenDesign is the mandatory
 design-and-refinement system, no ad-hoc CSS / one-off tool; we just consume it as the tool
 it actually is, and extend it upstream (§11.4.74) for anything missing (§7).
 
-> **D-OD-1 (open, raise to operator).** §11.4.162's literal text ("install as a project
-> dependency; use its design tokens/themes system") describes a tool shape OpenDesign does
-> not have. Recommend an operator clarification (§11.4.66) that the mandate is satisfied by
-> consuming OpenDesign as a CLI/MCP design-and-refinement tool + authoring a HelixVPN
-> OpenDesign design system, with `helix_design` owning the polyglot distribution — OR an
-> upstream extension (§7) that gives OpenDesign the missing token-export capability.
-> `UNVERIFIED` (operator decision) until ratified.
+> **D-OD-1 — OPERATOR CONFIRMED (2026-06-26).** §11.4.162's literal text ("install as a
+> project dependency; use its design tokens/themes system") describes a tool shape
+> OpenDesign does not have. The operator has CONFIRMED the safe-default interpretation
+> (§11.4.101): the mandate is satisfied by consuming OpenDesign as a CLI/MCP
+> design-and-refinement tool + authoring a HelixVPN OpenDesign design system, with
+> `helix_design` owning the polyglot distribution. See `../v00-meta/decision-register.md`
+> §4 "D-OD-1" for the authoritative record. This is now a settled fact, not an open
+> decision — the upstream-extension alternative (§7) remains available opportunistically
+> (D-DESIGN-4) but is no longer required to satisfy §11.4.162.
 
 ---
 
@@ -433,7 +439,7 @@ design system, not a test oracle.
 | Risk | Impact | Mitigation / refinement action |
 |---|---|---|
 | OpenDesign API/schema drifts (fast-moving, "0.x" releases — V) | a built integration breaks on an OpenDesign bump | pin a specific OpenDesign release in the toolchain (§11.4.31); re-verify `tokens.css`/`DESIGN.md` schema each bump per §11.4.99 90-day staleness |
-| §11.4.162 literal mismatch (D-OD-1) | mandate appears unmet on a literal reading | operator clarification (§11.4.66) recording the consume-as-CLI/MCP interpretation OR an upstream token-export extension (§7) |
+| §11.4.162 literal mismatch (D-OD-1) | ~~mandate appears unmet on a literal reading~~ **RESOLVED 2026-06-26** — operator confirmed the consume-as-CLI/MCP interpretation (see decision-register.md §4) | closed; upstream token-export extension (§7) remains a future opportunistic improvement, not a requirement |
 | Dark-mode convention (U) | dark theme renders wrong in OpenDesign previews | read a built-in system's `tokens.css`; align §5.2; possibly twin systems |
 | `DESIGN.md` 9-section headings (U) | authored system rejected by OpenDesign's parser | copy headings from a live built-in `DESIGN.md` |
 | `tokens.css` property schema (U) | round-trip (D-DESIGN-3) misaligns | read a built-in `tokens.css`; map property names to `helix_design` semantic tokens |
@@ -466,7 +472,7 @@ Every `UNVERIFIED`/`(U)`/open-decision in this document, for the reviewer to dis
 | U5 | exact MCP tool/resource names OpenDesign exposes for reading `tokens.css` | §4 (table) | OpenDesign MCP docs |
 | U6 | whether a Skill/Plugin can register a new EXPORT format (decides D-DESIGN-4) | §7 | `docs/skills-protocol.md`, `plugins/spec/SPEC.md` |
 | U7 | exact built-in-design-system count (version-dependent) | §1.1 | releases page (informational only) |
-| D-OD-1 | §11.4.162 literal "install as dependency / token engine" mismatch | §0, §1.2 | operator clarification (§11.4.66) |
+| D-OD-1 | §11.4.162 literal "install as dependency / token engine" mismatch | §0, §1.2 | **RESOLVED** — operator confirmed 2026-06-26, see decision-register.md §4 |
 | D-OD-2 | desktop app vs. `od` CLI/MCP vs. both for HelixVPN | §2.4 | Volume-10 review |
 
 None of these blocks the **design** of `helix_design` (sibling doc), because every

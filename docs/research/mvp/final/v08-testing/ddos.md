@@ -1,7 +1,12 @@
 # DDoS / Load-Flood Test Strategy
 
-**Revision:** 2
-**Last modified:** 2026-06-26T12:00:00Z
+**Revision:** 3
+**Last modified:** 2026-07-04T12:00:00Z
+
+> **Rev 3 (2026-07-04):** independently re-verified against `SPECIFICATION.md` /
+> `threat-model.md` during a corpus-wide gap-analysis pass; the anti-bluff rule (a
+> flood test must prove the legitimate client stayed usable, not merely that the
+> flood happened) is explicit and mechanically enforced (§4). No contradictions found.
 
 > **Reconciled (§11.4.35, 2026-06-26):** the `wg_init_flood` generator (§2, §8) now
 > targets the **canonical plain-WG port `gw:51820`** — a real WG `MessageInitiation`

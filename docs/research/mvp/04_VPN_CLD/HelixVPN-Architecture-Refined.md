@@ -1,6 +1,25 @@
 # HelixVPN — Refined Architecture & Engineering Specification
 
-**Status:** Refining pass over `Home_VPN.md`
+**Revision:** 2
+**Last modified:** 2026-07-04T12:00:00Z
+**Status:** Refining pass over `Home_VPN.md` — **primary architectural source, now elaborated by `docs/research/mvp/final/`**
+**Provenance note (added Rev 2, 2026-07-04 hardening pass):** This document (`[04_ARCH]`) is the
+dominant architectural source cited throughout `docs/research/mvp/final/` — `SPECIFICATION.md`
+§12 names it the primary source, and `99-source-coverage-ledger.md` records it as the most-cited
+source in the corpus. Since this document was written, `docs/research/mvp/final/` has grown into a
+~140-nano-detail-doc specification (`SPECIFICATION.md` is now the architectural **spine**;
+`v00-meta/decision-register.md` is now the canonical decision register expanding §13 below) that
+elaborates every section of this document to phase→task→subtask and near-code granularity, and
+which supersedes this document in point-of-fact detail (exact numeric SLOs, DDL, protobuf, per-
+platform mechanics). **Where this document and `final/` disagree, `final/` (specifically
+`SPECIFICATION.md` and `v00-meta/decision-register.md`) wins** — this document remains the
+authoritative **readable narrative overview** of the architecture and is not being rewritten
+section-by-section to chase every downstream refinement; it was independently re-checked during
+the 2026-07-04 hardening pass for any *outright* contradiction with `final/` (none found — every
+open decision/risk in §13 below is still genuinely open or has since been resolved consistently
+with what §13 anticipated, e.g. D-PKI-CA-TIER and D-OD-1 are now operator-confirmed per
+`decision-register.md`, and the Rust-core/Rust-edge preference in §13 still awaits gates G3/G4 as
+this document already said it would).
 **Scope of this document:** Turn the original deployment guide (a sysadmin-grade Hysteria2/WireGuard "how to set up a VPS tunnel" walkthrough) into a real product/engineering spec for a **self-hostable, two-way, multi-network VPN gateway platform** with Mullvad-parity privacy features and a cross-platform app suite on a shared codebase.
 
 ---

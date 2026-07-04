@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
   <meta charset="utf-8" />
-  <meta name="generator" content="pandoc" />
+  <meta name="generator" content="pandoc 3.10" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
   <title>HelixVPN — Requirements Traceability Matrix (requirement → component → test)</title>
   <style>
@@ -154,8 +154,12 @@ padding-left: 0;
 text-decoration: none;
 }
 span.smallcaps{font-variant: small-caps;}
-div.columns{display: flex; gap: min(4vw, 1.5em);}
-div.column{flex: auto; overflow-x: auto;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
 div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
 
 ul.task-list[class]{list-style: none;}
@@ -175,16 +179,28 @@ vertical-align: middle;
 </header>
 <h1 id="helixvpn--requirements-traceability-matrix-requirement--component--test">HelixVPN
 — Requirements Traceability Matrix (requirement → component → test)</h1>
-<p><strong>Revision:</strong> 3 <strong>Last modified:</strong>
-2026-06-26T12:00:00Z <strong>Status:</strong> active — Volume 0 (Spine,
-meta &amp; governance) nano-detail document <strong>Rev 3:</strong> §1
-legend — marked <strong>UI/UX/REC</strong> and <strong>META</strong> as
-<em>adjacent</em> types (NOT members of the §11.4.169 13-type set),
-added a member column; reworded the &quot;Sources verified&quot; MASTER_INDEX
-citation to cite on-disk existence (<code>[DONE]</code>) rather than a
-&quot;to-be-generated&quot; status as existence proof (§11.4.6). <strong>Rev
-2:</strong> Corrected GAP-3/GAP-5 —
-<code>v06-deploy/disaster-recovery.md</code> and all 15
+<p><strong>Revision:</strong> 4 <strong>Last modified:</strong>
+2026-07-04T12:00:00Z <strong>Status:</strong> active — Volume 0 (Spine,
+meta &amp; governance) nano-detail document <strong>Rev 4:</strong>
+Independent gap-analysis pass (enterprise-hardening audit). Added
+<strong>GAP-6</strong> — the <code>DDOS</code> test-type tag is defined
+in the §1 legend but traced to <strong>zero</strong> FR/NFR rows, i.e.
+the API gateway/edge has no requirement-level
+rate-limiting/DDoS-resilience obligation despite <code>04_ARCH</code>
+§4.6 naming a token-bucket mechanism; also flagged RBAC&#39;s
+lone-parenthetical status on FR-601. Added a §0 Mermaid diagram
+visualizing the
+<code>Req → Component → Test type → Ledger row → Evidence state</code>
+chain the prose already describes, to make the loop legible in one look.
+No existing row changed; this document still does not mint new
+requirement ids (that stays FR/NFR-doc territory). <strong>Rev
+3:</strong> §1 legend — marked <strong>UI/UX/REC</strong> and
+<strong>META</strong> as <em>adjacent</em> types (NOT members of the
+§11.4.169 13-type set), added a member column; reworded the &quot;Sources
+verified&quot; MASTER_INDEX citation to cite on-disk existence
+(<code>[DONE]</code>) rather than a &quot;to-be-generated&quot; status as
+existence proof (§11.4.6). <strong>Rev 2:</strong> Corrected GAP-3/GAP-5
+— <code>v06-deploy/disaster-recovery.md</code> and all 15
 <code>v08-testing/</code> docs are now authored (the stale
 &quot;not-yet-authored&quot; framing fixed per §11.4.6; residual gaps are
 pending-measurement, not missing docs). <strong>Authority:</strong>
@@ -282,6 +298,7 @@ key (<code>LEDG-FR-NNN</code> / <code>LEDG-NFR-NNN</code>). State =
 (<code>LEDG-FR-001</code> ↔︎ <code>HVPN-FR-001</code>) so the Volume-8
 coverage ledger (<code>coverage-ledger-schema.md</code>) can be
 populated mechanically from this matrix.</p>
+<p><strong>[MERMAID RENDER FAILED — block #1]</strong></p>
 <hr />
 <h2 id="1-the-114169-test-type-legend">1. The §11.4.169 test-type
 legend</h2>
@@ -2000,9 +2017,13 @@ spine decisions</em> (see <a href="decision-register.md#5-the-gate--decision-res
 honest)</h2>
 <p>Surfaced, never hidden. A GAP = a requirement whose satisfying
 component or test is <em>not yet fully pinned</em>, or a coverage seam
-this matrix exposes. None is a missing <em>requirement</em> (the FR/NFR
-set is enumerated); each is a <em>pin-the-detail</em> item tracked as a
-§11.4.93 workable item.</p>
+this matrix exposes. GAP-1 through GAP-5 are not missing
+<em>requirements</em> (the FR/NFR set is enumerated for those); each is
+a <em>pin-the-detail</em> item tracked as a §11.4.93 workable item.
+<strong>GAP-6 is the one exception</strong> — it is the inverse seam: a
+test type (<code>DDOS</code>) with zero requirements mapped to it, which
+this independent audit pass surfaces as a genuinely missing requirement
+recommendation (not silently assumed covered).</p>
 <ul>
 <li><strong>GAP-1 — FR-705 (connector local-ACL × central policy
 interaction) <code>UNVERIFIED</code>.</strong> The FR doc itself marks
@@ -2053,6 +2074,40 @@ PASS — every evidence-state is honestly <strong>PENDING</strong> (see
 header) until implementation lands. <strong>Owner:</strong> the
 implementation phases (P0–P3); the test specs that gate them are
 authored.</li>
+<li><strong>GAP-6 — <code>DDOS</code> test-type tag defined but traced
+to zero requirements; RBAC and rate-limiting are named but not
+requirement-level (enterprise-hardening gap, found in an independent
+audit pass).</strong> The §1 legend defines <strong>DDOS</strong>
+(DoS/load-flood, Volume-8 §5.8) as one of the 13 mandatory §11.4.169
+types, but scanning every row in §2 and §3 above, <strong>no FR or NFR
+carries the <code>DDOS</code> tag</strong> — the API gateway
+(<code>svc-api.md</code>) and the gateway edge (the public-facing
+MASQUE/plain-UDP listeners) have no traced requirement obligating
+rate-limiting or flood-resilience, even though <code>04_ARCH</code> §4.6
+names a concrete mechanism (&quot;rate limiting (token buckets per API key)&quot;
+in Redis). Relatedly, <strong>RBAC</strong> (the
+<code>users.role: admin|operator|member</code> model) appears only as a
+parenthetical test-type annotation on HVPN-FR-601 (&quot;INT + E2E (RBAC)&quot;),
+not as its own requirement with acceptance criteria — so RBAC
+enforcement (can an <code>operator</code> role escalate to
+<code>admin</code> actions?) has no dedicated ledger row either.
+<strong>This traceability doc does not mint new FR/NFR ids</strong> (see
+header), so this is recorded as a gap, not fixed here.
+<strong>Recommendation:</strong> a future pass to
+<code>v01-product/nonfunctional-requirements.md</code> should add an NFR
+(suggested id range NFR-31x, &quot;API/edge resilience&quot;) for API-key
+token-bucket rate limiting + a connection/handshake-rate ceiling at the
+gateway edge, <code>Verify by: DDOS</code>, owning doc
+<code>v03-control-plane/svc-api.md</code> (control-plane surface) +
+<code>v02-data-plane/routing-and-addressing.md</code> or the edge doc
+(data-plane surface, handshake flood); and a dedicated FR for RBAC
+(role→action matrix, <code>Verify by: SEC + INT</code>) alongside
+FR-601/606. Once minted, this matrix gains <code>LEDG-NFR-31x</code> /
+<code>LEDG-FR-6xx</code> rows immediately (the mechanical 1:1 derivation
+already described in §0). <strong>Owner (of the fix):</strong>
+<code>v01-product/nonfunctional-requirements.md</code> +
+<code>v01-product/functional-requirements.md</code> (not this document);
+<strong>Owner (of this gap record):</strong> this matrix, §6.</li>
 </ul>
 <blockquote>
 <p><strong>No requirement is orphaned of a <em>component</em>.</strong>
@@ -2072,7 +2127,7 @@ requirement in <code>functional-requirements.md</code>
 <code>nonfunctional-requirements.md</code> (HVPN-NFR-001…609, 7
 families) is mapped to a satisfying component <strong>and</strong> a
 §11.4.169 test type <strong>and</strong> a <code>LEDG-*</code> ledger
-row, with the 5 GAPs of §6 surfaced.</p>
+row, with the 6 GAPs of §6 surfaced.</p>
 <p><strong>What it does NOT claim (§11.4.6 honest
 boundary).</strong></p>
 <ol type="1">
@@ -2125,6 +2180,13 @@ on disk, not inferred from a &quot;to-be-generated&quot; status (GAP-3,
 GAP-5).</li>
 <li><a href="../99-source-coverage-ledger.md"><code>../99-source-coverage-ledger.md</code></a>
 gap G1 (DR/RTO consolidation → GAP-3).</li>
+<li><code>04_VPN_CLD/HelixVPN-Architecture-Refined.md</code> §4.6 (Redis
+usage — token-bucket rate limiting named but untraced → GAP-6, Rev
+4).</li>
+<li><a href="glossary.md"><code>glossary.md</code></a> (Rev 3
+<strong>API Gateway</strong> / <strong>Rate limiting</strong> /
+<strong>RBAC</strong> / <strong>Tenant</strong> entries,
+cross-referencing this document&#39;s GAP-6).</li>
 </ul>
 <p><em>Constitution bindings: §11.4.44 (revision header), §11.4.6 (no
 captured PASS asserted; <code>UNVERIFIED</code> targets owned by named

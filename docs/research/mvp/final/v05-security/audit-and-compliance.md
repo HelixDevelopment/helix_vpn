@@ -1,7 +1,11 @@
 # Audit & compliance
 
-**Revision:** 2
-**Last modified:** 2026-06-26T12:00:00Z
+**Revision:** 3
+**Last modified:** 2026-07-04T12:00:00Z
+**Rev 3:** Fixed an internal contradiction — §4's inline reconciliation note already resolved
+`D-AC-1` (adopting `auth.login`/`auth.enroll.denied` into the closed enum) but §11's honest
+boundary ledger and §13.1's decision table still listed it as an open "reconcile before tag"
+item. Both now read RESOLVED, consistent with §4.
 
 > Master technical specification — **Volume 5 (Security & Privacy)**, nano-detail
 > deep-dive. This document **deepens** the audit + compliance posture of the master
@@ -568,7 +572,7 @@ Phase-2/3 deliverable).
 | Anonymous mode stores no PII | ✅ **designed-in** | `email/oidc_sub = NULL` [04-SEC §2.2] |
 | Data-minimisation (GDPR Art. 5(1)(c)) by construction | ✅ **designed-in** at the schema level | §6, §7.1 |
 | Tamper-*evident* (hash-chained) audit | ⚠️ **`UNVERIFIED` / Phase 2** | §3.3 — MVP ships append-only *grant*, not the hash chain |
-| `auth.login` / `auth.enroll.denied` are audited | ⚠️ **`UNVERIFIED` reconciliation item** | master §7 narrative vs telemetry closed enum (§4 note) |
+| `auth.login` / `auth.enroll.denied` are audited | ✅ **designed-in — reconciled 2026-06-26** | §4 — both adopted as regular closed-enum members (`D-AC-1` resolved, option A); no longer an open reconciliation item |
 | "HelixVPN is GDPR compliant" | ⚠️ **aspirational — operator determination** | the code minimises data; a *deployment's* GDPR compliance depends on the operator's own processing (§7.1) |
 | "HelixVPN is SOC2 certified" | ⚠️ **aspirational — requires an independent audit** | §7.2 is a control *mapping*, not an attestation; a SOC2 report needs an auditor + operational evidence over a period |
 | A named SIEM connector (Splunk/Elastic) ships | ⚠️ **`UNVERIFIED` / Phase 2** | §9.3 — MVP exposes generic REST/WS; connectors are additive |
@@ -608,7 +612,7 @@ cannot bluff [svc-telemetry §10, §11.4.107(10)].
 
 | # | Decision | Option A | Option B | Recommendation |
 |---|---|---|---|---|
-| **D-AC-1** | `auth.login`/`auth.enroll.denied` audit rows | add to the closed enum (MVP) | defer to Phase 2 | **reconcile before tag** (§4 note) — the closed enum is the mechanical truth; pick one and align master §7 to it |
+| **D-AC-1** | `auth.login`/`auth.enroll.denied` audit rows | add to the closed enum (MVP) | defer to Phase 2 | ✅ **RESOLVED 2026-06-26 — option A adopted** (§4 note): both are regular closed-enum members; master §7 aligned to the same taxonomy. No longer open. |
 | **D-AC-2** | tamper-evident hash chain | ship in MVP | Phase 2 additive (append-only grant is the MVP floor) | **B** — §3.3; the `meta.prev_hash` seam is reserved now, the capability is not claimed for MVP |
 | **D-AC-3** | audit retention default | no auto-prune (operator-driven) | a default TTL | **A** — §8; control-action audit is low-volume + accountability-valuable; the operator chooses a period per their compliance regime |
 | **D-AC-4** | SIEM connector | named connector in MVP | generic REST/WS, connectors Phase 2 | **B** — §9.3; MVP exposes the generic surfaces, a named connector is additive |

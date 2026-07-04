@@ -1,7 +1,15 @@
 # coordinator service (the brain)
 
-**Revision:** 2
-**Last modified:** 2026-06-26T12:00:00Z
+**Revision:** 3
+**Last modified:** 2026-07-04T12:00:00Z
+
+**Rev 3 (enterprise-hardening pass, 2026-07-04):** expanded §10(c) "coordinators become stateless
+and horizontally scalable" from a one-line claim into §10.1 with a concrete multi-replica topology
+diagram + the exact mechanism by which a `WatchNetworkMap` stream held open on replica A observes a
+state change that originated via a write on replica B (both replicas consume the SAME Redis
+Streams / NATS JetStream consumer group against the SAME Postgres truth — there is no
+replica-to-replica RPC). This closes a gap flagged for review: the horizontal-scaling claim existed
+but had no worked example a reader could verify against.
 
 > Master technical specification — Volume 3 (Control Plane, Go), document `svc-coordinator`.
 > Scope: the **`internal/coordinator`** package — HelixVPN's brain. It holds a per-tenant
@@ -820,6 +828,91 @@ replicas need no sticky state [02_CP §11.3]; (d) the `version` namespace + `del
 support cross-restart resume, which generalises to cross-instance resume under a shared bus.
 Phase 1 drew the seams (R1–R4, the `Bus`/`Compiler`/`Registry`/`PKI` interfaces) so Phase 2 is
 additive.
+
+### 10.1 Multi-replica coordinator topology (worked example, closes the horizontal-scaling gap)
+
+**The question a reader needs answered:** if `helixd` runs as 3 K8s replicas (`v06-deploy/
+kubernetes.md`) and a policy change is submitted through replica A's REST endpoint (behind the
+Service/LB, any replica may receive it), how does an agent whose `WatchNetworkMap` stream happens
+to be open on replica **C** ever learn about it? **Answer: there is no replica-to-replica call.**
+Every replica independently consumes the SAME Redis Streams (or NATS JetStream, post-D3-swap)
+consumer group (`"coordinator"`) against the SAME Postgres truth — the event fan-out IS the
+inter-replica communication mechanism; the graph is never replica-local truth.
+
+```mermaid
+flowchart TB
+  subgraph LB["Load balancer / K8s Service"]
+    direction LR
+  end
+  Admin[Admin / Console] -->|"POST /v1/policies/{v}/activate"| LB
+  LB --> A["helixd replica A<br/>(receives the write)"]
+  ClientAgent[Client agent] -->|WatchNetworkMap open| LB
+  LB --> C["helixd replica C<br/>(holds this agent's stream)"]
+
+  subgraph PG["Postgres (RLS) — single source of truth"]
+    POL[(policies table)]
+  end
+  subgraph BUS["Redis Streams / NATS JetStream — consumer group 'coordinator'"]
+    EV[["events:policy"]]
+  end
+
+  A -->|"WithTenant tx: activate + outbox (§2.12 of data-model-ddl.md)"| PG
+  A -->|"sweeper XADD policy.compiled"| EV
+  EV -->|"XReadGroup — EACH replica is an independent consumer instance\nin the SAME group; Redis/NATS delivers to exactly one member per entry"| A2[replica A's consumer]
+  EV --> B2[replica B's consumer]
+  EV --> C2[replica C's consumer]
+  C2 -->|"apply to replica C's OWN in-mem graph copy"| CGraph["tenantState (replica C)"]
+  CGraph -->|"diffAffected finds this agent affected"| SendC["stream.Send(MapDelta)\non replica C's own open stream"]
+  SendC --> ClientAgent
+```
+
+**Load-bearing properties that make this correct (not merely "probably fine"):**
+
+1. **Every replica hydrates its OWN in-memory graph independently** from the same Postgres truth
+   on boot (§1.4) and keeps it fresh by consuming the same event streams (§4) — there are N
+   *copies* of the graph (one per replica), never one shared graph, and they are kept convergent
+   *because* they all derive from the same durable inputs (Postgres) + the same event log, not
+   because they synchronize with each other directly.
+2. **Consumer-group semantics deliver each event to exactly one replica's XReadGroup call** (Redis
+   Streams / NATS JetStream queue semantics within a group) — so only ONE replica actually runs
+   `apply()`+`fanout()` for a given event. This is fine: `fanout()` only needs to reach the
+   subscriptions held **on that same process** (`c.subs` is process-local, §3.1) — an agent's
+   stream is always served by exactly one replica (the one it TCP-connected to via the LB), so the
+   replica that processes the event and the replica serving the affected agent's stream are USUALLY
+   different processes for a 3+ replica fleet.
+3. **This is why every replica must independently apply every event to its own graph**, regardless
+   of which replica's `XReadGroup` "won" the delivery for `fanout` purposes: the reaction table
+   (§4.2) mutation (`ts.policy = fresh`, `ts.nodes[...] = ...`) MUST run on every replica so that
+   replica C's copy of `tenantState` is also current — **the actual Phase-2 mechanism (not yet
+   built, `UNVERIFIED` as running code) is a *fan-out consumer group* per replica** (each replica
+   subscribes with `hostID = replica-A|B|C` — i.e., `XReadGroup(group="coordinator", consumer=
+   hostID)` — but ALSO needs every replica to see every event for GRAPH APPLY purposes, which is a
+   **different consumption pattern than the single-instance MVP's exactly-once-processing
+   assumption**). **Honest boundary (§11.4.6):** the Phase-1 single-instance design (§4.1's
+   consumer loop) assumes ONE consumer processes each event for BOTH graph-apply AND fan-out. The
+   Phase-2 multi-replica design needs graph-apply to be **broadcast to every replica** (so each
+   replica's local graph copy stays current) while fan-out-decision-and-send stays **local** to
+   whichever replica holds the affected agent's stream. This requires EITHER (a) a fan-out
+   Redis/NATS subject per replica in addition to the shared consumer-group subject (each replica
+   also subscribes to a broadcast topic for graph-apply, while a single competing-consumers group
+   handles nothing extra since apply is idempotent and cheap to run redundantly), OR (b) every
+   replica simply consumes ALL events via `XRANGE`-style non-group reads for graph-apply (accepting
+   redundant apply work across replicas, which is safe because `apply()` is idempotent, §4.1) while
+   using a **separate** competing consumer group only for the DLQ/ack bookkeeping. **This
+   multi-replica consumption design is a Phase-2 deliverable, not proven in Phase 1** — it is
+   flagged here explicitly (rather than silently assumed) as a workable item for the Phase-2 WBS
+   (`08-phase2-parity-wbs.md` HA/multi-region tasks) with an integration test asserting: activate a
+   policy via replica A's REST endpoint, assert an agent connected to replica C's `WatchNetworkMap`
+   receives the correct `MapDelta` within the SLO — this is the concrete acceptance test that
+   proves the chosen mechanism (a or b above) actually works, not merely that it "should".
+4. **Presence (§4.4) is likewise per-replica-local but Redis-mediated**: each replica's
+   `subRegistry` only knows about the streams IT holds; the heartbeat TTL keys in Redis are shared,
+   so presence reads (`GET /v1/devices?online=`) are correct fleet-wide even though no single
+   replica's in-process `subRegistry` has a global view.
+
+Composes with `v06-deploy/ha-and-multiregion.md` (stateless coordinators, D-GW-SELECT) and
+`v03-control-plane/architecture-and-wiring.md` §11 ("the Phase-2 services... are UNVERIFIED as
+running code in Phase 1").
 
 ---
 

@@ -1,7 +1,12 @@
 # End-to-End Testing — HelixVPN nano-detail spec (Volume 8 · §11.4.169 type 3)
 
-**Revision:** 2
-**Last modified:** 2026-06-26T12:00:00Z
+**Revision:** 3
+**Last modified:** 2026-07-04T12:00:00Z
+
+> **Rev 3 (2026-07-04):** independently re-verified against `SPECIFICATION.md` /
+> `decision-register.md` / `test-rig.md` during a corpus-wide gap-analysis pass; no
+> contradictions found (the four-namespace rig alignment from the prior reconciliation
+> holds). Revision bumped for the audit pass itself.
 
 > **Reconciled (§11.4.35, 2026-06-26):** the §2 harness topology + skeletons were
 > rewritten onto the **canonical four-namespace rig** (`client` / `censor` /

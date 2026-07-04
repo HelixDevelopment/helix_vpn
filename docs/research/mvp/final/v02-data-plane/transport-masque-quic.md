@@ -1,7 +1,13 @@
 # MASQUE / QUIC Transport
 
-**Revision:** 1
-**Last modified:** 2026-06-25T00:00:00Z
+**Revision:** 2
+**Last modified:** 2026-07-04T12:00:00Z
+
+> **Rev 2 (enterprise-hardening pass, 2026-07-04):** added §6.4 QUIC anti-amplification
+> limit (RFC 9000 §8.1) as an explicit DDoS-resilience mechanism for the gateway edge —
+> a gap identified against the parent task's enterprise-hardening checklist (rate-limiting
+> / DDoS resilience at the Connector/Gateway roles). No other section changed; all prior
+> content (§0–§10) stands.
 
 > Master technical specification — Volume 2 (Data Plane), nano-detail document
 > deepening the **MASQUE / QUIC Transport** section of [`01-data-plane.md`](../01-data-plane.md) §3.3.
@@ -536,6 +542,49 @@ note]. Loss resilience is the reason mobile got this feature: under `netem loss 
 `masque-h3` MUST sustain higher goodput than the UDP-over-TCP strawman
 [01-DP §3.3, §12.1; 04_P0 §5.3, §8].
 
+### 6.4 Edge DDoS resilience — the QUIC anti-amplification limit (enterprise hardening)
+
+**Gap closed (2026-07-04):** the edge's `:443/udp` listener is a public, unauthenticated
+QUIC endpoint before a client completes address validation — exactly the shape of a
+reflection/amplification vector (a spoofed-source client sends a small QUIC Initial,
+the server replies with a larger Handshake/response to the *spoofed* victim address).
+QUIC (RFC 9000 §8.1) closes this by construction, and `helix-edge` MUST enforce it, not
+merely inherit it silently from `quinn`:
+
+- **The 3× rule.** Until the client's address is validated (by successfully processing
+  an Initial packet whose UDP datagram was padded to ≥ 1200 bytes, or by returning a
+  Retry token the client echoes back), the server **MUST NOT send more than three times
+  the number of bytes received** from that (as-yet-unvalidated) address. `quinn`
+  implements this limit internally; `helix-edge` MUST NOT bypass or relax it via any
+  transport-config knob, and the Phase-0 G4/G2 benchmark harness MUST capture the
+  enforced ratio (bytes-sent : bytes-received per unvalidated 4-tuple) as evidence, not
+  assume `quinn`'s default is wired in correctly.
+- **Retry tokens under load.** When the edge's concurrent-unvalidated-handshake count
+  crosses an operator-tunable threshold (`masque_retry_threshold`, default: an
+  evidence-calibrated value from the Phase-0 rig, `UNVERIFIED` until measured), the edge
+  SHOULD start issuing QUIC Retry packets (stateless, HMAC-tagged token, no
+  per-source-IP state held) before accepting the CONNECT-UDP flow — the standard QUIC
+  answer to a handshake flood, symmetric to WireGuard's own MAC1/cookie-reply defence
+  (`helix-wg` §14.3, [`wireguard-core.md`](wireguard-core.md)). This composes with, and
+  does not replace, connection-ID-based routing/load-balancing at the edge.
+- **Amplification-factor test point.** A new `LOAD`/`SEC` test point (feeds §8 table):
+  send an Initial from a spoofed/unvalidated source, assert the edge's *response* byte
+  count never exceeds 3× the request byte count before validation, captured via a pcap
+  byte-count ratio — never a config-only assertion that "quinn handles it."
+- **Composition with the edge decoy (§5.4).** A non-CONNECT-UDP probe that never
+  completes address validation is bounded by the same 3× ceiling regardless of whether
+  it is ultimately routed to the decoy site or the CONNECT-UDP handler — the
+  anti-amplification limit is a QUIC-transport-layer property, applied before HTTP/3
+  request routing even begins.
+
+This closes a concrete DDoS-resilience gap: without an explicit test asserting the 3×
+ratio, "quinn handles amplification" is an unverified assumption, not a proven property
+of `helix-edge`'s configuration (§11.4.6 no-guessing). Cross-references: the
+Connector/Gateway-role rate-limiting design lives in
+[`v06-deploy/ha-and-multiregion.md`](../v06-deploy/ha-and-multiregion.md) and
+[`v06-deploy/kubernetes.md`](../v06-deploy/kubernetes.md) (edge ingress hardening);
+this subsection is the transport-layer half of that story.
+
 ---
 
 ## 7. Performance budget & no-logging counters
@@ -588,6 +637,7 @@ Every claim ships captured evidence, not config-only PASS (§11.4.5/.69/.107;
 | Slice works with **plain WG/UDP `nft`-blocked** (S3/G2) | `E2E` + `FA` | real censorship evasion, not "QUIC also works" | netns rig run log [04_P0 §3]; `-count=3` re-runnable (§11.4.98) |
 | Flow classifies as **HTTP/3, no WG signature**, SNI = masquerade host (§5.5) | `SEC` (DPI) | browser-HTTP/3 indistinguishability (public layer) | `tshark`/pcap capture [01-DP §12.1; 04_P0 §8] |
 | QUIC/TLS fingerprint mimicry (§5.3) | `SEC` (DPI) | **research-tracked `UNVERIFIED` gap** — not a PASS until §5.3 settled; tracked item, honest SKIP-with-reason (§11.4.3) | risk-item ticket + capture diff vs browser profile |
+| Anti-amplification enforcement (§6.4): unvalidated-source response bytes ≤ 3× request bytes | `SEC` + `LOAD` | edge does not amplify toward a spoofed victim (RFC 9000 §8.1) | pcap byte-count ratio per unvalidated 4-tuple |
 | Throughput WG-direct vs WG-over-MASQUE; CPU-per-Gbps; handshake/sec (§7) | `BENCH` + `PERF` | quantified tax — **no parity claim** (§7.1) | `bench.sh` CSV [04_P0 §8] |
 | Loss resilience @ `netem loss 5%` beats UoT (§6.3, §7.2) | `BENCH` + `STRESS` | QUIC loss recovery (the mobile rationale) | goodput comparison [04_P0 §5.3] |
 | Sustained ≥30 s / ≥100-iter framing under load; ≥10 parallel conns | `STRESS` | no leak, no deadlock in the recv pump | `stress_chaos.sh` `ab_stress_*` (§11.4.85) |

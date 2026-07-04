@@ -1,5 +1,16 @@
 # Facet: Shared Core Architecture — Rust as Cross-Platform Foundation for Helix VPN
 
+**Revision:** 1
+**Last modified:** 2026-07-04T14:00:00Z
+
+> **Editorial note (added during the 2026-07-04 MVP2 gap-analysis/hardening
+> pass):** raw research brief preserved as historical input, not a living
+> spec. Note the code-reuse percentages here (60-70% mobile, 40-50% web) are
+> early estimates; the final, reconciled figures — 72% Android/iOS, 70%
+> HarmonyOS, 45% Web — are specified in `../MVP2_ARCHITECTURE.md` §4 and
+> `../MVP2_SHARED_CORE.md` §1.3, which are authoritative where they differ
+> from this brief.
+
 ## Executive Summary
 
 This research evaluates Rust as a shared core library foundation for maximum code reuse across all Helix VPN target platforms: macOS, Windows, Linux, Android, iOS, HarmonyOS, Aurora OS, and Web. The analysis covers FFI patterns, binding generators (UniFFI, flutter_rust_bridge, wasm-bindgen), build systems, real-world case studies from Mullvad VPN, Signal, Cloudflare BoringTun, and provides a recommended architecture with estimated code reuse percentages per platform.

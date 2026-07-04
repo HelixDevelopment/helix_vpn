@@ -1,7 +1,15 @@
 # Control Plane — Go modular monolith, data model, events, coordinator, API
 
-**Revision:** 1
-**Last modified:** 2026-06-25T00:00:00Z
+**Revision:** 2
+**Last modified:** 2026-07-04T12:00:00Z
+
+**Rev 2 (enterprise-hardening pass, 2026-07-04):** (1) §2 now references the `outbox` table (full
+DDL in `v03-control-plane/data-model-ddl.md` §2.12) — closes the reliable-event-publish gap
+`reconciliation-flow.md` §3.6 flagged as `UNVERIFIED`; (2) added §11.4 zero-downtime deploy /
+rolling-upgrade guidance tying the control plane's fail-static property (C1) to the Phase-2 K8s
+rolling-update strategy; (3) added a protobuf versioning cross-reference — see
+`v03-control-plane/protobuf-spec.md` §8 for the full compatibility policy (this document does not
+duplicate it).
 
 > Master technical specification — document 02 of the HelixVPN set.
 > Scope: the **Go control plane** (`helix-go`) — the brain that holds identity, topology
@@ -348,6 +356,16 @@ CREATE TABLE audit_events (
 );
 CREATE INDEX ON audit_events (tenant_id, ts DESC);
 ```
+
+**Reliable event publish — the `outbox` table.** Redis is not transactionally joined to Postgres,
+so a naive "commit, then XADD" has a lost-event window if the process crashes between the two
+(the write is durable; the coordinator never learns of it). The control plane closes this with a
+**transactional outbox**: every R3 write stages its event envelope in an `outbox` row **inside**
+the same `WithTenant` transaction as the domain mutation, and a background sweeper reliably drains
+unpublished rows to the bus. Full DDL + sweeper contract: `v03-control-plane/data-model-ddl.md`
+§2.12 (that document is the canonical owner of this table; this overview only summarizes it and
+resolves `reconciliation-flow.md` §3.6's `UNVERIFIED` note that the outbox mechanism was designed
+but not yet schema-specified anywhere).
 
 **Design notes.**
 - `devices` holds **both** clients and connectors (`kind`); `connectors` is a 1:1 detail table so
@@ -1097,6 +1115,39 @@ spec:
             - { name: HELIX_BUS_URL, valueFrom: { secretKeyRef: { name: helix-bus, key: url } } }
           ports: [ { containerPort: 8443 } ]
 ```
+
+### 11.4 Zero-downtime deploy & rolling upgrade (the control-plane half of "no downtime")
+
+The control plane's fail-static property (C1 — "if control is down, existing tunnels keep
+forwarding") is the reason a control-plane restart is *inherently* lower-stakes than a data-plane
+restart, but it is not license to drop in-flight `WatchNetworkMap` streams carelessly — a clean
+rollout still matters for convergence latency and Console UX.
+
+- **Single-node (Podman quadlet, Phase 1).** `Restart=always` (§11.1) restarts `helixd` in place
+  on upgrade. `App.Run`'s graceful shutdown (`internal/app/run.go` §6.5 of
+  `v03-control-plane/architecture-and-wiring.md`) drains in-flight HTTP requests, closes open
+  `WatchNetworkMap`/`/v1/stream` connections cleanly (agents observe a clean stream-close, not a
+  reset, and reconnect with `known_version` — doc 03 §3.3 — so the reconnect is a cheap delta
+  catch-up, not a full resync) before the process exits. There **is** a downtime window on
+  single-node (the new container is not up until the old one exits) — this is the honestly-stated
+  Phase-1 posture: single-node self-host trades a short control-plane blip (existing tunnels keep
+  forwarding, C1) for deploy simplicity. Zero-downtime *control-plane* upgrades are a Phase-2
+  multi-replica property (below).
+- **Multi-replica (K8s, Phase 2, `v06-deploy/kubernetes.md`).** `helixd` is stateless-on-restart
+  (R2 — the coordinator graph rebuilds from Postgres + events on boot; no durable table it owns),
+  so a standard Kubernetes `RollingUpdate` strategy (`maxUnavailable: 0, maxSurge: 1`, a `readyz`
+  gate per §4.7 so a new pod is not routed to until Postgres+Redis are reachable, and a
+  `preStop` hook that triggers the same graceful-shutdown drain as the quadlet path) achieves
+  genuine zero-downtime: old replicas keep serving `WatchNetworkMap` streams while new replicas
+  come up, and the LB/Service stops routing new connections to a replica once its `preStop` hook
+  fires. An agent whose specific replica is cycled sees a clean close + `known_version` reconnect
+  to a (possibly different) surviving replica — this is why the graph being rebuilt-from-events
+  (not replica-sticky) is load-bearing for zero-downtime, not just for horizontal scaling.
+- **Database migrations during a rollout.** Per `v03-control-plane/data-model-ddl.md` §8.4
+  (expand-contract), a migration that ships alongside a binary upgrade MUST be additive-only for
+  that release (new nullable/defaulted columns, new tables) so the OLD and NEW binary can both run
+  against the migrated schema during the rollout window; destructive changes (column/table drops,
+  renames) land in a LATER release after every replica confirms running the new binary.
 
 ---
 

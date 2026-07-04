@@ -1,7 +1,11 @@
 # identity service
 
-**Revision:** 1
-**Last modified:** 2026-06-25T00:00:00Z
+**Revision:** 2
+**Last modified:** 2026-07-04T12:00:00Z
+**Rev 2:** Added §11.5 MSP / multi-tenant-operator workflow (Enterprise Hardening) — the
+named primary-buyer persona (small MSP running networks for several clients) had no
+described cross-tenant workflow under the one-user-one-tenant model; documents the honest
+Phase-1 N-accounts answer + the additive Phase-2 `MSPIdentity`/`msp_tenant_grants` seam.
 
 > Master technical specification — Volume 3 (Control Plane, Go), service nano-detail
 > document `svc-identity`. Deepens the identity slice of the pass-1 control-plane overview
@@ -994,6 +998,41 @@ via the `vasic-digital/containers` submodule (§11.4.76 — never ad-hoc `docker
 owns the token-verify→IPAM→cert→persist→publish path); revoke→edge-enforced p99 < 1 s
 (identity originates it). These are measured with captured histograms (`helix_reconcile_seconds`
 tail, an enrollment-latency histogram), not asserted — the anti-bluff acceptance numbers.
+
+---
+
+## 11.5 MSP / multi-tenant-operator workflow — Enterprise Hardening
+
+**The gap this closes.** SPECIFICATION.md §2 names the primary buyer as "the self-hoster
+/ home-lab operator / small MSP who runs networks for **several clients**." Every table
+in this document (`users`, `sessions`, `accounts`, `api_tokens`) scopes a principal to
+**exactly one** `tenant_id` (`users.tenant_id NOT NULL`, §2.2) — there is no cross-tenant
+identity. Under the model as specified, an MSP operator managing five client tenants
+needs **five separate accounts** (one per tenant) and **five separate sessions**,
+switching between them by logging out/in or holding five browser sessions. This is a
+real day-one usability gap for the named persona, not a hypothetical.
+
+**Phase-1 answer (honest, not deferred without a path):** the MSP operator holds N
+per-tenant `admin`/`operator` accounts, one per client tenant they run — RLS-correct and
+secure by construction (each session is genuinely scoped to one tenant; a compromised
+session cannot reach a second tenant, C8). The Console MAY ship a **client-side-only**
+tenant switcher (a bookmarked list of `{tenant_slug, saved_session}` pairs) that does not
+require a new server-side capability — this is a pure UX affordance, not a security
+boundary change, and ships whenever v10-design's Console screens land it.
+
+**Phase-2 forward seam (the real fix, additive not a rewrite).** A `MSPIdentity` concept:
+one human identity (`msp_users` row, its own OIDC binding) linked N:N to tenants via an
+`msp_tenant_grants(msp_user_id, tenant_id, role)` table. `Authenticate` resolves an MSP
+bearer to a `Principal` carrying a `TenantID` selected **per-request** (e.g. an
+`X-Helix-Tenant` header or a per-request JWT claim), re-validated against
+`msp_tenant_grants` on every call — RLS still pins the query to that one `tenant_id`
+(never a cross-tenant query), so the security model is unchanged; only the
+*credential-to-session* relationship becomes 1:N instead of 1:1. This is additive: it
+does not touch the `users`/`sessions`/RLS schema above, it adds a parallel identity
+class that resolves to the *same* `Principal` shape (§1.2) the rest of the system
+already consumes. Tracked as a Phase-2 workable item (owning doc: this section +
+`v06-deploy/ha-and-multiregion.md` for any federation/session-affinity implications);
+not required for the Phase-1 MVP Definition-of-Done (SPECIFICATION.md §8.1).
 
 ---
 

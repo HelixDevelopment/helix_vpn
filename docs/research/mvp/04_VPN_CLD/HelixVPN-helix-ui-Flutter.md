@@ -1,5 +1,20 @@
 # HelixVPN — `helix-ui` Flutter Application Specification
 
+**Revision:** 1
+**Last modified:** 2026-07-04T12:00:00Z
+
+> **Status note (added in the production-hardening pass, 2026-07-04).** This is
+> the original Claude-authored source document (`[04_UI]`) that seeded Volume 4
+> of the `final/` specification set. Its architecture-level content (two-cores
+> strategy, melos layout, FFI surface sketch, per-platform shim matrix, design
+> system, Riverpod) has since been absorbed, deepened, and in places corrected by
+> the nano-detail documents under `docs/research/mvp/final/v04-client/` (see
+> `final/03-client-core-and-ui.md` §"Sources verified" for the absorption map) —
+> those documents are authoritative on any point of conflict per
+> `final/SPECIFICATION.md`'s provenance rule. This file is retained as the
+> readable narrative origin and primary citation source (`[04_UI §N]`); it is
+> **not** independently rewritten in this pass beyond this status note.
+
 **Companion to:** `HelixVPN-Architecture-Refined.md`, `HelixVPN-Phase0-Spike.md`, `HelixVPN-Phase1-MVP.md`, `HelixVPN-Phase2-Parity.md`.
 **Role in the suite:** this is the **third reuse pillar** (architecture §5.5) — the single Dart/Flutter codebase that produces **all three apps** (Access, Connector, Console) across **all eight platforms** (iOS, Android, Aurora, HarmonyOS, Windows, Linux, macOS, Web), sitting on top of the unchanged **Rust `helix-core`** and the **generated API clients**.
 

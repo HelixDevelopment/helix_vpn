@@ -1,7 +1,12 @@
 # Memory Test Strategy (iOS NE ceiling + leak soak)
 
-**Revision:** 2
-**Last modified:** 2026-06-26T12:00:00Z
+**Revision:** 3
+**Last modified:** 2026-07-04T12:00:00Z
+
+> **Rev 3 (2026-07-04):** independently re-verified against `SPECIFICATION.md` /
+> `_SYNTHESIS.md` during a corpus-wide gap-analysis pass; the §11.4.50 24h-soak
+> carve-out (recorded explicitly at the gate, not silent) is correctly documented in
+> both §5 and §6. No contradictions found.
 
 > **Reconciled (§11.4.35, 2026-06-26):** the 24 h MEM-SOAK-LEAK / SLO4 single run is
 > now an **explicit, documented §11.4.50 carve-out recorded at the gate (§6)** —

@@ -1,7 +1,7 @@
 # helix-core Orchestrator & State Machine
 
-**Revision:** 1
-**Last modified:** 2026-06-25T00:00:00Z
+**Revision:** 2
+**Last modified:** 2026-07-04T12:00:00Z
 
 > Master technical specification — Volume 2 (Data Plane), nano-detail deep-dive.
 > This document **deepens** the *Orchestrator, status stream, and auto transport selection*

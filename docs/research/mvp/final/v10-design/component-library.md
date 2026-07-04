@@ -1,7 +1,7 @@
 # Component library — the canonical reusable component catalog
 
-**Revision:** 1
-**Last modified:** 2026-06-25T12:00:00Z
+**Revision:** 2
+**Last modified:** 2026-07-04T12:00:00Z
 
 > Master technical specification — Volume 10 (Design System), nano-detail
 > deep-dive. This document **owns** HelixVPN's complete reusable **component
@@ -840,9 +840,23 @@ between nodes: solid=direct, dashed=relay, red=blocked), `nodeLabel`,
 - **edge**: `direct` (green solid) · `relay` (teal dashed) · `blocked` (red, with
   a block glyph at midpoint) · `highlighted` (when an incident node is selected,
   its edges thicken).
+- **canvas (whole-graph, stale vs live)**: `live` (the WS/SSE snapshot stream is
+  healthy — the default) · `stale` (the stream dropped; the **last-known** graph
+  keeps rendering, but with a persistent `feedback.warning` banner — "may be
+  stale — reconnecting" — and every node/edge desaturated ~20% so a stale render
+  is never visually indistinguishable from a live one). This closes a
+  cross-doc gap against [`screens-console.md`] §8, which already describes this
+  exact behaviour ("if the snapshot fails, an inline retry over the last-known
+  graph (marked stale)") without the component previously naming a `stale`
+  canvas state/token — reconciled here against `screens-console.md` as the
+  behavioural source of truth. The component-level state mirrors the Console
+  shell's stream-health chip (that doc's §14) so `TopologyGraph` never silently
+  paints frozen data as current (§11.4.6).
 
 **Tokens consumed:** `comp.topology.node.{healthy,degraded,down,selected}.{fill,ring,label}`,
 `comp.topology.edge.{direct,relay,blocked,highlighted}`,
+`comp.topology.canvas.{live,stale}` (`stale` = the canvas at reduced opacity +
+`comp.topology.staleBanner` = `feedback.warning`),
 `comp.topology.selectionHalo` (= `border.focus`), `comp.topology.legend.*`,
 `comp.topology.canvas` (= `surface.sunken`), plus `comp.tooltip.*`.
 
@@ -855,7 +869,10 @@ graph is never the only way to read the topology (§11.4.117 pixel-only surfaces
 get a structured fallback). Nodes are keyboard-focusable in a deterministic order;
 `Enter` selects (opens the PeerCard, §7); edges are reachable via their endpoints.
 Health is conveyed by ring **shape pattern** (solid/dashed/dotted) + label, not
-colour alone.
+colour alone. When `canvas` is `stale`, the `aria-label` summary appends the
+honest qualifier ("… data may be stale, reconnecting") so a screen-reader user
+gets the same staleness signal a sighted user reads from the banner — never a
+silent stale render on either channel (§11.4.6).
 
 **Light + dark.** Canvas (`surface.sunken`), node fills, edge colours, and rings
 swap via the fork. Edge **line styles** (solid/dashed) are theme-invariant so the

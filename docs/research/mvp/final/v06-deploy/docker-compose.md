@@ -1,7 +1,10 @@
 # Docker Compose (the documented fallback substrate)
 
-**Revision:** 2
-**Last modified:** 2026-06-26T12:00:00Z
+**Revision:** 3
+**Last modified:** 2026-07-04T12:00:00Z
+**Rev 3:** Cross-referenced the new rate-limiting/DDoS section (`05-repo-layout-tooling-and-helix-
+ecosystem.md §7.5`) — same reasoning as `podman-quadlets.md §4.1`: the edge's transient-ban rule
+reuses the `cap_add: [NET_ADMIN, NET_RAW]` already granted in §3, no Compose change required.
 
 > Master technical specification — Volume 6 (Deployment, Tooling & Operations), nano-detail
 > document. **[RES]** research-backed. Scope: the **Docker Compose equivalent** of the HelixVPN

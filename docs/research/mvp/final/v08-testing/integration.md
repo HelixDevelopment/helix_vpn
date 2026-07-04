@@ -1,7 +1,13 @@
 # Integration Testing — HelixVPN nano-detail spec (Volume 8 · §11.4.169 type 2)
 
-**Revision:** 1
-**Last modified:** 2026-06-26T12:00:00Z
+**Revision:** 2
+**Last modified:** 2026-07-04T12:00:00Z
+
+> **Rev 2 (2026-07-04):** independently re-verified against `SPECIFICATION.md` /
+> `decision-register.md` / `10-testing-acceptance-and-qa.md` during a corpus-wide
+> gap-analysis pass; no contradictions or gaps found (the on-demand-infra-via-
+> `containers` invariant and the no-mocks-below-unit boundary are consistent with
+> the rest of the corpus). Revision bumped for the audit pass itself.
 
 > Nano-detail expansion of [§5.2 of the Volume-8 overview](../10-testing-acceptance-and-qa.md).
 > Integration (INT) is the **first layer where mocks are forbidden** (§11.4.27): every

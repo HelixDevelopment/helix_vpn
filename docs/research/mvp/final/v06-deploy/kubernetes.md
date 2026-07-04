@@ -1,7 +1,12 @@
 # Kubernetes deployment (fleet / Phase-2 HA substrate)
 
-**Revision:** 2
-**Last modified:** 2026-06-26T12:00:00Z
+**Revision:** 3
+**Last modified:** 2026-07-04T12:00:00Z
+**Rev 3:** Added §8.1 (rate-limiting/DDoS note — `NetworkPolicy` governs the control-plane mesh
+but NOT the `hostNetwork` edge; cross-referenced the new `05-repo-layout-tooling-and-helix-
+ecosystem.md §7.5` mitigation). Added §9.1 (rolling-upgrade ↔ fail-static tie-in, making explicit
+that a `helixd` rollout never drops a live tunnel because C1 keeps the edge out of the packet
+path — the property was implicit in §5/§9, now stated as its own callout).
 
 > Master technical specification — Volume 6 (Deployment, Tooling & Operations), nano-detail
 > document `kubernetes.md`. Scope: the **Kubernetes substrate** for HelixVPN — plain
@@ -500,6 +505,16 @@ spec:
 > is a real, UNVERIFIED-in-the-general-case boundary worth calling out: pod NetworkPolicy
 > protects the control plane; host firewalling protects the edge.
 
+### 8.1 Rate limiting & DDoS (cross-reference)
+
+`NetworkPolicy` (§8) is a pod-mesh control and does not — cannot — rate-limit the `hostNetwork`
+edge's public UDP listeners, which sit outside the K8s network-policy enforcement point entirely
+(the host-network bypass noted above). The concrete volumetric/handshake-flood mitigation for
+those listeners (WG cookie mechanism, per-source-IP handshake-attempt cap, transient nftables/eBPF
+ban, QUIC Retry validation) and the control-plane API token-bucket limiter are specified in
+`05-repo-layout-tooling-and-helix-ecosystem.md §7.5` (added this revision) — this document's
+NetworkPolicy defends the *east-west* mesh; §7.5 defends the *north-south* public listeners.
+
 ---
 
 ## 9. Probes, PodDisruptionBudgets & rollout discipline
@@ -522,6 +537,32 @@ spec: { minAvailable: 1, selector: { matchLabels: { app: helixd } } }
   a PDB that fights the operator (a documented anti-pattern, deferred to `ha-and-multiregion.md §3`).
 - **Edge** is a `DaemonSet`: it has no PDB (one per node); draining a gateway node drains its
   tunnels — that failover is the `ha-and-multiregion.md §5` anycast/geoDNS story, not a pod concern.
+
+### 9.1 Why a control-plane rollout is zero-downtime for the data plane (the fail-static tie-in)
+
+This is C1 made concrete at rollout time, stated as its own callout because "zero-downtime
+upgrade" is exactly the kind of claim §11.4.6 forbids asserting without the mechanism spelled out.
+A `helixd` `Deployment` rollout (§5, `maxUnavailable:0/maxSurge:1`) replaces control-plane pods one
+at a time; **at no point does this touch the data plane**, because:
+
+1. **The edge is a separate `DaemonSet`**, never rolled together with `helixd` — a control-plane
+   version bump and an edge version bump are independent rollouts (different `image:` tags, §1).
+2. **The edge already holds its WireGuard peer state** (kernel or `boringtun`) programmed from the
+   last `MapDelta` it received — that state does not depend on `helixd` staying up (C1: Go never
+   in the packet path).
+3. **An agent whose `WatchNetworkMap` stream lands on a draining `helixd` pod reconnects** to a
+   surviving replica and resumes by `known_version` (§9's rollout bullet) — this is a *control*
+   reconnect, not a *data-plane* interruption; the edge's already-programmed peers keep forwarding
+   throughout.
+
+So "zero-downtime control-plane upgrade" does not mean "no visible event anywhere" — it means
+precisely: **live tunnels never stop forwarding**, while a *brief* WatchNetworkMap stream
+reconnect (sub-second, per §8's convergence SLO once reconnected) is the honestly-disclosed
+control-plane-side effect. Captured evidence: a rolling `kubectl rollout restart deployment/helixd`
+during an active load test shows zero packet-loss on the data plane and a bounded
+reconnect-and-resume blip on the control-plane stream metric (`helix_open_watch_streams`,
+`observability.md §2.2`) — the same evidence class already required by `ha-and-multiregion.md §8`
+for a replica-loss chaos test (a rollout is a *voluntary* instance of that same event).
 
 ---
 

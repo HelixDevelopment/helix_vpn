@@ -1,8 +1,15 @@
 # HelixVPN — Requirements Traceability Matrix (requirement → component → test)
 
-**Revision:** 3
-**Last modified:** 2026-06-26T12:00:00Z
+**Revision:** 4
+**Last modified:** 2026-07-04T12:00:00Z
 **Status:** active — Volume 0 (Spine, meta & governance) nano-detail document
+**Rev 4:** Independent gap-analysis pass (enterprise-hardening audit). Added **GAP-6** — the
+`DDOS` test-type tag is defined in the §1 legend but traced to **zero** FR/NFR rows, i.e. the API
+gateway/edge has no requirement-level rate-limiting/DDoS-resilience obligation despite `04_ARCH`
+§4.6 naming a token-bucket mechanism; also flagged RBAC's lone-parenthetical status on FR-601.
+Added a §0 Mermaid diagram visualizing the `Req → Component → Test type → Ledger row → Evidence
+state` chain the prose already describes, to make the loop legible in one look. No existing row
+changed; this document still does not mint new requirement ids (that stays FR/NFR-doc territory).
 **Rev 3:** §1 legend — marked **UI/UX/REC** and **META** as *adjacent* types (NOT members of the §11.4.169 13-type set), added a member column; reworded the "Sources verified" MASTER_INDEX citation to cite on-disk existence (`[DONE]`) rather than a "to-be-generated" status as existence proof (§11.4.6).
 **Rev 2:** Corrected GAP-3/GAP-5 — `v06-deploy/disaster-recovery.md` and all 15 `v08-testing/` docs are now authored (the stale "not-yet-authored" framing fixed per §11.4.6; residual gaps are pending-measurement, not missing docs).
 **Authority:** Subordinate to [`../SPECIFICATION.md`](../SPECIFICATION.md). Requirement ids are owned by [`../v01-product/functional-requirements.md`](../v01-product/functional-requirements.md) (`HVPN-FR-NNN`) and [`../v01-product/nonfunctional-requirements.md`](../v01-product/nonfunctional-requirements.md) (`HVPN-NFR-NNN`); this document does **not** mint new requirements — it cross-references them. Test types are the §11.4.169 closed set owned by [`../10-testing-acceptance-and-qa.md`](../10-testing-acceptance-and-qa.md).
@@ -55,6 +62,16 @@ Each FR/NFR is one row with five cross-reference fields:
 The ledger row id is derived 1:1 from the requirement id (`LEDG-FR-001` ↔
 `HVPN-FR-001`) so the Volume-8 coverage ledger (`coverage-ledger-schema.md`) can be
 populated mechanically from this matrix.
+
+```mermaid
+flowchart LR
+  FR["HVPN-FR-NNN / HVPN-NFR-NNN\n(owned by functional-/nonfunctional-requirements.md)"]
+  COMP["Satisfying component\n(Volume 2-6/10 owning doc)\nor GAP if none (§6)"]
+  TEST[">=1 §11.4.169 test type\n(§1 legend) or GAP if none (§6)"]
+  LEDG["LEDG-FR-NNN / LEDG-NFR-NNN\n(coverage-ledger-schema.md row)"]
+  EVID["Evidence state\nMISSING -> DESIGNED -> AUTONOMOUS_DESIGNED -> AUTONOMOUS_VERIFIED\n(spec phase: always PENDING, never asserted PASS)"]
+  FR --> COMP --> TEST --> LEDG --> EVID
+```
 
 ---
 
@@ -370,15 +387,19 @@ the make-or-break requirements *and resolve the spine decisions* (see
 ## 6. GAP register (§11.4.6 — honest)
 
 Surfaced, never hidden. A GAP = a requirement whose satisfying component or test is
-*not yet fully pinned*, or a coverage seam this matrix exposes. None is a missing
-*requirement* (the FR/NFR set is enumerated); each is a *pin-the-detail* item tracked
-as a §11.4.93 workable item.
+*not yet fully pinned*, or a coverage seam this matrix exposes. GAP-1 through GAP-5
+are not missing *requirements* (the FR/NFR set is enumerated for those); each is a
+*pin-the-detail* item tracked as a §11.4.93 workable item. **GAP-6 is the one
+exception** — it is the inverse seam: a test type (`DDOS`) with zero requirements
+mapped to it, which this independent audit pass surfaces as a genuinely missing
+requirement recommendation (not silently assumed covered).
 
 - **GAP-1 — FR-705 (connector local-ACL × central policy interaction) `UNVERIFIED`.** The FR doc itself marks the local-ACL/central-policy interaction `UNVERIFIED`; `svc-policy.md` is named as the doc that fixes it but the precedence contract (local vs central deny) is not yet pinned. **Owner:** `v03-control-plane/svc-policy.md` + connector spec. **Test once pinned:** INT (local-ACL honoured + central-deny wins). Not a missing component — an unpinned contract.
 - **GAP-2 — FR-1103 (Rosenpass) is an *evaluation*, not a built capability.** Its acceptance criterion is "a documented evaluation exists", so it has **no runtime test type** (correctly — it is a decision-input doc, not a feature). Recorded so the absence of a runtime test is *intentional*, not an oversight. **Owner:** `v05-security/post-quantum.md`.
 - **GAP-3 — NFR-205 / DR runbook RTO/RPO are `UNVERIFIED` targets pending measurement.** `v06-deploy/disaster-recovery.md` now EXISTS and pins the region-failover RTO/RPO budget + restore/failover runbooks (closing 99-ledger gap G1 at the doc level). The residual gap is narrower: the RTO/RPO numbers are stated as TARGETS (§11.4.6) and stay `UNVERIFIED` until a real failover drill measures them, so NFR-205's CHAOS region-failover drill asserts against a target, not yet a measured baseline. **Owner:** `v06-deploy/disaster-recovery.md` (G1 closed; numbers pending soak).
 - **GAP-4 — Connector has no single owning nano-detail doc.** FR-7xx point at "connector spec (Volume 4 shims + `helix-core-rust.md` advertise/route mode)" — the Connector's behaviour is distributed across `helix-core-rust.md` (advertise/route mode) + `svc-registry.md` + the shims, with **no** dedicated `v04-client/connector-*.md`. The behaviour *is* specified (across those docs); the GAP is the absence of a single consolidating doc, which makes connector-only traceability span three files. **Recommendation:** a future pass MAY add `v04-client/connector.md` consolidating FR-701..707. Not a missing capability — a doc-locality seam.
 - **GAP-5 — `v08-testing/` authored; every evidence-state is `PENDING` because nothing is *built* yet (spec phase).** Volume 8's 15 nano-detail docs (the 13 §11.4.169 per-type docs + `coverage-ledger-schema.md` + `test-rig.md`) now EXIST; the `LEDG-*` ledger rows trace to `coverage-ledger-schema.md` (authored) and the per-type harness docs. The residual is not a missing doc but the spec-phase reality: no code is built, so no test has produced a captured PASS — every evidence-state is honestly **PENDING** (see header) until implementation lands. **Owner:** the implementation phases (P0–P3); the test specs that gate them are authored.
+- **GAP-6 — `DDOS` test-type tag defined but traced to zero requirements; RBAC and rate-limiting are named but not requirement-level (enterprise-hardening gap, found in an independent audit pass).** The §1 legend defines **DDOS** (DoS/load-flood, Volume-8 §5.8) as one of the 13 mandatory §11.4.169 types, but scanning every row in §2 and §3 above, **no FR or NFR carries the `DDOS` tag** — the API gateway (`svc-api.md`) and the gateway edge (the public-facing MASQUE/plain-UDP listeners) have no traced requirement obligating rate-limiting or flood-resilience, even though `04_ARCH` §4.6 names a concrete mechanism ("rate limiting (token buckets per API key)" in Redis). Relatedly, **RBAC** (the `users.role: admin|operator|member` model) appears only as a parenthetical test-type annotation on HVPN-FR-601 ("INT + E2E (RBAC)"), not as its own requirement with acceptance criteria — so RBAC enforcement (can an `operator` role escalate to `admin` actions?) has no dedicated ledger row either. **This traceability doc does not mint new FR/NFR ids** (see header), so this is recorded as a gap, not fixed here. **Recommendation:** a future pass to `v01-product/nonfunctional-requirements.md` should add an NFR (suggested id range NFR-31x, "API/edge resilience") for API-key token-bucket rate limiting + a connection/handshake-rate ceiling at the gateway edge, `Verify by: DDOS`, owning doc `v03-control-plane/svc-api.md` (control-plane surface) + `v02-data-plane/routing-and-addressing.md` or the edge doc (data-plane surface, handshake flood); and a dedicated FR for RBAC (role→action matrix, `Verify by: SEC + INT`) alongside FR-601/606. Once minted, this matrix gains `LEDG-NFR-31x` / `LEDG-FR-6xx` rows immediately (the mechanical 1:1 derivation already described in §0). **Owner (of the fix):** `v01-product/nonfunctional-requirements.md` + `v01-product/functional-requirements.md` (not this document); **Owner (of this gap record):** this matrix, §6.
 
 > **No requirement is orphaned of a *component*.** Every FR/NFR above names ≥1
 > satisfying owning doc (GAP-4 notes one is *distributed*, not *absent*). Every FR/NFR
@@ -394,7 +415,7 @@ as a §11.4.93 workable item.
 `functional-requirements.md` (HVPN-FR-001…1014, 14 capability bands A–L) and
 `nonfunctional-requirements.md` (HVPN-NFR-001…609, 7 families) is mapped to a
 satisfying component **and** a §11.4.169 test type **and** a `LEDG-*` ledger row,
-with the 5 GAPs of §6 surfaced.
+with the 6 GAPs of §6 surfaced.
 
 **What it does NOT claim (§11.4.6 honest boundary).**
 
@@ -423,5 +444,7 @@ The reverse loop closes mechanically: `LEDG-FR-NNN` ↔ `HVPN-FR-NNN` ↔ owning
 - [`../SPECIFICATION.md`](../SPECIFICATION.md) §7 (cross-cutting contracts → FR-003/018/205), §8 (phase gates G1–G6 + 8-criteria DoD → §4/§5), §9 (decisions → `decision-register.md`).
 - [`../MASTER_INDEX.md`](../MASTER_INDEX.md) Volumes 2–10 (owning-doc filenames) + the on-disk existence (now `[DONE]`) of the `v08-testing/` docs and `v06-deploy/disaster-recovery.md` — verified as files present on disk, not inferred from a "to-be-generated" status (GAP-3, GAP-5).
 - [`../99-source-coverage-ledger.md`](../99-source-coverage-ledger.md) gap G1 (DR/RTO consolidation → GAP-3).
+- `04_VPN_CLD/HelixVPN-Architecture-Refined.md` §4.6 (Redis usage — token-bucket rate limiting named but untraced → GAP-6, Rev 4).
+- [`glossary.md`](glossary.md) (Rev 3 **API Gateway** / **Rate limiting** / **RBAC** / **Tenant** entries, cross-referencing this document's GAP-6).
 
 *Constitution bindings: §11.4.44 (revision header), §11.4.6 (no captured PASS asserted; `UNVERIFIED` targets owned by named gates; GAPs surfaced not hidden), §11.4.108 (evidence-state is the runtime-signature dimension — PENDING until captured on a clean deployment), §11.4.118 (enumerated-coverage claim + its boundary in §7), §11.4.169 (every requirement → a mandatory test type), §11.4.93 (each requirement + GAP → a workable item), §11.4.25 (coverage-ledger discipline), §11.4.65/.153 (HTML+PDF[+DOCX] exports follow in refinement).*

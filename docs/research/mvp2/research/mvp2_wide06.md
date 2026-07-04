@@ -1,5 +1,16 @@
 # Web Platform VPN Capabilities & Browser Extensions - Comprehensive Research
 
+**Revision:** 1
+**Last modified:** 2026-07-04T14:00:00Z
+
+> **Editorial note (added during the 2026-07-04 MVP2 gap-analysis/hardening
+> pass):** raw research brief preserved as historical input, not a living
+> spec. The final web specification (Proxy Mode / Native Bridge / P2P Mode,
+> Enterprise Hardening detail for extension-store review, enterprise policy
+> push, and auto-update) lives in `../MVP2_WEB_CLIENT.md` and
+> `../MVP2_ARCHITECTURE.md` §2.2.5 — where this brief's recommendations
+> differ, those documents are authoritative.
+
 ## Executive Summary
 
 Web browsers present significant limitations for true VPN functionality due to sandbox constraints: no raw socket access, no TUN/TAP interface creation, and no ability to intercept system-wide traffic. However, browser extensions and modern web APIs can provide partial VPN-like functionality through proxy APIs, WebRTC data channels, WebSocket tunneling, and WebTransport. This research evaluates all web-based approaches for VPN functionality, providing a capability matrix and strategic recommendation for Helix VPN.

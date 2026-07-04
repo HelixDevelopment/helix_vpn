@@ -1,7 +1,16 @@
 # pki service
 
-**Revision:** 1
-**Last modified:** 2026-06-25T00:00:00Z
+**Revision:** 2
+**Last modified:** 2026-07-04T12:00:00Z
+**Rev 2:** §2.3 CA rotation split into two DISTINCT paths — scheduled (safe, 24h overlap)
+vs. compromise (fast, zero-overlap, force-revoke+re-enroll every device chaining through
+the compromised issuing CA) — the prior revision conflated both under one overlap window,
+which would have kept a compromised CA trusted for up to 24h. Wired the `AuthDevice` hot
+path (§8.2) to reject a `compromised`-status issuer regardless of leaf `not_after`; added
+`ErrIssuingCACompromised` (§10.1) and the `ca.issuing.compromised` event (§9.1). Added a
+KMS/signer-unavailability blast-radius + mitigation note (§2.3) closing an unstated
+availability dependency (a KMS outage longer than the renew-skew window cascades into
+fleet-wide expiry).
 
 > Master technical specification — Volume 3 (Control Plane, Go), service `internal/pki`.
 > This document is the **nano-detail deepening** of [02-control-plane §9 (Identity,
@@ -134,17 +143,75 @@ graph TD
 - The control plane (Connect server) verifies the **client** leaf against the tenant's
   issuing CA on every handshake (§8.2) — mutual.
 
-### 2.3 CA rotation
+### 2.3 CA rotation — two DISTINCT paths (scheduled vs. compromise) — Enterprise Hardening
 
-- **Issuing-CA rotation** (scheduled ~annually or on suspected compromise): the root signs
-  a *new* issuing CA; both old and new issuing certs are trusted during an overlap window
-  (= the max device-cert TTL, 24h) so in-flight 24h leaves remain valid; after the window
-  the old issuing CA is retired. New leaves are signed by the new issuing CA. Captured as
-  rows in `ca_keys` (`status: active|retiring|retired`).
-- **Root-CA rotation** (rare, multi-year): cross-sign the new root with the old during a
-  long overlap; **operator-gated** (§11.4.66 / §11.4.101 — irreversible, high blast radius,
-  cannot be auto-decided). Phase-1 spec models the schema + the manual `helixvpnctl ca
-  rotate-root` path; automation is Phase 2.
+**These are not the same operation and MUST NOT share the same overlap window.** An
+earlier revision of this document treated "scheduled ~annually" and "on suspected
+compromise" as one path with a shared 24h trust-overlap; that is wrong — a compromised
+issuing CA must be distrusted immediately, never carried through a grace period during
+which the attacker (or anyone holding the leaked key) could still mint valid-looking
+leaves. The two paths now diverge at the `ca_keys.status` transition:
+
+- **(a) Scheduled rotation (safe, has overlap).** Cadence ~annually, or ahead of the
+  issuing CA's own `not_after`. The root signs a *new* issuing CA (`status='active'`);
+  the *old* issuing CA is marked `status='retiring'` and **both remain trusted** for an
+  overlap window `= max device-cert TTL (24h) + renew-sweeper margin` so every in-flight
+  24h leaf signed by the old CA remains valid until it naturally expires or renews under
+  the new CA. After the window, `status='retired'`. This is the path modelled in §2.1/§2.2.
+- **(b) Compromise rotation (fast, NO overlap, P3/P5).** Triggered by `RevokeReason
+  ::=compromise`-class evidence (leaked `key_sealed`/KMS credential, HSM tamper alert,
+  unexplained cert issuance the audit log cannot attribute). The compromised issuing CA
+  is flipped **directly to `status='compromised'`** (the terminal `ca_keys.status` value
+  already present in the §3.1 DDL enum but previously undocumented in this rotation
+  prose — it is now load-bearing, not vestigial) —
+  **zero overlap**: `AuthDevice` (§8.2) is extended to reject any leaf whose
+  `issuing_ca_id` resolves to a `compromised` row, regardless of the leaf's own
+  `not_after` (P5 fail-closed — an unexpired-but-compromised-issuer leaf is untrusted
+  the instant the flip commits). The root immediately signs a *new* issuing CA
+  (`status='active'`) and **every device whose active cert chains through the
+  compromised CA is force-revoked and re-enrolled** — not renewed, because renewal
+  reuses the device's *existing* cert-issuance path which itself ran through the
+  compromised signer; re-enrollment via a fresh `Enroll` (or an operator-driven
+  bulk `helixvpnctl ca reissue-affected --ca <id>`) is the only path that provably
+  re-establishes trust from the new CA. **Blast-radius bound:** the compromise event is
+  scoped to the *tenant* whose `ca_keys` row was compromised (per-tenant CA hierarchy,
+  §2.1) — no cross-tenant blast radius. **Time-to-full-recovery** = `device count ×
+  reissue round-trip (§10.3, <150ms) `, parallelized; a fleet of 10k devices
+  re-issues in well under a minute of pure compute, gated in practice by how fast each
+  agent's control channel reconnects with the new CA's chain (bounded by the agent's
+  own reconnect/backoff policy, out of `pki`'s control).
+- **Root-CA rotation** (rare, multi-year, unaffected by the a/b split above): cross-sign
+  the new root with the old during a long overlap; **operator-gated** (§11.4.66 /
+  §11.4.101 — irreversible, high blast radius, cannot be auto-decided). Phase-1 spec
+  models the schema + the manual `helixvpnctl ca rotate-root` path; automation is Phase 2.
+  A compromised **root** (as opposed to the online issuing CA) is the catastrophic case:
+  it invalidates the tenant's entire trust anchor, including any still-valid issuing CA
+  it signed. Recovery requires **operator-driven, out-of-band re-establishment of trust**
+  (a brand-new root + a fresh enrollment bundle re-distributed to every device by the
+  operator, since the agent's pinned root, §2.2, can no longer be updated *through* the
+  now-untrusted channel) — this is why P3 mandates the root key be the most tightly
+  protected secret in the system and why root rotation is never autonomous.
+
+#### KMS / signer unavailability — the resilience gap this closes
+
+`CASigner` (§4.3) is a hard dependency for **every** issuance and renewal (§5.2/§6.2). If
+the KMS backend (or the sealed-file decryption path) is unreachable for longer than the
+renew skew window (~4.8h before a 24h leaf's expiry, §6.1), devices approaching expiry
+start failing `RenewDeviceCert` and — once past `not_after` — fail `AuthDevice` (P5
+fail-closed), losing their control channel fleet-wide as leaves expire on a rolling
+basis. This is a genuine availability dependency the earlier revision did not name.
+**Mitigations (operational, not a code change to this spec):** (1) the signer backend
+(KMS/HSM) MUST carry its own HA/SLA appropriate to the fleet's cert TTL — a KMS outage
+budget of `< renewSkew` (≈4.8h for the default 24h TTL) keeps the fleet inside its
+existing grace margin; a longer TTL (e.g. 7d, within the `[minTTL,maxTTL]` clamp, §5.2)
+buys more outage tolerance at the cost of a slower revocation-by-non-renewal fallback;
+(2) `helix_pki_certs_expired_total` (§6.3) climbing is the leading alert — page on any
+sustained increase, not just on `ErrNoActiveCA`; (3) the file-sealed backend (§4.3) has
+no external-service dependency once the KMS-wrapped data key is cached in memory at boot
+— it degrades gracefully to "control-plane-process-availability only," which is why it
+is the recommended default for the self-hosted/homelab primary buyer (SPECIFICATION.md
+§2) who has no KMS/HSM budget; a managed KMS is the enterprise-tier upgrade for
+regulatory key-custody requirements, not a Phase-1 requirement.
 
 ---
 
@@ -726,11 +793,22 @@ func (s *Service) AuthDevice(ctx context.Context, leaf *x509.Certificate) (Authe
     if err != nil { return AuthedDevice{}, ErrCertUnknownSerial }     // unknown => reject (P5)
     if row.Status == "revoked" { return AuthedDevice{}, ErrCertRevoked }
     if time.Now().After(row.NotAfter) { return AuthedDevice{}, ErrCertExpired }
+    // 2b. COMPROMISE FAST-PATH (§2.3(b)): reject regardless of not_after — an issuer flip
+    // to 'compromised' is a zero-overlap distrust event, unlike scheduled 'retiring' (§2.3(a)).
+    if s.issuingCAStatus(ctx, row.IssuingCaID) == "compromised" {
+        return AuthedDevice{}, ErrIssuingCACompromised
+    }
     // 3. SPIFFE URI in leaf SAN must match the resolved device (binding, not just serial)
     if leaf.URIs[0].String() != row.SpiffeUri { return AuthedDevice{}, ErrSpiffeMismatch }
     return AuthedDevice{DeviceID: row.DeviceID, TenantID: row.TenantID, CertID: row.ID}, nil
 }
 ```
+
+> `issuingCAStatus` reads the in-memory CA-status cache (same pattern as the §8.2 revoke
+> cache — hydrated at boot, invalidated on `ca.issuing.rotated`/a new `ca.issuing.compromised`
+> event, §9.1) so the compromise check costs no DB round-trip on the hot path. `ErrIssuingCACompromised`
+> maps to Connect `PermissionDenied` / HTTP 403 (§10.1) and triggers the same force-close +
+> re-enroll flow as `ErrCertRevoked` from the caller's perspective.
 
 A **fast revocation cache** (in-memory `map[serial]struct{}` of revoked serials, hydrated
 from `device_certs WHERE status='revoked'` on boot and updated by the `device.revoked`
@@ -771,7 +849,8 @@ unauthenticated RPC (it validates a single-use hashed enroll token, [02-CP §8.2
 | `device.revoked` | `events:devices` | `{device_id, serial, reason}` | **remove node**; push peer-removal `MapDelta` to everyone who saw it; edge drops WG peer; add serial to revoke cache (§8.2) |
 | `wg.key.rotated` | `events:devices` | `{device_id, old_pub, new_pub}` | push `MapDelta` replacing the peer `wg_pubkey` to all nodes that may reach it (C4) |
 | `pq.psk.rotated` | `events:devices` | `{device_id, psk_epoch}` | push updated `PQParams` to relevant peers (when PQ enabled) |
-| `ca.issuing.rotated` | `events:gateway` | `{tenant_id, old_ca, new_ca}` | extend trust set during overlap window (§2.3) |
+| `ca.issuing.rotated` | `events:gateway` | `{tenant_id, old_ca, new_ca}` | extend trust set during overlap window (§2.3(a) scheduled path only) |
+| `ca.issuing.compromised` | `events:gateway` | `{tenant_id, ca_id, new_ca_id}` | **zero-overlap** distrust: invalidate the in-memory CA-status cache entry immediately (§8.2), force-close every open agent stream whose cert chains through `ca_id`, drive bulk re-enrollment (§2.3(b)) |
 
 ### 9.2 Revocation algorithm (the two teeth, P5)
 
@@ -840,6 +919,7 @@ sequenceDiagram
 | `ErrCertRevoked` | `PermissionDenied` | serial in revoke set | terminal; device must re-enroll |
 | `ErrCertExpired` | `Unauthenticated` | `now > not_after`, never renewed | renew / re-enroll |
 | `ErrSpiffeMismatch` | `Unauthenticated` | leaf SAN URI ≠ resolved device | reject (possible cert-swap attack) |
+| `ErrIssuingCACompromised` | `PermissionDenied` | leaf's `issuing_ca_id` status flipped to `compromised` (§2.3(b)) — zero-overlap, checked regardless of `not_after` | re-enroll after the new issuing CA is provisioned (never renew — see §2.3(b) rationale) |
 | `ErrWGKeyLen` | `InvalidArgument` | WG pubkey ≠ 32 bytes | client bug; reject |
 | `ErrWGKeyDuplicate` | `AlreadyExists` | pubkey already bound (tenant unique) | regenerate key |
 | `ErrPQDisabled` | `FailedPrecondition` | PQ op on a tenant with PQ disabled | enable suite first |

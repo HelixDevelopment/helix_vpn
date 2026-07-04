@@ -1,7 +1,20 @@
 # Deep-Research Appendix (cited external findings)
 
-**Revision:** 3
-**Last modified:** 2026-06-25T12:00:00Z
+**Revision:** 4
+**Last modified:** 2026-07-04T12:00:00Z
+**Rev 4 (lighter-touch consistency audit, §11.4.99/§11.4.150):** Cross-checked this
+appendix's ten per-angle summaries (§A1–§A10) against the full text of every
+`v09-research/research-*.md` dossier + `_SYNTHESIS.md`. Result: **no factual
+contradictions found** — RFC numbers (9298/9297/9221/9220/9484), WireGuard wire
+sizes (148/92/64/32-byte overhead), MTU arithmetic (1420/1280), the maybenot/DAITA
+v1↔v2 constants, and the Rust-vs-Go tooling-maturity verdicts (MASQUE: no turnkey
+Rust crate vs `masque-go` turnkey; Go control-plane stack versions) are stated
+identically wherever they recur across files. All ten per-angle `[DONE][RES]`
+statuses in `MASTER_INDEX.md` are confirmed accurate — none overstate or
+understate what its dossier actually contains. The one consistency gap found —
+9 of 10 per-angle dossiers (all but `research-wireguard.md`) lacked the §11.4.44
+revision header — is fixed in this same pass (each now carries `Revision: 1`,
+`_SYNTHESIS.md` included).
 
 ---
 

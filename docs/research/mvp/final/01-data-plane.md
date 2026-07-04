@@ -1,7 +1,22 @@
 # Data Plane — WireGuard core, pluggable transports, obfuscation, routing
 
-**Revision:** 1
-**Last modified:** 2026-06-25T00:00:00Z
+**Revision:** 2
+**Last modified:** 2026-07-04T12:00:00Z
+
+> **Rev 2 (enterprise-hardening audit, 2026-07-04):** independent gap-analysis pass over
+> this document and its Volume-2 nano-detail siblings found the content already
+> exceptionally deep (frozen `Transport` trait, full MTU/overhead tables, per-transport
+> failure taxonomies, Mermaid diagrams throughout). Two genuine DDoS-resilience gaps were
+> found and closed in the owning nano-docs rather than duplicated here: QUIC
+> anti-amplification enforcement (RFC 9000 §8.1) in
+> [`v02-data-plane/transport-masque-quic.md`](v02-data-plane/transport-masque-quic.md) §6.4,
+> and edge-side Shadowsocks connection/resource-exhaustion accounting in
+> [`v02-data-plane/transport-shadowsocks.md`](v02-data-plane/transport-shadowsocks.md) §9.7.
+> No contradiction found between this overview and the nano-detail docs (`Transport`
+> trait signature, `TransportConfig`/`TransportKind` variants, MTU table, ladder order all
+> verified consistent, 2026-07-04). WireGuard key rotation was checked against
+> `v02-data-plane/wireguard-core.md` §6 and found already comprehensive (make-before-break
+> state machine) — no addition needed there.
 
 > Master technical specification — document 01 of the HelixVPN set.
 > Scope: the **Rust data plane** shared byte-for-byte by client, connector, and gateway

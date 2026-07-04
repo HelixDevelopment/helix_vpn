@@ -1,5 +1,17 @@
 # HelixVPN — Phase 0 Spike Plan
 
+**Revision:** 1
+**Last modified:** 2026-07-04T12:00:00Z
+**Note:** This is the original Claude-authored Phase-0 plan that seeded
+`final/06-phase0-spike-wbs.md`. It is kept as historical/primary-source reference
+([04_P0] citations throughout the `final/` set point here); `06-phase0-spike-wbs.md`
+is the authoritative, independently-verified, DB-ready expansion (3-tier
+epic→task→subtask, concrete evidence methodology, risk register cross-referenced
+to `v00-meta/decision-register.md`) — where the two differ in level of detail, the
+`final/` doc wins per `SPECIFICATION.md`'s spine-authority rule. No content
+contradictions were found between this document and `06-phase0-spike-wbs.md`
+during independent gap-analysis (2026-07-04).
+
 **Companion to:** `HelixVPN-Architecture-Refined.md`
 **Purpose of Phase 0:** build the thinnest possible *end-to-end* slice that exercises every hard part of the architecture, so that the expensive decisions (iOS viability, edge language, MASQUE-in-Rust maturity, the FFI boundary) are made on **measured evidence**, not on slideware. Phase 0 produces throwaway-quality code on production-quality interfaces: the *traits, FFI signatures, and wire contracts* defined here are meant to survive into Phase 1; the implementations behind them are allowed to be ugly.
 

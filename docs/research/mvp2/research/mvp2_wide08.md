@@ -1,5 +1,17 @@
 # Comprehensive Analysis: VPN Security Architecture, Performance Optimization & Build Pipeline
 
+**Revision:** 1
+**Last modified:** 2026-07-04T14:00:00Z
+
+> **Editorial note (added during the 2026-07-04 MVP2 gap-analysis/hardening
+> pass):** raw research brief preserved as historical input, not a living
+> spec. The final, hardened specification — including the new Enterprise
+> Hardening additions (supply-chain security/SBOM, staged/canary rollout,
+> crash-reporting/telemetry pipeline, update rollback) that this brief does
+> not cover — lives in `../MVP2_SECURITY_PERFORMANCE.md` and
+> `../MVP2_SHARED_CORE.md` §5.5, which are authoritative where they differ
+> from or extend this brief.
+
 > **Research Date**: July 2025
 > **Scope**: Security architecture patterns for VPN clients, performance optimization strategies across all platforms, and build/deployment pipeline design for cross-platform VPN app development.
 > **Sources**: 20+ independent web searches, academic papers, vendor documentation, and authoritative technical sources.
