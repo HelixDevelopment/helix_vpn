@@ -8,7 +8,30 @@
 
 ---
 
-## ROUND 2.1 — post-completion cleanup (2026-07-04T18:10-19:30, DONE, IN FLIGHT TO LAND)
+## ROUND 2 + 2.1: FULLY LANDED (2026-07-05T00:14:23Z, verified)
+
+Both main-repo commits are confirmed pushed to all 3 remotes — local
+HEAD, `github/main`, `origin/main`, `upstream/main` all equal
+`20dc9a4` (verified via `git rev-parse`, not assumed). Round 2's first
+push attempt (`e46a710`) stalled/died across a session/process
+restart mid-transfer (~84MB of new binary content) and had to be
+retried from scratch — the retry completed in seconds, confirming the
+first attempt was genuinely stuck, not just slow. **Lesson for future
+large pushes in this environment: verify completion by comparing
+`git rev-parse HEAD` against every remote's tip, never trust a
+"push started in background" message alone — nohup+disown does not
+reliably survive a session/process restart in this environment.**
+
+All 19 owned submodules verified in sync with their own remotes
+(15 confirmed byte-identical local==origin; the 4 known-diverged ones
+—doc_processor/llm_orchestrator/llm_provider/vision_engine— correctly
+left untouched at the main-repo-pointer level, with llm_provider's
+actual fix independently confirmed live on its real remote).
+
+**Round 2 + 2.1 are now genuinely, verifiably complete — commits
+pushed, submodule pointers current, nothing pending.**
+
+## ROUND 2.1 — post-completion cleanup (2026-07-04T18:10-19:30, DONE, LANDED)
 
 After round 2 was declared complete, two more real, operator-directed
 fixes landed across the submodule fleet (main repo's own commit for
