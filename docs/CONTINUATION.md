@@ -55,7 +55,7 @@ touched submodule:
   updates before push (no force-push, per §11.4.113). Pushed to `gitflic`/
   `github`/`gitlab`/`gitverse`/`origin`/`upstream`/`vasicdigitalgithub`/
   `vasicdigitalgitlab` on `main`.
-- Main repo — `9a7beba` — renamed `upstreams/GitHub.sh` → `upstreams/github.sh`;
+- Main repo — `ea9677a` — renamed `upstreams/GitHub.sh` → `upstreams/github.sh`;
   bumped all touched submodule pointers.
 
 **Remaining queued (not yet dispatched):** `helix_qa`'s nested third-party
