@@ -1,70 +1,97 @@
 # Helix VPN — Session Continuation File
 
-**Revision:** 13
-**Last modified:** 2026-07-05T03:10:00Z
+**Revision:** 14
+**Last modified:** 2026-07-05T07:00:00Z
 
 > Helix Constitution §11.4.131 — standing session-resumption artifact.
 > Re-read this file at the start of any new session before touching code.
+> A fresh session can resume with ONLY this file's path plus
+> `.remember/remember.md` — both are kept byte-accurate against live
+> `git rev-parse`/`workable-items validate` output, never against
+> in-context memory or a prior handoff's text alone (see the
+> multi-session lesson below).
 
 ---
 
-## ROUND 3: FULLY LANDED (2026-07-05T03:10:00Z, verified)
+## ROUND 3: FULLY LANDED (2026-07-05T07:00:00Z, re-verified this pass)
 
-All Round 3 work is committed and pushed, verified via `git rev-parse`
-equality against every remote (never trusted a push-log message alone,
-per §11.4.88):
+All Round 3 work is committed and pushed, re-confirmed via direct
+`git rev-parse` equality against every remote for the main repo AND
+every touched submodule (never trusted a push-log message or a prior
+handoff's text alone, per §11.4.88/§11.4.6):
 
-- `helix_core` — `992e1be` (engineering batch), pushed to `origin/main`.
-- `helix_edge` — `08d6e18` (first real crate), pushed to `origin/main`.
+- `helix_core` — `992e1be` (engineering batch), on `origin/main`.
+  Re-verified fresh this pass: `cargo test --workspace` → 120 tests,
+  0 failed.
+- `helix_edge` — `08d6e18` (first real crate), on `origin/main`.
+  Re-verified fresh: `cargo test --all-targets` → 11 tests, 0 failed.
 - `helix_go` — `57d4972` (first real Go module + a `.gitignore` fix —
-  a stray `/pkg/` ignore rule, copied from a non-Go template, was
-  silently excluding the entire `pkg/masqueedge` package from version
-  control; caught before push, not after), pushed to `origin/main`.
-- `llm_orchestrator` — `bf0ce58` (CLAUDE.md/AGENTS.md fix) +  `ef73c3a`
-  (CONSTITUTION.md full rewrite — a code review caught the first fix as
-  incomplete: only 3 literal strings were touched while ~430 lines of a
-  different project's constitution survived), pushed to `master` on all
-  3 remotes (this repo's parent-tracked lineage is `master`, not `main`
-  — the same expected divergence pattern as `llm_provider`/`vision_engine`
-  /`doc_processor`).
-- `vision_engine` — `2f22942`, reviewed GO, already pushed.
-- `llms_verifier` — `9281cae2` (HelixCode contamination fully removed;
-  the leftover "Lava" section confirmed gone), pushed to `origin/main`
-  on `github`+`gitlab`+`origin`+`upstream`.
-- `panoptic` — `31aaceb` (cascaded CONST-048/050/051/052/056 boilerplate
-  sections fixed — the top-level sections had been fixed correctly the
-  first time, only the deeper mirrored sections were missed), pushed to
-  `origin/main`.
-- `containers` — `a432efa` (real `os.UserHomeDir()` fix + a regression
-  test specifically designed to fail against the original bug even on
-  this same machine, plus a 33-package doc-table correction), already
-  pushed, independently re-verified in this round.
+  a stray `/pkg/` ignore rule was silently excluding `pkg/masqueedge`
+  from version control; caught before push), on `origin/main`.
+  Re-verified fresh: `go build ./...` clean, `go test ./...` → ok.
+- `llm_orchestrator` — `ef73c3a` (two-pass CONSTITUTION.md rewrite — a
+  review caught the first pass as incomplete), pushed to `master` on
+  all 3 remotes (this repo's parent-tracked lineage is `master`, not
+  `main`).
+- `vision_engine` — `2f22942`, reviewed GO, pushed to `master`.
+- `llms_verifier` — `17b4bfb6` (HelixCode + leftover-Lava fix at
+  `9281cae2`, **fast-forwarded** past 3 unrelated upstream commits from
+  a separate workstream — a semantic-code-visibility exit-code fix +
+  a CONST-069 mandate + a reconciliation merge — found and merged
+  during this pass, no force-push, no conflict), on `origin/main`.
+- `panoptic` — `31aaceb` (cascaded CONST-048/050/051/052/056
+  boilerplate fixed on a second pass), on `origin/main`.
+- `containers` — `a432efa` (real `os.UserHomeDir()` fix + a synthetic-
+  `$HOME` regression test + 33-package doc-table correction),
+  re-verified.
 - `helix_qa` — `c1c2513` (routine nested opensource-tool submodule
-  pointer advancement — confirmed via `git diff --submodule=log` to be
-  ordinary upstream drift, not corruption), pushed to all 5 remotes.
-- Main repo — `4d338cb` (13-submodule pointer bump) + `e96410b`
-  (workable-items DB closures) + `f1de366` (final llms_verifier +
-  panoptic pointer bump), all confirmed on `github`/`origin`/`upstream`.
+  pointer advancement, confirmed ordinary upstream drift). Its nested
+  third-party tools (`tools/opensource/docling`, `.../skyvern`) show
+  their OWN working-tree drift (a modified test-data file, a modified
+  nested `integrations/n8n` pointer) — deliberately left untouched
+  (third-party vendored code, exempt from equal-engineering per
+  §11.4.28; origin/intent of the drift was not investigated).
+- Main repo — `26b4b2a` (bumps `llms_verifier`'s pointer to the
+  fast-forwarded tip above; supersedes the earlier `4d338cb`/`e96410b`/
+  `f1de366` pointer-bump sequence). Confirmed identical across
+  `origin`/`github`/`upstream` via `git rev-parse`.
 
 Every commit above passed an independent adversarial code-review pass
-(§11.4.125/§11.4.134) before being accepted — two rounds initially
-returned NO-GO (llm_orchestrator's CONSTITUTION.md, and the first
-llms_verifier+panoptic HelixCode pass) and were re-fixed + re-reviewed
-until clean, per the iterate-until-GO mandate.
+(§11.4.125/§11.4.134) before being accepted — three rounds initially
+returned NO-GO or hit a mid-review session-limit error (llm_orchestrator's
+CONSTITUTION.md; the first llms_verifier+panoptic HelixCode pass; the
+helix_go review) — each was confirmed genuinely completed via git state
+before being trusted, per the no-guessing mandate, not re-done blindly.
+
+**Multi-session lesson (new this pass, keep this note until it's no
+longer novel):** mid-session, this exact working directory was found to
+have been advanced by a PARALLEL Claude Code session operating the same
+checkout concurrently — commits landed and `.remember/remember.md` was
+overwritten with a handoff describing work outside the then-current
+conversation's own context. The correct response was to treat git state
+as ground truth and re-verify everything (`git log`, `git rev-parse`
+against every remote, re-run test suites fresh) rather than trust the
+handoff text or the in-context conversation memory of "pending work."
+This generalizes §11.4.37's fetch-before-edit doctrine to a stronger
+claim: verify against the filesystem even when your OWN memory feels
+current — a parallel session can invalidate it without warning.
 
 `docs/workable_items.db`: HVPN-P0-018/028/031/039/042/071 closed
-`Completed (→ Fixed.md)` with real evidence citations (the `-020/021`
-etc. sub-numbers referenced in commit messages are descriptive labels
-within these primary items, not separate DB rows). `validate`: PASS,
-484 items, 0 issues.
+`Completed (→ Fixed.md)` with real evidence citations. `validate`: PASS,
+484 items, 0 issues (re-confirmed this pass).
 
 **Remaining queued (not yet dispatched, carried forward to a later
-round)** — see "§4 findings" immediately below: broken
-`[Constitution.md](Constitution.md)` self-links in `docs_chain`
-(llms_verifier/panoptic already fixed as part of this round's rewrite);
-stale package tables in `challenges`/`security` (`containers`'s was
-fixed this round); PascalCase `GitHub.sh`/`GitLab.sh` upstream scripts
-in 11 "borrowed" submodules (§11.4.29 violation).
+round):** broken `[Constitution.md](Constitution.md)` self-links in
+`docs_chain` (llms_verifier/panoptic already fixed as part of this
+round's rewrite); stale package tables in `challenges`/`security`
+(`containers`'s was fixed this round); PascalCase `GitHub.sh`/`GitLab.sh`
+upstream scripts in 11 "borrowed" submodules (§11.4.29 violation);
+`helix_qa`'s nested third-party tool drift noted above.
+
+**Next action**: none in flight. Await new operator instructions
+(original mandate: notify when fully committed/pushed so the user can
+send mvp4 instructions — done), or action the queued follow-up round
+above.
 
 ---
 
