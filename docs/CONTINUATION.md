@@ -1,7 +1,7 @@
 # Helix VPN — Session Continuation File
 
-**Revision:** 14
-**Last modified:** 2026-07-05T07:00:00Z
+**Revision:** 15
+**Last modified:** 2026-07-05T11:29:45Z
 
 > Helix Constitution §11.4.131 — standing session-resumption artifact.
 > Re-read this file at the start of any new session before touching code.
@@ -10,6 +10,59 @@
 > `git rev-parse`/`workable-items validate` output, never against
 > in-context memory or a prior handoff's text alone (see the
 > multi-session lesson below).
+
+---
+
+## ROUND 3.1: FULLY LANDED (2026-07-05T11:29:45Z)
+
+Follow-up clean-up round for deferred items discovered during the Round 3
+second decoupling audit. Committed and pushed; verified via direct
+`git rev-parse` equality against every remote for the main repo AND every
+touched submodule:
+
+- `docs_chain` — `99ad270` — fixed broken `[Constitution.md](Constitution.md)`
+  self-links in `CONSTITUTION.md` / `AGENTS.md` / `CLAUDE.md` / `QWEN.md`;
+  renamed `Upstreams/` → `upstreams/` and `GitHub.sh`/`GitLab.sh` →
+  `github.sh`/`gitlab.sh`; updated `install_upstreams.sh`. Pushed to
+  `origin`/`github`/`gitlab`/`upstream` on `main`.
+- `llms_verifier` — `0e7d6949` — fixed broken self-links in `QWEN.md`;
+  lowercase upstream scripts. Pushed to `origin`/`github`/`gitlab`/`upstream`
+  on `main`.
+- `panoptic` — `c6b6c49` — fixed broken self-links in `CRUSH.md`; lowercase
+  upstream scripts. Pushed to `origin`/`github`/`upstream` on `main`.
+- `challenges` — `2711bf0` — added containers-style package metadata table to
+  `README.md`; lowercase upstream scripts. Pushed to `origin`/`github`/
+  `gitlab`/`upstream`/`vasicdigitalgithub` on `main`.
+- `security` — `318c8c7` — added containers-style package metadata table to
+  `README.md`; lowercase upstream scripts. Pushed to `origin`/`github`/
+  `gitlab`/`upstream` on `main`.
+- `containers` — `df980b3` — lowercase upstream scripts. Pushed to
+  `origin`/`github`/`gitlab`/`upstream`/`vasicdigitalgitlab` on `main`.
+- `doc_processor` — `4e98523` — lowercase upstream scripts. Pushed to
+  `origin`/`github`/`gitlab`/`upstream`/`vasicdigitalgithub`/
+  `vasicdigitalgitlab` on `master`.
+- `helix_qa` — `04e12e4` — lowercase upstream scripts. Pushed to
+  `origin`/`github`/`gitlab`/`upstream`/`vasicdigitalgithub` on `main`.
+- `llm_orchestrator` — `4aa7219` — lowercase upstream scripts. Pushed to
+  `origin`/`github`/`upstream` on `master`.
+- `llm_provider` — `084d56f` — lowercase upstream scripts. Pushed to
+  `origin`/`github`/`gitlab`/`upstream`/`vasicdigitalgithub` on `master`.
+- `vision_engine` — `9553a31` — lowercase upstream scripts; rewrote stale
+  `push-all.sh` to iterate all configured remotes and removed four broken
+  single-remote push scripts. Pushed to `origin`/`github`/`upstream` on
+  `master`.
+- `constitution` — `eae531a` — lowercase upstream scripts. Merged gitflic/main
+  updates before push (no force-push, per §11.4.113). Pushed to `gitflic`/
+  `github`/`gitlab`/`gitverse`/`origin`/`upstream`/`vasicdigitalgithub`/
+  `vasicdigitalgitlab` on `main`.
+- Main repo — `9a7beba` — renamed `upstreams/GitHub.sh` → `upstreams/github.sh`;
+  bumped all touched submodule pointers.
+
+**Remaining queued (not yet dispatched):** `helix_qa`'s nested third-party
+`tools/opensource/docling` / `tools/opensource/skyvern` working-tree drift
+(remains untouched; third-party vendored code, exempt per §11.4.28).
+
+**Next action:** none in flight. Await new operator instructions.
 
 ---
 
@@ -81,12 +134,10 @@ current — a parallel session can invalidate it without warning.
 484 items, 0 issues (re-confirmed this pass).
 
 **Remaining queued (not yet dispatched, carried forward to a later
-round):** broken `[Constitution.md](Constitution.md)` self-links in
-`docs_chain` (llms_verifier/panoptic already fixed as part of this
-round's rewrite); stale package tables in `challenges`/`security`
-(`containers`'s was fixed this round); PascalCase `GitHub.sh`/`GitLab.sh`
-upstream scripts in 11 "borrowed" submodules (§11.4.29 violation);
-`helix_qa`'s nested third-party tool drift noted above.
+round):** `helix_qa`'s nested third-party tool drift noted above. The
+other deferred items (broken `Constitution.md` self-links in `docs_chain`,
+stale package tables in `challenges`/`security`, and PascalCase upstream
+scripts) were dispatched and completed in **Round 3.1** above.
 
 **Next action**: none in flight. Await new operator instructions
 (original mandate: notify when fully committed/pushed so the user can
