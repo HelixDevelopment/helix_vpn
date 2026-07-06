@@ -1,0 +1,33 @@
+[package]
+name = "rust_edge_bench"
+version = "0.1.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+description = "HVPN-P0-045 benchmark driver for the Rust helix-edge MASQUE termination path (G4 A/B bench)"
+publish = false
+
+# This is a standalone benchmarking tool, NOT a member of the helix_core
+# Cargo workspace and NOT part of helix_edge itself — it lives under
+# scripts/bench/ per the Phase-0 spike task boundary ("do NOT touch
+# submodules/helix_core or submodules/helix_shims"; helix_edge/helix_core
+# are read/consumed only, never edited). It drives the REAL, already-built
+# helix_edge::edge::spawn_edge entry point (the exact function
+# helix-edge's own src/main.rs calls) plus the REAL helix-masque client
+# transport, over loopback, to produce genuine measured MASQUE-termination
+# numbers for the G4 Go-vs-Rust edge decision (HelixVPN-Phase0-Spike.md §7).
+[[bin]]
+name = "rust_edge_bench"
+path = "src/main.rs"
+
+[dependencies]
+tokio = { version = "1", features = ["full"] }
+rustls = "0.23"
+rcgen = "0.13"
+
+# Sibling submodules, consumed via Cargo path dependency exactly like
+# helix_edge's own Cargo.toml does (Constitution §11.4.28(C) layout) —
+# reached from this tool's own location four levels down from the project
+# root: scripts/bench/tools/rust_edge_bench -> ../../../../submodules/*.
+helix-edge = { path = "../../../../submodules/helix_edge" }
+helix-masque = { path = "../../../../submodules/helix_core/crates/helix-masque" }
+helix-transport = { path = "../../../../submodules/helix_core/crates/helix-transport" }
