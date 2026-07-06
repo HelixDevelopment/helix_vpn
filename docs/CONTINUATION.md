@@ -1,7 +1,7 @@
 # Helix VPN — Session Continuation File
 
-**Revision:** 19
-**Last modified:** 2026-07-06T16:39:13Z
+**Revision:** 20
+**Last modified:** 2026-07-06T16:54:01Z
 
 > Helix Constitution §11.4.131 — standing session-resumption artifact.
 > Re-read this file at the start of any new session before touching code.
@@ -87,17 +87,15 @@ Reopened-Details attached, not silently left closed):**
   `TransportSwitched`) that `helix-ffi`'s match statement doesn't cover
   (`E0004` non-exhaustive match). Found by Track A, confirmed
   independently by the controller.
-- **`HVPN-P0-011`** (`helix-wg` boringtun wrapper) — 2 tests are
-  `#[ignore]`d for a vague "transport key alignment" reason; force-running
-  them reproduces a real `decapsulate error: InvalidPacket` — the WG
-  data-plane **encrypt/decrypt** path is broken, not merely untested
-  (the item's own title promises "handshake / encrypt / timers").
+- **`HVPN-P0-011`** (`helix-wg` boringtun wrapper) — 2 tests were
+  `#[ignore]`d for a vague, unverified "transport key alignment" reason;
+  force-running them reproduced a real, reproducible `decapsulate error:
+  InvalidPacket` failure. **At the time this was first written up (just
+  above), that was read as "the WG data-plane encrypt/decrypt path is
+  broken" — see the correction directly below; that reading was wrong.**
   Found independently by BOTH Track D and Track E, corroborated by an
   already-existing finding in
   `docs/reviews/mvp-final/findings/phase3-code-spec-alignment.md`.
-  Track E confirmed this does NOT cascade into any other closed item —
-  the broken function isn't called by `wg_session.rs`'s handshake-only
-  path that P0-018/025/035/039 all depend on.
 
 **Flagged for operator attention — NOT yet actioned, needs a decision:**
 Track E found a freshly-generated benchmark CSV (from Track B's harness
@@ -110,26 +108,77 @@ non-trivial" caveat already anticipated volatility, but a flip this
 large is worth resolving (more samples, or explicitly widening the
 decision's confidence framing) before G4 is finally closed.
 
-**Neither reopened regression was fixed this round** — both are real,
-properly tracked, and need a dedicated TDD fix pass (§11.4.43): add the
-3 missing match arms in `helix-ffi/src/project.rs` (deciding what each
-new `TunnelEvent` variant should map to for the Dart-facing
-`TunnelStatus`, not just silencing the compiler with a wildcard), and
-investigate the boringtun transport-key-alignment gap in `helix-wg`
-(real crypto bug, needs actual debugging, not guessing).
+### Both regressions fixed this round, same session — including a self-correction
 
-**DB state:** 485 items, `validate` PASS/0 issues, `diff` PASS/0
-divergences (verified live, not assumed, after every write this round).
-24 P0 items `Completed`, 1 `Fixed` (the tooling fix itself, `P0-084`),
-1 `In progress` (`P0-052`), 2 `Reopened` (`P0-011`/`P0-049`), 9 `Queued`
+Two more parallel tracks were dispatched immediately after the finding
+above, and both landed real, independently-verified fixes:
+
+**`HVPN-P0-011` — CORRECTED root cause, then fixed.** The actual root
+cause was **not** a crypto/transport bug — it was two malformed test
+fixtures. `boringtun::noise::Tunn::decapsulate` runs every decrypted
+payload through its own `validate_decapsulated_packet` sanity check,
+which requires the payload to parse as a well-formed IPv4/IPv6 packet
+whose header-declared total length equals the packet's actual byte
+length (WireGuard's data plane only ever tunnels genuine IP packets;
+this is boringtun's built-in defense against garbage/attack payloads).
+`test_encrypt_decrypt_roundtrip`'s crafted packet declared an IP Total
+Length of 46 and a UDP Length of 26 but was only actually 44 bytes long
+— an internally-inconsistent fixture, correctly rejected.
+`test_encrypt_decrypt_bidirectional` fed raw ASCII (`b"hello from A"`)
+as a "plaintext IP packet," whose first byte's version-nibble made
+boringtun attempt IPv6 parsing on a 12-byte message. **Neither failure
+ever touched the Noise IK handshake or session-key cross-pairing** —
+those were already proven correct by the never-ignored
+`test_handshake_completes`. Fixed by correcting the fixtures to be
+genuine, length-consistent IPv4/UDP packets (verified byte-for-byte
+against boringtun's own vendored source); both tests now pass for the
+right reason, `#[ignore]` removed. `helix-wg`: 36/36 passing (was 34/36
++ 2 ignored), full `helix_core` workspace green. `helix_core` commit
+`b7e6b248`, pushed, confirmed matching `origin/main`. Independently
+re-verified by the controller (re-read the diff's byte-length math,
+re-ran the tests fresh). **Lesson: the earlier write-up in this same
+file overstated the defect** ("the WG data-plane encrypt/decrypt path
+is broken") before the actual root cause was known — corrected here
+rather than silently left wrong, per this project's own no-guessing/
+no-bluff discipline applying equally to its own documentation.
+
+**`HVPN-P0-049` — fixed with real design justification, not a wildcard.**
+Read `helix_core`'s G6 map-reconciliation tests first to confirm the
+reconciler converges routes/transport **without restarting the tunnel**
+(`TunnelState` stays `Connected` throughout). Decision: `RouteAdded`/
+`RouteRemoved` → genuine no-op (pure route-table plumbing, no
+corresponding slot in the Dart-facing 5-variant `TunnelStatus`).
+`TransportSwitched` → re-projects `Connected` with the new transport,
+honestly **reusing the last genuinely-measured RTT** rather than
+fabricating a new one (no fresh handshake occurs on a transport switch,
+so no new RTT exists to report — inventing one would itself be a
+§11.4.6/§11.4.107 bluff). 6 new tests (4 unit + 2 integration) added
+TDD-first. `helix-ffi`: 10/10 unit + 4/4 integration passing, full
+crate builds clean. Confirmed the Dart-side `tunnel_status.dart` model
+(built by the earlier Flutter track) still matches unchanged.
+`helix_shims` commit `734ead0`, pushed, confirmed matching
+`origin/main`. Independently re-verified by the controller (re-ran all
+14 tests fresh).
+
+Both closed `Fixed (→ Fixed.md)` in the tracker with real evidence.
+`HVPN-P0-S1` milestone remains `Queued` — its own closure wasn't
+re-attempted this round (P0-011 is now fixed, so S1 may be closable on
+a future pass; not verified here to avoid re-opening this same file
+mid-edit).
+
+**DB state (after both fixes):** 485 items, `validate` PASS/0 issues,
+`diff` PASS/0 divergences. 26 P0 items `Completed`, 3 `Fixed`
+(`P0-084`, `P0-011`, `P0-049`), 1 `In progress` (`P0-052`), 9 `Queued`
 (the genuinely device-blocked items + `S1`/`S5`/`S6`/`S7` milestones).
 
 **Remaining queued P0 work:** `HVPN-P0-055`/`058` (Android, needs real
 phone), `HVPN-P0-061`/`064` (iOS, needs real device), `HVPN-P0-067`
 (memory soak, needs a real tunnel up) — all genuinely `Operator-blocked`
-per §11.4.21, not silently skipped. Plus the 2 reopened regressions
-above, which ARE autonomously fixable and should be the next work
-picked up.
+per §11.4.21, not silently skipped. The G4 throughput ranking-flip
+above still needs an operator decision. `HVPN-P0-052` (Flutter toggle)
+remains blocked on `libgtk+3-devel` (needs root) for a full build/run,
+though its FFI dependency (`helix-ffi`) now compiles again after the
+`P0-049` fix.
 
 ---
 
@@ -1016,7 +1065,7 @@ and are no longer next-up):**
 
 ### SHORT variant
 
-> Continue work on `main` in `/run/media/milosvasic/DATA4TB/Projects/helix_vpn`; read `docs/CONTINUATION.md` first (esp. "ROUND 6" at the top — Rounds 1-6 are all complete and pushed, HEAD `1747ba8` verified identical across origin/github/upstream). Next up: fix 2 real regressions found+reopened this round (`HVPN-P0-011` boringtun encrypt/decrypt bug, `HVPN-P0-049` helix-ffi compile failure against new `TunnelEvent` variants) — both autonomously fixable, no device needed. Also flag to the operator: a G4 Rust-vs-Go throughput ranking flip found by the independent audit, needs a decision before that gate closes. Remaining P0-055/058/061/064/067 items are genuinely device-blocked.
+> Continue work on `main` in `/run/media/milosvasic/DATA4TB/Projects/helix_vpn`; read `docs/CONTINUATION.md` first (esp. "ROUND 6" at the top, including the "Both regressions fixed" follow-up sub-section — Rounds 1-6 are all complete and pushed). `HVPN-P0-011` (was a malformed test fixture, not a crypto bug) and `HVPN-P0-049` (helix-ffi TunnelEvent coverage) are both now `Fixed`. Still open: surface the G4 Rust-vs-Go throughput ranking-flip finding to the operator before that gate closes; `HVPN-P0-S1` milestone may now be closable (not re-checked yet); remaining P0-055/058/061/064/067 items are genuinely device-blocked.
 
 ### FULL variant
 
