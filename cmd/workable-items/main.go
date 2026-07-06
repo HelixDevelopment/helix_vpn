@@ -1006,6 +1006,14 @@ func cmdDbtoMD(dryRun bool) {
 			epics[it.Epic] = append(epics[it.Epic], it)
 		}
 
+		// §11.4.93 round-trip note: the heading emitted for an epic/milestone
+		// item MUST be parseable by this same file's milestoneRe / epicRe
+		// (see parseWBS above) — those regexes require "## <N>. Milestone
+		// <S-tag> — <Title>" / "## <N>. <E-tag> — <Title>", NOT a bare
+		// "## <ATM-ID> — <Title>". A mismatch here makes the item invisible
+		// to a subsequent parse (the exact "in DB, not in MD" divergence
+		// `diff` reports), even though a heading line was written.
+		epicIdx := 0
 		for _, epic := range sortedKeys(epics) {
 			epicItems := epics[epic]
 			// Find the epic item itself
@@ -1017,7 +1025,12 @@ func cmdDbtoMD(dryRun bool) {
 				}
 			}
 			if epicItem != nil {
-				sb.WriteString(fmt.Sprintf("## %s — %s\n\n", epicItem.ATMID, epicItem.Title))
+				epicIdx++
+				if epicItem.Kind == "milestone" {
+					sb.WriteString(fmt.Sprintf("## %d. Milestone %s — %s\n\n", epicIdx, epicItem.Epic, epicItem.Title))
+				} else {
+					sb.WriteString(fmt.Sprintf("## %d. %s — %s\n\n", epicIdx, epicItem.Epic, epicItem.Title))
+				}
 			}
 
 			for _, it := range epicItems {
