@@ -1,7 +1,7 @@
 # Helix VPN — Session Continuation File
 
-**Revision:** 18
-**Last modified:** 2026-07-06T14:20:47Z
+**Revision:** 19
+**Last modified:** 2026-07-06T16:39:13Z
 
 > Helix Constitution §11.4.131 — standing session-resumption artifact.
 > Re-read this file at the start of any new session before touching code.
@@ -10,6 +10,126 @@
 > `git rev-parse`/`workable-items validate` output, never against
 > in-context memory or a prior handoff's text alone (see the
 > multi-session lesson below).
+
+---
+
+## ROUND 6: 4-STREAM PARALLEL PHASE-0 CLOSEOUT + 2 REAL REGRESSIONS FOUND (2026-07-06)
+
+**Started:** 2026-07-06T19:04:00Z (after fixing Round 5's stale resumption
+prompt — see the entry directly below)
+**Landed:** 2026-07-06T16:39:13Z (this entry)
+**Trigger:** operator instruction to run the endless autonomous loop with
+≥3-4 parallel subagent streams on every genuinely parallelizable workable
+item, with a hard "rock-solid evidence, no bluff" requirement.
+
+**What happened:** dispatched 4 parallel subagent tracks (disjoint file
+scope) plus did direct controller-level DB work between their reports.
+All 4 hit an external Claude-API session-limit wall mid-flight (reset 7pm
+Europe/Moscow) and were resumed via targeted continuations (not blind
+restarts) once it cleared — no work was lost, all 4 had crashed before
+writing any files.
+
+**Track A — HVPN-P0-052 (Flutter-Linux toggle, `submodules/helix_ui`):**
+real `app_access` Flutter project scaffolded (`flutter create
+--platforms=linux`), G5 happy-path toggle+status-chip screen wired to a
+swappable `HelixCoreBridge` interface whose only production
+implementation honestly throws `UnimplementedError` (never fabricates
+data) since no real Rust FFI wiring exists yet. 9/9 widget tests passing,
+`flutter analyze` 0 issues, deterministic across 3 runs. **Confirmed
+blocker**: `flutter build linux` needs `libgtk+3-devel`, which needs root
+(no sudo password available) — an environment constraint, not a design
+gap. Separately discovered `helix-ffi`'s FRB wiring isn't possible
+regardless: hand-rolled `frb_stub::StreamSink`, no `cdylib` crate-type —
+**and it doesn't currently compile at all** (see the regression below).
+Item left `In progress`, not closed. `helix_ui` commit `1751701`, pointer
+bumped in the root repo at `1747ba8`.
+
+**Track B — HVPN-P0-077 + HVPN-P0-078 (measurement harness + decision
+log + demo script):** `scripts/bench/unified_harness.sh` (603 lines) —
+one harness producing a comparable CSV across G1/G2/G4 per §8's
+pass-bar contract, reusing existing tools rather than reimplementing
+probes; every honestly-unmeasurable metric labeled with a reason, never
+fabricated. `scripts/demo.sh` (304 lines) — the 5-minute narrated
+vertical-slice walkthrough. §12's G1 decision-log row backfilled with
+real, independently-re-run evidence (was an empty placeholder). Real bug
+found (out of scope, in `helix_core`): `g2_dpi_masque_unpriv.sh`'s
+loss-resilience phase runs under `set -e` while the probe's exit code
+communicates its measured verdict, silently truncating the script —
+worked around without editing the out-of-scope file. Both items closed
+`Completed`. Root commits `1a00311` (DB) + `9a7b3bb` (scripts/docs).
+
+**Track D — audit + close verified-complete milestones:** independently
+re-verified every constituent child of `HVPN-P0-S0`/`S2`/`S3`/`S4`
+(re-ran cited tests, confirmed cited commits exist) before closing each
+milestone — **and correctly refused to close `HVPN-P0-S1`**, having found
+a real gap in `HVPN-P0-011` (below). Controller closed `HVPN-P0-S8`
+separately once its last 2 children (`HVPN-P0-077`/`078`) landed from
+Track B.
+
+**Track E — independent adversarial evidence audit of all closed P0
+items:** re-verified 20 items' evidence by actually re-running cited
+tests (in isolated git worktrees for historical commits, cleaned up
+after), re-executing live probes (`containers_check`, the G2 DPI rig
+twice from scratch), and static analysis where told not to touch a
+tree another track owned. 19/20 CONFIRMED or PLAUSIBLE. **Independently
+rediscovered the `HVPN-P0-011` gap on its own** (force-ran the same
+ignored tests, got the same `decapsulate error: InvalidPacket`) before
+learning Track D had already caught and reopened it — a genuine
+cross-validation, not a copy. Flagged one citation-precision nit
+(`HVPN-P0-001`'s evidence cites a commit with 2 crates for a "6 crates"
+claim true only of a later commit — not a functional defect, just a
+citation to tighten next time it's touched).
+
+**Two real regressions found and REOPENED this round (§11.4.34
+Reopened-Details attached, not silently left closed):**
+- **`HVPN-P0-049`** (`helix-ffi`) — no longer compiles. `helix_core`
+  added 3 new `TunnelEvent` variants (`RouteAdded`/`RouteRemoved`/
+  `TransportSwitched`) that `helix-ffi`'s match statement doesn't cover
+  (`E0004` non-exhaustive match). Found by Track A, confirmed
+  independently by the controller.
+- **`HVPN-P0-011`** (`helix-wg` boringtun wrapper) — 2 tests are
+  `#[ignore]`d for a vague "transport key alignment" reason; force-running
+  them reproduces a real `decapsulate error: InvalidPacket` — the WG
+  data-plane **encrypt/decrypt** path is broken, not merely untested
+  (the item's own title promises "handshake / encrypt / timers").
+  Found independently by BOTH Track D and Track E, corroborated by an
+  already-existing finding in
+  `docs/reviews/mvp-final/findings/phase3-code-spec-alignment.md`.
+  Track E confirmed this does NOT cascade into any other closed item —
+  the broken function isn't called by `wg_session.rs`'s handshake-only
+  path that P0-018/025/035/039 all depend on.
+
+**Flagged for operator attention — NOT yet actioned, needs a decision:**
+Track E found a freshly-generated benchmark CSV (from Track B's harness
+run) showing **Go beating Rust on G4 throughput** (800.7 vs 655.7 Mbps)
+— the **opposite ranking** from the decision-log's cited numbers (Rust
+1163.9 vs Go 884.5 Mbps). This is a full ranking flip, not just noise,
+on the exact metric the still-open G4 edge-language decision hinges on.
+The decision log's own "run-to-run variance on shared hardware is
+non-trivial" caveat already anticipated volatility, but a flip this
+large is worth resolving (more samples, or explicitly widening the
+decision's confidence framing) before G4 is finally closed.
+
+**Neither reopened regression was fixed this round** — both are real,
+properly tracked, and need a dedicated TDD fix pass (§11.4.43): add the
+3 missing match arms in `helix-ffi/src/project.rs` (deciding what each
+new `TunnelEvent` variant should map to for the Dart-facing
+`TunnelStatus`, not just silencing the compiler with a wildcard), and
+investigate the boringtun transport-key-alignment gap in `helix-wg`
+(real crypto bug, needs actual debugging, not guessing).
+
+**DB state:** 485 items, `validate` PASS/0 issues, `diff` PASS/0
+divergences (verified live, not assumed, after every write this round).
+24 P0 items `Completed`, 1 `Fixed` (the tooling fix itself, `P0-084`),
+1 `In progress` (`P0-052`), 2 `Reopened` (`P0-011`/`P0-049`), 9 `Queued`
+(the genuinely device-blocked items + `S1`/`S5`/`S6`/`S7` milestones).
+
+**Remaining queued P0 work:** `HVPN-P0-055`/`058` (Android, needs real
+phone), `HVPN-P0-061`/`064` (iOS, needs real device), `HVPN-P0-067`
+(memory soak, needs a real tunnel up) — all genuinely `Operator-blocked`
+per §11.4.21, not silently skipped. Plus the 2 reopened regressions
+above, which ARE autonomously fixable and should be the next work
+picked up.
 
 ---
 
@@ -896,7 +1016,7 @@ and are no longer next-up):**
 
 ### SHORT variant
 
-> Continue work on `main` in `/run/media/milosvasic/DATA4TB/Projects/helix_vpn`; read `docs/CONTINUATION.md` first (esp. "ROUND 5" at the top — Rounds 1-5 are all complete and pushed, HEAD verified identical across origin/github/upstream). Three parallel tracks are in flight: P0-052 (Flutter-Linux toggle, `submodules/helix_ui`), P0-077+P0-078 (measurement-harness CSV contract + decision-log G1 backfill + demo script, root repo), and a `db-to-md` generator fix for the 43 milestone/epic MD↔DB divergences (`cmd/workable-items`). The remaining P0-055/058/061/064/067 items are genuinely device-blocked (real Android/iOS hardware, none available autonomously).
+> Continue work on `main` in `/run/media/milosvasic/DATA4TB/Projects/helix_vpn`; read `docs/CONTINUATION.md` first (esp. "ROUND 6" at the top — Rounds 1-6 are all complete and pushed, HEAD `1747ba8` verified identical across origin/github/upstream). Next up: fix 2 real regressions found+reopened this round (`HVPN-P0-011` boringtun encrypt/decrypt bug, `HVPN-P0-049` helix-ffi compile failure against new `TunnelEvent` variants) — both autonomously fixable, no device needed. Also flag to the operator: a G4 Rust-vs-Go throughput ranking flip found by the independent audit, needs a decision before that gate closes. Remaining P0-055/058/061/064/067 items are genuinely device-blocked.
 
 ### FULL variant
 
@@ -906,10 +1026,10 @@ You are resuming work on the Helix VPN project.
 Repository:  /run/media/milosvasic/DATA4TB/Projects/helix_vpn
 Branch:      main
 Handoff doc: docs/CONTINUATION.md  ← read this FIRST, especially
-             "ROUND 5" at the top.
+             "ROUND 6" at the top.
 
-State at handoff (2026-07-06, Rounds 1-5 all complete and pushed;
-HEAD e66e07d confirmed identical across origin/github/upstream via
+State at handoff (2026-07-06, Rounds 1-6 all complete and pushed;
+HEAD 1747ba8 confirmed identical across origin/github/upstream via
 direct git rev-parse, never trusted from memory or a prior handoff's
 text alone — see the multi-session lesson further down this file)
 -------------------------------------------------------------------
@@ -936,23 +1056,38 @@ text alone — see the multi-session lesson further down this file)
   HVPN-P0-035 (G2 core survival proven, 2 quantitative sub-bars
   honestly failed and root-caused, not hidden). All independently
   re-verified by the controller (re-ran test suites, not just
-  trusted subagent reports). Main repo HEAD e66e07d.
+  trusted subagent reports).
+- Round 6 (complete): 4-stream parallel closeout — fixed the db-to-md
+  generator's epic/milestone heading round-trip bug (HVPN-P0-084);
+  closed milestones S0/S2/S3/S4/S8 with independently re-verified
+  evidence; closed HVPN-P0-077/078 (unified measurement harness +
+  decision-log G1 backfill + demo script); scaffolded a real Flutter
+  app for HVPN-P0-052 (blocked on missing libgtk+3-devel, needs root).
+  Found and REOPENED 2 real regressions: HVPN-P0-049 (helix-ffi no
+  longer compiles against helix_core's new TunnelEvent variants) and
+  HVPN-P0-011 (helix-wg's encrypt/decrypt path genuinely broken,
+  found independently by TWO separate tracks). An independent
+  adversarial audit (Track E) re-verified 19/20 already-closed P0
+  items by actually re-running cited tests/probes, not trusting DB
+  text. Flagged for operator decision: a G4 Rust-vs-Go throughput
+  ranking flip in a fresh benchmark run. Main repo HEAD 1747ba8.
 
 What's next
 -----------
 1. git fetch --all --prune && git submodule foreach --recursive 'git fetch --all --prune --quiet'
-2. Read docs/CONTINUATION.md fully, starting at "ROUND 5" at the top.
-3. Check status of the 3 parallel tracks dispatched at the end of
-   Round 5 (P0-052 Flutter-Linux toggle in helix_ui; P0-077+P0-078
-   measurement-harness/decision-log/demo-script in the root repo;
-   db-to-md generator fix for the 43 milestone/epic MD↔DB
-   divergences in cmd/workable-items) — they may have returned,
-   partially landed, or still be in flight; verify via
-   `workable-items diff` + `git log` + `git status`, never assume.
-4. Remaining queued P0 items needing a real device (P0-055/058
+2. Read docs/CONTINUATION.md fully, starting at "ROUND 6" at the top.
+3. Fix the 2 reopened regressions (both autonomously fixable, no
+   device needed): HVPN-P0-011's helix-wg boringtun encrypt/decrypt
+   bug (real crypto debugging, don't guess) and HVPN-P0-049's
+   helix-ffi compile failure (add real match arms for the 3 new
+   TunnelEvent variants, decide what each should map to for the
+   Dart-facing TunnelStatus — don't just silence the compiler).
+4. Surface the G4 throughput ranking-flip finding to the operator
+   before that decision is finalized.
+5. Remaining queued P0 items needing a real device (P0-055/058
    Android VpnService+JNI, P0-061/064 iOS staticlib+
    NEPacketTunnelProvider, P0-067 memory soak) are genuinely
    Operator-blocked per §11.4.21 — no physical phone/iPhone reachable
    autonomously in this environment.
-5. Otherwise, await new operator instructions.
+6. Otherwise, await new operator instructions.
 ```
