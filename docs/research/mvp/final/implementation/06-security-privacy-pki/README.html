@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>06 — Security, Privacy &amp; PKI</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">06 — Security, Privacy &amp; PKI</h1>
+</header>
+<h1 id="06--security-privacy--pki">06 — Security, Privacy &amp; PKI</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-07-05T14:20:00Z <strong>Status:</strong> Draft — consolidated from
+<code>04-security-privacy-pki.md</code> and
+<code>v05-security/*</code>.</p>
+<hr />
+<h2 id="1-position-and-invariants">1. Position and invariants</h2>
+<p>This section owns the <strong>security spine</strong> of HelixVPN:
+zero-trust routing, identity, PKI, no-logging, kill-switch/DNS-leak
+protection, audit, and the post-quantum handshake. It defines the
+invariants; the data plane, control plane, and client-core docs define
+the mechanisms that enforce them.</p>
+<h3 id="11-non-negotiable-invariants-s1s11">1.1 Non-negotiable
+invariants (S1–S11)</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Invariant</th>
+<th>Enforced where</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>S1</strong></td>
+<td>Zero-trust default-deny — no peer reaches anything without an
+explicit compiled policy rule.</td>
+<td>Policy compiler → <code>AllowedIPs</code> + edge verdict map</td>
+</tr>
+<tr>
+<td><strong>S2</strong></td>
+<td>Device private keys never leave the device; only the 32-byte WG
+public key is registered.</td>
+<td>Enrollment protocol + device keystore</td>
+</tr>
+<tr>
+<td><strong>S3</strong></td>
+<td>Need-to-know map distribution — a device&#39;s <code>NetworkMap</code>
+contains only policy-granted peers.</td>
+<td>Coordinator filter before serialization</td>
+</tr>
+<tr>
+<td><strong>S4</strong></td>
+<td>Short-lived control-channel mTLS (≤24 h leaf); WG data channel uses
+separate Noise IK.</td>
+<td>PKI service + TLS 1.3 mutual auth</td>
+</tr>
+<tr>
+<td><strong>S5</strong></td>
+<td>Revocation latency == convergence SLO (p99 &lt; 1 s).</td>
+<td>Revocation pipeline + event fan-out</td>
+</tr>
+<tr>
+<td><strong>S6</strong></td>
+<td>No durable connection/traffic log — by construction; CI schema-lint
+blocks flow tables.</td>
+<td>Data model + <code>tools/schemalint</code></td>
+</tr>
+<tr>
+<td><strong>S7</strong></td>
+<td>Control actions are audited; traffic is not.</td>
+<td><code>audit_events</code> closed vocabulary</td>
+</tr>
+<tr>
+<td><strong>S8</strong></td>
+<td>Edge hardening — rootless Podman, seccomp allowlist, read-only
+rootfs, no SSH.</td>
+<td>Edge quadlet + container profile</td>
+</tr>
+<tr>
+<td><strong>S9</strong></td>
+<td>Kill-switch + DNS-leak protection are core-owned state, not
+hand-edited rules.</td>
+<td><code>helix-core</code> state machine + OS firewall shims</td>
+</tr>
+<tr>
+<td><strong>S10</strong></td>
+<td>PQ is hybrid, never PQ-only — PSK derived from PQ KEM mixed into
+classical WG handshake.</td>
+<td><code>helix-pki</code> PQ module (Phase 2)</td>
+</tr>
+<tr>
+<td><strong>S11</strong></td>
+<td>The tenant CA root and Postgres are the only secrets to protect;
+data-plane nodes are cattle.</td>
+<td>KMS/HSM root, offline root, backups</td>
+</tr>
+</tbody>
+</table>
+<p>A violation of any invariant is a release blocker, not a tunable.</p>
+<hr />
+<h2 id="2-trust-model-and-identity">2. Trust model and identity</h2>
+<h3 id="21-two-authentication-channels">2.1 Two authentication
+channels</h3>
+<table>
+<thead>
+<tr>
+<th>Channel</th>
+<th>Mechanism</th>
+<th>Owner</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Control</strong></td>
+<td>mTLS with ≤24 h device cert signed by tenant CA</td>
+<td>Control plane / PKI</td>
+</tr>
+<tr>
+<td><strong>Data</strong></td>
+<td>WireGuard Noise IK handshake; peer pubkeys from filtered map</td>
+<td>Data plane / <code>helix-wg</code></td>
+</tr>
+</tbody>
+</table>
+<p>The channels are <strong>independent</strong>: stealing a device cert
+does not yield the WG private key, and vice versa.</p>
+<h3 id="22-identity-modes">2.2 Identity modes</h3>
+<ul>
+<li><strong>Managed (OIDC)</strong> — Console/API users authenticate via
+Authorization Code + PKCE against a tenant-configured IdP. HelixVPN is
+an OIDC Relying Party, never an IdP. Roles map IdP group claims to
+<code>admin</code> / <code>operator</code> / <code>member</code>.</li>
+<li><strong>Anonymous (device tokens)</strong> — The privacy-VPN
+default. A high-entropy enroll token is shown once; only its Argon2id
+hash is stored. The resulting <code>users</code> row has
+<code>email = NULL</code>, <code>oidc_sub = NULL</code> — no
+reverse-link to a human.</li>
+</ul>
+<h3 id="23-defence-in-depth">2.3 Defence-in-depth</h3>
+<ul>
+<li>RBAC gates Console/API actions.</li>
+<li>Postgres <code>FORCE ROW LEVEL SECURITY</code> is the floor — a
+logic bug cannot cross tenants.</li>
+<li>Every privileged identity action is audited (§7).</li>
+</ul>
+<hr />
+<h2 id="3-enrollment">3. Enrollment</h2>
+<p>Enrollment mints a network identity <strong>without the device ever
+surrendering its WireGuard private key</strong>.</p>
+<ol type="1">
+<li>Admin mints a single/bounded-use, TTL&#39;d enroll token; plaintext
+shown once.</li>
+<li>Device generates WG + Ed25519 leaf keypairs locally; sends only
+public material (<code>wg_pubkey</code>, CSR).</li>
+<li>Server verifies token (constant-time Argon2id hash check), allocates
+overlay IP, inserts <code>devices</code> row, signs a ≤24 h leaf
+cert.</li>
+<li>Device uses the new cert for <code>WatchNetworkMap</code>; the
+coordinator pushes a policy-filtered map.</li>
+</ol>
+<p>Key security properties:</p>
+<ul>
+<li>CSR proof-of-possession ensures the device controls the leaf private
+key.</li>
+<li>Rate limiting + per-source-IP buckets resist enroll flooding.</li>
+<li><code>UNIQUE (tenant_id, wg_pubkey)</code> prevents key reuse across
+devices.</li>
+<li><code>bind_kind</code> prevents a connector token from enrolling a
+client.</li>
+</ul>
+<hr />
+<h2 id="4-pki--key-hierarchy-certs-rotation-revocation">4. PKI — key
+hierarchy, certs, rotation, revocation</h2>
+<h3 id="41-key-hierarchy">4.1 Key hierarchy</h3>
+<table>
+<thead>
+<tr>
+<th>Tier</th>
+<th>Role</th>
+<th>Lifetime</th>
+<th>Storage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Tenant root CA</strong></td>
+<td>Signs the issuing CA once</td>
+<td>~10 y</td>
+<td>Offline / KMS / HSM</td>
+</tr>
+<tr>
+<td><strong>Issuing CA</strong></td>
+<td>Signs every device leaf</td>
+<td>~1 y</td>
+<td>Online signer (KMS-backed)</td>
+</tr>
+<tr>
+<td><strong>Device leaf</strong></td>
+<td>mTLS control channel</td>
+<td>≤24 h</td>
+<td>Device OS keystore</td>
+</tr>
+<tr>
+<td><strong>Device WG key</strong></td>
+<td>Tunnel identity</td>
+<td>Rotatable</td>
+<td>Device OS keystore</td>
+</tr>
+<tr>
+<td><strong>PQ PSK</strong></td>
+<td>HNDL hedge</td>
+<td>Per-session</td>
+<td>Ephemeral memory only</td>
+</tr>
+</tbody>
+</table>
+<p>Three <strong>independent</strong> key planes (control, data, PQ)
+prevent a single compromise from cascading.</p>
+<h3 id="42-certificate-profile">4.2 Certificate profile</h3>
+<ul>
+<li>Ed25519 keys (ECDSA-P256 fallback if a platform rejects Ed25519
+client certs).</li>
+<li>TLS 1.3 mutual auth only; no downgrade.</li>
+<li>SPIFFE URI SAN binds the cert to a device id.</li>
+<li><code>CA:FALSE</code>, <code>clientAuth</code> EKU, ≤24 h
+validity.</li>
+</ul>
+<h3 id="43-lifecycle">4.3 Lifecycle</h3>
+<ul>
+<li><strong>Auto-renew:</strong> core renews at
+<code>not_after − renewSkew</code>
+(<code>renewSkew = max(1h, 0.2 × TTL)</code>) over the existing
+authenticated channel — no new enroll token.</li>
+<li><strong>WG key rotation:</strong> device generates a new keypair
+locally; coordinator swaps the edge peer atomically. Old key removed
+before new key announced.</li>
+<li><strong>Issuing-CA rotation:</strong> offline root signs a new
+intermediate; both trusted during a 24 h overlap.</li>
+</ul>
+<h3 id="44-revocation--1-s">4.4 Revocation (&lt; 1 s)</h3>
+<p><code>device.revoked</code> is the security analogue of the
+convergence SLO:</p>
+<ol type="1">
+<li>Identity/pki marks the cert revoked and emits
+<code>device.revoked</code> in one transaction.</li>
+<li>Coordinator removes the WG peer at the edge and drops verdict-map
+entries.</li>
+<li>Affected open streams receive a
+<code>MapDelta{remove peer}</code>.</li>
+<li>The revoked device&#39;s control stream is force-closed; its serial is
+blacklisted in memory.</li>
+</ol>
+<p>No CRL/OCSP on the data path — short-lived certs + active push
+provide revocation.</p>
+<hr />
+<h2 id="5-edge-hardening-s8">5. Edge hardening (S8)</h2>
+<p>The Rust data-plane edge is the only component reachable from the
+hostile Internet on the data port.</p>
+<ul>
+<li><strong>Rootless Podman quadlet</strong> with read-only rootfs.</li>
+<li><code>DropCapability=ALL</code>, add only <code>CAP_NET_ADMIN</code>
++ <code>CAP_NET_RAW</code>.</li>
+<li>Default-deny seccomp allowlist — no <code>execve</code>,
+<code>ptrace</code>, <code>mount</code>, <code>kexec</code>.</li>
+<li>Distroless image — no shell, no SSH.</li>
+<li>Host firewall: only <code>:443/udp</code> + <code>:443/tcp</code> +
+control API open.</li>
+</ul>
+<hr />
+<h2 id="6-no-logging-as-code-s6">6. No-logging as code (S6)</h2>
+<p>The privacy promise is a <strong>build property</strong>, enforced by
+absence and a CI schema-lint.</p>
+<ul>
+<li>No durable <code>connections</code>, <code>sessions</code>,
+<code>flows</code>, <code>traffic</code>, <code>packets</code>, or
+<code>dns_queries</code> tables.</li>
+<li>Live presence lives only in Redis with a TTL (default 45 s = 3 ×
+heartbeat interval).</li>
+<li><code>devices.last_seen_at</code> is coarse (≥5 min) and carries no
+destination.</li>
+<li><code>tools/schemalint</code> fails the build if a durable table has
+a connection-log shape (forbidden names, or <code>src/dst</code> +
+<code>bytes/ts</code> outside <code>audit_events</code>).</li>
+<li>A paired §1.1 mutation plants a <code>flows(src,dst,bytes,ts)</code>
+table and asserts the lint FAILs.</li>
+</ul>
+<hr />
+<h2 id="7-audit--control-actions-only-s7">7. Audit — control actions
+only (S7)</h2>
+<p><code>audit_events</code> records <strong>who did what to control
+objects</strong>, never traffic.</p>
+<ul>
+<li>Closed <code>AuditAction</code> enum: <code>device.enrolled</code>,
+<code>device.revoke</code>, <code>device.cert.issued</code>,
+<code>device.cert.rotated</code>, <code>policy.create</code>,
+<code>policy.activate</code>, <code>policy.rollback</code>,
+<code>connector.attached</code>,
+<code>connector.prefixes.changed</code>, <code>enroll_token.mint</code>,
+<code>enroll_token.used</code>, <code>tenant.create</code>,
+<code>user.role.change</code>, <code>auth.login</code>,
+<code>auth.enroll.denied</code>.</li>
+<li>Synchronous, in-transaction write — a committed mutation cannot
+exist without its audit row.</li>
+<li>Append-only by grant: <code>helix_app</code> has no
+<code>UPDATE</code>/<code>DELETE</code> on
+<code>audit_events</code>.</li>
+<li><code>meta</code> JSON shape-checked to forbid traffic keys
+(<code>dst_ip</code>, <code>bytes_in</code>, etc.).</li>
+<li>Phase 2: optional hash-chained <code>meta.prev_hash</code> for
+tamper-evidence.</li>
+</ul>
+<hr />
+<h2 id="8-kill-switch--dns-leak-protection-s9">8. Kill-switch &amp;
+DNS-leak protection (S9)</h2>
+<p>A core-owned state machine drives the OS firewall; the rules are an
+<strong>output</strong> of state transitions, not an input.</p>
+<table>
+<thead>
+<tr>
+<th>State</th>
+<th>Egress</th>
+<th>DNS</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Disconnected</code></td>
+<td>all (killswitch off) or none (lockdown)</td>
+<td>system</td>
+</tr>
+<tr>
+<td><code>Connecting</code> / <code>Reconnecting</code></td>
+<td>only gateway endpoint IP:port</td>
+<td>blocked</td>
+</tr>
+<tr>
+<td><code>Connected</code></td>
+<td>only via tunnel + gateway endpoint</td>
+<td>tunnel DNS only; off-tunnel <code>:53</code>/<code>:853</code>
+dropped</td>
+</tr>
+<tr>
+<td><code>Blocked</code></td>
+<td>only gateway endpoint</td>
+<td>blocked</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Firewall is applied <strong>before</strong> the network operation on
+every transition.</li>
+<li>Fail-closed on tunnel drop; revert only on user-initiated stop.</li>
+<li>Closed rules persist across core crash (Linux
+<code>ExecStopPost</code> gating, Windows persistent WFP filters, Apple
+<code>includeAllNetworks</code>).</li>
+<li>IPv6 is either fully captured or fully blocked — never a
+partial-capture leak.</li>
+</ul>
+<hr />
+<h2 id="9-post-quantum-handshake-s10">9. Post-quantum handshake
+(S10)</h2>
+<p>WireGuard&#39;s optional 32-byte PSK slot is filled with a key derived
+from a post-quantum KEM exchange, <strong>without forking WG
+crypto</strong>.</p>
+<ul>
+<li><strong>Hybrid, never PQ-only:</strong> an attacker must break both
+classical X25519 ECDH and the PQ KEM.</li>
+<li><strong>Default KEM:</strong> ML-KEM-768 (FIPS 203); Phase-2 opt-in
+for ML-KEM-768 + Classic McEliece or Rosenpass evaluation.</li>
+<li>The PQ exchange rides the <strong>authenticated mTLS control
+channel</strong> — no new public listener.</li>
+<li><code>psk = HKDF-SHA256(shared_secret, salt=session_id, info=&quot;helix-pq-psk-v1&quot;)</code>.</li>
+<li>PSK is rotated on every WG rekey (~120 s); ephemeral, never
+persisted.</li>
+<li>MVP ships classical WG with the PSK seam reserved; PQ is Phase
+2.</li>
+</ul>
+<hr />
+<h2 id="10-threat-model">10. Threat model</h2>
+<p>The threat model (STRIDE per component + LINDDUN privacy) is the
+authoritative justification for every mechanism above. Key threats →
+mitigations:</p>
+<table>
+<thead>
+<tr>
+<th>Threat</th>
+<th>Mitigation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Spoof control RPC</td>
+<td>mTLS device cert + CSR proof-of-possession</td>
+</tr>
+<tr>
+<td>Spoof WG peer</td>
+<td>Noise IK + peer pubkey from signed map</td>
+</tr>
+<tr>
+<td>Lateral movement to ungranted CIDR</td>
+<td>Default-deny <code>AllowedIPs</code> + edge verdict map</td>
+</tr>
+<tr>
+<td>Over-broad map distribution</td>
+<td>Need-to-know coordinator filter (S3)</td>
+</tr>
+<tr>
+<td>Traffic correlation logging</td>
+<td>No durable connection log (S6) + schema-lint</td>
+</tr>
+<tr>
+<td>DNS/plaintext leak on drop</td>
+<td>Kill-switch state machine (S9)</td>
+</tr>
+<tr>
+<td>Harvest-now-decrypt-later</td>
+<td>Hybrid PQ PSK (S10)</td>
+</tr>
+<tr>
+<td>Edge container escape</td>
+<td>Rootless, seccomp, read-only, no shell (S8)</td>
+</tr>
+<tr>
+<td>Insider cross-tenant write</td>
+<td>RLS <code>FORCE ROW LEVEL SECURITY</code></td>
+</tr>
+</tbody>
+</table>
+<p>Residual risks (R-CA, R-RELAY, R-COMPEL, R-INS, R-DEV, R-RACE, R-TA,
+R-CENSOR) are tracked honestly in the threat-model nano-detail.</p>
+<hr />
+<h2 id="11-secrets-management-and-backup">11. Secrets management and
+backup</h2>
+<p>The durable secret surface is deliberately tiny (S11):</p>
+<ul>
+<li><strong>Protect:</strong> tenant CA root key + Postgres.</li>
+<li><strong>Cattle:</strong> data-plane nodes, edge config —
+reprovisioned from IaC.</li>
+<li>CA root in KMS/HSM or offline; online <code>pki</code> service signs
+only with the issuing intermediate.</li>
+<li>Enroll/API tokens hashed at rest; no credential logged or printed by
+<code>helixvpnctl</code>.</li>
+<li>Backup: GPG/age-encrypted Postgres PITR + CA root; 3-2-1; quarterly
+DR drill.</li>
+</ul>
+<hr />
+<h2 id="12-cross-references">12. Cross-references</h2>
+<ul>
+<li>Zero-trust contract → <a href="../../v05-security/zero-trust-and-default-deny.md"><code>../../v05-security/zero-trust-and-default-deny.md</code></a></li>
+<li>Identity &amp; enrollment → <a href="../../v05-security/identity-and-enrollment.md"><code>../../v05-security/identity-and-enrollment.md</code></a></li>
+<li>PKI &amp; certificates → <a href="../../v05-security/pki-and-certs.md"><code>../../v05-security/pki-and-certs.md</code></a></li>
+<li>Kill-switch &amp; DNS leak → <a href="../../v05-security/kill-switch-and-dns-leak.md"><code>../../v05-security/kill-switch-and-dns-leak.md</code></a></li>
+<li>No-logging as code → <a href="../../v05-security/no-logging-as-code.md"><code>../../v05-security/no-logging-as-code.md</code></a></li>
+<li>Audit &amp; compliance → <a href="../../v05-security/audit-and-compliance.md"><code>../../v05-security/audit-and-compliance.md</code></a></li>
+<li>Threat model → <a href="../../v05-security/threat-model.md"><code>../../v05-security/threat-model.md</code></a></li>
+<li>Post-quantum handshake → <a href="../../v05-security/post-quantum.md"><code>../../v05-security/post-quantum.md</code></a></li>
+<li>Control-plane PKI/identity mechanics → <a href="../04-control-plane/README.md">04 — Control Plane</a></li>
+<li>Data-plane policy enforcement → <a href="../03-data-plane/README.md">03 — Data Plane</a></li>
+<li>Client core kill-switch/PQ implementation → <a href="../05-client-core-ui/README.md">05 — Client Core &amp; UI</a></li>
+</ul>
+<hr />
+<p><em>Sources:
+<code>docs/research/mvp/final/04-security-privacy-pki.md</code>,
+<code>v05-security/*.md</code>.</em></p>
+</body>
+</html>

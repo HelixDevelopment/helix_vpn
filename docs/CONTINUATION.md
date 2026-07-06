@@ -1,7 +1,7 @@
 # Helix VPN — Session Continuation File
 
-**Revision:** 15
-**Last modified:** 2026-07-05T11:29:45Z
+**Revision:** 16
+**Last modified:** 2026-07-05T12:00:00Z
 
 > Helix Constitution §11.4.131 — standing session-resumption artifact.
 > Re-read this file at the start of any new session before touching code.
@@ -10,6 +10,48 @@
 > `git rev-parse`/`workable-items validate` output, never against
 > in-context memory or a prior handoff's text alone (see the
 > multi-session lesson below).
+
+---
+
+## ROUND 4: FINAL MVP DOCUMENTATION & PLATFORM READINESS (IN PROGRESS)
+
+**Started:** 2026-07-05T11:57:05Z
+**Goal:** Prepare complete, sorted, merged MVP documentation under
+`docs/research/mvp/final/implementation/` as the single source of truth;
+install and integrate OpenDesign (`nexu-io/open-design`); reconcile all
+Helix code submodules to the spec; define full testability and author
+HelixVPN-specific Challenges + HelixQA banks; run independent adversarial
+review until the package is ready for dev-team kick-off.
+
+**State at dispatch:**
+- Main repo at `77e7dfdaace83f41a5faa5861d28de5bc67283e5`.
+- All remotes fetched and pruned; submodule remotes fetched recursively.
+- Git hooks installed (`core.hooksPath = .githooks`); pre-build gate passes.
+- Added `ignore = dirty` to `submodules/helix_qa` in `.gitmodules` to
+  suppress third-party nested-tool working-tree drift (`docling`/`skyvern`).
+- Existing docs present in `docs/research/mvp/final/` (12 main docs + index +
+  versioned dirs); design assets present in `docs/design/` with OpenDesign-style
+  manifest/tokens/components at `docs/design/opendesign/helix/`.
+- OpenDesign CLI **not** installed (`/usr/bin/od` is GNU coreutils).
+- `helix_proto`, `helix_ui`, `helix_transport`, `helix_shims`, `helix_design`
+  remain scaffolding; `helix_core`/`helix_edge`/`helix_go` have Phase-0 spikes.
+
+**Parallel workstreams dispatched (all running):**
+1. **Phase 1 — Docs consolidation:** audit existing MVP docs, close GAP-6/RBAC/GAP-1,
+   populate `docs/research/mvp/final/implementation/`.
+2. **Phase 2 — OpenDesign integration:** add `submodules/open-design`, build the CLI,
+   validate/generate design assets.
+3. **Phase 3 — Code/spec alignment:** reconcile `helix_*` submodules, define protobufs,
+   create decoupling/reusability plan.
+4. **Phase 4 — QA/test banks:** define coverage ledger, author HelixVPN Challenges and
+   HelixQA banks.
+
+**Next actions:**
+- Receive subagent completion reports.
+- Run independent adversarial review (Phase 5).
+- Fix findings and iterate until clean GO.
+- Commit and push per submodule + main repo; verify `git rev-parse` equality.
+- Update `.remember/remember.md`.
 
 ---
 

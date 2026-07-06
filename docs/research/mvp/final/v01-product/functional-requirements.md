@@ -1,8 +1,14 @@
 # Functional Requirements (HVPN-FR-NNN)
 
-**Revision:** 3
-**Last modified:** 2026-07-04T12:00:00Z
+**Revision:** 4
+**Last modified:** 2026-07-05T14:20:00Z
 
+> **Rev 4 (2026-07-05, Phase-1 consolidation pass).** Added HVPN-FR-610 (RBAC
+> role→action matrix enforcement) to close the RBAC ownership gap identified in
+> [`../v00-meta/requirements-traceability.md`](../v00-meta/requirements-traceability.md)
+> GAP-6. FR-610 is additive; §M DoD-traceability and §N parity-coverage tables are
+> unaffected.
+>
 > **Rev 3 (2026-07-04, independent gap-analysis pass).** Added HVPN-FR-609
 > (scoped, exportable audit slice for incident-response/compliance reporting) to
 > back the MSP-operator incident-response journey added to
@@ -231,6 +237,7 @@ Persona: business-admin / tenant-owner [00 §5.3].
 | HVPN-FR-607 | The Console MAY provide optional multi-tenant billing. | Billing flows function for the managed SKU when enabled; absent by default. | `web-console.md` | P3 |
 | HVPN-FR-608 | The Console MUST be responsive across phone/tablet/desktop and ship light + dark themes from the OpenDesign system. | Visual-regression suite passes light+dark; no element overlap/overlay (§11.4.162). `[evidence]` | `web-console.md`, Volume 10 | MVP |
 | HVPN-FR-609 | The Console MUST let an admin/operator filter and export a control-action audit slice (device/user/time-window/tenant-scoped) for incident-response or compliance reporting, containing zero traffic/destination data and zero rows outside the caller's authorized tenant scope. | An exported slice for tenant A + a time window contains only tenant-A control-action rows (RLS-bounded export, not just RLS-bounded live view); the export itself is an audited control action. `[evidence]` | `audit-and-compliance.md`, `svc-telemetry.md` | MVP |
+| HVPN-FR-610 | The control plane MUST enforce an RBAC role→action matrix: a principal with role `member` MUST NOT perform `operator` actions, and a principal with role `operator` MUST NOT perform `admin` actions. | A `member`-role token invoking an admin-only route (e.g. mint enroll-token, revoke device, delete tenant) returns 403; an `operator`-role token invoking an admin-only route returns 403; RLS still blocks cross-tenant reads even if RBAC is bypassed. `[evidence]` | `svc-identity.md`, `svc-api.md` | MVP |
 
 ---
 
@@ -249,7 +256,7 @@ Differentiator X2; persona connector-operator [00 §5.2].
 | HVPN-FR-702 | The Connector MUST run headless (daemon) with an optional slim config UI. | The daemon runs without a UI; the optional UI configures it. `[evidence]` | `helix-core-rust.md` (advertise/route mode) | MVP |
 | HVPN-FR-703 | The Connector MUST share the same Rust `helix-core` as the Client, in advertise/route mode (not capture mode). | The Connector links the same crate; runs in advertise/route mode. | `helix-core-rust.md` | MVP |
 | HVPN-FR-704 | The Connector MUST advertise its network's CIDRs to the Gateway and route authorized traffic into the LAN. | Advertised CIDR appears in the registry; authorized client reaches a LAN host. `[evidence]` | `svc-registry.md`, `01` (edge) | MVP |
-| HVPN-FR-705 | The Connector SHOULD support local ACLs scoped to its own network. | A local ACL on the connector is honoured for its network. `[evidence]` (`UNVERIFIED` interaction with central policy — fixed by `svc-policy.md`) | `svc-policy.md`, `helix-core-rust.md` (advertise/route mode) | MVP |
+| HVPN-FR-705 | The Connector SHOULD support local ACLs scoped to its own network, interacting with central policy by the precedence rule defined in `svc-policy.md`. | A local ACL on the connector is honoured for its network; local-deny overrides central-allow, central-deny overrides local-allow, and the connector advertises its `local_denylist` to the coordinator. `[evidence]` | `svc-policy.md`, `helix-core-rust.md` (advertise/route mode) | MVP |
 | HVPN-FR-706 | The Connector MUST be runnable on Android/embedded appliance hardware in addition to Linux/Windows/macOS. | A Connector build runs on an embedded/Android target. `[evidence]` | `helix-core-rust.md` (advertise/route mode), `shim-android.md` | P2 |
 | HVPN-FR-707 | The Connector MUST follow availability-following on drop: detect, log offline, reconnect with defined timings, resume (§11.4.144 alignment). | A simulated drop is logged offline, reconnected, and resumed with no silent gap. `[evidence]` | `orchestrator-and-state.md` | MVP |
 
@@ -384,10 +391,9 @@ the parity matrix is the acceptance checklist and nothing is orphaned.
 > capability set (parity matrix F1–F17, differentiators X1–X5, the 8 DoD criteria,
 > and the seven principles). It is *necessary, not provably exhaustive*: a capability
 > introduced by a later Volume 2–6 doc that the overview did not enumerate becomes a
-> new FR via the §11.4.93 workable-item path. FRs whose detailed contract is fixed by
-> an owning doc that has not yet pinned it (e.g. FR-705 local-ACL scope) are marked
-> `UNVERIFIED` inline. No requirement quotes a quantitative target not present in the
-> overview/spine/security-overview.
+> new FR via the §11.4.93 workable-item path. FR-705 local-ACL × central-policy
+> precedence is now pinned in `svc-policy.md` and `helix-core-rust.md`. No requirement
+> quotes a quantitative target not present in the overview/spine/security-overview.
 
 ---
 
@@ -408,9 +414,11 @@ the parity matrix is the acceptance checklist and nothing is orphaned.
 
 *Honesty note (§11.4.6): every quantitative acceptance target (≥80%/≥50%
 throughput, p99 < 1 s convergence/revocation, ~15 MB / ≥30% memory headroom) is
-quoted from the overview/spine/security-overview, never invented. FRs whose
-detailed contract awaits an owning doc are marked `UNVERIFIED`. `[evidence]` flags
-criteria requiring captured runtime evidence per §11.4.69 — none may pass on
+quoted from the overview/spine/security-overview, never invented. FR-705's
+local-ACL × central-policy precedence is now pinned in `svc-policy.md` and
+`helix-core-rust.md`; residual `UNVERIFIED` markers (e.g. FR-1103 evaluation)
+remain where the owning doc explicitly does not pin runtime behaviour. `[evidence]`
+flags criteria requiring captured runtime evidence per §11.4.69 — none may pass on
 metadata/config-only signal.*
 
 *Constitution bindings: §11.4.44 (revision header), §11.4.6 (no-guessing —

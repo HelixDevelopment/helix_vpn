@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>02 — System Architecture</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">02 — System Architecture</h1>
+</header>
+<h1 id="02--system-architecture">02 — System Architecture</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-07-05T14:20:00Z <strong>Status:</strong> Draft — consolidated from
+<code>SPECIFICATION.md</code> §5–§6, <code>01-data-plane.md</code> §0,
+<code>02-control-plane.md</code> §0, and
+<code>05-repo-layout-tooling-and-helix-ecosystem.md</code>.</p>
+<hr />
+<h2 id="1-one-screen-architecture-overview">1. One-screen architecture
+overview</h2>
+<p>HelixVPN is a <strong>three-role, hub-and-spoke overlay</strong>:</p>
+<ul>
+<li><strong>Connector</strong> dials outbound from a private network and
+advertises CIDRs.</li>
+<li><strong>Gateway</strong> (public VPS) hosts the control plane (Go)
+and data-plane edge (Rust).</li>
+<li><strong>Client</strong> dials outbound from an end-user device to
+reach authorized networks or a privacy exit.</li>
+</ul>
+<p>The control plane <strong>never sits in the packet path</strong>. If
+it fails, existing tunnels keep forwarding
+(<strong>fail-static</strong>).</p>
+<h2 id="2-c4-style-component-view">2. C4-style component view</h2>
+<pre class="text"><code>┌─────────────────────────────────────────────────────────────────────────────┐
+│  PRIVATE NETWORK A/B (outbound-only)                                        │
+│  ┌─────────────────┐                                                        │
+│  │ Helix Connector │  Rust helix-core (advertise/route mode)                │
+│  │ advertises CIDRs│  dials out, routes LAN traffic                         │
+│  └────────┬────────┘                                                        │
+└───────────┼─────────────────────────────────────────────────────────────────┘
+            │ reverse tunnel
+            ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  HELIX GATEWAY (public VPS)                                                 │
+│  ┌──────────────┐  ┌─────────────┐  ┌─────────────────┐  ┌───────────────┐ │
+│  │ API Gateway  │  │ Coordinator │  │ Control services│  │ Data-plane    │ │
+│  │ Go / Gin     │  │ Go          │  │ Go modular      │  │ edge (Rust)   │ │
+│  │ REST + gRPC  │  │ server-     │  │ monolith        │  │ WG + transport│ │
+│  │              │  │ streaming   │  │ identity/registry│  │ verdict maps  │ │
+│  └──────┬───────┘  └──────┬──────┘  │ /ipam/pki/policy │  └───────┬───────┘ │
+│         │                 │         │ /events/telemetry│          │         │
+│         └────────┬────────┘         └────────┬─────────┘          │         │
+│                  │                           │                    │         │
+│         ┌────────▼────────┐         ┌────────▼────────┐            │         │
+│         │   PostgreSQL    │         │     Redis       │◄───────────┘         │
+│         │   RLS multi-    │         │   Streams + KV  │   push deltas        │
+│         │   tenant        │         │   (TTL)         │                      │
+│         └─────────────────┘         └─────────────────┘                      │
+└─────────────────────────────────────────────────────────────────────────────┘
+            ▲
+            │ obfuscated tunnel
+┌───────────┼─────────────────────────────────────────────────────────────────┐
+│  CLIENT DEVICES                                                             │
+│  ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐         │
+│  │ Helix Access    │    │ Helix Access    │    │ Helix Console   │         │
+│  │ Flutter + Rust  │    │ (other platform)│    │ Flutter API-only│         │
+│  │ core + shim     │    │                 │    │ (no core)       │         │
+│  └─────────────────┘    └─────────────────┘    └─────────────────┘         │
+└─────────────────────────────────────────────────────────────────────────────┘</code></pre>
+<h2 id="3-data-plane-layering">3. Data-plane layering</h2>
+<pre class="text"><code>L4  Application traffic (user packets / advertised LAN hosts)
+L3  WireGuard (Noise IK, Curve25519, ChaCha20-Poly1305) — CRYPTO CORE
+L2.5 (optional) DAITA shaping: pad + cover traffic (maybenot) — ABOVE WG
+L2  Pluggable transport (exactly one active):
+      · plain UDP          · MASQUE CONNECT-UDP / H3
+      · Shadowsocks-wrap   · UDP-over-TCP
+      · LWO                · port-hop / 443 / 53 disguise
+L1  IP to gateway public endpoint (:443/udp, :443/tcp, :51820/udp, …)</code></pre>
+<p>The transport layer <strong>only changes how encrypted WG datagrams
+look on the wire</strong>.</p>
+<h2 id="4-reuse-map">4. Reuse map</h2>
+<p>Three reuse pillars:</p>
+<table>
+<thead>
+<tr>
+<th>Pillar</th>
+<th>Shared by</th>
+<th>Repo (future)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Rust core</strong> (<code>helix-core</code>)</td>
+<td>Client, Connector, Gateway edge</td>
+<td><code>vasic-digital/helix_core</code></td>
+</tr>
+<tr>
+<td><strong>Flutter UI</strong> (<code>helix-ui</code>)</td>
+<td>Access, Connector, Console</td>
+<td><code>vasic-digital/helix_ui</code></td>
+</tr>
+<tr>
+<td><strong>Schema-generated clients</strong>
+(<code>helix-proto</code>)</td>
+<td>Dart, Go, Rust</td>
+<td><code>vasic-digital/helix_proto</code></td>
+</tr>
+</tbody>
+</table>
+<pre class="text"><code>helix-core (Rust)
+  ├── helix-transport   ← obfuscation carriers (shared client↔edge)
+  ├── helix-wg          ← boringtun wrapper
+  ├── helix-ffi         ← flutter_rust_bridge + UniFFI
+  ├── helix-core        ← orchestrator + reconciler
+  └── helix-route       ← overlay addressing + verdict maps
+
+helix-ui (Flutter/Dart)
+  ├── helix_design      ← OpenDesign system (decoupled submodule)
+  ├── app_access        ← consumer VPN flavor
+  ├── app_connector     ← network-operator flavor
+  └── app_console       ← admin flavor (no core_ffi)
+
+helix-proto
+  └── .proto / OpenAPI  → generated Dart/Go/Rust clients</code></pre>
+<h2 id="5-repository--component-layout">5. Repository &amp; component
+layout</h2>
+<pre class="text"><code>helixvpn/                          # umbrella
+├── helix_core/                    # Rust workspace
+│   ├── crates/helix_transport/
+│   ├── crates/helix_wg/
+│   ├── crates/helix_ffi/
+│   ├── crates/helix_core/
+│   ├── crates/helix_tun/
+│   ├── crates/helix_route/
+│   └── crates/helix_daita/
+├── helix_edge/                    # Gateway data-plane edge
+├── helix_go/                      # Go control plane (modular monolith)
+├── helix_proto/                   # Protobuf + OpenAPI
+├── helix_ui/                      # Flutter monorepo
+│   ├── app_access/
+│   ├── app_connector/
+│   └── app_console/
+├── shims/                         # apple / android / windows / linux / harmonyos / aurora
+├── deploy/                        # Podman quadlets, Terraform, Grafana-as-code, helixvpnctl
+└── submodules/                    # containers, helix_qa, challenges, docs_chain, security, vision_engine, …</code></pre>
+<h2 id="6-cross-cutting-contracts">6. Cross-cutting contracts</h2>
+<p>Three contracts bind every component:</p>
+<ol type="1">
+<li><strong><code>Transport</code> trait</strong> (Rust) — owning doc
+<code>v02-data-plane/transport-trait.md</code>. One implementation,
+three consumers.</li>
+<li><strong><code>WatchNetworkMap</code> stream</strong> (protobuf) —
+owning doc <code>v03-control-plane/svc-coordinator.md</code>. Snapshot +
+delta stream of desired state.</li>
+<li><strong>FFI surface</strong> (<code>helix-ffi</code>) — owning doc
+<code>v04-client/ffi-surface.md</code>. Dart drives the core and
+consumes a status stream.</li>
+</ol>
+<h2 id="7-cross-references">7. Cross-references</h2>
+<ul>
+<li>Data-plane details → <a href="../03-data-plane/README.md">03 — Data
+Plane</a></li>
+<li>Control-plane details → <a href="../04-control-plane/README.md">04 —
+Control Plane</a></li>
+<li>Client core &amp; UI → <a href="../05-client-core-ui/README.md">05 —
+Client Core &amp; UI</a></li>
+<li>API contracts → <a href="../08-api-contracts/README.md">08 — API
+Contracts</a></li>
+<li>Infrastructure &amp; deploy → <a href="../07-infrastructure-devops/README.md">07 — Infrastructure &amp;
+DevOps</a></li>
+</ul>
+<hr />
+<p><em>Sources: <code>docs/research/mvp/final/SPECIFICATION.md</code>
+§5–§6, <code>01-data-plane.md</code> §0,
+<code>02-control-plane.md</code> §0,
+<code>05-repo-layout-tooling-and-helix-ecosystem.md</code>
+§0–§2.</em></p>
+</body>
+</html>

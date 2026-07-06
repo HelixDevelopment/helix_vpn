@@ -200,7 +200,10 @@ ingest (JSONC) and stripped before storage so `spec` is canonical RFC-8259 JSON.
     { "action": "accept", "src": ["group:admins"],      "dst": ["*:*"] },
     { "action": "accept", "src": ["group:contractors"], "dst": ["warehouse-cams:554,80"] }
   ],
-  "exitNodes": ["group:admins"]            // who may use the gateway as a full-tunnel exit
+  "exitNodes": ["group:admins"],           // who may use the gateway as a full-tunnel exit
+  "connectors": {
+    "<conn-A-device-id>": { "local_denylist": ["10.10.0.128/25"] }  // connector tightens central allow (FR-705)
+  }
 }
 ```
 
@@ -214,6 +217,11 @@ type Spec struct {
 	Hosts         map[string]string    `json:"hosts"`     // "alias" -> CIDR string
 	ACLs          []Rule               `json:"acls"`
 	ExitNodes     []string             `json:"exitNodes"` // selectors permitted to full-tunnel
+	Connectors    map[string]Connector `json:"connectors,omitempty"` // device_id -> per-connector local overrides
+}
+
+type Connector struct {
+	LocalDenylist []netip.Prefix `json:"local_denylist,omitempty"` // CIDRs this connector always denies (FR-705)
 }
 
 type Rule struct {
@@ -257,6 +265,8 @@ const (
 | `dst` token | `<host>:<ports>` \| `<cidr>:<ports>` \| `*:*` | missing `:` ⇒ `ERR_BAD_DST_FORMAT` |
 | ports | `*` \| `N` \| `N-M` \| comma list \| `tcp:N`/`udp:N` | non-numeric / `Lo>Hi` ⇒ `ERR_BAD_PORT_SPEC` |
 | `exitNodes` entry | `group:X` \| member key | resolves to a connector ⇒ `ERR_EXIT_IS_CONNECTOR` |
+| `connectors` key | existing connector `device_id` (as known to `registry`) | unknown id ⇒ `ERR_UNKNOWN_CONNECTOR` |
+| `connectors[id].local_denylist` | array of parseable CIDRs | bad CIDR ⇒ `ERR_BAD_HOST_CIDR`; not covered by this connector's advertised prefixes ⇒ `ERR_LOCAL_DENY_NOT_ADVERTISED` (P7) |
 
 > **Nested groups** (a `group:X` member of `group:Y`) resolve transitively with cycle
 > detection; a membership cycle ⇒ `ERR_GROUP_CYCLE` (§8). **UNVERIFIED:** the source docs
@@ -333,6 +343,15 @@ compile(tenant, spec, snap) -> (CompiledPolicy, []Advisory, error):
       if not coveredByAdvertised(p, snap):             # P7 cross-check
           return _, _, ERR_HOST_NOT_ADVERTISED(alias, p)
       hostCIDR[alias] = p
+  # ── phase 1b: per-connector local denylist (FR-705) ──────────────────────
+  localDeny := {}                                      # connector device_id -> []netip.Prefix
+  for connID, cfg in spec.connectors:
+      if snap.Devices[connID].Kind != CONNECTOR:
+          return _, _, ERR_NOT_A_CONNECTOR(connID)
+      for p in cfg.local_denylist:
+          if not coveredByConnectorAdvertised(p, connID, snap):  # P7 per-connector coverage
+              return _, _, ERR_LOCAL_DENY_NOT_ADVERTISED(connID, p)
+      localDeny[connID] = sortedPrefixes(cfg.local_denylist)
   # ── phase 2: per-device rule application (default-deny base, P1) ──────────
   out := CompiledPolicy{ all maps empty }
   devOrder := sortedDeviceIDs(snap.Devices)            # deterministic iteration (P2)
@@ -347,10 +366,14 @@ compile(tenant, spec, snap) -> (CompiledPolicy, []Advisory, error):
               for (peer, cidr, site) in targets:
                   if peer == d: continue                 # no self-edge
                   if snap.Devices[peer].Revoked: continue
-                  out.VisibleTo[d].add(peer)              # ARTIFACT 1 (P1)
-                  out.AllowedIPs[d][peer].add(cidr)       # ARTIFACT 1b (coarse, P3)
-                  if dt.Ports not ALL:
-                      out.Verdicts[d][peer].add(portRules(cidr, dt.Ports))  # ARTIFACT 2
+                  # FR-705: local-deny overrides central-allow; subtract per-connector denylist.
+                  # central-deny (absence of allow) is the default-deny floor and already wins.
+                  deniedParts := localDenySubtraction(peer, cidr, dt.Ports, localDeny)
+                  for (allowCidr, allowPorts) in deniedParts:
+                      out.VisibleTo[d].add(peer)              # ARTIFACT 1 (P1)
+                      out.AllowedIPs[d][peer].add(allowCidr)  # ARTIFACT 1b (coarse, P3)
+                      if allowPorts not ALL:
+                          out.Verdicts[d][peer].add(portRules(allowCidr, allowPorts))  # ARTIFACT 2
                   if site != 0:
                       out.Via6[d][peer].add(via6(cidr, site, snap))         # D4
   # ── phase 3: exit nodes ───────────────────────────────────────────────────
@@ -365,7 +388,40 @@ compile(tenant, spec, snap) -> (CompiledPolicy, []Advisory, error):
   return out, adv, nil
 ```
 
-### 4.2 `expandDst` — the destination resolver (the heart)
+### 4.2 `localDenySubtraction` — connector local-deny overrides central-allow (FR-705)
+
+For a central-allow grant toward `peer` (usually a connector) with CIDR `c` and ports
+`ports`, `localDenySubtraction` enforces the adopted precedence rule:
+
+1. **Local-deny overrides central-allow.** Every CIDR (and optional port range) in
+   `spec.connectors[peer].local_denylist` is removed from the grant.
+2. **Central-deny overrides local-allow.** If the central ACL never granted `c`, the
+   default-deny floor keeps it denied; the connector cannot use `local_denylist` to
+   re-open a flow the central policy did not allow.
+3. The result is the **union of central policy minus local-deny** for that peer.
+
+```python
+localDenySubtraction(peer, cidr, ports, localDeny) -> [(cidr, ports)]:
+    if peer not in localDeny:
+        return [(cidr, ports)]
+    remaining := [(cidr, ports)]
+    for deny in localDeny[peer]:
+        next := []
+        for (c, ps) in remaining:
+            if c overlaps deny:
+                for splitCidr in subtractCidr(c, deny):
+                    next.append((splitCidr, ps))
+            else:
+                next.append((c, ps))
+        remaining := next
+    return remaining
+```
+
+If the subtraction empties a CIDR entirely, nothing is added for that peer. The
+operation is deterministic: `localDeny[peer]` is sorted at parse time and `subtractCidr`
+returns disjoint, sorted results (P2).
+
+### 4.3 `expandDst` — the destination resolver (the heart)
 
 `expandDst(dt, snap)` maps one parsed `dst` token to the concrete set of peer devices +
 CIDRs the source may reach:
@@ -385,7 +441,7 @@ CIDRs the source may reach:
   destinations; device-as-destination is a defined superset for client↔client policy — flag
   as design, not inherited.
 
-### 4.3 Worked example output (running example from §2.1)
+### 4.4 Worked example output (running example from §2.1)
 
 Given tenant devices — `alice-laptop`, `bob-laptop` (admins' devices), `carol-laptop`
 (contractor), `conn-A` (connector serving `10.10.0.0/24`, site-id 1), `conn-B` (connector
@@ -414,20 +470,21 @@ flowchart LR
   CL -. "DENIED (default-deny): no rule grants office-lan or exit" .-> CB
 ```
 
-Concrete artifact for `carol-laptop` (the precise, port-restricted grant):
+Concrete artifact for `carol-laptop` (the precise, port-restricted grant), reflecting the
+connector-A `local_denylist` `10.10.0.128/25` from §2.1:
 
 ```text
 VisibleTo[carol-laptop]            = { conn-A }
-AllowedIPs[carol-laptop][conn-A]   = [ 10.10.0.0/24 ]
-Verdicts[carol-laptop][conn-A]     = [ {10.10.0.0/24, ANY, 554, 554}, {10.10.0.0/24, ANY, 80, 80} ]
-Via6[carol-laptop][conn-A]         = [ {10.10.0.0/24, fd7a:helix:rrrr:0001::/96} ]
+AllowedIPs[carol-laptop][conn-A]   = [ 10.10.0.0/25 ]                # 10.10.0.128/25 removed by local-deny (FR-705)
+Verdicts[carol-laptop][conn-A]     = [ {10.10.0.0/25, ANY, 554, 554}, {10.10.0.0/25, ANY, 80, 80} ]
+Via6[carol-laptop][conn-A]         = [ {10.10.0.0/25, fd7a:helix:rrrr:0001::/96} ]
 ExitNodes                          = { alice-laptop, bob-laptop }   # carol absent → no exit
 # carol-laptop has NO entry for conn-B or office-lan → default-deny (P1)
 ```
 
-`alice-laptop`/`bob-laptop` get `AllowedIPs` `[10.10.0.0/24, 192.168.50.0/24, 0.0.0.0/0,
-::/0]` toward the relevant peers, **empty `Verdicts`** (all ports, coarse rule suffices, P3),
-and membership in `ExitNodes`.
+`alice-laptop`/`bob-laptop` get `AllowedIPs` `[10.10.0.0/25, 192.168.50.0/24, 0.0.0.0/0,
+::/0]` toward the relevant peers (`10.10.0.128/25` removed by conn-A's local-denylist),
+**empty `Verdicts`** (all ports, coarse rule suffices, P3), and membership in `ExitNodes`.
 
 ---
 
@@ -443,6 +500,8 @@ clean dry-run may persist (`Update`) [04_P1 §7.3, research-go_cp §7.3].
 |---|---|---|
 | unknown group/host/member selector | **BLOCKING** | reject; `ERR_UNKNOWN_*` |
 | `dst` CIDR not covered by any `advertised_prefixes` | **BLOCKING** (P7) | reject; `ERR_HOST_NOT_ADVERTISED` |
+| `connectors[id].local_denylist` CIDR not covered by that connector's advertised prefixes | **BLOCKING** (P7 + FR-705) | reject; `ERR_LOCAL_DENY_NOT_ADVERTISED` |
+| `connectors` key references a non-connector device | **BLOCKING** | reject; `ERR_NOT_A_CONNECTOR` |
 | rule that would grant a **revoked** device (as src or dst) | **BLOCKING** | reject; `ERR_GRANTS_REVOKED` |
 | `exitNodes` entry resolving to a connector | **BLOCKING** | reject; `ERR_EXIT_IS_CONNECTOR` |
 | unsupported `action` (≠ `accept`) | **BLOCKING** | reject; `ERR_UNSUPPORTED_ACTION` |
@@ -598,6 +657,7 @@ The policy service is the **producer** on `events:policy` and a consumer for the
 | emit | `policy.compiled` | `{version}` | `Compile(N)` materialized the artifact, OR `Activate/Rollback(N)` flipped active — coordinator recomputes tenant visibility + pushes deltas |
 | emit | `route.conflict.detected` | `{cidr, connector_ids[]}` | dry-run advisory P7 (overlapping advertised CIDRs) |
 | consume | `connector.prefixes.changed` | `{connector_id, cidrs[]}` | recompile the **active** version against new prefixes; if a previously-resolvable host CIDR is now unadvertised, emit `route.conflict.detected` (does NOT auto-deactivate — fail-static, C1) |
+| consume | `connector.local_denylist.changed` | `{connector_id, local_denylist[]}` | recompile the **active** version with the new per-connector denylist; if a deny CIDR is no longer covered by the connector's advertised prefixes, emit `route.conflict.detected` (does NOT auto-deactivate) |
 | consume | `device.revoked` | `{device_id}` | drop the device from the served compiled view immediately (coordinator removes peer); next activation re-validates (§6.3) |
 
 Canonical envelope (bus-agnostic, [research-go_cp §5.2]):
@@ -630,6 +690,7 @@ message Peer {
   bool               is_connector = 5;
   repeated Via6Route via6        = 6;  // from CompiledPolicy.Via6[self][peer] (D4)
   repeated PortRule  verdicts    = 7;  // from CompiledPolicy.Verdicts[self][peer] (P3 fine)
+  repeated string    local_denylist = 8;  // FR-705: connector-advertised local denies; edge may cross-check/audit
 }
 message PortRule { string dst_cidr = 1; uint32 proto = 2; uint32 lo = 3; uint32 hi = 4; }
 message Via6Route { string ipv4_cidr = 1; string via6_prefix = 2; }
@@ -669,6 +730,8 @@ const (
 	ErrGroupCycle       ErrCode = "ERR_GROUP_CYCLE"        // nested-group membership cycle
 	// ── semantic / fail-closed (BLOCKING, P4/P7) ──
 	ErrHostNotAdvertised ErrCode = "ERR_HOST_NOT_ADVERTISED" // dst CIDR not in advertised_prefixes
+	ErrLocalDenyNotAdvertised ErrCode = "ERR_LOCAL_DENY_NOT_ADVERTISED" // connector local_denylist CIDR not in its advertised prefixes (FR-705)
+	ErrNotAConnector    ErrCode = "ERR_NOT_A_CONNECTOR"     // connectors[] key is not a connector device
 	ErrGrantsRevoked    ErrCode = "ERR_GRANTS_REVOKED"      // rule grants a revoked device
 	ErrExitIsConnector  ErrCode = "ERR_EXIT_IS_CONNECTOR"   // exitNodes entry resolves to connector
 	// ── lifecycle (BLOCKING) ──
@@ -715,7 +778,7 @@ RBAC with the RLS database floor (C8).
 | # | Edge case | Defined behavior |
 |---|---|---|
 | E1 | Empty `acls` (only groups/hosts) | Compiles to all-empty visibility → **everyone denied everything** (default-deny floor, P1). Valid, not an error. |
-| E2 | `*:*` for a non-admin via a group | Honored — wildcard expands per §4.2; the operator chose to grant broad reach. No implicit narrowing. |
+| E2 | `*:*` for a non-admin via a group | Honored — wildcard expands per §4.3; the operator chose to grant broad reach. No implicit narrowing. |
 | E3 | Overlapping advertised CIDRs (conn-A & conn-B both `10.0.0.0/24`) | **Advisory** `route.conflict.detected` (P7); compile succeeds; `4via6` site-ids disambiguate at the data path; Console surfaces the conflict for operator choice. |
 | E4 | `dst` CIDR is a sub-range of an advertised prefix (`10.10.0.128/25` ⊂ `10.10.0.0/24`) | Allowed — longest-prefix coverage check passes; `AllowedIPs` carries the narrower `/25`; the connector still routes it. |
 | E5 | Device revoked between dry-run and activate | Caught at activate (`revokedGrantsAfter` re-check, §6.3) → `ERR_GRANTS_REVOKED`; never streams to a revoked device (coordinator belt-and-suspenders). Honest <1 s race window (§5.2). |
@@ -726,6 +789,7 @@ RBAC with the RLS database floor (C8).
 | E10 | Massive tenant (10k devices, 1k rules) | Compile is O(devices × matching-rules × dst-targets); the §11 budget caps it at **<200 ms** (benchmark gate). Output maps pre-sized from snapshot counts to avoid rehash churn. |
 | E11 | `connector.prefixes.changed` removes a CIDR a live policy granted | Active version recompiled; the now-unadvertised CIDR drops from `AllowedIPs` → coordinator pushes a peer-removal delta; emits `route.conflict.detected`. Existing tunnels fail-static until the delta lands (C1). Policy is **not** auto-deactivated. |
 | E12 | Nested-group cycle (`A∈B`, `B∈A`) | **BLOCKING** `ERR_GROUP_CYCLE` (DFS cycle detection in `resolveGroups`). |
+| E13 | Connector `local_denylist` narrows a central-allow | The compiled `AllowedIPs`/`Verdicts` toward that connector exclude the denied CIDR (FR-705). Central-deny (absence of allow) still wins; the connector cannot re-open a denied flow. |
 
 ### 10.3 The honest convergence-race boundary (§11.4.6)
 
@@ -791,7 +855,7 @@ captured-evidence test point [04_P1 §10, research-go_cp §10.3, §11.4.27/§11.
 
 | Test type | Concrete test point | Captured evidence (§11.4.69) |
 |---|---|---|
-| **Unit** | `Compile(runningExample)` → assert exact `CompiledPolicy` for `carol-laptop` (§4.3): `VisibleTo={conn-A}`, `Verdicts` tcp 554+80 only, `ExitNodes` excludes carol. | golden `compiled.json` byte-compare |
+| **Unit** | `Compile(runningExample)` → assert exact `CompiledPolicy` for `carol-laptop` (§4.4): `VisibleTo={conn-A}`, `Verdicts` tcp 554+80 only, `ExitNodes` excludes carol. | golden `compiled.json` byte-compare |
 | **Unit — determinism (P2)** | compile same `(spec,snap)` twice with different `SnapAt` → `canonicalEncode` outputs byte-identical; property test over 1000 random specs. | hash-equality log per iter |
 | **Unit — purity lint (§3.1)** | custom analyzer asserts no `time.Now`/`rand`/bare `range map` inside `compile.go`. | analyzer report |
 | **Unit — error taxonomy** | table-driven: each `ERR_*` (§8) reproduced by a crafted spec; assert exact `Code`+`RuleIx`. | per-code assertion table |

@@ -469,7 +469,7 @@ sequenceDiagram
   U->>ED2: re-handshake, SAME transport rung as before (no ladder restart)
   ED2-->>CN: tunnel re-established via Region 2
   ED2-->>U: tunnel re-established via Region 2
-  Note over ED1: Region 1 drains/recovers independently; no manual re-enrollment on any agent
+  Note over ED1: Region 1 drains/recovers independently — no manual re-enrollment on any agent
 ```
 
 > **Phase + honesty boundary (§11.4.6).** UC-08 is explicitly **P2** (multi-region

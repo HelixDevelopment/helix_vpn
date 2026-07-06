@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Decoupling &amp; Reusability Plan</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Decoupling &amp; Reusability Plan</h1>
+</header>
+<h1 id="decoupling--reusability-plan">Decoupling &amp; Reusability
+Plan</h1>
+<p><strong>Scope:</strong> Define module boundaries, dependency
+inversion, shared libraries, platform abstraction layers, and how other
+projects can reuse each HelixVPN component. <strong>Status:</strong>
+Aligned with the MVP final spec and the current submodule layout.</p>
+<hr />
+<h2 id="1-principles">1. Principles</h2>
+<ol type="1">
+<li><strong>One core per concern, reused everywhere.</strong> The Rust
+transport/VPN core is shared by client, connector, and edge. The Flutter
+UI core is shared by Access, Connector, and Console. Protobuf-generated
+clients are shared by Go/Dart/Rust.</li>
+<li><strong>Schema-first, zero drift.</strong> The wire contract lives
+in <code>helix-proto</code>; generated stubs are the only clients. No
+hand-written parallel structs.</li>
+<li><strong>No hardcoded project identity.</strong> Reusable crates
+contain no consumer project name, fixed hostname, tenant assumption, or
+asset path. Project specifics enter via configuration injection.</li>
+<li><strong>Dependency inversion.</strong> Higher layers depend on trait
+interfaces, not on concrete transport or platform implementations.</li>
+<li><strong>Flat submodule layout.</strong> Every reusable component is
+a direct child of <code>submodules/</code>; no nested own-org submodule
+chains.</li>
+</ol>
+<hr />
+<h2 id="2-module-boundaries">2. Module boundaries</h2>
+<h3 id="21-rust-core-workspace-helix_core">2.1 Rust core workspace
+(<code>helix_core</code>)</h3>
+<table>
+<thead>
+<tr>
+<th>Crate</th>
+<th>Boundary</th>
+<th>Public interface</th>
+<th>What it hides</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>helix-transport</code></td>
+<td>L2 carrier abstraction</td>
+<td><code>Transport</code>, <code>Connection</code>,
+<code>Listener</code>, <code>TransportRegistry</code>,
+<code>TransportError</code></td>
+<td>UDP sockets, future TCP/TLS implementations</td>
+</tr>
+<tr>
+<td><code>helix-wg</code></td>
+<td>WireGuard crypto core</td>
+<td><code>WireguardDevice</code>, <code>PeerConfig</code>,
+<code>WgConfig</code>, key types, handshake helpers</td>
+<td><code>boringtun::noise::Tunn</code>, Noise state machine</td>
+</tr>
+<tr>
+<td><code>helix-masque</code></td>
+<td>MASQUE/QUIC carrier</td>
+<td><code>MasqueTransport</code>, <code>MasqueConfig</code>,
+<code>MasqueConnection</code></td>
+<td><code>quinn</code>, TLS, HTTP-Datagram framing</td>
+</tr>
+<tr>
+<td><code>helix-tun</code></td>
+<td>OS TUN abstraction</td>
+<td><code>TunDevice</code>, <code>TunConfig</code></td>
+<td>Linux <code>tun</code> crate, platform differences</td>
+</tr>
+<tr>
+<td><code>helix-orch</code></td>
+<td>Tunnel lifecycle</td>
+<td><code>Orchestrator</code>, <code>EventBus</code>,
+<code>TunnelEvent</code>, <code>TunnelState</code>,
+<code>wg_session</code></td>
+<td>Three-loop scheduling, handshake driver</td>
+</tr>
+<tr>
+<td><code>helix-core</code></td>
+<td>Integration crate</td>
+<td>Re-exports + <code>map.json</code> reconciler</td>
+<td>Composition glue</td>
+</tr>
+<tr>
+<td><code>helix-ffi</code> <em>(future)</em></td>
+<td>Dart/UniFFI surface</td>
+<td><code>helix_start</code>, <code>helix_stop</code>,
+<code>helix_status_stream</code></td>
+<td><code>flutter_rust_bridge</code> / UniFFI internals</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Boundary rule:</strong> Crates inside <code>helix_core</code>
+may depend only on sibling crates at their abstraction level or below.
+<code>helix-orch</code> depends on <code>helix-transport</code> and
+<code>helix-wg</code>; <code>helix-masque</code> depends only on
+<code>helix-transport</code> and QUIC libraries.</p>
+<h3 id="22-gateway-edge-helix_edge">2.2 Gateway edge
+(<code>helix_edge</code>)</h3>
+<table>
+<thead>
+<tr>
+<th>Module</th>
+<th>Boundary</th>
+<th>Public interface</th>
+<th>What it hides</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>edge</code></td>
+<td>Edge listener binding</td>
+<td><code>EdgeConfig</code>, <code>EdgeAddrs</code>,
+<code>spawn_edge()</code></td>
+<td>MASQUE + decoy co-binding on same port</td>
+</tr>
+<tr>
+<td><code>gateway</code></td>
+<td>MASQUE-to-gateway relay</td>
+<td><code>relay()</code></td>
+<td>UDP socket forwarding, kernel-WG handoff point</td>
+</tr>
+<tr>
+<td><code>decoy</code></td>
+<td>TCP masquerade</td>
+<td><code>bind()</code>, <code>run()</code></td>
+<td>Static HTML response, probe handling</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Boundary rule:</strong> <code>helix_edge</code> depends on
+<code>helix_core</code> crates via path dependencies and treats the
+gateway UDP address as an injectable endpoint. This lets the same relay
+logic talk to kernel WG, <code>boringtun</code>, or a test stand-in.</p>
+<h3 id="23-go-control-plane-helix_go">2.3 Go control plane
+(<code>helix_go</code>)</h3>
+<table>
+<thead>
+<tr>
+<th>Domain service</th>
+<th>Boundary</th>
+<th>Public interface</th>
+<th>What it hides</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>identity</code></td>
+<td>Enrollment + OIDC</td>
+<td><code>Coordinator.Enroll</code>,
+<code>Session.Authenticate</code></td>
+<td>Token hashing, OIDC validation</td>
+</tr>
+<tr>
+<td><code>registry</code></td>
+<td>Devices + tenants</td>
+<td>Device CRUD, cert serial lookup</td>
+<td>Postgres RLS queries</td>
+</tr>
+<tr>
+<td><code>ipam</code></td>
+<td>Overlay addressing</td>
+<td><code>AllocOverlayIP</code>, <code>ReleaseOverlayIP</code></td>
+<td>ULA /48 + 4via6 allocation</td>
+</tr>
+<tr>
+<td><code>pki</code></td>
+<td>Certificates</td>
+<td><code>IssueDeviceCert</code>, <code>RevokeCert</code></td>
+<td>CA, short-lived mTLS</td>
+</tr>
+<tr>
+<td><code>policy</code></td>
+<td>ACL compiler</td>
+<td><code>CompilePolicy</code>, <code>VisibleTo</code></td>
+<td>Tailscale-ACL-flavored rules</td>
+</tr>
+<tr>
+<td><code>coordinator</code></td>
+<td>Map streaming</td>
+<td><code>Coordinator.WatchNetworkMap</code></td>
+<td>In-memory graph, delta computation</td>
+</tr>
+<tr>
+<td><code>events</code></td>
+<td>Event bus</td>
+<td>Publish/subscribe on Redis Streams</td>
+<td>Redis topology, consumer groups</td>
+</tr>
+<tr>
+<td><code>telemetry</code></td>
+<td>Metrics/logs</td>
+<td><code>Telemetry.SubmitMetrics</code>, <code>SubmitLog</code></td>
+<td>sampling, anonymization</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Boundary rule:</strong> Services communicate through domain
+events and the <code>Coordinator</code> proto, not by direct imports
+except inside the API gateway layer.</p>
+<h3 id="24-protobuf-helix_proto">2.4 Protobuf
+(<code>helix_proto</code>)</h3>
+<table>
+<thead>
+<tr>
+<th>Package</th>
+<th>Scope</th>
+<th>Consumers</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>helix.coordinator.v1</code></td>
+<td>Agent⇄control-plane contract</td>
+<td>Go server, Rust/Dart agents</td>
+</tr>
+<tr>
+<td><code>helix.session.v1</code></td>
+<td>Console auth + session validation</td>
+<td>Go API gateway, Console REST</td>
+</tr>
+<tr>
+<td><code>helix.tunnel.v1</code></td>
+<td>Core→UI status/events</td>
+<td>Rust FFI, Dart UI, telemetry collector</td>
+</tr>
+<tr>
+<td><code>helix.ui.v1</code></td>
+<td>Normalized UI state</td>
+<td>Flutter widgets, Challenge/QA harness</td>
+</tr>
+<tr>
+<td><code>helix.telemetry.v1</code></td>
+<td>Aggregate metrics/logs</td>
+<td>Edge, agents, telemetry collector</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="3-dependency-inversion">3. Dependency inversion</h2>
+<h3 id="31-transport-trait">3.1 Transport trait</h3>
+<p>The orchestrator and WG layer depend on the abstract
+<code>Transport</code> trait, not on <code>UdpTransport</code> or
+<code>MasqueTransport</code>. New carriers are added by implementing the
+trait and registering them in the ladder policy.</p>
+<p>Current code has a different trait shape; the plan is to converge on
+the frozen spec trait:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">trait</span> Transport<span class="op">:</span> <span class="bu">Send</span> <span class="op">+</span> <span class="bu">Sync</span> <span class="op">{</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">async</span> <span class="kw">fn</span> send(<span class="op">&amp;</span><span class="kw">self</span><span class="op">,</span> datagram<span class="op">:</span> Bytes) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">,</span> TransportError<span class="op">&gt;;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">async</span> <span class="kw">fn</span> recv(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>Bytes<span class="op">,</span> TransportError<span class="op">&gt;;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> kind(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="op">&amp;</span><span class="ot">&#39;static</span> <span class="dt">str</span><span class="op">;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> effective_mtu(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">u16</span><span class="op">;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> health(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> TransportHealth<span class="op">;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">async</span> <span class="kw">fn</span> close(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">,</span> TransportError<span class="op">&gt;;</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> dial(cfg<span class="op">:</span> TransportConfig) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span><span class="dt">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> Transport<span class="op">&gt;,</span> TransportError<span class="op">&gt;;</span></span></code></pre></div>
+<p>The <code>dial()</code> free function selects the concrete
+implementation from the <code>TransportConfig</code> enum, keeping the
+orchestrator agnostic of transport internals.</p>
+<h3 id="32-platform-tunnel-shim">3.2 Platform tunnel shim</h3>
+<p>The Rust core treats the TUN as an injectable <code>PacketIO</code>
+trait:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>async_trait<span class="at">]</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">trait</span> PacketIO<span class="op">:</span> <span class="bu">Send</span> <span class="op">+</span> <span class="bu">Sync</span> <span class="op">{</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">async</span> <span class="kw">fn</span> read_packet(<span class="op">&amp;</span><span class="kw">self</span><span class="op">,</span> buf<span class="op">:</span> <span class="op">&amp;</span><span class="kw">mut</span> [<span class="dt">u8</span>]) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span><span class="dt">usize</span><span class="op">&gt;;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">async</span> <span class="kw">fn</span> write_packet(<span class="op">&amp;</span><span class="kw">self</span><span class="op">,</span> buf<span class="op">:</span> <span class="op">&amp;</span>[<span class="dt">u8</span>]) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span><span class="dt">usize</span><span class="op">&gt;;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> mtu(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">u16</span><span class="op">;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><code>helix-tun</code> provides the Linux implementation. Platform
+shims (<code>helix_shims</code>) provide Android
+<code>VpnService</code>/JNI, Apple <code>NEPacketTunnelProvider</code>,
+Windows <code>wireguard-nt</code>, HarmonyOS Network Kit, and Aurora
+Qt/tun implementations, all satisfying the same trait.</p>
+<h3 id="33-pki-abstraction">3.3 PKI abstraction</h3>
+<p>The control plane depends on a <code>PkiService</code> trait, not on
+a specific CA library:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> PkiService <span class="kw">interface</span> <span class="op">{</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    IssueDeviceCert<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> deviceID uuid<span class="op">.</span>UUID<span class="op">,</span> ttl time<span class="op">.</span>Duration<span class="op">)</span> <span class="op">([]</span><span class="dt">byte</span><span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    Revoke<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> serial <span class="dt">string</span><span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>This allows reuse in projects with different CA backends (internal
+CA, ACME, HashiCorp Vault).</p>
+<hr />
+<h2 id="4-shared-libraries">4. Shared libraries</h2>
+<table>
+<thead>
+<tr>
+<th>Library</th>
+<th>Location</th>
+<th>How to reuse</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Pluggable transport abstraction</td>
+<td><code>helix_core/crates/helix-transport</code></td>
+<td>Add crate dependency; implement <code>Transport</code> for new
+carriers</td>
+</tr>
+<tr>
+<td>WireGuard wrapper</td>
+<td><code>helix_core/crates/helix-wg</code></td>
+<td>Use key types, config, handshake helpers</td>
+</tr>
+<tr>
+<td>QUIC + MASQUE framing</td>
+<td><code>helix_core/crates/helix-masque</code></td>
+<td>Use <code>quinn</code> endpoints and HTTP-Datagram codec</td>
+</tr>
+<tr>
+<td>Linux TUN</td>
+<td><code>helix_core/crates/helix-tun</code></td>
+<td>Use <code>TunDevice</code> for any Linux VPN product</td>
+</tr>
+<tr>
+<td>Event bus vocabulary</td>
+<td><code>helix_core/crates/helix-orch</code> +
+<code>helix.tunnel.v1</code> proto</td>
+<td>Consume <code>TunnelEvent</code> in any UI/telemetry consumer</td>
+</tr>
+<tr>
+<td>RFC 9298 edge terminator</td>
+<td><code>helix_go/pkg/masqueedge</code></td>
+<td>Import package; inject listen address, TLS, and gateway target</td>
+</tr>
+<tr>
+<td>Agent control contract</td>
+<td><code>helix_proto</code></td>
+<td>Generate stubs for Go/Dart/Rust/TypeScript</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="5-platform-abstraction-layers">5. Platform abstraction
+layers</h2>
+<table>
+<thead>
+<tr>
+<th>Platform</th>
+<th>Shim responsibility</th>
+<th>Trait boundary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Linux</td>
+<td>Create/manage TUN interface, set routes</td>
+<td><code>PacketIO</code></td>
+</tr>
+<tr>
+<td>Android</td>
+<td><code>VpnService</code> + JNI fd handoff</td>
+<td><code>PacketIO</code></td>
+</tr>
+<tr>
+<td>iOS / macOS</td>
+<td><code>NEPacketTunnelProvider</code> + NetworkExtension</td>
+<td><code>PacketIO</code> + UI status channel</td>
+</tr>
+<tr>
+<td>Windows</td>
+<td><code>wireguard-nt</code> + privileged service</td>
+<td><code>PacketIO</code></td>
+</tr>
+<tr>
+<td>HarmonyOS NEXT</td>
+<td>Network Kit ability</td>
+<td><code>PacketIO</code></td>
+</tr>
+<tr>
+<td>Aurora OS</td>
+<td>Qt/C++ + tun fd</td>
+<td><code>PacketIO</code></td>
+</tr>
+<tr>
+<td>Web (WASM)</td>
+<td>Browser-scoped MASQUE proxy, NOT system VPN</td>
+<td><code>WebTransport</code> fallback</td>
+</tr>
+</tbody>
+</table>
+<p>The Rust core stays platform-agnostic. Only the shim layer changes
+per platform.</p>
+<hr />
+<h2 id="6-how-other-projects-can-reuse-each-component">6. How other
+projects can reuse each component</h2>
+<h3 id="61-reusing-helix_core">6.1 Reusing <code>helix_core</code></h3>
+<p>A third-party VPN or SD-WAN product can depend on
+<code>helix_core</code> crates to obtain a Rust-based WG + pluggable
+transport stack without adopting the HelixVPN control plane. Required
+inputs:</p>
+<ul>
+<li><code>WgConfig</code> + peer public keys</li>
+<li><code>TransportConfig</code> (plain-udp, masque-h3, etc.)</li>
+<li>A <code>PacketIO</code> implementation for the target platform</li>
+</ul>
+<p>Caveat: the current <code>Transport</code> trait shape is not yet
+final. External projects should wait for the spec reconciliation or pin
+a specific commit.</p>
+<h3 id="62-reusing-helix_edge">6.2 Reusing <code>helix_edge</code></h3>
+<p>A self-hosted gateway project can use
+<code>helix_edge::edge::spawn_edge()</code> to get a MASQUE-terminating
+edge with a TCP decoy on the same port. Required inputs:</p>
+<ul>
+<li>Bind address + SNI host</li>
+<li>TLS certificate chain + private key</li>
+<li>Gateway UDP target (kernel WG / boringtun / test socket)</li>
+</ul>
+<p>Caveat: the Rust MASQUE implementation currently uses a labeled
+stand-in for CONNECT-UDP flow establishment. For a turnkey RFC 9298
+solution, prefer <code>helix_go/pkg/masqueedge</code> today.</p>
+<h3 id="63-reusing-helix_gopkgmasqueedge">6.3 Reusing
+<code>helix_go/pkg/masqueedge</code></h3>
+<p>Any Go project needing a CONNECT-UDP proxy/terminator can import
+<code>github.com/vasic-digital/helix_go/pkg/masqueedge</code>. It
+requires only:</p>
+<ul>
+<li>Listen address</li>
+<li><code>*tls.Config</code></li>
+<li>Gateway UDP target passed via the URI template</li>
+</ul>
+<h3 id="64-reusing-helix_proto">6.4 Reusing
+<code>helix_proto</code></h3>
+<p>Any project needing the agent⇄control-plane contract can copy the
+<code>proto/helix/...</code> tree and run <code>buf generate</code> with
+its own language plugins. The package names and field numbers are stable
+for <code>v1</code>.</p>
+<hr />
+<h2 id="7-current-coupling-risks-and-mitigation">7. Current coupling
+risks and mitigation</h2>
+<table>
+<thead>
+<tr>
+<th>Risk</th>
+<th>Severity</th>
+<th>Mitigation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Transport</code> trait shape mismatch</td>
+<td>High</td>
+<td>Reconcile to frozen spec before external adoption; add migration
+guide</td>
+</tr>
+<tr>
+<td><code>helix_transport</code> scaffolding duplicates
+<code>helix_core/crates/helix-transport</code></td>
+<td>Medium</td>
+<td>Decide: archive, merge, or make it a re-export; document
+decision</td>
+</tr>
+<tr>
+<td><code>helix_edge</code> hard path-depends on <code>helix_core</code>
+layout</td>
+<td>Low</td>
+<td>Already tested by <code>dependency_resolution_smoke.rs</code>; keep
+sibling layout stable</td>
+</tr>
+<tr>
+<td>Go control plane does not exist yet</td>
+<td>High</td>
+<td>Implement as modular monolith with interface boundaries (§3.3)</td>
+</tr>
+<tr>
+<td>Dart/Rust proto stubs not generated</td>
+<td>Medium</td>
+<td>Install plugins and add <code>buf generate</code> to pre-build
+hook</td>
+</tr>
+<tr>
+<td>No platform shims beyond Linux</td>
+<td>High</td>
+<td>Implement behind <code>PacketIO</code> trait per platform</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="8-recommended-next-steps">8. Recommended next steps</h2>
+<ol type="1">
+<li>Converge <code>Transport</code> trait to the frozen spec and migrate
+all current implementations/tests.</li>
+<li>Generate Dart + Rust proto stubs and replace any hand-written
+structs.</li>
+<li>Implement the Go control-plane services behind the trait boundaries
+above.</li>
+<li>Add <code>PacketIO</code> trait and migrate <code>helix-tun</code> +
+future shims behind it.</li>
+<li>Resolve the <code>helix_transport</code> submodule disposition.</li>
+<li>Add <code>buf breaking</code> CI gate against <code>main</code> to
+protect the <code>v1</code> field-number registry.</li>
+</ol>
+<hr />
+<h2 id="9-links">9. Links</h2>
+<ul>
+<li>System architecture overview: <code>README.md</code> (sibling
+file)</li>
+<li>API contracts:
+<code>docs/research/mvp/final/implementation/08-api-contracts/README.md</code></li>
+<li>Alignment report:
+<code>docs/reviews/mvp-final/findings/phase3-code-spec-alignment.md</code></li>
+<li>Protobuf source:
+<code>submodules/helix_proto/proto/helix/...</code></li>
+</ul>
+</body>
+</html>

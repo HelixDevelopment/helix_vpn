@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>07 — Infrastructure &amp; DevOps</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">07 — Infrastructure &amp; DevOps</h1>
+</header>
+<h1 id="07--infrastructure--devops">07 — Infrastructure &amp;
+DevOps</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-07-05T14:20:00Z <strong>Status:</strong> Draft — consolidated from
+<code>05-repo-layout-tooling-and-helix-ecosystem.md</code> and
+<code>v06-deploy/*</code>.</p>
+<hr />
+<h2 id="1-position-and-scope">1. Position and scope</h2>
+<p>This section owns the <strong>physical engineering substrate</strong>
+of HelixVPN: the monorepo layout, the reusable-component extraction
+plan, schema-first code generation, the <code>helixvpnctl</code>
+operator CLI, the three deployment substrates (Podman quadlets, Docker
+Compose, Kubernetes), and the wiring of every incorporated
+<code>submodules/</code> member into a concrete role.</p>
+<p>It does not own the logical architecture — data plane, control plane,
+client core, security — only the files, repos, build tools, and deploy
+units that materialize them.</p>
+<hr />
+<h2 id="2-repo-layout-strategy-monorepo-now-extract-later">2. Repo
+layout strategy: monorepo now, extract later</h2>
+<p>The MVP builds in one working monorepo <code>helixvpn/</code> whose
+internal workspace boundaries are already the future repo boundaries.
+Once the public surface of each pillar stabilizes, the pillar is
+extracted to a standalone <code>vasic-digital</code> repo and
+re-consumed as a flat submodule.</p>
+<table>
+<thead>
+<tr>
+<th>Pillar</th>
+<th>Monorepo dir</th>
+<th>Future repo</th>
+<th>Extract trigger</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Schema contract</td>
+<td><code>helix-proto/</code></td>
+<td><code>helix_proto</code></td>
+<td>First frozen <code>WatchNetworkMap</code> version</td>
+</tr>
+<tr>
+<td>Rust client/connector core</td>
+<td><code>helix-core/</code></td>
+<td><code>helix_core</code></td>
+<td>iOS memory gate passes + FFI surface freezes</td>
+</tr>
+<tr>
+<td>Rust gateway edge</td>
+<td><code>helix-edge/</code></td>
+<td><code>helix_edge</code></td>
+<td>Right after <code>helix_core</code></td>
+</tr>
+<tr>
+<td>Flutter UI</td>
+<td><code>helix-ui/</code></td>
+<td><code>helix_ui</code></td>
+<td><code>runHelixApp</code> flavors + status-stream contract
+stable</td>
+</tr>
+<tr>
+<td>Go control plane</td>
+<td><code>helix-go/</code></td>
+<td><code>helix_control</code></td>
+<td>Policy compiler + coordinator stable (last code repo)</td>
+</tr>
+<tr>
+<td>Deployment/tooling</td>
+<td><code>deploy/</code></td>
+<td><code>helix_deploy</code></td>
+<td>Image names + env contract freeze</td>
+</tr>
+<tr>
+<td>Design system</td>
+<td>already submodule</td>
+<td><code>helix_design</code></td>
+<td>Decoupled day one (Volume 10)</td>
+</tr>
+</tbody>
+</table>
+<p>Extraction is operator-gated via <code>gh repo create</code> /
+<code>glab repo create</code>; history is preserved with
+<code>git filter-repo</code> and the new repo is immediately added as a
+flat submodule. Release tags across every repo carry the
+<code>helix_vpn-</code> prefix (§11.4.151).</p>
+<hr />
+<h2 id="3-decoupling-and-dependency-from-root">3. Decoupling and
+dependency-from-root</h2>
+<p>Reusable repos are <strong>project-not-aware</strong>: no HelixVPN
+hostnames, asset names, or tenant assumptions are hardcoded. Project
+specifics enter only through config injection (env var / config struct /
+constructor param). The dependency graph is flat — every own-org
+submodule is reachable from the parent root, never nested inside another
+submodule.</p>
+<table>
+<thead>
+<tr>
+<th>Invariant</th>
+<th>Enforcement</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Project-not-aware</td>
+<td><code>CM-OWNED-SUBMODULE-DECOUPLING</code> gate greps submodule
+diffs for parent context</td>
+</tr>
+<tr>
+<td>Flat dependency layout</td>
+<td><code>CM-OWNED-SUBMODULE-LAYOUT</code> gate forbids nested own-org
+<code>.gitmodules</code> chains</td>
+</tr>
+<tr>
+<td>Equal engineering</td>
+<td>Each owned submodule gets the same test/doc/anti-bluff
+attention</td>
+</tr>
+<tr>
+<td>Catalogue-first reuse</td>
+<td>`Catalogue-Check: reuse</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="4-schema-first-codegen-zero-drift-contract">4. Schema-first
+codegen (zero-drift contract)</h2>
+<p>All Go/Dart/Rust/TS clients are generated from canonical schemas;
+hand-written clients are forbidden.</p>
+<table>
+<thead>
+<tr>
+<th>Plane</th>
+<th>Canonical source</th>
+<th>Generators</th>
+<th>Outputs</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Agent plane</td>
+<td><code>proto/helix/coordinator/v1/*.proto</code></td>
+<td><code>buf</code> (Connect: gRPC + gRPC-Web + Connect)</td>
+<td>Go server stubs, Dart/Rust clients</td>
+</tr>
+<tr>
+<td>App plane</td>
+<td><code>openapi/helix-rest.v1.yaml</code></td>
+<td><code>oapi-codegen</code>, <code>openapi-generator</code>,
+<code>openapi-typescript</code></td>
+<td>Go Gin stubs, Dart/TS clients</td>
+</tr>
+</tbody>
+</table>
+<p>The local build contract:</p>
+<ul>
+<li><code>make gen</code> — regenerate all clients from schema.</li>
+<li><code>make verify-gen</code> — regenerate, then
+<code>git diff --exit-code</code>; any drift blocks the commit.</li>
+<li><code>buf lint</code> + <code>buf breaking --against main</code> +
+<code>oasdiff breaking</code> run in the local pre-build sweep.</li>
+<li>Generated code is gitignored; the schema is the single source of
+truth.</li>
+</ul>
+<p>Protovalidate constraints travel with the <code>.proto</code> so a
+31-byte <code>wg_pubkey</code> is rejected in every generated
+language.</p>
+<hr />
+<h2 id="5-helixvpnctl--the-operator-cli">5. <code>helixvpnctl</code> —
+the operator CLI</h2>
+<p><code>helixvpnctl</code> is the single Go binary that replaces the
+original pile of bash install scripts. It has two front doors:</p>
+<ul>
+<li><strong>Homelab front door</strong> —
+<code>helixvpnctl init --domain gw.example.com</code> bootstraps a
+single-node gateway (tenant, admin, CA, keys, creds, deploy units), then
+prints <code>systemctl --user start helixvpn-pod</code>.</li>
+<li><strong>GitOps front door</strong> —
+<code>helixvpnctl policy set ./policy.jsonc</code> dry-run-compiles,
+persists a new policy version, and optionally activates it
+atomically.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Subcommand</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>init</code></td>
+<td>Bootstrap gateway; default substrate is quadlet</td>
+</tr>
+<tr>
+<td><code>keys rotate/show</code></td>
+<td>Gateway WireGuard key operations</td>
+</tr>
+<tr>
+<td><code>enroll-token</code></td>
+<td>Mint single-use, TTL&#39;d device enrollment token</td>
+</tr>
+<tr>
+<td><code>policy get/set/compile</code></td>
+<td>GitOps policy front door; <code>set</code> is fail-closed</td>
+</tr>
+<tr>
+<td><code>device list/revoke</code></td>
+<td>Device lifecycle; revoke &lt; 1 s</td>
+</tr>
+<tr>
+<td><code>connector list/advertise</code></td>
+<td>Declarative advertised CIDRs</td>
+</tr>
+<tr>
+<td><code>status</code></td>
+<td>Gateway/edge health + transport ladder</td>
+</tr>
+<tr>
+<td><code>deploy quadlet/compose/kube</code></td>
+<td>Render substrate units</td>
+</tr>
+</tbody>
+</table>
+<p>Credentials are handled per §11.4.10: the operator token is never
+logged, token files are mode <code>0600</code>, and loose-perm files are
+refused.</p>
+<hr />
+<h2 id="6-deployment-substrates">6. Deployment substrates</h2>
+<p>All three substrates run the <strong>same</strong> OCI images
+(<code>helixd</code>, <code>helix-edge</code>, <code>postgres:16</code>,
+<code>redis:7</code>) with the <strong>same</strong> env contract. They
+are generated from one in-code spec via the <code>containers</code>
+submodule so a stack-shape change lands in all three, not three
+hand-maintained files.</p>
+<h3 id="61-podman-quadlets--canonical-rootless">6.1 Podman quadlets —
+canonical, rootless</h3>
+<p>Podman rootless quadlets are the §11.4.161-mandated canonical
+substrate. A single pod groups edge + control + Postgres + Redis.</p>
+<table>
+<thead>
+<tr>
+<th>Concern</th>
+<th>Rule</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Runtime</td>
+<td>Rootless Podman only — no <code>sudo</code>, no rootful Docker for
+container ops</td>
+</tr>
+<tr>
+<td>Unit location</td>
+<td><code>~/.config/containers/systemd/</code> (rootless search
+path)</td>
+</tr>
+<tr>
+<td>Edge capability</td>
+<td><code>DropCapability=ALL</code>; add only <code>NET_ADMIN</code> +
+<code>NET_RAW</code> + <code>/dev/net/tun</code></td>
+</tr>
+<tr>
+<td>Control/DB/Redis</td>
+<td><code>DropCapability=ALL</code>; no extra caps</td>
+</tr>
+<tr>
+<td>Secrets</td>
+<td>Podman <code>Secret=</code> injected as env target; never in unit
+text</td>
+</tr>
+<tr>
+<td>Ingress</td>
+<td>Pod publishes <code>:443/udp</code> (MASQUE) +
+<code>:51820/udp</code> (plain WG)</td>
+</tr>
+<tr>
+<td>Host prerequisites</td>
+<td><code>net.ipv4.ip_unprivileged_port_start=443</code>; WireGuard
+kernel module loaded</td>
+</tr>
+</tbody>
+</table>
+<h3 id="62-docker-compose--documented-fallback">6.2 Docker Compose —
+documented fallback</h3>
+<p>For operators already running Docker. Same images and env contract,
+mapped service-by-service to a <code>compose.yaml</code>. Rootless
+Docker is preferred; rootful Docker is an honest §11.4.112-documented
+higher-privilege gap, never presented as equivalent to the canonical
+path.</p>
+<h3 id="63-kubernetes--fleet--phase-2-ha">6.3 Kubernetes — fleet /
+Phase-2 HA</h3>
+<p>Plain manifests + kustomize overlays for the multi-region fleet
+profile. Key shapes:</p>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>K8s shape</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>helixd</code></td>
+<td><code>Deployment</code> + HPA</td>
+<td>Stateless coordinator; safe to scale/restart</td>
+</tr>
+<tr>
+<td>Postgres</td>
+<td><code>StatefulSet</code> / Patroni / CloudNativePG</td>
+<td>Single durable source of truth (C2)</td>
+</tr>
+<tr>
+<td>Redis/NATS</td>
+<td><code>StatefulSet</code> (ephemeral)</td>
+<td>Event + presence backing; loss is recoverable</td>
+</tr>
+<tr>
+<td><code>helix-edge</code></td>
+<td><code>DaemonSet</code> + <code>hostNetwork: true</code></td>
+<td>UDP/443 must land on node IP; kernel-net caveat</td>
+</tr>
+<tr>
+<td>Network policy</td>
+<td>Default-deny mesh</td>
+<td>Calico/Cilium-class CNI required</td>
+</tr>
+</tbody>
+</table>
+<p>The edge capability set is the same canonical
+<code>{NET_ADMIN, NET_RAW}</code> + <code>/dev/net/tun</code> across all
+substrates.</p>
+<hr />
+<h2 id="7-ecosystem-submodule-integration">7. Ecosystem submodule
+integration</h2>
+<p>Every incorporated <code>submodules/</code> member has a concrete,
+catalogue-first role:</p>
+<table>
+<thead>
+<tr>
+<th>Submodule</th>
+<th>Role</th>
+<th>Catalogue-Check</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>containers</code></td>
+<td><strong>Sole</strong> container orchestration layer: deploy render +
+on-demand test infra</td>
+<td>reuse</td>
+</tr>
+<tr>
+<td><code>helix_qa</code></td>
+<td>Anti-bluff QA orchestrator driving the 8 MVP-DoD criteria</td>
+<td>reuse</td>
+</tr>
+<tr>
+<td><code>challenges</code></td>
+<td>Challenge engine; HelixVPN authors Challenge definitions</td>
+<td>reuse</td>
+</tr>
+<tr>
+<td><code>docs_chain</code></td>
+<td>Mechanical <code>final/*.md</code> → HTML/PDF/DOCX + workable-items
+DB sync</td>
+<td>reuse</td>
+</tr>
+<tr>
+<td><code>security</code></td>
+<td>Control-plane defensive libs: PII redaction, headers, at-rest
+crypto, SSRF-deny, edge privesc scan</td>
+<td>reuse/extend</td>
+</tr>
+<tr>
+<td><code>helix_design</code></td>
+<td>OpenDesign-based design system (Volume 10)</td>
+<td>extend</td>
+</tr>
+<tr>
+<td><code>vision_engine</code> + <code>panoptic</code></td>
+<td>UI recording/vision bridge for Flutter Challenges</td>
+<td>reuse (test-infra only)</td>
+</tr>
+<tr>
+<td><code>doc_processor</code></td>
+<td>Feature-map extraction → Status ledger cross-check</td>
+<td>reuse</td>
+</tr>
+<tr>
+<td><code>llm_orchestrator</code> / <code>llms_verifier</code></td>
+<td>Dev-loop only — not product runtime</td>
+<td>dev-only</td>
+</tr>
+<tr>
+<td><code>llm_provider</code></td>
+<td>Conditional Phase-2 policy-authoring helper</td>
+<td>Phase-2 opt-in</td>
+</tr>
+</tbody>
+</table>
+<p>Submodules are consumed by reference, never copied. The
+<code>containers</code> submodule&#39;s
+<code>pkg/boot</code>/<code>pkg/compose</code>/<code>pkg/health</code>
+primitives are the only sanctioned path to docker/podman/k8s in the
+codebase.</p>
+<hr />
+<h2 id="8-observability-dr-and-ha">8. Observability, DR, and HA</h2>
+<h3 id="81-observability">8.1 Observability</h3>
+<p>The observability stack consumes control-plane series emitted by
+<code>internal/telemetry</code> and edge series from the Rust edge. It
+is counts/gauges only — no per-packet, per-flow, or per-destination data
+(C3).</p>
+<table>
+<thead>
+<tr>
+<th>Concern</th>
+<th>Rule</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scrape target</td>
+<td><code>helixd:9090/metrics</code> internal-only; never on public
+<code>:443</code></td>
+</tr>
+<tr>
+<td>Headline SLO</td>
+<td><code>helix_reconcile_seconds</code> p99 &lt; 1 s</td>
+</tr>
+<tr>
+<td>Security SLO</td>
+<td><code>helix_revoke_enforce_seconds</code> p99 &lt; 1 s</td>
+</tr>
+<tr>
+<td>Forbidden labels</td>
+<td>No <code>tenant_id</code>, <code>device_id</code>,
+<code>src_ip</code>, <code>dst_ip</code></td>
+</tr>
+<tr>
+<td>Dashboards</td>
+<td>Grafana JSON-as-code under <code>deploy/grafana/</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="82-disaster-recovery">8.2 Disaster recovery</h3>
+<p>DR is simple because there is exactly one durable source of truth:
+Postgres.</p>
+<table>
+<thead>
+<tr>
+<th>Asset</th>
+<th>Backed up?</th>
+<th>Rationale</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Postgres + WAL</td>
+<td>Yes</td>
+<td>The only durable truth (C2)</td>
+</tr>
+<tr>
+<td>CA root / PKI secrets</td>
+<td>Yes, separately KMS-encrypted</td>
+<td>Catastrophic if lost or leaked</td>
+</tr>
+<tr>
+<td>Redis/NATS</td>
+<td>No</td>
+<td>Ephemeral; restoring would create a connection log (C3
+violation)</td>
+</tr>
+<tr>
+<td>Coordinator graph</td>
+<td>No</td>
+<td>Rebuilt from Postgres on boot</td>
+</tr>
+<tr>
+<td>Deploy manifests</td>
+<td>No</td>
+<td>Regenerated via <code>helixvpnctl deploy</code></td>
+</tr>
+</tbody>
+</table>
+<p>RTO target &lt; 15 min for Postgres restore or whole-region failover;
+RPO is 0 for sync-committed transactions, otherwise bounded by WAL
+archive interval.</p>
+<h3 id="83-high-availability">8.3 High availability</h3>
+<p>HA is cheap because coordinators are stateless on disk.</p>
+<table>
+<thead>
+<tr>
+<th>Failure</th>
+<th>Data-plane effect</th>
+<th>Control-plane effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>helixd</code> replica loss</td>
+<td>None (C1)</td>
+<td>Streams reconnect and resume by <code>known_version</code></td>
+</tr>
+<tr>
+<td>Postgres primary failover</td>
+<td>None (tunnels keep forwarding)</td>
+<td>Writes paused seconds; <code>/readyz</code> NOT-READY</td>
+</tr>
+<tr>
+<td>Redis/NATS blip</td>
+<td>None</td>
+<td>Event delivery paused; outbox drains on recovery</td>
+</tr>
+<tr>
+<td>Regional edge loss</td>
+<td>Clients on that gateway drop</td>
+<td><code>gateway.failover</code> delta re-homes clients</td>
+</tr>
+</tbody>
+</table>
+<p>Phase-2 multi-region uses a single Postgres primary, stateless
+<code>helixd</code> replicas behind a load balancer, per-region
+<code>helix-edge</code> DaemonSets, and geoDNS/anycast for gateway
+selection.</p>
+<hr />
+<h2 id="9-cross-references">9. Cross-references</h2>
+<ul>
+<li>Repo layout &amp; decoupling → <a href="../../v06-deploy/repo-layout-and-decoupling.md"><code>../../v06-deploy/repo-layout-and-decoupling.md</code></a></li>
+<li>Codegen pipeline → <a href="../../v06-deploy/codegen-pipeline.md"><code>../../v06-deploy/codegen-pipeline.md</code></a></li>
+<li><code>helixvpnctl</code> CLI → <a href="../../v06-deploy/helixvpnctl.md"><code>../../v06-deploy/helixvpnctl.md</code></a></li>
+<li>Podman quadlets → <a href="../../v06-deploy/podman-quadlets.md"><code>../../v06-deploy/podman-quadlets.md</code></a></li>
+<li>Docker Compose → <a href="../../v06-deploy/docker-compose.md"><code>../../v06-deploy/docker-compose.md</code></a></li>
+<li>Kubernetes → <a href="../../v06-deploy/kubernetes.md"><code>../../v06-deploy/kubernetes.md</code></a></li>
+<li>Ecosystem integration → <a href="../../v06-deploy/helix-ecosystem-integration.md"><code>../../v06-deploy/helix-ecosystem-integration.md</code></a></li>
+<li>Observability → <a href="../../v06-deploy/observability.md"><code>../../v06-deploy/observability.md</code></a></li>
+<li>Disaster recovery → <a href="../../v06-deploy/disaster-recovery.md"><code>../../v06-deploy/disaster-recovery.md</code></a></li>
+<li>HA &amp; multi-region → <a href="../../v06-deploy/ha-and-multiregion.md"><code>../../v06-deploy/ha-and-multiregion.md</code></a></li>
+<li>Source overview → <a href="../../05-repo-layout-tooling-and-helix-ecosystem.md"><code>05-repo-layout-tooling-and-helix-ecosystem.md</code></a></li>
+<li>Data plane → <a href="../03-data-plane/README.md">03 — Data
+Plane</a></li>
+<li>Control plane → <a href="../04-control-plane/README.md">04 — Control
+Plane</a></li>
+<li>Security/PKI → <a href="../06-security-privacy-pki/README.md">06 —
+Security, Privacy &amp; PKI</a></li>
+</ul>
+<hr />
+<p><em>Sources:
+<code>docs/research/mvp/final/05-repo-layout-tooling-and-helix-ecosystem.md</code>,
+<code>v06-deploy/*.md</code>.</em></p>
+</body>
+</html>

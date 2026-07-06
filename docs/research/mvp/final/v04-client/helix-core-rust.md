@@ -978,14 +978,36 @@ flowchart LR
   `helix-ffi` and drives the *same* core with `CoreMode::Connector`, calling
   `advertise(cidrs)` for the advertise UI [doc 03 §6, §3.1].
 
-### 9.3 `advertise` (FFI verb, connector only)
+### 9.3 `advertise` and `local_denylist` (FFI verbs, connector only)
 
 ```rust
 // helix-ffi/src/api.rs (connector mode)
 pub async fn advertise(cidrs: Vec<String>) -> Result<AdvertiseResult, CoreError>;
 // → orchestrator pushes the served CIDRs into its RouteMap; the gateway reconciles them.
 // AdvertiseResult.conflicts surfaces overlapping-CIDR rejections to the Connector UI (doc 03 §6).
+
+pub async fn advertise_with_local_denylist(
+    cidrs: Vec<String>,
+    local_denylist: Vec<String>,
+) -> Result<AdvertiseResult, CoreError>;
+// → advertises served CIDRs AND the connector's local_denylist to the control plane.
+//   The denylist is sent alongside CIDR advertisements (e.g. in the `connector.local_denylist.changed`
+//   event payload or equivalent agent RPC) so the coordinator/edge applies the same precedence rule.
 ```
+
+The connector accepts a `local_denylist` config value (daemon flag `--local-denylist <cidrs>`,
+JSON array, or FFI parameter) scoped to its own network. The same precedence rule is enforced
+both in the control-plane compiler (`svc-policy.md` §4.2) and at the connector's local edge:
+
+1. **Local-deny overrides central-allow** — a connector may tighten policy for its own network.
+2. **Central-deny overrides local-allow** — the tenant-wide default-deny/fail-closed invariant wins;
+   a connector cannot use `local_denylist` to re-open a flow the central policy did not grant.
+3. The resulting `AllowedIPs` + edge verdict map equal the **union of central policy minus local-deny**
+   for that connector's traffic.
+
+The connector advertises the `local_denylist` to the coordinator alongside its CIDR advertisements
+so the edge enforces it consistently; the local edge also applies it as a belt-and-suspenders check
+in case the control-plane delta is delayed (fail-static, never fail-open).
 
 ### 9.4 Status semantics on the connector
 

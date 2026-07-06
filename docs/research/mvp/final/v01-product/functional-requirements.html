@@ -178,9 +178,14 @@ vertical-align: middle;
 </header>
 <h1 id="functional-requirements-hvpn-fr-nnn">Functional Requirements
 (HVPN-FR-NNN)</h1>
-<p><strong>Revision:</strong> 3 <strong>Last modified:</strong>
-2026-07-04T12:00:00Z</p>
+<p><strong>Revision:</strong> 4 <strong>Last modified:</strong>
+2026-07-05T14:20:00Z</p>
 <blockquote>
+<p><strong>Rev 4 (2026-07-05, Phase-1 consolidation pass).</strong>
+Added HVPN-FR-610 (RBAC role→action matrix enforcement) to close the
+RBAC ownership gap identified in <a href="../v00-meta/requirements-traceability.md"><code>../v00-meta/requirements-traceability.md</code></a>
+GAP-6. FR-610 is additive; §M DoD-traceability and §N parity-coverage
+tables are unaffected.</p>
 <p><strong>Rev 3 (2026-07-04, independent gap-analysis pass).</strong>
 Added HVPN-FR-609 (scoped, exportable audit slice for
 incident-response/compliance reporting) to back the MSP-operator
@@ -1015,6 +1020,20 @@ live view); the export itself is an audited control action.
 <code>svc-telemetry.md</code></td>
 <td>MVP</td>
 </tr>
+<tr>
+<td>HVPN-FR-610</td>
+<td>The control plane MUST enforce an RBAC role→action matrix: a
+principal with role <code>member</code> MUST NOT perform
+<code>operator</code> actions, and a principal with role
+<code>operator</code> MUST NOT perform <code>admin</code> actions.</td>
+<td>A <code>member</code>-role token invoking an admin-only route (e.g.
+mint enroll-token, revoke device, delete tenant) returns 403; an
+<code>operator</code>-role token invoking an admin-only route returns
+403; RLS still blocks cross-tenant reads even if RBAC is bypassed.
+<code>[evidence]</code></td>
+<td><code>svc-identity.md</code>, <code>svc-api.md</code></td>
+<td>MVP</td>
+</tr>
 </tbody>
 </table>
 <hr />
@@ -1075,11 +1094,13 @@ LAN host. <code>[evidence]</code></td>
 </tr>
 <tr>
 <td>HVPN-FR-705</td>
-<td>The Connector SHOULD support local ACLs scoped to its own
-network.</td>
-<td>A local ACL on the connector is honoured for its network.
-<code>[evidence]</code> (<code>UNVERIFIED</code> interaction with
-central policy — fixed by <code>svc-policy.md</code>)</td>
+<td>The Connector SHOULD support local ACLs scoped to its own network,
+interacting with central policy by the precedence rule defined in
+<code>svc-policy.md</code>.</td>
+<td>A local ACL on the connector is honoured for its network; local-deny
+overrides central-allow, central-deny overrides local-allow, and the
+connector advertises its <code>local_denylist</code> to the coordinator.
+<code>[evidence]</code></td>
 <td><code>svc-policy.md</code>, <code>helix-core-rust.md</code>
 (advertise/route mode)</td>
 <td>MVP</td>
@@ -1671,10 +1692,10 @@ overview&#39;s enumerated capability set (parity matrix F1–F17,
 differentiators X1–X5, the 8 DoD criteria, and the seven principles). It
 is <em>necessary, not provably exhaustive</em>: a capability introduced
 by a later Volume 2–6 doc that the overview did not enumerate becomes a
-new FR via the §11.4.93 workable-item path. FRs whose detailed contract
-is fixed by an owning doc that has not yet pinned it (e.g. FR-705
-local-ACL scope) are marked <code>UNVERIFIED</code> inline. No
-requirement quotes a quantitative target not present in the
+new FR via the §11.4.93 workable-item path. FR-705 local-ACL ×
+central-policy precedence is now pinned in <code>svc-policy.md</code>
+and <code>helix-core-rust.md</code>. No requirement quotes a
+quantitative target not present in the
 overview/spine/security-overview.</p>
 </blockquote>
 <hr />
@@ -1701,11 +1722,13 @@ acceptance&quot;); owning-doc filenames cross-referenced from the Volume
 <p><em>Honesty note (§11.4.6): every quantitative acceptance target
 (≥80%/≥50% throughput, p99 &lt; 1 s convergence/revocation, ~15 MB /
 ≥30% memory headroom) is quoted from the
-overview/spine/security-overview, never invented. FRs whose detailed
-contract awaits an owning doc are marked <code>UNVERIFIED</code>.
-<code>[evidence]</code> flags criteria requiring captured runtime
-evidence per §11.4.69 — none may pass on metadata/config-only
-signal.</em></p>
+overview/spine/security-overview, never invented. FR-705&#39;s local-ACL ×
+central-policy precedence is now pinned in <code>svc-policy.md</code>
+and <code>helix-core-rust.md</code>; residual <code>UNVERIFIED</code>
+markers (e.g. FR-1103 evaluation) remain where the owning doc explicitly
+does not pin runtime behaviour. <code>[evidence]</code> flags criteria
+requiring captured runtime evidence per §11.4.69 — none may pass on
+metadata/config-only signal.</em></p>
 <p><em>Constitution bindings: §11.4.44 (revision header), §11.4.6
 (no-guessing — UNVERIFIED on un-pinned contracts; targets quoted not
 invented), §11.4.69 (captured-evidence acceptance), §11.4.93 (each FR →
