@@ -1,7 +1,7 @@
 # HelixVPN MVP Final — Handoff Report
 
 **Date:** 2026-07-06  
-**Main repo commit:** `7f692480ff7160005f0d61a5fda8dacad3e57882`  
+**Main repo commit:** `1c21267f76efbb2288e7975daa85649658b2ea44`  
 **Previous main repo commit:** `77e7dfdaace83f41a5faa5861d28de5bc67283e5`  
 **Status:** ✅ Documentation and platform-readiness package is landed, committed, pushed, and verified. Ready for development-team kick-off.
 
@@ -90,10 +90,10 @@ All touched submodules were committed and pushed before the main repo commit.
 
 Main repo push verified:
 ```text
-local:  7f692480ff7160005f0d61a5fda8dacad3e57882
-github: 7f692480ff7160005f0d61a5fda8dacad3e57882
-origin: 7f692480ff7160005f0d61a5fda8dacad3e57882
-upstream: 7f692480ff7160005f0d61a5fda8dacad3e57882
+local:  1c21267f76efbb2288e7975daa85649658b2ea44
+github: 1c21267f76efbb2288e7975daa85649658b2ea44
+origin: 1c21267f76efbb2288e7975daa85649658b2ea44
+upstream: 1c21267f76efbb2288e7975daa85649658b2ea44
 ```
 
 ---
