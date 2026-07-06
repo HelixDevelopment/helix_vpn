@@ -18,6 +18,8 @@ This round produced the consolidated MVP implementation source-of-truth, closed 
 | Protobuf API contracts | `submodules/helix_proto/` | Five `.proto` packages, generated Go stubs, `go.mod`/`go.sum`; `go build ./gen/...` and `buf lint` pass |
 | QA banks | `submodules/challenges/helix_vpn/`, `submodules/helix_qa/banks/helix_vpn/` | 8 Challenges + 8 HelixQA cases, traceable in coverage ledger |
 | Decoupling/reusability plan | `docs/research/mvp/final/implementation/02-system-architecture/decoupling-plan.md` | Each component mapped to ownership, reusability boundary, and test seam |
+| Connector owning doc | `docs/research/mvp/final/v04-client/connector.md` | FR-701..707 consolidated into a single nano-detail doc |
+| Gap-closure summary | `docs/reviews/mvp-final/signoffs/gap-closure-summary.md` | GAP-1..GAP-6 status, owner, residual, and kick-off blocker flag |
 | Adversarial review reports | `docs/reviews/mvp-final/review-rounds/round-{1,2}-{docs,design,code,qa}-findings.md` | Two full rounds; Round-2 verdicts listed below |
 
 ---
@@ -98,15 +100,17 @@ upstream: 1c21267f76efbb2288e7975daa85649658b2ea44
 
 ---
 
-## 5. Remaining honest gaps (not blockers for kick-off)
+## 5. Remaining honest measurement gaps (not blockers for kick-off)
 
-| Gap | Why it remains | Trigger for re-arm |
-|---|---|---|
-| GAP-3 | NFR-205 DR RTO/RPO unverified | Complete `v06-deploy/disaster-recovery.md` measured runbook |
-| GAP-4 | Connector single owning doc | Resolve cross-doc ownership between `helix-core-rust.md` and connector specs |
-| GAP-5 | All evidence states PENDING until build | First CI run produces captured artifacts |
-| OpenDesign token contract | Grade `needs-rebuild` (31/100) due to `var(--hx-*)` aliases not counted as source-backed | Provide literal canonical values or rebuild after design freeze |
-| DDoS attack rates | `ATTACK_PPS` and legit-handshake SLO are Phase-2 measured numbers | Topology becomes `multi-tenant-ha` |
+All documentation-level gaps are closed. Only quantitative targets remain unverified because the product is not yet built.
+
+| Gap | Documentation status | Why it remains | Trigger for re-arm |
+|---|---|---|---|
+| GAP-3 | **CLOSED** at doc level | NFR-205 DR RTO/RPO targets/runbooks authored; numbers unverified until first Phase-2 CHAOS region-failover drill | Drill produces captured RTO/RPO evidence |
+| GAP-4 | **CLOSED** | Single owning doc `v04-client/connector.md` created | — |
+| GAP-5 | **CLOSED** at doc level | All 15 `v08-testing/` docs + coverage-ledger schema authored; evidence states PENDING until build | First CI run produces captured artifacts |
+| GAP-6 | **CLOSED** at doc level | DDOS/RBAC/rate-limiting owners pinned; quantitative targets defined in `v08-testing/ddos.md` §10 | Phase-2 `multi-tenant-ha` benchmarks calibrate `ATTACK_PPS` and legit-handshake SLO |
+| OpenDesign token contract | N/A | Grade `needs-rebuild` (31/100) accepted; `--hx-*` project tokens remain source-of-truth with canonical aliases for consumers | Rebuild after design freeze if a passing grade becomes required |
 
 ---
 

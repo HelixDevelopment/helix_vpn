@@ -1,10 +1,13 @@
 # HelixVPN MVP — Test Coverage Ledger
 
-**Revision:** 1  
-**Last modified:** 2026-07-05T14:20:00Z  
+**Revision:** 2  
+**Last modified:** 2026-07-06T10:45:05Z  
 **Status:** active — Phase 4 QA architecture deliverable  
 **Authority:** Constitution §11.4.25/.52/.153 (coverage ledger), §11.4.169 (mandatory test types), §11.4.6 (no guessing — gaps surfaced), §11.4.118 (enumerated coverage claim)  
-**Scope:** Every MVP requirement (`HVPN-FR-NNN` / `HVPN-NFR-NNN`) mapped to test type, owner subsystem, current evidence state, and linked Challenge / HelixQA bank IDs. Phase-2 items are tracked as `P2` or `NOT_APPLICABLE` with an explicit re-arm trigger.
+**Scope:** Every MVP requirement (`HVPN-FR-NNN` / `HVPN-NFR-NNN`) mapped to test type, owner subsystem, current evidence state, and linked Challenge / HelixQA bank IDs. Phase-2 items are tracked as `P2` or `NOT_APPLICABLE` with an explicit re-arm trigger.  
+**Rev 2 (2026-07-06):** Pinned quantitative DDoS design targets for NFR-413/NFR-414 in
+`v08-testing/ddos.md` §10 and updated the GAP-6 closure statement to reference them. Marked
+GAP-3 doc-level CLOSED (measurement pending Phase-2 CHAOS region-failover drill).
 
 ---
 
@@ -323,7 +326,13 @@
 3. Both rows list concrete, minted Challenge IDs (`HVPN-CHAL-NFR413-API-Rate-Limit`, `HVPN-CHAL-NFR414-Edge-Flood`) and HelixQA bank IDs (`HVPN-HQA-NFR413-API-Rate-Limit`, `HVPN-HQA-NFR414-Edge-Flood`) that resolve in the committed banks.
 4. The bank entries are **`defined`**; the live DDoS attack harness is not exercised in the single-node-selfhost MVP topology and mechanically re-arms when `deployment.topology == "multi-tenant-ha"` in Phase 2.
 
-**Remaining coordinator decision:** The concrete design-attack-rate (`ATTACK_PPS`), legit-handshake SLO budget under flood, and supervisor restart budget are Phase-2 measured numbers; they must be calibrated during the Phase-2 soak before the DDOS gate becomes release-blocking.
+**Quantitative design targets pinned (see `v08-testing/ddos.md` §10).** The Phase-2 DDoS bank will calibrate against the following design targets, not measured baselines:
+
+1. **NFR-413 control-plane API flood:** `ATTACK_PPS_API = 10 000` invalid req/s for 10 s; legitimate-client SLO = p95 < 200 ms + zero HTTP 5xx.
+2. **NFR-414 data-plane edge WG-init flood:** `ATTACK_PPS_EDGE = 100 000` pps for 10 s; legitimate-handshake p99 budget < 2 × unflooded baseline.
+3. **Edge fail-static (`EDGE_FAILSTATIC`):** edge stays up, or restarts within 5 s with **zero** plaintext leak.
+
+These targets will be calibrated during the Phase-2 `multi-tenant-ha` soak; the DDOS gate becomes release-blocking only against the calibrated value.
 
 ---
 
@@ -339,8 +348,9 @@
 | HelixQA bank IDs minted | 8 |
 | DoD criteria covered | 8 / 8 (3 with minted primary bank IDs) |
 | Phase-0 gates covered | 6 / 6 (0 with minted primary bank IDs) |
-| Gaps closed (this pass) | GAP-6 |
-| Remaining open gaps | GAP-3 (NFR-205 DR RTO/RPO unverified), GAP-4 (Connector single owning doc), GAP-5 (all evidence states PENDING until build) |
+| Gaps closed (this pass) | GAP-1, GAP-3 (doc-level), GAP-4, GAP-5 (doc-level), GAP-6 |
+| Remaining open gaps | None at documentation level. Quantitative targets for NFR-205 (RTO/RPO) and NFR-413/414 (DDoS) remain measurement-pending until Phase-2 drills/benchmarks run against built code. |
+| Doc-level closed / measurement-pending | GAP-3 — DR targets/runbooks authored; GAP-5 — all `v08-testing/` docs authored; evidence states honestly `PENDING` in spec phase |
 
 ---
 

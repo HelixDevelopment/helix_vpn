@@ -67,6 +67,8 @@ The following distinctive source ideas are deliberately not adopted or are recor
 
 `v06-deploy/disaster-recovery.md` now consolidates the RTO/RPO budget, KMS-encrypted backups, and Terraform-driven region-failover runbook that the original ledger called for. Independently re-verified 2026-07-04. No further action.
 
+> **Traceability note:** This resolves the documentation side of requirements-traceability **GAP-3** (NFR-205 DR RTO/RPO targets are still `UNVERIFIED` pending the first **CHAOS region-failover drill in Phase 2** — a measurement deferral, not a missing doc).
+
 ### G2 — `[06_GRK]` sing-box transport framework — deliberate divergence
 
 **Proposed:** use sing-box as the universal transport multiplexer.
@@ -80,6 +82,19 @@ The following distinctive source ideas are deliberately not adopted or are recor
 **Decision:** **not adopted**. Flutter reaches all 8 required platforms (including Aurora OS and HarmonyOS NEXT) with one codebase and a shared `helix_design` system. Fyne lacks mobile/niche-OS reach.
 
 **Rationale recorded:** `99-source-coverage-ledger.md` §G3 and [`05 — Client Core & UI](../05-client-core-ui/README.md).
+
+### GAP cross-check (`requirements-traceability.md` register)
+
+The independent GAP-1..GAP-6 register in `v00-meta/requirements-traceability.md` is kept current with this consolidation:
+
+| GAP | Status | Residual |
+|---|---|---|
+| GAP-1 | Closed in source docs | local-ACL × central-policy precedence pinned in `v03-control-plane/svc-policy.md` and `v04-client/helix-core-rust.md` |
+| GAP-2 | Intentional / documented | FR-1103 (Rosenpass) is an evaluation, not a runtime capability; no runtime test type required |
+| GAP-3 | Doc-level closed | NFR-205 RTO/RPO targets remain `UNVERIFIED` until the first Phase-2 CHAOS region-failover drill measures them |
+| GAP-4 | Closed in source docs | Single owning doc created: `v04-client/connector.md` consolidates FR-701..707 and the advertise/route/registry contracts |
+| GAP-5 | Closed at doc level | All 15 `v08-testing/` docs + `coverage-ledger-schema.md` authored; evidence states are `PENDING` in spec phase |
+| GAP-6 | Closed in source docs | NFR-413/NFR-414/FR-610 added to pin `DDOS`/RBAC/rate-limiting owners; quantitative targets remain `UNVERIFIED` until Phase-2 benchmarks |
 
 ---
 

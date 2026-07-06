@@ -16,13 +16,13 @@
 ## ROUND 4: FINAL MVP DOCUMENTATION & PLATFORM READINESS — LANDED
 
 **Started:** 2026-07-05T11:57:05Z  
-**Landed:** 2026-07-06T13:34:55Z  
-**Main repo commit:** `1c21267f76efbb2288e7975daa85649658b2ea44`  
+**Landed:** 2026-07-06T13:40:00Z  
+**Main repo commit:** `d8b9fc1d087bfffa2ba871685bf8ac89687a8740`  
 **Handoff report:** `docs/reviews/mvp-final/signoffs/mvp-final-handoff-report.md`
 
 **Goal achieved:** The consolidated MVP implementation source-of-truth is authored,
-reviewed, committed, pushed, and verified. The package is ready for development-team
-kick-off.
+reviewed, gap-closed, committed, pushed, and verified. The package is ready for
+development-team kick-off.
 
 **Deliverables landed:**
 1. `docs/research/mvp/final/implementation/` — 13 numbered sections + source-coverage
@@ -33,8 +33,12 @@ kick-off.
    `go.mod`/`go.sum`; `go build ./gen/...` and `buf lint` pass.
 4. `submodules/challenges/helix_vpn/` + `submodules/helix_qa/banks/helix_vpn/` —
    8 Challenges + 8 HelixQA cases, bidirectionally traceable with the coverage ledger.
-5. `docs/reviews/mvp-final/review-rounds/round-{1,2}-{docs,design,code,qa}-findings.md` —
+5. `docs/research/mvp/final/v04-client/connector.md` — single owning nano-detail doc
+   consolidating FR-701..707.
+6. `docs/reviews/mvp-final/review-rounds/round-{1,2}-{docs,design,code,qa}-findings.md` —
    two full rounds of independent adversarial review.
+7. `docs/reviews/mvp-final/signoffs/gap-closure-summary.md` — GAP-1..GAP-6 status,
+   owner, residual, and kick-off blocker flag.
 
 **Round-2 adversarial verdicts:**
 - Docs: **GO-with-conditions** → post-review conditions fixed.
@@ -54,6 +58,14 @@ kick-off.
    Challenge IDs and 8 HelixQA IDs minted; DDoS entries added for NFR-413/NFR-414.
 - OpenDesign source manifest stripped of import-generated path declarations so the
    source package is reproducible.
+- GAP-3 closed at doc level: `v06-deploy/disaster-recovery.md` RTO/RPO targets and
+  runbooks authored; measurement pending Phase-2 CHAOS region-failover drill.
+- GAP-4 closed: `v04-client/connector.md` created as the single owning doc for
+  FR-701..707; traceability matrix repointed.
+- GAP-5 closed at doc level: all 15 `v08-testing/` nano-detail docs authored and
+  mapped; evidence states honestly PENDING until build.
+- GAP-6 closed: DDOS/RBAC/rate-limiting owners pinned; quantitative DDoS targets
+  defined in `v08-testing/ddos.md` §10.
 
 **Verification:**
 - `tests/pre_build_verification.sh` — PASS.
@@ -64,9 +76,10 @@ kick-off.
 - Main repo push verified by `git rev-parse HEAD` equality against `github`,
   `origin`, and `upstream`.
 
-**Honest residual gaps (not kick-off blockers):** GAP-3, GAP-4, GAP-5,
-OpenDesign token-contract grade `needs-rebuild`, and Phase-2 DDoS attack-rate
-constants. All are tracked in the coverage ledger, review reports, and handoff
+**Honest residual measurement gaps (not kick-off blockers):** NFR-205 RTO/RPO
+numbers pending Phase-2 drill; NFR-413/NFR-414 DDoS `ATTACK_PPS` and legit-handshake
+SLO pending Phase-2 benchmarks; OpenDesign token-contract grade `needs-rebuild`
+accepted. All are tracked in the coverage ledger, review reports, and handoff
 report.
 
 ---

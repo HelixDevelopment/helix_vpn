@@ -23,7 +23,7 @@ Each section is self-contained. Use this index to jump to the area you need; eac
 | **02** | [System Architecture](./02-system-architecture/README.md) | C4 view, components, data/control-plane split, repo layout | `SPECIFICATION.md` §5–§6, `02-control-plane.md`, `01-data-plane.md` |
 | **03** | [Data Plane](./03-data-plane/README.md) | `Transport` trait, transports, WG core, orchestrator, routing, policy, DAITA, multihop | `01-data-plane.md`, `v02-data-plane/*` |
 | **04** | [Control Plane](./04-control-plane/README.md) | Go services, DDL/RLS, events, coordinator, API, reconciliation | `02-control-plane.md`, `v03-control-plane/*` |
-| **05** | [Client Core & UI](./05-client-core-ui/README.md) | `helix-core` FFI, Flutter UI, platform shims, state management | `03-client-core-and-ui.md`, `v04-client/*` |
+| **05** | [Client Core & UI](./05-client-core-ui/README.md) | `helix-core` FFI, Flutter UI, platform shims, state management | `03-client-core-and-ui.md`, `v04-client/*`, `v04-client/connector.md` |
 | **06** | [Security, Privacy & PKI](./06-security-privacy-pki/README.md) | Zero-trust, identity, PKI, no-logging, kill-switch, PQ, threat model | `04-security-privacy-pki.md`, `v05-security/*` |
 | **07** | [Infrastructure & DevOps](./07-infrastructure-devops/README.md) | Repo layout, codegen, `helixvpnctl`, Podman/Compose/K8s, ecosystem | `05-repo-layout-tooling-and-helix-ecosystem.md`, `v06-deploy/*` |
 | **08** | [API Contracts](./08-api-contracts/README.md) | REST/WS/SSE, Connect-RPC, protobuf, FFI surface | `02-control-plane.md` §7, `v03-control-plane/svc-api.md`, `protobuf-spec.md`, `v04-client/ffi-surface.md`; GAP-1 precedence rule pinned in `v01-product/functional-requirements.md`, `v03-control-plane/svc-policy.md`, `v04-client/helix-core-rust.md` |
@@ -39,7 +39,7 @@ Each section is self-contained. Use this index to jump to the area you need; eac
 
 - **Authoritative detail remains in the parent `final/` tree.** This consolidation is the navigable entry point; if a detail is missing here, read the owning nano-detail doc.
 - **Cross-references use relative paths** from each `implementation/NN-*/README.md` back to sibling sections (`../03-data-plane/README.md`) and up to the parent nano-detail docs (`../../v02-data-plane/transport-trait.md`).
-- **Known gaps closed in this pass:** GAP-6 (DDOS/RBAC/rate-limiting owners), RBAC ownership, GAP-1 precedence rule (adopted in consolidation and backported into `v03-control-plane/svc-policy.md` + `v04-client/helix-core-rust.md`). See `docs/reviews/mvp-final/findings/phase1-docs-gap-analysis.md`.
+- **Known gaps closed in this pass:** GAP-1 (precedence rule backported), GAP-3 (DR RTO/RPO targets/runbooks documented; measurement pending Phase-2 drill), GAP-4 (single `v04-client/connector.md` owning doc), GAP-5 (`v08-testing/` 15 nano-detail docs authored; residual evidence-state `PENDING` is the honest spec-phase state), GAP-6 (DDOS/RBAC/rate-limiting owners), RBAC ownership. The only residual seams are quantitative targets that must be measured once code is built. See `docs/reviews/mvp-final/signoffs/gap-closure-summary.md`.
 
 ---
 

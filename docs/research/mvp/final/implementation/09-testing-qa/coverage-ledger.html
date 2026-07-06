@@ -178,8 +178,8 @@ vertical-align: middle;
 </header>
 <h1 id="helixvpn-mvp--test-coverage-ledger">HelixVPN MVP — Test Coverage
 Ledger</h1>
-<p><strong>Revision:</strong> 1<br />
-<strong>Last modified:</strong> 2026-07-05T14:20:00Z<br />
+<p><strong>Revision:</strong> 2<br />
+<strong>Last modified:</strong> 2026-07-06T10:45:05Z<br />
 <strong>Status:</strong> active — Phase 4 QA architecture
 deliverable<br />
 <strong>Authority:</strong> Constitution §11.4.25/.52/.153 (coverage
@@ -189,7 +189,12 @@ surfaced), §11.4.118 (enumerated coverage claim)<br />
 / <code>HVPN-NFR-NNN</code>) mapped to test type, owner subsystem,
 current evidence state, and linked Challenge / HelixQA bank IDs. Phase-2
 items are tracked as <code>P2</code> or <code>NOT_APPLICABLE</code> with
-an explicit re-arm trigger.</p>
+an explicit re-arm trigger.<br />
+<strong>Rev 2 (2026-07-06):</strong> Pinned quantitative DDoS design
+targets for NFR-413/NFR-414 in <code>v08-testing/ddos.md</code> §10 and
+updated the GAP-6 closure statement to reference them. Marked GAP-3
+doc-level CLOSED (measurement pending Phase-2 CHAOS region-failover
+drill).</p>
 <hr />
 <h2 id="how-to-read-this-ledger">How to read this ledger</h2>
 <table>
@@ -2050,11 +2055,24 @@ DDoS attack harness is not exercised in the single-node-selfhost MVP
 topology and mechanically re-arms when
 <code>deployment.topology == &quot;multi-tenant-ha&quot;</code> in Phase 2.</li>
 </ol>
-<p><strong>Remaining coordinator decision:</strong> The concrete
-design-attack-rate (<code>ATTACK_PPS</code>), legit-handshake SLO budget
-under flood, and supervisor restart budget are Phase-2 measured numbers;
-they must be calibrated during the Phase-2 soak before the DDOS gate
-becomes release-blocking.</p>
+<p><strong>Quantitative design targets pinned (see
+<code>v08-testing/ddos.md</code> §10).</strong> The Phase-2 DDoS bank
+will calibrate against the following design targets, not measured
+baselines:</p>
+<ol type="1">
+<li><strong>NFR-413 control-plane API flood:</strong>
+<code>ATTACK_PPS_API = 10 000</code> invalid req/s for 10 s;
+legitimate-client SLO = p95 &lt; 200 ms + zero HTTP 5xx.</li>
+<li><strong>NFR-414 data-plane edge WG-init flood:</strong>
+<code>ATTACK_PPS_EDGE = 100 000</code> pps for 10 s;
+legitimate-handshake p99 budget &lt; 2 × unflooded baseline.</li>
+<li><strong>Edge fail-static (<code>EDGE_FAILSTATIC</code>):</strong>
+edge stays up, or restarts within 5 s with <strong>zero</strong>
+plaintext leak.</li>
+</ol>
+<p>These targets will be calibrated during the Phase-2
+<code>multi-tenant-ha</code> soak; the DDOS gate becomes
+release-blocking only against the calibrated value.</p>
 <hr />
 <h2 id="coverage-summary">Coverage summary</h2>
 <table>
@@ -2099,12 +2117,19 @@ becomes release-blocking.</p>
 </tr>
 <tr>
 <td>Gaps closed (this pass)</td>
-<td>GAP-6</td>
+<td>GAP-1, GAP-3 (doc-level), GAP-4, GAP-5 (doc-level), GAP-6</td>
 </tr>
 <tr>
 <td>Remaining open gaps</td>
-<td>GAP-3 (NFR-205 DR RTO/RPO unverified), GAP-4 (Connector single
-owning doc), GAP-5 (all evidence states PENDING until build)</td>
+<td>None at documentation level. Quantitative targets for NFR-205
+(RTO/RPO) and NFR-413/414 (DDoS) remain measurement-pending until
+Phase-2 drills/benchmarks run against built code.</td>
+</tr>
+<tr>
+<td>Doc-level closed / measurement-pending</td>
+<td>GAP-3 — DR targets/runbooks authored; GAP-5 — all
+<code>v08-testing/</code> docs authored; evidence states honestly
+<code>PENDING</code> in spec phase</td>
 </tr>
 </tbody>
 </table>

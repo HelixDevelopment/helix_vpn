@@ -20,6 +20,12 @@ Phase 2 integrated OpenDesign (`nexu-io/open-design`) as a submodule, built the 
 
 **Status:** Canonical aliases added for light and dark themes. Re-import verified against a running daemon. Importer grade remains `needs-rebuild` because OpenDesign's scanner does not treat `var()` references as source-backed values; this is an importer limitation, not a design-system defect. Documented honestly in the report.
 
+**Follow-up pass (2026-07-06):** Attempted to raise the grade by giving canonical aliases literal values:
+1. Added `docs/design/opendesign/helix/canonical-literals.css` with literal hex/size values for all A1/A2 canonical tokens and re-imported. The file was not picked up because the OpenDesign manifest schema (`od-design-system-project/v1`) fixes `files.tokens` to the literal string `"tokens.css"`; additional token stylesheets are not scanned.
+2. Edited `tokens.css` directly, changing `--surface` and `--muted` first to `var(--hx-*, <literal>)` fallbacks and then to pure literals (`#FFFFFF`, `#8BA3B8`). In both cases `rebuild-token-contract user:helix-vpn-2 --force` still reported `needs-rebuild` / score 31 / A1 source-backed 6/26.
+
+**Conclusion of the pass:** OpenDesign classifies a canonical token as source-backed only when its value can be matched to a source token in the brand's `--hx-*` namespace by name/role heuristic. Literal values alone do not satisfy the scanner. Raising the grade to `usable` would require adding source tokens whose names mirror every canonical A1 name (e.g., `--hx-surface`, `--hx-muted`, `--hx-text-xs`, …) or replacing the canonical aliases with literal values plus dark-theme overrides in `tokens.css`. Either path duplicates the token layer and creates a maintenance hazard. This is accepted as the cost of keeping the project-specific `--hx-*` namespace as the single source of truth.
+
 ### 3. CLI stdout flush bug — DOCUMENT workaround
 **Decision:** Accept the bug and document the workaround (pseudo-TTY wrapper `script` or direct HTTP API). Report upstream to OpenDesign maintainers when the project reaches a stable milestone.
 
@@ -46,4 +52,6 @@ Phase 2 integrated OpenDesign (`nexu-io/open-design`) as a submodule, built the 
 **Status:** Documented here and in `docs/reviews/mvp-final/review-rounds/round-2-design-findings.md`.
 
 ## Result
-OpenDesign is installed, functional, and wired into the project. The Helix VPN design system is importable, generates exports, and provides both `--hx-*` and canonical token namespaces. The residual `needs-rebuild` grade is understood and accepted for the MVP kick-off package. The source manifest is now internally consistent and reproducible.
+OpenDesign is installed, functional, and wired into the project. The Helix VPN design system is importable, generates exports, and provides both `--hx-*` and canonical token namespaces.
+
+**Final token-contract grade:** `needs-rebuild` (31/100), A1 source-backed 6/26, fallback token ratio 77%. The grade was re-confirmed by `rebuild-token-contract user:helix-vpn-2 --force` after this pass. The `needs-rebuild` grade is accepted for the MVP kick-off package: the source tokens are intentionally project-specific (`--hx-*`), canonical aliases are present for consumers, and raising the grade would require duplicating the canonical layer or adding mirrored `--hx-*` source tokens. The source manifest remains internally consistent and reproducible.

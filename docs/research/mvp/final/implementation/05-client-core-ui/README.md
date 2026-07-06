@@ -131,6 +131,7 @@ The Connector runs the **same Rust core** with `--mode=connector`:
 - Detailed FFI → [`../../v04-client/ffi-surface.md`](../../v04-client/ffi-surface.md)
 - Flutter UI → [`../../v04-client/helix-ui-flutter.md`](../../v04-client/helix-ui-flutter.md)
 - Core Rust packaging → [`../../v04-client/helix-core-rust.md`](../../v04-client/helix-core-rust.md)
+- Connector mode → [`../../v04-client/connector.md`](../../v04-client/connector.md)
 - Platform shims → [`../../v04-client/shim-*.md`](../../v04-client/)
 - State management → [`../../v04-client/state-management.md`](../../v04-client/state-management.md)
 - Design system → [10 — Design System](../10-design-system/README.md)

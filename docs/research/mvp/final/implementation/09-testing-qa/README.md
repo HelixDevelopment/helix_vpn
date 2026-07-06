@@ -1,7 +1,7 @@
 # HelixVPN MVP — Testing & QA Implementation Strategy
 
 **Revision:** 1  
-**Last modified:** 2026-07-05T14:20:00Z  
+**Last modified:** 2026-07-06T10:44:05Z  
 **Status:** active — Phase 4 QA architecture deliverable  
 **Authority:** `docs/research/mvp/final/10-testing-acceptance-and-qa.md` (canonical QA contract)  
 **Scope:** Full testing strategy, test pyramid, CI/CD integration plan, and links to HelixVPN-specific Challenge / HelixQA banks.
@@ -239,10 +239,37 @@ Only after the irreversible-security floor is GREEN does the rest of the pyramid
 
 ---
 
-## 11. Links
+## 11. Source docs (`v08-testing/`)
+
+The detailed test-type specifications and the coverage-ledger schema live in the parent `final/` tree. This implementation section is a consolidation of the following source docs:
+
+| Source doc | §11.4.169 type / role |
+|---|---|
+| [`../../v08-testing/unit.md`](../../v08-testing/unit.md) | `UNIT` |
+| [`../../v08-testing/integration.md`](../../v08-testing/integration.md) | `INT` |
+| [`../../v08-testing/e2e.md`](../../v08-testing/e2e.md) | `E2E` |
+| [`../../v08-testing/full-automation.md`](../../v08-testing/full-automation.md) | `FA` |
+| [`../../v08-testing/challenges.md`](../../v08-testing/challenges.md) | `CHAL` |
+| [`../../v08-testing/helixqa.md`](../../v08-testing/helixqa.md) | `HQA` |
+| [`../../v08-testing/security.md`](../../v08-testing/security.md) | `SEC` |
+| [`../../v08-testing/ddos.md`](../../v08-testing/ddos.md) | `DDOS` |
+| [`../../v08-testing/stress-chaos.md`](../../v08-testing/stress-chaos.md) | `STR/CHAOS` |
+| [`../../v08-testing/concurrency.md`](../../v08-testing/concurrency.md) | `CONC` |
+| [`../../v08-testing/race-deadlock.md`](../../v08-testing/race-deadlock.md) | `RACE` |
+| [`../../v08-testing/memory.md`](../../v08-testing/memory.md) | `MEM` |
+| [`../../v08-testing/benchmarking.md`](../../v08-testing/benchmarking.md) | `BENCH/PERF/SCALE` |
+| [`../../v08-testing/coverage-ledger-schema.md`](../../v08-testing/coverage-ledger-schema.md) | Ledger schema + evidence-state machine |
+| [`../../v08-testing/test-rig.md`](../../v08-testing/test-rig.md) | Shared rig topology |
+
+These 15 docs (13 per-type specs + ledger schema + rig) are all authored and on disk; they close GAP-5 at the documentation level. Residual evidence-state `PENDING` is the honest spec-phase state until implementation produces captured PASS artifacts.
+
+---
+
+## 12. Links
 
 - Full coverage ledger: [`coverage-ledger.md`](coverage-ledger.md)
 - Canonical QA contract: [`../../10-testing-acceptance-and-qa.md`](../../10-testing-acceptance-and-qa.md)
+- Requirements traceability / GAP register: [`../../v00-meta/requirements-traceability.md`](../../v00-meta/requirements-traceability.md)
 - Challenges bank: [`submodules/challenges/helix_vpn/`](../../../../../../submodules/challenges/helix_vpn/)
 - HelixQA bank: [`submodules/helix_qa/banks/helix_vpn/`](../../../../../../submodules/helix_qa/banks/helix_vpn/)
 - Phase 4 findings report: [`docs/reviews/mvp-final/findings/phase4-qa-coverage-report.md`](../../../../../reviews/mvp-final/findings/phase4-qa-coverage-report.md)
