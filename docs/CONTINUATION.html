@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
   <meta charset="utf-8" />
-  <meta name="generator" content="pandoc" />
+  <meta name="generator" content="pandoc 3.10" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
   <title>Helix VPN — Session Continuation File</title>
   <style>
@@ -154,8 +154,12 @@ padding-left: 0;
 text-decoration: none;
 }
 span.smallcaps{font-variant: small-caps;}
-div.columns{display: flex; gap: min(4vw, 1.5em);}
-div.column{flex: auto; overflow-x: auto;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
 div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
 
 ul.task-list[class]{list-style: none;}
@@ -174,44 +178,843 @@ vertical-align: middle;
 </header>
 <h1 id="helix-vpn--session-continuation-file">Helix VPN — Session
 Continuation File</h1>
-<p><strong>Revision:</strong> 4 <strong>Last modified:</strong>
-2026-06-26T15:10:00Z</p>
+<p><strong>Revision:</strong> 16 <strong>Last modified:</strong>
+2026-07-05T12:00:00Z</p>
 <blockquote>
 <p>Helix Constitution §11.4.131 — standing session-resumption artifact.
-Re-read this file at the start of any new session before touching
-code.</p>
+Re-read this file at the start of any new session before touching code.
+A fresh session can resume with ONLY this file&#39;s path plus
+<code>.remember/remember.md</code> — both are kept byte-accurate against
+live <code>git rev-parse</code>/<code>workable-items validate</code>
+output, never against in-context memory or a prior handoff&#39;s text alone
+(see the multi-session lesson below).</p>
 </blockquote>
+<hr />
+<h2 id="round-4-final-mvp-documentation--platform-readiness--landed">ROUND
+4: FINAL MVP DOCUMENTATION &amp; PLATFORM READINESS — LANDED</h2>
+<p><strong>Started:</strong> 2026-07-05T11:57:05Z<br />
+<strong>Landed:</strong> 2026-07-06T13:28:40Z<br />
+<strong>Main repo commit:</strong>
+<code>ecb940856ba8969e323dc163b45b9595f6ad7326</code><br />
+<strong>Handoff report:</strong>
+<code>docs/reviews/mvp-final/signoffs/mvp-final-handoff-report.md</code></p>
+<p><strong>Goal achieved:</strong> The consolidated MVP implementation
+source-of-truth is authored, reviewed, committed, pushed, and verified.
+The package is ready for development-team kick-off.</p>
+<p><strong>Deliverables landed:</strong></p>
+<ol type="1">
+<li><code>docs/research/mvp/final/implementation/</code> — 13 numbered
+sections + source-coverage ledger, all with HTML/PDF/DOCX siblings.</li>
+<li><code>docs/design/opendesign/helix/</code> — OpenDesign design
+system (manifest, tokens, components, exports); imports cleanly (exit
+0).</li>
+<li><code>submodules/helix_proto/</code> — five <code>.proto</code>
+packages, generated Go stubs, <code>go.mod</code>/<code>go.sum</code>;
+<code>go build ./gen/...</code> and <code>buf lint</code> pass.</li>
+<li><code>submodules/challenges/helix_vpn/</code> +
+<code>submodules/helix_qa/banks/helix_vpn/</code> — 8 Challenges + 8
+HelixQA cases, bidirectionally traceable with the coverage ledger.</li>
+<li><code>docs/reviews/mvp-final/review-rounds/round-{1,2}-{docs,design,code,qa}-findings.md</code>
+— two full rounds of independent adversarial review.</li>
+</ol>
+<p><strong>Round-2 adversarial verdicts:</strong></p>
+<ul>
+<li>Docs: <strong>GO-with-conditions</strong> → post-review conditions
+fixed.</li>
+<li>Design: <strong>GO-with-conditions</strong> → source-manifest
+consistency fixed; token-contract grade <code>needs-rebuild</code>
+explicitly accepted and documented.</li>
+<li>Code: <strong>GO</strong>.</li>
+<li>QA: <strong>GO</strong>.</li>
+</ul>
+<p><strong>Key fixes closed in this round:</strong></p>
+<ul>
+<li><code>helix_proto</code> <code>go_package</code> paths aligned with
+generated directory layout so Go stubs are importable.</li>
+<li>GAP-1 connector local-ACL × central-policy precedence rule
+backported from the consolidation READMEs into
+<code>v03-control-plane/svc-policy.md</code> and
+<code>v04-client/helix-core-rust.md</code>;
+<code>requirements-traceability.md</code> and
+<code>functional-requirements.md</code> updated to CLOSED/VERIFIED.</li>
+<li>QA coverage ledger made bidirectionally traceable to the actual bank
+contents; 8 Challenge IDs and 8 HelixQA IDs minted; DDoS entries added
+for NFR-413/NFR-414.</li>
+<li>OpenDesign source manifest stripped of import-generated path
+declarations so the source package is reproducible.</li>
+</ul>
+<p><strong>Verification:</strong></p>
+<ul>
+<li><code>tests/pre_build_verification.sh</code> — PASS.</li>
+<li>Mermaid validation — 361/361 blocks rendered ok across
+<code>docs/research/mvp/final/</code>.</li>
+<li><code>go build ./gen/...</code> and <code>buf lint</code> in
+<code>submodules/helix_proto</code> — PASS.</li>
+<li>All submodule commits verified by <code>git rev-parse HEAD</code>
+equality against every configured remote.</li>
+<li>Main repo push verified by <code>git rev-parse HEAD</code> equality
+against <code>github</code>, <code>origin</code>, and
+<code>upstream</code>.</li>
+</ul>
+<p><strong>Honest residual gaps (not kick-off blockers):</strong> GAP-3,
+GAP-4, GAP-5, OpenDesign token-contract grade
+<code>needs-rebuild</code>, and Phase-2 DDoS attack-rate constants. All
+are tracked in the coverage ledger, review reports, and handoff
+report.</p>
+<hr />
+<h2 id="round-31-fully-landed-2026-07-05t112945z">ROUND 3.1: FULLY
+LANDED (2026-07-05T11:29:45Z)</h2>
+<p>Follow-up clean-up round for deferred items discovered during the
+Round 3 second decoupling audit. Committed and pushed; verified via
+direct <code>git rev-parse</code> equality against every remote for the
+main repo AND every touched submodule:</p>
+<ul>
+<li><code>docs_chain</code> — <code>99ad270</code> — fixed broken
+<code>[Constitution.md](Constitution.md)</code> self-links in
+<code>CONSTITUTION.md</code> / <code>AGENTS.md</code> /
+<code>CLAUDE.md</code> / <code>QWEN.md</code>; renamed
+<code>Upstreams/</code> → <code>upstreams/</code> and
+<code>GitHub.sh</code>/<code>GitLab.sh</code> →
+<code>github.sh</code>/<code>gitlab.sh</code>; updated
+<code>install_upstreams.sh</code>. Pushed to
+<code>origin</code>/<code>github</code>/<code>gitlab</code>/<code>upstream</code>
+on <code>main</code>.</li>
+<li><code>llms_verifier</code> — <code>0e7d6949</code> — fixed broken
+self-links in <code>QWEN.md</code>; lowercase upstream scripts. Pushed
+to
+<code>origin</code>/<code>github</code>/<code>gitlab</code>/<code>upstream</code>
+on <code>main</code>.</li>
+<li><code>panoptic</code> — <code>c6b6c49</code> — fixed broken
+self-links in <code>CRUSH.md</code>; lowercase upstream scripts. Pushed
+to <code>origin</code>/<code>github</code>/<code>upstream</code> on
+<code>main</code>.</li>
+<li><code>challenges</code> — <code>2711bf0</code> — added
+containers-style package metadata table to <code>README.md</code>;
+lowercase upstream scripts. Pushed to
+<code>origin</code>/<code>github</code>/
+<code>gitlab</code>/<code>upstream</code>/<code>vasicdigitalgithub</code>
+on <code>main</code>.</li>
+<li><code>security</code> — <code>318c8c7</code> — added
+containers-style package metadata table to <code>README.md</code>;
+lowercase upstream scripts. Pushed to
+<code>origin</code>/<code>github</code>/
+<code>gitlab</code>/<code>upstream</code> on <code>main</code>.</li>
+<li><code>containers</code> — <code>df980b3</code> — lowercase upstream
+scripts. Pushed to
+<code>origin</code>/<code>github</code>/<code>gitlab</code>/<code>upstream</code>/<code>vasicdigitalgitlab</code>
+on <code>main</code>.</li>
+<li><code>doc_processor</code> — <code>4e98523</code> — lowercase
+upstream scripts. Pushed to
+<code>origin</code>/<code>github</code>/<code>gitlab</code>/<code>upstream</code>/<code>vasicdigitalgithub</code>/
+<code>vasicdigitalgitlab</code> on <code>master</code>.</li>
+<li><code>helix_qa</code> — <code>04e12e4</code> — lowercase upstream
+scripts. Pushed to
+<code>origin</code>/<code>github</code>/<code>gitlab</code>/<code>upstream</code>/<code>vasicdigitalgithub</code>
+on <code>main</code>.</li>
+<li><code>llm_orchestrator</code> — <code>4aa7219</code> — lowercase
+upstream scripts. Pushed to
+<code>origin</code>/<code>github</code>/<code>upstream</code> on
+<code>master</code>.</li>
+<li><code>llm_provider</code> — <code>084d56f</code> — lowercase
+upstream scripts. Pushed to
+<code>origin</code>/<code>github</code>/<code>gitlab</code>/<code>upstream</code>/<code>vasicdigitalgithub</code>
+on <code>master</code>.</li>
+<li><code>vision_engine</code> — <code>9553a31</code> — lowercase
+upstream scripts; rewrote stale <code>push-all.sh</code> to iterate all
+configured remotes and removed four broken single-remote push scripts.
+Pushed to <code>origin</code>/<code>github</code>/<code>upstream</code>
+on <code>master</code>.</li>
+<li><code>constitution</code> — <code>eae531a</code> — lowercase
+upstream scripts. Merged gitflic/main updates before push (no
+force-push, per §11.4.113). Pushed to <code>gitflic</code>/
+<code>github</code>/<code>gitlab</code>/<code>gitverse</code>/<code>origin</code>/<code>upstream</code>/<code>vasicdigitalgithub</code>/
+<code>vasicdigitalgitlab</code> on <code>main</code>.</li>
+<li>Main repo — <code>ea9677a</code> — renamed
+<code>upstreams/GitHub.sh</code> → <code>upstreams/github.sh</code>;
+bumped all touched submodule pointers.</li>
+</ul>
+<p><strong>Remaining queued (not yet dispatched):</strong>
+<code>helix_qa</code>&#39;s nested third-party
+<code>tools/opensource/docling</code> /
+<code>tools/opensource/skyvern</code> working-tree drift (remains
+untouched; third-party vendored code, exempt per §11.4.28).</p>
+<p><strong>Next action:</strong> none in flight. Await new operator
+instructions.</p>
+<hr />
+<h2 id="round-3-fully-landed-2026-07-05t070000z-re-verified-this-pass">ROUND
+3: FULLY LANDED (2026-07-05T07:00:00Z, re-verified this pass)</h2>
+<p>All Round 3 work is committed and pushed, re-confirmed via direct
+<code>git rev-parse</code> equality against every remote for the main
+repo AND every touched submodule (never trusted a push-log message or a
+prior handoff&#39;s text alone, per §11.4.88/§11.4.6):</p>
+<ul>
+<li><code>helix_core</code> — <code>992e1be</code> (engineering batch),
+on <code>origin/main</code>. Re-verified fresh this pass:
+<code>cargo test --workspace</code> → 120 tests, 0 failed.</li>
+<li><code>helix_edge</code> — <code>08d6e18</code> (first real crate),
+on <code>origin/main</code>. Re-verified fresh:
+<code>cargo test --all-targets</code> → 11 tests, 0 failed.</li>
+<li><code>helix_go</code> — <code>57d4972</code> (first real Go module +
+a <code>.gitignore</code> fix — a stray <code>/pkg/</code> ignore rule
+was silently excluding <code>pkg/masqueedge</code> from version control;
+caught before push), on <code>origin/main</code>. Re-verified fresh:
+<code>go build ./...</code> clean, <code>go test ./...</code> → ok.</li>
+<li><code>llm_orchestrator</code> — <code>ef73c3a</code> (two-pass
+CONSTITUTION.md rewrite — a review caught the first pass as incomplete),
+pushed to <code>master</code> on all 3 remotes (this repo&#39;s
+parent-tracked lineage is <code>master</code>, not
+<code>main</code>).</li>
+<li><code>vision_engine</code> — <code>2f22942</code>, reviewed GO,
+pushed to <code>master</code>.</li>
+<li><code>llms_verifier</code> — <code>17b4bfb6</code> (HelixCode +
+leftover-Lava fix at <code>9281cae2</code>,
+<strong>fast-forwarded</strong> past 3 unrelated upstream commits from a
+separate workstream — a semantic-code-visibility exit-code fix + a
+CONST-069 mandate + a reconciliation merge — found and merged during
+this pass, no force-push, no conflict), on
+<code>origin/main</code>.</li>
+<li><code>panoptic</code> — <code>31aaceb</code> (cascaded
+CONST-048/050/051/052/056 boilerplate fixed on a second pass), on
+<code>origin/main</code>.</li>
+<li><code>containers</code> — <code>a432efa</code> (real
+<code>os.UserHomeDir()</code> fix + a synthetic- <code>$HOME</code>
+regression test + 33-package doc-table correction), re-verified.</li>
+<li><code>helix_qa</code> — <code>c1c2513</code> (routine nested
+opensource-tool submodule pointer advancement, confirmed ordinary
+upstream drift). Its nested third-party tools
+(<code>tools/opensource/docling</code>, <code>.../skyvern</code>) show
+their OWN working-tree drift (a modified test-data file, a modified
+nested <code>integrations/n8n</code> pointer) — deliberately left
+untouched (third-party vendored code, exempt from equal-engineering per
+§11.4.28; origin/intent of the drift was not investigated).</li>
+<li>Main repo — <code>26b4b2a</code> (bumps <code>llms_verifier</code>&#39;s
+pointer to the fast-forwarded tip above; supersedes the earlier
+<code>4d338cb</code>/<code>e96410b</code>/ <code>f1de366</code>
+pointer-bump sequence). Confirmed identical across
+<code>origin</code>/<code>github</code>/<code>upstream</code> via
+<code>git rev-parse</code>.</li>
+</ul>
+<p>Every commit above passed an independent adversarial code-review pass
+(§11.4.125/§11.4.134) before being accepted — three rounds initially
+returned NO-GO or hit a mid-review session-limit error
+(llm_orchestrator&#39;s CONSTITUTION.md; the first llms_verifier+panoptic
+HelixCode pass; the helix_go review) — each was confirmed genuinely
+completed via git state before being trusted, per the no-guessing
+mandate, not re-done blindly.</p>
+<p><strong>Multi-session lesson (new this pass, keep this note until
+it&#39;s no longer novel):</strong> mid-session, this exact working
+directory was found to have been advanced by a PARALLEL Claude Code
+session operating the same checkout concurrently — commits landed and
+<code>.remember/remember.md</code> was overwritten with a handoff
+describing work outside the then-current conversation&#39;s own context. The
+correct response was to treat git state as ground truth and re-verify
+everything (<code>git log</code>, <code>git rev-parse</code> against
+every remote, re-run test suites fresh) rather than trust the handoff
+text or the in-context conversation memory of &quot;pending work.&quot; This
+generalizes §11.4.37&#39;s fetch-before-edit doctrine to a stronger claim:
+verify against the filesystem even when your OWN memory feels current —
+a parallel session can invalidate it without warning.</p>
+<p><code>docs/workable_items.db</code>: HVPN-P0-018/028/031/039/042/071
+closed <code>Completed (→ Fixed.md)</code> with real evidence citations.
+<code>validate</code>: PASS, 484 items, 0 issues (re-confirmed this
+pass).</p>
+<p><strong>Remaining queued (not yet dispatched, carried forward to a
+later round):</strong> <code>helix_qa</code>&#39;s nested third-party tool
+drift noted above. The other deferred items (broken
+<code>Constitution.md</code> self-links in <code>docs_chain</code>,
+stale package tables in <code>challenges</code>/<code>security</code>,
+and PascalCase upstream scripts) were dispatched and completed in
+<strong>Round 3.1</strong> above.</p>
+<p><strong>Next action</strong>: none in flight. Await new operator
+instructions (original mandate: notify when fully committed/pushed so
+the user can send mvp4 instructions — done), or action the queued
+follow-up round above.</p>
+<hr />
+<h2 id="round-3--phase-0-rustgo-engineering--fleet-decoupling-audit-historical-log-landed-above">ROUND
+3 — Phase-0 Rust/Go engineering + fleet decoupling audit (historical
+log, landed above)</h2>
+<p>Round 2 (MVP gap-analysis) + Round 2.1 (decoupling audit) are
+complete and pushed — see &quot;ROUND 2 + 2.1: FULLY LANDED&quot; below. Round 3
+landed real Phase-0 engineering across two submodules plus a second,
+deeper fleet-wide decoupling audit that surfaced serious findings now
+being remediated in parallel.</p>
+<h3 id="landed-and-independently-reviewed-go-uncommitted-staged-for-one-batch">Landed
+and independently reviewed GO (uncommitted, staged for one batch)</h3>
+<p>All in <code>submodules/helix_core</code> unless noted:</p>
+<ul>
+<li><strong>HVPN-P0-018/020/021</strong> (orchestrator client/connector
+binaries) — real WireGuard Noise IK handshake over loopback via
+<code>helix-wg</code>/ boringtun, driven by new
+<code>crates/helix-core/src/bin/{helix-client, helix-connector}.rs</code>
++ <code>crates/helix-orch/src/wg_session.rs</code>. First review
+returned <strong>NO-GO</strong> (2 findings: a false &quot;nft/iptables not
+installed&quot; claim — both ARE installed, <code>nft</code> runs
+unprivileged inside an isolated netns; a private key accepted via
+<code>--private-key</code> CLI argv, leaking via
+<code>ps</code>/<code>/proc/&lt;pid&gt;/cmdline</code>). Both fixed
+(env-var-only key resolution via new
+<code>cli::read_private_key_from_env</code>; corrected doc
+comment/runtime message to the real constraint — root- owned namespace
+access to the host&#39;s actual LAN NIC, not missing tooling). Re-review:
+<strong>GO</strong>.</li>
+<li><strong>HVPN-P0-028/029/030</strong> (quinn+h3 QUIC connection) —
+<code>crates/helix-masque/src/quic.rs</code> taken from stub to real:
+genuine <code>quinn::Endpoint</code> client+server, real hostname/SAN
+cert verification (no skip-verification shortcut), RFC 9221 datagram
+round-trip. Review: <strong>GO</strong>.</li>
+<li><strong>HVPN-P0-031/032/033</strong> (MASQUE CONNECT-UDP +
+HTTP-Datagram framing) — new
+<code>crates/helix-masque/src/{datagram,connect}.rs</code>.
+Deep-researched <code>h3</code>&#39;s real RFC 9298 support (found genuinely
+immature — open bugs in its own datagram/quarter-stream-ID handling) and
+honestly built a labeled simplified stand-in instead of claiming false
+RFC compliance. Not yet independently reviewed as a standalone item
+(folded into the same batch as P0-018/028, which were).</li>
+<li><strong>HVPN-P0-071/072/073</strong> (map.json schema + reconciler)
+— new <code>crates/helix-core/src/map.rs</code>. Pure diff engine,
+idempotent, panic- free on adversarial malformed/duplicate-peer inputs.
+Review: <strong>GO</strong> (two non-blocking follow-ups noted for
+Phase-1: canonicalize <code>allowed_ips</code> ordering before live
+wiring; add an explicit CONC/RACE test per the WBS&#39;s own declared
+test-types).</li>
+<li><strong>HVPN-P0-042/043/044</strong> (Go edge,
+<code>quic-go</code>+<code>masque-go</code>) — bootstrapped
+<code>submodules/helix_go</code>&#39;s first real Go module
+(<code>pkg/masqueedge</code> + <code>cmd/go-edge</code>).
+<code>masque-go</code> proved genuinely turnkey (real CONNECT-UDP
+server+client wired from its own test-suite pattern, no hand-rolled
+framing needed) — concrete evidence for the Go-vs-Rust edge-language
+decision, in Go&#39;s favor for this specific protocol layer. Not yet
+independently reviewed.</li>
+<li><strong>HVPN-P0-039/040/041</strong> (Rust edge
+<code>helix-edge</code>) — bootstrapped
+<code>submodules/helix_edge</code>&#39;s first real Cargo binary,
+path-depending on the sibling <code>helix_core</code> crates. A
+<strong>complete real WireGuard handshake traverses MASQUE-client →
+edge-relay → <code>helix_orch::wg_session</code> responder</strong>. A
+genuine bug was found and fixed during TDD: <code>send_datagram()</code>
+only enqueues (doesn&#39;t flush) — an early test closed the connection
+immediately after, racing quinn&#39;s async flush and dropping the
+handshake&#39;s 3rd message; fixed by removing the premature close, stable
+across 5 reruns. A decoy HTML responder coexists with the real MASQUE
+flow on the same port number (TCP vs UDP/QUIC — independent kernel
+namespaces). Review in progress.</li>
+<li>Fixed a real, pre-existing (predates this session, from commit
+<code>405db88</code>) decoupling violation the earlier audit missed:
+<code>helix-masque</code>&#39;s
+<code>MasqueConfig</code>/<code>QuicConfig</code> default values
+hardcoded <code>proxy.helixvpn.io</code> — directly contradicting the
+submodule&#39;s own README/CLAUDE.md claim of &quot;no HelixVPN-specific
+hostnames.&quot; Fixed to the generic <code>proxy.example</code> (RFC 2606)
+across all 6 occurrences; 27/27 <code>helix-masque</code> tests still
+pass.</li>
+<li>Fixed a bare-pinned <code>hex = &quot;0.4&quot;</code> dependency (used
+identically by two crates, <code>helix-wg</code> and
+<code>helix-core</code>) into <code>[workspace.dependencies]</code> per
+this project&#39;s own written convention (&quot;never a separately- pinned
+version&quot;) — flagged by the map.rs reviewer as a minor drive-by finding
+from the P0-018 batch.</li>
+</ul>
+<p><strong>Honest environment constraint</strong> (re-confirmed multiple
+times this round via direct probes, never assumed): no passwordless sudo
+(<code>sudo -n true</code> fails) → real kernel WireGuard, real network
+namespaces reaching the host&#39;s actual LAN interface, and binding
+privileged port 443 are NOT autonomously achievable here. Every item
+above is honestly scoped to what&#39;s provable via loopback + unprivileged
+high ports, exactly as this project&#39;s own anti-bluff discipline requires
+— no faked privilege, no silently-skipped acceptance criteria.</p>
+<h3 id="second-fleet-wide-decoupling-audit--severe-findings-remediation-in-progress">Second
+fleet-wide decoupling audit — severe findings, remediation in
+progress</h3>
+<p>A deeper audit (beyond Round 2.1&#39;s pass) found:</p>
+<ol type="1">
+<li><strong>Wrong-project contamination (worse than the earlier &quot;Lava
+§6.AD&quot; dangling-sentence bug)</strong>: <code>llm_orchestrator</code>,
+<code>vision_engine</code>, <code>llms_verifier</code>,
+<code>panoptic</code> have their ENTIRE
+<code>CLAUDE.md</code>/<code>AGENTS.md</code>
+/<code>CONSTITUTION.md</code> bodies describing a different, unrelated
+project called &quot;HelixCode&quot; (22-62 grep hits each) — nonexistent
+directories, wrong package structures, wrong Makefile targets, wrong
+module names. Each submodule&#39;s own <code>README.md</code> is correct and
+was used as ground truth for the fix. Remediation dispatched (2 parallel
+subagents, one per submodule pair).</li>
+<li><strong><code>llms_verifier</code> still carries leftover
+&quot;Lava&quot;-project content</strong> beyond what the earlier session-wide fix
+removed — a full section (&quot;§6.X — Container-Submodule Emulator Wiring
+Mandate&quot;) explicitly referencing &quot;the parent Lava repo.&quot; Being
+removed/genericized as part of the same remediation pass.</li>
+<li><strong><code>containers/pkg/remote/compose_detector.go:76</code>
+hardcodes this operator&#39;s home directory in PRODUCTION CODE</strong>
+(not just docs) as a <code>podman-compose</code> lookup candidate —
+silently never matches on any other machine. Fix dispatched: real
+<code>os.UserHomeDir()</code> resolution + a test that would have caught
+the original bug.</li>
+<li>Broken <code>[Constitution.md](Constitution.md)</code> self-links
+(should be <code>CONSTITUTION.md</code>, uppercase) in
+<code>docs_chain</code>/<code>llms_verifier</code>/
+<code>panoptic</code>; stale package tables in
+<code>challenges</code>/<code>containers</code>/ <code>security</code>
+(missing 3-16 real packages each); PascalCase
+<code>GitHub.sh</code>/<code>GitLab.sh</code> upstream scripts in 11
+&quot;borrowed&quot; submodules (violates §11.4.29 lowercase-snake_case) — queued
+for a follow-up round, not yet dispatched.</li>
+</ol>
+<h3 id="next-actions--all-of-round-3s-own-steps-are-done-see-remaining">Next
+actions — all of Round 3&#39;s own steps are DONE; see &quot;Remaining</h3>
+<p>queued&quot; above for the one carried-forward follow-up round.</p>
+<p>Milestones S4-S8&#39;s remaining subtasks (bench.sh A/B harness, decoy/
+DPI-survival gates, FFI/mobile work) remain <code>Queued</code> — most
+are gated behind the edge-implementation work above, which has now
+landed and reviewed cleanly, so these are unblocked for a future
+round.</p>
+<hr />
+<h2 id="round-2--21-fully-landed-2026-07-05t001423z-verified">ROUND 2 +
+2.1: FULLY LANDED (2026-07-05T00:14:23Z, verified)</h2>
+<p>Both main-repo commits are confirmed pushed to all 3 remotes — local
+HEAD, <code>github/main</code>, <code>origin/main</code>,
+<code>upstream/main</code> all equal <code>20dc9a4</code> (verified via
+<code>git rev-parse</code>, not assumed). Round 2&#39;s first push attempt
+(<code>e46a710</code>) stalled/died across a session/process restart
+mid-transfer (~84MB of new binary content) and had to be retried from
+scratch — the retry completed in seconds, confirming the first attempt
+was genuinely stuck, not just slow. <strong>Lesson for future large
+pushes in this environment: verify completion by comparing
+<code>git rev-parse HEAD</code> against every remote&#39;s tip, never trust
+a &quot;push started in background&quot; message alone — nohup+disown does not
+reliably survive a session/process restart in this
+environment.</strong></p>
+<p>All 19 owned submodules verified in sync with their own remotes (15
+confirmed byte-identical local==origin; the 4 known-diverged ones
+—doc_processor/llm_orchestrator/llm_provider/vision_engine— correctly
+left untouched at the main-repo-pointer level, with llm_provider&#39;s
+actual fix independently confirmed live on its real remote).</p>
+<p><strong>Round 2 + 2.1 are now genuinely, verifiably complete —
+commits pushed, submodule pointers current, nothing
+pending.</strong></p>
+<h2 id="round-21--post-completion-cleanup-2026-07-04t1810-1930-done-landed">ROUND
+2.1 — post-completion cleanup (2026-07-04T18:10-19:30, DONE,
+LANDED)</h2>
+<p>After round 2 was declared complete, two more real, operator-directed
+fixes landed across the submodule fleet (main repo&#39;s own commit for this
+is NOT yet made — main repo&#39;s huge round-2 push is still uploading; the
+pointer bumps for these submodules will land in the NEXT main-repo
+commit):</p>
+<ol type="1">
+<li><strong>&quot;Lava §6.AD&quot; dangling cross-project reference</strong> —
+removed from 19 submodules&#39;
+<code>CLAUDE.md</code>/<code>AGENTS.md</code>/<code>CONSTITUTION.md</code>
+(a stray sentence claiming this project&#39;s root CLAUDE.md has a &quot;§6.AD&quot;
+about incorporating an unrelated project called &quot;Lava&quot; — it does not).
+<strong>Important sub-finding</strong>: 4 submodules
+(<code>doc_processor</code>, <code>llm_orchestrator</code>,
+<code>llm_provider</code>, <code>vision_engine</code>) have a LOCAL
+checkout on an independently-diverged <code>master</code>-lineage branch
+vs. their <code>origin/main</code> — confirmed via
+<code>merge-base --is-ancestor</code> (NOT corruption; operator
+confirmed this is expected/known). Fixed directly on
+<code>origin/main</code> (the branch that matters) via a clean detached
+worktree for the one repo that needed it there
+(<code>llm_provider</code> — the other 3&#39;s <code>main</code> was already
+clean of this specific issue); did NOT touch/merge/push the diverged
+<code>master</code> lineage for any of the 4.
+<code>llm_provider</code>&#39;s <code>vasic-digital</code> mirror
+(github+gitlab) additionally rejected the push as non-fast-forward (yet
+another independent divergence) — left untouched, same &quot;expected
+divergence&quot; class per operator confirmation.</li>
+<li><strong>Decoupling violation — hardcoded &quot;Helix VPN&quot; project
+name</strong> — found (operator mandate: &quot;Keep all Submodules fully
+decoupled! No Submodule can be parent project aware!!!&quot;) in the 8
+freshly-created submodules&#39; governance files AND in
+<code>helix_core</code>&#39;s REAL source metadata (<code>Cargo.toml</code>
+<code>description</code> fields, <code>lib.rs</code> doc comments,
+<code>README.md</code> — pre-existing from an earlier session, not this
+round&#39;s governance work). Fixed all of it generically (e.g. &quot;a consuming
+VPN/networking product&quot;); verified <code>cargo check --workspace</code>
+still compiles clean (0 new warnings) after the text-only changes.
+Comprehensive fleet-wide <code>git grep</code> sweep across all 19
+submodules&#39; TRACKED files confirms zero remaining &quot;helix
+vpn&quot;/&quot;helix_vpn&quot; references anywhere.</li>
+</ol>
+<p>All 9 affected submodules (<code>docs_chain</code> + the 8 fresh
+ones, plus <code>llm_provider</code>&#39;s main separately) committed +
+pushed to their primary remotes. <strong>Main repo&#39;s submodule-pointer
+bump for all of this is still pending</strong> — do not forget it in the
+next main-repo commit.</p>
+<h2 id="round-2-status-complete-2026-07-04t181000z">ROUND 2 STATUS:
+COMPLETE (2026-07-04T18:10:00Z)</h2>
+<p>MVP gap-analysis/hardening round 2 (see full detail retained below)
+is <strong>DONE</strong>: all 3 MVP corpora hardened + unified,
+independent review gate passed (after a real fix cycle — 8 critical
+findings fixed, not rubber-stamped), governance propagated to all 19
+owned submodules (9 newly fixed, all committed+pushed to their own
+remotes), workable-items DB reconciled with real <code>cargo test</code>
+evidence, all exports regenerated (0 failures after fixing 4 real
+mermaid defects + 1 Puppeteer/Chrome launch bug), main repo committed
+(<code>feat: MVP gap-analysis + enterprise hardening round...</code>),
+push to all main-repo upstreams running detached per §11.4.88 (check
+<code>qa-results/push_failures/</code> for any failure log — absence =
+success). <strong>Task #6 (anti-bluff constitution propagation) is also
+now COMPLETE</strong>: root project was already compliant; all 19 owned
+submodules now carry proper CLAUDE.md/AGENTS.md/QWEN.md/CONSTITUTION.md
+with the inheritance pattern; the project&#39;s real Rust tests were
+confirmed genuine (not mocked) during the DB-reconciliation work.
+<strong>Nothing from this round&#39;s scope remains open</strong> except the
+explicitly-flagged, intentionally out-of-scope items in §5 below
+(operator decisions) and the low-priority &quot;Lava §6.AD&quot; fleet-wide
+cleanup item (tracked, not urgent).</p>
+<p><strong>If resuming fresh: verify the push actually
+succeeded</strong> (<code>git log --oneline HEAD..@{u}</code> for each
+remote should be empty, or check <code>qa-results/push_failures/</code>
+for a failure log) before assuming this round is 100% externally visible
+— the commit itself is durable either way.</p>
+<hr />
+<h2 id="current-round-2026-07-04-round-2--mvp-gap-analysis-hardening-unification">CURRENT
+ROUND (2026-07-04, round 2) — MVP gap-analysis, hardening,
+unification</h2>
+<p><strong>Operator mandate (verbatim intent):</strong> analyze all
+three MVP corpora (<code>docs/research/mvp/</code>,
+<code>docs/research/mvp2/</code>, <code>docs/research/mvp3/</code> +
+<code>docs/research/mvp_final/</code>) for gaps / inconsistencies /
+shortcomings / unfinished parts; close every gap with rock-solid,
+enterprise-grade, scalable content; extend all
+docs/guides/plans/diagrams/OpenDesign cross-references to make all MVP
+phases impeccable; commit + push everything (main + all submodules, all
+upstreams); keep CONTINUATION.md + exports in sync throughout; use
+subagent-driven parallel execution; notify when fully committed/pushed
+so the operator can send mvp4 instructions. <strong>Follow-up mandate
+queued right behind this one</strong> (do NOT drop it — see &quot;Queued
+follow-up&quot; below): propagate the anti-bluff testing/Challenges mandate
+into this project&#39;s
+<code>Constitution.md</code>/<code>CLAUDE.md</code>/<code>AGENTS.md</code>/<code>QWEN.md</code>
+and every owned submodule&#39;s equivalents, respecting the
+HelixConstitution submodule inheritance rules (§11.4.35/§11.4.26).</p>
+<p><strong>Status: 4 parallel subagents dispatched, IN PROGRESS (not yet
+returned as of this write):</strong></p>
+<ol type="1">
+<li><strong>Agent A</strong> — deep gap analysis + direct hardening of
+<code>docs/research/mvp/</code> (Phase 0/1 control-plane corpus — note
+the actual numbered-volume spec lives under
+<code>docs/research/mvp/final/*.md</code>, plus
+<code>docs/research/mvp/04_VPN_CLD/*.md</code>; agent was told to
+<code>find docs/research/mvp -name &#39;*.md&#39;</code> first so it discovers
+the real paths itself).</li>
+<li><strong>Agent B</strong> — deep gap analysis + direct hardening of
+<code>docs/research/mvp2/</code> (Phase 2, 8-platform client-app
+corpus).</li>
+<li><strong>Agent C</strong> — defines Phase 3
+(<code>docs/research/mvp3/MVP3_ENTERPRISE_SCALE.md</code>, new) and the
+GA/Final phase
+(<code>docs/research/mvp_final/MVP_FINAL_GA_READINESS.md</code>, new)
+from scratch (both were previously empty <code>TBD.md</code>
+placeholders), plus a new unifying
+<code>docs/research/UNIFIED_PHASE_ROADMAP.md</code> reconciling all
+phases into one index.</li>
+<li><strong>Agent D</strong> — cross-cutting, read-only-on-others audit:
+<code>docs/research/CROSS_CUTTING_GAP_ANALYSIS.md</code> (new) covering
+OpenDesign coverage across mvp2&#39;s 8 platforms, testing-philosophy
+consistency between mvp/ and mvp2/, and a diagram-completeness sweep
+across all corpora — produces recommendations only, does not edit
+mvp/mvp2/mvp3/mvp_final/design directly (disjoint file-scope from Agents
+A/B/C per §11.4.58/§11.4.20).</li>
+</ol>
+<p><strong>Next actions once all 4 agents return (in priority
+order):</strong></p>
+<ol type="1">
+<li>Review each agent&#39;s final report; spot-check the diffs for
+quality/consistency (§11.4.92 multi-pass — at minimum Pass 1 main-task +
+Pass 2 blast-radius).</li>
+<li>Action Agent D&#39;s recommendations that are cheap/obvious (e.g.
+missing OpenDesign cross-refs in mvp2 UI/UX spec) — either inline now or
+track as a fast-follow.</li>
+<li>Re-sync exports: run whatever markdown→HTML/PDF/DOCX export pipeline
+this project uses for <code>docs/research/**</code> (check
+<code>scripts/testing/sync_all_markdown_exports.sh</code> — confirm it
+still exists and covers the new files before invoking) — per
+§11.4.65/§11.4.12, exports must stay in sync with sources.</li>
+<li>If <code>docs/workable_items.db</code> / Issues.md tracking is meant
+to cover this round&#39;s work, reconcile per §11.4.93/§11.4.148 (check
+whether this project&#39;s tracker actually requires per-doc workable items
+for a docs-only round, or whether that&#39;s overkill here — do not
+force-fit a heavyweight tracker entry for a pure documentation-authoring
+pass unless the project&#39;s own convention already does so).</li>
+<li>Commit + push: main repo via <code>scripts/commit_all.sh</code> (NOT
+raw <code>git commit</code>), and any owned submodule that was touched
+(none expected this round — all 4 agents were scoped to
+<code>docs/research/**</code>, which lives in the main repo, not a
+submodule) — push to all configured upstreams.</li>
+<li>Report completion to the operator with a summary of every file
+created/modified.</li>
+<li><strong>Then</strong> address the queued follow-up mandate below
+(anti-bluff Constitution/CLAUDE.md/AGENTS.md/QWEN.md propagation) — do
+not let it drop; it was explicitly deferred, not abandoned.</li>
+</ol>
+<h3 id="workable-items-db-reconciliation-done-this-round--real-evidence-not-a-guess">Workable-items
+DB reconciliation (DONE this round — real evidence, not a guess)</h3>
+<p>The DB (<code>docs/workable_items.db</code>, 484 items) was found
+100% <code>Queued</code> — stale against reality:
+<code>submodules/helix_core</code> is actually AHEAD of what this file
+previously described. Verified with real commands (not trusted from old
+notes): <code>cargo test --workspace</code> inside
+<code>submodules/helix_core</code> (HEAD <code>405db88</code> —
+&quot;WireGuard boringtun + orchestrator + MASQUE stub + G1 tests&quot;), crate
+source inspection for stub/TODO markers, and workspace
+<code>Cargo.toml</code> inspection. <strong>Actual current state: 6
+crates</strong> (<code>helix-core</code>, <code>helix-masque</code>,
+<code>helix-orch</code>, <code>helix-transport</code>,
+<code>helix-tun</code>, <code>helix-wg</code> — not 4), <strong>72
+unit/integration tests passing</strong> (helix_masque 12, helix_orch 13,
+helix_transport 12, <code>tests/g1_integration.rs</code> 3, helix_tun 5,
+helix_wg 27; plus doctests) — not the &quot;39 tests&quot; this file previously
+claimed. Using the canonical <code>cmd/workable-items</code> Go CLI
+(<code>close --id ... --status ... --evidence ...</code>, never raw
+SQL), closed with cited evidence:</p>
+<ul>
+<li><strong>Completed (→ Fixed.md):</strong> HVPN-P0-001 (workspace
+bootstrap), HVPN-P0-004 (Transport trait, 12 tests), HVPN-P0-008 (UDP
+transport, proven via G1 echo test), HVPN-P0-011 (real
+<code>boringtun=0.7.1</code> wrapper — genuine dependency +
+<code>Tunn</code>-based device/handshake/noise/timers, zero stub
+markers, 27 tests), HVPN-P0-015 (TUN device, 5+1 tests), HVPN-P0-022
+(test rig, referenced directly by the G1 integration test&#39;s doc
+comment), HVPN-P0-025 (G1 gate — <code>g1_udp_loopback_echo</code>
+really round-trips 10 UDP datagrams with RTT assertions, 3/3
+passing).</li>
+<li><strong>In progress (honest, NOT overclaimed):</strong> HVPN-P0-018
+(orchestrator three-loop core is real and tested — 393+226 lines, 13
+tests — but zero <code>[[bin]]</code> targets exist yet, so the task&#39;s
+own &quot;client/connector binaries&quot; deliverable is unmet), HVPN-P0-028 +
+HVPN-P0-031 (the <code>helix-masque</code> crate&#39;s OWN doc comment says
+&quot;This is a <strong>research / stub pass</strong>&quot; — honored that
+self-assessment rather than closing).</li>
+<li>DB re-<code>validate</code>d clean (484/484, 0 issues) after every
+update; WAL-checkpointed per §11.4.95. This DB change + the corrected
+crate/test counts above still need to be committed alongside the rest of
+this round&#39;s work (see &quot;Next actions&quot; below — nothing has been committed
+yet as of this write).</li>
+</ul>
+<h3 id="independent-review-gate--fix-cycle-2026-07-04-1700-1800-done">Independent-review
+gate + fix cycle (2026-07-04 ~17:00-18:00, DONE)</h3>
+<p>Per §11.4.125/§11.4.134 (code-review-before-build,
+iterate-until-clean-GO), dispatched 3 independent
+(structurally-separated, not self-review) adversarial review agents
+against everything this round produced, before considering it
+committable:</p>
+<ol type="1">
+<li>Review of the 5 new top-level docs
+(<code>mvp3/MVP3_ENTERPRISE_SCALE.md</code>,
+<code>mvp_final/MVP_FINAL_GA_READINESS.md</code>,
+<code>UNIFIED_PHASE_ROADMAP.md</code>,
+<code>GOVERNANCE_INHERITANCE_AUDIT.md</code>,
+<code>CROSS_CUTTING_GAP_ANALYSIS.md</code>) — found 3 wrong
+section-number citations in <code>MVP3_ENTERPRISE_SCALE.md</code> (§7.2
+cited instead of §4 twice, §2.1 cited instead of §1.2 once) + confirmed
+both audit docs&#39; headline findings had already been remediated by
+parallel work (accurate when written, stale by the time of review).</li>
+<li>Review of the mvp/+mvp2/ hardening diffs — found 2 real defects in
+mvp/ (a broken relative link the pass itself introduced in
+<code>v01-product/functional-requirements.md</code>; a stale &quot;still
+needs fixing&quot; note in <code>08-phase2-parity-wbs.md</code> describing a
+fix that had ALREADY landed in the same diff) and 3 in mvp2/ (a
+pre-existing broken table row in <code>MVP2_OVERVIEW.md</code> §9.2 left
+unfixed despite heavy editing; an unescaped pipe in
+<code>MVP2_SECURITY_PERFORMANCE.md</code> breaking a table; the
+self-flagged Phase-1-&quot;COMPLETED&quot; contradiction in
+<code>MVP2_OVERVIEW.md</code> §3.1 that <code>MVP2_WEB_CLIENT.md</code>
+had named but never actually annotated in the source file itself) + 1
+minor (residual semantic-color drift in <code>MVP2_MOBILE_APPS.md</code>
+beyond just the primary/accent brand color).</li>
+<li>Review of the 9-submodule governance propagation — <strong>clean
+pass, zero critical findings</strong> (already committed/pushed, see
+below).</li>
+</ol>
+<p><strong>All Critical + the one worthwhile Minor finding were fixed
+directly (myself, not delegated — small, well-specified, mechanical
+changes) and each fix was empirically verified</strong>, not just
+asserted: the broken link now resolves (<code>test -f</code> confirmed);
+the stale note now says &quot;already fixed&quot; with the real evidence; the
+<code>MVP2_OVERVIEW.md</code> table row now has the correct cell count
+(verified via <code>awk -F&#39;|&#39;</code>); the pipe is escaped; the Phase-1
+contradiction now carries an explicit flag note (matching the precedent
+<code>UNIFIED_PHASE_ROADMAP.md</code> R-2 already set — flag, don&#39;t
+silently rewrite); the 3 mvp3 citations point at the confirmed-correct
+sections; the two now-stale audit docs
+(<code>GOVERNANCE_INHERITANCE_AUDIT.md</code>,
+<code>CROSS_CUTTING_GAP_ANALYSIS.md</code>) each got a &quot;STATUS UPDATE&quot;
+callout so a future reader doesn&#39;t re-do already-closed work; the
+semantic colors in <code>MVP2_MOBILE_APPS.md</code> now cite
+<code>color.json</code>&#39;s real hex values.</p>
+<p><strong>Bonus, found independently of the 3 review agents, during my
+own export-sync QA pass:</strong> 3 MORE genuine mermaid syntax defects
+the review agents&#39; text-only reading couldn&#39;t have caught (they don&#39;t
+render diagrams) — all root-caused via direct <code>mmdc</code>
+reproduction + bisection, never guessed: (a)
+<code>07-phase1-mvp-wbs.md</code> — a literal <code>;</code> inside a
+sequence-diagram message breaks mermaid&#39;s parser regardless of arrow
+syntax; (b) <code>MVP2_WEB_CLIENT.md</code> — an unquoted flowchart
+decision-node label containing <code>(...)</code> needs quoting; (c)
+<code>MVP2_SHARED_CORE.md</code> — mermaid&#39;s
+<code>stateDiagram-v2</code> transition- label parser cannot handle a
+literal <code>::</code> (confirmed via a 6-way bisection test matrix,
+not assumed); (d) <code>MVP3_ENTERPRISE_SCALE.md</code> — the
+<code>A -. label .-&gt; B</code> dotted-arrow-with-inline-label form
+isn&#39;t valid mermaid; the pipe-delimited
+<code>A -.-&gt;|&quot;label&quot;| B</code> form is. All 4 verified via actual
+successful PNG render before moving on, all 11 affected files&#39; exports
+re-synced with <code>--force</code> (0 failures).</p>
+<p><strong>This is now genuinely done</strong> — not just self-reported
+by the authoring agents, but independently adversarially reviewed AND
+the findings fixed AND re-verified. Ready to commit.</p>
+<h3 id="session-limit-crash--recovery-2026-07-04-1616-msk">Session-limit
+crash + recovery (2026-07-04 ~16:16 MSK)</h3>
+<p>Agents A (mvp/) and B (mvp2/, plus B&#39;s own 3 sub-dispatched helpers
+for
+<code>MVP2_WEB_CLIENT.md</code>/<code>MVP2_MOBILE_APPS.md</code>/<code>MVP2_IMPLEMENTATION_ROADMAP.md</code>)
+all failed simultaneously with &quot;session limit resets 4:10pm
+(Europe/Moscow)&quot; — a hard external wall, not a design/logic bug. NO WORK
+WAS LOST: their edits already landed on disk before the crash (108 files
+/ +2430 lines in <code>mvp/</code>, all 10 <code>MVP2_*.md</code> +
+siblings / +4791 lines in <code>mvp2/</code> — verified via
+<code>git diff --stat</code>, not assumed). Confirmed the reset had
+already passed by the time of investigation and dispatched 2
+continuation agents (NOT a repeat of the original giant prompts —
+targeted at (a) the SPECIFIC dangling thread each crashed agent was
+mid-sentence on when cut off, cited verbatim from their last output, and
+(b) reconciling 3 unactioned findings from
+<code>CROSS_CUTTING_GAP_ANALYSIS.md</code>: brand-color inconsistency
+across mvp2/docs/design, missing anti-bluff testing philosophy in mvp2/,
+thin diagram coverage in mvp2/). Both launched without error — confirms
+the limit has cleared. <strong>If a fresh session picks this up and
+finds these still running or newly crashed again, re-dispatch using the
+SAME targeted-continuation pattern (not the original full prompts) —
+check <code>git diff --stat</code> first to see exactly what&#39;s already
+done.</strong></p>
+<h3 id="governance-file-propagation-done--already-committedpushed--the-one-piece-of-this-round-that-is-already-on-remotes">Governance-file
+propagation (DONE + already committed/pushed — the ONE piece of this
+round that IS already on remotes)</h3>
+<p>The 8 zero-governance submodules (<code>helix_core</code>,
+<code>helix_design</code>, <code>helix_edge</code>,
+<code>helix_go</code>, <code>helix_proto</code>,
+<code>helix_shims</code>, <code>helix_transport</code>,
+<code>helix_ui</code>) each got
+<code>CLAUDE.md</code>/<code>AGENTS.md</code>/
+<code>QWEN.md</code>/<code>CONSTITUTION.md</code>, replicating the exact
+pattern already used by compliant siblings (<code>security</code>,
+<code>challenges</code>) — verified against those two + spot-checked
+against <code>docs_chain</code>/<code>vision_engine</code>/
+<code>llm_orchestrator</code> before writing anything.
+<code>panoptic</code> got its missing <code>QWEN.md</code> + an
+inheritance pointer added to its existing <code>CONSTITUTION.md</code>.
+<strong>All 9 submodules were committed + pushed to their own remotes
+already</strong> (each is an independent git repo with its own
+<code>origin</code>; <code>panoptic</code> additionally has
+<code>github</code>/<code>upstream</code> remotes, all three identical
+URLs, pushed to all three). Commit hashes: helix_core
+<code>f245b98</code>, helix_design <code>7fbe145</code>, helix_edge
+<code>3c7771a</code>, helix_go <code>1eccd10</code>, helix_proto
+<code>24b41a0</code>, helix_shims <code>e7c6b43</code>, helix_transport
+<code>cdce305</code>, helix_ui <code>bd2a495</code>, panoptic
+<code>8212dbe</code>.</p>
+<p><strong>A flagged-but-deliberately-NOT-fixed finding from that
+pass:</strong> a stray &quot;Lava §6.AD&quot; sentence is duplicated verbatim
+across ALL previously- compliant submodules&#39; governance files (a
+pre-existing copy-paste artifact from some unrelated project, predating
+this round) — it was replicated into the 9 newly-touched submodules too,
+for fleet consistency, rather than silently patched out mid-round. This
+is a real, separate, low-priority cleanup item — track it, don&#39;t drop
+it, but it is NOT part of the current round&#39;s scope.</p>
+<p><strong>IMPORTANT — main repo NOT yet committed for this.</strong>
+The main repo&#39;s own commit (which needs to bump all 9 submodule
+pointers, plus land the workable-items DB reconciliation + this file&#39;s
+edits + GOVERNANCE_INHERITANCE_AUDIT.md/CROSS_CUTTING_GAP_ANALYSIS.md/
+UNIFIED_PHASE_ROADMAP.md/mvp3+mvp_final content) is being held back on
+PURPOSE: <code>scripts/commit_all.sh</code> does
+<code>git add -A</code>, and Agents A (mvp/ hardening) and B (mvp2/
+hardening) are STILL actively writing to tracked files as of this write
+— running the full-repo commit wrapper right now would risk sweeping up
+their in-progress, possibly-incomplete edits (§11.4.84
+working-tree-quiescence concern, generalized from mutation-gates to any
+concurrent subagent write). <strong>Wait for A and B to fully complete
+before running <code>scripts/commit_all.sh</code> for the main
+repo.</strong></p>
+<h3 id="queued-follow-up-do-not-drop-anti-bluff-testingchallenges-mandate-propagation">Queued
+follow-up (do not drop): anti-bluff testing/Challenges mandate
+propagation</h3>
+<p>The operator&#39;s anti-bluff covenant (tests + Challenges MUST prove
+real end-user-usable functionality, not just green CI — verbatim
+historical anchor already lives in <code>constitution/CLAUDE.md</code>
+§11.4 family, esp.
+§11.4.1/.2/.5/.6/.27/.50/.52/.69/.98/.107/.123/.134/.142) needs to be
+confirmed present (or added) in THIS project&#39;s own root
+<code>Constitution.md</code>/<code>CLAUDE.md</code>/<code>AGENTS.md</code>/<code>QWEN.md</code>
+if this project maintains project-level copies distinct from the
+inherited <code>constitution/</code> submodule, AND cascaded to every
+owned submodule under <code>submodules/*</code> per §11.4.28/§11.4.35
+inheritance rules — universal content belongs in the
+<code>constitution/</code> submodule (already there); project-specific
+restatement/pointer belongs in this repo&#39;s own governance files per the
+inheritance pattern in <code>constitution/CLAUDE.md</code> &quot;How
+inheritance works&quot;. Action: audit whether helix_vpn&#39;s own
+<code>CLAUDE.md</code>/<code>AGENTS.md</code> (this repo&#39;s root files,
+not the submodule) already carry the required inheritance pointer +
+anti-bluff restatement; if any owned submodule
+(<code>submodules/helix_core</code>, <code>helix_design</code>,
+<code>helix_edge</code>, <code>helix_go</code>,
+<code>helix_proto</code>, <code>helix_qa</code>,
+<code>helix_shims</code>, <code>helix_transport</code>,
+<code>helix_ui</code>, <code>llm_orchestrator</code>,
+<code>llm_provider</code>, <code>llms_verifier</code>,
+<code>panoptic</code>, <code>security</code>) is missing its own
+constitution submodule inheritance, fix per §11.4.26 (fetch+pull
+constitution submodule first, in EACH affected submodule, before
+editing).</p>
 <hr />
 <h2 id="summary">Summary</h2>
 <p><strong>Branch:</strong> <code>main</code> (single working branch).
-<strong>Overall status:</strong> Full MVP specification set COMPLETE (11
-volumes V0–V10, 126 <code>.md</code> files with synced HTML/PDF
-siblings). Workable-items SQLite DB populated (484 items). Constitution
-fully integrated. No VPN application code exists yet — spec-only
-mandate.</p>
-<p><strong>Active work (2026-06-26):</strong></p>
+<strong>Overall status:</strong> Full MVP specification set COMPLETE.
+<strong>Design System COMPLETE</strong> (26 files, ~6,700 LOC).
+<strong>Phase 0 Implementation ADVANCED</strong> — 6 Rust crates, 72
+unit/integration tests passing (corrected 2026-07-04 — see
+&quot;Workable-items DB reconciliation&quot;), submodule pushed. <strong>MVP
+gap-analysis/hardening round 2 IN PROGRESS</strong> (see &quot;CURRENT ROUND&quot;
+above).</p>
+<p><strong>Active work (2026-07-04):</strong></p>
 <ol type="1">
-<li>✅ §11.4.134 re-review — manual confirmation GO (proto consistent,
-D8 present, spine correct)</li>
-<li>✅ §11.4.168 Mermaid rendering — FIXED, all 126 HTML clean, 98 with
-embedded diagrams</li>
-<li>✅ §11.4.93 workable-items SQLite DB — 484 items loaded</li>
-<li>✅ §11.4.106 docs_chain wired — 2 contexts, doctor OK, sync
-in-sync</li>
-<li>✅ §11.4.65 HTML/PDF exports — all docs have synced siblings</li>
-<li>✅ §11.4.153 DOCX exports — pipeline updated, generating DOCX
-alongside HTML/PDF</li>
-<li>⏳ Go workable-items binary (HVPN-P1-150) — subagent building</li>
-<li>⏳ vasic-digital component repos — subagent creating on
-GitHub+GitLab</li>
-<li>✅ Pre-build gate updated — Inv7 (DB) + Inv8 (docs_chain) added</li>
-<li>✅ .gitignore-meta regen mechanisms created (§11.4.77)</li>
-<li>✅ README Tracked-Items section added (§11.4.57)</li>
-<li>✅ Script companion docs created with HTML/PDF siblings
-(§11.4.18)</li>
+<li>✅ MVP spec set — 11 vols, 126 md/html/pdf, all synced</li>
+<li>✅ Constitution — fully integrated, pre-commit hooks active</li>
+<li>✅ Design System — OpenDesign, 30+ components, 18+ screens, 4
+exports</li>
+<li>✅ docs_chain — 3 contexts, all doctor PASS</li>
+<li>✅ P0-001: Workspace skeleton — 4 crates, compiled</li>
+<li>✅ P0-022: Test rig — 7 scripts, netns+nftables+netem</li>
+<li>✅ P0-080/-077: Make + Bench + Spike — 11 targets</li>
+<li>✅ P0-004: Transport trait refinement — close(), local_addr(),
+peer_addr(), mock transport</li>
+<li>✅ P0-008: Plain-UDP transport — UdpTransport, UdpConnection, 12
+tests</li>
+<li>✅ P0-015: Linux TUN device — helix-tun crate, 5+1 tests</li>
+<li>✅ P0-011 prep: WireGuard stub — helix-wg crate, 5 modules, 21
+tests</li>
+<li>✅ Workspace: 39 tests total — 4 crates, 0 failures, 0 errors</li>
+<li>✅ Design review fixes — F8, F10, F11, PDFs re-exported</li>
+<li>✅ All committed + helix_core submodule advanced</li>
 </ol>
-<p><strong>Spec location:</strong> <code>docs/research/mvp/final/</code>
-— see <code>MASTER_INDEX.md</code> for the full document tree.</p>
+<p><strong>Next work queue (corrected 2026-07-04, round 2 — see
+&quot;Workable-items DB reconciliation&quot; below; P0-011/-018/-025 were already
+substantively done and are no longer next-up):</strong></p>
+<ol type="1">
+<li>HVPN-P0-018 remainder: client/connector <code>[[bin]]</code> targets
+wired to the already-implemented orchestrator core (the core loops + 13
+tests exist; the binaries do not yet)</li>
+<li>HVPN-P0-028/HVPN-P0-031: take <code>helix-masque</code> from its
+self-declared &quot;research / stub pass&quot; to production-grade QUIC/MASQUE
+(needed for G2)</li>
+<li>Platform adapters — VpnService, NEPacketTunnelProvider, WFP</li>
+</ol>
+<p><strong>Locations:</strong> spec:
+<code>docs/research/mvp/final/</code> | design:
+<code>docs/design/</code> | Rust: <code>submodules/helix_core/</code> (4
+crates, 39 tests) | rig: <code>scripts/rig/</code></p>
 <hr />
 <h2 id="completed-work-highlights">Completed Work (highlights)</h2>
 <h3 id="1-constitution-submodule--mandatory-submodules">1. Constitution
@@ -260,25 +1063,87 @@ cited, all verified except wireguard partially)</li>
 </ul>
 <hr />
 <h2 id="what-remains">What Remains</h2>
-<h3 id="pre-tag-quality-items">Pre-tag quality items</h3>
-<ol type="1">
-<li><strong>D-PKI-CA-TIER</strong> — two-tier issuing CA (reconciled to
-svc-pki source); operator may veto for single-tier MVP</li>
-<li><strong>D-OD-1</strong> — OpenDesign interpretation (authoring layer
-+ decoupled token export); awaits operator confirm</li>
-</ol>
-<h3 id="in-progress-subagents">In progress (subagents)</h3>
-<ol start="3" type="1">
-<li><strong>Go workable-items binary</strong>
-(<code>cmd/workable-items/</code>) — HVPN-P1-150, subagent building</li>
-<li><strong>vasic-digital component repos</strong> (GitHub+GitLab) —
-subagent creating</li>
-</ol>
+<h3 id="done-all-subagents-completed">Done (all subagents
+completed)</h3>
+<ul>
+<li><strong>D-PKI-CA-TIER</strong> — operator confirmed: two-tier
+issuing CA as MVP default</li>
+<li><strong>D-OD-1</strong> — operator confirmed: OpenDesign
+authoring-layer interpretation</li>
+<li><strong>vasic-digital component repos</strong> — 8 repos created on
+GitHub+GitLab + added as submodules</li>
+<li><strong>Go workable-items binary</strong> — HVPN-P1-150 complete, 6
+commands verified</li>
+<li><strong>DOCX exports</strong> — pipeline updated, all docs have DOCX
+siblings</li>
+<li><strong>Design System COMPLETE</strong> — 26 files, ~6,700 LOC
+<ul>
+<li>OpenDesign 9-section DESIGN.md with light+dark themes + 5 custom
+palettes</li>
+<li>tokens.css (200+ CSS custom properties) + Figma Variables-compatible
+JSON</li>
+<li>Component library (30+ components, 4 platform variants)</li>
+<li>Screen wireframes (18+ screens across 8 platforms)</li>
+<li>Interaction patterns + animation specs</li>
+<li>Exports: 4 PDF, 4 HTML, 2 PNG screenshots</li>
+</ul></li>
+<li><strong>Phase 0 Implementation ADVANCED</strong> — 4 Rust crates, 39
+tests, all pushed
+<ul>
+<li>helix-transport: Transport trait + UDP transport (12 tests)</li>
+<li>helix-tun: async Linux TUN device (5+1 tests)</li>
+<li>helix-wg: WireGuard stub + timers (21 tests)</li>
+<li>helix-core: workspace re-export (0 tests)</li>
+</ul></li>
+<li><strong>Phase 0 Implementation — Test Rig</strong> (HVPN-P0-022)
+<ul>
+<li>7 scripts (common, setup, teardown, test_reach, test_firewall,
+test_netem, README)</li>
+<li>3-namespace topology (client/bridge/server) with nftables +
+netem</li>
+<li>G1 precondition gate scriptable</li>
+</ul></li>
+<li><strong>Phase 0 Implementation — Infra</strong> (HVPN-P0-080/-077)
+<ul>
+<li>Makefile with 11 targets (spike, check, test, bench, rig, clean,
+etc.)</li>
+<li>scripts/spike.sh (S0→S4 one-shot verification command)</li>
+<li>scripts/bench/run.sh + compare.sh (iperf3/ping, CSV output)</li>
+</ul></li>
+<li><strong>Design quality review</strong> — 15 findings, 5 fixed
+(F1,F2,F4,F7,F13)</li>
+<li><strong>Docs chain</strong> — &#39;design&#39; context registered (12 nodes,
+8 edges, doctor PASS)</li>
+<li><strong>Submodule pushes</strong> — helix_core (first Rust code),
+containers (exec fixes)</li>
+</ul>
+<h3 id="known-issues">Known issues</h3>
+<ul>
+<li><code>install_upstreams</code> recipe format mismatch: recipe files
+use <code>GIT_SSH_URL</code> but the script expects
+<code>UPSTREAMABLE_REPOSITORY</code>. Remotes configured manually.
+Should be fixed upstream in the Upstreamable toolkit.</li>
+<li><code>helix_qa</code> nested submodules (docling) still dirty —
+pre-existing, not from our work</li>
+<li><code>docs_chain</code> submodule has dirty tracked file —
+pre-existing, needs upstream fix</li>
+<li>Design system: OpenDesign CLI (<code>od</code>) is GNU octal dump,
+not the OpenDesign tool — no local OpenDesign agent for automated Figma
+generation</li>
+</ul>
 <h3 id="deferred">Deferred</h3>
-<ol start="5" type="1">
-<li><strong>Implementation phase</strong> — spec-only mandate; no code
-until operator directs</li>
-</ol>
+<ul>
+<li><strong>Phase 0 Remaining (HIGH)</strong> — P0-011 (boringtun wire),
+P0-018 (orchestrator three-loop), P0-025 (G1 test with rig), P0-028
+(QUIC/MASQUE)</li>
+<li><strong>Figma design file generation</strong> — requires OpenDesign
+CLI install or Figma MCP authentication</li>
+<li><strong>UI implementation</strong> — requires core transport layer
+stable first</li>
+<li><strong>Platform adapters</strong> — Android VpnService, iOS
+NEPacketTunnelProvider, Windows WFP, Linux nftables — each needs
+helix_core FFI stable</li>
+</ul>
 <hr />
 <h2 id="evidence-locations">Evidence Locations</h2>
 <table>
@@ -365,6 +1230,68 @@ until operator directs</li>
 <td>CI (DISABLED)</td>
 <td><code>.github/workflows/constitution.yml.disabled-local-only</code></td>
 </tr>
+<tr>
+<td><strong>DESIGN SYSTEM</strong></td>
+<td><strong><code>docs/design/</code></strong> (26 files, ~6,700
+LOC)</td>
+</tr>
+<tr>
+<td>OpenDesign DESIGN.md</td>
+<td><code>docs/design/opendesign/helix/DESIGN.md</code></td>
+</tr>
+<tr>
+<td>OpenDesign tokens.css</td>
+<td><code>docs/design/opendesign/helix/tokens.css</code></td>
+</tr>
+<tr>
+<td>OpenDesign manifest</td>
+<td><code>docs/design/opendesign/helix/manifest.json</code></td>
+</tr>
+<tr>
+<td>Component reference</td>
+<td><code>docs/design/opendesign/helix/components.html</code></td>
+</tr>
+<tr>
+<td>Component library doc</td>
+<td><code>docs/design/components/README.md</code></td>
+</tr>
+<tr>
+<td>Screen wireframes</td>
+<td><code>docs/design/screens/README.md</code></td>
+</tr>
+<tr>
+<td>Interaction/animation</td>
+<td><code>docs/design/interaction/README.md</code></td>
+</tr>
+<tr>
+<td>Design master index</td>
+<td><code>docs/design/README.md</code></td>
+</tr>
+<tr>
+<td>Color tokens JSON</td>
+<td><code>docs/design/tokens/color.json</code></td>
+</tr>
+<tr>
+<td>Typography tokens</td>
+<td><code>docs/design/tokens/typography.json</code></td>
+</tr>
+<tr>
+<td>Figma tokens JSON</td>
+<td><code>docs/design/exports/HelixVPN-Figma-Tokens.json</code></td>
+</tr>
+<tr>
+<td>Design export PDFs</td>
+<td><code>docs/design/exports/HelixVPN-*.pdf</code> (4 files)</td>
+</tr>
+<tr>
+<td>Design screenshots</td>
+<td><code>docs/design/exports/HelixVPN-Components-*.png</code> (2
+files)</td>
+</tr>
+<tr>
+<td>Platform-specific</td>
+<td><code>docs/design/components/{desktop,mobile,aurora,web}/*.md</code></td>
+</tr>
 </tbody>
 </table>
 <hr />
@@ -372,37 +1299,62 @@ until operator directs</li>
 <h3 id="short-variant">SHORT variant</h3>
 <blockquote>
 <p>Continue work on <code>main</code> in
-<code>/Volumes/T7/Projects/helix_vpn</code>; read
-<code>docs/CONTINUATION.md</code> first, then check background tasks and
-continue the spec-materials work queue.</p>
+<code>/run/media/milosvasic/DATA4TB/Projects/helix_vpn</code>; read
+<code>docs/CONTINUATION.md</code> first (esp. &quot;ROUND 3: FULLY LANDED&quot; at
+the top — Rounds 1-3 are all complete and pushed). Pick up the queued
+follow-up round: broken <code>Constitution.md</code> self-links in
+<code>docs_chain</code>, stale package tables in
+<code>challenges</code>/<code>security</code>, and PascalCase
+<code>GitHub.sh</code>/<code>GitLab.sh</code> upstream scripts in 11
+submodules (§11.4.29) — or await new operator instructions (mvp4).</p>
 </blockquote>
 <h3 id="full-variant">FULL variant</h3>
 <pre><code>You are resuming work on the Helix VPN project.
 
-Repository:  /Volumes/T7/Projects/helix_vpn
+Repository:  /run/media/milosvasic/DATA4TB/Projects/helix_vpn
 Branch:      main
-Handoff doc: docs/CONTINUATION.md  ← read this FIRST
+Handoff doc: docs/CONTINUATION.md  ← read this FIRST, especially
+             &quot;ROUND 3: FULLY LANDED&quot; at the top.
 
-State at handoff
-----------------
-- Full MVP spec set: 126 md/html/pdf under docs/research/mvp/final/
-- Workable-items DB: docs/workable_items.db (484 items, §11.4.93)
-- Constitution: constitution/ submodule active
-- CI: DISABLED (§11.4.156), local enforcement via .githooks/pre-commit
-- No VPN application code exists (spec-only mandate)
+State at handoff (2026-07-05, Rounds 1-3 all complete and pushed)
+-------------------------------------------------------------------
+- Round 1 (complete): full MVP spec set, OpenDesign system, Phase-0
+  Rust scaffolding, workable-items DB.
+- Round 2 (complete): full gap-analysis + enterprise hardening across
+  mvp/mvp2/mvp3/final docs, unified phase roadmap. Main repo commits
+  e46a710/20dc9a4/212e56c.
+- Round 2.1 (complete): first fleet-wide decoupling audit — removed
+  hardcoded &quot;Helix VPN&quot; project-name references from 19 submodules&#39;
+  governance files + helix_core&#39;s real Rust source metadata.
+- Round 3 (complete): real Phase-0 engineering — helix_core WG CLI
+  binaries + quinn/h3 QUIC + MASQUE framing + map.json reconciler
+  (992e1be); helix_edge&#39;s first real crate, a genuine WG handshake
+  traversing MASQUE-client -&gt; edge-relay -&gt; wg_session responder
+  (08d6e18); helix_go&#39;s first real Go module, a MASQUE/CONNECT-UDP
+  edge spike (57d4972, plus a .gitignore bugfix that was silently
+  excluding pkg/ from version control). A second, deeper decoupling
+  audit found llm_orchestrator/vision_engine/llms_verifier/panoptic&#39;s
+  ENTIRE governance docs described an unrelated project (&quot;HelixCode&quot;)
+  — all four fixed and independently re-reviewed to a clean GO
+  (bf0ce58+ef73c3a, 2f22942, 9281cae2, 31aaceb). containers&#39;
+  compose_detector.go hardcoded an operator home directory in
+  production code — fixed with a real os.UserHomeDir() resolution +
+  a regression test (a432efa). Every fix passed independent adversarial
+  code review before being accepted, iterating to a clean GO where the
+  first pass was incomplete (§11.4.125/§11.4.134).
 
-Active work queue
------------------
-1. §11.4.134 re-review of V1/V6/V7/V8/V0 reconciliation fixes
-2. §11.4.168 Mermaid rendering verification (full re-export)
-3. docs_chain wiring (§11.4.106)
-4. vasic-digital component repos (deferred until spec stabilizes)
-5. DOCX exports (§11.4.153)
-
-First actions
--------------
-1. git fetch --all
-2. Check background task status
-3. Continue the work queue from item 3+</code></pre>
+What&#39;s next
+-----------
+1. git fetch --all --prune &amp;&amp; git submodule foreach --recursive &#39;git fetch --all --prune --quiet&#39;
+2. Read docs/CONTINUATION.md fully, starting at &quot;ROUND 3: FULLY LANDED&quot;
+3. Nothing from Rounds 1-3 is outstanding. The one carried-forward
+   follow-up round (not yet dispatched): broken
+   [Constitution.md](Constitution.md) self-links (should be uppercase
+   CONSTITUTION.md) in docs_chain; stale package tables in
+   challenges/security; PascalCase GitHub.sh/GitLab.sh upstream
+   scripts in 11 &quot;borrowed&quot; submodules (§11.4.29 lowercase-snake_case
+   violation).
+4. Otherwise, await new operator instructions (the operator indicated
+   mvp4 work would follow full Round 2/3 completion).</code></pre>
 </body>
 </html>

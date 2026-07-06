@@ -13,45 +13,61 @@
 
 ---
 
-## ROUND 4: FINAL MVP DOCUMENTATION & PLATFORM READINESS (IN PROGRESS)
+## ROUND 4: FINAL MVP DOCUMENTATION & PLATFORM READINESS — LANDED
 
-**Started:** 2026-07-05T11:57:05Z
-**Goal:** Prepare complete, sorted, merged MVP documentation under
-`docs/research/mvp/final/implementation/` as the single source of truth;
-install and integrate OpenDesign (`nexu-io/open-design`); reconcile all
-Helix code submodules to the spec; define full testability and author
-HelixVPN-specific Challenges + HelixQA banks; run independent adversarial
-review until the package is ready for dev-team kick-off.
+**Started:** 2026-07-05T11:57:05Z  
+**Landed:** 2026-07-06T13:28:40Z  
+**Main repo commit:** `ecb940856ba8969e323dc163b45b9595f6ad7326`  
+**Handoff report:** `docs/reviews/mvp-final/signoffs/mvp-final-handoff-report.md`
 
-**State at dispatch:**
-- Main repo at `77e7dfdaace83f41a5faa5861d28de5bc67283e5`.
-- All remotes fetched and pruned; submodule remotes fetched recursively.
-- Git hooks installed (`core.hooksPath = .githooks`); pre-build gate passes.
-- Added `ignore = dirty` to `submodules/helix_qa` in `.gitmodules` to
-  suppress third-party nested-tool working-tree drift (`docling`/`skyvern`).
-- Existing docs present in `docs/research/mvp/final/` (12 main docs + index +
-  versioned dirs); design assets present in `docs/design/` with OpenDesign-style
-  manifest/tokens/components at `docs/design/opendesign/helix/`.
-- OpenDesign CLI **not** installed (`/usr/bin/od` is GNU coreutils).
-- `helix_proto`, `helix_ui`, `helix_transport`, `helix_shims`, `helix_design`
-  remain scaffolding; `helix_core`/`helix_edge`/`helix_go` have Phase-0 spikes.
+**Goal achieved:** The consolidated MVP implementation source-of-truth is authored,
+reviewed, committed, pushed, and verified. The package is ready for development-team
+kick-off.
 
-**Parallel workstreams dispatched (all running):**
-1. **Phase 1 — Docs consolidation:** audit existing MVP docs, close GAP-6/RBAC/GAP-1,
-   populate `docs/research/mvp/final/implementation/`.
-2. **Phase 2 — OpenDesign integration:** add `submodules/open-design`, build the CLI,
-   validate/generate design assets.
-3. **Phase 3 — Code/spec alignment:** reconcile `helix_*` submodules, define protobufs,
-   create decoupling/reusability plan.
-4. **Phase 4 — QA/test banks:** define coverage ledger, author HelixVPN Challenges and
-   HelixQA banks.
+**Deliverables landed:**
+1. `docs/research/mvp/final/implementation/` — 13 numbered sections + source-coverage
+   ledger, all with HTML/PDF/DOCX siblings.
+2. `docs/design/opendesign/helix/` — OpenDesign design system (manifest, tokens,
+   components, exports); imports cleanly (exit 0).
+3. `submodules/helix_proto/` — five `.proto` packages, generated Go stubs,
+   `go.mod`/`go.sum`; `go build ./gen/...` and `buf lint` pass.
+4. `submodules/challenges/helix_vpn/` + `submodules/helix_qa/banks/helix_vpn/` —
+   8 Challenges + 8 HelixQA cases, bidirectionally traceable with the coverage ledger.
+5. `docs/reviews/mvp-final/review-rounds/round-{1,2}-{docs,design,code,qa}-findings.md` —
+   two full rounds of independent adversarial review.
 
-**Next actions:**
-- Receive subagent completion reports.
-- Run independent adversarial review (Phase 5).
-- Fix findings and iterate until clean GO.
-- Commit and push per submodule + main repo; verify `git rev-parse` equality.
-- Update `.remember/remember.md`.
+**Round-2 adversarial verdicts:**
+- Docs: **GO-with-conditions** → post-review conditions fixed.
+- Design: **GO-with-conditions** → source-manifest consistency fixed; token-contract
+  grade `needs-rebuild` explicitly accepted and documented.
+- Code: **GO**.
+- QA: **GO**.
+
+**Key fixes closed in this round:**
+- `helix_proto` `go_package` paths aligned with generated directory layout so Go stubs
+  are importable.
+- GAP-1 connector local-ACL × central-policy precedence rule backported from the
+  consolidation READMEs into `v03-control-plane/svc-policy.md` and
+  `v04-client/helix-core-rust.md`; `requirements-traceability.md` and
+  `functional-requirements.md` updated to CLOSED/VERIFIED.
+- QA coverage ledger made bidirectionally traceable to the actual bank contents; 8
+   Challenge IDs and 8 HelixQA IDs minted; DDoS entries added for NFR-413/NFR-414.
+- OpenDesign source manifest stripped of import-generated path declarations so the
+   source package is reproducible.
+
+**Verification:**
+- `tests/pre_build_verification.sh` — PASS.
+- Mermaid validation — 361/361 blocks rendered ok across `docs/research/mvp/final/`.
+- `go build ./gen/...` and `buf lint` in `submodules/helix_proto` — PASS.
+- All submodule commits verified by `git rev-parse HEAD` equality against every
+  configured remote.
+- Main repo push verified by `git rev-parse HEAD` equality against `github`,
+  `origin`, and `upstream`.
+
+**Honest residual gaps (not kick-off blockers):** GAP-3, GAP-4, GAP-5,
+OpenDesign token-contract grade `needs-rebuild`, and Phase-2 DDoS attack-rate
+constants. All are tracked in the coverage ledger, review reports, and handoff
+report.
 
 ---
 
