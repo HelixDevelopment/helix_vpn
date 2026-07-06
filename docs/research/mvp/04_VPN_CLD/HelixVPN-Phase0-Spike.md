@@ -1,7 +1,7 @@
 # HelixVPN — Phase 0 Spike Plan
 
-**Revision:** 1
-**Last modified:** 2026-07-04T12:00:00Z
+**Revision:** 2
+**Last modified:** 2026-07-06T19:30:00Z
 **Note:** This is the original Claude-authored Phase-0 plan that seeded
 `final/06-phase0-spike-wbs.md`. It is kept as historical/primary-source reference
 ([04_P0] citations throughout the `final/` set point here); `06-phase0-spike-wbs.md`
@@ -388,6 +388,34 @@ One harness, run for every transport × edge combination so results are comparab
 
 Script it (`bench.sh`) so S4's A/B and S7's transport pair run identically and land in a CSV → the decision tables fill themselves.
 
+**Implementation note (HVPN-P0-077, added 2026-07-06):** the "one harness"
+called for above is `scripts/bench/unified_harness.sh` (root repo). It does
+not reimplement any transport/probe/edge logic — it drives the already-built
+Phase-0 tools (`submodules/helix_core`'s `g2-dpi-probe` binary + its own
+`scripts/spike/g2_dpi_masque_unpriv.sh` sandboxed rig, and this repo's own
+`scripts/bench/edge_ab.sh`) and normalizes their JSON/CSV output into ONE
+CSV (schema: `timestamp,gate,transport,edge,metric,value,unit,pass_bar,
+verdict,method,note`) covering G1 (plain-UDP baseline), G2 (MASQUE through a
+DPI-style block), and G4 (Rust-vs-Go edge A/B) against this table's rows.
+Honest scope, read before trusting a number it produces: this Phase-0
+codebase has no real end-to-end WireGuard dataplane wired up yet (no TUN
+device, no client-gateway-connector process chain running simultaneously) —
+only crate-level tests and probe binaries exist — so G1/G2's
+"through-tunnel throughput" and "added latency" rows are loopback
+TRANSPORT-PRIMITIVE numbers (the same code a future tunnel will carry WG
+datagrams over), not real tunnel measurements; every row's `note` column
+says so explicitly rather than silently relabeling a proxy as the real
+thing. `iperf3`, `tshark`, and `tcpdump` are absent from the sandbox this
+harness was authored in (confirmed via `command -v`); the loss-resilience,
+throughput, and wire-fingerprint numbers reuse the hand-rolled stand-ins the
+G2 work already built (real `AF_PACKET` sniffer, real `nft`-in-`unshare`
+DPI block, real paced offered-load goodput comparison) rather than
+reinventing them. `reconnect_roam` is honestly `SKIP`ped project-wide for
+G1/G2/G4 in this harness — no real up tunnel + flappable interface exists
+yet to measure it against. See `scripts/bench/README.md` for the full
+verdict vocabulary (`PASS`/`FAIL`/`RECORDED`/`NOT_APPLICABLE`/
+`NOT_MEASURED`/`SKIP`/`UNMEASURED_VS_BAR`) and usage.
+
 ---
 
 ## 9. FFI boundary — Flutter ↔ Rust core (S5, gate G5)
@@ -459,7 +487,7 @@ The reconciler diffs desired-vs-actual and converges (add/remove peers, switch t
 
 | Gate | Outcome | Evidence (numbers / capture) | Decision / consequence |
 |---|---|---|---|
-| G1 plain-UDP slice | ☐ pass ☐ fail | iperf …, ping … | — |
+| G1 plain-UDP slice | ☑ pass (core UDP transport + real WireGuard handshake proven; full netns-routed reachability not independently re-run here — needs root, see Decision column) | `submodules/helix_core` (commit `02c3636`, independently re-run 2026-07-06, not just cited from a prior note): **(1)** `cargo test -p helix-transport g1_udp_loopback_echo -- --nocapture` (`crates/helix-transport/tests/g1_integration.rs`) → 1/1 passed; the full file is 3/3 passed (`g1_udp_loopback_echo`, `g1_udp_multiple_messages`, `g1_udp_dial_unreachable`) — byte-identical 10-round UDP echo through the real `UdpTransport`, every round's RTT well inside the 5s per-round assertion; full-workspace `cargo test --all-targets` re-run green: 155 passed, 0 failed, 2 ignored. **(2)** A REAL boringtun Noise-IK WireGuard handshake (not just raw UDP) via `helix_orch::wg_session::run_client_handshake`/`run_connector_handshake` — the exact code `helix-client`/`helix-connector` drive — completes successfully on loopback with the DPI block INACTIVE (`g2-dpi-probe dpi-survival --block-active false`: `plain_udp_wg.success=true`, `elapsed_ms=0`), meeting the `<1s` handshake bar with large margin. **(3)** `scripts/bench/unified_harness.sh` (HVPN-P0-077, root repo) measured the plain-UDP transport primitive directly on loopback: baseline round-trip latency 0.0175ms, request-response goodput 1097.1 Mbps, 0.99 cores/Gbps, 7664 KiB peak RSS — honestly labeled a proxy, NOT an iperf3 bulk-throughput number (iperf3 unavailable in this sandbox, confirmed via `command -v iperf3`) and NOT a through-tunnel number (no real end-to-end WG dataplane — TUN + encrypt/decrypt + routed peer — is wired up yet anywhere in this Phase-0 codebase). CSV: `bench-results/unified-*.csv` (gitignored, regenerate via `./scripts/bench/unified_harness.sh`). | Core G1 claim (real UDP transport + real WireGuard handshake both work) is confirmed with real, independently re-run evidence. The full S2 milestone — routing through a simulated connector LAN via the 2-netns rig (`scripts/rig/test_g1.sh`) — needs real root (`sudo -n true` fails in this sandbox), so it remains written and ready but not executed here, the same class of gap already recorded for G2's `g2_dpi_masque_rig.sh`; tracked as Phase-0 follow-up, not a blocking finding about G1's basic viability. |
 | G2 MASQUE through DPI block | ☑ pass (core claim) / ☒ fail (2 quantitative sub-bars) | `submodules/helix_core` branch work merged to main (commit `02c3636`, `G2-RESULTS.md` at that commit): with a real nftables DROP on plain-WG UDP + ACCEPT on :443/udp (unprivileged `unshare --net --user` rig, root unavailable in this sandbox), the real boringtun Noise-IK handshake timed out at 5000ms while the real `helix-masque` quinn/QUIC connection succeeded in 1ms and moved an echo payload — core survival claim proven. Wire fingerprint: hand-rolled AF_PACKET capture (no tshark/tcpdump in sandbox) classified 16/16 captured :443 packets as QUIC long/short-header framing with QUIC v1 version bytes, 0 WireGuard signatures. **Sub-bars NOT met as tested, root-caused, not hidden:** under `tc netem loss 5% delay 40ms`, MASQUE did not beat a UDP-over-TCP strawman at 300kbps/2Mbps offered load — traced to RFC 9221 (QUIC DATAGRAM frames are congestion-controlled, so a fresh connection under immediate loss has no inherent raw-throughput edge; QUIC's real advantage is avoiding head-of-line blocking, a latency property this goodput-only metric didn't capture). Overhead: MASQUE ≈3.3× plain-UDP CPU/round-trip, 37.5% of plain-UDP request-response goodput (request-response, not saturating bulk — `iperf3` unavailable in sandbox). 36/36 (pre-merge) → 40/40 (post-merge with G6) helix-core tests green, 16 new zero-privilege `g2_wire` unit tests. Root-privileged 3-netns rig variant (`scripts/spike/g2_dpi_masque_rig.sh`) is written and `bash -n` clean but not executed (no root in this sandbox) — flagged follow-up: wire a `--target-ip` for genuine cross-namespace evidence. | Basic MASQUE-through-DPI-block survival is confirmed — architecture is NOT invalidated. Loss-resilience/throughput headline numbers remain open pending: (a) a latency/HoL-blocking metric instead of goodput-only, (b) a sustained-transfer (not request-response) measurement with `iperf3`, (c) execution of the root-privileged rig variant. Tracked as Phase-0 follow-up, not blocking G2's core pass. |
 | G3 iOS memory | ☐ pass ☐ fail | peak RSS … / ceiling … / headroom … % | core stays Rust ↔ fallback §6.4 |
 | G4 edge language | ☑ measured, decision deferred | `scripts/bench/edge_ab.sh` (root repo, independently re-run by controller): peak sink throughput R:1163.9 Mbps @c=10 / G:884.5 Mbps @c=1; CPU R:0.81 / G:1.28 cores·Gbps⁻¹ @c=10; idle p99 R:0.064ms / G:0.143ms; handshake@c=100 p99 R:217.6ms / G:275.6ms; churn R:1986.7/s / G:332.8/s @c=10. **Honest caveat: Rust's `helix-edge` path is a hand-rolled non-HTTP/3 CONNECT-UDP stand-in (helix-masque's own docs cite `h3` as not yet viable for this), while Go's uses the real RFC 9298 `masque-go`/`quic-go` stack — so Rust's throughput/CPU/latency wins here are not yet an apples-to-apples MASQUE-conformance comparison.** Run-to-run variance on shared hardware is non-trivial; treat as one representative sample, not a precise benchmark. CSV: `bench-results/bench-*.csv` (gitignored, regenerate via `make bench-edge-ab`). | Decision NOT closed — re-run once Rust's CONNECT-UDP is either genuinely HTTP/3-conformant or the comparison is explicitly reframed as "hand-rolled vs turnkey" per §7.3's dev-cost row before committing to single-impl vs dual-impl |

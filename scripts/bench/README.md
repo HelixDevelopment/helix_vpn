@@ -2,14 +2,13 @@
 
 ## Overview
 
-The benchmark harness covers two independent measurement suites, both
-writing into the same CSV schema (`timestamp,test_type,metric,value,unit`)
-so one file can be diffed/compared/tabulated uniformly:
+The benchmark harness covers three measurement suites:
 
 1. **netns-rig suite** (`run.sh`'s `latency_test`/`throughput_test`) —
    **latency**, **throughput**, **packet loss**, and **jitter** through the
    Helix VPN test rig (network namespace topology with client, server, and
-   bridge namespaces per `scripts/rig/`). Requires root + `iperf3`.
+   bridge namespaces per `scripts/rig/`). Requires root + `iperf3`. Writes
+   `timestamp,test_type,metric,value,unit`.
 2. **G4 edge A/B suite** (`edge_ab.sh`, HVPN-P0-045) — drives the REAL Rust
    `helix-edge` and Go `go-edge` MASQUE-termination binaries through the
    identical protocol from `HelixVPN-Phase0-Spike.md` §7.2 (throughput at
@@ -17,7 +16,86 @@ so one file can be diffed/compared/tabulated uniformly:
    connection-churn handshakes/sec, memory-under-churn) so the §7.3
    decision matrix can be filled mechanically via `decision_matrix.sh`.
    Runs entirely on loopback — **no root, no iperf3 needed**. `run.sh`
-   invokes it automatically (disable with `--skip-edge-ab`).
+   invokes it automatically (disable with `--skip-edge-ab`). Writes
+   `timestamp,test_type,metric,value,unit`.
+3. **Unified G1/G2/G4 harness** (`unified_harness.sh`, HVPN-P0-077) — the
+   "one harness ... for every transport x edge combination" §8 calls for.
+   See its own section below. Writes a DIFFERENT, wider schema:
+   `timestamp,gate,transport,edge,metric,value,unit,pass_bar,verdict,
+   method,note`.
+
+The first two suites share one schema so their files can be
+diffed/compared/tabulated uniformly (`compare.sh`); the unified harness's
+CSV is intentionally wider (it needs `gate`/`pass_bar`/`verdict`/`method`
+columns to be self-describing across G1/G2/G4 in one file) and is its own
+format — read it directly or with `awk -F,`/`jq`-over-`csv`, not with
+`compare.sh`.
+
+## Unified G1/G2/G4 measurement harness (`unified_harness.sh`)
+
+```bash
+# Full run: G1 (plain-UDP baseline) + G2 (MASQUE through a DPI-style
+# block) + G4 (Rust-vs-Go edge A/B), one CSV
+./scripts/bench/unified_harness.sh
+
+# Faster / narrower runs
+./scripts/bench/unified_harness.sh --skip-g4                 # G1+G2 only, ~35s
+./scripts/bench/unified_harness.sh --skip-loss                # skip the ~25s tc-netem loss-resilience phase
+./scripts/bench/unified_harness.sh --out-csv /path/to/out.csv
+```
+
+This is `edge_ab.sh` generalized to also cover G1 and G2, per
+`HelixVPN-Phase0-Spike.md` §8: "One harness, run for every transport x
+edge combination so results are comparable." It does **not** reimplement
+any transport/probe/edge logic — it drives `submodules/helix_core`'s
+`g2-dpi-probe` binary (via its `overhead`/`dpi-survival`/`loss-resilience`
+subcommands) + that submodule's own `scripts/spike/g2_dpi_masque_unpriv.sh`
+sandboxed rig (real `nft` DPI block inside `unshare --net --user`, real
+`AF_PACKET` wire-fingerprint capture) + this directory's own `edge_ab.sh`,
+and normalizes their real JSON/CSV output into one comparable CSV.
+
+**Verdict vocabulary** (the `verdict` column, closed set):
+
+| Verdict | Meaning |
+|---|---|
+| `PASS` / `FAIL` | The row's real measured value was checked against its `pass_bar` and genuinely passed/failed. |
+| `RECORDED` | Spec §8 says "record" for this metric (no PASS/FAIL bar) — the number is captured, not judged. |
+| `NOT_APPLICABLE` | This metric's pass-bar text doesn't apply to this gate (e.g. `wire_fingerprint` for G1 — plain WireGuard isn't hiding). |
+| `NOT_MEASURED` | This run's tooling doesn't exercise this metric for this gate (e.g. `edge_ab.sh` has no loss-impairment step) — see the row's `note` for the project-wide source of truth. |
+| `SKIP` | Genuinely unmeasurable in this Phase-0 codebase/sandbox right now (e.g. `reconnect_roam` — no real up tunnel + flappable interface exists yet). |
+| `UNMEASURED_VS_BAR` | The number itself is real, but no valid comparator exists to judge it against its bar (e.g. G1's own throughput number IS the closest thing to a "bare link" reference — there's nothing distinct to compute a percentage against). |
+
+**Honest scope** (read before trusting a number this script produces):
+this Phase-0 codebase has **no real end-to-end WireGuard dataplane wired
+up yet** (no TUN device, no client-gateway-connector process chain running
+simultaneously — only crate-level tests and probe binaries exist). So
+G1/G2's `through_tunnel_throughput_mbps` and `added_latency_ms` are
+loopback **transport-primitive** numbers (the same code a future tunnel
+will carry WG datagrams over), not real tunnel measurements — every such
+row's `note` column says so explicitly. `iperf3`, `tshark`, and `tcpdump`
+are absent from the sandbox this harness was authored in (confirmed via
+`command -v`); the loss-resilience, throughput, and wire-fingerprint
+numbers reuse the real hand-rolled stand-ins the G2 work already built
+(paced offered-load goodput comparison, `AF_PACKET` sniffer, `nft`-in-
+`unshare` DPI block) rather than reinventing them.
+
+**A real bug found (and worked around, not silently patched over) while
+building this harness:** `g2_dpi_masque_unpriv.sh`'s own internal
+loss-resilience phase (in `submodules/helix_core`, out of this task's file
+scope) runs both its offered-load sub-tests as plain statements under
+`set -euo pipefail`. `g2-dpi-probe`'s `loss-resilience` subcommand's exit
+code communicates its measured PASS/FAIL **verdict** (exits 1 on a real
+"FAIL", the exact same convention its `overhead`/`dpi-survival`
+subcommands use) — and a "FAIL" is the historically expected, honestly
+documented real outcome of that specific test (see
+`submodules/helix_core/G2-RESULTS.md` §5). So the wrapper aborts before
+its second sub-test and its own `tc` cleanup whenever that happens —
+reproduced directly (running it unmodified left only one of the two
+expected evidence files on disk, with no explicit error text). This
+harness works around it by re-running both offered-load sub-tests itself,
+reusing the identical technique (same binary, same `unshare`, same `tc
+netem loss 5% delay 40ms 10ms`) with tolerant error handling, rather than
+editing that out-of-scope script.
 
 ## G4 Edge A/B benchmark (`edge_ab.sh`)
 
