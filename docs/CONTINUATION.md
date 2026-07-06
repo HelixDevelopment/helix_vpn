@@ -1,7 +1,7 @@
 # Helix VPN — Session Continuation File
 
-**Revision:** 16
-**Last modified:** 2026-07-05T12:00:00Z
+**Revision:** 17
+**Last modified:** 2026-07-06T15:40:00Z
 
 > Helix Constitution §11.4.131 — standing session-resumption artifact.
 > Re-read this file at the start of any new session before touching code.
@@ -10,6 +10,93 @@
 > `git rev-parse`/`workable-items validate` output, never against
 > in-context memory or a prior handoff's text alone (see the
 > multi-session lesson below).
+
+---
+
+## ROUND 5: PHASE 0 SPIKE KICK-OFF — G2/G4/G5/G6 GATES CLOSED (2026-07-06)
+
+**Started:** 2026-07-06T15:15:00Z
+**Landed:** 2026-07-06T15:40:00Z (this entry)
+**Trigger:** operator instruction to kick off real development against the Round-4
+documentation package, then a follow-up demand for ≥3-4 parallel autonomous subagent
+streams on parallelizable workable items.
+
+**What happened:** dispatched 4 parallel subagents against the 13 remaining queued
+Phase-0 (`P0`) tasks in `docs/workable_items.db`, picking the 4 that were genuinely
+independent (different repos/crates, no shared file scope): two in isolated
+`git worktree`s of `helix_core` (avoiding index/lock contention on the same repo per
+§11.4.176/§11.4.179), one in `helix_shims` (previously empty scaffolding), one in the
+root repo's `scripts/bench`+`scripts/spike` + `submodules/containers`. All 4 returned
+real, independently-controller-reverified results (re-ran test suites / a bounded
+bench sample myself, not just trusted the subagent reports) — no bluffed PASSes.
+
+**Closed this round (all `Completed (→ Fixed.md)` in the workable-items DB):**
+- `HVPN-P0-074` — **G6 pass.** Live `map.json` file-watch reconciliation wired into
+  `helix-orch::Orchestrator` (poll-based, no new crate dep). Real test: peer
+  unreachable → edit `map.json` → reachable within 5s, no restart, unrelated peer
+  undisturbed. `helix_core` commit `c2e815e` (merged to main at `02c3636`).
+- `HVPN-P0-049` — **G5 pass.** New `helix-ffi` crate in `helix_shims` (bootstrapped
+  from empty scaffolding) implementing the flutter_rust_bridge v2 surface
+  (`ClientConfig`/`start`/`stop`/`status_stream`/`TunnelStatus`), driving a **real**
+  WireGuard handshake through `helix-orch`. TDD caught a real race (late stream
+  subscription missing the `Connecting` event) and fixed it. `helix_shims` commit
+  `4958072`, merged to its `main` and pushed. **Honest gap:** Dart/Flutter codegen
+  not run — no `dart`/`flutter` toolchain in this environment; tracked as a
+  follow-up, not silently skipped.
+- `HVPN-P0-045` + `HVPN-P0-080` — **G4 measured, decision deferred.**
+  `scripts/bench/edge_ab.sh` + `decision_matrix.sh` now drive both the Rust
+  (`helix-edge`) and Go (`masqueedge`) MASQUE edges through an identical
+  throughput/CPU/latency/churn protocol into a CSV; `scripts/spike.sh` S4 now proves
+  genuine `containers` submodule runtime connectivity instead of just checking an
+  executable bit. **Honest caveat surfaced by the subagent and preserved in the
+  decision log:** Rust's edge currently uses a hand-rolled non-HTTP/3 CONNECT-UDP
+  stand-in (per `helix-masque`'s own docs — the `h3` crate isn't yet viable for
+  this), while Go's is the real RFC 9298 stack — so the numbers aren't yet an
+  apples-to-apples MASQUE-conformance comparison. Root repo commits `f58d079` +
+  `edc80b0` (the second fixes two compiled binaries — `helix_vpn_go_edge_bench`,
+  `helix_vpn_containers_check` — that slipped past a `.gitignore` filename mismatch
+  into the first commit; caught during controller review and fixed forward, not by
+  rewriting history).
+- `HVPN-P0-035` — **G2 core claim pass, 2 quantitative sub-bars fail (root-caused,
+  not hidden).** Real nftables DROP on plain-WG UDP + ACCEPT on :443/udp (run
+  unprivileged via `unshare --net --user`, since no root/sudo was available in this
+  sandbox): the real boringtun handshake timed out while the real MASQUE/QUIC
+  connection succeeded and moved traffic — core survival proven. Wire fingerprint:
+  hand-rolled AF_PACKET capture (no tshark in sandbox) classified 16/16 `:443`
+  packets as QUIC, 0 WireGuard signatures. **But** loss-resilience under
+  `netem loss 5%` did NOT beat a UDP-over-TCP strawman — traced to RFC 9221 (QUIC
+  DATAGRAM frames are congestion-controlled, so a fresh connection under immediate
+  loss has no inherent raw-throughput edge; QUIC's real advantage here is avoiding
+  head-of-line blocking, a latency property the goodput-only metric used didn't
+  capture). `helix_core` commit `c257a7e` (merged to main at `02c3636`).
+
+**Full decision log (G1–G6):** see
+`docs/research/mvp/04_VPN_CLD/HelixVPN-Phase0-Spike.md` §12 — G2/G4/G5/G6 rows
+filled this round with evidence citations; G1/G3 remain from earlier rounds (G1
+marked done in the DB but its §12 row was never backfilled with evidence — a
+pre-existing gap, not introduced this round; G3 needs a real iOS device, out of
+autonomous reach).
+
+**Verification performed by the controller (not just trusted subagent claims):**
+independently re-ran `cargo test` for both `helix_core` merges (40/40 green) and
+`helix_shims`'s `helix-ffi` (9/9 green), and ran a bounded (`--duration-secs 2`)
+real invocation of `scripts/bench/edge_ab.sh` producing real, if differently-valued,
+numbers — confirming the harness is genuinely reproducible, not a one-off.
+
+**Remaining queued P0 tasks (untouched this round):** `HVPN-P0-052` (Flutter-Linux
+toggle, G5 close — now unblocked since `helix-ffi` exists), `HVPN-P0-055`/`058`
+(Android VpnService+JNI, real-device E2E — needs a physical phone),
+`HVPN-P0-061`/`064` (iOS staticlib + NEPacketTunnelProvider — needs a real device
+per §6.3, Simulator is explicitly non-representative), `HVPN-P0-067` (memory soak,
+depends on a real tunnel being up), `HVPN-P0-077` (unified measurement harness —
+partially subsumed by `edge_ab.sh`), `HVPN-P0-078` (decision log + demo script —
+depends on all other gates closing first).
+
+**Known pre-existing gap (not introduced this round, noted honestly):**
+`workable-items diff` reports 43 MD↔DB divergences, all on `milestone`/`epic`-kind
+items across all four WBS docs — the `db-to-md` generator does not appear to render
+these kinds at all (only `task`/`subtask`). Not investigated further this round;
+flagged for whoever next touches the docs_chain/generator tooling.
 
 ---
 
