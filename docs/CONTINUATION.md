@@ -1,7 +1,7 @@
 # Helix VPN — Session Continuation File
 
-**Revision:** 17
-**Last modified:** 2026-07-06T15:40:00Z
+**Revision:** 18
+**Last modified:** 2026-07-06T14:20:47Z
 
 > Helix Constitution §11.4.131 — standing session-resumption artifact.
 > Re-read this file at the start of any new session before touching code.
@@ -896,7 +896,7 @@ and are no longer next-up):**
 
 ### SHORT variant
 
-> Continue work on `main` in `/run/media/milosvasic/DATA4TB/Projects/helix_vpn`; read `docs/CONTINUATION.md` first (esp. "ROUND 3: FULLY LANDED" at the top — Rounds 1-3 are all complete and pushed). Pick up the queued follow-up round: broken `Constitution.md` self-links in `docs_chain`, stale package tables in `challenges`/`security`, and PascalCase `GitHub.sh`/`GitLab.sh` upstream scripts in 11 submodules (§11.4.29) — or await new operator instructions (mvp4).
+> Continue work on `main` in `/run/media/milosvasic/DATA4TB/Projects/helix_vpn`; read `docs/CONTINUATION.md` first (esp. "ROUND 5" at the top — Rounds 1-5 are all complete and pushed, HEAD verified identical across origin/github/upstream). Three parallel tracks are in flight: P0-052 (Flutter-Linux toggle, `submodules/helix_ui`), P0-077+P0-078 (measurement-harness CSV contract + decision-log G1 backfill + demo script, root repo), and a `db-to-md` generator fix for the 43 milestone/epic MD↔DB divergences (`cmd/workable-items`). The remaining P0-055/058/061/064/067 items are genuinely device-blocked (real Android/iOS hardware, none available autonomously).
 
 ### FULL variant
 
@@ -906,46 +906,53 @@ You are resuming work on the Helix VPN project.
 Repository:  /run/media/milosvasic/DATA4TB/Projects/helix_vpn
 Branch:      main
 Handoff doc: docs/CONTINUATION.md  ← read this FIRST, especially
-             "ROUND 3: FULLY LANDED" at the top.
+             "ROUND 5" at the top.
 
-State at handoff (2026-07-05, Rounds 1-3 all complete and pushed)
+State at handoff (2026-07-06, Rounds 1-5 all complete and pushed;
+HEAD e66e07d confirmed identical across origin/github/upstream via
+direct git rev-parse, never trusted from memory or a prior handoff's
+text alone — see the multi-session lesson further down this file)
 -------------------------------------------------------------------
 - Round 1 (complete): full MVP spec set, OpenDesign system, Phase-0
   Rust scaffolding, workable-items DB.
 - Round 2 (complete): full gap-analysis + enterprise hardening across
-  mvp/mvp2/mvp3/final docs, unified phase roadmap. Main repo commits
-  e46a710/20dc9a4/212e56c.
-- Round 2.1 (complete): first fleet-wide decoupling audit — removed
-  hardcoded "Helix VPN" project-name references from 19 submodules'
-  governance files + helix_core's real Rust source metadata.
-- Round 3 (complete): real Phase-0 engineering — helix_core WG CLI
-  binaries + quinn/h3 QUIC + MASQUE framing + map.json reconciler
-  (992e1be); helix_edge's first real crate, a genuine WG handshake
-  traversing MASQUE-client -> edge-relay -> wg_session responder
-  (08d6e18); helix_go's first real Go module, a MASQUE/CONNECT-UDP
-  edge spike (57d4972, plus a .gitignore bugfix that was silently
-  excluding pkg/ from version control). A second, deeper decoupling
-  audit found llm_orchestrator/vision_engine/llms_verifier/panoptic's
-  ENTIRE governance docs described an unrelated project ("HelixCode")
-  — all four fixed and independently re-reviewed to a clean GO
-  (bf0ce58+ef73c3a, 2f22942, 9281cae2, 31aaceb). containers'
-  compose_detector.go hardcoded an operator home directory in
-  production code — fixed with a real os.UserHomeDir() resolution +
-  a regression test (a432efa). Every fix passed independent adversarial
-  code review before being accepted, iterating to a clean GO where the
-  first pass was incomplete (§11.4.125/§11.4.134).
+  mvp/mvp2/mvp3/final docs, unified phase roadmap.
+- Round 2.1 (complete): first fleet-wide decoupling audit.
+- Round 3 + 3.1 (complete): real Phase-0 Rust/Go engineering across
+  helix_core/helix_edge/helix_go; second, deeper decoupling audit
+  (HelixCode contamination in 4 submodules, hardcoded home-dir in
+  containers) fixed and re-reviewed to clean GO; fleet-wide
+  lowercase-snake_case + broken-self-link cleanup.
+- Round 4 (complete): consolidated MVP implementation doc set (13
+  sections + coverage ledger), OpenDesign system, helix_proto stubs,
+  Challenges/HelixQA banks, connector.md, two rounds of adversarial
+  review to GO. Main repo commit d8b9fc1.
+- Round 5 (complete): real Phase-0 spike engineering closing gates
+  G2/G4/G5/G6 — HVPN-P0-074 (live map.json reconciliation),
+  HVPN-P0-049 (helix-ffi crate + real WG handshake via flutter_rust_
+  bridge v2 surface, Dart codegen honestly deferred — no toolchain),
+  HVPN-P0-045/080 (edge_ab.sh A/B bench harness, Rust-vs-Go MASQUE
+  edge, decision deferred pending apples-to-apples conformance),
+  HVPN-P0-035 (G2 core survival proven, 2 quantitative sub-bars
+  honestly failed and root-caused, not hidden). All independently
+  re-verified by the controller (re-ran test suites, not just
+  trusted subagent reports). Main repo HEAD e66e07d.
 
 What's next
 -----------
 1. git fetch --all --prune && git submodule foreach --recursive 'git fetch --all --prune --quiet'
-2. Read docs/CONTINUATION.md fully, starting at "ROUND 3: FULLY LANDED"
-3. Nothing from Rounds 1-3 is outstanding. The one carried-forward
-   follow-up round (not yet dispatched): broken
-   [Constitution.md](Constitution.md) self-links (should be uppercase
-   CONSTITUTION.md) in docs_chain; stale package tables in
-   challenges/security; PascalCase GitHub.sh/GitLab.sh upstream
-   scripts in 11 "borrowed" submodules (§11.4.29 lowercase-snake_case
-   violation).
-4. Otherwise, await new operator instructions (the operator indicated
-   mvp4 work would follow full Round 2/3 completion).
+2. Read docs/CONTINUATION.md fully, starting at "ROUND 5" at the top.
+3. Check status of the 3 parallel tracks dispatched at the end of
+   Round 5 (P0-052 Flutter-Linux toggle in helix_ui; P0-077+P0-078
+   measurement-harness/decision-log/demo-script in the root repo;
+   db-to-md generator fix for the 43 milestone/epic MD↔DB
+   divergences in cmd/workable-items) — they may have returned,
+   partially landed, or still be in flight; verify via
+   `workable-items diff` + `git log` + `git status`, never assume.
+4. Remaining queued P0 items needing a real device (P0-055/058
+   Android VpnService+JNI, P0-061/064 iOS staticlib+
+   NEPacketTunnelProvider, P0-067 memory soak) are genuinely
+   Operator-blocked per §11.4.21 — no physical phone/iPhone reachable
+   autonomously in this environment.
+5. Otherwise, await new operator instructions.
 ```
