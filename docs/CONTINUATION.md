@@ -1,7 +1,7 @@
 # Helix VPN — Session Continuation File
 
-**Revision:** 20
-**Last modified:** 2026-07-06T16:54:01Z
+**Revision:** 21
+**Last modified:** 2026-07-07T20:49:00Z
 
 > Helix Constitution §11.4.131 — standing session-resumption artifact.
 > Re-read this file at the start of any new session before touching code.
@@ -10,6 +10,126 @@
 > `git rev-parse`/`workable-items validate` output, never against
 > in-context memory or a prior handoff's text alone (see the
 > multi-session lesson below).
+
+---
+
+## ROUND 7: PHASE-0 CLOSEOUT + PHASE-1 GATE-HARDENING KICK-OFF (2026-07-07)
+
+**Started:** 2026-07-07T19:00:00Z (session resumed mid-context; found the repo
+had already progressed through Rounds 5/6 via prior background work this
+session had no in-context memory of — re-verified everything from git/DB
+state before acting, per this file's own multi-session lesson below).
+**Landed:** 2026-07-07T20:49:00Z (this entry).
+**Trigger:** operator's repeated "continue endless autonomous loop, 3-4
+parallel subagents, rock-solid evidence, no bluff" directive.
+
+**What happened, in order:**
+
+1. **Landed uncommitted work found sitting in the tree**: a 13-run
+   statistical re-check of the G4 Rust-vs-Go edge benchmark
+   (`scripts/bench/g4-statistical-analysis-2026-07-06.md`) plus its
+   matching decision-log update — resolves the earlier single-sample
+   ranking-flip ambiguity: **Go wins throughput 13/13** (mean +489 Mbps)
+   while **Rust wins CPU-efficiency and connection-churn 13/13** — a
+   genuine three-axis trade-off, not a coin flip. G4's edge-language call
+   remains an explicit open operator decision (not closed by this data).
+   Root commit `b218a26`.
+2. **Retried HVPN-P0-055/058 (Android) and HVPN-P0-061/064 (iOS)** — the
+   previous round's attempts at these had been lost when their scratch
+   worktrees got wiped by a process restart before committing (confirmed:
+   both branches were still at their unmodified base commit). Re-dispatched
+   with an explicit "commit after every increment" instruction this time.
+   - **iOS**: real `apple/helix-ios-ffi` C-ABI crate + genuine `cbindgen`
+     header generation (fixing a real cbindgen `Option<fn>` codegen bug
+     along the way) + complete Swift `NEPacketTunnelProvider` skeleton.
+     Rust cross-compile to `aarch64-apple-ios` confirmed blocked at
+     `ring`/`boringtun`'s `build.rs` (no Apple SDK on Linux — exact error
+     captured, an unavoidable wall for any non-Mac host). **A background
+     security review of the committed Swift file found 3 real
+     memory-safety/lifecycle issues** (use-after-free from an unretained
+     C-side self-pointer; the inbound callback and the outbound pump loop
+     both continuing to act after `stopTunnel`) — the controller traced
+     the exact C ABI contract in `engine.rs`, confirmed
+     `helix_core_stop()` genuinely blocks until the engine thread joins,
+     and fixed all 3 (verified by careful manual read-through only — this
+     file cannot be compiled without Xcode). `helix_shims` commit
+     `9eb51bb`.
+   - **Android**: real Gradle app module (`HelixVpnService`, JNI decls,
+     config parsing), 20/20 unit tests, a signed debug APK genuinely
+     assembled. Rust cross-compile blocked on an isolated-worktree
+     environment gap (no sibling `helix_core` checkout — honestly
+     captured, not worked around by bypassing sandbox permissions).
+     **A genuine emulator run** (KVM-accelerated AVD via the `containers`
+     submodule's own orchestrator — the fully-containerized image path
+     was blocked by a private-registry 401, honestly reported and
+     substituted) **found and fixed a real crash**: `UnsatisfiedLinkError`
+     is a `LinkageError` (an `Error`, not an `Exception`), so an existing
+     `catch (Exception)` never caught it during cleanup, killing the app
+     process — fixed via TDD (RED reproduced with Robolectric, then
+     GREEN) with a `nativeLoaded` guard flag. Never described as a real
+     device — "emulator" throughout. `helix_shims` commit `3a3ba03`.
+3. **Independent adversarial audit** of the freshest, highest-regression-risk
+   work (the G4 statistics, the `HVPN-P0-011` boringtun-fixture fix, the
+   `HVPN-P0-049` FFI-projector fix) — re-ran everything from scratch
+   (independently recomputed the G4 statistics bit-for-bit from raw CSVs,
+   did the WireGuard fixture byte-math by hand against boringtun's actual
+   vendored source, reproduced both original failures by reverting just
+   the fix). **All 3 CONFIRMED**, no bluffs found.
+4. **`HVPN-P1-001` (G1 gate, Phase-1 rigor)** — deliberately chosen as this
+   round's Phase-1 entry point because the workable-items DB shows it has
+   zero dependencies (the actual root of the `P1-010→P1-005→P1-001` chain)
+   — hardening it does not jump ahead of any still-open Phase-0 gate.
+   Real statistical BENCH (RTT percentiles + sustained throughput) +
+   E2E (50 verified round trips, simulated drop, fresh handshake/roam,
+   50 more verified round trips — recovery 8-11ms vs a <3s bar).
+   `helix_core` commit `338fae1`.
+5. **Closing `HVPN-P1-001` unblocked `HVPN-P1-002`/`005`/`006`** (all three
+   listed it as their only dependency) — dispatched in parallel alongside
+   the Android retry, bringing the round back up to 4 concurrent streams:
+   - **`HVPN-P1-002` (G2)**: real BENCH (QUIC latency/throughput, honest
+     RFC 9221 congestion-ceiling measurement), 6 adversarial SEC tests,
+     a sustained 20-round E2E survival test. **Found and fixed 2 real bugs**
+     while building the E2E test: a `quinn` connection-drop race, and a
+     stale-connector-reuse bug that silently turned a negative control
+     into a no-op. `helix_core` commit `f45fd29`.
+   - **`HVPN-P1-005` (G5)**: UI-facing contract hardened (14→23 tests) —
+     late subscription, concurrent subscribers, dead-subscriber safety,
+     concurrent start/stop correctness, 3-cycle E2E. Honest scope note:
+     no Dart/Flutter toolchain in this sandbox, so "UI" was tested as the
+     contract a UI would consume, not faked. Real positive finding: a
+     stopped session's sink genuinely closes (→ Dart's `onDone`), not
+     just goes silent — a prior test assumption was corrected.
+     `helix_shims` commit `a323196`.
+   - **`HVPN-P1-006` (G6)**: 3 new scenarios (rapid successive edits,
+     malformed intermediate `map.json` write, 4-peer no-cross-contamination)
+     — no bug found, existing reconciler design already correct.
+     `helix_core` commit `c653011`.
+
+**Every merge in this round was independently re-verified by the
+controller** (re-ran the relevant crate's/module's test suite fresh,
+post-merge, before pushing) — not just trusted from the implementing
+subagent's own report. Two accidental compiled-binary commits from an
+earlier round's `.gitignore` filename mismatch were also caught and fixed
+forward (never rewriting history).
+
+**DB state after this round:** 485 items, `validate` PASS/0 issues. P0: 29
+`Completed`, 3 `Fixed`, 1 `In progress` (`HVPN-P0-052`, still blocked on
+`libgtk+3-devel`/root), 4 `Queued` (`HVPN-P0-067` memory-soak + the
+`S5`/`S6`/`S7` milestone rollups — all genuinely hardware-blocked). P1: 4
+`Completed` (`001`/`002`/`005`/`006`), 206 `Queued`.
+
+**Still open / needs an operator decision:**
+- **G4 edge-language call** (Rust vs Go) — a real three-axis trade-off
+  (throughput vs CPU-efficiency/churn), not resolvable by more
+  benchmarking alone; flagged to the operator, not decided unilaterally.
+- **`HVPN-P0-052`** (Flutter-Linux toggle) — blocked on `libgtk+3-devel`
+  needing root, confirmed no passwordless sudo in this environment.
+- **`HVPN-P0-058`/`064`/`067`-class real-device work** — Android/iOS
+  hardware and Mac/Xcode are genuinely required for the remaining scope;
+  precisely enumerated in `android/README.md` and `apple/README.md` for
+  whoever has the physical devices.
+- **`HVPN-P1-003`** (G3 gate at Phase-1 rigor) — same hardware block as
+  Phase-0's G3, not attempted again this round.
 
 ---
 
