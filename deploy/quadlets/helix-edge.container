@@ -1,0 +1,63 @@
+# HelixVPN MASQUE Edge Terminator — QUIC/HTTP3 reverse proxy.
+# Rootless Podman quadlet (systemd-managed).
+#
+# Purpose:  Terminates client MASQUE (RFC 9298 CONNECT-UDP over QUIC/HTTP3)
+#           connections on pod port 443, published at host:8443. Handles TLS
+#           termination and CONNECT-UDP flow establishment, forwarding inner
+#           WireGuard datagrams to the gateway.
+# Usage:    systemctl --user daemon-reload && systemctl --user start helix-edge
+#            → auto-started as part of helix.pod
+# Side-effects: Binds UDP+TCP on port 443 inside the pod; requires TLS certs.
+# Depends:  helix.pod (Pod=helix), helix-coordinator (for gateway resolution)
+# Cross-refs: containers submodule pkg/health, docs/design/escalation/DESIGN.md
+
+[Container]
+ContainerName=helix-edge
+Image=localhost/helix-edge:latest
+Pod=helix
+
+# Environment file — loaded from project .env (gitignored per §11.4.30).
+# Contains TLS_CERT_PATH, TLS_KEY_PATH, COORDINATOR_GRPC_URL, etc.
+EnvironmentFile=%h/.local/share/helix-vpn/edge.env
+
+# Fallback defaults for local development.
+Environment=EDGE_LISTEN=0.0.0.0:443
+Environment=COORDINATOR_GRPC_URL=http://localhost:8443
+Environment=TLS_CERT_PATH=/etc/helix-vpn/certs/edge.crt
+Environment=TLS_KEY_PATH=/etc/helix-vpn/certs/edge.key
+
+# TLS certificates — mounted from host.
+Volume=%h/.local/share/helix-vpn/certs:/etc/helix-vpn/certs:Z,ro
+
+# Health check — edge responds to HTTP/3 on its listen port.
+# Uses a TCP probe; QUIC health can be upgraded to h2load later.
+HealthCmd=/usr/bin/nc -z localhost 443
+HealthInterval=15s
+HealthTimeout=5s
+HealthRetries=3
+HealthStartPeriod=20s
+
+# Rootless — binary is statically linked; no uid constraints.
+User=%u
+
+# Additional args: mount the podman socket so the edge can introspect
+# its own container state if needed.
+# PodmanArgs=--security-opt label=disable
+
+[Unit]
+# Edge must start after the coordinator is ready.
+Requires=helix-coordinator.service
+After=helix-coordinator.service
+
+[Service]
+Restart=on-failure
+RestartSec=5s
+TimeoutStartSec=60
+TimeoutStopSec=30
+
+CPUQuota=200%
+MemoryMax=1G
+MemoryHigh=768M
+
+[Install]
+WantedBy=default.target

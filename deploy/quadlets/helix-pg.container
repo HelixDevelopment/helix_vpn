@@ -1,0 +1,56 @@
+# HelixVPN PostgreSQL — persistent state store for coordinator + PKI.
+# Rootless Podman quadlet (systemd-managed).
+#
+# Purpose:  PostgreSQL 16 for the HelixVPN control plane: devices, policies,
+#           connector sites, IPAM pools, certificate records, Enroll state.
+# Usage:    systemctl --user daemon-reload && systemctl --user start helix-pg
+#            → auto-started as part of helix.pod
+# Side-effects: Initializes an empty database + extension on first run.
+# Depends:  helix.pod (Pod=helix)
+# Cross-refs: containers submodule pkg/health, docs/design/api/DESIGN.md,
+#             docs/design/identity/DESIGN.md
+
+[Container]
+ContainerName=helix-pg
+Image=docker.io/library/postgres:16-alpine
+Pod=helix
+
+# Environment — loaded from the project .env (gitignored per §11.4.30).
+# Fallback defaults are for local development only.
+Environment=POSTGRES_USER=helix_vpn
+Environment=POSTGRES_PASSWORD=helix_vpn_dev
+Environment=POSTGRES_DB=helix_vpn
+Environment=PGDATA=/var/lib/postgresql/data
+
+# Condition: wait for the named secret file if using a non-default password.
+# ConditionFileExists=%t/helix-vpn/pg-password.env
+
+# Persistence — data survives container recreation.
+Volume=helix-pg-data.volume:/var/lib/postgresql/data:Z
+
+# Init scripts — create schema on first run.
+Volume=%h/.local/share/helix-vpn/pg-init:/docker-entrypoint-initdb.d:Z,ro
+
+# Health check — TCP reachability on the PG port.
+HealthCmd=pg_isready -U helix_vpn -d helix_vpn
+HealthInterval=10s
+HealthTimeout=5s
+HealthRetries=3
+HealthStartPeriod=15s
+
+# User namespace — rootless mapping (PG runs as uid 999 inside container).
+# Podman maps this to the host user automatically in rootless mode.
+User=999
+
+[Service]
+Restart=on-failure
+RestartSec=5s
+TimeoutStartSec=90
+TimeoutStopSec=30
+
+# Pod-level memory limits inherited; PG gets a dedicated cap.
+MemoryMax=1G
+MemoryHigh=768M
+
+[Install]
+WantedBy=default.target

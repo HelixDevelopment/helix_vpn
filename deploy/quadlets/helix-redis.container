@@ -1,0 +1,43 @@
+# HelixVPN Redis — event streams, session state, and caching.
+# Rootless Podman quadlet (systemd-managed).
+#
+# Purpose:  Redis 7 for HelixVPN event streams (device.enrolled, connector.attached,
+#           policy.compiled, etc.), coordinator session state, and buildMap cache.
+# Usage:    systemctl --user daemon-reload && systemctl --user start helix-redis
+#            → auto-started as part of helix.pod
+# Side-effects: Enables AOF persistence; data survives pod teardown via named volume.
+# Depends:  helix.pod (Pod=helix)
+# Cross-refs: containers submodule pkg/health, docs/design/topology/DESIGN.md
+
+[Container]
+ContainerName=helix-redis
+Image=docker.io/library/redis:7-alpine
+Pod=helix
+
+# Arguments — enable AOF persistence, disable snapshotting (RDB).
+Exec=redis-server --appendonly yes --save "" --maxmemory 256mb --maxmemory-policy allkeys-lru
+
+# Persistence — AOF file survives container recreation.
+Volume=helix-redis-data.volume:/data:Z
+
+# Health check — ping Redis.
+HealthCmd=redis-cli ping
+HealthInterval=10s
+HealthTimeout=5s
+HealthRetries=3
+HealthStartPeriod=10s
+
+# Rootless — Redis runs as uid 999 inside the container.
+User=999
+
+[Service]
+Restart=on-failure
+RestartSec=5s
+TimeoutStartSec=30
+TimeoutStopSec=30
+
+MemoryMax=512M
+MemoryHigh=384M
+
+[Install]
+WantedBy=default.target

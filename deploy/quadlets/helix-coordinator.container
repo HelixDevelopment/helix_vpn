@@ -1,0 +1,58 @@
+# HelixVPN Coordinator — control-plane binary (Go).
+# Rootless Podman quadlet (systemd-managed).
+#
+# Purpose:  Runs the HelixVPN coordinator binary — topology management, policy
+#           compilation, buildMap computation, PKI/CA, Enroll RPC, IPAM.
+# Usage:    systemctl --user daemon-reload && systemctl --user start helix-coordinator
+#            → auto-started as part of helix.pod
+# Side-effects: Reads coordinator config from an env file; connects to PG + Redis
+#               on localhost (shared pod network).
+# Depends:  helix.pod (Pod=helix), helix-pg (health), helix-redis (health)
+# Cross-refs: containers submodule pkg/compose, pkg/health,
+#             docs/design/topology/DESIGN.md, docs/design/buildmap/DESIGN.md
+
+[Container]
+ContainerName=helix-coordinator
+Image=localhost/helix-coordinator:latest
+Pod=helix
+
+# Environment file — loaded from project .env (gitignored per §11.4.30).
+# Contains DATABASE_URL, REDIS_URL, COORDINATOR_LISTEN, etc.
+EnvironmentFile=%h/.local/share/helix-vpn/coordinator.env
+
+# Fallback defaults for local development (override via EnvironmentFile).
+Environment=COORDINATOR_LISTEN=0.0.0.0:8443
+Environment=DATABASE_URL=postgres://helix_vpn:helix_vpn_dev@localhost:5432/helix_vpn?sslmode=disable
+Environment=REDIS_URL=redis://localhost:6379
+
+# Health check — coordinator exposes a gRPC health endpoint.
+# TODO(HVPN-P2-XXX): Wire gRPC health probing once the coordinator serves the
+# gRPC health.checking.v1 standard. For now, TCP reachability.
+HealthCmd=/usr/bin/nc -z localhost 8443
+HealthInterval=15s
+HealthTimeout=5s
+HealthRetries=3
+HealthStartPeriod=20s
+
+# Rootless — runs as the current host user inside the container.
+# The coordinator binary is statically linked; no uid constraints.
+User=%u
+
+[Unit]
+# Coordinator must start after PG and Redis within the pod are ready.
+Requires=helix-pg.service helix-redis.service
+After=helix-pg.service helix-redis.service
+
+[Service]
+Restart=on-failure
+RestartSec=5s
+TimeoutStartSec=60
+TimeoutStopSec=30
+
+# CPU: 2 vCPUs; Memory: dedicated cap within pod budget.
+CPUQuota=200%
+MemoryMax=1G
+MemoryHigh=768M
+
+[Install]
+WantedBy=default.target

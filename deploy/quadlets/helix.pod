@@ -1,0 +1,44 @@
+# HelixVPN Pod — shared network namespace for all Helix VPN services.
+# Rootless Podman quadlet (systemd-managed).
+#
+# Purpose:  Groups coordinator, edge terminator, PostgreSQL, and Redis into one
+#           Pod so they share localhost networking with zero mTLS overhead
+#           between services on the control-plane path.
+# Usage:    systemctl --user daemon-reload && systemctl --user start helix-pod
+# Side-effects: Creates a shared network namespace + /etc/hosts alias "helix-pg"
+#               and "helix-redis" reachable from the coordinator container.
+# Depends:  Individual .container files (helix-pg, helix-redis, helix-coordinator,
+#           helix-edge).
+# Cross-refs: containers submodule pkg/compose, docs/design/topology/DESIGN.md
+
+[Pod]
+PodName=helix
+
+# Shared network — all containers in the pod communicate over localhost.
+# Coordinator → PG :5432, Coordinator → Redis :6379, Edge → Coordinator :8443 (gRPC).
+Network=helix
+
+# Host port mapping. Rootless podman maps to unprivileged host ports.
+# Edge MASQUE/QUIC on 8443 (host) → 443 (pod). Coordinator gRPC exposed for
+# external edge agents on 8444 (host) → 8443 (pod).
+PublishPort=8443:443
+PublishPort=8444:8443
+PublishPort=5432:5432
+PublishPort=6379:6379
+
+# Volume mounts shared at pod level — all containers inherit.
+# Persistent data volumes are declared in individual .container files.
+
+[Service]
+Restart=on-failure
+RestartSec=5s
+TimeoutStartSec=60
+TimeoutStopSec=30
+
+# Limit pod to 4 GiB RSS — well within §12.6 60% system memory ceiling.
+MemoryMax=4G
+MemoryHigh=3G
+
+[Install]
+# Start automatically on user login (rootless).
+WantedBy=default.target
