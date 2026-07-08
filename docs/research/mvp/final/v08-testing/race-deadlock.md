@@ -1,7 +1,13 @@
 # Race-Condition / Deadlock Test Strategy
 
-**Revision:** 1
-**Last modified:** 2026-06-26T12:00:00Z
+**Revision:** 2
+**Last modified:** 2026-07-04T12:00:00Z
+
+> **Rev 2 (2026-07-04):** independently re-verified against `SPECIFICATION.md` /
+> `transport-selection-ladder.md` during a corpus-wide gap-analysis pass; the
+> loom-vs-tsan/`-race` determinism distinction (§6) and the G4-decides-the-canonical-
+> tool framing (QA-D1) are consistent with `benchmarking.md`'s G4 treatment. No
+> contradictions found.
 
 > Master technical specification — Volume 8 (Testing & QA), nano-detail document **race-deadlock**,
 > one of the seven §11.4.169 cross-cutting test-type deep-dives. It deepens

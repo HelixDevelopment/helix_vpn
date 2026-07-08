@@ -1,7 +1,11 @@
 # The Transport Trait
 
-**Revision:** 1
-**Last modified:** 2026-06-25T00:00:00Z
+**Revision:** 2
+**Last modified:** 2026-07-04T12:00:00Z
+
+> **Rev 2 (consistency reconciliation, 2026-07-04):** added §2.4 reconciling this
+> document's frozen trait signature against `SPECIFICATION.md` §7.1's illustrative
+> sketch (see below) — no signature or behavioural change, documentation-only.
 
 > Volume 2 (Data Plane) nano-detail specification — deepens §3 ("The Transport
 > trait") of the pass-1 data-plane overview [01-data-plane §3]. SPEC ONLY:
@@ -185,6 +189,36 @@ EWMA recommendation (`UNVERIFIED`, calibrate per §11.4.107(13) on real fixtures
 not literature-hardcoded): `rtt_ewma = 7/8 * rtt_ewma + 1/8 * sample` (the
 classic TCP SRTT α=1/8 [RFC 6298] is the documented starting point; final α set
 by Phase-0 BENCH evidence).
+
+### 2.4 Reconciliation vs `SPECIFICATION.md` §7.1 (documentation-only)
+
+**Gap identified (2026-07-04):** the master spine's §7.1 "Cross-cutting contracts" shows
+an earlier, deliberately-illustrative sketch of the `Transport` trait —
+`kind() -> TransportKind`, `connect()`/`accept()` returning a separate `TransportConn`
+object with its own `send`/`recv`/`health`. That sketch **predates** this nano-detail
+deepening and differs at the surface level from the frozen signature in §2 above (where
+`Transport` itself exposes `send`/`recv`/`kind`/`effective_mtu`/`health`/`close`, and
+construction is via the free function `dial()` rather than `connect`/`accept` methods on
+the trait). `SPECIFICATION.md` §0 explicitly self-declares its code blocks as
+**"illustrative interface sketches, not final implementations"** — so this is not a
+release-blocking contradiction per the parent task's reconciliation rule (§11.4.35: a
+per-doc callout stays authoritative in its owning doc), but it is a genuine drift worth
+recording so a reader does not implement against the stale sketch:
+
+- **Canonical, frozen signature:** this document (§2) and [01-DP §3.1] — both agree
+  byte-for-byte (verified 2026-07-04) — are the binding Phase-0 contract.
+- **`TransportKind`** (§3.3 below) is real and does exist, but it is the ladder's
+  *policy-ordering* enum (`TransportPolicy.order: Vec<TransportKind>`), not the return
+  type of `Transport::kind()` (which returns `&'static str` for logs/metrics, §2).
+  `SPECIFICATION.md`'s sketch conflates the two; they are related but distinct types
+  here.
+- **`CarrierHealth`** in the spine sketch is this document's `TransportHealth` (§2.3
+  above) — same concept, renamed during the nano-detail pass.
+- **Action recorded, not taken here:** this document is not the owner of
+  `SPECIFICATION.md`; a future editorial pass on the spine (outside this document's file
+  scope) should update §7.1's sketch to mirror the signature in this section, or add a
+  forward-pointer here so implementers are never tempted to code against the older
+  illustrative form. Recorded per §11.4.6 (no silent drift) rather than left implicit.
 
 ---
 

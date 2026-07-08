@@ -1,7 +1,11 @@
 # Codegen Pipeline (zero-drift contract)
 
-**Revision:** 1
-**Last modified:** 2026-06-25T12:00:00Z
+**Revision:** 2
+**Last modified:** 2026-07-04T12:00:00Z
+**Rev 2:** Reviewed against the Volume-6 enterprise-hardening pass (2026-07-04). The schema-
+migration/versioning story this document owns (buf breaking-change gate §5, additive Phase-2
+forward seams §9) already covers protobuf compatibility; no gap found in scope. Revision bumped
+for the pass.
 
 > Master technical specification — Volume 6 (Deployment, Tooling & Operations), nano-detail
 > document. Scope: the **schema-first code generation pipeline** — `buf` → Go/Dart/Rust from the

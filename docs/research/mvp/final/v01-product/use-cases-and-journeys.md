@@ -1,7 +1,16 @@
 # Use Cases & End-to-End Journeys
 
-**Revision:** 1
-**Last modified:** 2026-06-26T12:00:00Z
+**Revision:** 2
+**Last modified:** 2026-07-04T12:00:00Z
+
+> **Rev 2 (2026-07-04, independent gap-analysis pass).** Added **UC-08 — Gateway
+> failover**: the Architecture-Refined source (`04_ARCH §8`) sketches this flow
+> and `HVPN-NFR-206`/`D-GW-SELECT` (decision register) depend on it, but no
+> dedicated use-case + sequence diagram existed in this document (the other five
+> core journeys named by the gap-analysis brief — connector onboarding, client
+> connect+reach, policy-change propagation, and device revoke — were already
+> covered: UC-05, UC-01, UC-04, and `personas-and-roles.md` §6.2 respectively).
+> §1's catalogue table and §10's traceability table are extended to match.
 
 > **Document role.** This is the Volume 1 (Product & Requirements) nano-detail
 > spec enumerating HelixVPN's primary **end-to-end use cases**, each rendered as
@@ -40,6 +49,7 @@
 - [6. UC-05 — Connector advertises a route](#6-uc-05--connector-advertises-a-route)
 - [7. UC-06 — Censorship-evade via transport escalation](#7-uc-06--censorship-evade-via-transport-escalation)
 - [8. UC-07 — Kill-switch trips on network drop](#8-uc-07--kill-switch-trips-on-network-drop)
+- [8a. UC-08 — Gateway failover](#8a-uc-08--gateway-failover)
 - [9. Cross-cutting postcondition invariants](#9-cross-cutting-postcondition-invariants)
 - [10. Use-case → component → API → test traceability](#10-use-case--component--api--test-traceability)
 - [Sources verified](#sources-verified)
@@ -68,6 +78,7 @@ The actors are the three roles of the overview plus the human personas
 | UC-05 | Connector advertises a route | Network operator | MVP | X1, X2 |
 | UC-06 | Censorship-evade via transport escalation | End user | MVP | F2, F6, F7, F8 |
 | UC-07 | Kill-switch trips on network drop | End user | MVP | F11, F13 |
+| UC-08 | Gateway failover | Gateway control plane (system-initiated) | P2 | X3, NFR-206 |
 
 Each journey below maps to the MVP Definition-of-Done acceptance criteria of
 the overview §10.2 where applicable, and each is a §11.4.98-compliant
@@ -399,6 +410,78 @@ stateDiagram-v2
 
 ---
 
+## 8a. UC-08 — Gateway failover
+
+**Goal.** A gateway (region/node) becomes unhealthy; the system re-points every
+affected agent (clients and connectors) to a healthy gateway endpoint with the
+selected transport preserved and without the operator manually touching any
+device — the multi-region HA promise (X3, `04_ARCH §8` "Gateway failover"
+sketch) made into a falsifiable journey.
+
+**Preconditions.** Phase-2 multi-region deployment: ≥2 gateway endpoints share
+control-plane state (stateless coordinators + Patroni Postgres / NATS
+JetStream, per `v06-deploy/ha-and-multiregion.md`); a health probe monitors each
+gateway; `D-GW-SELECT` (decision register) has picked a selection mechanism
+(geoDNS default, anycast, or map-driven `GatewayInfo`).
+
+**Postconditions (captured-evidence assertions).**
+- The health probe's failure is observed and a `gateway.failover {from, to}`
+  event is emitted — never a silent gap (`UNVERIFIED` exact probe-timeout value
+  until the Phase-2 HA runbook fixes it).
+- Every affected agent receives a `MapDelta` carrying an updated `GatewayInfo`
+  (new endpoint) within the convergence SLO (NFR-003 class), **without** the
+  agent needing a fresh enrollment or the user taking any action.
+- The client/connector re-handshakes to the new endpoint with the **same
+  selected transport** (ladder position preserved — no re-run of the escalation
+  ladder from scratch) per NFR-206.
+- No private-network inbound port is opened by the failover (P3 still holds —
+  the connector still only ever dials outbound, now to the new endpoint).
+- The region-failover RTO/RPO budget is the named target owned by
+  `v06-deploy/disaster-recovery.md` — this journey's postconditions are the
+  *functional* correctness bar; the *time* bound is `UNVERIFIED` until that
+  runbook's drill produces a capture (§11.4.6 — no fabricated number here).
+
+**Components / APIs exercised.** health-probe/liveness (`v06-deploy/observability.md`),
+`coordinator` (recomputes `GatewayInfo` per affected tenant, emits
+`gateway.failover`), events bus, `helix-core` (both Client and Connector
+capture modes — reconnect-preserving-transport), edge (new region terminates
+the re-established tunnel).
+
+```mermaid
+sequenceDiagram
+  autonumber
+  participant HP as Health probe
+  participant CO as Coordinator (region-aware)
+  participant BUS as Events bus
+  participant CN as Connector (in LAN)
+  participant U as Client (Access app)
+  participant ED1 as Edge — Region 1 (failing)
+  participant ED2 as Edge — Region 2 (healthy)
+
+  HP->>HP: liveness check on Region 1 edge/control fails
+  HP->>BUS: emit gateway.failover {from: region-1, to: region-2}
+  BUS-->>CO: deliver
+  CO->>CO: recompute GatewayInfo for every tenant agent routed via region-1
+  CO->>CN: MapDelta (GatewayInfo → region-2 endpoint) version++
+  CO->>U: MapDelta (GatewayInfo → region-2 endpoint) version++
+  Note over CO,U: NFR-206: convergence SLO class: no agent left pointed at a dead gateway
+  CN->>ED2: re-handshake, SAME transport rung as before (no ladder restart)
+  U->>ED2: re-handshake, SAME transport rung as before (no ladder restart)
+  ED2-->>CN: tunnel re-established via Region 2
+  ED2-->>U: tunnel re-established via Region 2
+  Note over ED1: Region 1 drains/recovers independently — no manual re-enrollment on any agent
+```
+
+> **Phase + honesty boundary (§11.4.6).** UC-08 is explicitly **P2** (multi-region
+> HA is out of MVP scope per the overview §10.2/§10.3) — Phase-1 self-host is
+> single-gateway and has no failover target by design. The *mechanism* (health
+> probe → `gateway.failover` event → `GatewayInfo`-only delta) is fixed here so
+> `svc-coordinator.md` and `ha-and-multiregion.md` implement against one
+> contract; the concrete probe-timeout and RTO/RPO numbers remain `UNVERIFIED`
+> pending the Phase-2 DR drill (`v06-deploy/disaster-recovery.md`).
+
+---
+
 ## 9. Cross-cutting postcondition invariants
 
 Every journey above, regardless of actor, must leave the system in a state that
@@ -433,6 +516,7 @@ no-logging guarantee surfacing as per-journey postconditions:
 | UC-05 | core, identity, pki, registry, ipam, coordinator, policy | `route.advertised`; `connector.attached` | X1/X2, NFR-103/104 | e2e + integration |
 | UC-06 | core (ladder), transport, edge, coordinator, telemetry | ladder; `TransportPolicy.order` | DoD-4, NFR-002/410/006 | e2e (DPI-sim) |
 | UC-07 | core (kill-switch/DNS), firewall shim, coordinator, edge | firewall state machine | DoD-7, NFR-404/405 | security / e2e (leak test) |
+| UC-08 | health-probe, coordinator, events bus, core (client+connector), edge (2 regions) | `gateway.failover` event; `GatewayInfo`-only `MapDelta` | X3, NFR-206 (P2) | chaos + integration (region-failover drill) |
 
 ```mermaid
 flowchart LR
@@ -440,6 +524,7 @@ flowchart LR
     EU[End user]
     OP[Network operator]
     AD[Admin]
+    SYS[Health probe /<br/>system-initiated]
   end
   EU --> UC01[UC-01 connect] --> CORE[helix-core + edge]
   EU --> UC02[UC-02 switch] --> COORD[coordinator]
@@ -447,15 +532,17 @@ flowchart LR
   EU --> UC07[UC-07 kill-switch] --> FW[firewall shim]
   OP --> UC05[UC-05 advertise] --> REG[registry/ipam]
   AD --> UC04[UC-04 enroll+policy] --> POL[policy + api]
+  SYS --> UC08[UC-08 gateway failover] --> COORD
   COORD --> SLO[< 1 s convergence SLO]
   LAD --> NL[no-logging: counts only]
   FW --> LEAK[zero-leak capture]
+  UC08 --> GWI[GatewayInfo delta · transport preserved]
 ```
 
 > **Phase honesty (§11.4.6).** UC-01/02/04/05/06/07 are MVP-scoped; UC-03
-> (multihop) is P2. P2/P3 postconditions are `UNVERIFIED` until their phase's
-> implementation and captured e2e evidence exist — they are the forward
-> contract, never asserted as already working.
+> (multihop) and UC-08 (gateway failover) are P2. P2/P3 postconditions are
+> `UNVERIFIED` until their phase's implementation and captured e2e evidence
+> exist — they are the forward contract, never asserted as already working.
 
 ---
 
@@ -480,6 +567,10 @@ flowchart LR
 - `docs/research/mvp/final/v02-data-plane/transport-selection-ladder.md` — the
   escalation ladder behind UC-06 (seed order, monotonic cursor L-I8, WG-handshake
   success criterion I2, per-network memory + no-logging I5, aggregate telemetry).
+- `04_VPN_CLD/HelixVPN-Architecture-Refined.md` §8 ("Gateway failover" sequence
+  sketch) and `docs/research/mvp/final/v06-deploy/ha-and-multiregion.md` +
+  `disaster-recovery.md` (region-failover mechanism + the RTO/RPO budget owner)
+  — the source for UC-08.
 
 *Constitution bindings applied: §11.4.44 (revision header), §11.4.6 (no-guessing
 — P2/P3 postconditions + unproven targets marked `UNVERIFIED`), §11.4.98 (every

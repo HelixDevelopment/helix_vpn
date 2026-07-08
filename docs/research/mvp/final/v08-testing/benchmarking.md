@@ -1,7 +1,12 @@
 # Benchmarking / Performance Test Strategy
 
-**Revision:** 1
-**Last modified:** 2026-06-26T12:00:00Z
+**Revision:** 2
+**Last modified:** 2026-07-04T12:00:00Z
+
+> **Rev 2 (2026-07-04):** independently re-verified against `SPECIFICATION.md` /
+> `memory.md` during a corpus-wide gap-analysis pass; the figure-is-a-target-not-a-
+> claim rule (§0) and the baseline-registry regression rule (§3) are consistent with
+> the rest of the corpus's anti-bluff-by-optimism framing. No contradictions found.
 
 > Master technical specification — Volume 8 (Testing & QA), nano-detail document **benchmarking**,
 > one of the seven §11.4.169 cross-cutting test-type deep-dives. It deepens

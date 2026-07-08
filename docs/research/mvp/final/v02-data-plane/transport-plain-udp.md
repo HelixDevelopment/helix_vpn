@@ -1,7 +1,14 @@
 # Plain-UDP Transport
 
-**Revision:** 1
-**Last modified:** 2026-06-25T00:00:00Z
+**Revision:** 2
+**Last modified:** 2026-07-04T12:00:00Z
+
+> **Rev 2 (enterprise-hardening audit, 2026-07-04):** independently reviewed against the
+> parent gap-analysis checklist. MTU/overhead budget (§4.4), failure detection (§6), and
+> edge-case enumeration (§8, including E8 `ENOBUFS` backpressure) already cover the
+> relevant resource-exhaustion and fragmentation concerns for a connectionless UDP
+> carrier — no addition made here. No consistency issue found against
+> [`transport-trait.md`](transport-trait.md) or [`01-data-plane.md`](../01-data-plane.md).
 
 > Master technical specification — Volume 2 (Data Plane), nano-detail document.
 > Deepens the *Plain-UDP Transport* section (`§3.2`) of [01-data-plane §3.2]. This is a

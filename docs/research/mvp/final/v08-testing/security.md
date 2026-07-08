@@ -1,7 +1,12 @@
 # Security Test Strategy
 
-**Revision:** 2
-**Last modified:** 2026-06-26T12:00:00Z
+**Revision:** 3
+**Last modified:** 2026-07-04T12:00:00Z
+
+> **Rev 3 (2026-07-04):** independently re-verified against `SPECIFICATION.md` /
+> `threat-model.md` / `test-rig.md` during a corpus-wide gap-analysis pass; the
+> `killswitch_drop.sh` canonical-definition pointer to `test-rig.md` §6.1 (from the
+> prior reconciliation) is correct and consistent. No contradictions found.
 
 > **Reconciled (§11.4.35, 2026-06-26):** two fixes. (1) §7 acceptance-gate table
 > relabels the RLS row from `S9 (RLS)` to **`P6 (RLS)`** — §0/§1 map RLS to invariant

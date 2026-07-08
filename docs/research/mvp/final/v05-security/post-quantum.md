@@ -1,7 +1,12 @@
 # Post-Quantum Handshake (PQ-derived PSK, hybrid never PQ-only)
 
-**Revision:** 2
-**Last modified:** 2026-06-26T12:00:00Z
+**Revision:** 3
+**Last modified:** 2026-07-04T12:00:00Z
+**Rev 3:** Added §4.1a — an explicit downgrade-attack-resistance statement (an on-path MITM
+cannot force a PQ-capable pair to classical-only because the capability exchange rides the
+already-authenticated mTLS channel; tampering breaks TLS 1.3 transcript integrity rather than
+silently downgrading). Closes a gap-analysis finding that the property was implied but never
+stated as its own reasoned claim.
 
 > Master technical specification — Volume 5 (Security & Privacy), nano-detail spec.
 > Deepens invariant **S10** and §9 of [04-sec] (`04-security-privacy-pki.md`): the
@@ -294,6 +299,21 @@ sequenceDiagram
 6. **Rotation.** On every WireGuard rekey (`REKEY_AFTER_TIME` ≈ 120 s [research-wg §9]) the PQ
    exchange re-runs and a fresh PSK is installed (§8). The PSK is *ephemeral* — never persisted
    (§4.5 of [04-sec], the PQ plane "per-session, never persisted").
+
+### 4.1a Downgrade-attack resistance (why an on-path MITM cannot force classical-only)
+
+A natural question: could an active on-path attacker (C-ACT, [`threat-model.md` §4]) force a
+PQ-capable pair down to classical-only by tampering with the `PqCapabilities` exchange (§7)?
+**No** — the capability advertisement and the `PqInit`/`PqResp` exchange ride the **already-
+authenticated mTLS control channel** (S4, step 1 above), not a bare unauthenticated
+pre-handshake negotiation. An attacker without a valid device cert cannot inject or rewrite
+`PqCapabilities`/`PqInit`/`PqResp` frames — TLS 1.3's transcript integrity means any tampering
+with the mTLS-carried bytes is detected and the connection aborts, not silently falls back.
+The *only* legitimate path to classical-only is (a) one peer genuinely lacking PQ support, or
+(b) the user's own toggle set to off (§7.2) — both are observable, honest outcomes, never an
+attacker-forced one. This closes the downgrade vector structurally: forcing a fallback requires
+first breaking mTLS (T-CP-S-1/[`threat-model.md` §5.2]), at which point the attacker already
+has a stronger foothold than a PQ downgrade would gain them.
 
 ### 4.2 What the adversary sees
 

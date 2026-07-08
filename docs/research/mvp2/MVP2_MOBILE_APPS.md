@@ -1,11 +1,47 @@
 # MVP2 Mobile Apps Specification
 
+**Revision:** 3
+**Last modified:** 2026-07-04T16:30:00Z
+
+> **Revision 3 changelog:** added the missing Mermaid state diagram for the
+> Android foreground-service lifecycle next to §2.10 (the section this
+> diagram synthesizes: §2.2 VpnService start/stop, §2.3 foreground
+> notification, §2.4 Doze/battery-optimization handling, and this section's
+> own Android 15+ UIDT keepalive fallback); corrected §5.1's Flutter
+> `HelixTheme` brand-color seed values, which hardcoded an independent
+> indigo (`#6366F1`) never reconciled against the canonical, already-built
+> OpenDesign token system (`docs/research/CROSS_CUTTING_GAP_ANALYSIS.md`
+> §1.2 finding #1).
+
 ## Helix VPN Mobile Client — Android, iOS, and HarmonyOS
 
-**Version:** 1.0.0  
-**Date:** July 2025  
+**Version:** 1.1.0  
+**Date:** July 2025 (Revision 2: 2026-07-04)  
 **Status:** Draft for Implementation  
-**Related Documents:** MVP2 Architecture Spec, MVP2 Rust Core Spec, MVP2 Desktop Spec
+**Related Documents:** MVP2 Architecture Spec, MVP2 Shared Core Spec, MVP2 Desktop Spec
+
+> **Revision 2 changelog:** reconciled the protocol list (WireGuard,
+> Shadowsocks, MASQUE, Multi-Hop; `OpenVPN` is a RESERVED/unimplemented enum
+> placeholder only — `MVP2_SHARED_CORE.md` §2.3) across all three
+> architecture diagrams and the server protocol-badge widget; corrected the
+> FFI-bridge description (UniFFI is used specifically for the iOS Swift
+> Network Extension interop layer, not for Android); corrected code-reuse
+> percentages (72% / 72% / 70%) and the cross-platform bundle/RAM budgets
+> (<25MB / <120MB idle) to match `MVP2_ARCHITECTURE.md` §4; reconciled every
+> platform's connection-state enum (Kotlin `VpnConnectionState`, Swift
+> `TunnelState`, ArkTS `TunnelState`, Dart `ConnectionState`) to the single
+> canonical `Disconnected → Connecting → Connected → Reconnecting →
+> KillSwitchActive → Disconnecting → (Disconnected)` state machine owned by
+> `helix-vpn-engine` (`MVP2_ARCHITECTURE.md` §5.6) — no platform-invented
+> states remain; corrected the CI pipeline's Flutter version pinning
+> (Android/iOS use Flutter 3.29+, only the HarmonyOS job uses the community
+> `3.22.0-ohos` embedding); wired `PlatformAdapter::apply_managed_policy`
+> through each platform's managed-configuration channel; added a new §8
+> Enterprise Hardening & Production Readiness section (app-store review,
+> MDM/managed-config, staged rollout + rollback, crash reporting, telemetry
+> consent, offline/degraded-network behavior, accessibility, localization,
+> biometric fallback, multi-account, enterprise SSO, license/entitlement
+> checks); added 3 Mermaid diagrams (this document previously had none).
 
 ---
 
@@ -18,6 +54,7 @@
 5. [Mobile UI/UX Design](#5-mobile-uiux-design)
 6. [Mobile-Specific Features](#6-mobile-specific-features)
 7. [Build & Distribution](#7-build--distribution)
+8. [Enterprise Hardening & Production Readiness](#8-enterprise-hardening--production-readiness)
 
 ---
 
@@ -25,7 +62,7 @@
 
 ### 1.1 Unified Mobile Strategy
 
-The Helix VPN mobile strategy employs a **unified Flutter codebase** with platform-specific native integrations for VPN tunnel management. This approach achieves ~85-90% code reuse across Android, iOS, and HarmonyOS while leveraging each platform's native VPN APIs for secure, performant tunneling.
+The Helix VPN mobile strategy employs a **unified Flutter codebase** (Flutter 3.29+ with the Impeller renderer on Android/iOS; the community `ohos` embedding pinned at `3.22.0-ohos` on HarmonyOS — see §7.4 for why the CI pipeline pins two different Flutter versions) with platform-specific native integrations for VPN tunnel management. Per the reconciled cross-platform code-reusability analysis (`MVP2_ARCHITECTURE.md` §4), this achieves **72% code reuse on Android, 72% on iOS, and 70% on HarmonyOS** — not the "85-90%" figure quoted in an earlier draft of this document, which double-counted UI-only reuse without netting out the native VPN-adapter layer. Target bundle size is **<25MB** and idle RAM is **<120MB** on all three platforms (`MVP2_ARCHITECTURE.md` §4; see Appendix B for the full per-platform matrix).
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -39,12 +76,12 @@ The Helix VPN mobile strategy employs a **unified Flutter codebase** with platfo
 │  │ Config      │ │ Profile      │ │                       │ │
 │  └─────────────┘ └──────────────┘ └───────────────────────┘ │
 ├─────────────────────────────────────────────────────────────┤
-│              flutter_rust_bridge (Dart FFI)                  │
+│              flutter_rust_bridge v2+ (Dart FFI)               │
 ├─────────────────────────────────────────────────────────────┤
 │                    Shared Rust Core (helix-core)             │
 │  ┌──────────────┐ ┌─────────────┐ ┌──────────────────────┐ │
-│  │ WireGuard    │ │ OpenVPN     │ │ IKEv2/IPsec          │ │
-│  │ Protocol     │ │ Protocol    │ │ Protocol             │ │
+│  │ WireGuard    │ │ Shadowsocks │ │ MASQUE (RFC 9298) /  │ │
+│  │ (primary)    │ │ SIP022      │ │ Multi-Hop            │ │
 │  └──────────────┘ └─────────────┘ └──────────────────────┘ │
 │  ┌──────────────┐ ┌─────────────┐ ┌──────────────────────┐ │
 │  │ Encryption   │ │ Connection  │ │ DNS Leak Protection  │ │
@@ -58,11 +95,20 @@ The Helix VPN mobile strategy employs a **unified Flutter codebase** with platfo
 │  │            │  │  │ (Swift)    │  │  │ (ArkTS)      │    │
 │  └────────────┘  │  └────────────┘  │  └──────────────┘    │
 │  ┌────────────┐  │  ┌────────────┐  │  ┌──────────────┐    │
-│  │ JNI Bridge │  │  │ UniFFI FFI │  │  │ N-API Bridge │    │
-│  │ to Rust    │  │  │ to Rust    │  │  │ to Rust      │    │
+│  │ JNI Bridge │  │  │ FRB (Dart) │  │  │ N-API Bridge │    │
+│  │ (FRB) to   │  │  │ + UniFFI   │  │  │ to Rust      │    │
+│  │ Rust       │  │  │ (NE Swift) │  │  │              │    │
 │  └────────────┘  │  └────────────┘  │  └──────────────┘    │
 └──────────────────┴──────────────────┴───────────────────────┘
 ```
+
+**Note (OpenVPN):** `helix-core`'s `ProtocolType` enum carries a RESERVED
+`OpenVPN` variant for a possible post-MVP2 addition. There is no
+`helix-openvpn` crate and no OpenVPN entry in the supported-protocol table;
+selecting it returns `HelixError::UnsupportedProtocol` in MVP2 builds. No
+mobile UI, server-list badge, or protocol picker in this document may present
+OpenVPN as an available option — this reconciles several places in this
+document (§2.1, §4.1, §5.4) that referenced OpenVPN as if it shipped.
 
 ### 1.2 Platform-Specific Adaptations
 
@@ -70,16 +116,32 @@ The Helix VPN mobile strategy employs a **unified Flutter codebase** with platfo
 |--------|---------|-----|-----------|
 | **VPN API** | `VpnService` + `Builder` | `NEPacketTunnelProvider` | `VpnExtensionAbility` |
 | **Native Language** | Kotlin | Swift | ArkTS + C++ (N-API) |
-| **Bridge to Rust** | JNI via flutter_rust_bridge | UniFFI + flutter_rust_bridge | N-API via flutter_rust_bridge |
+| **Bridge to Rust** | JNI via flutter_rust_bridge (FRB only — no UniFFI) | flutter_rust_bridge (Dart↔Rust, main app) **+** UniFFI (Swift↔Rust, Network Extension only) | N-API via flutter_rust_bridge |
 | **Background Model** | Foreground Service | System-managed extension | ExtensionAbility lifecycle |
 | **Credential Store** | Android Keystore | iOS Keychain | HUKS (Huawei Universal Keystore) |
 | **Push Notifications** | FCM (Firebase) | APNs | HMS Push Kit |
-| **Min OS Version** | Android 8.0 (API 26) | iOS 15.0 | HarmonyOS NEXT (API 12) |
+| **Min OS Version** | Android 8.0 (API 26) — product-supported minimum | iOS 15.0 | HarmonyOS NEXT (API 12) |
+
+> **FFI clarification:** Android uses `flutter_rust_bridge` (FRB) exclusively
+> for its Dart↔Rust bridge — there is no UniFFI involvement on Android. iOS
+> uses FRB for the main app's Dart↔Rust calls, **plus** UniFFI specifically
+> to bridge the separate `PacketTunnelProvider` Network Extension process's
+> Swift code to `helix-core`, because the NE runs outside the Flutter engine
+> and cannot use FRB's Dart-side codegen. An earlier draft of §1.4 incorrectly
+> described UniFFI as generating "Kotlin and Swift" bindings; UniFFI applies
+> to the iOS Swift NE layer only.
 
 ### 1.3 System Requirements
 
 **Android:**
-- Minimum SDK: API 26 (Android 8.0 Oreo)
+- Minimum SDK: **API 26 (Android 8.0 Oreo)** — this is the product-supported
+  minimum (matches `MVP2_SHARED_CORE.md` §5.1). It is also the build-toolchain
+  floor: the Gradle `minSdk` (§2.7) and the `cargo-ndk` Rust cross-compilation
+  target both target API 26, so there is no lower toolchain floor to
+  distinguish from the product minimum on this platform. Do not lower `minSdk`
+  to chase a wider device footprint without a corresponding constitutional
+  product-scope decision — API 26 is required for the modern `VpnService`
+  route/DNS APIs this spec depends on (§2.2).
 - Target SDK: API 35 (Android 15)
 - Architecture: arm64-v8a, armeabi-v7a, x86_64 (for emulator)
 - Permissions: `BIND_VPN_SERVICE`, `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_SPECIAL_USE`, `FOREGROUND_SERVICE_DATA_SYNC`, `POST_NOTIFICATIONS`, `ACCESS_NETWORK_STATE`, `INTERNET`
@@ -102,7 +164,8 @@ The Helix VPN mobile strategy employs a **unified Flutter codebase** with platfo
 1. **Rust-First Core:** All VPN protocol logic, encryption, and state management lives in the shared `helix-core` Rust library. Native platform code is a thin adapter layer.
 2. **Memory-Conscious iOS:** The iOS NEPacketTunnelProvider operates under a strict ~15MB memory limit. The Swift wrapper must be minimal; all heavy lifting is done in optimized Rust code.
 3. **Foreground Service for Android:** Android requires a persistent foreground service with notification. The service must handle Doze mode, manufacturer-specific battery optimizations, and Android 15's 6-hour foreground service limit.
-4. **UniFFI for Binding Generation:** Cross-platform Rust bindings for Kotlin and Swift are auto-generated using Mozilla's UniFFI, reducing hand-written binding code and potential memory safety issues.
+4. **UniFFI for the iOS Network Extension Only:** Rust↔Swift bindings for the standalone `PacketTunnelProvider` process (which cannot use `flutter_rust_bridge`'s Dart-side codegen because it never loads the Flutter engine) are auto-generated using Mozilla's UniFFI, reducing hand-written binding code and potential memory safety issues. Android has no UniFFI dependency — its JNI bridge is generated entirely by `flutter_rust_bridge`.
+5. **Enterprise-Managed Policy is Adapter-Level:** All three platforms implement `PlatformAdapter::apply_managed_policy(policy: ManagedPolicy) -> Result<()>` (`MVP2_SHARED_CORE.md` §3.1) so an MDM/EMM-pushed policy (allowed protocols, forced kill switch, forced split-tunnel, forced DNS, require-SSO) is applied through the same code path as a user-initiated settings change — see §8.2.
 
 ---
 
@@ -130,8 +193,10 @@ The Android client uses a three-layer architecture:
 │  - Quick Settings TileService            │
 ├─────────────────────────────────────────┤
 │         Shared Rust Core                 │
-│  - helix-core via JNI                    │
-│  - WireGuard/OpenVPN protocol impl       │
+│  - helix-core via JNI (flutter_rust_bridge, no UniFFI) │
+│  - WireGuard (primary) / Shadowsocks /   │
+│    MASQUE / Multi-Hop protocol impl      │
+│    (OpenVPN: reserved, unimplemented)    │
 │  - Encryption & packet routing           │
 └─────────────────────────────────────────┘
 ```
@@ -143,6 +208,28 @@ The Android client uses a three-layer architecture:
 The `HelixVpnService` extends Android's `VpnService` and uses the `Builder` inner class to configure the virtual network interface:
 
 ```kotlin
+/**
+ * Mirrors the single canonical `ConnectionStatus` state machine owned by
+ * `helix-vpn-engine` (`MVP2_ARCHITECTURE.md` §5.6). Android reports
+ * low-level events (`onRevoke`, permission changes, network callbacks) up to
+ * the Rust core via [HelixRustBridge]; the core — never this enum's
+ * assignment sites directly — decides the next state. This service only
+ * *mirrors* the resulting state for `MethodChannel` / Tile / notification
+ * consumers. No Android-specific state (e.g. a bespoke `REVOKED` or `ERROR`
+ * value) is added here — a system VPN-permission revocation
+ * ([onRevoke]) is reported as a transition to [DISCONNECTED] with a
+ * `disconnectReason` side-channel extra, not as a new enum value.
+ */
+enum class VpnConnectionState {
+    DISCONNECTED,
+    CONNECTING,
+    CONNECTED,
+    RECONNECTING,
+    KILL_SWITCH_ACTIVE,
+    DISCONNECTING,
+    CONNECTION_FAILED,
+}
+
 class HelixVpnService : VpnService() {
     
     companion object {
@@ -157,6 +244,10 @@ class HelixVpnService : VpnService() {
             
         @JvmStatic
         var connectionState: VpnConnectionState = VpnConnectionState.DISCONNECTED
+            private set
+
+        @JvmStatic
+        var lastDisconnectReason: String? = null
             private set
     }
     
@@ -297,10 +388,14 @@ class HelixVpnService : VpnService() {
     }
     
     override fun onRevoke() {
-        // Called when user revokes VPN permission or another VPN app takes over
+        // Called when user revokes VPN permission or another VPN app takes
+        // over. This is NOT a new canonical state — it reports into the same
+        // DISCONNECTED state as any other teardown, with the reason carried
+        // as a side-channel so the UI can show "VPN permission revoked"
+        // without the engine needing a bespoke `Revoked` enum value.
         Log.w("HelixVPN", "VPN permission revoked by system or user")
+        lastDisconnectReason = "permission_revoked"
         stopVpnConnection()
-        broadcastStateChange(VpnConnectionState.REVOKED)
     }
     
     override fun onDestroy() {
@@ -607,12 +702,30 @@ class HelixVpnTileService : TileService() {
                 tile.label = "Helix VPN: ON"
                 tile.icon = Icon.createWithResource(this, R.drawable.ic_tile_vpn_on)
             }
+            VpnConnectionState.RECONNECTING -> {
+                tile.state = Tile.STATE_ACTIVE
+                tile.label = "Helix VPN: Reconnecting"
+                tile.icon = Icon.createWithResource(this, R.drawable.ic_tile_vpn_connecting)
+            }
+            VpnConnectionState.KILL_SWITCH_ACTIVE -> {
+                // Fail-closed: traffic is actively blocked, not just idle —
+                // surface this distinctly so the user does not mistake a
+                // blocked device for a working connection.
+                tile.state = Tile.STATE_ACTIVE
+                tile.label = "Helix VPN: Blocked (Kill Switch)"
+                tile.icon = Icon.createWithResource(this, R.drawable.ic_tile_vpn_blocked)
+            }
             VpnConnectionState.CONNECTING -> {
                 tile.state = Tile.STATE_UNAVAILABLE
                 tile.label = "Connecting..."
                 tile.icon = Icon.createWithResource(this, R.drawable.ic_tile_vpn_connecting)
             }
-            else -> {
+            VpnConnectionState.DISCONNECTING -> {
+                tile.state = Tile.STATE_UNAVAILABLE
+                tile.label = "Disconnecting..."
+                tile.icon = Icon.createWithResource(this, R.drawable.ic_tile_vpn_connecting)
+            }
+            VpnConnectionState.DISCONNECTED, VpnConnectionState.CONNECTION_FAILED -> {
                 tile.state = Tile.STATE_INACTIVE
                 tile.label = "Helix VPN"
                 tile.icon = Icon.createWithResource(this, R.drawable.ic_tile_vpn_off)
@@ -709,15 +822,22 @@ class MainActivity : FlutterActivity() {
     }
     
     private fun handleGetStatus(result: MethodChannel.Result) {
+        // String keys mirror the canonical `ConnectionStatus` values verbatim
+        // (`MVP2_ARCHITECTURE.md` §5.6) so the Dart side's `ConnectionState`
+        // enum (§5.3) can parse them without a platform-specific lookup table.
         val status = when (HelixVpnService.connectionState) {
             VpnConnectionState.CONNECTED -> "connected"
             VpnConnectionState.CONNECTING -> "connecting"
+            VpnConnectionState.RECONNECTING -> "reconnecting"
+            VpnConnectionState.KILL_SWITCH_ACTIVE -> "killSwitchActive"
             VpnConnectionState.DISCONNECTING -> "disconnecting"
             VpnConnectionState.DISCONNECTED -> "disconnected"
-            VpnConnectionState.REVOKED -> "revoked"
-            VpnConnectionState.ERROR -> "error"
+            VpnConnectionState.CONNECTION_FAILED -> "connectionFailed"
         }
-        result.success(status)
+        result.success(mapOf(
+            "state" to status,
+            "disconnectReason" to HelixVpnService.lastDisconnectReason
+        ))
     }
     
     private fun handleGetStats(result: MethodChannel.Result) {
@@ -978,6 +1098,47 @@ flutter build apk --release --split-per-abi --flavor fdroid
 
 Starting with Android 15 (API 35), all foreground services share a **6-hour time limit** within a 24-hour window. For a VPN app, this requires adaptation:
 
+The diagram below synthesizes the full Android foreground-service lifecycle
+described across this chapter — `onStartCommand`'s `ACTION_CONNECT` /
+`ACTION_DISCONNECT` / system-restart branches and `START_STICKY` return
+(§2.2), the persistent foreground notification (§2.3), the Doze-mode
+keepalive-interval adjustment (§2.4), and this section's Android 15+ UIDT
+job fallback for the 6-hour limit. It does not introduce any behavior not
+already described in prose/code above — it is a visual index into it.
+
+```mermaid
+stateDiagram-v2
+    [*] --> Stopped
+
+    Stopped --> Starting: ACTION_CONNECT\n(onStartCommand, §2.2)
+    Starting --> Foreground: builder.establish() succeeds\n+ startForeground() (§2.3)
+    Foreground --> Connected: rustBridge.startTunnel()\nisRunning = true (§2.2)
+
+    Connected --> Backgrounded: app UI backgrounded\n(foreground SERVICE keeps running)
+    Backgrounded --> DozeAdjusted: ACTION_DEVICE_IDLE_MODE_CHANGED\n(registerDozeReceiver, §2.4)\nkeepalive interval adjusted
+    DozeAdjusted --> Backgrounded: device exits Doze
+
+    Backgrounded --> FgsLimitApproaching: Android 15+ (API 35)\n6-hour FGS time-limit window\napproaching (§2.10)
+    FgsLimitApproaching --> UIDTScheduled: scheduleVpnKeepAliveJob()\nJobScheduler.setUserInitiated(true) (§2.10)
+
+    Connected --> KilledBySystem: system reclaims the FGS\n(OOM / OEM battery killer / 6h limit hit)
+    Backgrounded --> KilledBySystem: system reclaims the FGS
+    UIDTScheduled --> KilledBySystem: FGS killed while the\nUIDT job is still pending
+
+    KilledBySystem --> Restarting: onStartCommand(intent = null)\n(START_STICKY, §2.2)\nloadSavedConfiguration()
+    UIDTScheduled --> KeepAliveRestart: VpnKeepAliveJobService.onStartJob()\nif HelixVpnService.isRunning:\nstartForegroundService() (§2.10)
+    KeepAliveRestart --> Foreground: foreground service re-established
+
+    Restarting --> Foreground: savedConfig != null\nstartVpnConnection(savedConfig)
+    Restarting --> Stopped: savedConfig == null\n(no reconnect)
+
+    Connected --> Stopping: ACTION_DISCONNECT
+    Backgrounded --> Stopping: ACTION_DISCONNECT
+    Stopping --> Stopped: rustBridge.stopTunnel()\nvpnInterface.close()\nisRunning = false (§2.2)
+
+    Stopped --> [*]
+```
+
 ```kotlin
 object Android15ForegroundServiceHelper {
     
@@ -1104,6 +1265,7 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
             if let error = error {
                 os_log("Failed to set tunnel settings: %{public}@", 
                        log: self.logger, type: .error, error.localizedDescription)
+                self.saveStateToAppGroup(state: .connectionFailed, config: nil)
                 completionHandler(error)
                 return
             }
@@ -1117,6 +1279,9 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
             } catch {
                 os_log("Failed to start Rust tunnel: %{public}@", 
                        log: self.logger, type: .error, error.localizedDescription)
+                // Initial-attempt failure maps to `connectionFailed`, never a
+                // bespoke `error` state — see the `TunnelState` doc comment.
+                self.saveStateToAppGroup(state: .connectionFailed, config: nil)
                 completionHandler(error)
             }
         }
@@ -1323,8 +1488,16 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
         sharedDefaults.synchronize()
     }
     
+    /// Mirrors the canonical `ConnectionStatus` state machine owned by
+    /// `helix-vpn-engine` (`MVP2_ARCHITECTURE.md` §5.6). The Network
+    /// Extension does not invent its own states (no bespoke `error` value);
+    /// a failed first-connection attempt is `connectionFailed`, and a
+    /// post-connection failure is reported as `reconnecting` /
+    /// `killSwitchActive` per the same state machine every other platform
+    /// implements.
     enum TunnelState: String {
-        case connected, disconnected, connecting, error
+        case disconnected, connecting, connected, reconnecting
+        case killSwitchActive, disconnecting, connectionFailed
     }
     
     enum TunnelError: Error {
@@ -2036,7 +2209,9 @@ The HarmonyOS client follows a similar pattern to Android but uses HarmonyOS-spe
 ├─────────────────────────────────────────────┤
 │         Shared Rust Core                     │
 │  - helix-core via N-API                      │
-│  - WireGuard/OpenVPN protocol                │
+│  - WireGuard (primary) / Shadowsocks /        │
+│    MASQUE / Multi-Hop (OpenVPN reserved,      │
+│    unimplemented — see §1.1)                 │
 └─────────────────────────────────────────────┘
 ```
 
@@ -2115,7 +2290,10 @@ export default class HelixVpnAbility extends VpnExtensionAbility {
 
     } catch (error) {
       hilog.error(0x0000, TAG, `VPN setup failed: ${JSON.stringify(error)}`);
-      this.saveConnectionState('error', config);
+      // Initial-attempt failure maps to the canonical `connectionFailed`
+      // state (`MVP2_ARCHITECTURE.md` §5.6), never a HarmonyOS-only 'error'
+      // value — see the `TunnelState` type below.
+      this.saveConnectionState('connectionFailed', config);
     }
   }
 
@@ -2234,7 +2412,11 @@ interface ConnectionStats {
   duration: number;
 }
 
-type TunnelState = 'disconnected' | 'connecting' | 'connected' | 'disconnecting' | 'error';
+// Mirrors the canonical `ConnectionStatus` state machine owned by
+// `helix-vpn-engine` (`MVP2_ARCHITECTURE.md` §5.6) — no ability-invented
+// states (no bespoke 'error' value; see `setupVpn`'s catch block above).
+type TunnelState = 'disconnected' | 'connecting' | 'connected' | 'reconnecting'
+  | 'killSwitchActive' | 'disconnecting' | 'connectionFailed';
 ```
 
 **Native C++ N-API binding layer:**
@@ -2653,24 +2835,42 @@ export default class HelixWidgetAbility extends FormExtensionAbility {
 
 ### 5.1 Flutter Design System
 
+**Reconciliation note (Revision 3):** the previous revision of this class
+hardcoded an independently-invented indigo (`primaryColor = 0xFF6366F1`) as
+the Material 3 seed color — never reconciled against the canonical,
+already-built OpenDesign token system (`docs/design/opendesign/helix/
+tokens.css`, `docs/design/tokens/color.json`), and not the color Android/
+iOS/HarmonyOS should actually render
+(`docs/research/CROSS_CUTTING_GAP_ANALYSIS.md` §1.2 finding #1). The values
+below are corrected to the canonical OpenDesign primary scale
+(`color.json` `primary.500`/`.600`) and secondary accent
+(`color.json` `accent.400`); `ColorScheme.fromSeed()` still generates the
+full Material 3 tonal palette, but now from the real brand seed instead of
+an invented one. Do not reintroduce a different brand hex here — extend
+`docs/design/` if a platform-specific adjustment is ever needed.
+
 ```dart
 // lib/theme/helix_theme.dart
 import 'package:flutter/material.dart';
 import 'dart:io' show Platform;
 
 class HelixTheme {
-  // Brand colors
-  static const Color primaryColor = Color(0xFF6366F1);
-  static const Color primaryDark = Color(0xFF4F46E5);
-  static const Color accentColor = Color(0xFF10B981);
-  static const Color errorColor = Color(0xFFEF4444);
-  static const Color warningColor = Color(0xFFF59E0B);
+  // Brand colors — sourced from docs/design/tokens/color.json `primary`/
+  // `accent` scales (canonical OpenDesign teal, not an independently
+  // invented palette; see the reconciliation note above §5.1's code block)
+  static const Color primaryColor = Color(0xFF00897B); // color.json primary.500
+  static const Color primaryDark = Color(0xFF00796B);  // color.json primary.600
+  static const Color accentColor = Color(0xFF00BCD4);  // color.json accent.400
+  static const Color errorColor = Color(0xFFD32F2F);   // color.json semantic.error (was invented 0xFFEF4444)
+  static const Color warningColor = Color(0xFFF57C00); // color.json semantic.warning (was invented 0xFFF59E0B)
   
-  // Connection state colors
-  static const Color connected = Color(0xFF10B981);
-  static const Color connecting = Color(0xFFF59E0B);
-  static const Color disconnected = Color(0xFF6B7280);
-  static const Color error = Color(0xFFEF4444);
+  // Connection state colors — color.json `semantic` scale (reconciled
+  // 2026-07-04; previously invented ad-hoc hex values, same class of drift
+  // the brand-primary teal fix above already closed for primaryColor/accentColor)
+  static const Color connected = Color(0xFF4CAF50);    // color.json semantic.connected
+  static const Color connecting = Color(0xFFFF9800);   // color.json semantic.connecting
+  static const Color disconnected = Color(0xFF6B7280); // color.json semantic.neutral (intentional: disconnected reads as neutral-gray, not alarm-red, in this UX)
+  static const Color error = Color(0xFFD32F2F);        // color.json semantic.error
   
   // Background colors
   static const Color darkBackground = Color(0xFF0F172A);
@@ -2874,14 +3074,25 @@ class ConnectionScreen extends ConsumerWidget {
       case ConnectionState.connecting:
         statusText = 'Connecting...';
         statusColor = HelixTheme.connecting;
+      case ConnectionState.reconnecting:
+        statusText = 'Reconnecting...';
+        statusColor = HelixTheme.connecting;
+      case ConnectionState.killSwitchActive:
+        // Fail-closed: all non-VPN traffic is actively blocked at the
+        // platform firewall layer (`VpnService.setBlocking` / NE
+        // `includeRoutes` / HarmonyOS `isBlocking`) — this is distinct from
+        // "disconnected" and MUST read as an alarming state, not a neutral
+        // one, per `MVP2_ARCHITECTURE.md` §5.6.
+        statusText = 'Blocked · Kill Switch Active';
+        statusColor = HelixTheme.error;
       case ConnectionState.disconnecting:
         statusText = 'Disconnecting...';
         statusColor = HelixTheme.warningColor;
       case ConnectionState.disconnected:
         statusText = 'Not Connected';
         statusColor = HelixTheme.disconnected;
-      case ConnectionState.error:
-        statusText = 'Connection Error';
+      case ConnectionState.connectionFailed:
+        statusText = 'Connection Failed';
         statusColor = HelixTheme.error;
     }
     
@@ -2942,12 +3153,19 @@ class ConnectionScreen extends ConsumerWidget {
   void _toggleConnection(WidgetRef ref, ConnectionState state) {
     switch (state) {
       case ConnectionState.disconnected:
-      case ConnectionState.error:
+      case ConnectionState.connectionFailed:
         ref.read(connectionStateProvider.notifier).connect();
       case ConnectionState.connected:
+      case ConnectionState.killSwitchActive:
+        // Kill-switch-active is the engine's
+        // `Disconnecting: user forces disconnect (explicit override)`
+        // transition (`MVP2_ARCHITECTURE.md` §5.6) — the toggle button is
+        // the "explicit override" the user presses to escape a stuck
+        // fail-closed state.
         ref.read(connectionStateProvider.notifier).disconnect();
       default:
-        // Do nothing while transitioning
+        // Do nothing while transitioning (connecting / reconnecting /
+        // disconnecting)
         break;
     }
   }
@@ -3006,15 +3224,23 @@ class _ConnectionButtonState extends State<ConnectionButton>
   void didUpdateWidget(ConnectionButton oldWidget) {
     super.didUpdateWidget(oldWidget);
     
-    if (widget.state == ConnectionState.connecting) {
+    // `reconnecting` reuses the same spinner as `connecting` — from the
+    // user's perspective both are "please wait, working on it" states; the
+    // distinct label is carried by `_buildConnectionStatus` (§5.2), not by a
+    // second animation.
+    final isBusy = widget.state == ConnectionState.connecting ||
+        widget.state == ConnectionState.reconnecting;
+    
+    if (isBusy) {
       _rotateController.repeat();
     } else {
       _rotateController.stop();
     }
     
-    if (widget.state == ConnectionState.connected) {
+    if (widget.state == ConnectionState.connected ||
+        widget.state == ConnectionState.killSwitchActive) {
       _pulseController.repeat(reverse: true);
-    } else if (widget.state != ConnectionState.connecting) {
+    } else if (!isBusy) {
       _pulseController.stop();
       _pulseController.value = 0;
     }
@@ -3030,8 +3256,12 @@ class _ConnectionButtonState extends State<ConnectionButton>
   @override
   Widget build(BuildContext context) {
     final isConnected = widget.state == ConnectionState.connected;
-    final isConnecting = widget.state == ConnectionState.connecting;
-    final buttonColor = isConnected ? HelixTheme.connected : HelixTheme.disconnected;
+    final isKillSwitchActive = widget.state == ConnectionState.killSwitchActive;
+    final isConnecting = widget.state == ConnectionState.connecting ||
+        widget.state == ConnectionState.reconnecting;
+    final buttonColor = isKillSwitchActive
+        ? HelixTheme.error
+        : (isConnected ? HelixTheme.connected : HelixTheme.disconnected);
     
     return AnimatedBuilder(
       animation: Listenable.merge([_pulseController, _rotateController]),
@@ -3072,7 +3302,7 @@ class _ConnectionButtonState extends State<ConnectionButton>
                       BoxShadow(
                         color: buttonColor.withOpacity(0.4),
                         blurRadius: 30,
-                        spreadRadius: isConnected ? 10 : 0,
+                        spreadRadius: (isConnected || isKillSwitchActive) ? 10 : 0,
                       ),
                     ],
                   ),
@@ -3087,7 +3317,11 @@ class _ConnectionButtonState extends State<ConnectionButton>
                             ),
                           )
                         : Icon(
-                            isConnected ? Icons.power_settings_new : Icons.power_settings_new,
+                            isKillSwitchActive
+                                ? Icons.gpp_bad // fail-closed, blocked
+                                : (isConnected
+                                    ? Icons.gpp_good // tunnel up
+                                    : Icons.power_settings_new),
                             color: Colors.white,
                             size: 48,
                           ),
@@ -3102,12 +3336,28 @@ class _ConnectionButtonState extends State<ConnectionButton>
   }
 }
 
+/// Mirrors the single canonical `ConnectionStatus` state machine owned by
+/// `helix-vpn-engine` (`MVP2_ARCHITECTURE.md` §5.6) verbatim — this is the
+/// Dart-side rendering target for the `"state"` string returned by
+/// `getStatus` on every platform's MethodChannel (§2.6, §3.1, §4.2). No
+/// Flutter-only state (e.g. a bespoke `error`) may be added here; a platform
+/// UI introducing its own ad-hoc state is an architectural contract
+/// violation per `MVP2_ARCHITECTURE.md` §5.6.
 enum ConnectionState {
   disconnected,
   connecting,
   connected,
+  /// Handshake or keepalive lost; attempting to re-establish. Distinct from
+  /// `connecting` (first connection) for UI messaging purposes.
+  reconnecting,
+  /// Reconnect exceeded the grace period AND kill switch is enabled: all
+  /// non-VPN traffic is being actively blocked at the platform firewall
+  /// layer. See `MVP2_SECURITY_PERFORMANCE.md` §2.
+  killSwitchActive,
   disconnecting,
-  error,
+  /// Initial connection attempt failed (timeout / handshake error), prior to
+  /// ever reaching `connected`. Distinct from `reconnecting`.
+  connectionFailed,
 }
 ```
 
@@ -3309,11 +3559,18 @@ class ServerListTile extends StatelessWidget {
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Protocol support badges
+          // Protocol support badges. `ProtocolType.OpenVPN` is a RESERVED,
+          // unimplemented placeholder in `helix-core` (`MVP2_SHARED_CORE.md`
+          // §2.3) — it MUST NOT appear here or anywhere else a user could
+          // select it as an available protocol.
           if (server.supportsWireGuard)
             _buildProtocolBadge('WG'),
-          if (server.supportsOpenVPN)
-            _buildProtocolBadge('OV'),
+          if (server.supportsShadowsocks)
+            _buildProtocolBadge('SS'),
+          if (server.supportsMasque)
+            _buildProtocolBadge('MQ'),
+          if (server.supportsMultiHop)
+            _buildProtocolBadge('MH'),
           const SizedBox(width: 8),
           
           // Favorite toggle
@@ -4597,7 +4854,9 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.22.0'
+          # Mainline Flutter (3.29+), NOT the HarmonyOS community `-ohos`
+          # fork used by the build-harmonyos job below — see §1.1.
+          flutter-version: '3.29.0'
       
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -4647,7 +4906,8 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.22.0'
+          # Mainline Flutter (3.29+) — same rationale as build-android above.
+          flutter-version: '3.29.0'
       
       - name: Setup Rust
         uses: dtolnay/rust-action@stable
@@ -4904,10 +5164,13 @@ helix-vpn-mobile/
 | Feature | Android | iOS | HarmonyOS |
 |---------|---------|-----|-----------|
 | **VPN API** | VpnService | NEPacketTunnelProvider | VpnExtensionAbility |
-| **Min OS** | API 26 (8.0) | iOS 15 | API 12 (NEXT) |
-| **Code Reuse** | 85-90% | 85-90% | 80-85% |
+| **Min OS** | API 26 (8.0) — product-supported minimum | iOS 15 | API 12 (NEXT) |
+| **Flutter** | 3.29+ (Impeller) | 3.29+ (Impeller/Metal) | 3.22-ohos (community embedding, pinned) |
+| **Code Reuse** | 72% | 72% | 70% |
+| **Bundle Size Target** | < 25 MB | < 25 MB | < 25 MB |
+| **Idle RAM Target** | < 120 MB | < 120 MB | < 120 MB |
 | **Background** | Foreground service | System extension | ExtensionAbility |
-| **Memory Limit** | ~200MB+ | ~15MB | Unknown |
+| **Memory Limit** | No hard OS cap on the foreground service itself; ~200MB+ is a practical working budget, distinct from the <120MB whole-app idle target above | ~15 MB hard cap on the Network Extension process (`MVP2_ARCHITECTURE.md` §4) | Not officially published by Huawei; engineering target is the same <120MB whole-app idle budget until measured |
 | **Split Tunneling** | App + Route-based | Route-based only | App-based |
 | **Always-On VPN** | Yes (system) | On-Demand rules | Limited |
 | **Kill Switch** | Lockdown mode | Limited | isBlocking flag |

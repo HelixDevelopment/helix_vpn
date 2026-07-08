@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>HelixVPN MVP — Testing &amp; QA Implementation Strategy</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">HelixVPN MVP — Testing &amp; QA Implementation
+Strategy</h1>
+</header>
+<h1 id="helixvpn-mvp--testing--qa-implementation-strategy">HelixVPN MVP
+— Testing &amp; QA Implementation Strategy</h1>
+<p><strong>Revision:</strong> 1<br />
+<strong>Last modified:</strong> 2026-07-06T10:44:05Z<br />
+<strong>Status:</strong> active — Phase 4 QA architecture
+deliverable<br />
+<strong>Authority:</strong>
+<code>docs/research/mvp/final/10-testing-acceptance-and-qa.md</code>
+(canonical QA contract)<br />
+<strong>Scope:</strong> Full testing strategy, test pyramid, CI/CD
+integration plan, and links to HelixVPN-specific Challenge / HelixQA
+banks.</p>
+<hr />
+<h2 id="1-one-sentence-rule">1. One-sentence rule</h2>
+<blockquote>
+<p>A green test suite is not proof the feature works. It only counts as
+proof if a real artifact — a packet capture, a throughput number, a
+database rowset, a screen recording — was captured <em>while the feature
+ran</em> and shows the user-visible outcome actually happened.</p>
+</blockquote>
+<p>This document operationalizes that rule for HelixVPN.</p>
+<hr />
+<h2 id="2-test-pyramid">2. Test pyramid</h2>
+<pre><code>                    ┌─────────────┐
+                    │   REC/UI    │  ← window-scoped MP4 + vision_engine OCR verdict
+                    │  (top gate) │
+                   ┌┴─────────────┴┐
+                   │ CHAL + HQA   │  ← challenges + helix_qa banks score DoD ACs
+                  ┌┴───────────────┴┐
+                  │ SEC·STRESS·CHAOS│  ← kill-switch, DPI, reconnect, fail-static
+                 ┌┴─────────────────┴┐
+                 │       E2E         │  ← netns + nftables + netem rig
+                ┌┴───────────────────┴┐
+                │        INT          │  ← real PG + Redis + edge via containers
+               ┌┴─────────────────────┴┐
+               │        UNIT           │  ← pure logic; mocks allowed only here
+               └───────────────────────┘</code></pre>
+<h3 id="layer-responsibilities">Layer responsibilities</h3>
+<table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Proves</th>
+<th>Harness</th>
+<th>Mocks?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>UNIT</strong></td>
+<td>Policy compiler, IPAM, delta diff, MASQUE framing, status FSM</td>
+<td><code>cargo test</code>, <code>go test</code>,
+<code>dart test</code></td>
+<td>Only here</td>
+</tr>
+<tr>
+<td><strong>INT</strong></td>
+<td>Enrollment, RLS, reconcile, cert rotation, presence TTL</td>
+<td><code>containers/pkg/boot</code> PG+Redis+edge</td>
+<td>No</td>
+</tr>
+<tr>
+<td><strong>E2E</strong></td>
+<td>Real tunnel carries real packets; authorized reach;
+default-deny</td>
+<td>Netns + nftables + netem rig</td>
+<td>No</td>
+</tr>
+<tr>
+<td><strong>SEC/STR/CHAOS</strong></td>
+<td>Kill-switch, DNS leak, DPI evasion, fail-static, reconnect</td>
+<td><code>rig/</code>, <code>scripts/stress_chaos.sh</code></td>
+<td>No</td>
+</tr>
+<tr>
+<td><strong>CHAL/HQA</strong></td>
+<td>DoD ACs scored on captured evidence; defeats B1–B5</td>
+<td><code>submodules/challenges/</code>,
+<code>submodules/helix_qa/</code></td>
+<td>No</td>
+</tr>
+<tr>
+<td><strong>REC/UI</strong></td>
+<td>User-visible flows rendered and match core FSM</td>
+<td><code>panoptic</code> + <code>vision_engine</code></td>
+<td>No</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="3-test-type-taxonomy-114169">3. Test-type taxonomy
+(§11.4.169)</h2>
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>Type</th>
+<th>MVP status</th>
+<th>Owner subsystem</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>UNIT</code></td>
+<td>Unit</td>
+<td>required</td>
+<td><code>helix-core</code>, <code>helix-go</code>,
+<code>helix-ui</code></td>
+</tr>
+<tr>
+<td><code>INT</code></td>
+<td>Integration</td>
+<td>required</td>
+<td><code>svc-*</code>, <code>helix-core</code></td>
+</tr>
+<tr>
+<td><code>E2E</code></td>
+<td>End-to-end</td>
+<td>required</td>
+<td>netns rig / edge</td>
+</tr>
+<tr>
+<td><code>FA</code></td>
+<td>Full-automation</td>
+<td>required</td>
+<td><code>make spike</code> / <code>make qa</code></td>
+</tr>
+<tr>
+<td><code>SEC</code></td>
+<td>Security</td>
+<td>required</td>
+<td>security / <code>helix-core</code></td>
+</tr>
+<tr>
+<td><code>DDOS</code></td>
+<td>DDoS / load-flood</td>
+<td><strong>parked</strong> (GAP-6 closed)</td>
+<td><code>svc-api</code> (NFR-413), <code>helix-edge</code>
+(NFR-414)</td>
+</tr>
+<tr>
+<td><code>STRESS</code></td>
+<td>Stress</td>
+<td>required</td>
+<td><code>svc-coordinator</code>, <code>helix-edge</code></td>
+</tr>
+<tr>
+<td><code>CHAOS</code></td>
+<td>Chaos</td>
+<td>required</td>
+<td><code>svc-coordinator</code>, <code>helix-edge</code></td>
+</tr>
+<tr>
+<td><code>CONC</code></td>
+<td>Concurrency</td>
+<td>required</td>
+<td><code>svc-ipam</code>, <code>svc-coordinator</code></td>
+</tr>
+<tr>
+<td><code>RACE</code></td>
+<td>Race / deadlock</td>
+<td>required</td>
+<td><code>helix-core</code>, <code>helix-go</code></td>
+</tr>
+<tr>
+<td><code>MEM</code></td>
+<td>Memory</td>
+<td>required</td>
+<td><code>shim-apple</code>, <code>svc-coordinator</code></td>
+</tr>
+<tr>
+<td><code>BENCH</code></td>
+<td>Benchmarking</td>
+<td>required</td>
+<td><code>bench.sh</code>, <code>criterion</code></td>
+</tr>
+<tr>
+<td><code>PERF</code></td>
+<td>Performance</td>
+<td>required</td>
+<td><code>svc-coordinator</code>, <code>helix-edge</code></td>
+</tr>
+<tr>
+<td><code>SCALE</code></td>
+<td>Scaling</td>
+<td>partial MVP / full P2</td>
+<td><code>svc-coordinator</code></td>
+</tr>
+<tr>
+<td><code>UI</code></td>
+<td>UI / UX</td>
+<td>required</td>
+<td><code>helix-ui</code></td>
+</tr>
+<tr>
+<td><code>REC</code></td>
+<td>Recorded evidence</td>
+<td>required</td>
+<td><code>panoptic</code></td>
+</tr>
+<tr>
+<td><code>CHAL</code></td>
+<td>Challenges</td>
+<td>required (DoD)</td>
+<td><code>submodules/challenges/helix_vpn/</code></td>
+</tr>
+<tr>
+<td><code>HQA</code></td>
+<td>HelixQA</td>
+<td>required (DoD)</td>
+<td><code>submodules/helix_qa/banks/helix_vpn/</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="4-cicd-integration-plan">4. CI/CD integration plan</h2>
+<blockquote>
+<p><strong>Constraint:</strong>
+<code>docs/research/mvp/final/10-testing-acceptance-and-qa.md</code> §9
+/ §11.4.156 — no active remote CI. All gates are local.</p>
+</blockquote>
+<h3 id="local-gate-layers">Local gate layers</h3>
+<pre><code>pre-commit hook
+├── sh -n on shell scripts
+├── schema-lint (no durable flow table)
+├── no-logging payload lint
+├── mutation-residue scan
+└── UNIT (fast)
+
+pre-push hook
+├── UNIT (full)
+├── INT (containers boots PG+Redis)
+├── SEC subset (secret audit, RLS fixture)
+└── propagation gates (buf breaking-change lint)
+
+make test
+├── UNIT
+├── INT
+├── E2E (netns rig)
+├── SEC
+├── STRESS + CHAOS
+└── report to qa-results/
+
+make qa
+├── CHAL/HQA bank run
+├── REC/UI bank run
+└── coverage-ledger regeneration</code></pre>
+<h3 id="cicd-parity-future">CI/CD parity (future)</h3>
+<p>When remote CI is re-enabled, the same local targets are wrapped:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># .github/workflows/qa.yml (future)</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">-</span><span class="at"> </span><span class="fu">run</span><span class="kw">:</span><span class="at"> make test</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">-</span><span class="at"> </span><span class="fu">run</span><span class="kw">:</span><span class="at"> make qa</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="kw">-</span><span class="at"> </span><span class="fu">run</span><span class="kw">:</span><span class="at"> scripts/verify-coverage-ledger.sh</span></span></code></pre></div>
+<p>No new test logic lives in CI; CI only orchestrates the existing
+local harness.</p>
+<hr />
+<h2 id="5-evidence-model">5. Evidence model</h2>
+<p>Every feature class maps to a §11.4.69 sink-side evidence class.</p>
+<table>
+<thead>
+<tr>
+<th>Feature class</th>
+<th>Evidence class</th>
+<th>Artifact</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>tunnel carries traffic</td>
+<td><code>network_throughput</code></td>
+<td><code>iperf3 -J</code> + pcap with ≥1 inner packet</td>
+</tr>
+<tr>
+<td>authorized reachability</td>
+<td><code>network_connectivity</code></td>
+<td><code>curl</code> 200 + pcap SYN→SYN-ACK</td>
+</tr>
+<tr>
+<td>default-deny</td>
+<td><code>network_connectivity</code> (negative)</td>
+<td>pcap SYN out, zero SYN-ACK</td>
+</tr>
+<tr>
+<td>kill-switch / DNS leak</td>
+<td><code>wifi_link</code> / negative</td>
+<td>host pcap: zero plaintext / zero :53</td>
+</tr>
+<tr>
+<td>transport escalation</td>
+<td><code>network_connectivity</code></td>
+<td><code>StatusReport.transport==&quot;masque-h3&quot;</code> + tshark H3</td>
+</tr>
+<tr>
+<td>policy reconcile latency</td>
+<td><code>counter_delta</code></td>
+<td><code>helix_reconcile_seconds</code> p99 &lt; 1 s</td>
+</tr>
+<tr>
+<td>revoke latency</td>
+<td><code>counter_delta</code></td>
+<td>revoke→edge-enforcement timing CSV</td>
+</tr>
+<tr>
+<td>key-never-leaves</td>
+<td>negative</td>
+<td>FFI boundary scan + log scan</td>
+</tr>
+<tr>
+<td>iOS NE memory</td>
+<td><code>MEM</code></td>
+<td>Instruments <code>.trace</code> / <code>footprint</code> RSS</td>
+</tr>
+<tr>
+<td>UI connect flow</td>
+<td><code>REC</code></td>
+<td>window-scoped MP4 + vision verdict</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="6-helixvpn-specific-banks">6. HelixVPN-specific banks</h2>
+<h3 id="challenges">Challenges</h3>
+<p>Path: <code>submodules/challenges/helix_vpn/</code></p>
+<table>
+<thead>
+<tr>
+<th>Challenge ID</th>
+<th>Critical path</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>HVPN-CHAL-AUTH-TUNNEL</code></td>
+<td>Auth + tunnel establishment</td>
+<td>pcap + iperf3 JSON</td>
+</tr>
+<tr>
+<td><code>HVPN-CHAL-RECONNECT-ROAMING</code></td>
+<td>Reconnect / roaming</td>
+<td>pcap + status log</td>
+</tr>
+<tr>
+<td><code>HVPN-CHAL-KILL-SWITCH</code></td>
+<td>Kill-switch</td>
+<td>gap pcap</td>
+</tr>
+<tr>
+<td><code>HVPN-CHAL-DNS-LEAK</code></td>
+<td>DNS leak prevention</td>
+<td>DNS pcap + resolvers JSON</td>
+</tr>
+<tr>
+<td><code>HVPN-CHAL-CONTROL-PLANE-HA</code></td>
+<td>Control-plane HA</td>
+<td>HA pcap + CP down log</td>
+</tr>
+<tr>
+<td><code>HVPN-CHAL-CLIENT-UI-VISUAL</code></td>
+<td>Client UI visual proof</td>
+<td>MP4 + vision verdict</td>
+</tr>
+</tbody>
+</table>
+<h3 id="helixqa">HelixQA</h3>
+<p>Path: <code>submodules/helix_qa/banks/helix_vpn/</code></p>
+<table>
+<thead>
+<tr>
+<th>Test-case ID</th>
+<th>Critical path</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>HVPN-HQA-AUTH-TUNNEL</code></td>
+<td>Auth + tunnel establishment</td>
+<td>pcap + iperf3</td>
+</tr>
+<tr>
+<td><code>HVPN-HQA-RECONNECT-ROAMING</code></td>
+<td>Reconnect / roaming</td>
+<td>pcap + status log</td>
+</tr>
+<tr>
+<td><code>HVPN-HQA-KILL-SWITCH</code></td>
+<td>Kill-switch</td>
+<td>gap pcap</td>
+</tr>
+<tr>
+<td><code>HVPN-HQA-DNS-LEAK</code></td>
+<td>DNS leak prevention</td>
+<td>DNS pcap</td>
+</tr>
+<tr>
+<td><code>HVPN-HQA-CONTROL-PLANE-HA</code></td>
+<td>Control-plane HA</td>
+<td>HA pcap + log</td>
+</tr>
+<tr>
+<td><code>HVPN-HQA-CLIENT-UI-VISUAL</code></td>
+<td>Client UI visual proof</td>
+<td>MP4 + vision verdict</td>
+</tr>
+<tr>
+<td><code>HVPN-HQA-NFR413-API-Rate-Limit</code></td>
+<td>GAP-6: API rate limiting</td>
+<td>latency + counter CSV</td>
+</tr>
+<tr>
+<td><code>HVPN-HQA-NFR414-Edge-Flood</code></td>
+<td>GAP-6: edge flood resilience</td>
+<td>liveness + legit latency CSV</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="7-gap-6-closure">7. GAP-6 closure</h2>
+<p><strong>Gap:</strong> <code>DDOS</code> test type had no owning
+FR/NFR.</p>
+<p><strong>Fix:</strong></p>
+<ul>
+<li><strong>NFR-413</strong> — control-plane API rate limiting (token
+bucket per API key/device) → <code>svc-api</code> owns it.</li>
+<li><strong>NFR-414</strong> — data-plane edge DDoS/UDP-flood resilience
+→ <code>helix-edge</code> / <code>helix-transport</code> owns it.</li>
+</ul>
+<p>At MVP the runnable cells are <code>not-applicable-MVP</code>
+(<code>single-node-selfhost</code>); the banks are authored-now-parked
+and mechanically re-arm when
+<code>deployment.topology == &quot;multi-tenant-ha&quot;</code> in Phase 2.</p>
+<hr />
+<h2 id="8-acceptance-gates">8. Acceptance gates</h2>
+<h3 id="phase-0--spike-exit-gates">Phase 0 — spike exit gates</h3>
+<table>
+<thead>
+<tr>
+<th>Gate</th>
+<th>Bar</th>
+<th>Evidence</th>
+<th>Test types</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>G1</td>
+<td>plain-UDP ≥ 80 % bare link</td>
+<td>pcap + iperf3 CSV</td>
+<td>E2E, BENCH, CHAL</td>
+</tr>
+<tr>
+<td>G2</td>
+<td>MASQUE ≥ 50 % plain-UDP through DPI block</td>
+<td>pcap + tshark + CSV</td>
+<td>E2E, SEC, BENCH</td>
+</tr>
+<tr>
+<td>G3</td>
+<td>iOS NE memory headroom ≥ 30 %</td>
+<td>Instruments <code>.trace</code></td>
+<td>MEM</td>
+</tr>
+<tr>
+<td>G4</td>
+<td>Go-vs-Rust edge decision</td>
+<td><code>edge_compare.csv</code></td>
+<td>BENCH, PERF, RACE</td>
+</tr>
+<tr>
+<td>G5</td>
+<td>flutter_rust_bridge FFI</td>
+<td>FFI round-trip log + UI recording</td>
+<td>UNIT, UI</td>
+</tr>
+<tr>
+<td>G6</td>
+<td>push-based reconcile</td>
+<td>reconcile event log</td>
+<td>INT, E2E</td>
+</tr>
+</tbody>
+</table>
+<h3 id="phase-1--mvp-dod">Phase 1 — MVP DoD</h3>
+<table>
+<thead>
+<tr>
+<th>AC</th>
+<th>Criterion</th>
+<th>Evidence</th>
+<th>Primary challenge</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AC1</td>
+<td>self-host from zero</td>
+<td>terminal recording + healthchecks</td>
+<td><code>HVPN-CHAL-FR901-Init-From-Zero</code></td>
+</tr>
+<tr>
+<td>AC2</td>
+<td>enroll connector+client; reach authorized host</td>
+<td>E2E netns + pcap</td>
+<td><code>HVPN-CHAL-AUTH-TUNNEL</code></td>
+</tr>
+<tr>
+<td>AC3</td>
+<td>deny unauthorized host</td>
+<td>negative E2E pcap</td>
+<td><code>HVPN-CHAL-FR201-Default-Deny</code></td>
+</tr>
+<tr>
+<td>AC4</td>
+<td>auto-escalate to MASQUE</td>
+<td><code>StatusReport.transport</code> + tshark H3</td>
+<td><code>HVPN-CHAL-FR006-Auto-Ladder</code></td>
+</tr>
+<tr>
+<td>AC5</td>
+<td>policy edit &lt; 1 s</td>
+<td><code>helix_reconcile_seconds</code> p99</td>
+<td><code>HVPN-CHAL-FR205-Policy-Reconcile</code></td>
+</tr>
+<tr>
+<td>AC6</td>
+<td>revoke &lt; 1 s</td>
+<td>revoke→edge timing CSV</td>
+<td><code>HVPN-CHAL-FR107-Revoke-Speed</code></td>
+</tr>
+<tr>
+<td>AC7</td>
+<td>kill-switch + DNS leak</td>
+<td>host pcap zero leak</td>
+<td><code>HVPN-CHAL-KILL-SWITCH</code>,
+<code>HVPN-CHAL-DNS-LEAK</code></td>
+</tr>
+<tr>
+<td>AC8</td>
+<td>no durable log + 3 apps</td>
+<td>schema-lint + UX recordings</td>
+<td><code>HVPN-CHAL-FR801-No-Flow-Table</code>,
+<code>HVPN-CHAL-CLIENT-UI-VISUAL</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="9-risk-ordering">9. Risk ordering</h2>
+<p>The suite runs highest-risk first:</p>
+<ol type="1">
+<li>kill-switch / DNS leak (AC7)</li>
+<li>default-deny / RLS (AC3)</li>
+<li>revoke &lt; 1 s (AC6)</li>
+<li>key-never-leaves (FR-103)</li>
+<li>authorized reach (AC2)</li>
+<li>transport escalation (AC4)</li>
+<li>policy reconcile (AC5)</li>
+<li>UI / recorded evidence (AC9)</li>
+</ol>
+<p>Only after the irreversible-security floor is GREEN does the rest of
+the pyramid run.</p>
+<hr />
+<h2 id="10-determinism--mutation">10. Determinism &amp; mutation</h2>
+<ul>
+<li>Every PASS runs N=3 (normal) / N=10 (cycle-validation) against the
+same artifact MD5 + same rig.</li>
+<li>Divergent runs are auto-FAIL.</li>
+<li>Every gate has a paired §1.1 mutation that disables the protection
+and expects RED.</li>
+<li>Every analyzer ships with golden-good + golden-bad fixtures.</li>
+</ul>
+<hr />
+<h2 id="11-source-docs-v08-testing">11. Source docs
+(<code>v08-testing/</code>)</h2>
+<p>The detailed test-type specifications and the coverage-ledger schema
+live in the parent <code>final/</code> tree. This implementation section
+is a consolidation of the following source docs:</p>
+<table>
+<thead>
+<tr>
+<th>Source doc</th>
+<th>§11.4.169 type / role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="../../v08-testing/unit.md"><code>../../v08-testing/unit.md</code></a></td>
+<td><code>UNIT</code></td>
+</tr>
+<tr>
+<td><a href="../../v08-testing/integration.md"><code>../../v08-testing/integration.md</code></a></td>
+<td><code>INT</code></td>
+</tr>
+<tr>
+<td><a href="../../v08-testing/e2e.md"><code>../../v08-testing/e2e.md</code></a></td>
+<td><code>E2E</code></td>
+</tr>
+<tr>
+<td><a href="../../v08-testing/full-automation.md"><code>../../v08-testing/full-automation.md</code></a></td>
+<td><code>FA</code></td>
+</tr>
+<tr>
+<td><a href="../../v08-testing/challenges.md"><code>../../v08-testing/challenges.md</code></a></td>
+<td><code>CHAL</code></td>
+</tr>
+<tr>
+<td><a href="../../v08-testing/helixqa.md"><code>../../v08-testing/helixqa.md</code></a></td>
+<td><code>HQA</code></td>
+</tr>
+<tr>
+<td><a href="../../v08-testing/security.md"><code>../../v08-testing/security.md</code></a></td>
+<td><code>SEC</code></td>
+</tr>
+<tr>
+<td><a href="../../v08-testing/ddos.md"><code>../../v08-testing/ddos.md</code></a></td>
+<td><code>DDOS</code></td>
+</tr>
+<tr>
+<td><a href="../../v08-testing/stress-chaos.md"><code>../../v08-testing/stress-chaos.md</code></a></td>
+<td><code>STR/CHAOS</code></td>
+</tr>
+<tr>
+<td><a href="../../v08-testing/concurrency.md"><code>../../v08-testing/concurrency.md</code></a></td>
+<td><code>CONC</code></td>
+</tr>
+<tr>
+<td><a href="../../v08-testing/race-deadlock.md"><code>../../v08-testing/race-deadlock.md</code></a></td>
+<td><code>RACE</code></td>
+</tr>
+<tr>
+<td><a href="../../v08-testing/memory.md"><code>../../v08-testing/memory.md</code></a></td>
+<td><code>MEM</code></td>
+</tr>
+<tr>
+<td><a href="../../v08-testing/benchmarking.md"><code>../../v08-testing/benchmarking.md</code></a></td>
+<td><code>BENCH/PERF/SCALE</code></td>
+</tr>
+<tr>
+<td><a href="../../v08-testing/coverage-ledger-schema.md"><code>../../v08-testing/coverage-ledger-schema.md</code></a></td>
+<td>Ledger schema + evidence-state machine</td>
+</tr>
+<tr>
+<td><a href="../../v08-testing/test-rig.md"><code>../../v08-testing/test-rig.md</code></a></td>
+<td>Shared rig topology</td>
+</tr>
+</tbody>
+</table>
+<p>These 15 docs (13 per-type specs + ledger schema + rig) are all
+authored and on disk; they close GAP-5 at the documentation level.
+Residual evidence-state <code>PENDING</code> is the honest spec-phase
+state until implementation produces captured PASS artifacts.</p>
+<hr />
+<h2 id="12-links">12. Links</h2>
+<ul>
+<li>Full coverage ledger: <a href="coverage-ledger.md"><code>coverage-ledger.md</code></a></li>
+<li>Canonical QA contract: <a href="../../10-testing-acceptance-and-qa.md"><code>../../10-testing-acceptance-and-qa.md</code></a></li>
+<li>Requirements traceability / GAP register: <a href="../../v00-meta/requirements-traceability.md"><code>../../v00-meta/requirements-traceability.md</code></a></li>
+<li>Challenges bank: <a href="../../../../../../submodules/challenges/helix_vpn/"><code>submodules/challenges/helix_vpn/</code></a></li>
+<li>HelixQA bank: <a href="../../../../../../submodules/helix_qa/banks/helix_vpn/"><code>submodules/helix_qa/banks/helix_vpn/</code></a></li>
+<li>Phase 4 findings report: <a href="../../../../../reviews/mvp-final/findings/phase4-qa-coverage-report.md"><code>docs/reviews/mvp-final/findings/phase4-qa-coverage-report.md</code></a></li>
+</ul>
+</body>
+</html>

@@ -1,5 +1,32 @@
 # Helix VPN — Aurora OS Client Specification
 
+**Revision:** 2
+**Last modified:** 2026-07-04T14:00:00Z
+
+**Revision 2 changelog:** Reconciled against `MVP2_ARCHITECTURE.md` §5.6 /
+`MVP2_SHARED_CORE.md` §3.1 canonical connection-lifecycle state machine —
+added `KillSwitchActive` + `ConnectionFailed` states end-to-end through the
+Rust FFI constants, generated C header, C++ bridge, and QML UI (this doc
+previously modeled only 6 of the 9 wire states). Fixed OpenVPN references —
+it is a reserved/unimplemented placeholder only, never a supported protocol.
+Added §3.6 clarifying how Shadowsocks/MASQUE/Multi-Hop map onto ConnMan
+(they do NOT use ConnMan's native VPN plugin `Type` field, unlike WireGuard).
+Confirmed split tunneling is route/CIDR-based only (no per-app support on
+Aurora) and fixed a stale "App-based split tunneling" file-tree comment.
+Added explicit N/A-biometric rationale (§6.6) and an explicit MDM/enterprise
+-fleet out-of-scope statement + `ManagedPolicy`/`apply_managed_policy` stub
+(§10.8), per `MVP2_ARCHITECTURE.md` §10.2. Added a new "§10 Enterprise
+Hardening & Production Readiness" section (store/OpenRepos review, RPM GPG
+signing, update/rollback, crash reporting, telemetry consent, offline/
+degraded-network behavior, concrete kill-switch/split-tunnel mechanism,
+accessibility, i18n, license/entitlement checks). Added Mermaid diagrams
+(connection state machine, ConnMan D-Bus VPN connect flow, RPM package
+build/sign/distribute/update/rollback flow) — this file previously had zero.
+Added OpenDesign token-system reference for the Silica Ambiance (dark-first)
+theme (§6.1). Reconciled internal Phase 1-4 week numbering (§9) against
+`MVP2_IMPLEMENTATION_ROADMAP.md` Phase 7's absolute calendar placement
+(Weeks 27-30).
+
 ## Comprehensive Technical Specification for Aurora OS (Sailfish OS) VPN Client
 
 **Version**: 1.0  
@@ -22,6 +49,7 @@
 7. [Build System](#7-build-system)
 8. [Comparison with Other Platforms](#8-comparison-with-other-platforms)
 9. [Implementation Phases](#9-implementation-phases)
+10. [Enterprise Hardening & Production Readiness](#10-enterprise-hardening--production-readiness)
 
 ---
 
@@ -224,7 +252,14 @@ Distribution is via RPM packages:
 ConnMan manages VPN connections through a plugin architecture. The VPN subsystem consists of:
 
 - **connman-vpnd**: VPN daemon (runs as system service)
-- **VPN Provider**: Represents a VPN configuration (WireGuard, OpenVPN, etc.)
+- **VPN Provider**: Represents a VPN configuration. ConnMan's own built-in
+  plugin set covers `wireguard`, `openvpn`, `openconnect`, `l2tp`, `pptp`,
+  `vpnc` — **Helix only ever registers a `wireguard` provider.** OpenVPN is
+  a **reserved, unimplemented placeholder** in the Helix protocol matrix
+  (never shipped, never selectable in the UI) even though ConnMan itself
+  supports it; do not read the presence of `openvpn` in ConnMan's plugin
+  list as Helix support for it. See §3.6 for how Helix's other protocols
+  (Shadowsocks, MASQUE, Multi-Hop) relate to ConnMan.
 - **VPN Manager**: Manages the list of VPN providers
 - **VPN Connection**: Active VPN connection state
 
@@ -283,6 +318,13 @@ Properties:
   UserRoutes   — User-defined routes
   ServerRoutes — Server-pushed routes
 ```
+
+> **Note:** `Type` is a generic ConnMan property that accepts any registered
+> plugin name (`"wireguard"`, `"openvpn"`, etc. per upstream ConnMan).
+> Helix's `VpnConfigurator` (§3.4) only ever writes `Type = "wireguard"` —
+> OpenVPN is a reserved/unimplemented placeholder in the Helix protocol
+> matrix, not a Helix-supported value here, regardless of what ConnMan
+> itself is capable of. See §3.6.
 
 ### 3.3 Qt D-Bus Integration Code
 
@@ -442,6 +484,34 @@ QVariantMap ConnManVpnManager::getConnectionProperties(const QString &connection
 }
 ```
 
+**End-to-end connect flow across the layers above** — this is the concrete
+sequence a `vpnController.connectToServer()` call from QML actually drives
+for the WireGuard/ConnMan path (§3.6 covers Shadowsocks/MASQUE, which skip
+ConnMan entirely):
+
+```mermaid
+sequenceDiagram
+    participant QML as QML UI (MainPage)
+    participant VC as VpnController (C++)
+    participant CM as ConnManVpnManager (C++)
+    participant DBus as D-Bus (net.connman.vpn)
+    participant Conn as connman-vpnd
+    participant WG as WireGuard iface (kernel/userspace)
+
+    QML->>VC: connectToServer(serverId)
+    VC->>CM: connectVpn(connectionPath)
+    CM->>DBus: Connection.Connect()
+    DBus->>Conn: dispatch Connect()
+    Conn->>WG: bring up wg-helix0,\nconfigure keys + routes
+    WG-->>Conn: handshake_complete
+    Conn-->>DBus: PropertyChanged(State, "ready")
+    DBus-->>CM: onPropertyChanged("State", "ready")
+    CM-->>VC: connectionStateChanged()
+    VC-->>QML: connectionState = Connected
+
+    Note over Conn,WG: On keepalive timeout, Conn instead emits<br/>PropertyChanged(State, "configuration"),<br/>which VpnController maps to Reconnecting (§4.2.1)
+```
+
 ### 3.4 VPN Plugin Registration
 
 For Helix VPN to work with ConnMan, we register a WireGuard VPN configuration:
@@ -493,6 +563,30 @@ The ConnMan configuration files are stored at:
 - `/var/lib/connman-vpn/` — VPN configuration files
 - `/var/lib/connman/` — Main ConnMan service configs
 
+### 3.6 Protocol Support Matrix on Aurora OS
+
+Helix VPN supports four protocol families across all platforms — this
+section reconciles which of them go through ConnMan's native VPN-plugin
+registry versus which are implemented entirely inside `helix-core` as a
+userspace overlay, since ConnMan has no built-in plugin type for Shadowsocks
+or MASQUE.
+
+| Protocol | Status | ConnMan Integration |
+|----------|--------|---------------------|
+| **WireGuard** | Primary | Native ConnMan `wireguard` VPN plugin (§3.1-§3.5) — deep OS integration, visible in **Settings > System > VPN**, managed via `net.connman.vpn.Connection` |
+| **Shadowsocks** (SIP022 AEAD-2022) | Secondary | **No native ConnMan plugin type exists.** `helix-vpn-engine` establishes the Shadowsocks session itself and `helix-platform-abstraction`'s Linux adapter creates its own TUN device + routes + DNS + nftables rules directly (bypassing ConnMan's provider registry entirely). Not visible in system VPN settings — only in the Helix app UI. |
+| **MASQUE** (RFC 9298) | Secondary | Same as Shadowsocks — QUIC/HTTP-3 datagram tunnel established by `helix-network`/`helix-vpn-engine`, TUN + routing handled directly by `helix-platform-abstraction`, not registered with ConnMan. |
+| **Multi-Hop** | Advanced | Chained sessions built from the above — the first hop MAY be a native ConnMan WireGuard connection with subsequent hops layered by `helix-vpn-engine` inside that tunnel; the ConnMan D-Bus interface only ever reflects the first hop's state. |
+| **OpenVPN** | **Reserved / unimplemented placeholder** | Deliberately not implemented anywhere in `helix-core`. ConnMan itself has a native `openvpn` plugin, but Helix never registers one — this row exists only to prevent this document (or ConnMan's own capability) from being misread as Helix OpenVPN support. |
+
+**Practical consequence for the C++ bridge:** `ConnManVpnManager` (§3.3) is
+the correct integration surface only for WireGuard. `VpnController` (§5.7)
+dispatches Shadowsocks/MASQUE/Multi-Hop connection requests straight to the
+Rust FFI layer (§4) without touching `net.connman.vpn` at all; the D-Bus
+client is used opportunistically for WireGuard and for reading ConnMan's
+own connectivity/interface-change signals (§10.6), never as a gate on
+whether a non-WireGuard protocol can connect.
+
 ---
 
 ## 4. Rust Core Integration
@@ -537,12 +631,23 @@ pub type ConnectionCallback = extern "C" fn(state: c_int, info: *const c_char, u
 pub type StatsCallback = extern "C" fn(bytes_in: u64, bytes_out: u64, duration_secs: u64, user_data: *mut c_void);
 
 // Status constants
+//
+// Reconciled 2026-07-04 (Revision 2): this wire enum previously modeled
+// only 6 states and had no representation for a fail-closed kill switch or
+// a failed *initial* connection attempt. It is now the literal C ABI
+// projection of the canonical connection-lifecycle state machine owned by
+// `helix-vpn-engine` (`MVP2_ARCHITECTURE.md` §5.6, `MVP2_SHARED_CORE.md`
+// §3.1 `ConnectionStatus`). Every consumer of this enum (helixffi.cpp §4.4,
+// VpnController §5.7, the QML UI §5.3/§5.4) MUST switch over exactly this
+// set — no bespoke additional client-invented state.
 pub const HELIX_STATE_DISCONNECTED: c_int = 0;
 pub const HELIX_STATE_CONNECTING: c_int = 1;
 pub const HELIX_STATE_CONNECTED: c_int = 2;
 pub const HELIX_STATE_DISCONNECTING: c_int = 3;
 pub const HELIX_STATE_ERROR: c_int = 4;
 pub const HELIX_STATE_RECONNECTING: c_int = 5;
+pub const HELIX_STATE_KILL_SWITCH_ACTIVE: c_int = 6;
+pub const HELIX_STATE_CONNECTION_FAILED: c_int = 7;
 
 /// Initialize the Helix core
 /// 
@@ -668,6 +773,12 @@ pub extern "C" fn helix_get_state(core: *mut HelixCore) -> c_int {
             helix_vpn_engine::State::Connected => HELIX_STATE_CONNECTED,
             helix_vpn_engine::State::Disconnecting => HELIX_STATE_DISCONNECTING,
             helix_vpn_engine::State::Reconnecting => HELIX_STATE_RECONNECTING,
+            // Reconciled 2026-07-04: these two states previously fell
+            // through to the generic HELIX_STATE_ERROR catch-all, which
+            // made a fail-closed kill switch indistinguishable from an
+            // unrelated internal error in the QML UI.
+            helix_vpn_engine::State::KillSwitchActive => HELIX_STATE_KILL_SWITCH_ACTIVE,
+            helix_vpn_engine::State::ConnectionFailed => HELIX_STATE_CONNECTION_FAILED,
             _ => HELIX_STATE_ERROR,
         }
     })
@@ -728,6 +839,56 @@ pub unsafe extern "C" fn helix_free_string(s: *mut c_char) {
 }
 ```
 
+### 4.2.1 Canonical Connection-Lifecycle State Machine (Aurora Rendering)
+
+`helix-vpn-engine` owns a single canonical connection state machine shared
+by every Helix platform (`MVP2_ARCHITECTURE.md` §5.6); no platform UI,
+including this one, is permitted to invent its own connection states or
+transitions. The diagram below is the same canonical machine, annotated
+with the concrete Aurora OS mechanism backing each transition — the QML UI
+(§5.3, §5.4) and the `VpnController` enum (§5.7) MUST switch over exactly
+this set.
+
+```mermaid
+stateDiagram-v2
+    [*] --> Disconnected
+
+    Disconnected --> Connecting: user taps Connect /\nauto-connect trigger
+    Connecting --> Connected: helix_connect() callback\nHELIX_STATE_CONNECTED
+    Connecting --> ConnectionFailed: timeout / handshake error\nHELIX_STATE_CONNECTION_FAILED
+
+    ConnectionFailed --> Disconnected: user dismisses /\nauto-retry exhausted
+    ConnectionFailed --> Connecting: auto-retry\n(exponential backoff)
+
+    Connected --> Disconnecting: user taps Disconnect
+    Connected --> Reconnecting: ConnMan PropertyChanged\n(State: ready -> configuration) /\nkeepalive timeout
+    Connected --> Connected: split-tunnel rule update\n(ConnMan SplitRouting/UserRoutes,\nno tunnel teardown)
+
+    Reconnecting --> Connected: handshake_complete\n(new session keys)
+    Reconnecting --> KillSwitchActive: kill switch enabled AND\nreconnect exceeds grace period
+    Reconnecting --> Disconnected: kill switch disabled AND\nreconnect exhausted
+
+    KillSwitchActive --> Reconnecting: ConnMan connectivity restored,\nretry handshake
+    KillSwitchActive --> Disconnecting: user forces disconnect\n(explicit override)
+
+    Disconnecting --> Disconnected: teardown_complete\n(ConnMan Connection.Disconnect()\nreturns; nftables rules removed)
+
+    Disconnected --> [*]
+
+    note right of KillSwitchActive
+        Fail-closed: all non-VPN
+        traffic blocked by the
+        helix-platform-abstraction
+        Linux adapter's nftables
+        rules (see §10.6). ConnMan
+        itself has no first-class
+        "kill switch active" State
+        value, so this is a Helix-
+        owned overlay state, not
+        read directly off ConnMan.
+    end note
+```
+
 ### 4.3 cbindgen Configuration
 
 ```toml
@@ -768,6 +929,8 @@ extern "C" {
 #define HELIX_STATE_DISCONNECTING 3
 #define HELIX_STATE_ERROR 4
 #define HELIX_STATE_RECONNECTING 5
+#define HELIX_STATE_KILL_SWITCH_ACTIVE 6
+#define HELIX_STATE_CONNECTION_FAILED 7
 
 typedef struct HelixCore HelixCore;
 
@@ -962,18 +1125,24 @@ void HelixFfi::updateState(int state, const QString &info)
         m_serverLocation = obj["location"].toString();
         m_ipAddress = obj["tunnel_ip"].toString();
         emit connected(info);
-    } else if (state == HELIX_STATE_ERROR) {
+    } else if (state == HELIX_STATE_ERROR || state == HELIX_STATE_CONNECTION_FAILED) {
         QJsonDocument doc = QJsonDocument::fromJson(info.toUtf8());
         QJsonObject obj = doc.object();
         m_errorMessage = obj["error"].toString();
         stopStatsPolling();
+    } else if (state == HELIX_STATE_KILL_SWITCH_ACTIVE) {
+        // Reconciled 2026-07-04: fail-closed — traffic is actively blocked
+        // by nftables (§10.6), so stats polling continues (bytes_out stays
+        // at 0 for non-VPN traffic) but no new connection attempt runs
+        // until ConnMan reports connectivity restored (§4.2.1).
+        m_errorMessage.clear();
     } else if (state == HELIX_STATE_DISCONNECTED) {
         stopStatsPolling();
         emit disconnected();
     }
     
     emit connectionStateChanged();
-    if (state == HELIX_STATE_ERROR) {
+    if (state == HELIX_STATE_ERROR || state == HELIX_STATE_CONNECTION_FAILED) {
         emit errorOccurred();
     }
 }
@@ -1238,6 +1407,11 @@ Page {
     property bool isConnecting: vpnController.connectionState === VpnController.Connecting
     property bool isConnected: vpnController.connectionState === VpnController.Connected
     property bool isDisconnected: vpnController.connectionState === VpnController.Disconnected
+    // Reconciled 2026-07-04: render the full canonical state set
+    // (MVP2_ARCHITECTURE.md §5.6) — no bespoke additional states.
+    property bool isReconnecting: vpnController.connectionState === VpnController.Reconnecting
+    property bool isKillSwitchActive: vpnController.connectionState === VpnController.KillSwitchActive
+    property bool isConnectionFailed: vpnController.connectionState === VpnController.ConnectionFailed
 
     // Pull-down menu for quick actions
     PullDownMenu {
@@ -1279,7 +1453,16 @@ Page {
                     anchors.fill: parent
                     anchors.margins: Theme.horizontalPageMargin
                     radius: Theme.paddingMedium
-                    color: isConnected ? "#1B5E20" : (isConnecting ? "#E65100" : "#37474F")
+                    // NOTE: these should resolve to the OpenDesign semantic
+                    // color tokens (connected/connecting/error/warning —
+                    // docs/design/README.md §4, Silica Ambiance dark-first
+                    // variant), not ad hoc hex literals; shown here as
+                    // literals only to keep this snippet self-contained.
+                    color: isKillSwitchActive ? "#B71C1C"   // OpenDesign "error"
+                         : isConnectionFailed ? "#E65100"   // OpenDesign "warning"
+                         : isConnected ? "#1B5E20"          // OpenDesign "connected"
+                         : (isConnecting || isReconnecting) ? "#E65100" // OpenDesign "connecting"
+                         : "#37474F"                        // OpenDesign "disconnected"
                     opacity: 0.3
                 }
 
@@ -1297,14 +1480,21 @@ Page {
                         color: isConnected ? Theme.primaryColor : Theme.secondaryColor
                     }
 
-                    // Status text
+                    // Status text — renders the full canonical state set,
+                    // no bespoke additional states (MVP2_ARCHITECTURE.md §5.6)
                     Label {
                         anchors.horizontalCenter: parent.horizontalCenter
-                        text: isConnected ? qsTr("Connected")
+                        text: isKillSwitchActive ? qsTr("Kill Switch Active")
+                              : isConnectionFailed ? qsTr("Connection Failed")
+                              : isReconnecting ? qsTr("Reconnecting...")
+                              : isConnected ? qsTr("Connected")
                               : isConnecting ? qsTr("Connecting...")
                               : qsTr("Not Connected")
                         font.pixelSize: Theme.fontSizeExtraLarge
-                        color: isConnected ? Theme.highlightColor : Theme.primaryColor
+                        color: isKillSwitchActive ? Theme.errorColor
+                             : isConnectionFailed ? Theme.errorColor
+                             : isConnected ? Theme.highlightColor
+                             : Theme.primaryColor
                     }
 
                     // Server info (when connected)
@@ -1333,14 +1523,22 @@ Page {
                 id: connectButton
                 anchors.horizontalCenter: parent.horizontalCenter
                 preferredWidth: Theme.buttonWidthLarge
-                text: isConnected ? qsTr("Disconnect")
-                      : isConnecting ? qsTr("Cancel")
+                // KillSwitchActive: per §4.2.1, only an explicit user
+                // override forces a disconnect out of this fail-closed
+                // state — reusing "Disconnect" keeps a single well-known
+                // affordance rather than inventing a bespoke UI action.
+                text: isKillSwitchActive ? qsTr("Disconnect (Kill Switch)")
+                      : isConnected ? qsTr("Disconnect")
+                      : (isConnecting || isReconnecting) ? qsTr("Cancel")
+                      : isConnectionFailed ? qsTr("Retry")
                       : qsTr("Connect")
-                
+
                 onClicked: {
-                    if (isConnected) {
+                    if (isKillSwitchActive) {
                         vpnController.disconnect();
-                    } else if (isConnecting) {
+                    } else if (isConnected) {
+                        vpnController.disconnect();
+                    } else if (isConnecting || isReconnecting) {
                         vpnController.cancelConnection();
                     } else {
                         vpnController.connectToBestServer();
@@ -1401,7 +1599,7 @@ Page {
             Label {
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: vpnController.lastError
-                visible: text.length > 0 && isDisconnected
+                visible: text.length > 0 && (isDisconnected || isConnectionFailed)
                 color: Theme.errorColor
                 font.pixelSize: Theme.fontSizeSmall
                 wrapMode: Text.WordWrap
@@ -1427,6 +1625,11 @@ CoverBackground {
 
     property bool isConnected: vpnController.connectionState === VpnController.Connected
     property bool isConnecting: vpnController.connectionState === VpnController.Connecting
+    // Reconciled 2026-07-04: cover renders the same canonical state set as
+    // MainPage (\u00A75.3) \u2014 a kill-switch or failed-connection state must be
+    // visible from the home screen, not silently absorbed into "Helix VPN".
+    property bool isKillSwitchActive: vpnController.connectionState === VpnController.KillSwitchActive
+    property bool isConnectionFailed: vpnController.connectionState === VpnController.ConnectionFailed
 
     // Status icon
     Label {
@@ -1436,7 +1639,8 @@ CoverBackground {
         anchors.topMargin: Theme.paddingLarge
         text: isConnected ? "\uE32A" : "\uE32B"
         font.pixelSize: Theme.fontSizeHuge * 1.5
-        color: isConnected ? Theme.highlightColor : Theme.secondaryColor
+        color: isKillSwitchActive || isConnectionFailed ? Theme.errorColor
+             : isConnected ? Theme.highlightColor : Theme.secondaryColor
     }
 
     // Status text
@@ -1445,11 +1649,13 @@ CoverBackground {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: statusIcon.bottom
         anchors.topMargin: Theme.paddingSmall
-        text: isConnected ? qsTr("Connected")
+        text: isKillSwitchActive ? qsTr("Kill Switch Active")
+              : isConnectionFailed ? qsTr("Connection Failed")
+              : isConnected ? qsTr("Connected")
               : isConnecting ? qsTr("Connecting...")
               : qsTr("Helix VPN")
         font.pixelSize: Theme.fontSizeMedium
-        color: Theme.primaryColor
+        color: isKillSwitchActive || isConnectionFailed ? Theme.errorColor : Theme.primaryColor
     }
 
     // Server info (when connected)
@@ -1799,13 +2005,19 @@ class VpnController : public QObject
     Q_PROPERTY(QString lastError READ lastError NOTIFY errorOccurred)
 
 public:
+    // Reconciled 2026-07-04 (Revision 2): extended to the full 8-value
+    // canonical set (MVP2_ARCHITECTURE.md §5.6) — KillSwitchActive and
+    // ConnectionFailed previously had no QML-visible representation and
+    // silently rendered as the generic Error state.
     enum ConnectionState {
         Disconnected = 0,
         Connecting = 1,
         Connected = 2,
         Disconnecting = 3,
         Error = 4,
-        Reconnecting = 5
+        Reconnecting = 5,
+        KillSwitchActive = 6,
+        ConnectionFailed = 7
     };
     Q_ENUM(ConnectionState)
 
@@ -1855,7 +2067,23 @@ private:
 
 ### 6.1 Ambiance / Theme Integration
 
-Aurora OS uses "ambiences" (themes) that define the color palette. All UI components must use `Theme` properties:
+Aurora OS uses "ambiences" (themes) that define the color palette. All UI
+components must use `Theme` properties — **but the values those `Theme`
+property bindings ultimately resolve to are not left to per-developer
+taste.** Per the project-wide OpenDesign design system
+(`docs/design/README.md`), Aurora is the **"Silica Ambiance (dark-first)"**
+theme variant: `Theme.primaryColor`, `Theme.highlightColor`,
+`Theme.errorColor`, and every other semantic color/typography/spacing value
+used by this client MUST be sourced from the OpenDesign token set (the same
+tokens compiled to `docs/design/opendesign/helix/tokens.css` for the other
+platforms), not the plain default Sailfish Ambiance palette and not ad hoc
+hex literals. Referencing plain "Sailfish Silica conventions" in isolation,
+without the OpenDesign token mapping, is insufficient — see §11.4.162 in
+the project constitution for the underlying mandate. Where this document's
+QML snippets use raw hex colors (e.g. the status-card colors in §5.3) they
+are illustrative shorthand for the corresponding OpenDesign semantic token
+(connected/connecting/error/warning) and MUST be replaced with the real
+token bindings in the implementation, never shipped as literals.
 
 ```qml
 // Correct — uses Theme
@@ -2059,6 +2287,36 @@ Harbor validation requirements:
 - Must handle all orientations
 - Must have active cover
 - RPM must be signed
+
+### 6.6 Biometric Authentication (N/A) and Device-Lock Equivalent
+
+`MVP2_OVERVIEW.md` §7.5 lists Aurora OS as **N/A** for biometric
+authentication, and this client deliberately does not attempt to invent
+one. There is no Aurora/Sailfish OS public, third-party-app-facing
+equivalent of Android's `BiometricPrompt` API, iOS/macOS
+`LocalAuthentication`, or Windows Hello as of Aurora OS 4.x/5.x — even on
+the subset of devices with a hardware fingerprint sensor, that sensor is
+wired only into the OS-level device lock screen (Settings > Security >
+**Lock code**), not exposed through any documented Sailfish/Aurora SDK API
+an application can call to gate a UI action.
+
+Consequently, Helix VPN on Aurora OS does **not** gate any connection
+action (connect, disconnect, reveal a saved credential) behind an
+in-app biometric prompt. The closest equivalents actually available on
+this platform, both already reused rather than invented:
+
+1. **OS device-lock code** — the existing Aurora OS lock-code/PIN screen
+   already gates access to the device (and therefore the app) before the
+   app is ever reached; Helix relies on this rather than duplicating it.
+2. **`Sailfish::Secrets` passphrase-protected storage** — WireGuard private
+   keys and API tokens are stored via the platform secure-storage adapter
+   (`helix-platform-abstraction`'s Linux/Sailfish adapter), which can
+   optionally require the device lock-code to be re-entered before a
+   secret is released, giving an equivalent "prove you are the device
+   owner" gate without a bespoke biometric UI.
+
+This is a deliberate, documented scope decision (no biometric API exists
+to integrate with), not a gap.
 
 ---
 
@@ -2352,6 +2610,19 @@ Aurora OS has distinctive UI patterns not found on other platforms:
 
 ## 9. Implementation Phases
 
+> **Reconciliation note (Revision 2):** the "Weeks 1-8" numbering below is
+> this document's own internal engineering-effort breakdown for the Aurora
+> client considered as a standalone unit of work — it is **not** the
+> project's absolute calendar. The authoritative master schedule is
+> `MVP2_IMPLEMENTATION_ROADMAP.md` (36 weeks expected / 30 weeks best case /
+> 44 weeks worst case), which places all Aurora OS work inside **Phase 7
+> (Weeks 24-30)**, specifically **Weeks 27-30** (Aurora's ~4-week slice of
+> the 7-week Phase 7, which it shares with HarmonyOS) — compressed relative
+> to the 8-week breakdown below because Phase 7 reuses mobile UI/UX
+> patterns already built in Phases 5-6. Treat §9.1-§9.4 as *what* has to
+> happen and in *what order*, and `MVP2_IMPLEMENTATION_ROADMAP.md` §8 as
+> *when* on the master calendar.
+
 ### 9.1 Phase 1: Rust Core FFI Bridge and ConnMan Plugin (Weeks 1-2)
 
 **Goals:**
@@ -2433,7 +2704,8 @@ qml/
 **Deliverables:**
 ```
 qml/pages/
-├── SplitTunnelPage.qml         # App-based split tunneling
+├── SplitTunnelPage.qml         # Route/CIDR-based split tunneling only —
+│                               # Aurora has no per-app split tunneling (§10.6)
 ├── ConnectionLogPage.qml       # Connection history
 └── AboutPage.qml               # App info, licenses
 
@@ -2481,6 +2753,546 @@ sfdk check RPMS/ru.auroraos.helixvpn-0.1.0-1.aarch64.rpm
 # Upload to OpenRepos
 # (manual upload via openrepos.net web interface)
 ```
+
+---
+
+## 10. Enterprise Hardening & Production Readiness
+
+This section closes the production-readiness gaps common to every MVP2
+platform doc — store review, signing, updates, crash visibility, telemetry
+consent, offline resilience, and the concrete security-control mechanisms —
+adapted honestly to what the Aurora OS/Sailfish ecosystem actually offers,
+which is meaningfully different from the Android/iOS/desktop app-store
+model this project also targets.
+
+### 10.1 App Store / Marketplace Review
+
+Aurora OS has two realistic distribution channels (plus the "Chum" and
+"Manual" channels already listed in §6.5); neither resembles Apple's or
+Google Play's strict, multi-day human app review — this is a niche
+platform ecosystem and the review process is deliberately lightweight:
+
+1. **Aurora OS Store (official, OMP-operated "Harbor"-validated store)** —
+   submission requires an Open Mobile Platform (OMP) developer
+   registration/agreement. Review is primarily the automated conformance
+   validation already described in §6.5 (`sfdk check`: Silica-only UI, no
+   Qt Quick Controls, valid `.desktop` + `.permissions` Sailjail
+   declarations, required icon sizes, RPM signature validity, no private
+   API usage) plus a light manual pass. There is no published multi-day
+   human-review SLA equivalent to Apple App Review or Google Play policy
+   review; turnaround is fast once the automated checks pass.
+2. **OpenRepos.net (community repository)** — the de facto **primary**
+   distribution channel used routinely across the wider Sailfish/Aurora
+   developer community, by hobbyist and commercial apps alike. Review is
+   essentially automated RPM validity checking (installs cleanly, is
+   signed, spec file parses) with no content/policy review beyond that.
+   This is standard, expected practice for this platform, not a fallback
+   or a workaround.
+
+Because OMP developer-account access for the official store cannot be
+guaranteed for every deployment (government/enterprise Aurora OS
+procurement sometimes distributes signed RPMs out-of-band entirely,
+outside either channel), Helix VPN's release process treats **OpenRepos as
+the primary channel** and the Aurora OS Store as an **additional** channel
+pursued once OMP registration is confirmed in place — the reverse of how a
+Tier 1 platform (App Store/Play Store as primary, sideload as a niche
+fallback) would be sequenced.
+
+### 10.2 Package Signing
+
+Both channels require a signed RPM. Aurora/Sailfish tooling uses the
+standard RPM GPG-signing model (already introduced via `rpmsign-external`
+in §9.4), not a proprietary code-signing scheme.
+
+**One-time key generation (offline signing host only):**
+```bash
+gpg --batch --gen-key <<EOF
+%echo Generating Helix VPN Aurora OS release key
+Key-Type: RSA
+Key-Length: 4096
+Name-Real: Helix VPN Release Signing
+Name-Email: release-signing@helixvpn.example
+Expire-Date: 2y
+%no-protection
+%commit
+%echo done
+EOF
+
+# Public key, published alongside the RPM on OpenRepos + the Store listing
+gpg --export -a "Helix VPN Release Signing" > helix-vpn-release.pub.asc
+```
+
+**RPM signing macros** (signing host only, never committed):
+```
+# ~/.rpmmacros
+%_signature gpg
+%_gpg_name Helix VPN Release Signing
+%_gpgbin /usr/bin/gpg
+```
+
+**Sign + verify** (extends the §9.4 distribution step):
+```bash
+sfdk engine exec rpmsign-external sign \
+    -k ~/.auroraos-regular-keys/regular_key.pem \
+    -c ~/.auroraos-regular-keys/regular_cert.pem \
+    RPMS/*.rpm
+
+rpm --checksig RPMS/ru.auroraos.helixvpn-*.rpm
+# expected: ru.auroraos.helixvpn-0.1.0-1.aarch64.rpm: digests signatures OK
+```
+
+**Key management:** the private release-signing key MUST NEVER be
+committed to the repository (per the project's credentials-handling
+mandate) — it lives only on the CI signing host or an offline HSM-backed
+keystore, filesystem-excluded from version control, `chmod 600` on the key
+file and `chmod 700` on its parent directory. On suspected compromise:
+revoke, generate a fresh key, re-sign the next release with it, and
+republish the new public key to both OpenRepos and the Aurora OS Store
+listing — old RPMs signed with the compromised key are not retroactively
+re-signed, but the compromise and rotation are documented in the release
+changelog.
+
+### 10.3 Auto-Update Mechanism + Rollback
+
+```mermaid
+flowchart TD
+    A["sfdk build (§7.2)"] --> B["RPM produced\nRPMS/*.aarch64.rpm"]
+    B --> C["GPG sign\n(rpmsign-external, §10.2)"]
+    C --> D{Distribution channel}
+    D -->|Primary| E["Upload to OpenRepos.net"]
+    D -->|Secondary, requires OMP account| F["Submit to Aurora OS Store"]
+    E --> G["Installed via community client\n(Storeman/Warehouse) or pkcon/zypper"]
+    F --> H["Installed via Aurora OS Store app"]
+    G --> I{"User checks for update\n(no confirmed silent\nbackground auto-update\non either channel)"}
+    H --> I
+    I -->|Update available| J["zypper/pkcon fetches\nand installs new RPM"]
+    J --> K{Post-install smoke check OK?}
+    K -->|Yes| L["Running version = new release"]
+    K -->|No / user reports regression| M["Rollback:\nzypper install --oldpackage\n&lt;cached-previous.rpm&gt;"]
+    M --> N["Running version = last-known-good"]
+```
+
+- **Aurora OS Store channel**: the on-device Aurora Store app surfaces
+  available updates against its own catalogue metadata; the update
+  install itself goes through the same RPM/`zypper`/PackageKit
+  (`pkcon`) machinery as any other package update on this platform.
+- **OpenRepos channel**: there is no bundled OS-level "check OpenRepos for
+  updates" agent; in practice users rely on a community catalogue client
+  (Storeman/Warehouse) that polls OpenRepos, or manual
+  `devel-su zypper refresh && devel-su zypper update ru.auroraos.helixvpn`
+  in Developer Mode.
+- **Rollback**: Aurora OS / Sailfish has **no staged or canary rollout
+  capability** on either channel — there is no percentage-based phased
+  rollout mechanism analogous to Google Play's staged rollout or Apple's
+  phased release. This is a genuine platform limitation, stated honestly
+  rather than invented around. A rollback is a manual RPM downgrade to a
+  previously-cached package:
+  ```bash
+  # Downgrade to the last-known-good RPM (kept in the release archive)
+  devel-su rpm -Uvh --oldpackage ru.auroraos.helixvpn-0.1.0-1.aarch64.rpm
+  # or, if zypper is available:
+  devel-su zypper install --oldpackage ru.auroraos.helixvpn-0.1.0-1
+  ```
+  **Mitigation for the missing staged-rollout safety net:** because there
+  is no percentage-based rollout to catch a regression early on a small
+  cohort, every Aurora OS release goes through a stricter pre-release QA
+  gate than platforms that do have staged rollout — full regression suite
+  + emulator + at least one physical device from Appendix A, run to
+  completion, before ANY RPM is uploaded to either channel. The absence of
+  a rollout safety net is compensated for before release, not after.
+
+### 10.4 Crash Reporting
+
+There is no mature, officially-supported first-party crash-reporting SDK
+confirmed for Aurora OS specifically. Sentry ships a native C/C++ SDK
+(`sentry-native`) that could theoretically link against a Qt/C++ app, but
+it is not confirmed tested or supported against Aurora's Sailjail-sandboxed
+runtime, and its own network egress would itself need an explicit
+Sailjail permission declaration (§6.3) — this is stated honestly rather
+than presenting an unverified third-party SDK as a turnkey solution.
+
+Given that, Helix VPN implements a **lightweight, opt-in, crash-dump-to-
+server mechanism** built on Qt's own signal/message handling plus the
+MVP1 Utils Service's existing ingestion endpoint, rather than depending on
+an unconfirmed third-party SDK:
+
+```cpp
+// crashhandler.h — minimal opt-in crash reporting for Aurora OS
+#ifndef CRASHHANDLER_H
+#define CRASHHANDLER_H
+
+#include <QObject>
+#include <QString>
+#include <csignal>
+
+class CrashHandler : public QObject
+{
+    Q_OBJECT
+public:
+    explicit CrashHandler(QObject *parent = nullptr);
+
+    // Installed only if the user has opted in (§10.5); the signal handler
+    // itself has no user-consent branching — consent gates whether the
+    // handler is installed at all, and whether a previously-written dump
+    // is ever uploaded.
+    static void install();
+
+    // Called on next launch: if a crash dump exists from a previous
+    // session AND telemetry consent is granted, upload it to the MVP1
+    // Utils Service and delete the local copy either way.
+    Q_INVOKABLE void uploadPendingCrashIfConsented();
+
+private:
+    static void signalHandler(int sig);
+    static void writeCrashDump(int sig);
+};
+
+#endif // CRASHHANDLER_H
+```
+
+```cpp
+// crashhandler.cpp (excerpt)
+#include "crashhandler.h"
+#include <QStandardPaths>
+#include <QDir>
+#include <QFile>
+#include <QDateTime>
+#include <execinfo.h>  // glibc backtrace()/backtrace_symbols()
+
+void CrashHandler::install()
+{
+    std::signal(SIGSEGV, &CrashHandler::signalHandler);
+    std::signal(SIGABRT, &CrashHandler::signalHandler);
+}
+
+void CrashHandler::signalHandler(int sig)
+{
+    writeCrashDump(sig);
+    std::signal(sig, SIG_DFL);
+    std::raise(sig); // re-raise so the OS still records the crash normally
+}
+
+void CrashHandler::writeCrashDump(int sig)
+{
+    void *frames[32];
+    int count = backtrace(frames, 32);
+    char **symbols = backtrace_symbols(frames, count);
+
+    QString dir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+    QDir().mkpath(dir);
+    QFile f(dir + "/crash_" + QDateTime::currentDateTime().toString(Qt::ISODate) + ".txt");
+    if (f.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        f.write(QByteArray("signal=") + QByteArray::number(sig) + "\n");
+        for (int i = 0; i < count; ++i) {
+            f.write(symbols[i]);
+            f.write("\n");
+        }
+    }
+    free(symbols); // NOSONAR: async-signal-safe context, no heap alloc beyond this
+}
+```
+
+Upload only happens on the **next normal launch** (never from inside the
+signal handler itself, which must stay async-signal-safe), and only after
+`uploadPendingCrashIfConsented()` confirms telemetry consent (§10.5) —
+POSTs the dump text + app version + Aurora OS version + device model to
+the MVP1 Utils Service's existing crash-ingestion endpoint over HTTPS. A
+user who never opts in never has a dump leave the device; unconsented
+dumps are deleted locally on the next launch rather than retained
+indefinitely.
+
+### 10.5 Telemetry / Privacy Consent
+
+First-run opt-in, gating both crash-report upload (§10.4) and any usage
+telemetry, tied to the MVP1 Utils Service:
+
+```qml
+// qml/pages/FirstRunConsentPage.qml (excerpt)
+Page {
+    id: consentPage
+
+    SilicaFlickable {
+        anchors.fill: parent
+        Column {
+            width: parent.width
+            PageHeader { title: qsTr("Before you start") }
+
+            Label {
+                width: parent.width - Theme.horizontalPageMargin * 2
+                x: Theme.horizontalPageMargin
+                wrapMode: Text.WordWrap
+                text: qsTr("Help improve Helix VPN by sending anonymous " +
+                           "crash reports and basic usage statistics. " +
+                           "This is off by default and never includes your " +
+                           "browsing activity, VPN traffic, or IP address.")
+            }
+
+            TextSwitch {
+                id: consentSwitch
+                text: qsTr("Send anonymous crash reports & usage statistics")
+                checked: false // default OFF — explicit opt-in required
+            }
+
+            Button {
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: qsTr("Continue")
+                onClicked: {
+                    appSettings.telemetryConsentGiven = true;
+                    appSettings.telemetryEnabled = consentSwitch.checked;
+                    pageStack.replace(Qt.resolvedUrl("MainPage.qml"));
+                }
+            }
+        }
+    }
+}
+```
+
+`appSettings.telemetryEnabled` (persisted via `SettingsManager`/`QSettings`)
+is read by `CrashHandler::uploadPendingCrashIfConsented()` (§10.4) and by
+any future usage-telemetry client before a single byte leaves the device.
+Consent can be withdrawn at any time from `SettingsPage.qml` (§5.6), which
+immediately stops future uploads and deletes any locally-queued dump.
+
+### 10.6 Offline / Degraded-Network Behavior; Kill Switch & Split Tunneling (Concrete Mechanism)
+
+**Offline / degraded network:** Helix does not run its own connectivity
+poller on Aurora OS — it consumes ConnMan's own connectivity state machine
+directly, since ConnMan already tracks overall device connectivity via
+`net.connman.Manager`'s `State` property (`"offline"`, `"idle"`,
+`"ready"`, `"online"`). The app subscribes to `PropertyChanged` on the
+Manager object (not just the VPN Connection object from §3.2) to detect
+interface-up/down and connectivity-class transitions, and re-enters the
+canonical `Reconnecting` state (§4.2.1) directly from `Disconnected` on a
+network-interface-change event — reusing the reconnect/exponential-backoff
+logic `helix-vpn-engine` already implements for the generic
+`Connected -> Reconnecting` transition, rather than a bespoke Aurora-only
+retry loop. While offline, `ServerListModel` continues to serve the
+last-successfully-fetched server list from its local cache (SQLite/
+`QSettings`-backed, refreshed opportunistically whenever `ConnMan.State`
+returns to `"online"`), so `ServerListPage.qml` (§5.5) never shows an
+empty list purely because connectivity is currently down.
+
+**Kill switch (concrete mechanism):** ConnMan itself has no named
+"kill switch" feature — the `TextSwitch` in `SettingsPage.qml` (§5.6)
+only persists a boolean preference; the actual fail-closed enforcement is
+programmed directly by `helix-platform-abstraction`'s Linux adapter as
+`nftables` rules, entered on the `Reconnecting -> KillSwitchActive`
+transition (§4.2.1) and torn down on `Disconnecting -> Disconnected`:
+
+```bash
+# Armed when Kill Switch is enabled AND the state machine enters
+# KillSwitchActive (reconnect exceeded the grace period, §4.2.1)
+nft add table inet helix_killswitch
+nft add chain inet helix_killswitch output \
+    '{ type filter hook output priority 0; policy drop; }'
+nft add rule inet helix_killswitch output oifname "lo" accept
+nft add rule inet helix_killswitch output oifname "wg-helix0" accept
+nft add rule inet helix_killswitch output udp dport <server_port> \
+    ip daddr <server_ip> accept   # allow the handshake retry itself out
+
+# Torn down on Disconnecting -> Disconnected (teardown_complete, §4.2.1)
+nft delete table inet helix_killswitch
+```
+
+This is a default-DROP `output` hook — genuinely fail-closed, matching the
+`KillSwitchActive` note in §4.2.1's state diagram — rather than a
+best-effort application-layer block.
+
+**Split tunneling (concrete mechanism, route/CIDR only):** implemented
+entirely through the ConnMan VPN `Connection` object's existing
+`UserRoutes` / `ServerRoutes` / `SplitRouting` D-Bus properties already
+documented in §3.2 — CIDR ranges the user excludes from (or restricts to)
+the tunnel are pushed via `SetProperty`:
+
+```cpp
+// Excerpt — VpnConfigurator: push a CIDR-based split-tunnel rule set
+void VpnConfigurator::setSplitTunnelRoutes(const QString &connectionPath,
+                                            const QStringList &excludedCidrs)
+{
+    QDBusInterface connection(CONNMAN_VPN_SERVICE, connectionPath,
+                               CONNMAN_VPN_CONNECTION,
+                               QDBusConnection::systemBus());
+    connection.call("SetProperty", "UserRoutes", QVariant(excludedCidrs));
+    connection.call("SetProperty", "SplitRouting", QVariant(!excludedCidrs.isEmpty()));
+}
+```
+
+**Aurora OS has no per-app split tunneling**, unlike macOS/Windows/
+Android/iOS (`MVP2_OVERVIEW.md` §4.3/§7.3). ConnMan's VPN provider model
+operates at the routing/interface layer only — there is no per-UID or
+per-package traffic-filtering primitive analogous to Android
+`VpnService.Builder.addAllowedApplication()` exposed anywhere in ConnMan's
+D-Bus API. `SplitTunnelPage.qml` therefore only ever presents CIDR/route
+entry, never an app picker; this is stated explicitly here (and in the
+file-tree comments in §9.3/Appendix C) as a documented platform limitation,
+not a silently-omitted feature.
+
+### 10.7 Accessibility
+
+Target: WCAG 2.1 AA, to the extent the Silica/QML accessibility stack
+actually supports it. Qt Quick's `Accessible` attached property
+(`Accessible.role`, `Accessible.name`, `Accessible.description`,
+`Accessible.focusable`) is available on Silica components since they are
+ordinary `Item`-derived types underneath, so every interactive component
+(`Button`, `TextSwitch`, `ValueButton`, `ListItem`) SHOULD carry an
+explicit `Accessible.name`:
+
+```qml
+Button {
+    text: qsTr("Connect")
+    Accessible.role: Accessible.Button
+    Accessible.name: text
+    Accessible.description: qsTr("Connect to the fastest available Helix VPN server")
+}
+```
+
+Font scaling already follows the OS-wide "Text size" accessibility
+setting for free, since every `Theme.fontSize*` token (§6.1) is itself
+scaled by that system setting. **Honest caveat:** Sailfish/Aurora's own
+screen-reader and accessibility-service ecosystem is materially less
+mature than Android TalkBack or iOS VoiceOver — there is no confirmed,
+widely-deployed third-party screen reader for this platform to validate
+against. Accessibility work here is therefore best-effort against the
+`Accessible` attached-property surface Qt Quick exposes, tracked as an
+explicit follow-up item rather than claimed as verified WCAG 2.1 AA
+conformance.
+
+### 10.8 MDM / Enterprise Deployment (Explicitly Out of Scope)
+
+`MVP2_ARCHITECTURE.md` §10.2's cross-platform enterprise table states this
+directly: **Aurora OS enterprise/fleet MDM deployment is out of scope for
+MVP2.** Niche/government Aurora OS deployments are, in practice,
+single-device and manually configured (procurement teams image and
+configure devices individually rather than enrolling a fleet into a
+central MDM), so building a fleet policy-push integration for this
+platform would be speculative engineering against a deployment model that
+does not exist for Aurora today. This is a **deliberate, documented scope
+decision**, not a silently-missing feature — the `PlatformAdapter` trait's
+`apply_managed_policy(policy: &ManagedPolicy)` extension point
+(`MVP2_ARCHITECTURE.md` §5.5/§10.2) still exists on every platform for
+trait-interface parity, but Aurora's implementation returns an explicit,
+loggable "unsupported" error rather than silently no-op'ing (a silent
+no-op would let an enterprise operator believe a pushed policy took effect
+when it did not — a materially worse failure mode than a loud rejection):
+
+```rust
+// crates/helix-platform-abstraction/src/linux/aurora.rs (excerpt)
+#[async_trait::async_trait]
+impl PlatformAdapter for AuroraPlatformAdapter {
+    // ...
+
+    /// Aurora OS enterprise/MDM fleet deployment is explicitly OUT OF
+    /// SCOPE for MVP2 (MVP2_ARCHITECTURE.md §10.2) — niche/government
+    /// Aurora deployments are single-device, manually configured. This
+    /// returns an explicit error rather than silently no-op'ing so an
+    /// enterprise operator pushing a policy gets a loud, actionable
+    /// failure instead of a false sense that the policy took effect.
+    async fn apply_managed_policy(&self, _policy: &ManagedPolicy) -> Result<()> {
+        Err(HelixError::Unsupported(
+            "apply_managed_policy is not implemented on Aurora OS: MDM/\
+             enterprise fleet management is out of scope for MVP2 on this \
+             platform (see MVP2_ARCHITECTURE.md §10.2); Aurora OS \
+             deployments are configured per-device, manually".into(),
+        ))
+    }
+}
+```
+
+Single-device configuration (the actual norm for this platform) is a
+signed configuration file the operator installs manually (e.g. via
+`devel-su` copy to a fixed path Helix reads on next launch, or pasted into
+`SettingsPage.qml` as a provisioning code) — not a fleet push mechanism,
+and out of scope to build further for MVP2.
+
+### 10.9 Localization / i18n
+
+Standard Qt Linguist pipeline, already anticipated by the
+`translations/helix-vpn-ru.ts` file in Appendix C:
+
+```bash
+# Extract translatable strings from QML + C++ sources into a .ts file
+lupdate qml/ src/ -ts translations/helix-vpn-ru.ts
+
+# Translators edit translations/helix-vpn-ru.ts (Qt Linguist GUI or by hand)
+
+# Compile to the binary .qm format shipped in the RPM
+lrelease translations/helix-vpn-ru.ts -qm translations/helix-vpn-ru.qm
+```
+
+```qmake
+# helix-aurora.pro addition (§4.5)
+TRANSLATIONS += translations/helix-vpn-ru.ts
+translations.files = translations/*.qm
+translations.path = /usr/share/$$TARGET/translations
+INSTALLS += translations
+```
+
+```cpp
+// main.cpp addition — load the translation matching the device locale
+QTranslator translator;
+if (translator.load(QLocale(), "helix-vpn", "-",
+                     "/usr/share/ru.auroraos.helixvpn/translations")) {
+    app->installTranslator(&translator);
+}
+```
+
+**RTL support** uses Qt Quick's built-in `LayoutMirroring` attached
+property rather than a hand-rolled mirroring scheme, applied once at the
+`ApplicationWindow` root so every child inherits it:
+
+```qml
+// qml/main.qml addition
+ApplicationWindow {
+    id: appWindow
+    LayoutMirroring.enabled: Qt.application.layoutDirection === Qt.RightToLeft
+    LayoutMirroring.childrenInherit: true
+    // ...
+}
+```
+
+### 10.10 License / Entitlement Checks
+
+Subscription/plan-tier entitlement is checked against the MVP1 Client API
+(the same account/auth backend every platform uses), with a **signed
+offline-grace cache** so the app keeps working through a temporary
+network gap without silently granting unlimited free access:
+
+```cpp
+// settingsmanager.h (excerpt) — entitlement surface exposed to QML
+Q_PROPERTY(bool entitlementValid READ entitlementValid NOTIFY entitlementChanged)
+Q_PROPERTY(QString entitlementTier READ entitlementTier NOTIFY entitlementChanged)
+Q_PROPERTY(qint64 entitlementGraceRemainingSecs READ entitlementGraceRemainingSecs NOTIFY entitlementChanged)
+
+Q_INVOKABLE void refreshEntitlement(); // calls Client API /v1/account/entitlement
+```
+
+Flow: on login and periodically thereafter, `SettingsManager` calls the
+Client API's entitlement endpoint (bearer token from the existing OAuth2/
+OIDC session) and receives a signed (JWS) claim — plan tier, feature
+flags, expiry, and a monotonic issue timestamp. The raw JWS is cached to
+disk (not just the parsed boolean), so the app can re-validate the
+signature and expiry **offline**, without trusting a locally-flippable
+flag:
+
+```cpp
+bool SettingsManager::entitlementValid() const
+{
+    if (!m_cachedEntitlementJws.isEmpty() &&
+        verifyJwsSignature(m_cachedEntitlementJws, kEntitlementPublicKey)) {
+        qint64 age = QDateTime::currentSecsSinceEpoch() - m_entitlementIssuedAt;
+        // 72h offline grace window before falling back to reduced tier
+        return age < 72 * 3600 || m_lastOnlineEntitlementValid;
+    }
+    return false;
+}
+```
+
+Past the grace window with no successful refresh, the app falls back to
+the free/reduced feature tier (e.g. WireGuard only, no Multi-Hop) rather
+than either silently continuing to grant premium features indefinitely
+offline, or hard-blocking the VPN connection entirely — a temporarily
+unreachable Client API must never turn into a de facto denial-of-service
+against a paying user's basic VPN connectivity.
 
 ---
 
@@ -2540,7 +3352,7 @@ helix-aurora/                          # Aurora OS client
 │   │   ├── MainPage.qml               # Connection UI
 │   │   ├── ServerListPage.qml         # Server selection
 │   │   ├── SettingsPage.qml           # Preferences
-│   │   ├── SplitTunnelPage.qml        # Split tunneling
+│   │   ├── SplitTunnelPage.qml        # Split tunneling (route/CIDR only)
 │   │   └── AboutPage.qml              # About dialog
 │   └── cover/
 │       └── CoverPage.qml              # Active cover

@@ -1,4 +1,18 @@
 # Desktop Platform VPN Implementation Research
+
+**Revision:** 1
+**Last modified:** 2026-07-04T14:00:00Z
+
+> **Editorial note (added during the 2026-07-04 MVP2 gap-analysis/hardening
+> pass):** raw research brief preserved as historical input, not a living
+> spec. The final desktop specification (macOS 12+/Windows 10-11/Linux via
+> Tauri v2, plus the new Enterprise Hardening detail: code-signing,
+> notarization, MDM deployment, auto-update/rollback) lives in
+> `../MVP2_DESKTOP_APPS.md`. Aurora OS is specified separately in
+> `../MVP2_AURORA_CLIENT.md`, not as a desktop-Tauri platform (Aurora uses
+> Qt6/QML, not Tauri) — where this brief groups Aurora with the Tauri
+> desktop platforms, the split final specs are authoritative.
+
 ## macOS, Windows, Linux, and Aurora OS Deep Analysis
 
 **Research Date**: 2025  

@@ -1,8 +1,38 @@
 # HelixVPN — Requirements Traceability Matrix (requirement → component → test)
 
-**Revision:** 3
-**Last modified:** 2026-06-26T12:00:00Z
+**Revision:** 8
+**Last modified:** 2026-07-06T10:44:05Z
 **Status:** active — Volume 0 (Spine, meta & governance) nano-detail document
+**Rev 8 (GAP-4 closure, 2026-07-06):** Created `v04-client/connector.md` as the single
+consolidating nano-detail owner for the Connector requirement band (FR-701..707) and
+updated the FR-7xx owning-doc column to point to it. Also repointed NFR-603 to
+`connector.md` as its primary owning doc. Updated §6 GAP-4 to **CLOSED**.
+
+**Rev 7 (GAP-3 doc-level closure + DDoS targets, 2026-07-06):** Closed GAP-3 at the
+documentation level (`v06-deploy/disaster-recovery.md` consolidates source-coverage ledger gap
+G1 and pins RTO/RPO targets/runbooks; the RTO/RPO numbers remain measurement-pending until the
+first Phase-2 CHAOS region-failover drill). Pinned quantitative DDoS design targets for
+NFR-413/NFR-414 in `v08-testing/ddos.md` §10 and updated the coverage-ledger GAP-6 closure
+statement to reference them.
+
+**Rev 6 (GAP-5 doc-level closure):** Updated §6 GAP-5 to **CLOSED at doc level** — all 15
+`v08-testing/` nano-detail docs are authored and on disk, the `coverage-ledger-schema.md` is
+authored, and every FR/NFR maps to a planned §11.4.169 test type. The residual "evidence state
+PENDING" is the honest spec-phase state (no code built yet), not a documentation gap. Added the
+`v08-testing/` source-doc list to §8.
+
+**Rev 5 (Phase-1 consolidation pass):** Closed GAP-6 in source docs by syncing the matrix with
+`nonfunctional-requirements.md` Rev 2 (NFR-411..414 added there) and the new FR-610 added to
+`functional-requirements.md` Rev 4. Added traceability rows for NFR-411/412/413/414 and
+NFR-700/701/702/703, plus FR-609/610. Updated §6 GAP-6 to CLOSED. No existing row semantics
+changed.
+**Rev 4:** Independent gap-analysis pass (enterprise-hardening audit). Added **GAP-6** — the
+`DDOS` test-type tag is defined in the §1 legend but traced to **zero** FR/NFR rows, i.e. the API
+gateway/edge has no requirement-level rate-limiting/DDoS-resilience obligation despite `04_ARCH`
+§4.6 naming a token-bucket mechanism; also flagged RBAC's lone-parenthetical status on FR-601.
+Added a §0 Mermaid diagram visualizing the `Req → Component → Test type → Ledger row → Evidence
+state` chain the prose already describes, to make the loop legible in one look. No existing row
+changed; this document still does not mint new requirement ids (that stays FR/NFR-doc territory).
 **Rev 3:** §1 legend — marked **UI/UX/REC** and **META** as *adjacent* types (NOT members of the §11.4.169 13-type set), added a member column; reworded the "Sources verified" MASTER_INDEX citation to cite on-disk existence (`[DONE]`) rather than a "to-be-generated" status as existence proof (§11.4.6).
 **Rev 2:** Corrected GAP-3/GAP-5 — `v06-deploy/disaster-recovery.md` and all 15 `v08-testing/` docs are now authored (the stale "not-yet-authored" framing fixed per §11.4.6; residual gaps are pending-measurement, not missing docs).
 **Authority:** Subordinate to [`../SPECIFICATION.md`](../SPECIFICATION.md). Requirement ids are owned by [`../v01-product/functional-requirements.md`](../v01-product/functional-requirements.md) (`HVPN-FR-NNN`) and [`../v01-product/nonfunctional-requirements.md`](../v01-product/nonfunctional-requirements.md) (`HVPN-NFR-NNN`); this document does **not** mint new requirements — it cross-references them. Test types are the §11.4.169 closed set owned by [`../10-testing-acceptance-and-qa.md`](../10-testing-acceptance-and-qa.md).
@@ -55,6 +85,16 @@ Each FR/NFR is one row with five cross-reference fields:
 The ledger row id is derived 1:1 from the requirement id (`LEDG-FR-001` ↔
 `HVPN-FR-001`) so the Volume-8 coverage ledger (`coverage-ledger-schema.md`) can be
 populated mechanically from this matrix.
+
+```mermaid
+flowchart LR
+  FR["HVPN-FR-NNN / HVPN-NFR-NNN\n(owned by functional-/nonfunctional-requirements.md)"]
+  COMP["Satisfying component\n(Volume 2-6/10 owning doc)\nor GAP if none (§6)"]
+  TEST[">=1 §11.4.169 test type\n(§1 legend) or GAP if none (§6)"]
+  LEDG["LEDG-FR-NNN / LEDG-NFR-NNN\n(coverage-ledger-schema.md row)"]
+  EVID["Evidence state\nMISSING -> DESIGNED -> AUTONOMOUS_DESIGNED -> AUTONOMOUS_VERIFIED\n(spec phase: always PENDING, never asserted PASS)"]
+  FR --> COMP --> TEST --> LEDG --> EVID
+```
 
 ---
 
@@ -192,18 +232,20 @@ criteria require captured runtime evidence per §11.4.69).
 | HVPN-FR-606 | multi-tenant isolation — `web-console.md`, RLS | SEC | LEDG-FR-606 | MVP |
 | HVPN-FR-607 | optional billing — `web-console.md` | INT | LEDG-FR-607 | P3 |
 | HVPN-FR-608 | responsive light+dark Console — `web-console.md`, Volume 10 | UI/UX (visual-regression) | LEDG-FR-608 | MVP |
+| HVPN-FR-609 | exportable control-action audit slice — `audit-and-compliance.md`, `svc-telemetry.md` | SEC + INT | LEDG-FR-609 | MVP |
+| HVPN-FR-610 | RBAC role→action matrix enforcement — `svc-identity.md`, `svc-api.md` | SEC + INT + E2E | LEDG-FR-610 | MVP |
 
 ### H. Connector (FR-7xx)
 
 | Req ID | Satisfying component (owning doc) | §11.4.169 test type(s) | Ledger row | Phase |
 |---|---|---|---|---|
-| HVPN-FR-701 | outbound-only, no inbound — connector spec, `helix-core-rust.md` | SEC (no-inbound) + E2E | LEDG-FR-701 | MVP |
-| HVPN-FR-702 | headless daemon + optional UI — connector spec | INT | LEDG-FR-702 | MVP |
-| HVPN-FR-703 | shared `helix-core` advertise/route — `helix-core-rust.md` | INT (shared-crate) | LEDG-FR-703 | MVP |
-| HVPN-FR-704 | advertise CIDRs + route — `svc-registry.md`, edge | E2E | LEDG-FR-704 | MVP |
-| HVPN-FR-705 | local ACLs (`UNVERIFIED` central interaction) — `svc-policy.md`, connector spec | INT — **see GAP-1** | LEDG-FR-705 | MVP |
-| HVPN-FR-706 | Android/embedded connector — connector spec, `shim-android.md` | E2E (embedded target) | LEDG-FR-706 | P2 |
-| HVPN-FR-707 | availability-following on drop (§11.4.144) — `orchestrator-and-state.md` | CHAOS (drop→resume) | LEDG-FR-707 | MVP |
+| HVPN-FR-701 | [`v04-client/connector.md`](../v04-client/connector.md) (secondary: `helix-core-rust.md` §9.1) | SEC (no-inbound) + E2E | LEDG-FR-701 | MVP |
+| HVPN-FR-702 | [`v04-client/connector.md`](../v04-client/connector.md) (secondary: `helix-core-rust.md` §9.2, `shim-linux.md` §9) | INT | LEDG-FR-702 | MVP |
+| HVPN-FR-703 | [`v04-client/connector.md`](../v04-client/connector.md) (secondary: `helix-core-rust.md` §9.1) | INT (shared-crate) | LEDG-FR-703 | MVP |
+| HVPN-FR-704 | [`v04-client/connector.md`](../v04-client/connector.md) (secondary: `svc-registry.md`, edge) | E2E | LEDG-FR-704 | MVP |
+| HVPN-FR-705 | [`v04-client/connector.md`](../v04-client/connector.md) (secondary: `svc-policy.md` §4.2, `helix-core-rust.md` §9.3) | INT (local-ACL honoured + central-deny wins) | LEDG-FR-705 | MVP |
+| HVPN-FR-706 | [`v04-client/connector.md`](../v04-client/connector.md) (secondary: `helix-core-rust.md` §9.2, `shim-android.md`) | E2E (embedded target) | LEDG-FR-706 | P2 |
+| HVPN-FR-707 | [`v04-client/connector.md`](../v04-client/connector.md) traces availability-following to `v02-data-plane/orchestrator-and-state.md` | CHAOS (drop→resume) | LEDG-FR-707 | MVP |
 
 ### I. Observability & telemetry (FR-8xx)
 
@@ -288,7 +330,7 @@ targets are the NFR doc's; this matrix does not assert them met.
 | HVPN-NFR-202 | Redis loss degrades gracefully | `svc-events.md`, `no-logging-as-code.md` | CHAOS | LEDG-NFR-202 | MVP |
 | HVPN-NFR-203 | no-work-loss XAutoClaim | `svc-events.md` | CHAOS | LEDG-NFR-203 | MVP |
 | HVPN-NFR-204 | coordinator restart transparent | `svc-coordinator.md` | CHAOS/INT | LEDG-NFR-204 | MVP |
-| HVPN-NFR-205 | region-failover RTO/RPO (`UNVERIFIED`) | `v06-deploy/disaster-recovery.md` | CHAOS (drill) — **see GAP-3** | LEDG-NFR-205 | P2 |
+| HVPN-NFR-205 | region-failover RTO/RPO (`UNVERIFIED`) | `v06-deploy/disaster-recovery.md` | CHAOS (drill) — GAP-3 doc-level CLOSED; targets verified by Phase-2 drill | LEDG-NFR-205 | P2 |
 | HVPN-NFR-206 | gateway failover re-point | `svc-coordinator.md`, `ha-and-multiregion.md` | INT/CHAOS | LEDG-NFR-206 | P2 |
 | HVPN-NFR-207 | poison→DLQ | `svc-events.md` | CHAOS/INT | LEDG-NFR-207 | MVP |
 | HVPN-NFR-300 | no durable flow table | `no-logging-as-code.md`, `data-model-ddl.md` | SEC | LEDG-NFR-300 | ALWAYS |
@@ -311,6 +353,10 @@ targets are the NFR doc's; this matrix does not assert them met.
 | HVPN-NFR-408 | RLS at DB | `data-model-ddl.md` | SEC/INT | LEDG-NFR-408 | MVP |
 | HVPN-NFR-409 | anti-bluff gauntlet per change | Volume 8 | META (per-gate mutation) | LEDG-NFR-409 | ALWAYS |
 | HVPN-NFR-410 | censorship-evasion ladder | `transport-selection-ladder.md` | E2E (DPI-sim) | LEDG-NFR-410 | MVP |
+| HVPN-NFR-411 | runtime secrets rotatable without rebuild | `repo-layout-and-decoupling.md`, `data-model-ddl.md` | SEC + INT | LEDG-NFR-411 | MVP |
+| HVPN-NFR-412 | WG/device + edge transport key rotation cadence | `pki-and-certs.md`, `wireguard-core.md` | SEC + INT | LEDG-NFR-412 | MVP |
+| HVPN-NFR-413 | control-plane API rate limiting | `svc-api.md`, `architecture-and-wiring.md` | STRESS + SEC | LEDG-NFR-413 | MVP |
+| HVPN-NFR-414 | data-plane edge DDoS/UDP-flood/amplification resilience | `svc-api.md` (enroll limits), edge (`v02-data-plane/routing-and-addressing.md` / `transport-masque-quic.md`) | DDOS | LEDG-NFR-414 | MVP |
 | HVPN-NFR-500 | iOS NE +≥30% headroom | `shim-apple.md` | MEM (G3) | LEDG-NFR-500 | P0 |
 | HVPN-NFR-501 | battery-sensitive push | `orchestrator-and-state.md`, `shim-*` | BENCH (battery) | LEDG-NFR-501 | MVP |
 | HVPN-NFR-502 | small core footprint | `helix-core-rust.md` | BENCH (artifact-size) | LEDG-NFR-502 | MVP |
@@ -321,13 +367,17 @@ targets are the NFR doc's; this matrix does not assert them met.
 | HVPN-NFR-600 | one Flutter tree 3 flavors | `helix-ui-flutter.md` | INT | LEDG-NFR-600 | MVP |
 | HVPN-NFR-601 | core byte-for-byte shared | `transport-trait.md`, `helix-core-rust.md` | INT (shared-core parity) | LEDG-NFR-601 | MVP |
 | HVPN-NFR-602 | MVP iOS/Android/Linux | `shim-apple.md`, `shim-android.md`, `shim-linux.md` | E2E/FA | LEDG-NFR-602 | MVP |
-| HVPN-NFR-603 | connector headless Linux/Win/macOS | connector spec | INT | LEDG-NFR-603 | MVP |
+| HVPN-NFR-603 | connector headless Linux/Win/macOS | [`v04-client/connector.md`](../v04-client/connector.md) (secondary: `shim-linux.md` §9, `shim-windows.md`, `shim-apple.md`) | INT | LEDG-NFR-603 | MVP |
 | HVPN-NFR-604 | Console web+desktop | `web-console.md` | E2E (responsive) | LEDG-NFR-604 | MVP |
 | HVPN-NFR-605 | P2 Windows+macOS | `shim-windows.md`, `shim-apple.md` | E2E | LEDG-NFR-605 | P2 |
 | HVPN-NFR-606 | P3 HarmonyOS+Aurora (`UNVERIFIED`) | `shim-harmonyos.md`, `shim-aurora.md` | E2E (per-shim) | LEDG-NFR-606 | P3 |
 | HVPN-NFR-607 | Web honestly scoped | `web-console.md` | E2E + doc-honesty | LEDG-NFR-607 | P3 |
 | HVPN-NFR-608 | light+dark visual-regression | Volume 10 | UI/UX | LEDG-NFR-608 | P3 |
 | HVPN-NFR-609 | cross-platform parity (§11.4.81) | per-OS test branches | per-OS branch | LEDG-NFR-609 | ALWAYS |
+| HVPN-NFR-700 | zero-downtime rolling upgrades | `ha-and-multiregion.md`, `architecture-and-wiring.md` | CHAOS + INT | LEDG-NFR-700 | P2 |
+| HVPN-NFR-701 | backward-compatible Postgres migrations | `data-model-ddl.md`, `codegen-pipeline.md` | INT | LEDG-NFR-701 | P2 |
+| HVPN-NFR-702 | protobuf/OpenAPI wire-compatibility window | `protobuf-spec.md`, `codegen-pipeline.md` | U + META | LEDG-NFR-702 | MVP |
+| HVPN-NFR-703 | infra sizing/cost forecast formula | `observability.md`, `ha-and-multiregion.md` | BENCH | LEDG-NFR-703 | P2 |
 
 ---
 
@@ -370,31 +420,50 @@ the make-or-break requirements *and resolve the spine decisions* (see
 ## 6. GAP register (§11.4.6 — honest)
 
 Surfaced, never hidden. A GAP = a requirement whose satisfying component or test is
-*not yet fully pinned*, or a coverage seam this matrix exposes. None is a missing
-*requirement* (the FR/NFR set is enumerated); each is a *pin-the-detail* item tracked
-as a §11.4.93 workable item.
+*not yet fully pinned*, or a coverage seam this matrix exposes. GAP-1 through GAP-5
+are not missing *requirements* (the FR/NFR set is enumerated for those); each is a
+*pin-the-detail* item tracked as a §11.4.93 workable item. **GAP-6 is the one
+exception** — it is the inverse seam: a test type (`DDOS`) with zero requirements
+mapped to it, which this independent audit pass surfaces as a genuinely missing
+requirement recommendation (not silently assumed covered).
 
-- **GAP-1 — FR-705 (connector local-ACL × central policy interaction) `UNVERIFIED`.** The FR doc itself marks the local-ACL/central-policy interaction `UNVERIFIED`; `svc-policy.md` is named as the doc that fixes it but the precedence contract (local vs central deny) is not yet pinned. **Owner:** `v03-control-plane/svc-policy.md` + connector spec. **Test once pinned:** INT (local-ACL honoured + central-deny wins). Not a missing component — an unpinned contract.
+- **GAP-1 — FR-705 (connector local-ACL × central policy interaction) — CLOSED in source docs (2026-07-05).** The precedence rule (local-deny overrides central-allow; central-deny overrides local-allow; compiled output = central policy minus local-deny; connector advertises `local_denylist` to the coordinator) is now pinned and backported into `v03-control-plane/svc-policy.md` §2/§4/§5/§7/§8/§10 and `v04-client/helix-core-rust.md` §9.3. **Owner:** `v03-control-plane/svc-policy.md` + `v04-client/helix-core-rust.md`. **Test:** INT (local-ACL honoured + central-deny wins).
 - **GAP-2 — FR-1103 (Rosenpass) is an *evaluation*, not a built capability.** Its acceptance criterion is "a documented evaluation exists", so it has **no runtime test type** (correctly — it is a decision-input doc, not a feature). Recorded so the absence of a runtime test is *intentional*, not an oversight. **Owner:** `v05-security/post-quantum.md`.
-- **GAP-3 — NFR-205 / DR runbook RTO/RPO are `UNVERIFIED` targets pending measurement.** `v06-deploy/disaster-recovery.md` now EXISTS and pins the region-failover RTO/RPO budget + restore/failover runbooks (closing 99-ledger gap G1 at the doc level). The residual gap is narrower: the RTO/RPO numbers are stated as TARGETS (§11.4.6) and stay `UNVERIFIED` until a real failover drill measures them, so NFR-205's CHAOS region-failover drill asserts against a target, not yet a measured baseline. **Owner:** `v06-deploy/disaster-recovery.md` (G1 closed; numbers pending soak).
-- **GAP-4 — Connector has no single owning nano-detail doc.** FR-7xx point at "connector spec (Volume 4 shims + `helix-core-rust.md` advertise/route mode)" — the Connector's behaviour is distributed across `helix-core-rust.md` (advertise/route mode) + `svc-registry.md` + the shims, with **no** dedicated `v04-client/connector-*.md`. The behaviour *is* specified (across those docs); the GAP is the absence of a single consolidating doc, which makes connector-only traceability span three files. **Recommendation:** a future pass MAY add `v04-client/connector.md` consolidating FR-701..707. Not a missing capability — a doc-locality seam.
-- **GAP-5 — `v08-testing/` authored; every evidence-state is `PENDING` because nothing is *built* yet (spec phase).** Volume 8's 15 nano-detail docs (the 13 §11.4.169 per-type docs + `coverage-ledger-schema.md` + `test-rig.md`) now EXIST; the `LEDG-*` ledger rows trace to `coverage-ledger-schema.md` (authored) and the per-type harness docs. The residual is not a missing doc but the spec-phase reality: no code is built, so no test has produced a captured PASS — every evidence-state is honestly **PENDING** (see header) until implementation lands. **Owner:** the implementation phases (P0–P3); the test specs that gate them are authored.
+- **GAP-3 — NFR-205 / DR runbook RTO/RPO — CLOSED at doc level (2026-07-06).**
+  `v06-deploy/disaster-recovery.md` consolidates the `[03_ZAI]` RTO/RPO budget, KMS-encrypted
+  backups, and Terraform-driven region-failover/restore runbooks, closing source-coverage ledger
+  gap G1 at the **documentation** level. The residual item is an explicit **measurement pending**
+  note: the §1 RTO/RPO numbers are stated as **TARGETS** (§11.4.6), not measured baselines, and
+  will be verified by the first **CHAOS region-failover drill in Phase 2** (NFR-205's
+  release-blocking gate). Until that drill produces captured evidence, the targets stay
+  `UNVERIFIED` and the coverage ledger honestly records the evidence state as `PENDING`.
+  **Owner:** `v06-deploy/disaster-recovery.md` (G1 closed; numbers pending the Phase-2 drill).
+- **GAP-4 — Connector has no single owning nano-detail doc. — CLOSED (2026-07-06).** [`v04-client/connector.md`](../v04-client/connector.md) now consolidates FR-701..707 and is the primary owning doc for the Connector requirement band; secondary implementation authority remains in `helix-core-rust.md` §9, `svc-registry.md`, `routing-and-addressing.md`, and the Volume-4 shims. The traceability rows for FR-701..707 have been updated to point to `connector.md`.
+- **GAP-5 — `v08-testing/` docs and coverage-ledger schema authored — CLOSED at doc level.** Volume 8's 15 nano-detail docs (the 13 §11.4.169 per-type docs + `coverage-ledger-schema.md` + `test-rig.md`) now EXIST on disk; the `LEDG-*` ledger rows trace to `coverage-ledger-schema.md` (authored) and the per-type harness docs. Every FR/NFR maps to ≥1 planned §11.4.169 test type. The residual "evidence state PENDING" is the honest spec-phase state: no code is built, so no test has produced a captured PASS — that is a *build-phase* pending state, not a documentation gap. **Owner:** `docs/research/mvp/final/v08-testing/*` (authored); future implementation phases (P0–P3) will move evidence states from `PENDING` to `AUTONOMOUS_VERIFIED`.
+- **GAP-6 — `DDOS`/RBAC/rate-limiting traceability gap — CLOSED in source docs (2026-07-05).** The original finding (Rev 4) was that the `DDOS` §11.4.169 type had zero requirement owners and RBAC was only parenthetical. The fix has been applied:
+  - `v01-product/nonfunctional-requirements.md` already added **NFR-413** (control-plane API rate limiting) and **NFR-414** (data-plane edge DDoS/UDP-flood/amplification resilience, `Verify by: DDOS`).
+  - `v01-product/functional-requirements.md` added **FR-610** (RBAC role→action matrix enforcement).
+  - This matrix now lists `LEDG-NFR-413`, `LEDG-NFR-414`, and `LEDG-FR-610` with their owning docs and test types.
+  - **Residual:** NFR-413/414 quantitative targets remain `UNVERIFIED` until Phase-2 benchmarks run; this is honest per §11.4.6, not a missing requirement.
 
 > **No requirement is orphaned of a *component*.** Every FR/NFR above names ≥1
-> satisfying owning doc (GAP-4 notes one is *distributed*, not *absent*). Every FR/NFR
-> names ≥1 §11.4.169 test type *except* FR-1103 (intentionally an evaluation, GAP-2).
-> The GAPs are pin-the-detail / doc-locality / pending-measurement seams (all owning
-> docs now authored), all tracked, none a hidden hole (§11.4.118).
+> satisfying owning doc (GAP-4 is now closed with `v04-client/connector.md` as the
+> consolidated Connector owner). Every FR/NFR names ≥1 §11.4.169 test type *except*
+> FR-1103 (intentionally an evaluation, GAP-2). The GAPs are pin-the-detail /
+> doc-locality / pending-measurement seams (all owning docs now authored), all
+> tracked, none a hidden hole (§11.4.118).
 
 ---
 
 ## 7. Coverage claim & boundary (§11.4.118)
 
 **What this matrix claims.** Every enumerated requirement in
-`functional-requirements.md` (HVPN-FR-001…1014, 14 capability bands A–L) and
-`nonfunctional-requirements.md` (HVPN-NFR-001…609, 7 families) is mapped to a
-satisfying component **and** a §11.4.169 test type **and** a `LEDG-*` ledger row,
-with the 5 GAPs of §6 surfaced.
+`functional-requirements.md` (HVPN-FR-001…1014, 14 capability bands A–L, now
+including FR-609/610) and `nonfunctional-requirements.md`
+(HVPN-NFR-001…414 and HVPN-NFR-700…703, 8 families) is mapped to a satisfying
+component **and** a §11.4.169 test type **and** a `LEDG-*` ledger row, with the
+§6 GAP register surfaced (GAP-1 and GAP-6 closed in source docs as of 2026-07-05;
+GAP-3, GAP-4 and GAP-5 closed at doc level as of 2026-07-06).
 
 **What it does NOT claim (§11.4.6 honest boundary).**
 
@@ -417,11 +486,13 @@ The reverse loop closes mechanically: `LEDG-FR-NNN` ↔ `HVPN-FR-NNN` ↔ owning
 
 ## Sources verified
 
-- [`../v01-product/functional-requirements.md`](../v01-product/functional-requirements.md) — the FR ids, statements, acceptance criteria, owning-doc column, priority, §M DoD map, §N parity-matrix map, and the FR-705 `UNVERIFIED` flag (GAP-1).
+- [`../v01-product/functional-requirements.md`](../v01-product/functional-requirements.md) — the FR ids, statements, acceptance criteria, owning-doc column, priority, §M DoD map, §N parity-matrix map, and the FR-705 pinned local-ACL × central-policy precedence contract (GAP-1 CLOSED).
 - [`../v01-product/nonfunctional-requirements.md`](../v01-product/nonfunctional-requirements.md) — the NFR ids, targets, the **Verify by** §11.4.169 test type column, priority, §9 NFR→principle map, §10 convergence chain, and the `UNVERIFIED`/`TARGET` markers (G1/G2/G3/iOS-NE/RTO).
 - [`../10-testing-acceptance-and-qa.md`](../10-testing-acceptance-and-qa.md) §2/§5 — the closed §11.4.169 test-type taxonomy (the §1 legend), §6 the coverage-ledger model (PENDING evidence-state), §7 per-phase acceptance gates.
 - [`../SPECIFICATION.md`](../SPECIFICATION.md) §7 (cross-cutting contracts → FR-003/018/205), §8 (phase gates G1–G6 + 8-criteria DoD → §4/§5), §9 (decisions → `decision-register.md`).
 - [`../MASTER_INDEX.md`](../MASTER_INDEX.md) Volumes 2–10 (owning-doc filenames) + the on-disk existence (now `[DONE]`) of the `v08-testing/` docs and `v06-deploy/disaster-recovery.md` — verified as files present on disk, not inferred from a "to-be-generated" status (GAP-3, GAP-5).
 - [`../99-source-coverage-ledger.md`](../99-source-coverage-ledger.md) gap G1 (DR/RTO consolidation → GAP-3).
+- `04_VPN_CLD/HelixVPN-Architecture-Refined.md` §4.6 (Redis usage — token-bucket rate limiting named but untraced → GAP-6, Rev 4).
+- [`glossary.md`](glossary.md) (Rev 3 **API Gateway** / **Rate limiting** / **RBAC** / **Tenant** entries, cross-referencing this document's GAP-6).
 
 *Constitution bindings: §11.4.44 (revision header), §11.4.6 (no captured PASS asserted; `UNVERIFIED` targets owned by named gates; GAPs surfaced not hidden), §11.4.108 (evidence-state is the runtime-signature dimension — PENDING until captured on a clean deployment), §11.4.118 (enumerated-coverage claim + its boundary in §7), §11.4.169 (every requirement → a mandatory test type), §11.4.93 (each requirement + GAP → a workable item), §11.4.25 (coverage-ledger discipline), §11.4.65/.153 (HTML+PDF[+DOCX] exports follow in refinement).*

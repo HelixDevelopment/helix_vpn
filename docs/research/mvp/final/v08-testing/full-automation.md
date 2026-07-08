@@ -1,7 +1,12 @@
 # Full-Automation Testing — HelixVPN nano-detail spec (Volume 8 · §11.4.169 type 4)
 
-**Revision:** 2
-**Last modified:** 2026-06-26T12:00:00Z
+**Revision:** 3
+**Last modified:** 2026-07-04T12:00:00Z
+
+> **Rev 3 (2026-07-04):** independently re-verified against `SPECIFICATION.md` /
+> `decision-register.md` / `10-testing-acceptance-and-qa.md` during a corpus-wide
+> gap-analysis pass; the 9-AC DoD count is consistent with the overview and no new
+> contradictions were found. Revision bumped for the audit pass itself.
 
 > **Reconciled (§11.4.35, 2026-06-26):** the MVP Definition-of-Done bank has **NINE**
 > acceptance criteria (AC1–AC9) per the canonical overview

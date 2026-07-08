@@ -248,3 +248,88 @@ docs/design/
     ├── HelixVPN-Screen-Wireframes.pdf   ← Screen wireframes export
     └── HelixVPN-Interaction-Specs.pdf   ← Interaction patterns export
 ```
+
+---
+
+## OpenDesign Integration
+
+OpenDesign is included as a git submodule under `submodules/open-design` and is consumed through a project wrapper script at `tools/opendesign`.
+
+### Installation path
+
+- Submodule: `submodules/open-design` (https://github.com/nexu-io/open-design, main branch)
+- CLI wrapper: `tools/opendesign`
+- Built artifacts live in `submodules/open-design/apps/daemon/dist/`
+
+### Environment requirements
+
+- Node.js 22+ (OpenDesign declares `~24`, but the CLI builds and runs on Node v22.19.0)
+- pnpm 10.33.2 (installed globally via `npm install -g pnpm@10.33.2`)
+- No Docker is used
+
+### How to install / build
+
+```bash
+# 1. Initialize the submodule (already done)
+git submodule update --init --recursive submodules/open-design
+
+# 2. Install dependencies
+cd submodules/open-design
+pnpm config set engine-strict false
+pnpm install
+
+# The postinstall script builds the daemon CLI automatically.
+```
+
+### CLI command
+
+Use the wrapper from the repository root. Do **not** use the system `/usr/bin/od` (GNU coreutils `od`).
+
+```bash
+./tools/opendesign --help
+./tools/opendesign version
+```
+
+> **Note:** The OpenDesign CLI writes to a TTY but may appear empty when its stdout is piped or redirected. For scripted capture, wrap invocations in `script -q -c '<cmd>' /dev/null` or use the daemon HTTP API directly (see below).
+
+### How to regenerate assets
+
+1. Start the daemon (port 7456 by default):
+
+   ```bash
+   ./tools/opendesign --no-open --port 7456
+   ```
+
+2. Import / refresh the Helix VPN design system:
+
+   ```bash
+   ./tools/opendesign design-systems import-local \
+     docs/design/opendesign/helix --name "Helix VPN" --json
+   ```
+
+3. Download the full export archive:
+
+   ```bash
+   curl -s -o docs/design/opendesign/helix/exports/helix-vpn-opendesign-archive.zip \
+     http://127.0.0.1:7456/api/design-systems/user:helix-vpn/archive
+   ```
+
+   Extract it to regenerate `docs/design/opendesign/helix/exports/` contents.
+
+### Current status
+
+- ✅ OpenDesign submodule added and built
+- ✅ Daemon starts on `http://127.0.0.1:7456`
+- ✅ `design-systems import-local` successfully imports the Helix VPN design system
+- ✅ Brand archive export generated (tokens, components, previews, source reports)
+- ⚠️ Token contract validation reports **grade: needs-rebuild** (score 31/100, 23% source-backed A1 coverage)
+- ⚠️ CLI stdout may not flush when piped; use TTY or HTTP API for automation
+- ❌ No built-in Figma/Sketch/Adobe/XD/Penpot exporters found; only Figma **import** is available
+
+### Known issues
+
+1. **Manifest key mapping.** OpenDesign normalizes the manifest to `schemaVersion: od-design-system-project/v1` and expects keys such as `files.design`, `files.tokens`, and `files.components`. The existing `manifest.json` uses `schemaVersion: "1.0"` and keys `designMd`, `tokensCss`, `componentsHtml`. The importer handles this automatically, but the source manifest is not natively aligned with the OpenDesign schema.
+2. **Token contract quality.** Many A1 structure tokens fall back to importer defaults because the source `tokens.css` uses project-specific prefixes (`--hx-*`) rather than OpenDesign's canonical token names.
+3. **CLI output buffering.** Non-TTY consumers (pipes, redirect files) may receive empty output from `od design-systems list`, `od design-systems show`, etc. Work around with `script` or the REST API.
+
+For full validation results, generated files, and command logs, see `docs/reviews/mvp-final/findings/phase2-opendesign-report.md`.

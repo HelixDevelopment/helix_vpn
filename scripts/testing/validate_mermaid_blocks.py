@@ -33,6 +33,7 @@
 #   - Companion guide: docs/scripts/validate_mermaid_blocks.md
 # ============================================================================
 
+import json
 import os
 import re
 import shutil
@@ -44,6 +45,28 @@ from pathlib import Path
 ROOT_DEFAULT = "docs/research/mvp/final"
 CONFIG = Path(__file__).resolve().parent / "mermaid.config.json"
 OPEN_RE = re.compile(r'^(\s*)(`{3,}|~{3,})\s*mermaid\s*$')
+
+# Mirror the fallback in render_mermaid_blocks.py: Puppeteer's bundled Chromium
+# often fails to launch in headless/server environments, while a system Chromium
+# with --no-sandbox works. Discover it on PATH and pass it to mmdc via a temp
+# puppeteer config. If none is found, mmdc uses its default resolution.
+_SYSTEM_BROWSER_CANDIDATES = (
+    "chromium", "chromium-browser", "google-chrome", "google-chrome-stable",
+)
+
+
+def _puppeteer_config_path() -> str | None:
+    exe = next((p for name in _SYSTEM_BROWSER_CANDIDATES if (p := shutil.which(name))), None)
+    if not exe:
+        return None
+    cfg = {"executablePath": exe, "args": ["--no-sandbox", "--disable-setuid-sandbox"]}
+    fd, path = tempfile.mkstemp(prefix="helixvpn-puppeteer-", suffix=".json")
+    with os.fdopen(fd, "w", encoding="utf-8") as f:
+        json.dump(cfg, f)
+    return path
+
+
+_PUPPETEER_CONFIG = _puppeteer_config_path()
 
 
 def iter_blocks(md_path: Path):
@@ -73,6 +96,8 @@ def render_ok(source: str):
     cmd = ["mmdc", "-i", mmd, "-o", png, "-b", "white", "-s", "3"]
     if CONFIG.exists():
         cmd += ["-c", str(CONFIG)]
+    if _PUPPETEER_CONFIG:
+        cmd += ["-p", _PUPPETEER_CONFIG]
     try:
         proc = subprocess.run(cmd, capture_output=True, text=True, timeout=180)
     except Exception as exc:  # noqa: BLE001

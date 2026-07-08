@@ -1,7 +1,12 @@
 # Stress + Chaos Test Strategy
 
-**Revision:** 1
-**Last modified:** 2026-06-26T12:00:00Z
+**Revision:** 2
+**Last modified:** 2026-07-04T12:00:00Z
+
+> **Rev 2 (2026-07-04):** independently re-verified against `SPECIFICATION.md` /
+> `reconciliation-flow.md` during a corpus-wide gap-analysis pass; the target/hardware
+> safety framing (§3 — injections are bounded to test-container cgroups/tmpfs, never
+> the host) is explicit and consistent with §11.4.133/§12. No contradictions found.
 
 > Master technical specification — Volume 8 (Testing & QA), nano-detail document **stress-chaos**,
 > one of the seven §11.4.169 cross-cutting test-type deep-dives. It deepens

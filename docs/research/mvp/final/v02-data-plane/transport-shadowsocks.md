@@ -1,7 +1,12 @@
 # Shadowsocks-Wrap Transport
 
-**Revision:** 1
-**Last modified:** 2026-06-25T00:00:00Z
+**Revision:** 2
+**Last modified:** 2026-07-04T12:00:00Z
+
+> **Rev 2 (enterprise-hardening pass, 2026-07-04):** added §9.7 edge-side connection /
+> resource-exhaustion accounting — a gap identified against the parent task's
+> enterprise-hardening checklist (rate-limiting / DDoS resilience at the Gateway role).
+> No other section changed; all prior content (§0–§13) stands.
 
 > Volume 2 (Data Plane) nano-detail specification — deepens the **Shadowsocks-Wrap
 > Transport** section of [01-data-plane §3.5]. SPEC ONLY: this document describes the
@@ -543,6 +548,52 @@ defect to fix at source, never a FAIL-bluff.
 6. **Key zeroization (§3.3).** All key material is `Zeroize`-on-drop; the `psk` is never logged
    (constitution §11.4.10) and never crosses the FFI boundary as plaintext (doc 05).
 
+### 9.7 Edge-side resource-exhaustion accounting (enterprise hardening)
+
+**Gap closed (2026-07-04):** unlike the UDP/QUIC carriers, `shadowsocks` accepts an
+**inbound TCP connection per client** at `helix-edge` — a fundamentally different
+resource-exhaustion surface (file descriptors, per-connection buffers, kernel socket
+memory) than a connectionless UDP listener. The edge MUST bound this surface explicitly
+rather than rely on the OS's default backlog:
+
+- **Per-source-IP concurrent-connection cap.** The edge tracks (in-RAM, aggregate-only —
+  I5) a counter of live Shadowsocks TCP connections per source IP/CIDR; beyond a
+  configured threshold (`ss_max_conns_per_source`, an operator/coordinator-tunable knob,
+  default `UNVERIFIED` — calibrate against the Phase-2 rig, §11.4.107(13)) new connect
+  attempts from that source are accepted-then-immediately-closed (never silently
+  dropped at the TCP layer, which would look like a network fault rather than a policy
+  decision) so a single source cannot exhaust the edge's fd table.
+- **Half-open / pre-AEAD-salt connection timeout.** A connection that completes the TCP
+  handshake but never sends a valid 32-byte salt (§4.1) within a bounded
+  `ss_pre_auth_timeout` (default `UNVERIFIED`, calibrate) is closed — this is the
+  Shadowsocks-specific analogue of a SYN-flood half-open-connection guard, closing the
+  gap between "TCP accept()" and "AEAD session proven live" during which an attacker can
+  hold a connection open for free.
+- **Global connection ceiling with graceful shed.** The edge's total concurrent
+  Shadowsocks connection count is bounded (`ss_max_conns_global`); beyond it, new
+  connections are refused at `accept()` (a fast, cheap rejection) rather than accepted
+  and then starved of buffer/CPU resources — protects the edge's other listeners
+  (`masque-h3`, `plain-udp`, `udp-over-tcp`) from head-of-line resource contention when
+  the Shadowsocks port is targeted.
+- **No new state exposed durably.** All of the above counters are in-RAM aggregate
+  counters only (I5) — no per-connection or per-source durable log; a source-IP's
+  connection count is process-lifetime state, reset on edge restart, never a "ban list"
+  requiring persistent storage (which would itself be a no-logging-by-construction
+  violation, [01-DP §0.1 I5]).
+- **Test point.** A `DDOS`/`LOAD` test point (extends §12): flood the edge's Shadowsocks
+  TCP port from N source IPs with connect-then-idle and connect-then-junk patterns;
+  assert (a) legitimate connections from a distinct source IP still complete within the
+  performance budget (§7), (b) the edge's fd/memory usage stays bounded (no unbounded
+  growth), (c) the per-source cap and global ceiling are both observably enforced via
+  connection-count telemetry, never inferred.
+
+Cross-reference: the Connector/Gateway-role rate-limiting and DDoS-resilience design
+for the control-plane API surface (a distinct concern — token-bucket per API key, not
+per raw TCP connection) lives in
+[`v06-deploy/ha-and-multiregion.md`](../v06-deploy/ha-and-multiregion.md); this
+subsection is the data-plane, connection-accounting half of that story, specific to the
+one `Transport` carrier that terminates a real TCP socket per peer.
+
 ---
 
 ## 10. Config knobs (consumed from the NetworkMap)
@@ -556,8 +607,11 @@ defect to fix at source, never a FAIL-bluff.
 | regional prior | `TransportPolicy.order` push | coordinator [01-DP §5.3 step 5] | CN-resolved clients MAY start at `shadowsocks` | skip escalation latency in censored regions |
 | `DIAL_TIMEOUT` | `Duration` | ladder `FailureBudget` [01-DP §5.3] | bounded | TCP-connect + carrier-up budget before escalation |
 | `TCP_NODELAY` | `bool` | fixed | `true` (§5.1) | disable Nagle for latency |
+| `ss_max_conns_per_source` | `u32` | `UNVERIFIED` (calibrate, §9.7) | edge-only, coordinator policy | per-source-IP concurrent Shadowsocks connection cap (§9.7) |
+| `ss_pre_auth_timeout` | `Duration` | `UNVERIFIED` (calibrate, §9.7) | edge-only | close a TCP connection that never completes the AEAD salt handshake within this window |
+| `ss_max_conns_global` | `u32` | `UNVERIFIED` (calibrate, §9.7) | edge-only | total concurrent Shadowsocks connection ceiling before new connects are refused at `accept()` |
 
-No knob is compiled in; all are resolved from the coordinator-pushed map [01-DP §3.1, §6.2].
+No knob is compiled in; all are resolved from the coordinator-pushed map [01-DP §3.1, §6.2] except the three edge-only resource-accounting knobs (§9.7), which are gateway-local operational configuration, not per-tenant NetworkMap fields.
 
 ---
 

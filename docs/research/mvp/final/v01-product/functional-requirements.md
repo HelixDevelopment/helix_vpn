@@ -1,7 +1,29 @@
 # Functional Requirements (HVPN-FR-NNN)
 
-**Revision:** 2
-**Last modified:** 2026-06-26T12:00:00Z
+**Revision:** 5
+**Last modified:** 2026-07-06T10:44:05Z
+
+> **Rev 5 (2026-07-06, GAP-4 closure).** Repainted the Connector band (FR-701..707)
+> owning-doc column to point to the new single consolidating doc
+> [`../v04-client/connector.md`](../v04-client/connector.md); secondary implementation
+> authority remains in `helix-core-rust.md` §9, `svc-registry.md`,
+> `routing-and-addressing.md`, Volume 4 shims, and `orchestrator-and-state.md` for
+> FR-707. No FR statement, acceptance criterion, priority, or DoD/parity mapping
+> changed.
+>
+> **Rev 4 (2026-07-05, Phase-1 consolidation pass).** Added HVPN-FR-610 (RBAC
+> role→action matrix enforcement) to close the RBAC ownership gap identified in
+> [`../v00-meta/requirements-traceability.md`](../v00-meta/requirements-traceability.md)
+> GAP-6. FR-610 is additive; §M DoD-traceability and §N parity-coverage tables are
+> unaffected.
+>
+> **Rev 3 (2026-07-04, independent gap-analysis pass).** Added HVPN-FR-609
+> (scoped, exportable audit slice for incident-response/compliance reporting) to
+> back the MSP-operator incident-response journey added to
+> [`personas-and-roles.md`](personas-and-roles.md) §2.2 (sibling file in this
+> same `v01-product/` directory — relative link, not `v01-product/…` again).
+> No other FR changed; the §M DoD-traceability and §N parity-coverage tables are
+> unaffected (FR-609 is additive, not DoD/parity-mapped).
 
 > **Reconciled (§11.4.35, 2026-06-26):** FR-101's RBAC role set is aligned to the
 > authoritative `svc-identity.md` enum `{member, operator, admin}` (no "tenant
@@ -222,27 +244,28 @@ Persona: business-admin / tenant-owner [00 §5.3].
 | HVPN-FR-606 | The Console MUST support multi-tenant management with strict per-tenant isolation. | An admin of tenant A cannot see tenant B's resources. `[evidence]` | `web-console.md`, RLS | MVP |
 | HVPN-FR-607 | The Console MAY provide optional multi-tenant billing. | Billing flows function for the managed SKU when enabled; absent by default. | `web-console.md` | P3 |
 | HVPN-FR-608 | The Console MUST be responsive across phone/tablet/desktop and ship light + dark themes from the OpenDesign system. | Visual-regression suite passes light+dark; no element overlap/overlay (§11.4.162). `[evidence]` | `web-console.md`, Volume 10 | MVP |
+| HVPN-FR-609 | The Console MUST let an admin/operator filter and export a control-action audit slice (device/user/time-window/tenant-scoped) for incident-response or compliance reporting, containing zero traffic/destination data and zero rows outside the caller's authorized tenant scope. | An exported slice for tenant A + a time window contains only tenant-A control-action rows (RLS-bounded export, not just RLS-bounded live view); the export itself is an audited control action. `[evidence]` | `audit-and-compliance.md`, `svc-telemetry.md` | MVP |
+| HVPN-FR-610 | The control plane MUST enforce an RBAC role→action matrix: a principal with role `member` MUST NOT perform `operator` actions, and a principal with role `operator` MUST NOT perform `admin` actions. | A `member`-role token invoking an admin-only route (e.g. mint enroll-token, revoke device, delete tenant) returns 403; an `operator`-role token invoking an admin-only route returns 403; RLS still blocks cross-tenant reads even if RBAC is bypassed. `[evidence]` | `svc-identity.md`, `svc-api.md` | MVP |
 
 ---
 
 ## H. Connector (FR-7xx)
 
-Owning docs: [`../v04-client/helix-core-rust.md`](../v04-client/helix-core-rust.md)
-(advertise/route mode) + Volume 4 platform shims (`shim-*.md`) +
-[`../v03-control-plane/svc-registry.md`](../v03-control-plane/svc-registry.md)
-(there is no standalone "Connector spec" file — the Connector is the same
-`helix-core` in advertise/route mode plus its registry contract).
+Owning doc: [`../v04-client/connector.md`](../v04-client/connector.md) (single
+consolidating doc for FR-701..707; secondary implementation authority remains in
+`helix-core-rust.md` §9, Volume 4 shims, `svc-registry.md`,
+`routing-and-addressing.md`, and `orchestrator-and-state.md` for FR-707).
 Differentiator X2; persona connector-operator [00 §5.2].
 
 | ID | Statement | Acceptance criterion | Owning doc | Priority |
 |---|---|---|---|---|
-| HVPN-FR-701 | The Connector MUST dial outbound to the Gateway and MUST NOT require any inbound port-forward. | The Connector establishes the tunnel with zero inbound exposure on its network. `[evidence]` | `helix-core-rust.md` (advertise/route mode), `svc-registry.md` | MVP |
-| HVPN-FR-702 | The Connector MUST run headless (daemon) with an optional slim config UI. | The daemon runs without a UI; the optional UI configures it. `[evidence]` | `helix-core-rust.md` (advertise/route mode) | MVP |
-| HVPN-FR-703 | The Connector MUST share the same Rust `helix-core` as the Client, in advertise/route mode (not capture mode). | The Connector links the same crate; runs in advertise/route mode. | `helix-core-rust.md` | MVP |
-| HVPN-FR-704 | The Connector MUST advertise its network's CIDRs to the Gateway and route authorized traffic into the LAN. | Advertised CIDR appears in the registry; authorized client reaches a LAN host. `[evidence]` | `svc-registry.md`, `01` (edge) | MVP |
-| HVPN-FR-705 | The Connector SHOULD support local ACLs scoped to its own network. | A local ACL on the connector is honoured for its network. `[evidence]` (`UNVERIFIED` interaction with central policy — fixed by `svc-policy.md`) | `svc-policy.md`, `helix-core-rust.md` (advertise/route mode) | MVP |
-| HVPN-FR-706 | The Connector MUST be runnable on Android/embedded appliance hardware in addition to Linux/Windows/macOS. | A Connector build runs on an embedded/Android target. `[evidence]` | `helix-core-rust.md` (advertise/route mode), `shim-android.md` | P2 |
-| HVPN-FR-707 | The Connector MUST follow availability-following on drop: detect, log offline, reconnect with defined timings, resume (§11.4.144 alignment). | A simulated drop is logged offline, reconnected, and resumed with no silent gap. `[evidence]` | `orchestrator-and-state.md` | MVP |
+| HVPN-FR-701 | The Connector MUST dial outbound to the Gateway and MUST NOT require any inbound port-forward. | The Connector establishes the tunnel with zero inbound exposure on its network. `[evidence]` | `connector.md` (secondary: `helix-core-rust.md` §9.1, `svc-registry.md`) | MVP |
+| HVPN-FR-702 | The Connector MUST run headless (daemon) with an optional slim config UI. | The daemon runs without a UI; the optional UI configures it. `[evidence]` | `connector.md` (secondary: `helix-core-rust.md` §9.2, `shim-linux.md` §9) | MVP |
+| HVPN-FR-703 | The Connector MUST share the same Rust `helix-core` as the Client, in advertise/route mode (not capture mode). | The Connector links the same crate; runs in advertise/route mode. | `connector.md` (secondary: `helix-core-rust.md` §9.1) | MVP |
+| HVPN-FR-704 | The Connector MUST advertise its network's CIDRs to the Gateway and route authorized traffic into the LAN. | Advertised CIDR appears in the registry; authorized client reaches a LAN host. `[evidence]` | `connector.md` (secondary: `svc-registry.md`, `01` edge) | MVP |
+| HVPN-FR-705 | The Connector SHOULD support local ACLs scoped to its own network, interacting with central policy by the precedence rule defined in `svc-policy.md`. | A local ACL on the connector is honoured for its network; local-deny overrides central-allow, central-deny overrides local-allow, and the connector advertises its `local_denylist` to the coordinator. `[evidence]` | `connector.md` (secondary: `svc-policy.md` §4.2, `helix-core-rust.md` §9.3) | MVP |
+| HVPN-FR-706 | The Connector MUST be runnable on Android/embedded appliance hardware in addition to Linux/Windows/macOS. | A Connector build runs on an embedded/Android target. `[evidence]` | `connector.md` (secondary: `helix-core-rust.md` §9.2, `shim-android.md`) | P2 |
+| HVPN-FR-707 | The Connector MUST follow availability-following on drop: detect, log offline, reconnect with defined timings, resume (§11.4.144 alignment). | A simulated drop is logged offline, reconnected, and resumed with no silent gap. `[evidence]` | `connector.md` traces availability-following to `orchestrator-and-state.md` | MVP |
 
 ---
 
@@ -375,10 +398,9 @@ the parity matrix is the acceptance checklist and nothing is orphaned.
 > capability set (parity matrix F1–F17, differentiators X1–X5, the 8 DoD criteria,
 > and the seven principles). It is *necessary, not provably exhaustive*: a capability
 > introduced by a later Volume 2–6 doc that the overview did not enumerate becomes a
-> new FR via the §11.4.93 workable-item path. FRs whose detailed contract is fixed by
-> an owning doc that has not yet pinned it (e.g. FR-705 local-ACL scope) are marked
-> `UNVERIFIED` inline. No requirement quotes a quantitative target not present in the
-> overview/spine/security-overview.
+> new FR via the §11.4.93 workable-item path. FR-705 local-ACL × central-policy
+> precedence is now pinned in `svc-policy.md` and `helix-core-rust.md`. No requirement
+> quotes a quantitative target not present in the overview/spine/security-overview.
 
 ---
 
@@ -399,9 +421,11 @@ the parity matrix is the acceptance checklist and nothing is orphaned.
 
 *Honesty note (§11.4.6): every quantitative acceptance target (≥80%/≥50%
 throughput, p99 < 1 s convergence/revocation, ~15 MB / ≥30% memory headroom) is
-quoted from the overview/spine/security-overview, never invented. FRs whose
-detailed contract awaits an owning doc are marked `UNVERIFIED`. `[evidence]` flags
-criteria requiring captured runtime evidence per §11.4.69 — none may pass on
+quoted from the overview/spine/security-overview, never invented. FR-705's
+local-ACL × central-policy precedence is now pinned in `svc-policy.md` and
+`helix-core-rust.md`; residual `UNVERIFIED` markers (e.g. FR-1103 evaluation)
+remain where the owning doc explicitly does not pin runtime behaviour. `[evidence]`
+flags criteria requiring captured runtime evidence per §11.4.69 — none may pass on
 metadata/config-only signal.*
 
 *Constitution bindings: §11.4.44 (revision header), §11.4.6 (no-guessing —

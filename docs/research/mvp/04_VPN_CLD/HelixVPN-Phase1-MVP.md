@@ -1,5 +1,16 @@
 # HelixVPN — Phase 1 MVP Build Specification
 
+**Revision:** 2
+**Last modified:** 2026-07-04T12:00:00Z
+**Status:** primary research source — elaborated + made authoritative by
+[`../final/07-phase1-mvp-wbs.md`](../final/07-phase1-mvp-wbs.md) (the executable
+WBS with `HVPN-P1-NNN` work items, acceptance criteria, and captured-evidence
+requirements) and [`../final/02-control-plane.md`](../final/02-control-plane.md)
+(the authoritative DDL/protobuf/API surface). Where this document and
+`final/07-phase1-mvp-wbs.md` disagree, **`final/` wins** per
+`SPECIFICATION.md` §12 versioning discipline — this document is preserved as
+the cited primary source ([04_P1] throughout `final/`), not re-derived.
+
 **Companion to:** `HelixVPN-Architecture-Refined.md` (the *what*) and `HelixVPN-Phase0-Spike.md` (the *prove-it-first*).
 **Entry condition:** Phase 0 gates G1–G6 cleared (the data path, MASQUE, iOS memory, edge language, FFI, and file-based reconciliation all proven).
 **Goal of Phase 1:** turn the proven slice into a **self-hostable MVP** — a real Go control plane that streams desired-state to many agents, a durable data model, an event-driven backbone, a working policy engine, the three apps in their first shippable form, and a one-command `podman` deploy.

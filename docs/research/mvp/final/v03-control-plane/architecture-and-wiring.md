@@ -1,7 +1,18 @@
 # Control-Plane Architecture & Wiring
 
-**Revision:** 1
-**Last modified:** 2026-06-25T00:00:00Z
+**Revision:** 2
+**Last modified:** 2026-07-04T12:00:00Z
+
+**Rev 2 (enterprise-hardening pass, 2026-07-04):** no structural gap found in this document during
+the 2026-07-04 review pass — it already covers horizontal-scaling seams (§11), the composition
+root, and a comprehensive mechanical-gate + test-point set. Cross-reference added: the multi-replica
+coordinator consumption pattern this document's §11 point 2 asserts ("stateless-on-restart... scales
+horizontally behind a load balancer with no reshaping") is given a concrete worked example — and an
+honestly-flagged open design question about fan-out-vs-graph-apply consumption semantics — in
+`svc-coordinator.md` §10.1; the zero-downtime rollout mechanics for this layer's composition root
+are in `02-control-plane.md` §11.4; the protobuf compatibility policy referenced implicitly by R1's
+seam discipline is now explicit in `protobuf-spec.md` §9. Revision bumped per the corpus-wide
+hardening pass even though no content changed, so the doc's revision reflects it was reviewed.
 
 > Master technical specification — Volume 3, document 03-A of the HelixVPN set.
 > Scope: the **Go modular monolith** at the structural level — the binaries

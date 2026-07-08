@@ -1,7 +1,12 @@
 # End-to-End Reconciliation Flow
 
-**Revision:** 1
-**Last modified:** 2026-06-25T00:00:00Z
+**Revision:** 2
+**Last modified:** 2026-07-04T12:00:00Z
+
+**Rev 2 (enterprise-hardening pass, 2026-07-04):** §3.6 and §7.3's `outbox` `UNVERIFIED` notes are
+RESOLVED — `v03-control-plane/data-model-ddl.md` §2.12 now specifies the full `outbox` table DDL +
+sweeper contract; both notes below are updated to cite it as the ratified mechanism rather than a
+speculative design addition.
 
 > Master technical specification — Volume 3 (Control Plane, Go), nano-detail deepening of
 > [`02-control-plane.md`](../02-control-plane.md) §10 (*End-to-end reconciliation, the <1 s
@@ -289,10 +294,12 @@ are handled honestly:
 
 - **Commit OK, XADD fails** → the hook retries with bounded backoff; if still failing it writes
   the envelope to a durable `outbox` row scanned by a sweeper (the transactional-outbox pattern).
-  **UNVERIFIED:** the `outbox` table is named here as the recommended mechanism; `02-control-plane.md`
-  does not yet specify an outbox table — it is a §11.4.6-honest design addition for this flow,
-  to be ratified as a workable item (§11). Without it, a crash between commit and XADD silently
-  drops the reconcile trigger.
+  **RESOLVED (2026-07-04):** the `outbox` table is now fully specified — DDL, RLS, and the sweeper
+  contract (poll interval, retry ceiling, `helix_outbox_stuck_total` alert metric, compaction) live
+  in `v03-control-plane/data-model-ddl.md` §2.12, referenced from `02-control-plane.md` §2. Without
+  it, a crash between commit and XADD would silently drop the reconcile trigger; with it, the
+  write and its eventual publish share one durability guarantee (§8 below extends the idempotency
+  argument to cover the outbox's own at-least-once redelivery).
 - **Commit fails** → nothing is staged-published; the version never existed; CLI gets `5xx` and
   may retry under the same `Idempotency-Key` (§3.4).
 
@@ -576,7 +583,7 @@ stateDiagram-v2
 | dry-run | §3.2 validation fail | `422 policy_invalid {violations[]}` | fix spec; nothing persisted |
 | persist | `UNIQUE(tenant,version)` race | retried internally (`NextPolicyVersion FOR UPDATE`) | transparent |
 | persist | commit fail | `500` | CLI retries (idempotent) |
-| publish | commit OK, XADD fail | outbox + sweeper (§3.6, UNVERIFIED table) | event re-published, no double create |
+| publish | commit OK, XADD fail | outbox + sweeper (§3.6; DDL in `data-model-ddl.md` §2.12) | event re-published, no double create |
 | policy svc | authoritative compile fail | NOT-Ack → redeliver → `events:policy:dlq` after K attempts + `helix_events_dlq_total`++ | alert; (should be impossible post dry-run) |
 | coordinator | recompute fail | NOT-Ack → redeliver (idempotent §8) | self-heals on next delivery |
 | coordinator | per-stream queue full | `DropForResync` → stream closed | client reconnects-with-snapshot |
@@ -707,6 +714,7 @@ absence is an honest §11.4.3 SKIP-with-reason, never a silent gap. Four-layer �
 | T-INT-1 | integration (real System, containers §11.4.76) | enroll→advertise→`policy apply`→delta-on-wire: assert MapDelta content + edge `wg show` peer-set diff + verdict-map bump | captured delta + edge diff |
 | T-INT-2 | integration | event idempotency — replay `policy.compiled{N}` 3× → empty delta, no peer churn (E2/§8) | peer-set unchanged capture |
 | T-INT-3 | integration | DLQ path — force authoritative compile fail → `events:policy:dlq` entry + `helix_events_dlq_total`++ (E7) | DLQ entry + metric |
+| T-INT-4 | integration / chaos | outbox reliability (§3.6, E6) — kill `helixd` between `COMMIT` and the sweeper's `XADD`; on restart the sweeper drains `published_at IS NULL` rows and the coordinator still converges within the SLO window measured from restart | outbox row transition + delta-on-wire capture (full DDL: `data-model-ddl.md` §2.12) |
 | T-E2E-1 | e2e | netns rig fed by real control plane: `policy apply` → authorized host reachable, unauthorized denied, < 1 s converge | tcpdump reach/deny + timer |
 | T-FA-1 | full-automation (§11.4.25/.52/.98, deterministic §11.4.50) | self-driving `policy apply`→reconcile→assert, re-runnable `-count=3` identical | run-transcript + p99 |
 | T-CHAL-1 | Challenges (challenges submodule §11.4.27(B)) | drive enroll→policy→delta, score PASS only on captured < 1 s SLO | challenge result.json |

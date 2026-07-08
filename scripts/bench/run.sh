@@ -2,14 +2,28 @@
 # Helix VPN — Benchmark runner
 #
 # Purpose:  Measure latency, throughput, packet loss, and jitter through the
-#           Helix VPN test rig. Records results to a timestamped CSV file.
+#           Helix VPN test rig (netns-based, requires root), AND drive the
+#           HVPN-P0-045 G4 edge A/B benchmark (Rust helix-edge vs Go go-edge
+#           MASQUE termination, HelixVPN-Phase0-Spike.md §7.2 — loopback
+#           only, no root required). Records results to a single timestamped
+#           CSV file so the §7.3 decision matrix can be filled mechanically
+#           (see scripts/bench/decision_matrix.sh).
 # Usage:    ./scripts/bench/run.sh [--duration N] [--output DIR] [--server-addr IP]
-# Inputs:   DURATION (seconds, default 30)
+#                                  [--skip-edge-ab] [--edge-ab-duration N]
+#                                  [--edge-ab-concurrencies "1 10 100"]
+# Inputs:   DURATION (seconds, default 30) — netns-rig latency/throughput tests
 #           OUTPUT_DIR (path, default ./bench-results/)
 #           SERVER_ADDR (IP, default 10.0.240.3)
-# Outputs:  Timestamped CSV file under OUTPUT_DIR
-# Side-effects: Creates OUTPUT_DIR if it does not exist
-# Dependencies: bash 4+, ping, iperf3 (optional), ncat (optional), pv (optional)
+#           SKIP_EDGE_AB (boolean, default false)
+#           EDGE_AB_DURATION (seconds per edge_ab test, default 5)
+#           EDGE_AB_CONCURRENCIES (space-separated, default "1 10 100")
+# Outputs:  Timestamped CSV file under OUTPUT_DIR containing BOTH the
+#           netns-rig metrics (test_type=latency/throughput/jitter/...) AND
+#           the edge_ab metrics (test_type=edge_ab) in one file.
+# Side-effects: Creates OUTPUT_DIR if it does not exist; builds+runs the
+#               scripts/bench/tools/{rust_edge_bench,go_edge_bench} binaries.
+# Dependencies: bash 4+, ping, iperf3 (optional), ncat (optional), pv
+#               (optional), cargo + go (for --skip-edge-ab=false, the default)
 
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -17,12 +31,18 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 DURATION=30
 OUTPUT_DIR="${SCRIPT_DIR}/../../bench-results"
 SERVER_ADDR="10.0.240.3"
+SKIP_EDGE_AB=false
+EDGE_AB_DURATION=5
+EDGE_AB_CONCURRENCIES="1 10 100"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --duration) DURATION="$2"; shift 2 ;;
     --output) OUTPUT_DIR="$2"; shift 2 ;;
     --server-addr) SERVER_ADDR="$2"; shift 2 ;;
+    --skip-edge-ab) SKIP_EDGE_AB=true; shift ;;
+    --edge-ab-duration) EDGE_AB_DURATION="$2"; shift 2 ;;
+    --edge-ab-concurrencies) EDGE_AB_CONCURRENCIES="$2"; shift 2 ;;
     *) echo "Unknown option: $1"; exit 1 ;;
   esac
 done
@@ -149,6 +169,24 @@ throughput_test() {
 }
 
 # ---------------------------------------------------------------------------
+# G4 edge A/B benchmark (HVPN-P0-045) — Rust helix-edge vs Go go-edge MASQUE
+# termination, HelixVPN-Phase0-Spike.md §7.2. Unlike latency_test/
+# throughput_test above, this needs NO root and NO netns rig — both edges
+# are loopback-only Phase-0 spikes (see scripts/bench/edge_ab.sh's own
+# header for the full honest-scope statement). Appends into the SAME
+# ${CSV_FILE} so one file mechanically fills the §7.3 decision matrix via
+# scripts/bench/decision_matrix.sh.
+# ---------------------------------------------------------------------------
+edge_ab_bench() {
+  echo ""
+  echo "--- G4 Edge A/B (Rust helix-edge vs Go go-edge, HVPN-P0-045) ---"
+  bash "${SCRIPT_DIR}/edge_ab.sh" \
+    --out-csv "${CSV_FILE}" \
+    --duration-secs "${EDGE_AB_DURATION}" \
+    --concurrencies "${EDGE_AB_CONCURRENCIES}"
+}
+
+# ---------------------------------------------------------------------------
 # Summary
 # ---------------------------------------------------------------------------
 echo ""
@@ -166,6 +204,13 @@ fi
 
 latency_test
 throughput_test
+
+if ! $SKIP_EDGE_AB; then
+  edge_ab_bench
+else
+  echo ""
+  echo "--- G4 Edge A/B --- SKIP (--skip-edge-ab)"
+fi
 
 echo ""
 echo "Results saved to ${CSV_FILE}"

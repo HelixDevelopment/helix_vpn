@@ -1,7 +1,7 @@
 # helix_design design system
 
-**Revision:** 1
-**Last modified:** 2026-06-25T00:00:00Z
+**Revision:** 2
+**Last modified:** 2026-07-04T12:00:00Z
 
 > Master technical specification — **Volume 4 (Clients)**, nano-detail deep-dive.
 > This document **deepens** the *`helix_design` — the design system* section of

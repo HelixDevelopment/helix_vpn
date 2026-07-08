@@ -1,7 +1,7 @@
 # Clients — helix-core FFI, Flutter helix-ui, per-platform shims
 
-**Revision:** 1
-**Last modified:** 2026-06-25T00:00:00Z
+**Revision:** 2
+**Last modified:** 2026-07-04T12:00:00Z
 
 > Master technical specification — document **03** of the HelixVPN set under
 > `docs/research/mvp/final/`. Scope: the **client stack** — the Rust `helix-core`

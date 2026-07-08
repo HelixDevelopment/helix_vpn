@@ -1,5 +1,8 @@
 # RESEARCH pki_pq_nat
 
+**Revision:** 1
+**Last modified:** 2026-07-04T12:00:00Z
+
 Scope: Device enrollment + PKI, post-quantum WireGuard handshake, WireGuard NAT
 traversal / DERP relay / Tailscale coordination + 4via6, for a Mullvad-parity
 self-hosted VPN spec. All facts cited; access date 2026-06-25.

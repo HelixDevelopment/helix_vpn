@@ -1,5 +1,18 @@
 # Cross-Platform UI Frameworks: Comprehensive Comparison for Helix VPN
 
+**Revision:** 1
+**Last modified:** 2026-07-04T14:00:00Z
+
+> **Editorial note (added during the 2026-07-04 MVP2 gap-analysis/hardening
+> pass):** this is a raw research brief that informed the final MVP2
+> specification documents — it is preserved as historical input, not
+> maintained as a living spec. Where a figure here (e.g., an early code-reuse
+> estimate or framework recommendation) differs from the final, reconciled
+> numbers in `../MVP2_ARCHITECTURE.md` / `../MVP2_OVERVIEW.md` / `../MVP2_SHARED_CORE.md`,
+> those specification documents are authoritative — the difference simply
+> reflects normal refinement between initial research and final architecture
+> decisions, not an error in either document.
+
 ## Executive Summary
 
 This report evaluates all viable cross-platform UI frameworks for building Helix VPN client applications across macOS, Windows, Linux, Android, iOS, HarmonyOS, and Aurora OS. Based on extensive research (>10 independent searches), benchmarks, and real-world VPN client examples, three strategies emerge as optimal for a VPN client where **maximal code reusability**, **minimal performance overhead**, and **smallest bundle/storage footprint** are critical.

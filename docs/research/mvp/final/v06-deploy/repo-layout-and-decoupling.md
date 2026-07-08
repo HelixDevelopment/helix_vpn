@@ -1,7 +1,10 @@
 # Repo Layout & Decoupling
 
-**Revision:** 1
-**Last modified:** 2026-06-25T12:00:00Z
+**Revision:** 2
+**Last modified:** 2026-07-04T12:00:00Z
+**Rev 2:** Reviewed against the Volume-6 enterprise-hardening pass (2026-07-04); repo topology,
+extraction sequencing, and decoupling invariants already comprehensive. No gap found in scope.
+Revision bumped for the pass.
 
 > Master technical specification — Volume 6 (Deployment, Tooling & Operations), nano-detail
 > document. Scope: the **physical repository layout** of HelixVPN — the Phase-0/1 working

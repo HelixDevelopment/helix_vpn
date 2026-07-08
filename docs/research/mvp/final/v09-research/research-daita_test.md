@@ -1,5 +1,8 @@
 # RESEARCH daita_test
 
+**Revision:** 1
+**Last modified:** 2026-07-04T12:00:00Z
+
 Scope: (1) DAITA / maybenot traffic-analysis defense — current state of the
 maybenot framework and Mullvad's DAITA v1/v2; (2) VPN testing methodology —
 Linux netns rigs, nftables DPI/leak blocking, tc netem impairment, iperf3

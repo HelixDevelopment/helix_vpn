@@ -125,31 +125,46 @@ else
   echo "  SKIP — --fast mode enabled"
 fi
 
-# ----[S4] Containers submodule check ----------------------------------
+# ----[S4] Containers submodule — genuine runtime-connectivity check ---
+#
+# HVPN-P0-080 investigation (full reasoning in scripts/spike/containers_check
+# /main.go's doc comment + the task's final report): the containers
+# submodule orchestrates OCI containers (Docker/Podman/K8s — image pull,
+# compose up, health-check, lifecycle). It has NO concept of Linux network
+# namespaces, veth pairs, bridges, nftables, or tc netem — the exact kernel
+# primitives HelixVPN-Phase0-Spike.md §3's rig topology needs. Forcing
+# container-boot into that netns/veth/bridge/nftables/tc creation would
+# misuse the submodule outside its design for zero real benefit.
+# scripts/rig/*.sh (ip netns + veth + bridge + nftables + tc) therefore
+# REMAINS the correct, sufficient tool for the rig's own topology — this
+# step does not replace or wrap it. What genuinely fits the submodule's
+# design is a FUTURE containerized stand-in for the connector-site LAN
+# service (§3's "hello page" host, today an ad-hoc `python3 -m
+# http.server`); this step proves that foundation — real runtime
+# auto-detection + a live query against this host's actual container
+# engine — is genuinely working, ahead of that future rig extension.
 echo ""
-echo "---[S4] Containers submodule ---"
+echo "---[S4] Containers submodule (runtime-connectivity check) ---"
 
 CONTAINERS_DIR="${PROJECT_ROOT}/submodules/containers"
+CONTAINERS_CHECK_DIR="${SCRIPT_DIR}/spike/containers_check"
 if [[ -d "${CONTAINERS_DIR}" ]]; then
   echo "  Found at: ${CONTAINERS_DIR}"
-  # Check for executable scripts
-  exec_count=0
-  while IFS= read -r -d '' f; do
-    if [[ -x "$f" ]]; then
-      exec_count=$((exec_count + 1))
-    fi
-  done < <(find "${CONTAINERS_DIR}" -name '*.sh' -type f -print0 2>/dev/null)
-  echo "  Executable scripts: ${exec_count}"
-  if [[ -f "${CONTAINERS_DIR}/bin/boot" ]]; then
-    boot_sz=$(stat -c%s "${CONTAINERS_DIR}/bin/boot" 2>/dev/null || echo "?")
-    echo "  boot binary: ${boot_sz} bytes"
-    if [[ -x "${CONTAINERS_DIR}/bin/boot" ]]; then
-      pass "containers/boot is executable"
-    else
-      fail "containers/boot is NOT executable"
-    fi
-  fi
   pass "containers submodule present"
+
+  if [[ -d "${CONTAINERS_CHECK_DIR}" ]] && go version &>/dev/null; then
+    if (cd "${CONTAINERS_CHECK_DIR}" && go build -o containers_check . 2>&1); then
+      if "${CONTAINERS_CHECK_DIR}/containers_check" 2>&1; then
+        pass "containers submodule: runtime auto-detected + queried live"
+      else
+        fail "containers submodule: runtime-connectivity check reported FAIL (see output above — e.g. no container runtime installed on this host)"
+      fi
+    else
+      fail "containers submodule: containers_check build failed"
+    fi
+  else
+    echo "  SKIP — scripts/spike/containers_check not found or 'go' unavailable"
+  fi
 else
   fail "containers submodule NOT found"
 fi

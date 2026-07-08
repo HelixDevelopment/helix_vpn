@@ -1,5 +1,8 @@
 # RESEARCH podman_k8s
 
+**Revision:** 1
+**Last modified:** 2026-07-04T12:00:00Z
+
 Scope: Rootless Podman quadlets (systemd `.container`/`.pod`) for a Mullvad-parity self-hosted VPN
 edge — `AddCapability=NET_ADMIN`, read-only rootfs + seccomp, `:443/udp` exposure, a single pod
 running Postgres + Redis + app; the same workload mapped to Docker Compose and to a Kubernetes

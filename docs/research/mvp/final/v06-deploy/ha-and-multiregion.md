@@ -1,7 +1,10 @@
 # High availability & multi-region (Phase-2 scale-out)
 
-**Revision:** 1
-**Last modified:** 2026-06-25T12:00:00Z
+**Revision:** 2
+**Last modified:** 2026-07-04T12:00:00Z
+**Rev 2:** Added §10 (Resource sizing & cost model — per-tier CPU/RAM/disk estimates from
+homelab to multi-region fleet); cross-referenced the new §7.5 rate-limiting/DDoS section in
+`05-repo-layout-tooling-and-helix-ecosystem.md`.
 
 > Master technical specification — Volume 6 (Deployment, Tooling & Operations), nano-detail
 > document `ha-and-multiregion.md`. Scope: how HelixVPN goes from the single-node Phase-1
@@ -31,6 +34,7 @@
 - [7. Split-brain handling](#7-split-brain-handling)
 - [8. SLOs under failover & anti-bluff evidence](#8-slos-under-failover--anti-bluff-evidence)
 - [9. UNVERIFIED register](#9-unverified-register)
+- [10. Resource sizing & cost model](#10-resource-sizing--cost-model-target-estimates-114216)
 - [Sources verified](#sources-verified)
 
 ---
@@ -350,6 +354,55 @@ bluff.
 | U4 | geoDNS vs anycast final pick (§5) | D-GW-SELECT options; recommendation given, not validated against a real fleet |
 | U5 | Postgres fencing under a genuine partition (§7) | bounded by sync-standby `remote_write`; exact operator fencing behaviour is operator-specific |
 | U6 | Whether the <1s SLO and the client re-handshake budget are ever conflated in tooling (§6) | the doc asserts they are distinct; a test must prove the tooling reports them separately |
+
+---
+
+## 10. Resource sizing & cost model (TARGET estimates, §11.4.6)
+
+**Gap closed (this revision).** No document in the corpus previously stated a concrete
+CPU/RAM/disk sizing envelope per deployment tier — a real operator (the primary buyer, the
+homelab/small-MSP self-hoster, spine §2) needs a starting point to provision, and an enterprise
+evaluator needs a cost-scaling story. The table below is an **engineering estimate (TARGET)**
+consistent with the chosen stack (Go control plane, Rust edge, Postgres, Redis) — it is explicitly
+NOT a measured benchmark until a capacity drill produces one (same discipline as the RTO/RPO
+targets in `disaster-recovery.md §1`).
+
+| Tier | Devices (approx) | `helixd` (control) | `helix-edge` (data) | Postgres | Redis | Disk | Notes |
+|---|---|---|---|---|---|---|---|
+| **Homelab / single VPS** | ≤ 50 | 0.25 vCPU / 128 MiB | 0.5 vCPU / 128 MiB | 0.5 vCPU / 256 MiB, 5 GiB disk | 0.1 vCPU / 32 MiB | 10 GiB | Fits a $5–10/mo VPS; one pod, quadlet substrate (§7.4) |
+| **Small MSP / multi-tenant homelab** | ≤ 500 | 0.5 vCPU / 256 MiB | 1 vCPU / 256 MiB | 1 vCPU / 1 GiB, 20 GiB disk | 0.25 vCPU / 128 MiB | 30 GiB | Still single-node quadlet; watch `helix_open_watch_streams` (`observability.md §2.2`) as the load signal |
+| **Regional gateway (Phase-2 K8s, single region)** | ≤ 5,000 | 2× (0.25 vCPU / 256 MiB) replicas + HPA to 10 (`kubernetes.md §5`) | 1–2 vCPU / 512 MiB per DaemonSet node | CNPG 3-instance: 2 vCPU / 2 GiB primary, 20 GiB disk per instance | 1 vCPU / 512 MiB (or NATS JetStream equivalent, §4) | 60 GiB (PG) + 10 GiB (bus) | The `helixd` resource **limits** in `kubernetes.md §5` (`cpu:2, memory:1Gi` per replica) are the individual-pod ceiling; this row is the *aggregate* fleet footprint |
+| **Multi-region fleet** | ≤ 50,000 (10 regions × 5,000) | per-region as above, × N regions | per-region as above, × N regions | 1 global primary (largest region) + ≥1 sync + N async standbys (`§3`) | 1 JetStream cluster (R3) per region-group (§4) | scales linearly with tenant/device count | Cross-region write latency is acceptable (§1 — control writes are low-rate); dominant cost driver is standby-replica count, not `helixd` CPU |
+
+> **Basis for the estimates (§11.4.6 — stated, not hidden).** `helixd` is stateless and does no
+> per-packet work (C1) — its footprint scales with **open `WatchNetworkMap` streams** and event
+> throughput, not device count directly (`svc-coordinator §7.3`'s 24h-soak assumes RSS slope ≈ 0
+> at a given stream count, not that RSS is independent of it). `helix-edge`'s footprint scales
+> with **concurrent active tunnels + transport-ladder overhead** (MASQUE/QUIC costs more per-conn
+> than plain UDP, `01-data-plane.md`). Postgres sizing follows the DDL row-count growth
+> (`data-model-ddl.md`) — dominated by `devices`/`policy_rules`/`audit_events`, all small rows;
+> 20 GiB comfortably covers tens of thousands of rows with headroom. These multipliers are
+> **estimates**, not measurements — the anti-bluff discipline applied elsewhere in this corpus
+> (RTO/RPO targets, SLO thresholds) applies here too: the first capacity/load drill (§11.4.85
+> stress test at the target device count) replaces the estimate with a measured number, and the
+> measured number is what future sizing guidance cites — never the design estimate.
+
+### 10.1 Cost-tier framing (self-host vs managed, non-marketing)
+
+The cost story is deliberately not a marketing tier list — it is the same engineering estimate
+translated into off-the-shelf cloud pricing shapes so an operator can budget:
+
+| Tier | Representative monthly infra cost (2026 pricing, illustrative) | What drives the cost |
+|---|---|---|
+| Homelab | $0 (existing hardware) or ~$5–10/mo (smallest cloud VPS) | one always-on small VM/VPS |
+| Small MSP | ~$20–40/mo (1–2 vCPU / 2–4 GiB VPS) | still one node; disk grows with audit-event retention (`audit-and-compliance.md`) |
+| Regional K8s | ~$150–400/mo (managed K8s control plane + 3-node worker pool + managed-or-CNPG Postgres) | Postgres HA (3 instances) is the largest single line item, not `helixd`/edge compute |
+| Multi-region fleet | scales ~linearly per added region (regional cost × N) + cross-region egress | egress + standby-replica storage dominate at this tier, not CPU |
+
+**UNVERIFIED — exact dollar figures.** The representative costs are illustrative, tied to
+generic 2026 cloud list pricing, not a specific provider quote; an operator's actual bill depends
+on their chosen provider, region, and reserved-vs-on-demand pricing. This table exists to give a
+*shape* (what dominates cost at each tier), not a quote.
 
 ---
 

@@ -1,7 +1,7 @@
 # Client screens — every end-user surface, in depth (light + dark, phone→tablet→desktop→TV)
 
-**Revision:** 1
-**Last modified:** 2026-06-25T12:00:00Z
+**Revision:** 2
+**Last modified:** 2026-07-04T12:00:00Z
 
 > Master technical specification — Volume 10 (Design System), nano-detail
 > deep-dive. This document **owns** the complete **screen-level UX specification
@@ -568,6 +568,18 @@ searchable, RTT-sorted, favourite-able list with jurisdiction labels; and the
 entry point to the multi-hop builder (§7). Distinguishes a **privacy-exit** (a
 public/managed exit gateway) from a **network** (a private overlay network the
 device has joined) [04_CLIENT §7.2 `ExitPicker`].
+
+> **Zero-trust tie (load-bearing, not decorative).** The list this screen
+> renders is **already policy-filtered before it reaches the client** — the
+> coordinator's `WatchNetworkMap` snapshot/delta only ever contains peers and
+> networks this device's compiled policy authorizes [SPINE §7.2, `v05-security/
+> zero-trust-and-default-deny.md` "need-to-know peer filtering"]. The picker
+> therefore has no client-side "hide unauthorized networks" filter to get wrong
+> — there is structurally nothing unauthorized in the list to accidentally
+> show. This is why a compromised/jailbroken client cannot self-grant access to
+> an un-joined network by tampering with picker UI state: the authorization
+> boundary is enforced server-side, in the data the stream carries, not in
+> this screen's rendering logic.
 
 **Layout (regions).**
 1. `SearchField` (sticky top) — filters by name/city/country/jurisdiction.

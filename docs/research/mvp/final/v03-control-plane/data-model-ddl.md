@@ -1,7 +1,16 @@
 # Data Model — full Postgres DDL + RLS
 
-**Revision:** 1
-**Last modified:** 2026-06-25T00:00:00Z
+**Revision:** 2
+**Last modified:** 2026-07-04T12:00:00Z
+
+**Rev 2 (enterprise-hardening pass, 2026-07-04):** (1) added the `outbox` table + sweeper —
+closes the gap `reconciliation-flow.md` §3.6 flagged as `UNVERIFIED`/not-yet-specified (a commit
+that succeeds but whose `XADD` fails previously had no durable re-publish path; the transactional
+outbox pattern is now the ratified mechanism, referenced from `reconciliation-flow.md` §3.6);
+(2) added §12 zero-downtime schema-migration guidance (expand-contract pattern, backward-compatible
+column changes, `goose`/`atlas` rollout discipline) closing a production-readiness gap around live
+schema evolution (the original §8 covered migration *ordering* at initial-schema time but not the
+*rollout safety* of a later live-schema change against a running `helixd` fleet).
 
 > Master technical specification — Volume 3 (Control Plane, Go), nano-detail deepening of
 > [02-control-plane.md §2](../02-control-plane.md). Scope: the **complete, runnable Postgres
@@ -461,6 +470,77 @@ DROP TABLE audit_events;
 | `*.created_at`/`ts`/`not_after`/`last_seen_at` | `timestamptz` | Always UTC-anchored; never naive `timestamp`. |
 | `connectors.site_id`, `overlay_pools.next_site_id` | `int` (CHECK 1..65535) | 16-bit `4via6` site index fits the `/96`→`/48` site field; `int` for arithmetic headroom. |
 | roles enum | `user_role`/`device_kind` | Closed sets enforced at the type level; a typo'd `kind` is a write error, not a silent bug. |
+
+### 2.12 `0013_outbox.sql` — transactional outbox (reliable event publish)
+
+**Why this table exists.** `reconciliation-flow.md` §3.6 identified a real gap: `policy.Activate`
+and other R3 (write-emits-event) mutations publish to Redis Streams in an after-commit hook, not
+inside the Postgres transaction itself (Redis is not transactionally joined to Postgres). If the
+process crashes between `COMMIT` and the `XADD`, the write is durable but the event that should
+trigger the coordinator's reconcile is silently lost — the exact "DB changed, edges did not
+converge" failure R3 exists to prevent (doc 02 §1.2-R3). The **transactional outbox** pattern
+closes this: the event envelope is written to a durable table **in the same transaction** as the
+domain write, and a separate sweeper reliably drains it to the bus, so "commit succeeded" and
+"the event WILL be published" become the same durability guarantee.
+
+```sql
+-- +goose Up
+-- Transactional outbox: every R3 write inserts its event envelope HERE, in the SAME
+-- WithTenant transaction as the domain mutation — never a separate best-effort publish.
+-- A background sweeper (helixd internal/events/outbox_sweeper.go) polls
+-- WHERE published_at IS NULL, XADDs to the target stream, then marks published_at.
+CREATE TABLE outbox (
+  id            bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  tenant_id     uuid NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+  stream        text  NOT NULL,            -- target Redis stream, e.g. "events:policy"
+  envelope      jsonb NOT NULL,            -- the full bus envelope (doc 02 §5.2 shape)
+  created_at    timestamptz NOT NULL DEFAULT now(),
+  published_at  timestamptz,               -- NULL = not yet durably XADD'd; set by the sweeper
+  attempts      int NOT NULL DEFAULT 0,    -- sweeper retry count; feeds the DLQ ceiling (doc 02 §5.4)
+  last_error    text,                      -- last XADD failure reason, for operator visibility
+  CONSTRAINT outbox_stream_not_blank CHECK (length(stream) > 0)
+);
+-- Sweeper's hot query: unpublished rows, oldest first, per-tenant fair scheduling.
+CREATE INDEX outbox_unpublished_idx ON outbox (created_at) WHERE published_at IS NULL;
+CREATE INDEX outbox_tenant_idx      ON outbox (tenant_id, created_at) WHERE published_at IS NULL;
+
+ALTER TABLE outbox ENABLE ROW LEVEL SECURITY;
+ALTER TABLE outbox FORCE  ROW LEVEL SECURITY;
+CREATE POLICY tenant_isolation ON outbox
+  USING      (tenant_id = current_setting('app.tenant_id')::uuid)
+  WITH CHECK (tenant_id = current_setting('app.tenant_id')::uuid);
+-- The sweeper itself runs as helix_sys (WithSystem, §6.4) since it scans ACROSS tenants; it sets
+-- app.tenant_id per-row from the outbox row it is processing when it needs a tenant-scoped read.
+
+-- +goose Down
+DROP TABLE outbox;
+```
+
+**Sweeper contract (`internal/events/outbox_sweeper.go`).** Runs as a `helixd` background
+goroutine (wired in `App.Run`, alongside the DLQ sweeper of doc 02 §5.4): poll
+`outbox_unpublished_idx` every `OUTBOX_SWEEP_INTERVAL` (default 250 ms — tight enough that the
+outbox path adds negligible latency to the p99 < 1 s convergence SLO, doc 02 §10.2), `XADD` each
+row's `envelope` to its `stream`, then `UPDATE outbox SET published_at = now() WHERE id = $1` in a
+short transaction. On `XADD` failure, increment `attempts` + record `last_error`; after
+`OUTBOX_RETRY_CAP` (default 10) consecutive failures, alert (`helix_outbox_stuck_total` counter) —
+the row is NEVER silently dropped (§11.4.147 no-work-loss). A periodic `outbox` compaction job
+deletes rows with `published_at < now() - retention` (default 24 h) so the table does not grow
+unbounded; this is metadata about *publish attempts*, not user traffic, so it is exempt from the
+no-durable-log intent of C3 (it carries no connection/traffic content — only the same control-plane
+event envelopes §7.1's lint already permits on the Streams themselves).
+
+**Reconciled (§11.4.35):** this table directly resolves the `reconciliation-flow.md` §3.6
+`UNVERIFIED` note ("the `outbox` table is named here as the recommended mechanism;
+`02-control-plane.md` does not yet specify an outbox table") — `data-model-ddl.md` is now the
+canonical owner of the `outbox` schema; `02-control-plane.md` §2 and `reconciliation-flow.md` §3.6
+both reference this section rather than re-deriving it.
+
+**Anti-bluff test point (added to §9 below):** a chaos test kills `helixd` between the domain
+`COMMIT` and the outbox sweeper's `XADD` (a deterministic injection point — pause the sweeper
+goroutine, commit the write, kill -9, restart) and asserts the event is published exactly once
+after restart (the sweeper resumes from `published_at IS NULL`, and consumer-side idempotency,
+doc 02 §5.4, tolerates a duplicate if the crash instead lands between `XADD` and
+`published_at` update).
 
 ---
 
@@ -1001,9 +1081,68 @@ being goose's own version table) that the live schema equals the committed autho
 | 0010 | audit_events | FK tenants |
 | 0011 | RLS enable/force/policies + coherence triggers | tables must exist first; this is the correctness floor |
 | 0012 | grants + default privileges | last; references all tables |
+| 0013 | `outbox` (§2.12) | depends on `tenants` (FK) + the 0012 grant pattern (re-runs `GRANT`/RLS for the new table) |
 
 RLS (0011) lands as early as the tables permit — it is the irreversible correctness floor, validated
 first (§11.4.132 risk-descending: a tenant leak is the highest-severity failure in this layer).
+
+---
+
+## 8.4 Zero-downtime schema evolution (expand-contract, live-fleet safety)
+
+§8.1–§8.3 cover the **initial** schema's migration ordering. This subsection covers the
+**production-readiness gap** of evolving that schema later, against a **running** `helixd` fleet
+(single-node MVP today; Phase-2 multi-replica per `svc-coordinator.md` §10) without downtime or a
+crash-looping old binary reading a schema it does not understand.
+
+**The rule: every migration must be safe for the OLD and the NEW `helixd` binary to run against
+simultaneously**, for the window between "migration applied" and "new binary rolled out
+everywhere" (Podman quadlet single-instance restart is near-instantaneous, but Phase-2 K8s rolling
+updates per `05-repo-layout-tooling-and-helix-ecosystem.md` / `v06-deploy/kubernetes.md` take
+multiple pod-cycle minutes with old and new pods serving concurrently).
+
+**Expand-contract, the three safe change classes:**
+
+1. **Additive (always safe).** `ADD COLUMN ... NULL` or `ADD COLUMN ... NOT NULL DEFAULT <literal>`
+   (Postgres 11+ computes the default without a table rewrite/lock for a constant default); `ADD
+   TABLE`; `ADD INDEX CONCURRENTLY` (never a plain `CREATE INDEX`, which takes an
+   `ACCESS EXCLUSIVE` lock and blocks writes for the index-build duration — unacceptable on
+   `devices`/`audit_events` at scale). The OLD binary ignores the new column/table; the NEW binary
+   uses it. No coordination needed.
+2. **Destructive-in-two-steps (expand, deploy, contract).** Renaming or dropping a column/table:
+   (a) **expand** — add the new column, backfill it (a batched `UPDATE ... WHERE new IS NULL LIMIT
+   N` loop, never one giant transaction that holds a long lock), dual-write it alongside the old
+   column from application code for one release; (b) **deploy** — roll out the binary that reads
+   the NEW column exclusively; (c) **contract** — a LATER migration drops the old column/table,
+   only after every replica confirmed running the binary from (b) (a `helixvpnctl doctor`-style
+   pre-contract check, or simply: never contract in the same release as expand). **NEVER** rename
+   a column in place (`ALTER TABLE ... RENAME COLUMN`) as a single-step change if the old binary
+   might still be reading it during a rollout — treat a rename as expand(add new)-backfill-contract
+   (drop old), not a single atomic rename.
+3. **Type changes (case-by-case, usually expand-contract).** A widening change (e.g. `int` → 
+   `bigint`) is often safe in-place (Postgres 12+ can do a `TABLE REWRITE`-free widening for some
+   type pairs — **UNVERIFIED** which exact pairs avoid a rewrite on the project's target PG16;
+   verify with `EXPLAIN`/`pg_class.relfilenode` unchanged before assuming it is lock-free). A
+   narrowing or incompatible type change always goes through expand (new column, new type) →
+   dual-write → contract.
+
+**Migration-runtime safety (mechanical):** every `goose` migration in this schema follows the
+`CREATE INDEX CONCURRENTLY` + `ADD COLUMN ... DEFAULT <constant>` discipline above; `atlas migrate
+lint` (§8.2) is configured with the `data-dependent-changes` and `destructive` linters ON so a
+migration that would lock/rewrite a large table or silently drop data FAILs the pre-build gate
+rather than surfacing as a production incident. RLS policies (§4) are **not** affected by additive
+migrations (a new column inherits the table's existing `FORCE ROW LEVEL SECURITY` automatically);
+a new **table** requires its own `ENABLE`/`FORCE`/`CREATE POLICY` triple in the SAME migration that
+creates it (as `0013_outbox.sql`, §2.12, does) — a table created without its RLS policy in the same
+migration is a §11.4.6 gap this document forbids: `atlas migrate lint` custom rule (recommended,
+`UNVERIFIED` as implemented) flags any `CREATE TABLE ... tenant_id uuid` migration file that lacks
+a same-file `ENABLE ROW LEVEL SECURITY`.
+
+**Rollback posture.** Every migration is `goose`-reversible (`-- +goose Down`) for the *schema*, but
+an application-level rollback (redeploying the OLD binary after a NEW-binary-only migration
+contracted an old column) is **not** safe — the contract step is the one-way door. Operators
+rolling back a bad release roll back the **binary** only, never re-run a `goose down` past a
+contract step in production without a full §9 restore-from-backup per constitution §9.2.
 
 ---
 
@@ -1026,6 +1165,7 @@ for the data-model layer.
 | **DDoS / load-flood** | 10k concurrent `WithTenant` enrollments against the pool; assert no connection exhaustion, no GUC bleed, bounded p99 insert latency. | Latency histogram + error count = 0. |
 | **security** (§11.4.10 + security submodule) | Role self-check (`MustVerifyAppRole`) aborts boot under a superuser/BYPASSRLS role; no credential in any migration or log; `WITH CHECK` blocks tenant-spoofing inserts. | Boot-abort log + grep-clean credential audit. |
 | **stress + chaos** (§11.4.85) | Kill the DB mid-`WithTenant` (chaos): the tx rolls back, GUC clears, the pooled conn recovers clean; disk-full on `audit_events` append degrades, never corrupts. | Recovery trace + post-chaos RLS still intact. |
+| **stress + chaos** (§11.4.85) | Outbox reliability (§2.12): kill `helixd` between a domain-write `COMMIT` and the sweeper's `XADD`; on restart assert the event is published exactly once (sweeper resumes from `published_at IS NULL`, consumer idempotency tolerates a duplicate on the alternate crash window). | Before/after `outbox` row state + bus delivery count. |
 | **concurrency / atomicity** | Two tenants interleaved on ONE pooled connection prove `SET LOCAL` scoping (§6.3); `BumpOverlayNextHost` under N goroutines yields N distinct host ids (no double-alloc). | Distinct-id set assertion + interleave log. |
 | **race-condition / deadlock** | `-race` build of the IPAM + pool paths; concurrent `Activate` flips never violate `policies_one_active_per_tenant`; no lock-order inversion between `devices`/`group_members` triggers. | `go test -race` clean + unique-violation retry log. |
 | **memory** | 24h soak of repeated `WithTenant` cycles; `process_resident_memory_bytes` slope ≈ 0 (no pgx conn/GUC leak). | RSS time series slope. |

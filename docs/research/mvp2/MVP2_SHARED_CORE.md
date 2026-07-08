@@ -1,9 +1,30 @@
 # MVP2 Shared Core Specification: `libhelix_core`
 
-> **Version**: 0.2.0-MVP2
-> **Date**: 2026-01-21
+**Revision:** 3
+**Last modified:** 2026-07-04T16:30:00Z
+
+> **Revision 3 changelog:** added the two Mermaid diagrams this document
+> previously had none of (`docs/research/CROSS_CUTTING_GAP_ANALYSIS.md`
+> §3.2 named this the single most architecturally central mvp2/ document
+> with the largest diagram gap): §3.1 gains a state-machine diagram for the
+> canonical `ConnectionStatus` FSM directly below its enum definition; §6
+> gains an architecture/FFI-boundary diagram showing the crate's module
+> structure and how each platform binding (UniFFI Kotlin/Swift,
+> flutter_rust_bridge, Tauri commands, wasm-bindgen, cbindgen C ABI) reaches
+> it. No prose or code content changed.
+
+> **Version**: 0.2.1-MVP2
+> **Date**: 2026-01-21 (Revision 2: 2026-07-04)
 > **Status**: Draft for Review
 > **Classification**: Technical Architecture Specification
+
+> **Revision 2 changelog:** reconciled the §5.1 minimum-OS-version column
+> against the product-level minimums declared in `MVP2_ARCHITECTURE.md` §1.2
+> and `MVP2_OVERVIEW.md` §4.1 (this document's target table previously stated
+> a looser Rust-toolchain floor, not the shipped product's supported
+> minimum); marked the `OpenVPN` protocol enum variant explicitly as a
+> reserved/unimplemented placeholder; added §5.5 Supply-Chain & Build
+> Integrity (reproducible builds + SBOM generation).
 
 ---
 
@@ -57,6 +78,10 @@
 | HarmonyOS | `aarch64-unknown-linux-ohos` | Tier 2 | `.so` | ~70% |
 | Aurora OS | `aarch64-unknown-linux-gnu` | Tier 2 | `.so` | ~75% |
 | Web/Browser | `wasm32-unknown-unknown` | Tier 2 | `.wasm` | ~45% |
+
+> This table summarizes artifact type and code-reuse percentage per target;
+> see §5.1 for the authoritative product-supported minimum OS version per
+> target (kept in one place to avoid the two tables drifting out of sync).
 
 ### 1.4 Crate Structure
 
@@ -484,6 +509,14 @@ pub enum ProtocolType {
     WireGuard,
     Shadowsocks,
     Masque,
+    /// RESERVED for a post-MVP2 (MVP3+) protocol addition. There is no
+    /// `helix-openvpn` crate, no OpenVPN entry in the multi-protocol support
+    /// table (`MVP2_OVERVIEW.md` §7.1), and the `openvpn` Cargo feature flag
+    /// (§1.5) is an empty placeholder (`openvpn = []`). Selecting this
+    /// variant MUST return `HelixError::UnsupportedProtocol` in MVP2 builds.
+    /// Reconciled in Revision 2 — earlier drafts of `README.md` listed
+    /// OpenVPN alongside WireGuard/Shadowsocks/MASQUE as if fully supported;
+    /// that line has been corrected.
     OpenVPN,
 }
 
@@ -835,15 +868,99 @@ pub struct VpnConfig {
     pub log_level: String,           // "trace", "debug", "info", "warn", "error"
 }
 
+/// Wire-format connection status surfaced to every platform binding.
+///
+/// **Revision 2 fix**: this enum previously modeled only six coarse states
+/// and collapsed "reconnecting after a keepalive timeout" and "kill switch
+/// actively blocking traffic" into a generic `Error`/`Disconnecting` state —
+/// a real UX gap, since a user cannot distinguish "temporarily blocked while
+/// the tunnel silently re-establishes" from "something is broken" without a
+/// dedicated state. This enum is now the literal wire representation of the
+/// canonical state machine in `MVP2_ARCHITECTURE.md` §5.6 — every platform
+/// UI's connection-state rendering (§UI_UX_SPEC "State Transitions") MUST
+/// switch over exactly this set, with no platform-invented additional state.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 pub enum ConnectionStatus {
     Disconnected,
     Connecting,
     Connected,
+    /// Handshake or keepalive lost; attempting to re-establish. Distinct
+    /// from `Connecting` (first connection) for UI messaging purposes.
+    Reconnecting,
+    /// Reconnect exceeded the grace period AND kill switch is enabled: all
+    /// non-VPN traffic is being actively blocked at the platform firewall
+    /// layer (see `MVP2_SECURITY_PERFORMANCE.md` §2).
+    KillSwitchActive,
     Disconnecting,
+    /// Initial connection attempt failed (timeout / handshake error), prior
+    /// to ever reaching `Connected`. Distinct from `Reconnecting`, which
+    /// implies a prior successful connection.
+    ConnectionFailed,
     Error,
     Unknown,
 }
+
+/// Enterprise-managed policy pushed from the `helix-admin` control plane
+/// (`MVP2_ARCHITECTURE.md` §10.2) via the MVP1 Admin API. Consumed by
+/// `PlatformAdapter::apply_managed_policy` (`MVP2_ARCHITECTURE.md` §5.5).
+/// A `None`/absent policy means the device is not MDM-enrolled and all
+/// settings remain fully user-controlled.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct ManagedPolicy {
+    pub organization_id: String,
+    pub allowed_protocols: Vec<ProtocolType>,
+    pub force_kill_switch: bool,
+    pub force_split_tunnel_rules: Option<SplitTunnelConfig>,
+    pub forced_dns_servers: Vec<String>,
+    pub require_sso_login: bool,
+    /// Monotonically increasing version so a device can detect and log a
+    /// stale/rolled-back policy push instead of silently reapplying it.
+    pub policy_version: u64,
+}
+```
+
+#### `ConnectionStatus` state machine (diagram)
+
+The diagram below is the literal state machine the `ConnectionStatus` enum
+above encodes — the same FSM every platform UI renders (`MVP2_ARCHITECTURE.md`
+§5.6; `MVP2_DESKTOP_APPS.md` §5.4; `MVP2_MOBILE_APPS.md` §2.2). It adds no
+transition not already described by the enum's own doc comments.
+
+```mermaid
+stateDiagram-v2
+    [*] --> Disconnected
+
+    Disconnected --> Connecting: connect()\n(HelixVpnApi.connect)
+
+    Connecting --> Connected: handshake succeeds\n(protocol_driver.handshake() OK)
+    Connecting --> ConnectionFailed: timeout / handshake error\n(never reached Connected)
+
+    ConnectionFailed --> Connecting: retry
+    ConnectionFailed --> Disconnected: user cancels / disconnect()
+
+    Connected --> Reconnecting: handshake/keepalive lost\n(distinct from Connecting: a prior\nsuccessful connection existed)
+    Reconnecting --> Connected: tunnel re-established
+
+    Reconnecting --> KillSwitchActive: reconnect exceeds the grace\nperiod AND kill_switch_enabled\n(all non-VPN traffic blocked,\nMVP2_SECURITY_PERFORMANCE.md §2)
+    KillSwitchActive --> Connected: reconnect succeeds\nwhile the block was held
+    KillSwitchActive --> Reconnecting: still retrying\n(traffic remains blocked)
+
+    Connected --> Disconnecting: disconnect()
+    Reconnecting --> Disconnecting: disconnect()
+    KillSwitchActive --> Disconnecting: disconnect()\n(firewall rules torn down)
+    Disconnecting --> Disconnected: engine.disconnect() completes
+
+    Disconnected --> [*]
+
+    note right of ConnectionFailed
+        Error / Unknown are generic FFI
+        fallback variants for genuinely
+        unclassifiable conditions -- not
+        part of this lifecycle. Every
+        platform UI renders them with the
+        ConnectionFailed treatment
+        (MVP2_DESKTOP_APPS.md §5.4).
+    end note
 ```
 
 ### 3.2 FFI Boundary Definitions (C ABI)
@@ -1649,22 +1766,32 @@ impl MultiHopChain {
 
 ### 5.1 Supported Targets Table
 
-| Platform | Target Triple | Rust Tier | Min OS Version | Build Tool | Notes |
+| Platform | Target Triple | Rust Tier | Min OS Version (product-supported) | Build Tool | Notes |
 |----------|--------------|-----------|----------------|------------|-------|
-| macOS Intel | `x86_64-apple-darwin` | Tier 2 | macOS 11+ | cargo | Universal binary with arm64 |
-| macOS Apple Silicon | `aarch64-apple-darwin` | Tier 2 | macOS 11+ | cargo | Universal binary with x86_64 |
+| macOS Intel | `x86_64-apple-darwin` | Tier 2 | macOS 12+ | cargo | Universal binary with arm64 |
+| macOS Apple Silicon | `aarch64-apple-darwin` | Tier 2 | macOS 12+ | cargo | Universal binary with x86_64 |
 | iOS Device | `aarch64-apple-ios` | Tier 2 | iOS 15+ | cargo | XCFramework |
 | iOS Simulator | `aarch64-apple-ios-sim` | Tier 2 | iOS 15+ | cargo | Apple Silicon sim |
 | Windows x64 | `x86_64-pc-windows-msvc` | Tier 1 | Windows 10+ | cargo | MSVC toolchain |
 | Windows ARM64 | `aarch64-pc-windows-msvc` | Tier 2 | Windows 11+ | cargo | Cross-compiled |
-| Linux x64 | `x86_64-unknown-linux-gnu` | Tier 1 | Linux 5.4+ | cargo/cross | glibc target |
-| Linux ARM64 | `aarch64-unknown-linux-gnu` | Tier 1 | Linux 5.4+ | cross | Server/embedded |
-| Android ARM64 | `aarch64-linux-android` | Tier 2 | API 24+ | cargo-ndk | Primary mobile |
-| Android ARMv7 | `armv7-linux-androideabi` | Tier 2 | API 24+ | cargo-ndk | Legacy devices |
-| Android x86_64 | `x86_64-linux-android` | Tier 2 | API 24+ | cargo-ndk | Emulators |
-| HarmonyOS | `aarch64-unknown-linux-ohos` | Tier 2 | HarmonyOS 4+ | cross + OHOS SDK | OpenHarmony target |
-| Aurora OS | `aarch64-unknown-linux-gnu` | Tier 1 | Sailfish 4+ | cross | Standard Linux ARM |
-| Web | `wasm32-unknown-unknown` | Tier 2 | Modern browsers | wasm-pack | Browser crypto only |
+| Linux x64 | `x86_64-unknown-linux-gnu` | Tier 1 | Ubuntu 22.04+ / Fedora 39+ (kernel 5.4+) | cargo/cross | glibc target |
+| Linux ARM64 | `aarch64-unknown-linux-gnu` | Tier 1 | Ubuntu 22.04+ / Fedora 39+ (kernel 5.4+) | cross | Server/embedded |
+| Android ARM64 | `aarch64-linux-android` | Tier 2 | API 26+ (Android 8.0+) | cargo-ndk | Primary mobile |
+| Android ARMv7 | `armv7-linux-androideabi` | Tier 2 | API 26+ (Android 8.0+) | cargo-ndk | Legacy devices |
+| Android x86_64 | `x86_64-linux-android` | Tier 2 | API 26+ (Android 8.0+) | cargo-ndk | Emulators |
+| HarmonyOS | `aarch64-unknown-linux-ohos` | Tier 2 | HarmonyOS NEXT 5.0+ (API 12+) | cross + OHOS SDK | OpenHarmony target |
+| Aurora OS | `aarch64-unknown-linux-gnu` | Tier 1 | Aurora OS 4.x+ (Sailfish OS-derived) | cross | Standard Linux ARM |
+| Web | `wasm32-unknown-unknown` | Tier 2 | Chrome 90+, Firefox 88+, Edge 90+, Safari 15+ | wasm-pack | Browser crypto only |
+
+> **Reconciliation note (Revision 2):** this table previously stated a looser
+> *Rust-toolchain* floor (e.g., macOS 11+, Android API 24+, "Sailfish 4+")
+> that is technically buildable but does not match the *product-supported*
+> minimum OS versions declared in `MVP2_ARCHITECTURE.md` §1.2 and
+> `MVP2_OVERVIEW.md` §4.1 — the values a QA matrix, app-store listing, or
+> support policy would actually use. The "Min OS Version" column now states
+> the product-supported minimum; where the Rust toolchain can technically
+> target an older OS, that is a build-system implementation detail, not a
+> customer-facing commitment, and is not tracked here.
 
 ### 5.2 Cargo Configuration
 
@@ -1891,9 +2018,101 @@ cargo build --release --target x86_64-pc-windows-msvc
 wasm-pack build --target web --out-dir pkg/ --profile release-wasm
 ```
 
+### 5.5 Supply-Chain & Build Integrity (New in Revision 2)
+
+The previous draft specified *what* to build for each target but not how to
+prove *what actually got built* — a genuine enterprise-readiness gap given
+that a VPN client is exactly the kind of security-sensitive binary a
+security-conscious customer (or their procurement/compliance team) will
+demand provenance for. This subsection is the architectural contract; the
+release-process detail (signing, attestation storage, canary gating) lives
+in `MVP2_SECURITY_PERFORMANCE.md` §10.
+
+**Reproducible builds.** Every one of the 14 target triples in §5.1 MUST
+build deterministically from a pinned toolchain and lockfile:
+
+```toml
+# rust-toolchain.toml (repo root — pins the exact toolchain for every CI runner)
+[toolchain]
+channel = "1.78.0"
+components = ["rustfmt", "clippy"]
+targets = [
+    "x86_64-apple-darwin", "aarch64-apple-darwin",
+    "aarch64-apple-ios", "aarch64-apple-ios-sim",
+    "x86_64-pc-windows-msvc", "aarch64-pc-windows-msvc",
+    "x86_64-unknown-linux-gnu", "aarch64-unknown-linux-gnu",
+    "aarch64-linux-android", "armv7-linux-androideabi", "x86_64-linux-android",
+    "aarch64-unknown-linux-ohos", "wasm32-unknown-unknown",
+]
+```
+
+- `cargo build --locked` is mandatory in CI (never `cargo update` inside a
+  release build) — `Cargo.lock` is committed and treated as a release
+  artifact, not a convenience file.
+- `SOURCE_DATE_EPOCH` is pinned to the release-tag commit's author timestamp
+  so embedded build timestamps do not vary run-to-run.
+- A quarterly "reproducibility drill" rebuilds the last released tag from a
+  clean checkout on a second, independent CI runner and diffs the resulting
+  artifact hashes — this is the anti-bluff check for the reproducibility
+  claim itself, not just a one-time assertion.
+
+**Software Bill of Materials (SBOM).** Every release artifact ships a
+companion SBOM generated in CI, never hand-maintained:
+
+| Artifact class | SBOM Tool | Format |
+|-----------------|-----------|--------|
+| Rust core (all 14 targets) | `cargo-cyclonedx` | CycloneDX JSON |
+| Tauri desktop bundles (npm + cargo deps) | `syft` (dir scan of the built `.app`/`.msi`/`.AppImage`) | CycloneDX JSON + SPDX |
+| Flutter mobile bundles (pub + cargo deps) | `cyclonedx-flutter` plugin + `cargo-cyclonedx` merge | CycloneDX JSON |
+| Browser extension (npm deps + WASM) | `syft` | CycloneDX JSON |
+
+SBOMs are attached to the GitHub Release alongside the signed artifact and
+its checksum file, and are diffed release-to-release in CI — a dependency
+appearing in the diff that was not part of the reviewed PR set fails the
+release gate (supply-chain injection detection). `cargo audit` and
+`cargo vet` (already part of the CI pipeline per §7.5) remain the
+vulnerability/provenance checks; SBOM generation is the disclosure artifact
+enterprise customers request, not a replacement for those checks.
+
 ---
 
 ## 6. FFI & Binding Generation
+
+The diagram below is the architecture overview this document previously
+lacked (`docs/research/CROSS_CUTTING_GAP_ANALYSIS.md` §3.2): the
+`helix-core` crate's internal module boundaries (§1.4, §2) on top, the
+single `HelixVpnApi` public-API entry point (§3.1) all bindings call
+through, and the concrete FFI mechanism (§3.2–§3.6, detailed per-target
+below in §6.1–§6.6) each platform surface actually uses to reach it.
+
+```mermaid
+flowchart TB
+  subgraph CORE["helix-core Rust workspace crate (§1.4 Crate Structure)"]
+    direction TB
+    LIBRS["lib.rs -- public API surface,\nfeature flags (§1.5, §2.1)"]
+    ENGINEMOD["engine/ -- HelixEngine + HelixVpnApi\n(§2.2, §3.1 single entry point)"]
+    SUBSYS["protocol/ . crypto/ . tun/ . routing/ .\nfirewall/ . dns/ . obfuscation/ . utils/"]
+    PLATFORMMOD["platform/ -- PlatformAdapter trait +\nper-binding glue (§3.2-§3.6)"]
+    LIBRS --> ENGINEMOD
+    ENGINEMOD --> SUBSYS
+    ENGINEMOD --> PLATFORMMOD
+  end
+
+  PLATFORMMOD -->|"C ABI (§3.2) + UniFFI\nKotlin bindings (§3.3/§6.1-6.2)"| ANDROIDNATIVE["Android native bridge\n(HelixRustBridge JNI wrapper,\nMVP2_MOBILE_APPS.md §2.2)"]
+  PLATFORMMOD -->|"UniFFI Swift bindings\n(§3.3/§6.1/§6.3)"| IOSNATIVE["iOS NEPacketTunnelProvider\n(native Swift extension)"]
+  PLATFORMMOD -->|"flutter_rust_bridge\n(§3.6/§6.4, Dart FFI)"| FLUTTERUI["Flutter Dart UI\n(Android/iOS/HarmonyOS config +\nstatus, MVP2_MOBILE_APPS.md §5)"]
+  PLATFORMMOD -->|"Tauri Command API\n(§3.5, in-process Rust)"| TAURICMD["Tauri #[command] handlers\n(macOS/Windows/Linux,\nMVP2_DESKTOP_APPS.md)"]
+  PLATFORMMOD -->|"wasm-bindgen (§6.5)"| WASMMOD["helix-crypto WASM module\n(browser: crypto only, no in-tab\ntunnel, MVP2_WEB_CLIENT.md §2.9)"]
+  PLATFORMMOD -->|"cbindgen C header (§6.6)"| CQTMOD["C ABI consumed by Qt6/C++\n(Aurora OS, MVP2_AURORA_CLIENT.md)"]
+
+  ANDROIDNATIVE --> ANDROIDVPN["HelixVpnService\n(Android VpnService, foreground\nservice, §2.2-§2.10)"]
+  FLUTTERUI --> ANDROIDVPN
+  IOSNATIVE --> IOSTUN["NEPacketTunnelProvider\ntunnel process"]
+  FLUTTERUI --> HARMONYVPN["VpnExtensionAbility\n(HarmonyOS)"]
+  TAURICMD --> DESKTOPUI["Tauri webview UI\n(React/TS)"]
+  WASMMOD --> WEBUI["Browser Extension /\nAdmin Panel / PWA"]
+  CQTMOD --> AURORAUI["QML UI\n(Silica Ambiance)"]
+```
 
 ### 6.1 UniFFI Setup for Kotlin (Android) and Swift (iOS)
 

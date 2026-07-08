@@ -1,7 +1,7 @@
 # Screens — Helix Console (admin web/desktop app)
 
-**Revision:** 1
-**Last modified:** 2026-06-25T12:00:00Z
+**Revision:** 2
+**Last modified:** 2026-07-04T12:00:00Z
 
 > Master technical specification — Volume 10 (Design System), nano-detail
 > deep-dive. This document **owns** the complete screen inventory and per-screen
@@ -605,7 +605,7 @@ destination, flow, or bandwidth record — by construction (C3 [CP §0.1/§2.4])
 │ TIME (UTC)   │ ACTOR    │ ACTION             │ TARGET / META               │
 ├──────────────┼──────────┼────────────────────┼────────────────────────────┤
 │ 12:04:31     │ alice    │ device.revoke      │ dev-31 (old-laptop)         │
-│ 12:03:10     │ system   │ policy.activate    │ v8  → see Policy editor      │
+│ 12:03:10     │ system   │ policy.activate    │ v8 → see Policy editor      │
 │ 12:01:55     │ bob      │ device.enroll      │ connector warehouse-gw      │
 │ 11:58:02     │ carol    │ prefixes.change    │ +10.20.0.0/24 on conn-B     │
 │ 11:40:18     │ alice    │ user.role.change   │ carol member→operator       │

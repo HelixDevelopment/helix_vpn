@@ -1,7 +1,7 @@
 # render_mermaid_blocks.py — companion guide
 
-**Revision:** 1
-**Last modified:** 2026-06-26T00:00:00Z
+**Revision:** 2
+**Last modified:** 2026-07-04T16:45:00Z
 
 ## Overview
 
@@ -54,6 +54,21 @@ Proven across all 8 diagram types the spec uses.
   `validate_mermaid_blocks.md`) — a render failure is a real defect, not a
   tooling glitch.
 - **No mermaid fences**: the input is copied verbatim.
+- **Every diagram fails with a bare, unhelpful "[object Object]" / "Failed to
+  launch the browser process!"** (2026-07-04 root-caused via a direct
+  `puppeteer.launch({dumpio: true})` probe — not guessed): `mmdc`'s bundled/
+  cached Puppeteer-downloaded Chromium build can fail to launch on some hosts
+  (observed cause on this host: the cached build under `~/.cache/puppeteer`
+  would not start; a system-package-installed `chromium` with its shared-lib
+  deps resolved by the OS package manager launched fine). The script now
+  auto-discovers a system `chromium`/`chromium-browser`/`google-chrome`/
+  `google-chrome-stable` on `PATH` at import time and, if found, writes a
+  throwaway Puppeteer config (`executablePath` + `--no-sandbox`) passed to
+  `mmdc -p`; if none is found, it falls back to `mmdc`'s own default
+  resolution unchanged (so hosts where the bundled Chrome already works are
+  unaffected). Never hardcodes an absolute browser path in a tracked file —
+  discovered fresh via `PATH` every run, per the project's no-guessing /
+  resolve-by-stable-name discipline.
 
 ## Related scripts
 

@@ -1,7 +1,10 @@
 # Podman Quadlets (rootless — the canonical substrate)
 
-**Revision:** 2
-**Last modified:** 2026-06-26T12:00:00Z
+**Revision:** 3
+**Last modified:** 2026-07-04T12:00:00Z
+**Rev 3:** Added §4.1 (rate-limiting/DDoS cross-reference for the rootless single-node case —
+the transient-ban nftables rule from `05-repo-layout-tooling-and-helix-ecosystem.md §7.5` reuses
+this document's edge `NET_ADMIN` capability, no new capability required).
 
 > Master technical specification — Volume 6 (Deployment, Tooling & Operations), nano-detail
 > document. **[RES]** research-backed. Scope: the **canonical rootless Podman quadlet deployment**
@@ -281,6 +284,18 @@ sudo sysctl --system
 > §11.4.161 forbids rootful/`sudo` *container runtime* operations; it does not forbid the operator
 > from configuring their own host kernel. The distinction is documented so the rootless mandate is
 > not misread as "the host needs no privileged setup".
+
+---
+
+### 4.1 Rate limiting & DDoS (cross-reference)
+
+The edge's transient-ban mechanism for handshake-flood mitigation (§7.5 of
+`05-repo-layout-tooling-and-helix-ecosystem.md`, added this revision) installs short-TTL
+nftables/eBPF DROP rules for an offending source IP — this is the **same** verdict-map mechanism
+the policy compiler already programs into the edge (`01-data-plane.md`), and it requires **no
+capability beyond the `NET_ADMIN`/`NET_RAW` set already granted** in §3.2 above. No quadlet change
+is needed to support it; it is a data-plane software behavior inside the already-privileged edge
+container, not a new host-facing surface.
 
 ---
 

@@ -1,5 +1,8 @@
 # HelixVPN — Cross-Document Synthesis (evidence base for the master spec)
 
+**Revision:** 1
+**Last modified:** 2026-07-04T12:00:00Z
+
 > Distilled from full digests of all 16 source research docs in `docs/research/mvp/`
 > (11 LLM analyses 00/01/02/03/05/06/07/08/09/10/11 + the 5 `04_VPN_CLD` refined docs).
 > This is the cross-cutting synthesis; spec writers also read the original source docs

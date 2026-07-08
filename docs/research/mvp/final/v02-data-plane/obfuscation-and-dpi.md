@@ -1,7 +1,7 @@
 # Obfuscation & DPI/Censorship Landscape
 
-**Revision:** 1
-**Last modified:** 2026-06-25T00:00:00Z
+**Revision:** 2
+**Last modified:** 2026-07-04T12:00:00Z
 
 > Volume 2 (Data Plane) nano-detail specification. This document deepens the
 > *Obfuscation & DPI/Censorship Landscape* surface of the pass-1 data-plane

@@ -1,5 +1,8 @@
 # RESEARCH masque
 
+**Revision:** 1
+**Last modified:** 2026-07-04T12:00:00Z
+
 Web access: YES. Researched 2026-06-25. Topic: MASQUE (RFC 9298 CONNECT-UDP /
 9297 HTTP Datagrams / 9221 QUIC DATAGRAM) for tunnelling WireGuard over HTTP/3,
 Rust + Go ecosystem maturity, and how Mullvad ships WG-over-MASQUE QUIC

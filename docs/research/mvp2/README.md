@@ -1,10 +1,20 @@
 # Helix VPN — Phase 2 (MVP2) Client Applications
 ## Comprehensive Technical Specification Package
 
-**Version:** 1.0  
-**Date:** 2026-07-03  
-**Status:** Final Draft  
+**Revision:** 2
+**Last modified:** 2026-07-04T12:00:00Z
+
+**Version:** 1.1
+**Date:** 2026-07-03 (Revision 2: 2026-07-04)
+**Status:** Final Draft
 **Classification:** Internal — Development Team
+
+> **Revision 2 changelog:** deep gap-analysis + production-readiness
+> hardening pass across the full MVP2 corpus — reconciled cross-document
+> contradictions (timeline, minimum OS versions, protocol support claims)
+> and added Enterprise Hardening / Production Readiness sections plus
+> Mermaid architecture diagrams to every platform document. See
+> `MVP2_OVERVIEW.md` §7.8 for the consolidated summary of what changed.
 
 ---
 
@@ -29,9 +39,9 @@ This package contains the complete technical specification for **Helix VPN Phase
 
 - **Total Documentation:** 24,000+ lines across 10 specification documents
 - **Research Base:** 8 wide-exploration research briefs (8,300+ lines)
-- **Estimated Implementation:** 36 weeks with 11-person team
+- **Estimated Implementation:** 36 weeks (expected case; 30 weeks best case / 44 weeks worst case — see `MVP2_IMPLEMENTATION_ROADMAP.md` §13) with an 11-person team
 - **Code Reuse Target:** 70-85% across all platforms via Rust shared core
-- **Protocols Supported:** WireGuard, Shadowsocks, MASQUE/QUIC, OpenVPN
+- **Protocols Supported:** WireGuard (primary), Shadowsocks SIP022 AEAD-2022 (secondary), MASQUE/QUIC RFC 9298 (secondary), Multi-Hop (advanced). **OpenVPN is a reserved `ProtocolType` enum placeholder only** (`openvpn = []` empty Cargo feature flag) — not implemented or supported in MVP2; see `MVP2_SHARED_CORE.md` §2.3 and corrected in this revision (earlier drafts listed it as supported).
 
 ---
 
@@ -166,4 +176,4 @@ Read: Overview → Security & Performance → Shared Core (security section)
 
 ---
 
-*This documentation package was generated on 2026-07-03 as part of the Helix VPN MVP2 planning phase. All specifications are final draft and subject to engineering review before implementation begins.*
+*This documentation package was generated on 2026-07-03 as part of the Helix VPN MVP2 planning phase, and hardened for production-readiness on 2026-07-04 (Revision 2 — deep gap analysis, contradiction reconciliation, Enterprise Hardening sections, and Mermaid architecture diagrams across all ten specification documents). All specifications are final draft and subject to engineering review before implementation begins.*

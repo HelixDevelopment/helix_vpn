@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
   <meta charset="utf-8" />
-  <meta name="generator" content="pandoc" />
+  <meta name="generator" content="pandoc 3.10" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
   <title>DDoS / Load-Flood Test Strategy</title>
   <style>
@@ -154,8 +154,12 @@ padding-left: 0;
 text-decoration: none;
 }
 span.smallcaps{font-variant: small-caps;}
-div.columns{display: flex; gap: min(4vw, 1.5em);}
-div.column{flex: auto; overflow-x: auto;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
 div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
 
 ul.task-list[class]{list-style: none;}
@@ -239,8 +243,22 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; }
 </header>
 <h1 id="ddos--load-flood-test-strategy">DDoS / Load-Flood Test
 Strategy</h1>
-<p><strong>Revision:</strong> 2 <strong>Last modified:</strong>
-2026-06-26T12:00:00Z</p>
+<p><strong>Revision:</strong> 4 <strong>Last modified:</strong>
+2026-07-06T10:45:05Z</p>
+<blockquote>
+<p><strong>Rev 4 (2026-07-06):</strong> pinned quantitative design
+targets for NFR-413 (control-plane API rate-limit flood) and NFR-414
+(data-plane edge WG-init flood / fail-static) in a new §10 &quot;Quantitative
+design targets (Phase-2 calibration)&quot;. These are design targets to be
+calibrated during the Phase-2 <code>multi-tenant-ha</code> soak, not
+measured baselines.</p>
+<p><strong>Rev 3 (2026-07-04):</strong> independently re-verified
+against <code>SPECIFICATION.md</code> / <code>threat-model.md</code>
+during a corpus-wide gap-analysis pass; the anti-bluff rule (a flood
+test must prove the legitimate client stayed usable, not merely that the
+flood happened) is explicit and mechanically enforced (§4). No
+contradictions found.</p>
+</blockquote>
 <blockquote>
 <p><strong>Reconciled (§11.4.35, 2026-06-26):</strong> the
 <code>wg_init_flood</code> generator (§2, §8) now targets the
@@ -291,6 +309,8 @@ mutation</a></li>
 <li><a href="#8-test-skeletons">8. Test skeletons</a></li>
 <li><a href="#9-the-mvp-skip-record--re-arm-trigger">9. The MVP SKIP
 record + re-arm trigger</a></li>
+<li><a href="#10-quantitative-design-targets-phase-2-calibration">10.
+Quantitative design targets (Phase-2 calibration)</a></li>
 <li><a href="#sources-verified">Sources verified</a></li>
 </ul>
 <hr />
@@ -671,14 +691,80 @@ flips the cell from <code>NOT_APPLICABLE</code> to
 release-blocking. No code change is needed to re-arm — the bank already
 exists (QA-D2), satisfying the §11.4.6 &quot;the seam exists now&quot; discipline
 so Phase-2 cannot ship a DDoS gap by omission.</p>
-<p><strong>UNVERIFIED.</strong> The concrete design-attack-rate
-(<code>ATTACK_PPS</code>), the legit-handshake SLO budget under flood,
-and the supervisor restart budget are Phase-2 measured numbers, not yet
-results; they are stated as Phase-2 targets here and become facts only
-when the Phase-2 rig produces the CSVs. The WG cookie-reply
-effectiveness against the specific init-flood rate is asserted from the
-WireGuard design [01-DP] but <strong>UNVERIFIED</strong> for HelixVPN&#39;s
-edge until the Phase-2 bank runs.</p>
+<h2 id="10-quantitative-design-targets-phase-2-calibration">10.
+Quantitative design targets (Phase-2 calibration)</h2>
+<p>The following numbers are <strong>design targets</strong> for the
+Phase-2 DDoS bank, not measured baselines. They pin the attack rate and
+the legitimate-client SLO budgets that NFR-413 and NFR-414 must defend
+against. The values will be calibrated — and may be adjusted — during
+the Phase-2 <code>multi-tenant-ha</code> soak once the real edge and API
+gateway are exercised.</p>
+<table>
+<thead>
+<tr>
+<th>Target</th>
+<th>NFR</th>
+<th>Attack</th>
+<th>Legitimate-client SLO</th>
+<th>Rationale</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ATTACK_PPS_API</code></td>
+<td>NFR-413</td>
+<td>10 000 invalid control-plane requests/s sustained for 10 s against
+the API gateway / <code>SignDeviceCert</code> endpoint</td>
+<td>Legitimate enroll / <code>WatchNetworkMap</code> requests: p95
+latency &lt; 200 ms, zero HTTP 5xx, token-bucket rejections returned as
+429</td>
+<td>Representative of a distributed credential-stuffing / enroll flood;
+Redis-backed token bucket <code>[svc-pki §3.4]</code> must shed the
+attack without harming a real tenant client.</td>
+</tr>
+<tr>
+<td><code>ATTACK_PPS_EDGE</code></td>
+<td>NFR-414</td>
+<td>100 000 WG <code>MessageInitiation</code> packets/s (plain-WG port
+<code>udp/51820</code>) for 10 s</td>
+<td>Legitimate WG handshake p99 latency &lt; 2 × the unflooded baseline;
+no handshake timeout</td>
+<td>Stresses WG stateless cookie-reply anti-DoS <code>[01-DP]</code> and
+the edge&#39;s per-source rate limiter while a real enrolled peer handshakes
+concurrently.</td>
+</tr>
+<tr>
+<td><code>EDGE_FAILSTATIC</code></td>
+<td>NFR-414</td>
+<td>volumetric byte flood (<code>iperf3 -u</code>) at line rate on edge
+<code>:443</code></td>
+<td><code>helix_edge_up == 1</code> throughout, OR process restart ≤ 5 s
+with <strong>zero</strong> plaintext leak in
+<code>gap_pcap.pcap</code></td>
+<td>Composes with the kill-switch SLO: a stateless edge must drop excess
+and stay alive; if the supervisor restarts it, the restart gap must not
+emit user traffic in plaintext.</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Design-target honesty (§11.4.6).</strong> The table above
+states what the architecture is <strong>designed</strong> to withstand,
+not what has been measured. The Phase-2 soak will either validate these
+targets or produce a lower calibrated capability; in either case the
+coverage-ledger row for NFR-413/414 is updated with the measured number
+and the gate becomes release-blocking only against that calibrated
+value.</p>
+</blockquote>
+<p><strong>UNVERIFIED.</strong> The concrete values are now pinned as
+design targets in §10 (<code>ATTACK_PPS_API</code>,
+<code>ATTACK_PPS_EDGE</code>, <code>EDGE_FAILSTATIC</code>). They remain
+<strong>UNVERIFIED</strong> until the Phase-2
+<code>multi-tenant-ha</code> soak produces the captured CSVs. The WG
+cookie-reply effectiveness against the specific init-flood rate is
+asserted from the WireGuard design [01-DP] but
+<strong>UNVERIFIED</strong> for HelixVPN&#39;s edge until the Phase-2 bank
+runs.</p>
 <hr />
 <h2 id="sources-verified">Sources verified</h2>
 <ul>

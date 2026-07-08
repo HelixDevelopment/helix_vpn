@@ -1,7 +1,12 @@
 # Helix-ecosystem submodule integration
 
-**Revision:** 2
-**Last modified:** 2026-06-26T12:00:00Z
+**Revision:** 3
+**Last modified:** 2026-07-04T12:00:00Z
+**Rev 3:** Reviewed against the Volume-6 enterprise-hardening pass (2026-07-04). Submodule wiring
+and decoupling invariants already comprehensive; the `remote-testing-infra.md` PARKED status
+(noted in this doc's header) is confirmed still accurate — the file genuinely does not exist on
+disk, consistent with "PARKED... out of scope per the blueprint," not a stale claim. No gap found
+in scope. Revision bumped for the pass.
 
 > Master technical specification — Volume 6 (Deployment, Tooling & Operations), nano-detail
 > document `helix-ecosystem-integration.md`. Scope: **how HelixVPN wires every already-

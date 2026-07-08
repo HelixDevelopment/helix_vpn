@@ -1,5 +1,8 @@
 # RESEARCH mullvad
 
+**Revision:** 1
+**Last modified:** 2026-07-04T12:00:00Z
+
 Parity-bar research into Mullvad VPN's full current (2025–2026) feature set, for a
 self-hosted WireGuard-based reimplementation. Every claim cited inline; access date
 2026-06-25. All sources listed at the bottom.

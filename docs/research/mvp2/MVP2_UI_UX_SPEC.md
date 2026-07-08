@@ -1,5 +1,17 @@
 # MVP2 UI/UX Design System Specification
 
+**Revision:** 1
+**Last modified:** 2026-07-04T14:00:00Z
+
+> **Revision 1 changelog:** Added the mandatory OpenDesign cross-reference and token
+> reconciliation (§1.2/§1.3); extended §7.2 with the full canonical 7-state connection
+> lifecycle visual treatment (`Reconnecting`, `KillSwitchActive`, `ConnectionFailed`) plus a
+> `stateDiagram-v2` diagram; extended accessibility coverage with per-platform screen-reader
+> bridge mechanics, dynamic type, and touch-target specs (§7.8–§7.11); added §11 Localization
+> & i18n UX, §12 Biometric Auth Fallback UX, §13 Multi-Account/Profile Switching UX, §14
+> Enterprise SSO Login UX, and §15 Offline & Degraded-Network UI States (with a `flowchart`
+> precedence diagram); extended Appendix B with per-phase accessibility gates and a new Phase 6.
+
 ## Helix VPN Cross-Platform Design System
 
 **Version:** 1.0.0  
@@ -22,6 +34,11 @@
 8. [Iconography](#8-iconography)
 9. [Animation & Motion](#9-animation--motion)
 10. [Platform Adaptations](#10-platform-adaptations)
+11. [Localization & Internationalization (i18n) UX](#11-localization--internationalization-i18n-ux)
+12. [Biometric Authentication Fallback UX](#12-biometric-authentication-fallback-ux)
+13. [Multi-Account / Profile Switching UX](#13-multi-account--profile-switching-ux)
+14. [Enterprise SSO Login UX](#14-enterprise-sso-login-ux)
+15. [Offline & Degraded-Network UI States](#15-offline--degraded-network-ui-states)
 
 ---
 
@@ -81,6 +98,10 @@ tokens/
 --helix-primary-900: #00332C;
 ```
 
+**OpenDesign is the mandatory token authority (not an inspirational reference).** The tokens shown in this document are a platform-mapping restatement of the canonical, already-built **OpenDesign** system at [`docs/design/README.md`](../../design/README.md) — specifically [`docs/design/opendesign/helix/DESIGN.md`](../../design/opendesign/helix/DESIGN.md) (9-section spec), [`docs/design/opendesign/helix/tokens.css`](../../design/opendesign/helix/tokens.css) (canonical compiled CSS custom properties, `--hx-*` prefix), [`docs/design/opendesign/helix/manifest.json`](../../design/opendesign/helix/manifest.json), and [`docs/design/opendesign/helix/components.html`](../../design/opendesign/helix/components.html). Every one of the 8 platforms' UI implementations MUST build on these tokens — this is not one option among several. This document's role is narrower and downstream: it describes **how** the `--hx-*` OpenDesign tokens map onto each platform's native UI framework (React/Tauri consumes `--hx-*` CSS custom properties directly; Flutter/Dart's `ThemeData`/`CupertinoThemeData` are generated from the same token source; QML binds `property` declarations to them for Silica; the browser extension uses the same CSS variables) and the platform-specific interaction/screen-layout decisions built on top — it does **not** re-derive token values independently. Where this document uses an unprefixed or `--helix-*`-prefixed name (a naming convention that predates the OpenDesign consolidation, e.g. `--helix-primary-500`, `--space-4`, `--radius-md`), resolve it to the canonical `--hx-*` name in `tokens.css` (`--helix-primary-500` → `--hx-primary-500`, `--space-4` → `--hx-space-4`, `--radius-md` → `--hx-radius-md`) — values are identical, only the prefix differs, and `tokens.css` is authoritative on any future drift.
+
+**Token cross-check performed 2026-07-04:** every color hex code (§2), typography size/weight/line-height/letter-spacing value (§3), and spacing/border-radius value (§4.3/§4.5) in this document was diffed against `tokens.css` and `DESIGN.md`. Result: colors, typography, spacing, and border-radius are **consistent** (byte-identical). Two discrepancies were found and reconciled: (1) Appendix A's motion quick-sheet listed `Fast: 150ms` against the canonical `--hx-duration-fast: 100ms` — corrected there, see the inline note at Appendix A; (2) §2.2's "Semantic Opacity Variants" listed only the light-theme 0.12 alpha, omitting `tokens.css`'s distinct dark-theme 0.18 alpha override — noted inline at §2.2. No other mismatches found.
+
 ### 1.3 Cross-Platform Consistency Strategy
 
 The design system employs a **"unified core with native skin"** approach:
@@ -109,6 +130,8 @@ The design system employs a **"unified core with native skin"** approach:
 | - Menu   | - Silica    |             |   script    |
 +----------+-------------+-------------+-------------+
 ```
+
+**OpenDesign is the Core Layer.** The "Core Layer (Shared)" box above — color tokens, spacing, iconography, connection-state semantics, accessibility standards — **is** the OpenDesign token system (`docs/design/README.md`, §1.2 above), not a parallel or duplicate abstraction maintained independently in this document. Every platform-specific "Design Adjustment" in §10 is layered strictly on top of unmodified OpenDesign tokens: a platform adaptation may change layout, chrome, density, or interaction convention, but MUST NOT redefine a color, spacing, typography, or motion token value — e.g. Windows's 8px spacing density (§10.2) or macOS's 16px card radius (§10.1) are *component-level* choices built from the same `--hx-space-*`/`--hx-radius-*` primitives, never a fork of the primitive itself.
 
 ### 1.4 Accessibility First (WCAG 2.1 AA)
 
@@ -176,6 +199,8 @@ Semantic colors convey meaning universally across all platforms.
 --helix-warning-bg: rgba(245, 124, 0, 0.12);
 --helix-info-bg: rgba(25, 118, 210, 0.12);
 ```
+
+**Cross-checked against OpenDesign 2026-07-04 (§1.2):** these are the light-theme (default) alpha values and are consistent with `tokens.css`. The dark theme applies a distinct, intentionally higher alpha (**0.18**, not a re-inversion of 0.12) for these same six semantic backgrounds — see `tokens.css`'s `[data-theme="dark"]` block — for adequate visibility against dark surfaces. Implementers MUST reference `--hx-semantic-*-bg` (theme-aware) rather than hardcoding `0.12` in a dark-theme code path.
 
 ### 2.3 Latency Color Coding
 
@@ -951,6 +976,56 @@ DISCONNECTED -> CONNECTING -> CONNECTED
 | Page push (mobile) | 300ms | ease-in-out | translateX |
 | Bottom sheet | 300ms | ease-out | translateY |
 
+### 7.2.1 Full Connection-State Visual Treatment (Canonical 7-State Machine)
+
+§7.1's Phase 1-3 connect animation and "Disconnect Flow" cover only 3 of the 7 states in the canonical connection lifecycle state machine owned by `helix-vpn-engine` (`MVP2_ARCHITECTURE.md` §5.6, mirrored in `MVP2_SHARED_CORE.md`'s `ConnectionStatus` enum, Revision 2). No platform UI may invent additional states or skip a distinct treatment for any of the following — every platform's connection button, status text, glow/ring, and screen-reader announcement MUST switch over exactly this set:
+
+| State | Ring/Glow | Motion | Status Text | Screen-Reader Announcement | Notes |
+|---|---|---|---|---|---|
+| `Disconnected` | `--hx-semantic-disconnected` (#F44336), static, no glow | Static shield-off icon | "Disconnected" | "Disconnected. Not protected." | §6.1.2 / §6.2.1 |
+| `Connecting` | `--hx-semantic-connecting` (#FF9800) ring, solid rotating spinner | 360°/1500ms | "Connecting…" | "Connecting to \<server\>…" | First-ever handshake attempt, §7.1 Phase 1-2 |
+| `Connected` | `--hx-semantic-connected` (#4CAF50), pulsing glow | Checkmark scale-in, pulse loop | "Connected" | "Connected to \<server\>, \<n\> milliseconds latency" | §7.1 Phase 3 |
+| `Reconnecting` | `--hx-semantic-connecting` (#FF9800) ring, **dashed/broken segment** rotation — deliberately distinct from `Connecting`'s solid spinner | Dashed ring segment rotates, no checkmark | "Reconnecting…" (never plain "Connecting…") | "Connection lost, reconnecting automatically. Your traffic is paused." | Distinguishing this from `Connecting` is the UX gap `MVP2_SHARED_CORE.md` Revision 2 closed at the engine layer; this row is its UI-layer close-out |
+| `KillSwitchActive` | `--hx-semantic-error` (#D32F2F) solid ring, **no pulse** (deliberately static/alarming) + full-width banner | Static lock/shield-blocked icon | "Kill Switch Active — All traffic blocked" (persistent banner, never a toast) | "Kill switch active. All network traffic is blocked until the VPN reconnects." (`aria-live="assertive"`, interrupts other announcements) | MUST be visually distinct from generic `Error` — see banner spec below |
+| `Disconnecting` | Transitional `--hx-semantic-connected` → `--hx-semantic-disconnected` crossfade, 300ms | Brief spinner or simple fade, no checkmark | "Disconnecting…" | Skip announcement if state is <300ms (avoids AT chatter) | §7.1 "Disconnect Flow" |
+| `ConnectionFailed` | `--hx-semantic-error` (#D32F2F), static, one-time shake micro-interaction on entry (300ms, respects reduced-motion) | Alert-triangle icon | "Connection Failed" + inline retry button | "Connection failed. \<reason\>. Retry available." | Reached only from `Connecting` — never had a successful session yet; distinct from `Reconnecting` per `MVP2_SHARED_CORE.md` |
+
+**Kill Switch banner (all platforms):** a full-width, non-dismissible-until-state-exits banner using `--hx-semantic-error` at full opacity (not the 12%/18% tint used for inline hints elsewhere in this system) — the one semantic state where the strong, non-tinted color is intentional, since it communicates an active traffic block rather than an informational hint. Desktop: banner docked below the title bar. Mobile: banner docked below the app bar, persists across navigation while the state holds. Aurora: banner replaces the pulley-menu label area (§5.3.1). See `MVP2_SECURITY_PERFORMANCE.md` §2 for the fail-closed firewall behavior this banner reports on.
+
+```mermaid
+stateDiagram-v2
+    [*] --> Disconnected
+    Disconnected --> Connecting: user connects
+    Connecting --> Connected: handshake_complete
+    Connecting --> ConnectionFailed: timeout / handshake error
+    ConnectionFailed --> Disconnected: dismissed
+    ConnectionFailed --> Connecting: auto-retry
+    Connected --> Disconnecting: user disconnects
+    Connected --> Reconnecting: keepalive timeout
+    Reconnecting --> Connected: handshake_complete
+    Reconnecting --> KillSwitchActive: kill switch on + grace exceeded
+    Reconnecting --> Disconnected: kill switch off + exhausted
+    KillSwitchActive --> Reconnecting: connectivity restored
+    KillSwitchActive --> Disconnecting: user forces disconnect
+    Disconnecting --> Disconnected: teardown_complete
+
+    note right of Connected
+        Ring: solid green, pulsing glow
+    end note
+    note right of Reconnecting
+        Ring: amber, dashed/broken segment
+        rotation (distinct from Connecting's
+        solid spinner)
+    end note
+    note right of KillSwitchActive
+        Ring: solid red, NO pulse
+        + persistent full-width banner
+        (fail-closed, aria-live="assertive")
+    end note
+```
+
+This diagram is the UI-layer rendering companion to the authoritative engine state diagram in `MVP2_ARCHITECTURE.md` §5.6 — transition labels are abbreviated here for visual-treatment clarity; the engine document is authoritative for exact trigger conditions.
+
 ### 7.3 Pull-to-Refresh
 
 - Trigger: Pull down past 64dp on scrollable lists
@@ -1005,6 +1080,53 @@ DISCONNECTED -> CONNECTING -> CONNECTED
 - Status updates: "Connection lost, reconnecting"
 - Landmark regions: `main`, `navigation`, `complementary`
 - Skip links for main content
+
+### 7.8 Per-Platform Screen-Reader Bridge Mechanics
+
+§7.7 states the content-level requirements (`aria-label`, `aria-live`, landmarks). Five of this system's 8 platforms are **not** native-widget UI trees (Tauri = WebView-hosted HTML/CSS/JS, Flutter = Skia/Impeller-rendered widget tree, QML = Qt Quick scene graph), so the accessibility tree the OS screen reader walks is not automatically populated the way a native UIKit/AppKit/Win32 tree is — each framework requires an explicit bridge:
+
+| Platform | UI Tree | OS Screen Reader | Bridge Mechanism |
+|---|---|---|---|
+| macOS / Windows / Linux (Tauri) | WKWebView / WebView2 / WebKitGTK (HTML DOM) | VoiceOver / Narrator / Orca | The DOM `role`/`aria-*` attributes from §7.7 are read directly by the WebView's built-in accessibility adapter (WKWebView exposes the DOM tree to VoiceOver via `AXWebArea`; WebView2 via UIA; WebKitGTK via AT-SPI) — no additional native bridge code needed, but a `<div>` with only a click handler and no `role`/`aria-label` is invisible to the OS tree regardless of platform. |
+| Android / iOS / HarmonyOS (Flutter) | Skia/Impeller-rendered widget tree (not a native view hierarchy) | TalkBack / VoiceOver / HarmonyOS screen reader | Flutter's `Semantics` widget tree is compiled by the engine into the platform's native accessibility tree (`SemanticsNode` → Android `AccessibilityNodeInfo` / iOS `UIAccessibilityElement`). Every custom-painted widget (the connection toggle's glow ring, the speed-graph sparkline, §5.2.8) MUST be wrapped in an explicit `Semantics(label:, value:, button: true, liveRegion: true)` — Flutter does **not** infer semantics from pixels; an un-annotated `CustomPaint` is a silent accessibility hole. |
+| Aurora OS (Qt6/QML) | Qt Quick scene graph | Orca (via AT-SPI, where Aurora exposes it) / Aurora's Silica accessibility layer | Each interactive QML `Item` MUST set the `Accessible` attached property (`Accessible.role`, `Accessible.name`, `Accessible.description`) — Qt Quick items have no accessibility representation by default; custom `Item` subclasses used for the connection toggle (§5.3) and cover page (§5.3.7) MUST implement `QAccessibleInterface` or set the attached properties explicitly. |
+| Web Extension (React) | Browser DOM | NVDA / JAWS / VoiceOver / Orca (via the host browser) | Standard DOM ARIA, same mechanism as Tauri's WebView — the popup and options page ARE plain web pages read natively by the browser's own accessibility tree. |
+
+**Verification note:** a bridge that is wired but never exercised is unverifiable — screen-reader coverage MUST be confirmed by actually running the platform's screen reader against the rendered build (VoiceOver/TalkBack/Orca/NVDA), never by code-reading the `Semantics`/`aria-*`/`Accessible` annotations alone.
+
+### 7.9 Dynamic Type / Font-Scaling Support
+
+All ten typography tokens (§3.2) and four monospace tokens (§3.4) MUST scale with the platform's user-controlled text-size setting — a fixed-px implementation that ignores OS-level scaling is a WCAG 2.1 AA 1.4.4 (Resize Text) failure:
+
+| Platform | Mechanism | Scale Range | Layout Behavior at Max Scale |
+|---|---|---|---|
+| macOS / Windows / Linux (Tauri) | CSS `rem` units (already used throughout §3.2) respond to the OS/browser base font-size | Up to 200% (WCAG 1.4.4 minimum) | Server list item (§5.1.3) and settings row (§5.1.6) grow to accommodate wrapped labels rather than truncating; the 140px connection button does **not** scale — it is icon-only, text lives outside it |
+| Android (Flutter) | `MediaQuery.textScaler` — every `Text` widget MUST read the ambient text scaler, never a hardcoded `fontSize` | Up to 200% (Android "Font size" + "Display size", compounding) | Bottom nav labels truncate to icon-only beyond 150% scale; server list switches to two-line subtitle layout |
+| iOS (Flutter/Cupertino) | `MediaQuery.textScaler` mapped from `UIContentSizeCategory`, including the accessibility sizes (`AX1`-`AX5`, up to ~310%) | Up to ~310% (Dynamic Type accessibility range) | At `AX` sizes, `CupertinoListTile` rows support multi-line mode; the 140dp connection button remains fixed-size (icon+glow only) |
+| HarmonyOS (Flutter+ArkUI) | `MediaQuery.textScaler`, HarmonyOS system font-scale setting | Up to 200% | Same reflow rules as Android |
+| Aurora OS (QML/Silica) | Silica `Theme.fontSizeXXXXXX` tokens already scale with Aurora's system-wide "Font size" setting; QML text elements MUST bind to `Theme.fontSize*`, never a hardcoded `px` | Aurora's 5-step system font-size setting | Silica list items (§5.3.3) grow height automatically per Silica's own layout rules |
+
+### 7.10 Minimum Touch Target Sizes (Mobile)
+
+Per §1.4, all interactive elements on touch platforms (Android/iOS/HarmonyOS/Aurora) MUST provide a minimum hit target of **44×44dp/pt** (WCAG 2.1 AA 2.5.5), independent of the element's *visual* size:
+
+- Server list favorite star (visually 20px, §8.2) → hit target padded to 44×44dp via invisible tap-area expansion, not a visually larger icon.
+- Protocol badge (visually 20px tall, §5.1.4/§5.2.x) is informational-only, never itself a tap target — the entire server list row (64dp/72dp, already ≥44dp) is the tap target.
+- Swipe-action buttons (§7.4, 72dp width) already exceed the floor.
+- Connection toggle (140dp) exceeds the floor by a wide margin.
+- Toast dismiss `[X]` (§5.1.9, visually 16px icon) → 44×44dp tap area required despite the toast's compact 48px height — pad the touch zone around the icon rather than shrinking the toast to fit a small icon.
+
+### 7.11 Accessibility Testing Checklist (Per Phase)
+
+Extends Appendix B with a dedicated per-phase accessibility gate — a phase does not exit "done" until its row here is checked (see Appendix B for the phase-by-phase checklist this table pairs with):
+
+| Phase | Accessibility Gate |
+|---|---|
+| Phase 1 (Foundation) | Color contrast validated ≥4.5:1 body / ≥3:1 large-text + UI components, both themes, all custom palettes (§1.2 OpenDesign presets) |
+| Phase 2 (Core Components) | Every component has a keyboard-operable equivalent (§7.6) + an `aria-label`/`Semantics`/`Accessible.name` equivalent (§7.8) |
+| Phase 3 (Screen Layouts) | Landmark regions present (desktop/web); Flutter `Semantics` traversal order matches visual reading order; QML `Accessible` focus order matches visual order |
+| Phase 4 (Interactions) | Reduced-motion fallback verified per animation (§9.5); dynamic-type reflow verified at 150%/200%/max-scale (§7.9) on every screen |
+| Phase 5 (Polish) | Live screen-reader pass — VoiceOver (macOS+iOS), TalkBack (Android), NVDA + Orca (Linux), Narrator (Windows) — against the actual rendered build, not code inspection alone; 44×44dp touch-target audit (§7.10) on every tappable element |
 
 ---
 
@@ -1367,6 +1489,290 @@ All animations respect `prefers-reduced-motion: reduce`:
 
 ---
 
+## 11. Localization & Internationalization (i18n) UX
+
+### 11.1 RTL Layout Mirroring
+
+Helix VPN ships RTL locale support (Arabic, Hebrew, Persian, Urdu) across all 8 platforms. RTL is a full layout mirror, not a text-direction-only change — the following components have an explicit RTL variant:
+
+| Component | LTR Behavior | RTL Behavior |
+|---|---|---|
+| Navigation chevron (§8.2 `chevron-right`) | Points right (forward = deeper into hierarchy) | Points left — swap to a dedicated `chevron-left` icon asset, do **not** CSS-transform-mirror a right-pointing glyph (produces a visually "wrong" arrowhead on some icon sets) |
+| Server list row (§5.1.3/§5.2.2) | Flag+name left, chevron+badges right | Full row mirror: flag+name right, chevron+badges left — `dir="rtl"` (Tauri/React) / `Directionality.rtl` (Flutter) / `LayoutMirroring.enabled` (QML) |
+| Connection-flow animation (§7.1/§7.2.1) | N/A | Unchanged — the circular connect/disconnect ring is direction-agnostic by construction; explicitly exempted from RTL variants |
+| Swipe actions (§7.4, mobile) | Swipe left = delete, swipe right = quick-connect | **Swapped**: swipe right = delete, swipe left = quick-connect (swipe-to-reveal direction follows reading direction, not a fixed screen-edge convention) |
+| Push navigation transitions (§9.2) | Push slides in from right | Push slides in from left |
+| Speed graph / sparkline (§5.2.8) | Time flows left→right (oldest→newest) | Time flows right→left (oldest→newest); axis labels re-anchor |
+| Data usage indicator (§5.2.9) | Download left, Upload right | Download right, Upload left |
+| Toast slide-in (§5.1.9) | Slides in from top-right | Slides in from top-left |
+
+Numeric/monospace content (IP addresses, latency in ms, protocol badges "WG"/"OV"/"IK", key fragments) is **never mirrored** — digits and Latin-script protocol abbreviations retain LTR internal reading order even inside an RTL row, per the Unicode Bidi Algorithm's numeric-run handling. Wrap these spans in `dir="ltr"` (Tauri/React) or an explicit `TextDirection.ltr` override (Flutter) so the bidi algorithm doesn't reorder digit groups.
+
+### 11.2 String Length Variance
+
+English strings are the design baseline, but German and Finnish equivalents commonly run 30–50% longer (e.g. "Connection Failed" → "Verbindung fehlgeschlagen"; "Kill Switch Active" → "Tappokytkin aktiivinen"). The layout grid (§4) accommodates this — no string-bearing component may hard-clip text with `overflow: hidden` / `TextOverflow.clip` as its only behavior:
+
+- **Buttons (§5.1.1):** width is content-driven (`min-width` floor only), not fixed-width; a translated label exceeding ~2× the English baseline wraps to two lines (`min-height: 40px` becomes a floor, not a ceiling) rather than truncating or overflowing.
+- **Server list item title (§5.1.3/§5.2.2):** single-line ellipsis truncation is acceptable **only** for the city/region name; the state label ("Connected"/"Reconnecting"/etc., §7.2.1) is **never** ellipsis-truncated — a truncated safety-critical state word is a trust-defeating failure mode for a security product.
+- **Settings rows (§5.1.6/§6.2.3):** the 56px row height is a floor, not a ceiling — rows with a wrapped two-line label grow to 72px, divider grows with it.
+- **Toast notifications (§5.1.9):** `auto`-width up to 400px already; translations exceeding that wrap to a second line and grow height from 48px rather than truncating; auto-dismiss timing (4000ms) is held constant regardless of line count.
+- **Kill Switch banner (§7.2.1):** the highest-stakes string in the system — explicitly exempted from any truncation; no max-height, wraps freely.
+
+### 11.3 Locale-Aware Number & Date Formatting (Statistics Screens)
+
+The Connection Stats / Connection Details screens (§6.1.5, §6.2.5) MUST format per the active locale, not per a hardcoded en-US convention:
+
+- **Decimal/thousands separators:** "1.2 GB" (en-US) vs "1,2 GB" (de-DE, fr-FR) — resolved via the platform's locale-aware number formatter (`Intl.NumberFormat` for Tauri/React, `NumberFormat` from `intl`/`flutter_localizations` for Flutter, `Qt.locale().toString()` for QML) — never a hand-rolled string template with a hardcoded `.` or `,`.
+- **Date/duration display:** session duration (`Mono Large`, "02:34:18") is locale-invariant and stays as-is; any *calendar date* shown (e.g. subscription renewal date in Settings > Account) MUST use the locale's date format (`DD.MM.YYYY` vs `MM/DD/YYYY` vs ISO 8601) via the platform's date formatter, never a fixed pattern.
+- **RTL numeral note:** locales expecting Eastern Arabic numerals may render them via the platform's locale formatter; the monospace stat displays (§3.4) fall back to the platform's default numeral rendering for these glyphs, since the monospace technical font stack does not guarantee Eastern-Arabic-numeral coverage — verified per-locale during Phase 5 (§7.11) rather than assumed.
+
+---
+
+## 12. Biometric Authentication Fallback UX
+
+Android, iOS, and HarmonyOS gate app access behind biometric auth (§10.4/§10.5/§10.6). This section specifies the on-screen flow those platform sections reference but do not detail: failure, unavailability, non-enrollment, and lockout.
+
+### 12.1 First-Time Explainer Screen ("Why Is This Needed")
+
+Shown once, before the first biometric prompt is ever issued (not on every app launch):
+
+```
++---------------------------+
+|  [Shield+Fingerprint       |
+|      illustration]         |
+|                             |
+|   Protect your VPN app     |
+|                             |
+|  Face/Touch ID keeps your  |
+|  connection settings and   |
+|  account private if this   |
+|  device is shared or lost. |
+|                             |
+|  [ Enable Face ID    ]     |
+|  [ Not now            ]    |
++---------------------------+
+```
+
+- Title: Title Large. Body: Body Medium, secondary color.
+- Primary button triggers the OS biometric prompt; "Not now" routes to the PIN/passcode fallback (§12.3) as the standing app-lock mechanism instead — never leaves the app entirely unlocked.
+- Shown exactly once; the decision is persisted, never re-asked on cold start.
+
+### 12.2 Biometric Prompt States
+
+| State | Trigger | On-Screen Treatment |
+|---|---|---|
+| Prompting | App foreground after lock timeout | OS-native biometric sheet (Android `BiometricPrompt`, iOS `LAContext` Face/Touch ID sheet) — Helix VPN does **not** draw a custom biometric UI; a branded "waiting" screen (logo + "Unlock to continue") shows behind the OS sheet |
+| Success | Match confirmed | OS sheet dismisses; app content fades in, 200ms |
+| Failed (repeated) | No match / face not recognized | OS sheet shows its own native retry affordance; after 2 consecutive OS-reported failures, an inline hint appears: "Having trouble? Use PIN instead" → routes to §12.3 |
+| Unavailable (hardware absent/disabled) | `canEvaluatePolicy` / `BiometricManager` reports no hardware or disabled at OS level | Skip the biometric sheet entirely, route straight to §12.3 — never show a prompt the OS has already reported as unusable |
+| Not enrolled | `BIOMETRIC_ERROR_NONE_ENROLLED` / `LAError.biometryNotEnrolled` | One-time inline banner: "No Face ID/fingerprint set up on this device — using PIN" then route to §12.3; link to the OS enrollment settings page, never attempt to enroll biometrics from within Helix VPN |
+
+### 12.3 PIN / Passcode Fallback Screen
+
+```
++---------------------------+
+|      Enter your PIN        |
+|                             |
+|     [ ][ ][ ][ ]           |
+|                             |
+|   1  2  3                  |
+|   4  5  6                  |
+|   7  8  9                  |
+|      0  <-                 |
+|                             |
+|   Forgot PIN?              |
++---------------------------+
+```
+
+- 4-6 digit numeric keypad; digit dots fill left-to-right on entry.
+- Incorrect PIN triggers a horizontal shake micro-interaction (§9.4-style, 300ms, respects `prefers-reduced-motion`) + dots clear + red flash on the dot row (`--hx-semantic-error`).
+- "Forgot PIN?" routes to account recovery — never to a biometric-bypass shortcut.
+
+### 12.4 Lockout Messaging After N Failed Attempts
+
+| Failed Attempts | Treatment |
+|---|---|
+| 1-2 | Shake + clear only (§12.3), no additional messaging |
+| 3 | Inline warning banner above the keypad: "2 attempts remaining before temporary lockout" (`--hx-semantic-warning`) |
+| 5 | Keypad disables; full-screen lockout state replaces the PIN screen: "Too many attempts. Try again in 00:30." with a live countdown (Mono Medium); the timer is anchored server/OS-side, not a client-resettable timer |
+| Countdown elapsed | Keypad re-enables automatically, warning clears, attempt counter resets |
+| Repeated lockout cycles | Escalates to full account-level re-authentication rather than an indefinitely-repeating short lockout |
+
+Lockout copy uses `--hx-semantic-warning`, never `--hx-semantic-error` (reserved for Kill Switch, §7.2.1) — lockout signals "temporary friction," not "critical failure."
+
+---
+
+## 13. Multi-Account / Profile Switching UX
+
+Helix VPN supports switching between multiple accounts on one app instance (e.g. personal + work-issued accounts) without signing out and back in.
+
+### 13.1 Entry Point
+
+- **Desktop (§6.1.4 Settings):** avatar chip in the top-right of the Settings tab bar area, always visible once ≥1 account is signed in — tapping opens a dropdown/popover.
+- **Mobile (§6.2.3 Settings):** avatar at the top of the Settings screen's "Account" section, a tappable row labeled with the active account's display name + a "Switch" chevron.
+- **Aurora (§5.3.1 Pulley Menu):** "Switch account" pull-down item, since Aurora has no persistent settings-tab-bar chrome to anchor a corner avatar.
+
+### 13.2 Account-Switcher Panel
+
+```
++-------------------------------+
+|  Switch account            [X]|
++-------------------------------+
+| (*) [Avatar] Alex - Personal  |
+|     Connected - US East       |
+|                                |
+| ( ) [Avatar] Alex - Acme Corp  |
+|     Not connected             |
+|                                |
+| [+] Add another account       |
++-------------------------------+
+```
+
+- Active account: filled/selected row (`--hx-overlay-selected`), plus its own live connection-state dot (§7.2.1 state colors) inline — the panel doubles as an at-a-glance "which account is currently tunneling" view.
+- Inactive accounts show their last-known state as a muted/desaturated dot, never the live color palette.
+- "Add another account" routes to sign-in (email/password, social, or §14 SSO) as an *additional* login, never a replace-current-session action.
+
+### 13.3 Switch Confirmation / Loading State
+
+1. Tap target account row → row shows an inline spinner (24px, §9.3) replacing its radio dot, label changes to "Switching…".
+2. If the currently active account has a live tunnel, the switch first runs the standard Disconnecting flow (§7.2.1) for it **before** loading the target profile — a switch never silently leaves an orphaned tunnel running for the account being switched away from.
+3. On completion: full navigation reset to the target profile's home screen (§6.1.1/§6.2.1) — never a partial state merge between profiles' favorites, history, or settings.
+4. Failure: revert to the previous account's panel with an inline error on the failed target row ("Couldn't switch — try again") — never leave the UI in an ambiguous "which account is this" state.
+
+### 13.4 Per-Profile State Visual Distinction
+
+- A persistent, small account-name/avatar chip appears in the connection screen's app bar whenever ≥2 accounts are signed in on the device — hidden entirely in the single-account case.
+- Server favorites (§8.2 star), connection history, and split-tunneling config (§6.2.4) are strictly namespaced per account; switching swaps the entire favorites set and history — surfaced here because its *absence* is a privacy-relevant UX defect, not merely cosmetic.
+- Each account MAY use a distinct, deterministic (hash-of-account-id) avatar tint from the OpenDesign custom-palette preset set (§1.2 — Ocean Blue/Forest/Ruby/Amethyst/Midnight) purely as a passive disambiguator in the switcher panel and app-bar chip; this is cosmetic only and MUST NOT replace the primary brand teal used for the actual connection-state UI, which stays teal regardless of which account is active.
+
+---
+
+## 14. Enterprise SSO Login UX
+
+Organization-managed Helix accounts (provisioned via the MVP1 Admin API / MDM enrollment, `MVP2_ARCHITECTURE.md` §5.5/§10.2) authenticate via the organization's Identity Provider rather than Helix's own email/password or social login — MVP1's Authentication Service already supports OAuth2/OIDC, the protocol this flow drives.
+
+### 14.1 Entry Point — "Sign In With Your Organization"
+
+```
++-------------------------------+
+|      Sign in to Helix VPN      |
+|                                |
+|  [ Email                    ]  |
+|  [ Password                 ]  |
+|  [       Sign In            ]  |
+|                                |
+|  -- or --                      |
+|  [ G  Continue with Google  ]  |
+|  [ A  Continue with Apple   ]  |
+|                                |
+|  ------------------------------ |
+|  [ Sign in with your           |
+|      organization           ]  |
++-------------------------------+
+```
+
+- The organization SSO button is visually separated (its own divider, not grouped with social buttons) since it is a categorically different flow (domain-routed OIDC discovery, not a fixed-provider OAuth button).
+- Tapping it first prompts for the user's work email/organization identifier (to resolve which IdP to route to via OIDC discovery / registered domain), then performs the handoff below — never a generic "SSO" button with no routing step.
+
+### 14.2 System-Browser Handoff (Security-Driven UX Constraint)
+
+**This is a deliberate security constraint, not a missed polish opportunity:** the SSO flow MUST open the organization's IdP login page in the platform's system browser (`ASWebAuthenticationSession` on iOS, Chrome Custom Tabs on Android, the OS default browser process on desktop, `Qt.openUrlExternally` on Aurora) — **never an embedded WebView**. An embedded WebView under the app's own control could programmatically read the credential-entry DOM or intercept form submission; a system-browser session is isolated from the requesting app, shares the user's existing IdP session cookies (enabling silent SSO), and is the only surface that can satisfy an organization-mandated browser-based second factor (hardware-key prompts, device-trust checks).
+
+```
++-------------------------------+
+|      [Spinner]                 |
+|                                |
+|  Continuing in your browser…   |
+|                                |
+|  [ Cancel ]                    |
++-------------------------------+
+```
+
+- The app shows this holding screen (never a blank/frozen screen) the moment the system browser is invoked, with a visible "Cancel" returning to §14.1.
+- The app is backgrounded/occluded on mobile while the system browser is foreground — expected OS behavior, not a bug.
+
+### 14.3 Return-to-App State
+
+- **Mobile:** the IdP redirects via a registered custom URL scheme / Universal Link / App Link, which the OS routes back into Helix VPN; the app resumes on the holding screen (§14.2), transitions to "Signing you in…" while exchanging the auth code for tokens, then lands on the connection home screen (§6.2.1) scoped to the SSO-provisioned account.
+- **Desktop:** the IdP redirects to a local loopback URL (standard OAuth2 native-app loopback flow); the system-browser tab shows "You can close this window and return to Helix VPN," and the desktop holding screen auto-transitions the same way.
+- **Failure / user cancels in browser:** return to §14.1 with a non-alarming inline message ("Sign-in was cancelled" — `--hx-semantic-info`, not `--hx-semantic-error`, since user-initiated cancellation is not a failure state).
+- **Enterprise policy applied post-login:** any MDM-pushed `ManagedPolicy` (`MVP2_ARCHITECTURE.md` §5.5/§10.2 `apply_managed_policy`) takes visual effect immediately on first landing at the connection home screen — e.g. a locked server list shows a grayed-out picker with a "Managed by your organization" inline label rather than silently applying the policy with no visual acknowledgement.
+
+---
+
+## 15. Offline & Degraded-Network UI States
+
+Three real-world network conditions are common enough to warrant first-class, purpose-built UI states rather than a generic error toast (§5.1.9) — a toast is transient and easy to miss; these are persistent conditions that shape what a user can and cannot do right now.
+
+### 15.1 "No Network" (Device Has No Connectivity At All)
+
+```
++---------------------------------+
+| [Wifi-off icon]                  |
+|                                   |
+|   No internet connection          |
+|   Helix VPN needs a network        |
+|   connection to connect.           |
+|                                   |
+|   [ Retry ]                        |
++---------------------------------+
+```
+
+- Replaces the connection screen's primary content area; the connection toggle is shown disabled/grayed rather than hidden.
+- Detected via the platform's native connectivity API (`NWPathMonitor`-class API on iOS, `ConnectivityManager` on Android, `navigator.onLine` + `online`/`offline` events for Tauri/React, Aurora's ConnMan D-Bus state) — never inferred solely from a failed connect attempt (that conflates "no network" with "server unreachable," §15.2).
+- Auto-recovers the instant the OS reports connectivity restored; "Retry" remains as a manual override for flaky detection.
+- Server list, favorites, and settings remain browsable (local/cached data) — only the connection toggle and network-dependent actions are disabled.
+
+### 15.2 "Server Unreachable — Using Cached List"
+
+```
++---------------------------------+
+| Showing saved servers              |
+| Couldn't refresh - using           |
+| last known list (2 hours ago)      |
++---------------------------------+
+| [Server list, unchanged layout]    |
++---------------------------------+
+```
+
+- A persistent banner (`--hx-semantic-warning`, not `--hx-semantic-error` — stale-but-usable data is degraded, not failed) docked above the server list (§6.1.3/§6.2.2), never a toast.
+- States cache age using the locale-aware relative-time formatting from §11.3.
+- The list renders normally from cache — latency/load figures are visually marked stale (latency dot, §5.1.5, at 50% opacity with a "cached" tooltip) rather than showing confidently-wrong live-looking numbers.
+- Pull-to-refresh (§7.3) is the primary manual retry; the banner itself is also tappable and triggers the same refresh.
+
+### 15.3 "Reconnecting" Banner (Distinct From the `Reconnecting` Connection State)
+
+§7.2.1's `Reconnecting` is the VPN tunnel's own state (amber ring, dashed spinner) when a connected session's handshake drops. §15.3 covers a **different** case: the app's own background services (server-list refresh, account/session sync) losing connectivity to Helix's backend while the VPN tunnel itself may be in any state, including fully `Disconnected` — "the app can't reach Helix's servers" as opposed to "the VPN tunnel can't reach the destination network."
+
+```
++---------------------------------+
+| [Small spinner] Reconnecting to  |
+| Helix services...                |
++---------------------------------+
+```
+
+- A slim, non-blocking top-of-screen strip — lighter-weight than §15.2's banner, using `--hx-semantic-info` (not warning/error), since this is an expected, usually-brief transient.
+- Never appears simultaneously with the §7.2.1 `Reconnecting` tunnel-state ring in a way that could be misread as the same event — if both are true at once, the §15.1 "No Network" full-state treatment supersedes both.
+- Auto-dismisses on successful reconnection with no persistent trace (unlike §15.2's cache-age banner, which persists until a fresh successful fetch).
+
+### 15.4 State-Precedence Summary
+
+When multiple degraded conditions could apply simultaneously, exactly one is shown — never stack multiple banners:
+
+```mermaid
+flowchart TD
+    A{Device has network?} -->|No| B[15.1 No Network full-screen state]
+    A -->|Yes| C{VPN tunnel state?}
+    C -->|KillSwitchActive| D[7.2.1 Kill Switch banner - always wins, highest severity]
+    C -->|Reconnecting| E[7.2.1 amber ring - tunnel-level, on connection screen]
+    C -->|other| F{Backend / server-list reachable?}
+    F -->|No, cached data available| G[15.2 cached-list warning banner]
+    F -->|No heartbeat, tunnel unaffected| H[15.3 slim info strip]
+    F -->|Yes| I[Normal state, no banner]
+```
+
+---
+
 ## Appendix A: Token Reference Quick Sheet
 
 ### Colors
@@ -1396,21 +1802,26 @@ All animations respect `prefers-reduced-motion: reduce`:
 
 ### Animation
 ```
-Fast: 150ms, Base: 200ms, Slow: 300ms, Page: 400ms
+Fast: 100ms, Base: 200ms, Slow: 300ms, Page: 400ms
 Easing: cubic-bezier(0.4, 0, 0.2, 1)
 Spring: type-spring, damping: 20, stiffness: 300
 ```
+
+> **Reconciled to OpenDesign token `--hx-duration-fast` (2026-07-04)** — was `150ms`, corrected to `100ms` to match `docs/design/opendesign/helix/tokens.css`. This also matches this document's own §7.2 "Button press" (100ms) and §9.4 "Button press" (100ms) entries, which were already correct. The `150ms` value survives only as the deliberately non-tokenized §9.4 "Button hover" duration, which is distinct from the named `fast` token and is unaffected by this fix.
 
 ---
 
 ## Appendix B: Implementation Checklist
 
+Each phase below carries a companion accessibility gate from §7.11 — a phase is not "done" until both its own checklist and its §7.11 accessibility-gate row are green.
+
 ### Phase 1: Foundation
-- [ ] Define all design tokens in JSON
+- [ ] Define all design tokens in JSON (sourced from OpenDesign `tokens.css` — §1.2, no independent re-derivation)
 - [ ] Implement color system (dark + light themes)
 - [ ] Set up typography scale per platform
 - [ ] Configure spacing scale
 - [ ] Implement border radius tokens
+- [ ] §7.11 Phase 1 accessibility gate: contrast validated across both themes + all custom palettes
 
 ### Phase 2: Core Components
 - [ ] Button variants (primary, secondary, ghost, danger)
@@ -1421,6 +1832,7 @@ Spring: type-spring, damping: 20, stiffness: 300
 - [ ] Input fields
 - [ ] Modal/dialog
 - [ ] Toast notification
+- [ ] §7.11 Phase 2 accessibility gate: keyboard + screen-reader-bridge equivalent (§7.8) per component
 
 ### Phase 3: Screen Layouts
 - [ ] Desktop main window (connected/disconnected)
@@ -1430,27 +1842,39 @@ Spring: type-spring, damping: 20, stiffness: 300
 - [ ] Mobile server selection
 - [ ] Mobile settings
 - [ ] Mobile split tunneling
+- [ ] §7.11 Phase 3 accessibility gate: landmark regions + traversal/focus order verified
 
 ### Phase 4: Interactions
-- [ ] Connection flow animation
+- [ ] Connection flow animation (full 7-state machine, §7.2.1 — not just connect/disconnect)
 - [ ] State transitions
 - [ ] Pull-to-refresh
-- [ ] Swipe actions
+- [ ] Swipe actions (incl. RTL-mirrored direction, §11.1)
 - [ ] Long-press menus
 - [ ] Keyboard navigation
 - [ ] Screen reader support
+- [ ] §7.11 Phase 4 accessibility gate: reduced-motion + dynamic-type reflow verified at 150%/200%/max-scale
 
 ### Phase 5: Polish
-- [ ] Icon set implementation
+- [ ] Icon set implementation (incl. RTL-specific icon variants, §11.1)
 - [ ] Animation system
 - [ ] Reduced motion support
 - [ ] Platform-specific adaptations
 - [ ] Accessibility audit
 - [ ] Cross-platform consistency review
+- [ ] §7.11 Phase 5 accessibility gate: live screen-reader pass on rendered build (all 4 readers) + 44×44dp touch-target audit
+
+### Phase 6: Localization, Auth Edge Cases & Network Resilience (Revision 1)
+- [ ] RTL layout mirror implemented + verified for every component in §11.1's table (not CSS-transform-mirrored icons)
+- [ ] String-length stress test with German/Finnish pseudo-translations (§11.2) — no clipped state labels
+- [ ] Locale-aware number/date formatting on statistics screens (§11.3)
+- [ ] Biometric first-time explainer + PIN/passcode fallback + lockout messaging (§12)
+- [ ] Multi-account switcher entry point, panel, and per-profile state isolation (§13)
+- [ ] Enterprise SSO system-browser handoff (never embedded WebView) + return-to-app state (§14)
+- [ ] Offline / cached-list / reconnecting-banner states implemented with correct precedence (§15.4)
 
 ---
 
 *Document generated: July 2025*  
 *Version: 1.0.0-MVP2*  
 *Classification: Design System Specification*  
-*Total Platforms: 7 (macOS, Windows, Linux, Android, iOS, HarmonyOS, Aurora OS)*
+*Total Platforms: 8 (macOS, Windows, Linux, Android, iOS, HarmonyOS, Aurora OS, Web Extension) — corrected from "7"; Web Extension is documented throughout this file (§5.1.10, §6, §8.3) and is platform #8 in the OpenDesign coverage matrix, `docs/design/README.md` §2.*

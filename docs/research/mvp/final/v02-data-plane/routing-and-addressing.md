@@ -1,7 +1,7 @@
 # Overlay Routing & Addressing
 
-**Revision:** 1
-**Last modified:** 2026-06-25T00:00:00Z
+**Revision:** 2
+**Last modified:** 2026-07-04T12:00:00Z
 
 > Volume 2 (Data Plane) nano-detail specification — deepens the **Overlay addressing &
 > multi-network routing** section (§6) and the **Policy/ACL → AllowedIPs + verdict-map**
@@ -629,6 +629,91 @@ hand-partitioned CGNAT space, is the proven Tailscale model, and is IPv6-native 
 `helix-route` reserves the seam: a `RouteMap` MAY carry an alternative `Cgnat { slice: Ipv4Net }`
 next-hop class instead of a `Via6` class, decoded by an analogous `cgnat.rs` decoder. This MVP
 specifies **only the 4via6 path**; CGNAT is the documented escape hatch, not built in Phase 1.
+
+### 8.1 CGNAT fallback — concrete design (reversal path, D4 reversal criterion)
+
+> **Gap closed (2026-07-04, independent hardening pass).** §8's prior text reserved the
+> `Cgnat{slice}` seam by name but did not specify its mechanics. `decision-register.md` §6 names
+> the reversal trigger explicitly: *"4via6 client/OS support proves inadequate on a target
+> platform → fall back to documented per-network NAT (FR-303 already provisions it)."* A reversal
+> path that is only a struct name is not "already provisioned" — this subsection makes it
+> buildable without a fresh design cycle if the trigger fires.
+
+**Why CGNAT would ever be needed:** 4via6 requires the **client OS** to have a working IPv6
+stack up to the point of routing traffic into a synthesized `Via6` destination even when the
+*advertised* LAN is IPv4-only (§3). A platform/OS combination that cannot route IPv6 at all on
+its TUN/VPN interface (`UNVERIFIED`: no cited evidence any of the 8 target platforms lack this —
+flagged as the reversal precondition, not a known defect) would need every peer's traffic
+represented as IPv4 end-to-end. CGNAT 1:1 is that IPv4-only path.
+
+**Address-space carve-out.** `100.64.0.0/10` (RFC 6598, Shared Address Space) is reserved
+entirely for HelixVPN's CGNAT fallback — never used for anything else, so activating the
+fallback for one tenant cannot collide with another tenant's 4via6-native traffic on the same
+gateway:
+
+```
+100.64.0.0/10  =  100.64.0.0 – 100.127.255.255   (4 194 304 addresses, /10)
+Per-tenant slice: /10 partitioned into up to 256 tenant /18s (100.64.0.0/18, 100.64.64.0/18, …)
+                  each /18 = 16 384 addresses = up to 64 sites of /24 (site = /24 slice of the tenant /18)
+```
+
+```rust
+// helix-route/src/cgnat.rs  (Phase-2-conditional; built only if D4 reverses per decision-register §6)
+use std::net::Ipv4Addr;
+use ipnet::Ipv4Net;
+
+pub type TenantCgnatSlot = u8;   // 0..=255, one /18 per tenant within 100.64.0.0/10
+pub type CgnatSiteId    = u8;   // 0..=63,  one /24 per site within the tenant's /18
+
+/// A tenant's CGNAT /18 within the shared 100.64.0.0/10 space (RFC 6598).
+pub fn tenant_slice(slot: TenantCgnatSlot) -> Ipv4Net {
+    let base = u32::from(Ipv4Addr::new(100, 64, 0, 0)) + ((slot as u32) << 14); // /18 stride = 2^14
+    Ipv4Net::new(Ipv4Addr::from(base), 18).expect("valid /18 within 100.64/10")
+}
+
+/// A site's /24 within its tenant's /18 — the 1:1-NAT target range for that connector's LAN.
+pub fn site_slice(slot: TenantCgnatSlot, site: CgnatSiteId) -> Ipv4Net {
+    let base = u32::from(tenant_slice(slot).network()) + ((site as u32) << 8); // /24 stride = 2^8
+    Ipv4Net::new(Ipv4Addr::from(base), 24).expect("valid /24 within tenant /18")
+}
+
+/// 1:1 host mapping: the Nth host of the served LAN <-> the Nth host of the CGNAT /24 slice.
+/// Symmetric with `via6::encode_host` (§3.1) but IPv4-only — no v6 anywhere on this path.
+pub fn map_host(slot: TenantCgnatSlot, site: CgnatSiteId, lan_host_offset: u8) -> Ipv4Addr {
+    let slice_base = u32::from(site_slice(slot, site).network());
+    Ipv4Addr::from(slice_base + lan_host_offset as u32)
+}
+```
+
+**Worked example (mirrors §3.1's 4via6 example so the two schemes are directly comparable):**
+tenant assigned CGNAT slot `3` ⇒ tenant /18 = `100.64.192.0/18`. Connector A serving
+`192.168.1.0/24`, site `0` ⇒ CGNAT slice `100.64.192.0/24`; host `192.168.1.10` (offset `10`)
+⇒ `100.64.192.10`. Connector B, also serving `192.168.1.0/24`, site `1` ⇒ CGNAT slice
+`100.64.193.0/24`; the identical host ⇒ `100.64.193.10` — **distinct address, no collision**,
+the same collision-firewall property as 4via6 (§3.1), traded against a **64-site-per-tenant
+ceiling** instead of 4via6's 65 536.
+
+**FIB and policy integration.** `Fib`/`NextHop` (§5) and `VerdictRule` (§6.1) are IPv6-typed
+(`Ipv6Net`) because R4 mandates ACLs target the overlay, never raw v4 (§12). The CGNAT fallback
+does **not** relax R4: a `Cgnat`-class route is still reached via the client's IPv6 overlay
+tunnel to the gateway (the gateway terminates WireGuard over IPv6 exactly as today); only the
+**LAN-side NAT target** — the address the connector 1:1-NATs into — changes from a 4via6-derived
+v6-embedded-v4 to a CGNAT v4 slice. Concretely: `PeerRoute.allowed_ips` still carries the
+tenant's IPv6 prefixes; a new `PeerRoute.cgnat_route: Option<CgnatRoute>` field carries
+`{ slot, site, lan_cidr }` for the connector's own NAT table, decoded by `cgnat.rs` exactly as
+`via6::decode` does for the `Via6` class (§3.1) — same validation discipline (`OverlapAdvertise`,
+`DuplicateSiteId`-equivalent `DuplicateCgnatSite`, reject-not-fix, §4.1).
+
+**What does NOT change:** the overlay is still IPv6-native end-to-end (§2); only the connector's
+NAT-back target address family changes. This means CGNAT is a **connector-local NAT-table
+config change**, not a re-architecture — consistent with the reversal being "additive, no
+client break" per `decision-register.md` §6.
+
+**Scale ceiling (the honest tradeoff, §11.4.6):** 256 tenants × 64 sites × 254 usable hosts ≈
+4.1M mapped hosts total across the *entire* `100.64.0.0/10` space shared by every tenant on a
+gateway — materially smaller than 4via6's per-tenant 65 536-site ceiling (§8 table). This is
+why CGNAT remains the **fallback**, never the default: it is provisioned to be buildable on
+short notice, not to be equally scalable.
 
 ---
 

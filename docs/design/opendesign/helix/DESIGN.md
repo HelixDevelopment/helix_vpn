@@ -1,7 +1,7 @@
 # Helix VPN Design System
 > Category: Security & Privacy
 
-Enterprise-grade cross-platform VPN client design system. Spans 8 platforms (macOS, Windows, Linux, Android, iOS, HarmonyOS, Aurora OS, Web Extension) with shared Rust core (`helix-core`), three UI frameworks (Tauri v2 + React for desktop, Flutter + Dart for mobile, Qt6/QML for Aurora), and WASM-based crypto for web. Mandatory light+dark themes, fully customizable color palettes, WCAG 2.1 AA accessibility.
+Enterprise-grade cross-platform VPN client design system. Spans 8 platforms (macOS, Windows, Linux, Android, iOS, HarmonyOS, Aurora OS, Web (browser extension)) with shared Rust core (`helix-core`), three UI frameworks (Tauri v2 + React for desktop, Flutter + Dart for mobile, Qt6/QML for Aurora), and WASM-based crypto for web. Mandatory light+dark themes, fully customizable color palettes, WCAG 2.1 AA accessibility.
 
 ---
 
@@ -33,7 +33,7 @@ Bleeding-edge enterprise quality. Glassmorphism and subtle depth for elevated su
 | **iOS** | Cupertino design | SF Symbols, blur materials, inset grouped lists |
 | **HarmonyOS** | ArkUI + HarmonyOS Sans | Service widgets, distributed capabilities |
 | **Aurora OS** | Silica UI, dark-first, gesture-driven | Pulley menus, Cover pages, ambiance integration |
-| **Web Extension** | Compact, browser-native | Popup UI (react), toolbar badge, options page |
+| **Web (browser extension)** | Compact, browser-native | Popup UI (react), toolbar badge, options page |
 
 ---
 
@@ -198,7 +198,7 @@ Font: `JetBrains Mono`, `Fira Code`, `SF Mono`, `Cascadia Code`
 | iOS (Flutter) | SF Pro Text/Display (Cupertino) |
 | HarmonyOS | HarmonyOS Sans |
 | Aurora OS | Sailfish Silica |
-| Web/Extension | Inter, system-ui, -apple-system, sans-serif |
+| Web (browser extension) | Inter, system-ui, -apple-system, sans-serif |
 
 ---
 
@@ -384,7 +384,7 @@ All components ship in light + dark theme variants and are responsive across the
 - Dialog (full-width stacked actions)
 - Slider (4px track, 20px thumb)
 
-#### Web Extension
+#### Web (browser extension)
 - Popup UI (380px × 480px max)
 - Toolbar action badge (connection state color dot)
 - Options page (600px, tabbed)

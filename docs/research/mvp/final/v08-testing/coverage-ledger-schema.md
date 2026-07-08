@@ -1,7 +1,13 @@
 # Coverage Ledger — feature × test-type × evidence-state schema (§11.4.25/.52/.153/.169)
 
-**Revision:** 2
-**Last modified:** 2026-06-26T12:00:00Z
+**Revision:** 3
+**Last modified:** 2026-07-04T12:00:00Z
+
+> **Rev 3 (2026-07-04):** independently re-verified against `SPECIFICATION.md` /
+> `10-testing-acceptance-and-qa.md` during a corpus-wide gap-analysis pass; the
+> schema-enforced `evidence_path`/`artifact_md5` CHECK constraints (§3) genuinely
+> make an unevidenced `AUTONOMOUS_VERIFIED` cell unrepresentable, which is the
+> strongest anti-bluff property in the whole volume. No contradictions found.
 
 > **Reconciled (§11.4.35, 2026-06-26):** two fixes. (1) §1 Axis-B now states the
 > test-type set consistently as **16 bundled families / 18 enumerated codes** (the

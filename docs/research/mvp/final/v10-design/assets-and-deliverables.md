@@ -1,7 +1,7 @@
 # Assets & deliverables manifest — every design resource, in every form, for every app and platform
 
-**Revision:** 1
-**Last modified:** 2026-06-25T12:00:00Z
+**Revision:** 2
+**Last modified:** 2026-07-04T12:00:00Z
 
 > Master technical specification — Volume 10 (Design System), nano-detail anchor
 > document. This doc is the **complete deliverables manifest** for the HelixVPN

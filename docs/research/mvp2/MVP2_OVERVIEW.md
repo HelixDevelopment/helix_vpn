@@ -1,14 +1,25 @@
 # Helix VPN -- Phase 2 (MVP2) Client Applications -- Comprehensive Specification
 
+**Revision:** 2
+**Last modified:** 2026-07-04T12:00:00Z
+
 | Field | Value |
 |-------|-------|
-| **Version** | 1.0 |
+| **Version** | 1.1 |
 | **Date** | 2026-07-03 |
 | **Status** | Draft for Review |
 | **Classification** | Internal -- Engineering Confidential |
 | **Author** | Technical Architecture Team |
 | **Audience** | Executive Leadership, Engineering Leads, Platform Teams, DevOps, Security Review, QA |
 | **Next Review** | 2026-07-17 |
+
+> **Revision 2 changelog (2026-07-04):** Deep gap-analysis + production-readiness
+> hardening pass across the full MVP2 corpus. Fixed the stale §8.1 document
+> registry (it referenced never-delivered filenames), reconciled the
+> best-case/expected/worst-case timeline against `MVP2_IMPLEMENTATION_ROADMAP.md`,
+> and added explicit cross-references to the new Enterprise Hardening
+> sections added to every platform document. See each linked document's own
+> revision header for its specific changes.
 
 ---
 
@@ -63,12 +74,27 @@ MVP2 is governed by three non-negotiable architectural pillars:
 
 | Dimension | Estimate |
 |-----------|----------|
-| **Total Development Duration** | 30 weeks (7.5 months) across 8 implementation phases |
+| **Total Development Duration** | 30 weeks best case / **36 weeks expected (planning baseline)** / 44 weeks worst case, across 9 implementation phases |
 | **Estimated Lines of Code (Rust Core)** | ~23,000 lines (shared across all platforms) |
 | **Estimated Lines of Code (Platform-Specific)** | ~6,500 lines (UI + adapters combined) |
 | **Shared Code Ratio** | 70-85% depending on platform |
-| **Team Size** | 8-12 engineers (2 core Rust, 2 desktop, 3 mobile, 1 Aurora/Qt, 1 web, 1 DevOps) |
+| **Team Size** | 8-12 engineers (11 is the planning-baseline headcount: 2 core Rust, 2 desktop, 3 mobile, 1 Aurora/Qt, 1 web, 1 DevOps, 1 floating QA/security) |
 | **CI/CD Targets** | 14+ build artifacts per release cycle |
+
+> **Reconciliation note (Revision 2):** earlier drafts of this table and of
+> `MVP2_ARCHITECTURE.md` §7.1 quoted an unbuffered **30-week** figure taken
+> directly from summing each phase's nominal duration with no schedule risk
+> applied. `MVP2_IMPLEMENTATION_ROADMAP.md` §13 ("Risk-Adjusted Timeline") is
+> the authoritative, detailed, per-phase schedule: it models the same 30-week
+> figure as the **20%-probability best case**, and derives a
+> **36-week expected case (60% probability)** and a **44-week worst case
+> (20% probability)** by adding phase-specific contingency buffers (entitlement
+> review delays, store review latency, cross-compilation toolchain friction).
+> This document and `README.md` now use the 36-week **expected/planning**
+> figure for staffing and stakeholder commitments, while still surfacing the
+> 30-week best case as the optimistic floor. Treat `MVP2_IMPLEMENTATION_ROADMAP.md`
+> §11-§13 as the single source of truth for schedule and headcount; this table
+> is a summary only.
 
 ---
 
@@ -86,6 +112,20 @@ Phase 2 (MVP2): Client Applications (8 platforms)       [THIS DOCUMENT]
 Phase 3 (MVP3): Enterprise Features & Ecosystem         [PLANNED]
 Phase 4 (MVP4): Advanced Anti-Censorship & Post-Quantum  [PLANNED]
 ```
+
+> **Flagged inconsistency (found 2026-07-04, NOT silently corrected here — see
+> `docs/research/UNIFIED_PHASE_ROADMAP.md` §4.2 "Narrative B" + open decision
+> R-2).** The "`[COMPLETED]`" framing of Phase 1/MVP1 below — including a
+> "globally distributed WireGuard server fleet" and "`[COMPLETED]`" billing
+> integration — does **not** match the actual, current Phase 0/1 specification
+> in `docs/research/mvp/final/SPECIFICATION.md` §8.1: a single self-hostable
+> control-plane MVP, not yet built, with billing explicitly out of scope until
+> the Phase-3 "billing-optional" epic (`HVPN-P3-E24`). This reads as carried-over
+> boilerplate from a generic SaaS-VPN framing rather than a description of
+> *this* project's actual state. It is intentionally left as-is here (correcting
+> the narrative is a product-framing decision for the operator, not something a
+> documentation-hardening pass should do unilaterally — §11.4.35) and is tracked
+> as an open item at `UNIFIED_PHASE_ROADMAP.md` R-2.
 
 ### 3.2 MVP1 Scope (Completed Deliverables)
 
@@ -478,26 +518,62 @@ Client --> [Entry Node: WireGuard] --> [Exit Node: WireGuard] --> Internet
 - Latency penalty: typically 15-30% increase over single-hop
 - Available on all platforms except Web (which lacks TUN access)
 
+### 7.8 Enterprise & Production Readiness Additions (Revision 2)
+
+The initial MVP2 draft focused heavily on consumer-facing VPN mechanics
+(protocols, kill switch, split tunneling). This revision closes the
+enterprise-operations and production-hardening gaps identified in the
+cross-document gap analysis. Each row is detailed in the cited platform
+document's own "Enterprise Hardening" / "Production Readiness" section.
+
+| Concern | Summary | Primary Document |
+|---------|---------|-------------------|
+| **Multi-Account / Profile Switching** | A single app install supports switching between multiple Helix accounts (personal + team/family plan), with isolated per-profile settings, keys, and connection history | `MVP2_UI_UX_SPEC.md` §UX flows, `MVP2_DESKTOP_APPS.md` / `MVP2_MOBILE_APPS.md` Enterprise Hardening |
+| **Enterprise SSO** | Organization-configured SAML/OIDC login via system browser (`ASWebAuthenticationSession`/Custom Tabs on mobile, system browser on desktop), bridging to the MVP1 Authentication Service's existing OAuth2/OIDC support | `MVP2_SECURITY_PERFORMANCE.md`, per-platform Enterprise Hardening sections |
+| **MDM & Centralized Policy Push** | Bulk configuration and policy enforcement (forced kill switch, allowed protocols, DNS policy) pushed from the `helix-admin` dashboard via the MVP1 Admin API to enrolled devices — macOS/Windows Configuration Profiles + Group Policy/Intune, Android Enterprise managed configuration, Apple MDM managed app config, Chrome/Firefox enterprise extension policies | `MVP2_SECURITY_PERFORMANCE.md` §10 (new), per-platform Enterprise Hardening sections |
+| **License / Entitlement Checks** | Subscription/plan-tier verification against the Client API with a signed, tamper-evident offline-grace cache so connectivity briefly surviving an API outage does not silently disable protection | `MVP2_SECURITY_PERFORMANCE.md`, per-platform Enterprise Hardening sections |
+| **Crash Reporting & Telemetry (Privacy-First)** | Opt-in, privacy-scrubbed crash reporting (Sentry or equivalent) and aggregated, anonymized telemetry gated behind an explicit first-run consent screen with granular toggles, feeding the MVP1 Utils Service | `MVP2_SECURITY_PERFORMANCE.md` §10 (new) |
+| **Update Rollback & Staged/Canary Rollout** | Every platform's auto-update mechanism supports a canary ring (internal → 1% → 10% → 50% → 100%) with automatic rollback on crash-rate/error-rate regression, coordinated through the MVP1 Utils Service feature-flag system | `MVP2_SECURITY_PERFORMANCE.md` §10 (new), `MVP2_IMPLEMENTATION_ROADMAP.md` |
+| **Supply-Chain Security** | Reproducible Rust core builds (`cargo --locked`, pinned toolchain), per-artifact SBOM generation (`cargo-cyclonedx`/`syft`), and signed release manifests across all 14+ build artifacts | `MVP2_SHARED_CORE.md` §5.3 (new), `MVP2_SECURITY_PERFORMANCE.md` §10 (new) |
+| **Accessibility & Localization** | WCAG 2.1 AA target across all platform UI layers (screen reader bridges for Tauri/Flutter/QML non-native widget trees), full i18n string externalization, and RTL layout support | `MVP2_UI_UX_SPEC.md` (expanded) |
+| **Offline / Degraded-Network Behavior** | Defined reconnect/backoff strategy, cached-server-list TTL, and explicit UI states for no-network and degraded-network conditions rather than treating them as unhandled edge cases | `MVP2_UI_UX_SPEC.md`, per-platform Enterprise Hardening sections |
+| **Design-System Consistency** | The OpenDesign token system (`docs/design/README.md`) — light/dark themes, brand colors, typography, spacing, component tokens — is the mandatory basis for every platform's UI, not an aspirational reference | `MVP2_UI_UX_SPEC.md` §1 |
+
 ---
 
 ## 8. Documentation Structure
 
 ### 8.1 MVP2 Document Registry
 
-The following documents comprise the complete MVP2 specification suite:
+The following documents comprise the complete MVP2 specification suite. **Revision 2
+correction:** the table below previously referenced ten never-created filenames
+(`MVP2_DESKTOP.md`, `MVP2_MOBILE.md`, `MVP2_AURORA.md`, `MVP2_WEB.md`,
+`MVP2_SECURITY.md`, `MVP2_DEVOPS.md`, `MVP2_QA.md`) all marked "Planned" — these
+were the working titles from the original `plan.md` Stage 3 brief (16 documents
+planned). During synthesis, DevOps/CI-CD, QA/Testing, and Security/Performance
+content was consolidated into fewer, denser documents rather than split as
+originally scoped; the table now reflects the actual delivered filenames and
+their **Final Draft** status.
 
-| # | Document Name | File Path | Description | Target Audience | Est. Size |
+| # | Document Name | File Path | Description | Target Audience | Actual Size |
 |---|--------------|-----------|-------------|-----------------|-----------|
-| 1 | **MVP2 Overview** (this document) | `MVP2_OVERVIEW.md` | Executive summary, platform matrix, architecture overview, success criteria, risk summary | Executives, Engineering Leads, PMs | ~650 lines |
-| 2 | **MVP2 Architecture & Technology Stack** | `MVP2_ARCHITECTURE.md` | Detailed architecture decisions, technology justifications, code reuse analysis, data flow diagrams, implementation roadmap | Engineering Leads, Platform Teams, DevOps | ~1,258 lines |
-| 3 | **MVP2 Shared Core Specification** | `MVP2_SHARED_CORE.md` | `helix-core` API design, module architecture, protocol implementations, FFI bindings, testing strategy, security architecture, performance budgets | Rust Core Team, Platform Engineers, Security Review | ~2,483 lines |
-| 4 | **MVP2 Desktop Specification** | `MVP2_DESKTOP.md` | Tauri v2 application spec, IPC commands, UI components, platform-specific desktop integration, bundling | Desktop Team, UI Engineers | Planned |
-| 5 | **MVP2 Mobile Specification** | `MVP2_MOBILE.md` | Flutter application spec, FRB integration, platform channel design, mobile UI patterns, store submission | Mobile Team, UI Engineers | Planned |
-| 6 | **MVP2 Aurora OS Specification** | `MVP2_AURORA.md` | Qt6/QML application spec, C FFI bridge, ConnMan integration, Sailfish Silica UI patterns | Aurora Platform Team | Planned |
-| 7 | **MVP2 Web Extension Specification** | `MVP2_WEB.md` | Browser extension spec, WASM crypto, proxy modes, native messaging, PWA companion | Web Team | Planned |
-| 8 | **MVP2 Security & Compliance** | `MVP2_SECURITY.md` | Threat model, security audit requirements, compliance checklists (SOC2, GDPR), penetration testing scope | Security Team, Compliance Officers | Planned |
-| 9 | **MVP2 DevOps & CI/CD** | `MVP2_DEVOPS.md` | Build pipeline, cross-compilation setup, artifact distribution, OTA updates, monitoring | DevOps Team | Planned |
-| 10 | **MVP2 QA & Testing** | `MVP2_QA.md` | Test plans per platform, automated testing framework, performance benchmarks, acceptance criteria | QA Team | Planned |
+| 1 | **MVP2 Overview** (this document) | `MVP2_OVERVIEW.md` | Executive summary, platform matrix, architecture overview, success criteria, risk summary | Executives, Engineering Leads, PMs | ~700 lines |
+| 2 | **MVP2 Architecture & Technology Stack** | `MVP2_ARCHITECTURE.md` | Detailed architecture decisions, technology justifications, code reuse analysis, data flow diagrams, connection lifecycle state machine, enterprise hardening overview | Engineering Leads, Platform Teams, DevOps | ~1,350 lines |
+| 3 | **MVP2 Shared Core Specification** | `MVP2_SHARED_CORE.md` | `helix-core` API design, module architecture, protocol implementations, FFI bindings, testing strategy, security architecture, performance budgets, supply-chain/build-integrity | Rust Core Team, Platform Engineers, Security Review | ~2,550 lines |
+| 4 | **MVP2 Desktop Specification** | `MVP2_DESKTOP_APPS.md` | Tauri v2 application spec (macOS/Windows/Linux), IPC commands, UI components, code-signing/notarization, MDM/enterprise deployment, auto-update + rollback | Desktop Team, UI Engineers | ~3,225+ lines |
+| 5 | **MVP2 Mobile Specification** | `MVP2_MOBILE_APPS.md` | Flutter application spec (Android/iOS/HarmonyOS), FRB integration, platform channel design, mobile UI patterns, app-store review, MDM/managed config, background execution limits | Mobile Team, UI Engineers | ~4,924+ lines |
+| 6 | **MVP2 Aurora OS Specification** | `MVP2_AURORA_CLIENT.md` | Qt6/QML application spec, C FFI bridge, ConnMan integration, Sailfish Silica UI patterns, Aurora Store submission | Aurora Platform Team | ~2,564+ lines |
+| 7 | **MVP2 Web Extension Specification** | `MVP2_WEB_CLIENT.md` | Browser extension spec, WASM crypto, proxy modes, native messaging, PWA companion, store review, enterprise policy push | Web Team | ~2,785+ lines |
+| 8 | **MVP2 Security & Performance** | `MVP2_SECURITY_PERFORMANCE.md` | Threat model, kill switch, leak prevention, obfuscation, performance budgets, CI/CD build pipeline, supply-chain security, staged/canary rollout, compliance checklists (SOC2, ISO 27001, GDPR) | Security Team, DevOps, Compliance Officers | ~2,304+ lines |
+| 9 | **MVP2 UI/UX Design Specification** | `MVP2_UI_UX_SPEC.md` | OpenDesign-token-based design system, component library, screen specifications, accessibility, localization/i18n | UI/UX Designers, Platform Teams | ~1,456+ lines |
+| 10 | **MVP2 Implementation Roadmap** | `MVP2_IMPLEMENTATION_ROADMAP.md` | 36-week phased plan (9 phases) with milestones, acceptance criteria, risk-adjusted timeline, team structure | Engineering Leads, PMs | ~2,553+ lines |
+
+> Note: the original `plan.md` Stage 3 brief additionally scoped standalone
+> `MVP2_TECHNOLOGY_STACK.md`, `MVP2_BUILD_SYSTEM.md`, `MVP2_TESTING_QA.md`,
+> `MVP2_API_REFERENCE.md`, and `MVP2_DEVELOPMENT_GUIDE.md` documents. Their
+> content was folded into documents 2, 3, 8, and 10 above rather than
+> maintained as separate files — this is a deliberate consolidation, not a
+> scope gap. See `plan.md`'s Revision 2 note for the full reconciliation.
 
 ### 8.2 Document Reading Guide
 
@@ -545,7 +621,7 @@ The following documents comprise the complete MVP2 specification suite:
 
 | ID | Criterion | Desktop Target | Mobile Target | Measurement Method |
 |----|-----------|---------------|---------------|-------------------|
-| SC-11 | Code reuse | >= 70% across all platforms | Source code analysis (LOC) |
+| SC-11 | Code reuse | >= 70% across all platforms | >= 70% across all platforms (same cross-platform target, not desktop/mobile-differentiated) | Source code analysis (LOC) |
 | SC-12 | Bundle size | < 15 MB compressed | < 25 MB compressed | `ls -la` of release artifact |
 | SC-13 | Connection time | < 1 second | < 2 seconds | WireGuard handshake duration timer |
 | SC-14 | Kill switch response | < 100 ms | < 200 ms | tcpdump + kernel timestamp analysis |

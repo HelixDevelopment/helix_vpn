@@ -1,7 +1,9 @@
 # HarmonyOS NEXT shim (Network Kit VPN)
 
-**Revision:** 1
-**Last modified:** 2026-06-25T00:00:00Z
+**Revision:** 2
+**Last modified:** 2026-07-04T12:00:00Z
+**Rev 2:** Added an AppGallery review/distribution compliance note to §12 — closing a
+gap identified in an independent enterprise-hardening pass over Volume 4.
 
 > Master technical specification — Volume 4 (Clients), document
 > `v04-client/shim-harmonyos.md` of the HelixVPN set. It **deepens** the
@@ -661,6 +663,23 @@ contents (§11.4.10 credentials never logged).
 The OHOS target triple, the VPN permission identifier, and the `oh-package.json5`
 native-module declaration are **UNVERIFIED** DevEco/SDK specifics — each is a
 Phase-3 latest-source verification (§11.4.99), not a memorized constant.
+
+### 12.1 AppGallery review + distribution (engineering-relevant subset)
+
+Huawei AppGallery applies its own review to apps declaring a VPN-class ability
+(`VpnExtensionAbility`) — an engineering-schedulable dependency of the Phase-3 plan,
+not a submission-day surprise: (a) the `ohos.permission.VPN`-class permission
+(exact identifier **UNVERIFIED**, §12) is a sensitive-permission category subject to
+functional-claim review (the app must genuinely establish a VPN, not merely declare
+the permission); (b) a privacy-disclosure + data-handling statement consistent with
+the no-durable-traffic-log architecture (`v05-security/no-logging-as-code.md`) is
+required, mirroring the Play/App-Store data-safety-form expectation on the other two
+mobile platforms; (c) HarmonyOS app signing/certification runs through Huawei's own
+AppGallery Connect + DevEco pipeline (§12), a separate credential + lead-time chain
+from the Apple/Google/Microsoft ones. Recommendation: budget AppGallery review lead
+time into the Phase-3 exit-gate schedule (`09-phase3-reach-wbs.md`) alongside the
+HarmonyOS shim implementation effort itself, since the two are independent critical-path
+items (implementation can finish while review is still pending).
 
 ---
 

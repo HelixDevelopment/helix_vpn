@@ -1,7 +1,15 @@
 # Personas, Jobs-to-be-Done & the RBAC Role Model
 
-**Revision:** 2
-**Last modified:** 2026-06-26T12:00:00Z
+**Revision:** 3
+**Last modified:** 2026-07-04T12:00:00Z
+
+> **Rev 3 (2026-07-04, independent gap-analysis pass).** §2.2 (business-admin /
+> tenant-owner) JTBD extended with the MSP-operator's incident-response and
+> compliance-reporting concerns — an operator running networks for several
+> client tenants needs an audit trail it can *export per-incident* and *reason
+> about across tenants it administers*, not only view live in Console. No other
+> change; the four-axis model, RBAC enum, and persona↔role mapping are unchanged
+> and remain reconciled to `svc-identity.md`.
 
 > **Reconciled (§11.4.35, 2026-06-26):** the RBAC role set is fixed to the
 > authoritative `svc-identity.md` enum `{member, operator, admin}` (+ **Device**,
@@ -149,11 +157,12 @@ that are not yet a fixed acceptance gate are marked `UNVERIFIED`.
 | **Drives** | Helix Console (Web responsive + Desktop — same Flutter build, **no tunnel core**) [00 §5, §5.2] |
 | **System role** | none in the data path — Console is API-client-only, drives the Gateway control plane [00 §5] |
 | **RBAC role** | **Admin** (the top RBAC role; tenant-ownership is a host/deployment privilege, not an RBAC role) |
-| **JTBD** | (1) CRUD tenants/users/devices/networks/routes/policies; (2) see/revoke devices instantly; (3) author default-deny ACLs that compile to reachability; (4) read a control-action audit trail; (5) optionally manage multi-tenant billing |
+| **JTBD** | (1) CRUD tenants/users/devices/networks/routes/policies; (2) see/revoke devices instantly; (3) author default-deny ACLs that compile to reachability; (4) read a control-action audit trail; (5) optionally manage multi-tenant billing; (6) **for an MSP administering several client tenants:** export an audit slice for a single incident/tenant on demand (compliance reporting to that client), and run a first-response revoke/isolate action within the same <1 s enforcement guarantee as any other device revoke |
 | **Primary journey** | log in (OIDC) → create a tenant → invite members → approve/enroll devices → author policy (`group:contractors → net:warehouse:554/tcp`) → watch it converge in <1 s → revoke a lost device and watch enforcement in <1 s → review `audit_events` [00 §9 F17], [SPEC §8.1 DoD#5/#6], [SEC S5/S7] |
-| **Pain points removed** | policy edits requiring restarts (push-based, <1 s); device revoke lag (<1 s edge enforcement); destinations/flows leaking into audit (audit is control-only) |
-| **Success criteria** | DoD#5 (policy edit reflected <1 s, no restart); DoD#6 (device revoke enforced <1 s); audit records who-did-what-to-identity/policy/devices, never destinations [SEC S7] |
-| **Sensitivities** | tenant isolation must be airtight — Postgres RLS, not app-layer only [SEC S6/RLS] |
+| **Incident-response / compliance journey (MSP-operator variant)** | suspected-compromised-device report arrives → admin locates the device in Console (own-tenant scope, RLS-bounded) → revokes it (<1 s edge enforcement, DoD#6) → filters `audit_events` to that device/time-window → exports the filtered control-action slice as the incident evidence handed to the affected client — never a traffic/destination record, because none exists (P7) [SEC S7], `audit-and-compliance.md` |
+| **Pain points removed** | policy edits requiring restarts (push-based, <1 s); device revoke lag (<1 s edge enforcement); destinations/flows leaking into audit (audit is control-only); an MSP having to promise "trust me" on incident evidence instead of handing over an exportable control-action trail scoped to the affected tenant only |
+| **Success criteria** | DoD#5 (policy edit reflected <1 s, no restart); DoD#6 (device revoke enforced <1 s); audit records who-did-what-to-identity/policy/devices, never destinations [SEC S7]; an audit export for one tenant/time-window contains **zero** rows from any other tenant (RLS-bounded export, not just RLS-bounded live view) |
+| **Sensitivities** | tenant isolation must be airtight — Postgres RLS, not app-layer only [SEC S6/RLS]; an MSP-operator's cross-tenant *administrative* access (if any) is itself an audited action — administering tenant B is never silent to tenant B's own audit trail |
 
 ### 2.3 Business-end-user
 

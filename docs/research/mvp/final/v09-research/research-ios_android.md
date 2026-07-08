@@ -1,5 +1,8 @@
 # RESEARCH ios_android
 
+**Revision:** 1
+**Last modified:** 2026-07-04T12:00:00Z
+
 Self-hosted Mullvad-parity VPN — mobile native core constraints. Deep multi-angle
 research (§11.4.150 / §11.4.99). Access date for every source: **2026-06-25**.
 All numeric claims cited; where a figure is unofficial/undocumented it is marked.

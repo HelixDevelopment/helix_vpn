@@ -1,7 +1,11 @@
 # Phase 3 (Extended Reach) Subtask Deepening — epic → task → subtask (closes R5)
 
-**Revision:** 1
-**Last modified:** 2026-06-26T12:00:00Z
+**Revision:** 2
+**Last modified:** 2026-07-04T12:00:00Z
+**Rev 2:** Independent gap-analysis pass — structure and honesty stance
+(`PENDING_DEVICE:`/`Operator-blocked` vocabulary) verified consistent with
+`09-phase3-reach-wbs.md` and the sibling Phase-1/Phase-2 deepening docs. No
+contradictions found.
 
 > Volume 7 (Phase Execution), document 5 of 5. Companion to
 > `subtask-deepening-p1.md` / `-p2.md`, applying the R5 deepening

@@ -1,7 +1,19 @@
 # Non-Functional Requirements (HVPN-NFR-NNN)
 
-**Revision:** 1
-**Last modified:** 2026-06-26T12:00:00Z
+**Revision:** 2
+**Last modified:** 2026-07-04T12:00:00Z
+
+> **Rev 2 (2026-07-04, independent gap-analysis pass).** Added five NFR classes
+> that were absent or thin against enterprise-production-readiness criteria:
+> secrets management/rotation (NFR-411), WireGuard/device-key rotation cadence +
+> triggers (NFR-412), control-plane API rate limiting (NFR-413), data-plane
+> DDoS/UDP-flood/amplification resilience (NFR-414) — a *different* concern from
+> NFR-413 (control-plane request throttling), audit-retention default (NFR-309),
+> and a new **Operability & Compatibility** band (NFR-700…) covering zero-downtime
+> rolling deploys, Postgres schema-migration backward-compatibility windows,
+> protobuf wire-compatibility guarantees, and an infra-sizing/cost model. No
+> existing NFR was weakened; §9 traceability and the family diagram are extended
+> to match.
 
 > **Document role.** This is the Volume 1 (Product & Requirements) nano-detail
 > spec enumerating every HelixVPN **non-functional requirement (NFR)** —
@@ -158,6 +170,7 @@ guarantee **testable** rather than promissory. They are bound by
 | HVPN-NFR-306 | `/metrics` exposes aggregate counters only — no per-user, per-flow, per-destination, or per-tenant-label series. | every collector's label set ⊆ allow-list; **no** `tenant_id`/`device_id`/`*_ip` label | unit (label-cardinality audit) | MVP |
 | HVPN-NFR-307 | Anonymous identity is supported (no email, no SSO required). | a tenant mints device enroll tokens with `users.email = NULL`, `oidc_sub = NULL`; no reverse-link to a human | integration (anonymous enroll) | MVP |
 | HVPN-NFR-308 | The no-logging guarantee holds as a runtime signature, not a source grep (§11.4.108). | schema-lint green against the **deployed** DB, asserted post-deploy | e2e Challenge (deployed-DB lint) | MVP |
+| HVPN-NFR-309 | Audit (control-action) retention follows an explicit, operator-set policy — never a silent default that either grows unbounded or auto-prunes accountability evidence. | default = **no auto-prune** (D-AC-3); operator MAY set a retention period per their compliance regime; retention config is itself an audited control action | integration (retention-policy set/enforce) | MVP |
 
 > **Honest boundary (§11.4.6).** These NFRs guarantee *durable-store + bus +
 > audit* absence of traffic data. They do **not** claim a hot-compromised running
@@ -183,6 +196,10 @@ guarantee **testable** rather than promissory. They are bound by
 | HVPN-NFR-408 | Multi-tenant isolation is enforced at the database (RLS), not only in app code. | `FORCE ROW LEVEL SECURITY`; tenant A cannot read tenant B even with a crafted query as `helix_app` | security / integration (RLS) | MVP |
 | HVPN-NFR-409 | Every change crosses the mandatory anti-bluff test gauntlet before release. | each §11.4.169 type present + paired §1.1 mutation that flips its gate RED | meta-test (per-gate mutation) | ALWAYS |
 | HVPN-NFR-410 | Censorship-evasion: the ladder reaches a working obfuscated transport under DPI/UDP-block. | escalation reaches MASQUE (or a later rung) and completes a WG handshake under a DPI sim | e2e (DPI-sim escalation) | MVP |
+| HVPN-NFR-411 | Control-plane secrets (Postgres/Redis credentials, tenant CA root/KMS key material, OIDC client secrets) are never stored in plaintext in the image or repo, and are rotatable without a rebuild. | secrets injected at runtime (env/File/KMS reference, never baked into an image layer); a credential rotation (DB password, Redis AUTH) completes with **0** dropped in-flight control RPCs | security + integration (rotate-while-serving) | MVP |
+| HVPN-NFR-412 | Device WireGuard keys and gateway/edge transport keys rotate on an explicit cadence and immediately on revocation — never silently indefinite. | device WG key: operator-configurable rotation period (**TARGET default 90 days**, `UNVERIFIED` concrete default) **and** immediate re-key on `device.revoked`; gateway edge transport key: independent rotation schedule from device keys, rotated with **0** tunnel drop for unaffected peers | security + integration (scheduled + on-revoke rotation, zero-drop capture) | MVP |
+| HVPN-NFR-413 | The control-plane API (Gin REST + gRPC/Connect agent surface) enforces per-principal rate limiting so no single API key/device can exhaust coordinator or Postgres capacity. | token-bucket per API key/device on `api`+`coordinator`; **TARGET** default ceiling `UNVERIFIED` (operator-tunable), 429/backpressure response, no unbounded queueing (composes NFR-506) | stress (burst-request flood) + security | MVP |
+| HVPN-NFR-414 | The data-plane edge resists UDP-flood / reflection-amplification abuse of its public `:443/udp` (and other) listeners — a *distinct* concern from NFR-413 (that governs the authenticated control-plane API; this governs the unauthenticated public data-plane listener). | WireGuard's built-in stateless cookie-reply mechanism is enabled (bounds per-source handshake-initiation cost); the MASQUE/QUIC listener rate-limits unmatched/pre-handshake datagrams per source IP; edge CPU/bandwidth stay bounded under a simulated flood (no amplification — reply size ≤ request size for any unauthenticated packet) | DDoS test (`v08-testing/ddos.md`) — flood simulation with pre/post resource + amplification-ratio capture | MVP |
 
 ---
 
@@ -230,6 +247,30 @@ bars, phased per §10.
 
 ---
 
+## 8a. Operability & Compatibility NFRs (HVPN-NFR-700…)
+
+These NFRs close a gap the earlier revision left implicit: a self-hostable
+product that scales to a managed fleet (P6) MUST also be **upgradeable** and
+**forecastable** without a rewrite. They are the "can we run this for years,
+across upgrades and growth" bars — distinct from the runtime performance/scale
+bars above.
+
+| ID | Statement | Target | Verify by | Priority |
+|---|---|---|---|---|
+| HVPN-NFR-700 | The control plane supports zero-downtime rolling upgrades: a new version deploys without dropping in-flight `WatchNetworkMap` streams or existing data-plane tunnels. | rolling deploy (N replicas, one at a time) completes with **0** dropped agent streams beyond the individual replica's own graceful-drain reconnect (which resumes from `known_version`, NFR-204); existing edge tunnels never drop (fail-static, NFR-200 holds *across* a control-plane version change too) | chaos + integration (rolling-upgrade drill) | P2 |
+| HVPN-NFR-701 | Postgres schema migrations are backward-compatible for at least one prior minor version (expand-then-contract), so a rolling upgrade never requires simultaneous downtime of app + DB migration. | every migration is additive-first (new column nullable/defaulted, old column dropped only in a later release after the app no longer reads it); a mixed-version fleet (N replicas on version X, N on X+1) runs correctly against one schema version | integration (mixed-version-fleet-against-one-schema test) | P2 |
+| HVPN-NFR-702 | Protobuf (`helix.coordinator.v1`) and OpenAPI contracts are wire-compatible within a documented backward-compatibility window: new optional fields only, no field-number reuse, no required-field addition. | a buf/OpenAPI breaking-change linter runs in the codegen pipeline (`v06-deploy/codegen-pipeline.md`) and **fails** the build on a breaking change without an explicit major-version bump | unit (schema-diff lint) + meta-test (planted breaking change → lint FAILs) | MVP |
+| HVPN-NFR-703 | Infra sizing (vCPU/RAM/disk/network) scales predictably with tenant/device count, so an operator can forecast cost before growing. | a documented sizing formula (or reference table) ties coordinator/Postgres/Redis/edge resource needs to `{tenants, devices, connectors}` counts, validated against the NFR-100/101 soak-test figures; **TARGET** concrete formula `UNVERIFIED` until the soak-test dataset exists | benchmarking (resource-vs-load curve from the soak-stress suite, `v06-deploy/observability.md` sizing dashboard) | P2 |
+
+> **Honest boundary (§11.4.6).** NFR-703 is deliberately not a fixed dollar
+> figure — cloud/self-host pricing varies by operator and region. The NFR
+> requires a *sizing formula* (resource units per tenant/device), not a cost
+> quote; a managed-SKU cost model (if D8 licensing lands a managed offering) is
+> a commercial decision layered on top of this technical sizing curve, tracked
+> separately from this spec set.
+
+---
+
 ## 9. NFR → principle → verification traceability
 
 Each NFR family traces to the overview's non-negotiable principles (P1–P7) and
@@ -245,6 +286,7 @@ the parity matrix (F1–F17 / X1–X5), so no quality bar floats unanchored
 | Security (400–410) | P2 (WG core), P3 (outbound-only) | F11, F12, F13, F16, F17, X2, X4 | security, e2e, meta-test |
 | Resource (500–506) | P5 (one core), P6 | F1, X5 | memory, benchmarking |
 | Portability (600–609) | P5 (one core, reused) | X5 | integration, e2e, UI/visual-regression |
+| Operability & Compatibility (700–703) | P6 (self-host→fleet, no rewrite) | X3 | chaos, integration, unit (schema-diff), benchmarking |
 
 ```mermaid
 flowchart LR
@@ -261,10 +303,11 @@ flowchart LR
     PERF[Performance 001-009]
     SCALE[Scale 100-108]
     HA[Availability 200-207]
-    PRIV[Privacy 300-308]
-    SEC[Security 400-410]
+    PRIV[Privacy 300-309]
+    SEC[Security 400-414]
     RES[Resource 500-506]
     PORT[Portability 600-609]
+    OPS[Operability+Compat 700-703]
   end
   P1 --> PERF
   P1 --> HA
@@ -272,6 +315,7 @@ flowchart LR
   P4 --> SCALE
   P6 --> SCALE
   P6 --> RES
+  P6 --> OPS
   P7 --> PRIV
   P2 --> SEC
   P3 --> SEC
@@ -347,6 +391,18 @@ The dependency order (each lower NFR is a precondition of the SLO above it):
 - `docs/research/mvp/final/v02-data-plane/transport-selection-ladder.md` — the
   escalation-ladder budgets, monotonic-cursor invariant (L-I8), and aggregate
   no-per-user telemetry (I5) behind NFR-006 / NFR-410.
+- `docs/research/mvp/final/v05-security/pki-and-certs.md` — device/gateway key
+  rotation cadence + revoke-triggered re-key behind NFR-412; the decision
+  register D-AC-3 (audit retention, no auto-prune default) behind NFR-309.
+- `docs/research/mvp/final/v08-testing/ddos.md` — the DDoS/flood-simulation
+  harness behind NFR-414 (data-plane) distinct from NFR-413 (control-plane API
+  rate limiting).
+- `docs/research/mvp/final/v06-deploy/codegen-pipeline.md` — the D-CODEGEN-TRACK/
+  D-OPENAPI-AUTHORING decisions and the schema-diff breaking-change lint behind
+  NFR-702; `docs/research/mvp/final/v06-deploy/ha-and-multiregion.md` and
+  `disaster-recovery.md` — rolling-upgrade + RTO/RPO context behind NFR-700/701;
+  `docs/research/mvp/final/v06-deploy/observability.md` — the sizing dashboard
+  behind NFR-703.
 
 *Constitution bindings applied: §11.4.44 (revision header), §11.4.6 (no-guessing
 — every unproven target marked `UNVERIFIED` and owned by a named gate/benchmark,

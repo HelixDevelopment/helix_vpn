@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>04 — Control Plane</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">04 — Control Plane</h1>
+</header>
+<h1 id="04--control-plane">04 — Control Plane</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-07-05T14:20:00Z <strong>Status:</strong> Draft — consolidated from
+<code>02-control-plane.md</code> and
+<code>v03-control-plane/*</code>.</p>
+<hr />
+<h2 id="1-position">1. Position</h2>
+<p>The control plane is the <strong>Go brain</strong> that holds
+identity, topology, and policy truth, compiles ACLs, and pushes
+desired-state network maps to every edge. It <strong>never sits in the
+packet path</strong>.</p>
+<p><strong>Stack:</strong> Go + Gin + PostgreSQL + Redis + Podman
+(rootless).</p>
+<h2 id="2-modular-monolith-layout">2. Modular monolith layout</h2>
+<pre class="text"><code>helix-go/
+├── cmd/
+│   ├── helixd/              # control-plane binary
+│   └── helixvpnctl/         # bootstrap + ops CLI
+├── internal/
+│   ├── identity/            # tenants, users, OIDC, anonymous device tokens
+│   ├── registry/            # devices, connectors, advertised prefixes, presence
+│   ├── ipam/                # overlay IP allocation (ULA /48 per tenant)
+│   ├── pki/                 # short-lived device certs, rotation, revoke
+│   ├── policy/              # ACL model + pure, versioned compiler
+│   ├── coordinator/         # in-mem topology graph, deltas, WatchNetworkMap streams
+│   ├── events/              # bus abstraction (Redis Streams MVP → NATS JetStream P2)
+│   ├── telemetry/           # Prometheus metrics + control-action audit sink
+│   ├── api/                 # Gin REST + Connect (agents) + WS/SSE
+│   └── store/               # Postgres pool, RLS tenant-tx helper, migrations
+├── proto/                   # helix/coordinator/v1/*.proto
+├── openapi/                 # REST contract
+└── migrations/              # goose SQL — schema authority</code></pre>
+<h2 id="3-wiring-rules">3. Wiring rules</h2>
+<ul>
+<li><strong>R1</strong> — no cross-store imports; modules read each
+other through exported interfaces.</li>
+<li><strong>R2</strong> — <code>coordinator</code> owns no durable
+tables; only in-memory graph + streams.</li>
+<li><strong>R3</strong> — every state mutation emits an event
+(transactional outbox pattern).</li>
+<li><strong>R4</strong> — every DB access is tenant-scoped under
+RLS.</li>
+</ul>
+<h2 id="4-data-model">4. Data model</h2>
+<p>Core tenant-scoped tables:</p>
+<ul>
+<li><code>tenants</code>, <code>users</code> (with
+<code>user_role</code> enum: admin/operator/member)</li>
+<li><code>devices</code>, <code>connectors</code>,
+<code>advertised_prefixes</code></li>
+<li><code>groups</code>, <code>group_members</code></li>
+<li><code>policies</code> (jsonb spec, monotonic version, active
+flag)</li>
+<li><code>overlay_pools</code> (ULA /48 per tenant)</li>
+<li><code>device_certs</code> (short-lived, revocable)</li>
+<li><code>audit_events</code> (control actions only — never
+traffic)</li>
+<li><code>outbox</code> (transactional event staging)</li>
+</ul>
+<p><strong>Absent by design:</strong> no <code>connections</code>,
+<code>sessions</code>, <code>flows</code>, <code>traffic</code>,
+<code>packets</code> tables. Their absence is CI-lint-enforced.</p>
+<h2 id="5-row-level-security">5. Row-Level Security</h2>
+<div class="sourceCode" id="cb2"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">TABLE</span> devices <span class="kw">ENABLE</span> <span class="kw">ROW</span> <span class="kw">LEVEL</span> SECURITY;</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">TABLE</span> devices <span class="kw">FORCE</span> <span class="kw">ROW</span> <span class="kw">LEVEL</span> SECURITY;</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> POLICY tenant_isolation <span class="kw">ON</span> devices</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">USING</span> (tenant_id <span class="op">=</span> current_setting(<span class="st">&#39;app.tenant_id&#39;</span>):<span class="ch">:uuid</span>);</span></code></pre></div>
+<p>The app connects as a non-superuser <code>helix_app</code> role;
+tenant isolation is enforced at the database even if app-layer RBAC is
+bypassed.</p>
+<h2 id="6-policy-service-and-compiler-with-gap-1-consolidation">6.
+Policy service and compiler (with GAP-1 consolidation)</h2>
+<p>The <code>policy</code> package is a <strong>pure, deterministic,
+versioned compiler</strong>:</p>
+<ul>
+<li>Input: Tailscale-ACL-flavored JSON document
+(<code>policies.spec</code>).</li>
+<li>Output:
+<ul>
+<li><code>VisibleTo</code> — need-to-know peer set.</li>
+<li><code>AllowedIPs</code> — coarse WG routes.</li>
+<li><code>Verdicts</code> — port/proto-granular edge map.</li>
+<li><code>Via6</code> — 4via6 mappings for overlapping IPv4 LANs.</li>
+<li><code>ExitNodes</code> — full-tunnel grants.</li>
+</ul></li>
+</ul>
+<p><strong>GAP-1 — connector local-ACL precedence (adopted in
+consolidation):</strong></p>
+<p>The <code>policy</code> compiler accepts an optional
+<code>connector.local_denylist</code> input. The precedence rule is:</p>
+<ol type="1">
+<li>Local-deny overrides central-allow.</li>
+<li>Central-deny overrides local-allow.</li>
+<li>Output = central policy minus local-deny.</li>
+</ol>
+<blockquote>
+<p><strong>Honesty note:</strong> backported into
+<code>v03-control-plane/svc-policy.md</code> and
+<code>v04-client/helix-core-rust.md</code>; GAP-1 CLOSED.</p>
+</blockquote>
+<h2 id="7-event-backbone">7. Event backbone</h2>
+<ul>
+<li><strong>MVP:</strong> Redis Streams.</li>
+<li><strong>Phase 2:</strong> NATS JetStream (mechanical swap via
+<code>Bus</code> interface).</li>
+</ul>
+<p>Key streams: <code>device.enrolled</code>,
+<code>device.revoked</code>, <code>route.advertised</code>,
+<code>policy.updated</code>, <code>policy.compiled</code>.</p>
+<p>Reliable publish via transactional <code>outbox</code> + sweeper.</p>
+<h2 id="8-coordinator-and-watchnetworkmap">8. Coordinator and
+<code>WatchNetworkMap</code></h2>
+<p>The coordinator maintains an <strong>in-memory per-tenant topology
+graph</strong> and streams:</p>
+<ul>
+<li><code>Snapshot</code> — full desired-state on first connect or
+version gap.</li>
+<li><code>Delta</code> — minimal change set for the affected agent.</li>
+</ul>
+<p>Peers are <strong>pre-policy-filtered</strong> before they hit the
+wire (need-to-know).</p>
+<p><strong>SLOs:</strong></p>
+<ul>
+<li>Convergence p99 &lt; 1 s (event → delta-on-wire).</li>
+<li>Revoke &lt; 1 s (peer dropped everywhere).</li>
+</ul>
+<h2 id="9-api-surface">9. API surface</h2>
+<ul>
+<li><strong>REST (Gin):</strong> admin / Console CRUD, OpenAPI-generated
+clients.</li>
+<li><strong>Connect-RPC / gRPC:</strong> agent
+<code>WatchNetworkMap</code> and enrollment.</li>
+<li><strong>WebSocket / SSE:</strong> live Console state feed.</li>
+</ul>
+<p>Auth: OIDC session or API token + RBAC (<code>admin</code> /
+<code>operator</code> / <code>member</code>), with RLS as the
+backstop.</p>
+<h2 id="10-reconciliation-flow">10. Reconciliation flow</h2>
+<pre class="text"><code>Admin/Operator → REST/CLI
+        │
+        ▼
+   Postgres commit
+        │
+   outbox row (same tx)
+        │
+   sweeper → Redis Streams XADD
+        │
+   coordinator XREADGROUP
+        │
+   recompute graph + minimal affected set
+        │
+   stream.Send(MapDelta) to affected agents
+        │
+   helix-core reconciler applies routes / peers / verdict map</code></pre>
+<h2 id="11-cross-references">11. Cross-references</h2>
+<ul>
+<li>Data plane → <a href="../03-data-plane/README.md">03 — Data
+Plane</a></li>
+<li>API contracts → <a href="../08-api-contracts/README.md">08 — API
+Contracts</a></li>
+<li>Security/PKI → <a href="../06-security-privacy-pki/README.md">06 —
+Security, Privacy &amp; PKI</a></li>
+<li>Client core → <a href="../05-client-core-ui/README.md">05 — Client
+Core &amp; UI</a></li>
+<li>Detailed DDL → <a href="../../v03-control-plane/data-model-ddl.md"><code>../../v03-control-plane/data-model-ddl.md</code></a></li>
+<li>Detailed protobuf → <a href="../../v03-control-plane/protobuf-spec.md"><code>../../v03-control-plane/protobuf-spec.md</code></a></li>
+<li>Detailed coordinator → <a href="../../v03-control-plane/svc-coordinator.md"><code>../../v03-control-plane/svc-coordinator.md</code></a></li>
+</ul>
+<hr />
+<p><em>Sources:
+<code>docs/research/mvp/final/02-control-plane.md</code>,
+<code>v03-control-plane/*.md</code>.</em></p>
+</body>
+</html>

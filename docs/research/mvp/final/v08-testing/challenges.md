@@ -1,7 +1,13 @@
 # Challenges — HelixVPN nano-detail spec (Volume 8 · §11.4.169 type 5)
 
-**Revision:** 2
-**Last modified:** 2026-06-26T12:00:00Z
+**Revision:** 3
+**Last modified:** 2026-07-04T12:00:00Z
+
+> **Rev 3 (2026-07-04):** independently re-verified during a corpus-wide gap-analysis
+> pass. Confirmed honest framing: the `challenges` engine is described throughout as
+> a planned, owned-by-reference ecosystem submodule (`vasic-digital/challenges`,
+> per `SPECIFICATION.md` §6) consumed via `replace`/pinned-SHA — not as an
+> already-operational tool in this repo today. No contradictions found.
 
 > **Reconciled (§11.4.35, 2026-06-26):** the MVP Definition-of-Done has **NINE**
 > acceptance criteria (AC1–AC9) per the canonical overview

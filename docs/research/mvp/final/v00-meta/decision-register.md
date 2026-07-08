@@ -1,8 +1,20 @@
 # HelixVPN — Master Decision Register (expanded)
 
-**Revision:** 2
-**Last modified:** 2026-06-26T12:00:00Z
+**Revision:** 3
+**Last modified:** 2026-07-04T12:00:00Z
 **Status:** active — Volume 0 (Spine, meta & governance) nano-detail document
+**Rev 3 (2026-07-04 hardening pass):** Independently re-verified this whole register against
+`SPECIFICATION.md`, `99-source-coverage-ledger.md`, and every owning volume doc during a full-corpus
+hardening pass — no contradictions found (this register was already internally consistent and
+accurate; a genuinely rare result across the corpus). One clarifying cross-reference added: D-PKI-
+CA-TIER's owning doc (`v05-security/pki-and-certs.md` §2.1) now composes with a **new operational
+distinction** added to `v03-control-plane/svc-pki.md` during this pass — CA rotation is split into
+a *scheduled* path (24h trust-overlap, routine) and a *compromise* path (immediate, zero-overlap,
+force-revoke-and-re-enroll) — which sharpens (but does not change) this register's D-PKI-CA-TIER
+reversal criterion ("operational evidence the single online issuing CA is a bottleneck"): a
+*compromise* event is now handled as its own incident path distinct from a *bottleneck* reversal
+trigger, so the two are no longer conflated in the implementation the way they briefly were before
+this pass. No decision status changed.
 **Rev 2:** Added the §0-mandated explicit reversal line to the seven §4 decisions that lacked one (D-AC-1, D-OPENAPI-AUTHORING, D-CODEGEN-TRACK, D-K8S-EDGE-INGRESS, D-K8S-PG-HA, D-GW-SELECT, D-DESIGN-EXTRACT); fixed the §1 D4 "Resolved by" cross-ref `doc 04/svc-ipam.md` → `v03-control-plane/svc-ipam.md` (svc-ipam.md is a Volume-3 doc).
 **Authority:** Subordinate to [`../SPECIFICATION.md`](../SPECIFICATION.md) §9 (the spine decision register D1–D8, which this document expands). Where this register disagrees with the spine on a spine decision's camps or recommendation, the spine wins until amended per §11.4.73. The expansion-surfaced decisions (the `D-…` family) are owned by their volume docs and consolidated here per §11.4.66/.101 (no decision silently resolved).
 

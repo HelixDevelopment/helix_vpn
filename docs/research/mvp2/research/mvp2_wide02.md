@@ -1,5 +1,18 @@
 # OS-Specific VPN Integration APIs & Requirements — Deep Research
 
+**Revision:** 1
+**Last modified:** 2026-07-04T14:00:00Z
+
+> **Editorial note (added during the 2026-07-04 MVP2 gap-analysis/hardening
+> pass):** raw research brief preserved as historical input, not a living
+> spec. Note in particular that OpenVPN/IKEv2 are covered here as candidate
+> protocols, but the final architecture (`../MVP2_SHARED_CORE.md` §1.5/§2.3)
+> ships WireGuard/Shadowsocks/MASQUE/Multi-Hop only — OpenVPN is a reserved,
+> unimplemented `ProtocolType` enum placeholder and IKEv2 was not carried
+> forward at all. Where this brief's recommendations differ from
+> `../MVP2_ARCHITECTURE.md` / `../MVP2_SHARED_CORE.md`, the specification
+> documents are authoritative.
+
 **Research Date**: July 2025  
 **Scope**: Native VPN APIs, network extension frameworks, and system-level integration requirements for designing Rust shared core platform adapters  
 **Protocols Covered**: WireGuard, OpenVPN, IKEv2/IPsec  

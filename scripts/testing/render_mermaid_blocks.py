@@ -62,11 +62,13 @@
 # ============================================================================
 
 import hashlib
+import json
 import os
 import re
 import shutil
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 CONFIG = Path(__file__).resolve().parent / "mermaid.config.json"
@@ -75,6 +77,37 @@ CONFIG = Path(__file__).resolve().parent / "mermaid.config.json"
 # `mermaid` (optionally surrounded by whitespace), through the next closing
 # fence line of the same fence character run. Matched line-wise to stay robust.
 OPEN_RE = re.compile(r'^(\s*)(`{3,}|~{3,})\s*mermaid\s*$')
+
+# Some hosts ship a Puppeteer-bundled Chromium build (cached under
+# ~/.cache/puppeteer) that fails to launch in this environment (observed:
+# "Failed to launch the browser process!" with no further detail from mmdc,
+# root-caused via a direct `puppeteer.launch({dumpio: true})` probe to a
+# headless-EGL/X-display warning storm that is cosmetic — the REAL blocker
+# was the specific cached Chromium build, not the sandbox or the display).
+# A system-installed Chromium/Chrome (its shared-library deps resolved by
+# the OS package manager) reliably launches instead. Never hardcode a path —
+# discover it fresh each run via PATH, and only opt in when one is found, so
+# hosts where the bundled Puppeteer Chrome DOES work are left untouched.
+_SYSTEM_BROWSER_CANDIDATES = (
+    "chromium", "chromium-browser", "google-chrome", "google-chrome-stable",
+)
+
+
+def _puppeteer_config_path() -> str | None:
+    """Return a path to a temp puppeteer config pointing at a discovered
+    system Chromium/Chrome with --no-sandbox, or None if none is found (in
+    which case mmdc falls back to its own default Puppeteer resolution)."""
+    exe = next((p for name in _SYSTEM_BROWSER_CANDIDATES if (p := shutil.which(name))), None)
+    if not exe:
+        return None
+    cfg = {"executablePath": exe, "args": ["--no-sandbox", "--disable-setuid-sandbox"]}
+    fd, path = tempfile.mkstemp(prefix="helixvpn-puppeteer-", suffix=".json")
+    with os.fdopen(fd, "w", encoding="utf-8") as f:
+        json.dump(cfg, f)
+    return path
+
+
+_PUPPETEER_CONFIG = _puppeteer_config_path()
 
 
 def _config_bytes() -> bytes:
@@ -91,6 +124,8 @@ def render_one(source: str, out_png: Path) -> bool:
     cmd = ["mmdc", "-i", str(tmp_mmd), "-o", str(out_png), "-b", "white", "-s", "3"]
     if CONFIG.exists():
         cmd += ["-c", str(CONFIG)]
+    if _PUPPETEER_CONFIG:
+        cmd += ["-p", _PUPPETEER_CONFIG]
     try:
         proc = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
     except (subprocess.TimeoutExpired, FileNotFoundError) as exc:

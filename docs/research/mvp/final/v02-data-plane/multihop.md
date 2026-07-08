@@ -1,7 +1,7 @@
 # Multi-Hop (Entry/Exit Separation)
 
-**Revision:** 1
-**Last modified:** 2026-06-25T00:00:00Z
+**Revision:** 2
+**Last modified:** 2026-07-04T12:00:00Z
 
 > Volume 2 (Data Plane) nano-detail specification. Deepens the **Multi-Hop (nested
 > WireGuard)** section of the pass-1 data-plane overview [01-data-plane §11.1]. SPEC-ONLY:

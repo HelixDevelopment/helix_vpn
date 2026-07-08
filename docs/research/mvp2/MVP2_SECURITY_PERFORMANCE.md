@@ -1,5 +1,17 @@
 # MVP2: Security Architecture, Performance Engineering & Build Pipeline
 
+> **Revision:** 3
+> **Last modified:** 2026-07-04T16:30:00Z
+> **Revision 3 changelog:** Added §8.0 "Anti-Bluff Testing Doctrine" — this
+> document previously had zero mention of the anti-bluff evidence
+> philosophy already in force for the Phase 0/1 control plane
+> (`docs/research/mvp/final/10-testing-acceptance-and-qa.md`), a gap named
+> in `docs/research/CROSS_CUTTING_GAP_ANALYSIS.md` §2.2. Added a cadence
+> note to §8.7's CI Test Matrix clarifying "Daily"/"Weekly"/"Per release"
+> describe local-gate cadence, not remote CI, per constitution §11.4.156
+> (no active `.github/workflows/*.yml` or `.gitlab-ci.yml`).
+> **Revision 2 changelog:** Added §10 "Enterprise Hardening & Production Readiness" (staged/canary rollout across all 8 platforms, automatic rollback + rollout health monitor, privacy-first crash-reporting/telemetry pipeline, client-side update rollback for Tauri, end-to-end enterprise policy-push architecture, supply-chain release-process gates, reproducible-build release gate) — closes the cross-reference gap left by `MVP2_ARCHITECTURE.md` §10.1/§10.3 and `MVP2_SHARED_CORE.md` §5.5, both of which point here for release-process detail. Added §7.3.5 (Linux GPG package signing) to match the pipeline diagram's existing promise. Annotated the OpenVPN rows in §5.1–§5.3 as reserved/unimplemented to match `helix-core`'s actual protocol set (OpenVPN is a reserved placeholder identifier only, never a shipped protocol). Renumbered former §10 Appendices to §11.
+>
 > **Document Version**: 1.0.0
 > **Date**: 2025-07-08
 > **Classification**: Engineering Specification
@@ -19,7 +31,8 @@
 7. [Build Pipeline (CI/CD)](#7-build-pipeline-cicd)
 8. [Testing Strategy](#8-testing-strategy)
 9. [Compliance & Certification](#9-compliance--certification)
-10. [Appendices](#10-appendices)
+10. [Enterprise Hardening & Production Readiness](#10-enterprise-hardening--production-readiness)
+11. [Appendices](#11-appendices)
 
 ---
 
@@ -371,7 +384,7 @@ class AndroidKeystoreStorage {
 | **StrongBox** | Dedicated secure hardware (Android 9+ devices) |
 | **Biometric binding** | `setUserAuthenticationRequired(true)` |
 | **Enrollment invalidation** | `setInvalidatedByBiometricEnrollment(true)` |
-| **Key purposes** | `PURPOSE_ENCRYPT | PURPOSE_DECRYPT` |
+| **Key purposes** | `PURPOSE_ENCRYPT \| PURPOSE_DECRYPT` |
 
 #### 1.3.3 macOS: Keychain
 
@@ -1022,6 +1035,8 @@ Multi-Hop (Entry-Exit):
 
 ## 5. Performance Budgets
 
+> **Protocol implementation status note (added Revision 2):** `helix-core` natively implements WireGuard, Shadowsocks (SIP022 AEAD-2022), V2Ray/VMess+XTLS+REALITY, and MASQUE/QUIC. **OpenVPN is a reserved, unimplemented placeholder protocol identifier only** in `helix-core`'s protocol-negotiation enum — no OpenVPN client or server implementation ships in MVP2. Every OpenVPN row below is retained either as (a) an explicit industry-reference comparison point (§5.4, §5.5 — clearly labeled "Reference Data") or (b) marked **"reserved, not implemented"** where it previously appeared alongside genuinely-shipped protocol targets (§5.1–§5.3), so it is never mistaken for a Helix VPN performance commitment.
+
 ### 5.1 Cross-Platform Performance Targets
 
 | Metric | Desktop Target | Mobile Target | Web Target |
@@ -1031,7 +1046,7 @@ Multi-Hop (Entry-Exit):
 | **Memory footprint** | < 100MB | < 80MB | < 50MB |
 | **Bundle size** | < 15MB | < 25MB | < 5MB |
 | **Throughput (WireGuard)** | > 500 Mbps | > 100 Mbps | > 10 Mbps |
-| **Throughput (OpenVPN)** | > 200 Mbps | > 50 Mbps | > 5 Mbps |
+| **Throughput (OpenVPN — reserved, not implemented)** | > 200 Mbps | > 50 Mbps | > 5 Mbps |
 | **CPU usage (idle)** | < 1% | < 1% | < 1% |
 | **CPU usage (500 Mbps)** | < 25% | < 40% | N/A |
 | **Battery impact (hourly)** | N/A | < 3%/hour | N/A |
@@ -1045,7 +1060,7 @@ Multi-Hop (Entry-Exit):
 |----------|-------------------|-------------------|-----------------|-----------------|
 | **WireGuard** | > 500 Mbps | > 100 Mbps | < 1ms | < 100ms |
 | **Shadowsocks** | > 400 Mbps | > 80 Mbps | < 2ms | < 200ms |
-| **OpenVPN (UDP)** | > 200 Mbps | > 50 Mbps | < 5ms | < 2s |
+| **OpenVPN (UDP) — reserved, not implemented** | > 200 Mbps | > 50 Mbps | < 5ms | < 2s |
 | **IKEv2/IPsec** | > 300 Mbps | > 80 Mbps | < 3ms | < 1s |
 | **MASQUE/QUIC** | > 400 Mbps | > 100 Mbps | < 2ms | < 200ms |
 
@@ -1054,9 +1069,9 @@ Multi-Hop (Entry-Exit):
 | Metric | Windows | macOS | Linux | iOS | Android | Web |
 |--------|---------|-------|-------|-----|---------|-----|
 | **Throughput (WG)** | 500+ Mbps | 500+ Mbps | 500+ Mbps | 100+ Mbps | 100+ Mbps | 10+ Mbps |
-| **Throughput (OVPN)** | 200+ Mbps | 200+ Mbps | 200+ Mbps | 50+ Mbps | 50+ Mbps | 5+ Mbps |
+| **Throughput (OVPN — reserved, not implemented)** | 200+ Mbps | 200+ Mbps | 200+ Mbps | 50+ Mbps | 50+ Mbps | 5+ Mbps |
 | **Connection (WG)** | < 100ms | < 100ms | < 100ms | < 200ms | < 200ms | < 2s |
-| **Connection (OVPN)** | < 2s | < 2s | < 2s | < 3s | < 3s | < 5s |
+| **Connection (OVPN — reserved, not implemented)** | < 2s | < 2s | < 2s | < 3s | < 3s | < 5s |
 | **CPU idle** | < 1% | < 1% | < 1% | < 2% | < 2% | < 1% |
 | **CPU (500 Mbps)** | < 25% | < 25% | < 20% | < 40% | < 40% | N/A |
 | **Memory** | < 100MB | < 100MB | < 80MB | < 50MB | < 50MB | < 50MB |
@@ -1733,6 +1748,63 @@ sign-harmonyos:
           -out helix-vpn-signed.hap
 ```
 
+#### 7.3.5 Linux: GPG Package Signing (deb/rpm/AppImage)
+
+The §7.1 pipeline diagram lists "Linux: GPG signing" as a stage, but the
+original draft never specified it concretely (added Revision 2 to close
+that gap and to keep this section internally consistent — Windows uses an
+EV/OV-equivalent cloud HSM cert via Azure Trusted Signing §7.3.2, macOS
+uses Developer ID + notarization §7.3.1, and Linux uses a detached GPG
+signature, matching how every major Linux repository trust model works).
+
+```yaml
+# Linux package signing (.deb / .rpm / .AppImage)
+sign-linux:
+  runs-on: ubuntu-latest
+  needs: build-desktop
+  steps:
+    - name: Download Linux artifacts
+      uses: actions/download-artifact@v4
+
+    - name: Import release GPG key
+      env:
+        GPG_PRIVATE_KEY: ${{ secrets.LINUX_GPG_PRIVATE_KEY }}
+        GPG_PASSPHRASE: ${{ secrets.LINUX_GPG_PASSPHRASE }}
+      run: |
+        echo "$GPG_PRIVATE_KEY" | gpg --batch --import
+        echo "default-cache-ttl 600" >> ~/.gnupg/gpg-agent.conf
+
+    - name: Sign .deb (dpkg-sig)
+      run: |
+        dpkg-sig --sign builder -k "${{ secrets.LINUX_GPG_KEY_ID }}" \
+          --gpg-options "--batch --pinentry-mode loopback --passphrase ${{ secrets.LINUX_GPG_PASSPHRASE }}" \
+          helix-vpn_*.deb
+
+    - name: Sign .rpm (rpmsign)
+      run: |
+        rpmsign --addsign --define "_gpg_name ${{ secrets.LINUX_GPG_KEY_ID }}" \
+          helix-vpn-*.rpm
+
+    - name: Detached-sign AppImage + generate checksums
+      run: |
+        gpg --batch --pinentry-mode loopback \
+          --passphrase "${{ secrets.LINUX_GPG_PASSPHRASE }}" \
+          --local-user "${{ secrets.LINUX_GPG_KEY_ID }}" \
+          --detach-sign --armor helix-vpn.AppImage
+        sha256sum helix-vpn.AppImage helix-vpn_*.deb helix-vpn-*.rpm \
+          > SHA256SUMS
+        gpg --batch --pinentry-mode loopback \
+          --passphrase "${{ secrets.LINUX_GPG_PASSPHRASE }}" \
+          --local-user "${{ secrets.LINUX_GPG_KEY_ID }}" \
+          --clearsign SHA256SUMS
+```
+
+**Linux Signing Requirements**:
+- A dedicated release GPG key pair (4096-bit RSA or Ed25519), private key held only in CI secrets + an offline cold-storage backup (§9 data-safety class), never on a developer workstation.
+- Public key published on the project website, a public keyserver, and the `apt`/`dnf`/`zypper` repository metadata so package managers verify signatures automatically on install/upgrade.
+- `.AppImage` ships a detached `.asc` signature plus a GPG-clearsigned `SHA256SUMS` file (AppImage has no native repository-level signature verification, so the checksum + detached signature is the user-facing verification path).
+- Key rotation: annual, or immediately on suspected compromise (composes with §11.4.10 credential-rotation discipline); the previous public key stays published (marked superseded) for a transition window so already-installed repository configs can still verify packages signed before rotation.
+
 ### 7.4 Artifact Generation and Storage
 
 | Platform | Artifact Types | Storage | Retention |
@@ -1810,6 +1882,69 @@ Emergency Pipeline Timeline:
 ---
 
 ## 8. Testing Strategy
+
+### 8.0 Anti-Bluff Testing Doctrine
+
+**This section states, in mvp2's own words, the same testing philosophy
+already in force for the Phase 0/1 control plane** —
+`docs/research/mvp/final/10-testing-acceptance-and-qa.md`. That document's
+own one-sentence rule, quoted verbatim: *"A green test suite is not proof
+the feature works. It only counts as proof if a real artifact — a packet
+capture, a throughput number, a database rowset, a screen recording — was
+captured while the feature ran and shows the user-visible outcome actually
+happened."* This document previously stated no equivalent principle
+anywhere — an omission named by `docs/research/CROSS_CUTTING_GAP_ANALYSIS.md`
+§2.2 — and is corrected here rather than left to silently diverge from the
+control-plane doctrine.
+
+**The mvp2 anti-bluff bar, stated for the 8 client platforms:**
+
+1. **A test claim is only true if a real artifact was captured while the
+   client actually ran.** "Connect works," "kill switch trips in under
+   100ms," "no DNS leak" are only proven by a real pcap (§8.3), a real
+   `iperf3`/`ping` number (§8.4), a real WebDriver/XCUITest/Espresso/
+   Playwright session driving the actually-built app (§8.5), or a real
+   before/after policy-enforcement diff (§10.5) — never a green exit code
+   or an assertion that merely returned `true`.
+2. **Real UI, driven end-to-end, never mocked above the unit layer.**
+   Every §8.5 UI test drives the actually-built application through its
+   real UI — `tauri-driver` against the real webview, XCUITest/Espresso
+   against a real device or simulator, Playwright against the real built
+   extension/PWA in a real browser profile — never a stubbed status object
+   or a fake `chrome.*` shim. §8.1's Rust unit tests are the **only** layer
+   where a mock/stub/fake is permitted; §8.2 integration tests boot the
+   real platform VPN primitive (`NEPacketTunnelProvider`, WFP,
+   `VpnService`) and the real Rust core, never a mocked core.
+3. **Real network conditions, not a synthetic shortcut.** The kill-switch
+   and DNS-leak assertions in §8.3 capture a pcap and inspect it for zero
+   non-VPN egress and zero `:53` traffic during the gap — a timer-only
+   elapsed-time assertion is necessary but not sufficient; the pcap is the
+   artifact that actually proves the claim, matching the evidence bar
+   `10-testing-acceptance-and-qa.md` §3 already requires for the identical
+   claim on the control-plane side.
+4. **Self-validated analyzers.** Any custom leak/OCR/traffic-pattern
+   analyzer this document's harnesses rely on ships a golden-good +
+   golden-bad fixture pair so the analyzer itself cannot rubber-stamp a
+   broken feature as passing — the same discipline
+   `10-testing-acceptance-and-qa.md` §3.3 requires project-wide.
+5. **Mocks are confined to §8.1 (Rust unit tests) only.** This is the
+   explicit boundary statement this document previously left implicit: a
+   future contributor who mocks the VPN core, the platform VPN API, or the
+   network at the §8.2 integration layer or above has violated this
+   document's own testing policy, not merely taken a shortcut.
+
+**Coverage-ledger note.** This document currently expresses coverage only
+as static percentage targets (§8.1's Coverage Targets table) — a
+materially weaker guarantee than the git-tracked, schema-`CHECK`-constrained
+coverage ledger `10-testing-acceptance-and-qa.md` §6 already implements for
+the control plane (a constraint that makes a bluffed "verified" row
+structurally impossible: 100% line coverage of an assertion-free function
+is still "100%," which the ledger's evidence-state model rejects).
+Extending that same ledger with client-platform `feature_id` rows (e.g.
+`F-CONNECT-FLOW-DESKTOP`, `F-KILL-SWITCH-MOBILE`) — rather than mvp2/
+inventing a second, unlinked coverage-tracking mechanism — is tracked
+follow-up work per `docs/research/CROSS_CUTTING_GAP_ANALYSIS.md` §2.3
+item 6.
 
 ### 8.1 Unit Tests: Rust Core
 
@@ -2100,6 +2235,16 @@ fn test_connection_flow() {
 
 ### 8.7 CI Test Matrix
 
+**Cadence note (Revision 3):** "Daily" / "Weekly" / "Per release" below
+describe **local gate cadence** (pre-commit / pre-push / `make qa`
+triggers run on a developer or release machine), not a remote CI service —
+per constitution §11.4.156, all CI/CD automation is disabled and there is
+no active `.github/workflows/*.yml` or `.gitlab-ci.yml` in this project,
+matching the local-only test-pyramid topology
+`docs/research/mvp/final/10-testing-acceptance-and-qa.md` §4 already
+implements for the control plane
+(`docs/research/CROSS_CUTTING_GAP_ANALYSIS.md` §2.2 item 3).
+
 | Platform | Unit Tests | Integration | E2E | Security Tests | Performance |
 |----------|-----------|-------------|-----|----------------|-------------|
 | Linux | cargo test | Docker-based | Tauri WebDriver | Daily | Per release |
@@ -2203,7 +2348,432 @@ fn test_connection_flow() {
 
 ---
 
-## 10. Appendices
+## 10. Enterprise Hardening & Production Readiness
+
+*(Added Revision 2. This section fulfills the cross-reference made by
+`MVP2_ARCHITECTURE.md` §10.1/§10.3 — "Full mechanism detail ... is specified
+in `MVP2_SECURITY_PERFORMANCE.md` §10" — and by `MVP2_SHARED_CORE.md` §5.5 —
+"the release-process detail (signing, attestation storage, canary gating)
+lives in `MVP2_SECURITY_PERFORMANCE.md` §10." It does not duplicate the
+architectural contract already stated there (which platform owns which
+managed-config transport, which build produces which SBOM); it specifies
+the concrete mechanism each contract runs on.)*
+
+### 10.1 Staged / Canary Rollout Across All 8 Platforms
+
+**Canary ring definition** (applies uniformly; per-platform mechanism
+follows in the table below):
+
+| Ring | Audience | Minimum Duration | Advance Criteria |
+|------|----------|-------------------|-------------------|
+| **Internal / Dogfood** | Employees + opted-in volunteer testers (~50-200 devices) | 3 business days | Build succeeds, §8 test matrix green, no P0/P1 crash |
+| **Canary 1%** | ~1% of active install base per platform | 24h | Rollout Health Monitor (§10.2) reports no regression |
+| **Canary 10%** | ~10% | 24h | Rollout Health Monitor reports no regression |
+| **Canary 50%** | ~50% | 24h | Rollout Health Monitor reports no regression |
+| **GA 100%** | 100% | n/a — monitoring continues indefinitely | Reproducible-build gate (§10.7) already confirmed for this tag |
+
+This refines the existing §7.5 Beta/Stable channel model into discrete,
+independently-monitorable percentage rings rather than a single 5%→100%
+step, so a regression is caught (and halted) at 1% of the install base
+instead of at 5%.
+
+**Per-platform rollout mechanism** — every platform's own distribution
+channel is used as-is; none is reinvented:
+
+| Platform | Distribution Channel | Native Staged Rollout? | Mechanism / Compensating Control |
+|----------|----------------------|--------------------------|-----------------------------------|
+| macOS / Windows / Linux (Tauri) | Self-hosted `tauri-plugin-updater` endpoint + `.deb`/`.rpm`/AppImage repos | Approximated (self-hosted, so we control it) | Update-server buckets each device by `sha256(anonymous_install_id) % 100`; only devices whose bucket falls within the currently-open percentage range receive the new-version manifest (§10.1.1 below) |
+| Android | Google Play Console | **Yes (native)** | Play Console "staged rollout" — configurable percentage, pausable/resumable directly from the console; MVP2 policy sets it to the ring percentages above |
+| iOS | App Store Connect | **Yes (native, fixed schedule)** | "Phased Release for Automatic Updates" — Apple's fixed 7-day schedule (Day 1: 1%, Day 2: 2%, Day 3: 5%, Day 4: 10%, Day 5: 20%, Day 6: 50%, Day 7: 100%); can be paused but not re-percentaged — MVP2's Canary 1%/10%/50% rings map approximately onto Apple's Day 1/4/6 checkpoints |
+| HarmonyOS | Huawei AppGallery Connect | **Yes (native)** | AppGallery Connect "Phased Rollout" (gray release) — configurable percentage from the console, matching the ring table |
+| Aurora OS | Aurora OS Store / OpenRepos / enterprise MDM push | **No** — honestly, neither channel offers vendor-side percentage rollout | Compensating control: extended internal dogfood window (minimum 10 business days, vs. the 3-day default) **plus** a mandatory enterprise-pilot-fleet sign-off gate before any wider push, since Aurora OS deployments are already typically enterprise-MDM-managed device fleets (§10.5) rather than open consumer installs — the pilot fleet functions as the missing canary ring |
+| Web — Browser Extension (MV3) | Chrome Web Store / Firefox AMO / Edge Add-ons / Safari Extensions | **No** — extension stores auto-update all installed users to the latest published version (no vendor percentage-rollout API exists for any of the four stores) | Compensating control: **feature-flag kill switch** (§10.1.2) — ship the extension build to 100% but gate any new or risky code path behind a remote flag queried from the MVP1 Utils Service at startup, so a bad rollout is mitigated by disabling behavior remotely rather than by a slower store rollout |
+| Web — PWA | Self-hosted (service worker `update` event) | Approximated | Same bucketed-manifest technique as desktop (§10.1.1), applied to the service worker's update-check response |
+
+#### 10.1.1 Bucketed Update-Manifest Rollout (Tauri / PWA)
+
+```json
+// Update-server response logic (pseudo-code — not client-side config)
+// GET /updates/{platform}/{arch}/latest.json?install_id=<anon-id>
+{
+  "policy": {
+    "current_ring": "canary_10",
+    "ring_bucket_ranges": {
+      "canary_1":  [0, 1),
+      "canary_10": [0, 10),
+      "canary_50": [0, 50),
+      "ga_100":    [0, 100)
+    }
+  },
+  "rule": "bucket = sha256(install_id) % 100; serve new manifest only if bucket falls inside ring_bucket_ranges[current_ring]; otherwise return the previous stable manifest unchanged"
+}
+```
+
+`install_id` is a random, non-account-linked UUID generated at first launch
+(never derived from hardware identifiers — composes with §9.3 GDPR data
+minimization). The same bucket assignment is reused as each ring widens
+(a device that was in `canary_1` stays included as the range grows to
+`canary_10`), so a device is never "rolled back" to an older manifest by a
+bucket recompute, only ever advanced.
+
+#### 10.1.2 Feature-Flag Kill Switch (Utils Service)
+
+For the two channels with no vendor-side staged rollout (browser
+extensions, and Aurora OS as a compensating measure), new or risky
+behavior added in a release ships behind a remotely-toggleable flag:
+
+```yaml
+# Utils Service feature-flag check (client startup, all platforms — not just
+# the two above; the same mechanism doubles as the §10.2 rollback lever)
+GET /v1/flags?client_version=2.4.0&platform=web-extension
+# Response:
+{
+  "flags": {
+    "new_obfuscation_negotiation_path": false,
+    "adaptive_mtu_v2": true
+  },
+  "policy_version": 14
+}
+```
+
+A flag flip takes effect on the client's next flag poll (default interval:
+5 minutes while connected, on-launch otherwise) — no new extension
+publish, no app-store review cycle, no user action required.
+
+### 10.2 Rollout Health Monitor & Automatic Rollback
+
+The monitor watches two signals per active ring, both sourced from
+existing MVP1 surfaces (no new backend service invented): **crash-rate
+delta**, from the crash-reporting pipeline (§10.3), and **error-rate
+delta**, from Client API telemetry (connection failures, handshake
+failures, protocol negotiation failures reported by the client).
+
+| Ring | Crash-Rate Regression Threshold (vs. previous stable) | Error-Rate Regression Threshold | Action on Breach |
+|------|--------------------------------------------------------|-----------------------------------|--------------------|
+| Canary 1% | > +0.05 percentage points absolute, OR > 2× relative | > +1.0 percentage points absolute | Auto-halt ring expansion + auto-flip feature-flag kill switch (§10.1.2) + page on-call |
+| Canary 10% | > +0.03pp absolute, OR > 1.5× relative | > +0.5pp absolute | Same |
+| Canary 50% | > +0.02pp absolute, OR > 1.3× relative | > +0.3pp absolute | Same |
+| GA 100% | > +0.02pp absolute, sustained 1 hour | > +0.3pp absolute, sustained 1 hour | No further ring to halt; escalates directly to the §7.6 Emergency Security Update Pipeline if severity warrants |
+
+Sample-size floor: a ring's metrics are not evaluated against these
+thresholds until it has accumulated a statistically meaningful sample
+(minimum 200 sessions or 4 hours elapsed, whichever is later) — evaluating
+too early on a tiny sample is a false-positive risk, not a safety margin.
+
+"Automatic rollback" is intentionally scoped honestly per channel — it is
+**never** a forced uninstall of an already-updated app:
+
+- **Halt** (all channels): stop advancing the ring — Play Console / App
+  Store Connect / AppGallery Connect rollout is paused via their own API;
+  the bucketed-manifest server (§10.1.1) freezes `current_ring` at its
+  last value.
+- **Flag flip** (all channels): the feature-flag kill switch (§10.1.2)
+  disables the specific risky behavior for already-updated devices within
+  minutes, without a new release.
+- **Reissue previous-version installer** (Tauri desktop only, where the
+  client controls its own update mechanism): the client-side rollback
+  described in §10.4 actively reverts an already-updated device back to
+  the last-known-good signed installer.
+- **Alert**: PagerDuty (or equivalent) page to on-call, severity scaled to
+  ring size (a Canary 1% breach is far cheaper to page loudly on than a
+  GA 100% breach that's already been live for days).
+
+```mermaid
+sequenceDiagram
+    participant CI as CI/CD Pipeline
+    participant Store as Distribution Channel<br/>(Store / Self-hosted Updater)
+    participant Device as Client Device (active ring)
+    participant Telemetry as Client API<br/>(crash + error telemetry)
+    participant Monitor as Rollout Health Monitor
+    participant Flags as Utils Service<br/>(Feature Flags)
+    participant OnCall as On-Call Engineer
+
+    CI->>Store: Publish signed build + SBOM (§10.6) to ring N
+    Store->>Device: Serve update per §10.1 per-platform mechanism
+    Device->>Telemetry: Opt-in crash reports + error events (§10.3)
+    loop Every 5 minutes while ring N is active
+        Monitor->>Telemetry: Query crash-rate delta + error-rate delta for ring N
+        Telemetry-->>Monitor: Metrics vs. previous stable release
+        alt Sample size below floor
+            Monitor->>Monitor: Defer decision, keep monitoring
+        else Regression threshold breached (§10.2 table)
+            Monitor->>Store: Halt further ring expansion
+            Monitor->>Flags: Flip kill switch for the implicated flag(s)
+            Monitor->>OnCall: Page (severity = f(ring size))
+            Monitor->>Device: (Tauri only) Trigger last-known-good reversion, §10.4
+        else Within thresholds and duration elapsed
+            Monitor->>Store: Approve advance to next ring
+        end
+    end
+```
+
+This complements, rather than duplicates, the higher-level rollout diagram
+in `MVP2_ARCHITECTURE.md` §10.1 (`flowchart LR` across the whole pipeline);
+this diagram is the detailed polling/decision loop inside that flowchart's
+`MONITOR` subgraph.
+
+### 10.3 Crash Reporting & Telemetry Pipeline (Privacy-First)
+
+Every platform's own "Enterprise Hardening" section (being hardened in
+parallel) plugs its native crash SDK into this one pipeline rather than
+standing up per-platform infrastructure.
+
+**Architecture**:
+
+| Stage | Detail |
+|-------|--------|
+| **Ingestion endpoint** | Dedicated Client API routes `POST /v1/telemetry/crash` and `POST /v1/telemetry/error`, authenticated by the same non-account-linked `install_id` used for rollout bucketing (§10.1.1) — never the user's account token, so a crash report cannot be joined back to an identity server-side |
+| **PII scrubbing** | Applied at the ingestion edge, before any storage write: source IP address is never persisted (this is a VPN client — logging source IPs would itself violate the §9.4 no-logs policy); free-text fields (user-supplied bug-report comments) pass through a scrubber regex stripping emails, IPv4/IPv6 literals, and bearer tokens; file paths in stack traces are normalized to strip OS username segments (`/Users/<name>/` → `/Users/<redacted>/`); device identifiers are salted-hashed with a rotating (30-day) salt, never stored raw |
+| **Symbolication pipeline** | See CI snippet below — dSYM (Apple), ProGuard/R8 `mapping.txt` (Android), `dump_syms`/Breakpad `.sym` (Rust core, all platforms), and Windows PDB are all uploaded to a private symbol server in CI, keyed by exact build + version, so crash payloads never need to embed unstripped symbols on-device |
+| **Retention** | Raw (symbolicated) crash payloads: 90 days — matches the existing §9.3 GDPR Data Processing Inventory row ("App crash logs \| Yes (anonymized) \| Yes \| 90 days \| Quality improvement"), not a new retention rule. Aggregated crash-rate / error-rate metrics (counts only, no payload, no stack trace): retained indefinitely for trend analysis, consistent with data minimization since no PII exists in an aggregate count |
+| **Consent gate** | First-run consent dialog states exactly what §9.3's table already discloses (anonymized crash logs, 90-day retention, quality-improvement purpose). Consent state is stored locally and mirrored to the MVP1 Utils Service as feature-flag key `telemetry_crash_reporting_enabled`; when a user opts out, the crash SDK runs in local-only mode (writes to a local log file for user-initiated "Send diagnostic report" actions only — nothing is transmitted automatically) |
+
+```yaml
+# Symbolication upload, run in CI immediately after each signed build
+upload-symbols:
+  needs: [sign-macos, sign-windows, sign-android, sign-harmonyos, build-desktop]
+  runs-on: ubuntu-latest
+  steps:
+    - name: Upload Apple dSYMs
+      run: symbol-server upload --platform ios --version ${{ github.ref_name }} HelixVPN.dSYM.zip
+
+    - name: Upload Android ProGuard/R8 mapping
+      run: symbol-server upload --platform android --version-code ${{ env.VERSION_CODE }} mapping.txt
+
+    - name: Upload Rust core Breakpad symbols
+      run: |
+        dump_syms target/release/libhelix_core.so > libhelix_core.sym
+        symbol-server upload --platform rust-core --version ${{ github.ref_name }} libhelix_core.sym
+
+    - name: Upload Windows PDB
+      run: symbol-server upload --platform windows --version ${{ github.ref_name }} HelixVPN.pdb
+```
+
+Cross-reference: this pipeline's data handling is bound by, and must not
+diverge from, the constraints already documented in §9.3 GDPR Compliance
+and §9.4 No-Logs Policy Verification Approach — §10.3 is the mechanism,
+§9.3/§9.4 remain the compliance authority.
+
+### 10.4 Client-Side Update Rollback (Tauri Desktop)
+
+For macOS/Windows/Linux, where the client itself (not an app store) owns
+the update mechanism via `tauri-plugin-updater`, the client can perform a
+genuine reversion — not merely a halted rollout — for an already-updated
+device.
+
+```json5
+// tauri.conf.json (relevant excerpt)
+{
+  "plugins": {
+    "updater": {
+      "active": true,
+      "endpoints": [
+        "https://updates.helixvpn.example/{{target}}/{{arch}}/{{current_version}}"
+      ],
+      "dialog": true,
+      "pubkey": "<Ed25519 public key, matches §2 update-mechanism signing key>",
+      "windows": { "installMode": "passive" }
+    }
+  }
+}
+```
+
+- **Keep N previous signed installers cached.** On every successful
+  update, the client retains the previous `N = 3` signed installers
+  (current, current-1, current-2) under
+  `<app-data-dir>/previous-versions/`, each with its original Ed25519
+  signature and SHA-256 checksum intact — never re-derived, so a cached
+  installer's signature always verifies against the same public key the
+  live updater trusts.
+- **Local crash-count watchdog.** The Rust core increments a small
+  per-boot counter (`<app-data-dir>/update-health.json`) whenever the
+  previous process instance exited abnormally (crash, not a clean
+  shutdown) within the first 48 hours after an update. This is a local,
+  device-side signal — independent of, and faster-reacting than, the
+  aggregate §10.2 Rollout Health Monitor, which needs many devices'
+  aggregate data before it can act.
+- **Auto-revert trigger.** If the local crash count reaches `>= 3` within
+  a rolling 24-hour window **and** the currently-installed version was
+  installed within the last 48 hours, the client automatically launches
+  the cached `current-1` installer in silent/passive mode, notifies the
+  user ("Helix VPN reverted to the previous stable version after
+  detecting repeated crashes"), and reports the auto-rollback event
+  (opt-in telemetry, §10.3) so the Rollout Health Monitor sees the same
+  signal in aggregate across devices, even though this trigger acted
+  locally and immediately rather than waiting for the aggregate view.
+- **Fail-safe bound.** If no `current-1` installer is cached (e.g., first
+  install), the watchdog cannot revert and instead surfaces the crash
+  count to the user with a manual "reinstall previous version from
+  helixvpn.example" link — it never attempts to synthesize or download an
+  unverified fallback binary.
+
+### 10.5 Enterprise Policy Push Architecture
+
+End-to-end flow for `helix-admin` (Tauri v2 fleet-management dashboard,
+`MVP2_ARCHITECTURE.md` §2.2.6) pushing org policy to enrolled devices via
+the MVP1 Admin API, and each platform's
+`PlatformAdapter::apply_managed_policy` (`MVP2_ARCHITECTURE.md` §5.5)
+applying it.
+
+```rust
+// ManagedPolicy — pushed by helix-admin, applied by every platform adapter
+pub struct ManagedPolicy {
+    pub policy_version: u64,        // monotonic; devices never apply an
+                                     // older version than one already applied
+    pub allowed_protocols: Vec<ProtocolId>,
+    pub forced_kill_switch: bool,
+    pub forced_split_tunnel_rules: Vec<SplitTunnelRule>,
+    pub forced_dns_servers: Vec<IpAddr>,
+    pub require_sso: bool,          // bridges to the MVP1 Authentication
+                                     // Service's existing OAuth2/OIDC support
+}
+```
+
+**Device check-in / acknowledgment model** (so the dashboard can show
+"247/300 devices applied policy v14"):
+
+```mermaid
+sequenceDiagram
+    participant Admin as helix-admin (Tauri v2)
+    participant API as MVP1 Admin API
+    participant Device as Enrolled Device<br/>(PlatformAdapter)
+    participant SSO as MVP1 Authentication Service<br/>(OAuth2/OIDC)
+
+    Admin->>API: Publish ManagedPolicy{policy_version: 14, ...} for org
+    loop Every check-in interval (15 min while connected, or on app foreground)
+        Device->>API: GET /v1/policy/current?org_id=...&device_policy_version=13
+        alt Newer policy available
+            API-->>Device: ManagedPolicy{policy_version: 14, ...}
+            Device->>Device: apply_managed_policy(policy) via PlatformAdapter
+            alt require_sso and no valid SSO session
+                Device->>SSO: Redirect to OAuth2/OIDC login
+                SSO-->>Device: Token
+            end
+            Device->>API: POST /v1/policy/ack {device_id, policy_version: 14, applied_at, result: "success"}
+        else Apply failed (e.g. platform API rejected a rule)
+            Device->>API: POST /v1/policy/ack {device_id, policy_version: 13, result: "failed", reason}
+            Note over Device: Device stays on last successfully-applied<br/>version 13 — never a partially-applied state
+        else Already current
+            API-->>Device: 204 No Content
+        end
+    end
+    Admin->>API: GET /v1/policy/rollout-status?policy_version=14
+    API-->>Admin: {"applied": 247, "pending": 41, "failed": 12, "total": 300}
+```
+
+Failure handling: a device that fails to apply retries at the next
+check-in with exponential backoff (composes with §11.4.147 crash-respawn
+discipline at the fleet level, not just the agent level); it never
+half-applies a policy — `apply_managed_policy` is treated as atomic per
+device (all rules applied, or the previous policy version remains active
+and the failure reason is surfaced in the ack for the `helix-admin`
+operator to triage).
+
+### 10.6 Supply-Chain Security — Release-Process Gates
+
+`MVP2_SHARED_CORE.md` §5.5 ("Supply-Chain & Build Integrity") owns SBOM
+*generation* (`cargo-cyclonedx` for the Rust core, `syft` for Tauri/browser
+bundles, `cyclonedx-flutter` for mobile) and states that "the
+release-process detail (signing, attestation storage, canary gating) lives
+in `MVP2_SECURITY_PERFORMANCE.md` §10" — this is that detail.
+
+- **Publication**: every generated SBOM is attached to the corresponding
+  GitHub Release alongside the signed artifact and its `SHA256SUMS`
+  checksum file (the same checksum file produced in §7.3.5 for Linux, and
+  analogous per-artifact checksums for the other platforms) — an auditor
+  or enterprise customer downloads one signed artifact and gets its
+  checksum, its GPG/code-signing signature, and its SBOM as a matched set.
+- **Release-to-release diff gate**: composes with, and does not replace,
+  the `cargo audit` / `cargo deny check` / `cargo vet` vulnerability and
+  license gates already in the §7.1/§7.2 pipeline — those catch *known
+  vulnerabilities and disallowed licenses*; this gate catches *unreviewed
+  new dependencies*, a different failure mode (supply-chain injection).
+
+```yaml
+# Runs after SBOM generation (MVP2_SHARED_CORE.md §5.5), before promoting
+# past the Internal/Dogfood ring
+sbom-diff-gate:
+  needs: [generate-sboms]
+  runs-on: ubuntu-latest
+  steps:
+    - uses: actions/checkout@v4
+
+    - name: Fetch previous release's SBOM
+      run: gh release download "$(gh release list -L 1 --exclude-drafts --json tagName -q '.[0].tagName')" --pattern "*.cdx.json" --dir previous-sbom/
+
+    - name: Diff CycloneDX component lists
+      run: |
+        jq -r '.components[].purl' previous-sbom/*.cdx.json | sort -u > previous-deps.txt
+        jq -r '.components[].purl' current-sbom/*.cdx.json | sort -u > current-deps.txt
+        comm -13 previous-deps.txt current-deps.txt > new-deps.txt
+        cat new-deps.txt
+
+    - name: Fail on unreviewed new dependency
+      run: |
+        # .helix/sbom-reviewed-deps.txt is checked into the repo; a new
+        # dependency is added to it only via a PR that a reviewer approved
+        # specifically for that addition (composes with §11.4.142 universal
+        # code-review mandate)
+        comm -23 new-deps.txt <(sort .helix/sbom-reviewed-deps.txt) > unreviewed-deps.txt
+        if [ -s unreviewed-deps.txt ]; then
+          echo "::error::Unreviewed new dependency introduced since last release:"
+          cat unreviewed-deps.txt
+          exit 1
+        fi
+```
+
+### 10.7 Reproducible Build Verification as a Release Gate
+
+`MVP2_SHARED_CORE.md` §5.5 defines the quarterly reproducibility drill
+(rebuild the last released tag on a second independent CI runner, diff
+artifact hashes) as the standing anti-bluff check on the reproducibility
+*claim*. §10.7 adds the release-time enforcement that claim was missing a
+mechanism for: **a release is not promoted past the Internal/Dogfood ring
+(i.e., never reaches Canary 1%, §10.1) until reproducibility is confirmed
+for that specific tag** — not merely sampled quarterly, but verified for
+every release.
+
+```yaml
+# Runs once per release tag, gates promotion out of the Internal/Dogfood ring
+verify-reproducibility:
+  needs: [build-desktop, build-mobile]
+  runs-on: ubuntu-latest  # deliberately a different runner pool than the
+                           # primary build, per MVP2_SHARED_CORE.md §5.5
+  steps:
+    - uses: actions/checkout@v4
+      with:
+        ref: ${{ github.ref_name }}
+
+    - name: Rebuild from pinned toolchain + lockfile
+      run: |
+        cargo build --release --locked --target x86_64-unknown-linux-gnu
+        # SOURCE_DATE_EPOCH pinned to the tag commit's author timestamp,
+        # per MVP2_SHARED_CORE.md §5.1
+        export SOURCE_DATE_EPOCH=$(git log -1 --format=%at "${{ github.ref_name }}")
+
+    - name: Diff artifact hash against primary build
+      run: |
+        PRIMARY_HASH=$(gh release download "${{ github.ref_name }}" --pattern "*.tar.gz.sha256" -O -)
+        REBUILD_HASH=$(sha256sum target/x86_64-unknown-linux-gnu/release/helix-vpn)
+        if [ "$PRIMARY_HASH" != "$REBUILD_HASH" ]; then
+          echo "::error::Reproducibility check FAILED for ${{ github.ref_name }} — artifact hashes differ"
+          exit 1
+        fi
+
+  # Downstream promotion job depends on this one:
+  # promote-to-canary-1:
+  #   needs: [verify-reproducibility, sbom-diff-gate]
+```
+
+Honest boundary: reproducibility verification proves the shipped binary
+was genuinely built from the reviewed, tagged source — it does not by
+itself prove the binary is defect-free or that the canary rollout will be
+healthy; those are §10.2's job. The two gates are independent and both
+required.
+
+---
+
+## 11. Appendices
 
 ### Appendix A: Rust Crate Selection
 
@@ -2300,5 +2870,5 @@ fn test_connection_flow() {
 
 *Document generated from comprehensive research including 30+ independent web searches across academic papers, vendor documentation, open-source projects, and authoritative technical sources. All citations use [^number^] format referencing original search results.*
 
-*Last Updated: 2025-07-08*
+*Last Updated: 2025-07-08 (Revision 1 baseline); Revision 2 hardening pass: 2026-07-04*
 *Next Review: 2025-10-08*

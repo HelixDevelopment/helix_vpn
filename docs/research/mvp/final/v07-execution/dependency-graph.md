@@ -1,7 +1,14 @@
 # Cross-Phase Dependency Graph — the HelixVPN delivery DAG and critical paths
 
-**Revision:** 2
-**Last modified:** 2026-06-26T12:00:00Z
+**Revision:** 3
+**Last modified:** 2026-07-04T12:00:00Z
+**Rev 3:** Corrected §7 master-dependency-table row for `HVPN-P0-035` (G2 DPI-survival)
+— it listed `HVPN-P0-039` (Rust edge build) in its `blocks` column, but `06-phase0-spike-wbs.md`
+shows `HVPN-P0-039` depends directly on `HVPN-P0-031` (MASQUE framing), not `HVPN-P0-035`
+(the later DPI-block-survival proof); both share the common ancestor `031`, so the edge was
+transitively-plausible but not a cited `deps` field, violating this doc's own "nothing invented"
+guarantee (§0). Fixed per gap analysis against `06-…` §6 (reconciled against `06-phase0-spike-wbs.md`
+as the authoritative WBS for Phase-0 `depends_on` fields, per SPECIFICATION.md's spine-wins rule).
 
 > Volume 7 (Phase Execution), document 2 of 5. This spec consolidates the
 > dependency edges scattered across the four phase WBS documents into one
@@ -273,7 +280,8 @@ loader ingests). `blocks` = the inverse edge (what waits on this item).
 | `HVPN-P0-004` Transport trait | `HVPN-P0-002` | `HVPN-P0-008`,`028`,`049` | `06-…` §3 |
 | `HVPN-P0-008` plain-UDP | `HVPN-P0-006` | `HVPN-P0-018` (orchestrator) | `06-…` §3 |
 | `HVPN-P0-025` G1 reach | `HVPN-P0-020,023` | `HVPN-P1-001` (G1 entry) | `06-…` §5 |
-| `HVPN-P0-035` G2 MASQUE | `HVPN-P0-031,024` | `HVPN-P1-002`,`HVPN-P0-039` (Rust edge) | `06-…` §6 |
+| `HVPN-P0-035` G2 MASQUE | `HVPN-P0-031,024` | `HVPN-P1-002` (G2 entry) | `06-…` §6 |
+| `HVPN-P0-039` Rust edge (`helix-edge`) | `HVPN-P0-031` | `HVPN-P0-045` (A/B bench, G4) | `06-…` §7 |
 | `HVPN-P0-045` G4 bench | `HVPN-P0-040,043` | `HVPN-P1-004` (edge lang) | `06-…` §7 |
 | `HVPN-P1-010` monorepo | `HVPN-P1-005` (G5) | `HVPN-P1-011,013,110,150` | `07-…` §6 |
 | `HVPN-P1-022` FORCE-RLS | `HVPN-P1-021` | `HVPN-P1-030,032,040,050,060` | `07-…` §7 |

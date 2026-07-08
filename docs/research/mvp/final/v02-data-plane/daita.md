@@ -1,7 +1,7 @@
 # DAITA (Defense Against AI-guided Traffic Analysis)
 
-**Revision:** 1
-**Last modified:** 2026-06-25T00:00:00Z
+**Revision:** 2
+**Last modified:** 2026-07-04T12:00:00Z
 
 > Master technical specification — Volume 2 (Data Plane), nano-detail deepening of
 > [01-data-plane §9](../01-data-plane.md). Scope: the `helix-daita` crate — the

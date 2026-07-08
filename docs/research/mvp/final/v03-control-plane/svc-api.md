@@ -1,7 +1,12 @@
 # api service (Gin + Connect + WS/SSE)
 
-**Revision:** 1
-**Last modified:** 2026-06-25T00:00:00Z
+**Revision:** 2
+**Last modified:** 2026-07-04T12:00:00Z
+
+**Rev 2 (enterprise-hardening pass, 2026-07-04):** added §10.2 "Rate limiting" with concrete
+token-bucket limits, burst, and 429 semantics — closes a dangling cross-reference (the `rate_limited`
+row in §10's error table cited "§11" for detail, but §11 is "Edge cases" and never specified the
+actual limiting mechanism; this was a real gap, not a stale pointer to correct content).
 
 > Volume 3 nano-detail spec — deepens the **api service** of the Phase-1 control plane
 > (pass-1 overview: [`02-control-plane.md` §8](../02-control-plane.md)). Scope: ONE
@@ -894,7 +899,7 @@ type APIError struct {
 | `validation_failed` | 400 | InvalidArgument | binding/protovalidate failure (§4/§5.3) |
 | `policy_compile_failed` | 422 | InvalidArgument | dry-run compile rejected (§4.5, `details`=PolicyCompileError) |
 | `prefix_conflict` | 409 | AlreadyExists | overlapping advertised CIDR (hard-conflict path) |
-| `rate_limited` | 429 | ResourceExhausted | enroll/mint throttle (§11) |
+| `rate_limited` | 429 | ResourceExhausted | any bucket in §10.2 exhausted |
 | `internal` | 500 | Internal | unexpected (panic-recovered, audited, NO stack to client) |
 
 ### 10.1 `PolicyCompileError` detail shape (§4.5)
@@ -911,6 +916,77 @@ type PolicyCompileError struct {
 
 This is the fail-closed feedback of [02-cp §7.3] surfaced as structured `details` so the
 Console can pinpoint the offending rule.
+
+### 10.2 Rate limiting (control-plane API — token buckets per key/tenant, Redis-backed)
+
+Two DIFFERENT rate-limiting concerns exist in HelixVPN and MUST NOT be conflated: this subsection
+is the **control-plane API** limiter (protects `helixd`'s REST/Connect surface from an abusive or
+buggy caller); the DATA-PLANE volumetric/DDoS-resilience concern (protecting the public UDP/443
+MASQUE + plain-WG listener from an internet-facing flood) is a distinct mechanism owned by
+`05-repo-layout-tooling-and-helix-ecosystem.md` / `v06-deploy/*` (edge-level, pre-handshake) — see
+that document's "DDoS resilience" subsection; this section does not repeat it.
+
+**Mechanism.** A Redis-backed token bucket (`golang.org/x/time/rate`-shaped semantics, but the
+bucket state itself lives in Redis — not in-process — so the limit is fleet-wide correct across
+Phase-2 multi-replica `helixd` pods, not per-replica-only) keyed by `(tenant_id, principal_id,
+bucket_class)`. A request that would exceed its bucket's capacity is rejected `429 rate_limited`
+(§10) with a `Retry-After` header computed from the bucket's refill rate; it is NEVER silently
+queued or slowed — fail-fast is preferable to an unbounded goroutine backlog (mirrors the
+coordinator's bounded-queue-and-drop discipline, `svc-coordinator.md` §5).
+
+| Bucket class | Scope | Capacity (burst) | Refill rate | Rationale |
+|---|---|---|---|---|
+| `enroll_token_mint` | per (tenant, minting principal) | 20 | 1 / 3 s (20/min sustained) | mint is an admin/operator action; prevents a compromised admin session or buggy automation from exhausting the `enroll_tokens` table |
+| `enroll_consume` (the `Enroll` RPC itself) | per source-observed-at-TLS (no client IP persisted, C3 — rate key is ephemeral, not logged) | 10 | 1 / 6 s | anonymous enrollment is unauthenticated-by-cert; this is the primary anti-abuse control against enroll-token brute-forcing (a wrong/expired token guess) |
+| `api_token_mint` | per (tenant, admin principal) | 5 | 1 / 60 s | token minting is rare and high-privilege; a tight bucket makes a leaked admin session's blast radius smaller |
+| `policy_write` (`POST /v1/policies`, `/activate`) | per tenant | 30 | 1 / 2 s (30/min) | protects the compiler + coordinator fan-out from a policy-thrash storm (accidental CI loop, scripted misuse) |
+| `rest_general` (every other authenticated REST route) | per (tenant, principal) | 300 | 5 / s | generous default so the Console's normal polling/refresh never trips it; the floor against a runaway client |
+| `connect_unary` (`AdvertisePrefixes`, `ReportStatus`) | per device | 60 | 1 / s | a healthy agent reports status roughly every keepalive interval (20 s); 1/s gives ~20x headroom before tripping |
+| `ws_stream_open` / `WatchNetworkMap_open` | per device | 10 opens | 1 / 10 s | bounds a reconnect-storm from a single misbehaving agent without blocking a legitimate flap-and-retry |
+
+**Design defaults, not yet load-tuned (§11.4.6 honesty):** the specific numbers above are
+starting points sized to the SLO budgets already stated in this document set (e.g.
+`policy_write`'s 30/min is well above any legitimate admin cadence but well below a scripted-loop
+failure mode); they are **UNVERIFIED** against real production traffic and MUST be recalibrated
+from captured load data during the Phase-1 soak (`v08-testing/benchmarking.md`) rather than assumed
+correct from this table alone — the mechanism (Redis token bucket, `429`+`Retry-After`, fleet-wide
+correctness) is the binding contract; the exact numbers are operator-tunable via `Config` (extending
+`internal/config.Config`, `architecture-and-wiring.md` §1.3) and MUST NOT be hardcoded as
+un-overridable constants.
+
+**Implementation sketch:**
+
+```go
+// internal/api/ratelimit.go — Redis-backed sliding-window/token-bucket (e.g. via a Lua script
+// for atomicity: GET-and-decrement in one round trip, no read-then-write race).
+func rateLimited(class BucketClass, keyFn func(*gin.Context) string) gin.HandlerFunc {
+    return func(c *gin.Context) {
+        key := fmt.Sprintf("ratelimit:%s:%s", class, keyFn(c))
+        allowed, retryAfter, err := redisTokenBucket(c, key, class.Capacity(), class.RefillRate())
+        if err != nil {
+            c.Next() // Redis down: fail OPEN for availability (C2 — losing Redis loses no durable
+                      // state, and the API staying reachable during a Redis outage matters more
+                      // than the rate-limit floor for that short window); metric increments so
+                      // the operator sees degraded-mode traffic.
+            metrics.RateLimiterDegraded.Inc()
+            return
+        }
+        if !allowed {
+            c.Header("Retry-After", strconv.Itoa(retryAfter))
+            abort(c, 429, "rate_limited", nil)
+            return
+        }
+        c.Next()
+    }
+}
+```
+
+**Fail-open on Redis unavailability is a deliberate choice** (documented, not accidental): C2
+already establishes that losing Redis loses no durable state; the rate limiter is a defense-in-depth
+control, not the primary authz boundary (RBAC + RLS are), so degrading to "unlimited" during a
+Redis outage is preferable to the API becoming unavailable during an already-degraded window. This
+is the opposite failure mode from a security-critical control (e.g. authn) which always fails
+closed — the choice is explicit per control, not a blanket policy.
 
 ---
 
@@ -1002,6 +1078,7 @@ drive a real Postgres + Redis booted on-demand via the `vasic-digital/containers
 | **Stress / chaos** (§11.4.85) | Redis kill mid-mutation (E11); Postgres kill (E12); slow WS consumer (E8) | `readyz` red, clean `503`, no crash, no memory growth, recovery on restore |
 | **Security** | streaming-error rides trailer not HTTP status (§5.2); no client IP persisted/logged (C3, §4.6); secrets stored hashed only (§2) | trailer code asserted; schema-lint over `sessions`/`api_tokens`/`enroll_tokens` green |
 | **Security** | `wg_pubkey.len=32` rejects non-32B; contract has no private-key slot (C6, §5.3) | protovalidate rejection captured |
+| **DDoS / load-flood** | rate limiting (§10.2): each bucket class trips at its documented capacity, returns `429`+`Retry-After`; Redis-down degrades to fail-open with `RateLimiterDegraded` metric increment, never a hang | captured 429 sequence + degraded-mode metric |
 | **Meta-test (§1.1)** | every gate above has a paired mutation: unguarded route, hand-edited stub, added `client_ip` column, `ab_pass` without evidence | each mutation makes its gate FAIL |
 | **Contract / no-drift** | `buf lint`+`buf breaking` (§12.1); regenerate + `git diff --exit-code` (§12.3); `oasdiff` (§12.2) | stale stub / breaking change → FAIL |
 | **Challenge (HelixQA)** | drives enroll→policy→delta and asserts < 1 s SLO with captured evidence | §11.4.27/§11.4.5/.69/.107 [02-cp §12] |

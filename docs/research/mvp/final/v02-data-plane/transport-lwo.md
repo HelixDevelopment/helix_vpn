@@ -1,7 +1,15 @@
 # Lightweight Obfuscation (LWO) Transport
 
-**Revision:** 1
-**Last modified:** 2026-06-25T00:00:00Z
+**Revision:** 2
+**Last modified:** 2026-07-04T12:00:00Z
+
+> **Rev 2 (enterprise-hardening audit, 2026-07-04):** independently reviewed against the
+> parent gap-analysis checklist. LWO is per-packet stateless on the data path (invariant
+> L2) and UDP-based, so it carries no connection-accounting resource-exhaustion surface
+> analogous to `shadowsocks`'s TCP listener; the key-rotation state machine (§5
+> `Rekeying`) and honest security-boundary statement (§8) already satisfy this checklist
+> — no addition made here. No consistency issue found against
+> [`transport-trait.md`](transport-trait.md) or [`01-data-plane.md`](../01-data-plane.md).
 
 > Master technical specification — Volume 2 (Data Plane), nano-detail deepening of
 > the **Lightweight Obfuscation (LWO) Transport** introduced at [01-data-plane §3.7].

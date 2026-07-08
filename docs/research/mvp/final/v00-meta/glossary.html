@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
   <meta charset="utf-8" />
-  <meta name="generator" content="pandoc" />
+  <meta name="generator" content="pandoc 3.10" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
   <title>HelixVPN — Master Glossary (every term, acronym, protocol, RFC)</title>
   <style>
@@ -154,8 +154,12 @@ padding-left: 0;
 text-decoration: none;
 }
 span.smallcaps{font-variant: small-caps;}
-div.columns{display: flex; gap: min(4vw, 1.5em);}
-div.column{flex: auto; overflow-x: auto;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
 div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
 
 ul.task-list[class]{list-style: none;}
@@ -175,10 +179,24 @@ protocol, RFC)</h1>
 </header>
 <h1 id="helixvpn--master-glossary-every-term-acronym-protocol-rfc">HelixVPN
 — Master Glossary (every term, acronym, protocol, RFC)</h1>
-<p><strong>Revision:</strong> 2 <strong>Last modified:</strong>
-2026-06-26T12:00:00Z <strong>Status:</strong> active — Volume 0 (Spine,
-meta &amp; governance) nano-detail document <strong>Rev 2:</strong>
-Added <code>challenges</code> (vasic-digital/challenges, §11.4.27) +
+<p><strong>Revision:</strong> 3 <strong>Last modified:</strong>
+2026-07-04T12:00:00Z <strong>Status:</strong> active — Volume 0 (Spine,
+meta &amp; governance) nano-detail document <strong>Rev 3:</strong>
+Independent gap-analysis pass (enterprise-hardening audit). Added four
+entries the cross-reference sweep found used-but-undefined: <strong>API
+Gateway</strong> (the <code>api-gateway</code> service named in
+<code>SPEC</code> §5.1 and <code>04_ARCH</code> §4.1 had no glossary
+entry despite <code>Gin</code>, <code>Coordinator</code>, and
+<code>Control plane</code> all citing it), <strong>Rate limiting / token
+bucket</strong> (named once in <code>04_ARCH</code> §4.6 with no
+dedicated NFR yet — cross-referenced to the new GAP-6 in
+<code>requirements-traceability.md</code>), <strong>RBAC</strong> (used
+as a parenthetical test-type annotation on HVPN-FR-601 but never
+defined), and <strong>Tenant / multi-tenancy</strong> (the root
+isolation unit implied by every &quot;per-tenant&quot;/&quot;tenant isolation&quot; entry
+but never itself defined). No existing entry&#39;s meaning changed; this is
+pure additive coverage. <strong>Rev 2:</strong> Added
+<code>challenges</code> (vasic-digital/challenges, §11.4.27) +
 <code>containers</code> (vasic-digital/containers, §11.4.76/.161)
 submodule entries; added a <code>HelixError</code> entry
 cross-referencing its R7 rename to the canonical <code>CoreError</code>.
@@ -307,6 +325,13 @@ family of rules: a PASS requires positive captured evidence that the
 feature works for the end user;
 metadata/config/absence-of-error/grep-only PASS is forbidden. The
 governing doctrine of Volume 8. (10; §11.4)</li>
+<li><strong>API Gateway (<code>api-gateway</code> /
+<code>svc-api</code>)</strong> — the Gin + Connect-Go fan-in service
+serving REST (apps CRUD) + gRPC/Connect (agent
+<code>WatchNetworkMap</code>) + WS/SSE (live UI) on one HTTP/2+HTTP/3
+listener; the only control-plane component apps and agents talk to
+directly. (SPEC §5.1 C4 diagram; 04_ARCH §4.1/§4.2;
+<code>v03-control-plane/svc-api.md</code>)</li>
 <li><strong>ArkTS</strong> — the TypeScript-based application language
 of HarmonyOS/OpenHarmony; the HarmonyOS shim bridges ArkTS → NAPI → the
 Rust <code>.so</code>. (<code>v04-client/shim-harmonyos.md</code>;
@@ -887,6 +912,25 @@ Hysteria2-tuning reference. (01;
 </ul>
 <h2 id="r">R</h2>
 <ul>
+<li><strong>Rate limiting / token bucket</strong> — the API-gateway
+abuse-control mechanism: a per-API-key token bucket held in Redis,
+throttling enrollment/policy-write calls. Currently named only in
+<code>04_ARCH</code> §4.6 (&quot;Redis usage&quot;); <strong>no dedicated FR/NFR
+traces to it yet and no test type (incl. the <code>DDOS</code> tag in
+<code>requirements-traceability.md</code> §1) is mapped to it</strong> —
+see <code>requirements-traceability.md</code> GAP-6 (an honest
+enterprise-hardening gap, not a hidden one). (04_ARCH §4.6;
+<code>v03-control-plane/svc-api.md</code>; GAP-6)</li>
+<li><strong>RBAC (Role-Based Access Control)</strong> — the per-tenant
+role model (<code>users.role</code>:
+<code>admin | operator | member</code>) gating Console CRUD; currently
+surfaced only as a parenthetical test-type annotation on HVPN-FR-601
+(&quot;INT + E2E (RBAC)&quot;), not as its own FR with acceptance criteria — see
+<code>requirements-traceability.md</code> GAP-6. Distinct from
+<strong>RLS</strong> (which isolates <em>across</em> tenants; RBAC
+governs roles <em>within</em> one). (04_ARCH §4.5;
+<code>v03-control-plane/svc-identity.md</code>;
+<code>v03-control-plane/data-model-ddl.md</code>; FR-601; GAP-6)</li>
 <li><strong>Reconciler</strong> — the <code>helix-core</code> loop that
 drives the local state to the pushed network map (desired-state, no
 polling); reconnection state machine lives here.
@@ -985,6 +1029,17 @@ set ⊆ allow-list (no
 <code>tenant_id</code>/<code>device_id</code>/<code>*_ip</code>).
 (<code>v03-control-plane/svc-telemetry.md</code>; FR-803;
 HVPN-NFR-306)</li>
+<li><strong>Tenant / multi-tenancy</strong> — the root isolation unit
+every table in the data model carries as <code>tenant_id</code>
+(<code>04_ARCH</code> §4.5), enforced at the database by
+<strong>RLS</strong> and, within a tenant, subdivided by
+<strong>RBAC</strong> roles. One self-hoster may run multiple tenants
+(e.g. an MSP running networks for several clients); tenant
+creation/administration is a Console (<code>FR-6xx</code>) capability.
+Every &quot;per-tenant&quot;/&quot;tenant isolation&quot; reference elsewhere in this
+glossary implies this entry. (04_ARCH §4.5;
+<code>v03-control-plane/data-model-ddl.md</code>; RLS; RBAC;
+FR-110/606)</li>
 <li><strong>Terraform</strong> — the IaC tool for the multi-region/DR
 provisioning + region-failover runbook (Phase-2/DR).
 (<code>v06-deploy/disaster-recovery.md</code>; 99 G1)</li>
@@ -1184,6 +1239,14 @@ helix-ecosystem-integration), <code>v10-design/*</code>
 <li><a href="../99-source-coverage-ledger.md"><code>../99-source-coverage-ledger.md</code></a>
 (the rejected-alternative terms: sing-box G2, Fyne G3, KMP,
 CGNAT/100.64).</li>
+<li><code>04_VPN_CLD/HelixVPN-Architecture-Refined.md</code> §4.1
+(control-plane service table → <strong>API Gateway</strong>), §4.5
+(Postgres data-model sketch → <strong>Tenant</strong>,
+<strong>RBAC</strong> <code>role</code> column), §4.6 (Redis usage →
+<strong>Rate limiting / token bucket</strong>) — Rev 3 additions.</li>
+<li><a href="requirements-traceability.md"><code>requirements-traceability.md</code></a>
+GAP-6 (the RBAC/rate-limiting/DDoS traceability gap the Rev 3 entries
+cross-reference).</li>
 </ul>
 <p><em>Constitution bindings: §11.4.44 (revision header), §11.4.6
 (no-guessing — <code>UNVERIFIED</code> on terms whose numeric/interop

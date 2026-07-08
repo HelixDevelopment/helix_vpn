@@ -1,5 +1,17 @@
 # Mobile Platform VPN Implementation Research
 
+**Revision:** 1
+**Last modified:** 2026-07-04T14:00:00Z
+
+> **Editorial note (added during the 2026-07-04 MVP2 gap-analysis/hardening
+> pass):** raw research brief preserved as historical input, not a living
+> spec. The final mobile specification, including the reconciled
+> product-supported minimum OS versions (Android API 26+, iOS 15+, HarmonyOS
+> NEXT 5.0+/API 12+) and Enterprise Hardening detail (app-store review, MDM,
+> background-execution limits), lives in `../MVP2_MOBILE_APPS.md` and
+> `../MVP2_ARCHITECTURE.md` — where this brief's figures differ, those
+> documents are authoritative.
+
 ## Deep Analysis: Android, iOS, and HarmonyOS VPN Client Development
 
 **Research Date:** July 2025

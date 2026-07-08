@@ -1,7 +1,12 @@
 # Concurrency / Atomicity Test Strategy
 
-**Revision:** 1
-**Last modified:** 2026-06-26T12:00:00Z
+**Revision:** 2
+**Last modified:** 2026-07-04T12:00:00Z
+
+> **Rev 2 (2026-07-04):** independently re-verified against `SPECIFICATION.md` /
+> `svc-ipam.md` / `reconciliation-flow.md` during a corpus-wide gap-analysis pass; the
+> logical-correctness / memory-model-race division of labour with `race-deadlock.md`
+> is consistent on both sides. No contradictions found.
 
 > Master technical specification — Volume 8 (Testing & QA), nano-detail document **concurrency**,
 > one of the seven §11.4.169 cross-cutting test-type deep-dives. It deepens

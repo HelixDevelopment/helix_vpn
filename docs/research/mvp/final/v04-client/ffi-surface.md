@@ -1,7 +1,7 @@
 # FFI surface (Dart ⇄ Rust)
 
-**Revision:** 1
-**Last modified:** 2026-06-25T00:00:00Z
+**Revision:** 2
+**Last modified:** 2026-07-04T12:00:00Z
 
 > Master technical specification — Volume 4 (Clients), nano-detail deep-dive.
 > This document **deepens** the *FFI surface — Dart ⇄ `helix-core`* section of the
@@ -541,6 +541,26 @@ only ever needs the **latest** state, so the forwarding task treats `Lagged` as
 "continue → next `recv()` yields the newest" and never surfaces it to Dart as an error
 (§4.3). This mirrors the orchestrator's documented receiver contract [02_ORCH §4.6].
 
+### 4.7 Named backpressure policy (what happens if the Dart consumer is slow)
+
+The mechanism above (§4.2–§4.6) *is* the backpressure policy; this subsection names it
+explicitly so a slow-consumer question always has a one-line answer instead of requiring a
+re-derivation from the mechanics: **bounded ring (cap 64) + drop-to-latest-on-lag, never
+block, never grow unbounded, never error the UI.** Concretely: (1) the orchestrator's
+broadcast sender NEVER blocks on a slow receiver — a full ring silently overwrites the
+oldest unread entry (`tokio::broadcast` semantics); (2) the forwarding task NEVER buffers
+past the ring — on `Lagged` it drops straight to "read the newest" (§4.6), so memory is
+bounded regardless of how far behind Dart falls; (3) the UI therefore never sees a growing
+backlog and never sees an out-of-order replay — it sees the current truth, possibly having
+skipped some now-stale intermediate states, which is exactly correct for a *status* signal
+(the UI cares "what is true now", not "the full history of transitions"); (4) this is safe
+specifically because `TunnelStatus` is idempotent-to-replay state, not an event log — a
+backpressure design that dropped entries from an audit/event stream would be a §11.4.10/
+§11.4.13 violation, but dropping a stale *status* value the moment a fresher one exists is
+not (§3.5 already forbids the stream from carrying per-packet/audit-grade data). A future
+FFI stream carrying non-idempotent events (none currently planned) would need a different,
+explicitly-designed backpressure policy — this one is scoped to `status_stream` only.
+
 ---
 
 ## 5. The Dart-facing surface (`helix_core.dart`)
@@ -969,7 +989,7 @@ Per §11.4.6/§11.4.66 — options + recommendation, never silently resolved.
 |---|---|---|---|
 | C1 | The Dart-facing **`ffi::TunnelStatus`** (7-variant) + the `project()` mapping from `core::TunnelStatus` | §3.2, §3.3 | doc 02 (must emit the 5-variant on its stable prefixes); all apps |
 | C2 | The **two consumption modes** (in-process frb vs native-shim UniFFI/C) and where each status originates | §1, §7.1 | every per-platform shim [04_CLIENT §5] |
-| C3 | **`Connected.path`** requirement — the core MUST surface `"direct"|"relay"` (added to `core::TunnelStatus.Connected` **or** queryable via the active route), else the projector defaults `"direct"` and re-emits (§3.3, E10). **UNVERIFIED** in the current orchestrator enum [02_ORCH §4.1] (which carries only `transport`+`rtt_ms`) — recorded as a follow-up cross-doc item per §11.4.6 | §3.3 | doc 02 (orchestrator enum), doc 02 multihop/relay |
+| C3 | **`Connected.path`** requirement — the core MUST surface `"direct"\|"relay"` (added to `core::TunnelStatus.Connected` **or** queryable via the active route), else the projector defaults `"direct"` and re-emits (§3.3, E10). **UNVERIFIED** in the current orchestrator enum [02_ORCH §4.1] (which carries only `transport`+`rtt_ms`) — recorded as a follow-up cross-doc item per §11.4.6 | §3.3 | doc 02 (orchestrator enum), doc 02 multihop/relay |
 | C4 | The typed **`CoreError`** boundary enum (frb exception ⇄ UniFFI error ⇄ `HxCoreErr`) | §8 | all apps, all shims |
 | C5 | **`attach_tun` fd ownership transfer** (core close()s on detach/stop; shim hands a relinquished fd: Android `detachFd`, iOS callback-pump, Linux in-process) | §9.3 | every per-platform shim [04_CLIENT §5], doc 02 (`helix-tun`) |
 

@@ -1,0 +1,1624 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Desktop Platform VPN Implementation Research</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Desktop Platform VPN Implementation Research</h1>
+</header>
+<h1 id="desktop-platform-vpn-implementation-research">Desktop Platform
+VPN Implementation Research</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-07-04T14:00:00Z</p>
+<blockquote>
+<p><strong>Editorial note (added during the 2026-07-04 MVP2
+gap-analysis/hardening pass):</strong> raw research brief preserved as
+historical input, not a living spec. The final desktop specification
+(macOS 12+/Windows 10-11/Linux via Tauri v2, plus the new Enterprise
+Hardening detail: code-signing, notarization, MDM deployment,
+auto-update/rollback) lives in <code>../MVP2_DESKTOP_APPS.md</code>.
+Aurora OS is specified separately in
+<code>../MVP2_AURORA_CLIENT.md</code>, not as a desktop-Tauri platform
+(Aurora uses Qt6/QML, not Tauri) — where this brief groups Aurora with
+the Tauri desktop platforms, the split final specs are
+authoritative.</p>
+</blockquote>
+<h2 id="macos-windows-linux-and-aurora-os-deep-analysis">macOS, Windows,
+Linux, and Aurora OS Deep Analysis</h2>
+<p><strong>Research Date</strong>: 2025<br />
+<strong>Scope</strong>: Desktop-specific VPN client development across
+four platforms<br />
+<strong>Searches Conducted</strong>: 12 independent web searches</p>
+<hr />
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li><a href="#1-macos-vpn-networkextension-api">macOS VPN:
+NetworkExtension API</a></li>
+<li><a href="#2-macos-native-ui-swiftui-vs-appkit">macOS Native UI:
+SwiftUI vs AppKit</a></li>
+<li><a href="#3-windows-vpn-wfp--wintun">Windows VPN: WFP &amp;
+WinTUN</a></li>
+<li><a href="#4-windows-ui-patterns">Windows UI Patterns</a></li>
+<li><a href="#5-linux-vpn-tun--networkmanager">Linux VPN: TUN &amp;
+NetworkManager</a></li>
+<li><a href="#6-linux-ui-gtk4-vs-qt6">Linux UI: GTK4 vs Qt6</a></li>
+<li><a href="#7-aurora-os-sailfish-os">Aurora OS (Sailfish OS)</a></li>
+<li><a href="#8-desktop-rust-core-integration">Desktop Rust Core
+Integration</a></li>
+<li><a href="#9-privilege-escalation-patterns">Privilege Escalation
+Patterns</a></li>
+<li><a href="#10-auto-updaters">Auto-Updaters</a></li>
+<li><a href="#11-kill-switch-implementation">Kill Switch
+Implementation</a></li>
+<li><a href="#12-desktop-uiux-patterns-for-vpn">Desktop UI/UX Patterns
+for VPN</a></li>
+<li><a href="#13-platform-comparison-matrix">Platform Comparison
+Matrix</a></li>
+<li><a href="#14-desktop-specific-danger-zones">Desktop-Specific Danger
+Zones</a></li>
+<li><a href="#15-recommended-architecture-per-os">Recommended
+Architecture per OS</a></li>
+</ol>
+<hr />
+<h2 id="1-macos-vpn-networkextension-api">1. macOS VPN: NetworkExtension
+API</h2>
+<h3 id="11-nepackettunnelprovider">1.1 NEPacketTunnelProvider</h3>
+<p>Apple&#39;s <code>NetworkExtension</code> framework is the <strong>only
+supported API</strong> for building VPN apps on macOS. Apple explicitly
+discourages all other approaches:</p>
+<blockquote>
+<p>&quot;<strong>Network Extension is the supported API to build a VPN app.
+It works seamlessly with other networking and system components.
+Building a VPN app with anything else is highly discouraged.</strong>
+Avoid using Packet Filter or directly modifying the routing table on the
+Mac. This is not supported and risk clashing with traffic filtering and
+routing rules installed by the system or other apps.&quot; [^136^]</p>
+</blockquote>
+<blockquote>
+<p>&quot;<strong>If your VPN app doesn&#39;t use Network Extension today, you
+should migrate as soon as possible.</strong>&quot; [^136^]</p>
+</blockquote>
+<p>The core class is <code>NEPacketTunnelProvider</code>, which gives
+subclasses access to a virtual network interface:</p>
+<blockquote>
+<p>&quot;The <code>NEPacketTunnelProvider</code> class gives its subclasses
+access to a virtual network interface via the <code>packetFlow</code>
+property. Use the
+<code>setTunnelNetworkSettings(_:completionHandler:)</code> method in
+the Packet Tunnel Provider to specify network settings be associated
+with the virtual interface.&quot; [^235^]</p>
+</blockquote>
+<p>Key capabilities:</p>
+<ul>
+<li><strong>Virtual IP address</strong> assignment</li>
+<li><strong>DNS resolver</strong> configuration</li>
+<li><strong>HTTP proxy</strong> configuration</li>
+<li><strong>IP destination networks</strong> routing (included/excluded
+routes)</li>
+<li><strong>Interface MTU</strong> configuration</li>
+<li><strong>enforceRoutes</strong> option for split-tunnel VPNs</li>
+<li><strong>includeAllNetworks</strong> option for full-tunnel VPNs</li>
+<li><strong>excludeLocalNetworks</strong> for AirDrop/AirPlay
+bypass</li>
+</ul>
+<h3 id="12-app-bundle-structure">1.2 .app Bundle Structure</h3>
+<p>A macOS VPN app requires a specific bundle structure:</p>
+<pre><code>MyVPN.app/
+  Contents/
+    Info.plist
+    MacOS/
+      MyVPN (main executable)
+    Resources/
+    Library/
+      LoginItems/          (for launch-at-login helper)
+    PlugIns/
+      PacketTunnel.appex/  (Network Extension app extension)
+        Contents/
+          Info.plist       (NSExtensionPointIdentifier = com.apple.networkextension.packet-tunnel)
+          MacOS/
+            PacketTunnel   (extension binary)</code></pre>
+<p>The <code>Info.plist</code> for the extension must contain:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode xml"><code class="sourceCode xml"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>&lt;<span class="kw">key</span>&gt;NSExtension&lt;/<span class="kw">key</span>&gt;</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>&lt;<span class="kw">dict</span>&gt;</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    &lt;<span class="kw">key</span>&gt;NSExtensionPointIdentifier&lt;/<span class="kw">key</span>&gt;</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    &lt;<span class="kw">string</span>&gt;com.apple.networkextension.packet-tunnel&lt;/<span class="kw">string</span>&gt;</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    &lt;<span class="kw">key</span>&gt;NSExtensionPrincipalClass&lt;/<span class="kw">key</span>&gt;</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    &lt;<span class="kw">string</span>&gt;MyCustomPacketTunnelProvider&lt;/<span class="kw">string</span>&gt;</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>&lt;/<span class="kw">dict</span>&gt;</span></code></pre></div>
+<h3 id="13-code-signing--notarization">1.3 Code Signing &amp;
+Notarization</h3>
+<p>macOS VPN apps require:</p>
+<ul>
+<li><strong>Developer ID Application certificate</strong> (for
+distribution outside App Store)</li>
+<li><strong>Developer ID Installer certificate</strong> (for .pkg
+distribution)</li>
+<li><strong>Apple Developer Program membership</strong> ($99/year)</li>
+<li><strong>Entitlements</strong> including Network Extension
+capability</li>
+</ul>
+<p>Code signing via command line:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">codesign</span> <span class="at">-s</span> <span class="st">&quot;&lt;Developer_ID&gt;&quot;</span> <span class="at">-f</span> <span class="at">--timestamp</span> <span class="at">-o</span> runtime <span class="at">-i</span> <span class="st">&quot;&lt;Bundle_ID&gt;&quot;</span> <span class="at">--entitlements</span> <span class="st">&quot;entitlements.plist&quot;</span> <span class="st">&quot;MyVPN.app&quot;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">```</span> <span class="ex">[^231^]</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="ex">Notarization</span> <span class="er">(</span><span class="ex">required</span> since macOS 10.15<span class="kw">)</span><span class="bu">:</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="kw">```</span>bash</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="ex">xcrun</span> notarytool submit MyVPN.zip <span class="at">--apple-id</span> <span class="op">&lt;</span>appleid<span class="op">&gt;</span> --password <span class="op">&lt;</span>password<span class="op">&gt;</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="ex">xcrun</span> stapler staple MyVPN.app</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="kw">```</span> <span class="ex">[^232^]</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="ex">Key</span> entitlements needed:</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="ex">-</span> <span class="kw">`</span>com.apple.developer.networking.networkextension<span class="kw">`</span> <span class="ex">-</span> Packet Tunnel</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="ex">-</span> <span class="kw">`</span>com.apple.developer.networking.vpn.api<span class="kw">`</span> <span class="ex">-</span> VPN API access</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="ex">-</span> <span class="kw">`</span>com.apple.security.application-groups<span class="kw">`</span> <span class="ex">-</span> App group for main/extension communication</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="co">### 1.4 Menu Bar Extra &amp; Launch at Login</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a><span class="ex">For</span> a <span class="st">&quot;menubar-only&quot;</span> VPN app, macOS uses the <span class="kw">`</span>MenuBarExtra<span class="kw">`</span> <span class="ex">API</span> in SwiftUI:</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a><span class="kw">```</span>swift</span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a><span class="ex">MenuBarExtra</span> {</span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ContentView()</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>        <span class="ex">.frame</span><span class="er">(</span><span class="ex">width:</span> 300, height: 180<span class="kw">)</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a><span class="er">}</span> <span class="ex">label:</span> {</span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>    <span class="ex">Image</span><span class="er">(</span><span class="ex">systemName:</span> <span class="st">&quot;lock.shield&quot;</span><span class="kw">)</span></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a><span class="er">}</span></span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a><span class="kw">```</span> <span class="ex">[^247^]</span></span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a><span class="ex">**Three</span> macOS variants<span class="pp">**</span> exist for VPN apps, as documented by Tailscale:</span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a><span class="kw">|</span> <span class="ex">Feature</span> <span class="kw">|</span> <span class="ex">App</span> Store <span class="er">(</span><span class="ex">NE</span><span class="kw">)</span> <span class="kw">|</span> <span class="ex">Standalone</span> <span class="er">(</span><span class="ex">SysExt</span><span class="kw">)</span> <span class="kw">|</span> <span class="ex">CLI</span> <span class="er">(</span><span class="kw">`</span><span class="ex">utun</span><span class="kw">`)</span> <span class="kw">|</span></span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a><span class="kw">|</span><span class="ex">---------</span><span class="kw">|</span><span class="ex">---------------</span><span class="kw">|</span><span class="ex">---------------------</span><span class="kw">|</span><span class="ex">--------------</span><span class="kw">|</span></span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a><span class="kw">|</span> <span class="ex">GUI</span> <span class="kw">|</span> <span class="ex">Yes</span> <span class="kw">|</span> <span class="ex">Yes</span> <span class="kw">|</span> <span class="ex">No</span> <span class="kw">|</span></span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a><span class="kw">|</span> <span class="ex">Sandboxed</span> <span class="kw">|</span> <span class="ex">Yes</span> <span class="kw">|</span> <span class="ex">System</span> ext only <span class="kw">|</span> <span class="ex">No</span> <span class="kw">|</span></span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a><span class="kw">|</span> <span class="ex">Run</span> before login <span class="kw">|</span> <span class="ex">No</span> <span class="kw">|</span> <span class="ex">No</span> <span class="kw">|</span> <span class="ex">Yes</span> <span class="kw">|</span></span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a><span class="kw">|</span> <span class="ex">Auto-updates</span> <span class="kw">|</span> <span class="ex">App</span> Store <span class="kw">|</span> <span class="ex">Sparkle</span> <span class="kw">|</span> <span class="ex">No</span> <span class="kw">|</span></span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a><span class="kw">|</span> <span class="ex">Keychain</span> <span class="kw">|</span> <span class="ex">User</span> keychain <span class="kw">|</span> <span class="ex">Files</span> on disk <span class="kw">|</span> <span class="ex">Files</span> on disk <span class="kw">|</span></span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a><span class="ex">[^306^]</span></span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a><span class="co">### 1.5 Sandboxing Implications</span></span>
+<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a><span class="ex">Mac</span> App Store variants are fully sandboxed, which limits:</span>
+<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a><span class="ex">-</span> Access to system networking APIs <span class="er">(</span><span class="ex">must</span> use NetworkExtension<span class="kw">)</span></span>
+<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a><span class="ex">-</span> File system access <span class="er">(</span><span class="ex">requires</span> entitlements<span class="kw">)</span></span>
+<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a><span class="ex">-</span> Ability to run before login</span>
+<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a><span class="ex">-</span> Keychain access scope</span>
+<span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-48"><a href="#cb3-48" aria-hidden="true" tabindex="-1"></a><span class="ex">The</span> <span class="pp">**</span>Standalone <span class="er">(</span><span class="ex">System</span> Extension<span class="kw">)</span><span class="ex">**</span> approach is recommended for VPN apps:</span>
+<span id="cb3-49"><a href="#cb3-49" aria-hidden="true" tabindex="-1"></a><span class="ex">-</span> Not sandboxed <span class="er">(</span><span class="ex">full</span> system access via NetworkExtension<span class="kw">)</span></span>
+<span id="cb3-50"><a href="#cb3-50" aria-hidden="true" tabindex="-1"></a><span class="ex">-</span> Can use Sparkle for auto-updates</span>
+<span id="cb3-51"><a href="#cb3-51" aria-hidden="true" tabindex="-1"></a><span class="ex">-</span> Uses files on disk for credentials <span class="er">(</span><span class="ex">no</span> keychain dependency<span class="kw">)</span></span>
+<span id="cb3-52"><a href="#cb3-52" aria-hidden="true" tabindex="-1"></a><span class="ex">-</span> Can run menubar-only</span>
+<span id="cb3-53"><a href="#cb3-53" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-54"><a href="#cb3-54" aria-hidden="true" tabindex="-1"></a><span class="ex">---</span></span>
+<span id="cb3-55"><a href="#cb3-55" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-56"><a href="#cb3-56" aria-hidden="true" tabindex="-1"></a><span class="co">## 2. macOS Native UI: SwiftUI vs AppKit</span></span>
+<span id="cb3-57"><a href="#cb3-57" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-58"><a href="#cb3-58" aria-hidden="true" tabindex="-1"></a><span class="co">### 2.1 SwiftUI for VPN Clients</span></span>
+<span id="cb3-59"><a href="#cb3-59" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-60"><a href="#cb3-60" aria-hidden="true" tabindex="-1"></a><span class="ex">SwiftUI</span> is the recommended approach for new macOS VPN apps. The <span class="kw">`</span>MenuBarExtra<span class="kw">`</span> <span class="ex">API</span> is SwiftUI-native:</span>
+<span id="cb3-61"><a href="#cb3-61" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-62"><a href="#cb3-62" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;</span> <span class="st">&quot;Build a macOS menu bar utility in SwiftUI... To take your macOS app further, consider integrating with system features, such as adding a launch-at-login option or providing system-wide services.&quot;</span> <span class="ex">[^247^]</span></span>
+<span id="cb3-63"><a href="#cb3-63" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-64"><a href="#cb3-64" aria-hidden="true" tabindex="-1"></a><span class="ex">Key</span> SwiftUI advantages:</span>
+<span id="cb3-65"><a href="#cb3-65" aria-hidden="true" tabindex="-1"></a><span class="ex">-</span> Native <span class="kw">`</span>MenuBarExtra<span class="kw">`</span> <span class="cf">for</span> system <span class="ex">tray</span> apps</span>
+<span id="cb3-66"><a href="#cb3-66" aria-hidden="true" tabindex="-1"></a><span class="ex">-</span> <span class="kw">`</span>WindowGroup<span class="kw">`</span> <span class="cf">for</span> settings<span class="ex">/preferences</span> windows</span>
+<span id="cb3-67"><a href="#cb3-67" aria-hidden="true" tabindex="-1"></a><span class="ex">-</span> Native macOS look and feel</span>
+<span id="cb3-68"><a href="#cb3-68" aria-hidden="true" tabindex="-1"></a><span class="ex">-</span> Excellent Accessibility support</span>
+<span id="cb3-69"><a href="#cb3-69" aria-hidden="true" tabindex="-1"></a><span class="ex">-</span> Launch at login via <span class="kw">`</span>SMAppService<span class="kw">`</span> <span class="kw">(</span><span class="ex">macOS</span> 13+<span class="kw">)</span></span>
+<span id="cb3-70"><a href="#cb3-70" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-71"><a href="#cb3-71" aria-hidden="true" tabindex="-1"></a><span class="co">### 2.2 Swift-Rust FFI Bridging</span></span>
+<span id="cb3-72"><a href="#cb3-72" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-73"><a href="#cb3-73" aria-hidden="true" tabindex="-1"></a><span class="ex">The</span> recommended architecture for a Rust core + SwiftUI frontend follows Mitchell Hashimoto<span class="st">&#39;s Ghostty pattern:</span></span>
+<span id="cb3-74"><a href="#cb3-74" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-75"><a href="#cb3-75" aria-hidden="true" tabindex="-1"></a><span class="st">**Architecture:**</span></span></code></pre></div>
+<p>SwiftUI Views -&gt; State Stores -&gt; Swift FFI Facade -&gt; Rust
+Bridge (C ABI) -&gt; Core Rust Library</p>
+<pre><code>
+Using `swift-bridge` crate for safe interop:
+```rust
+#[swift_bridge::bridge]
+mod ffi {
+    extern &quot;Rust&quot; {
+        type Renderer;
+        #[swift_bridge(init)]
+        fn new(layer_ptr: *mut c_void, width: u32, height: u32) -&gt; Renderer;
+        fn render(&amp;mut self, time: f64);
+    }
+}
+``` [^254^]
+
+Alternative: Manual FFI with C headers:
+```rust
+// Rust FFI exports
+#[no_mangle]
+pub extern &quot;C&quot; fn vpn_connect(server: *const c_char) -&gt; i32 {
+    // implementation
+}</code></pre>
+<div class="sourceCode" id="cb5"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">// openwater.h - C header for Swift bridging</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>EXPORT <span class="dt">int</span> vpn_connect<span class="op">(</span><span class="dt">const</span> <span class="dt">char</span><span class="op">*</span> server<span class="op">);</span></span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode swift"><code class="sourceCode swift"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">// module.modulemap</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>module VPNCore <span class="op">{</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    umbrella header <span class="st">&quot;vpn_core.h&quot;</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    link <span class="st">&quot;vpn_core&quot;</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    export <span class="op">*</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>``` <span class="op">[^</span><span class="dv">252</span><span class="op">^]</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>### <span class="fl">2.3</span> Swift Package Manager Integration</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>Swift Package Manager <span class="op">(</span>not Xcode<span class="op">)</span> <span class="kw">is</span> the modern approach<span class="op">:</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>```swift</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="co">// Package.swift</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a><span class="co">// swift-tools-version:5.9</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="im">PackageDescription</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> <span class="va">package</span> <span class="op">=</span> Package<span class="op">(</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>    name<span class="op">:</span> <span class="st">&quot;VPNApp&quot;</span><span class="op">,</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>    platforms<span class="op">:</span> <span class="op">[.</span>macOS<span class="op">(.</span>v13<span class="op">)],</span></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>    dependencies<span class="op">:</span> <span class="op">[],</span></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>    targets<span class="op">:</span> <span class="op">[</span></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span>executableTarget<span class="op">(</span></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>            name<span class="op">:</span> <span class="st">&quot;VPNApp&quot;</span><span class="op">,</span></span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>            dependencies<span class="op">:</span> <span class="op">[</span><span class="st">&quot;VPNBridge&quot;</span><span class="op">]</span></span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>        <span class="op">),</span></span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span>systemLibrary<span class="op">(</span></span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>            name<span class="op">:</span> <span class="st">&quot;VPNBridge&quot;</span><span class="op">,</span></span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>            path<span class="op">:</span> <span class="st">&quot;Sources/VPNBridge&quot;</span></span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>        <span class="op">)</span></span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a>    <span class="op">]</span></span>
+<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div>
+<p>Build pipeline for universal binary:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Build Rust bridge for both architectures</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> build <span class="at">--target</span> x86_64-apple-darwin <span class="at">--release</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> build <span class="at">--target</span> aarch64-apple-darwin <span class="at">--release</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Create universal binary</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="ex">lipo</span> <span class="at">-create</span> <span class="at">-o</span> libvpn_bridge.a <span class="dt">\</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    target/x86_64-apple-darwin/release/libvpn_bridge.a <span class="dt">\</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    target/aarch64-apple-darwin/release/libvpn_bridge.a</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Generate C headers</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="ex">cbindgen</span> <span class="at">--crate</span> vpn_bridge <span class="at">--output</span> vpn_bridge.h</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Build Swift app</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a><span class="ex">swift</span> build</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a><span class="kw">```</span> <span class="ex">[^263^]</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a><span class="co">### 2.4 Key macOS Rust Crates</span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a><span class="kw">|</span> <span class="ex">Crate</span> <span class="kw">|</span> <span class="ex">Purpose</span> <span class="kw">|</span></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a><span class="kw">|</span><span class="ex">-------</span><span class="kw">|</span><span class="ex">---------</span><span class="kw">|</span></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a><span class="kw">|</span> <span class="kw">`</span>swift-bridge<span class="kw">`</span> <span class="kw">|</span> <span class="ex">Safe</span> FFI between Swift and Rust <span class="kw">|</span></span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a><span class="kw">|</span> <span class="kw">`</span>objc2<span class="kw">`</span> <span class="kw">|</span> <span class="ex">Objective-C</span> runtime bindings <span class="kw">|</span></span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a><span class="kw">|</span> <span class="kw">`</span>core-foundation<span class="kw">`</span> <span class="kw">|</span> <span class="ex">Core</span> Foundation bindings <span class="kw">|</span></span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a><span class="kw">|</span> <span class="kw">`</span>mac-notification-sys<span class="kw">`</span> <span class="kw">|</span> <span class="ex">macOS</span> notifications <span class="kw">|</span></span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a><span class="kw">|</span> <span class="kw">`</span>security-framework<span class="kw">`</span> <span class="kw">|</span> <span class="ex">Keychain</span> access <span class="kw">|</span></span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a><span class="ex">[^262^]</span></span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a><span class="ex">---</span></span>
+<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a><span class="co">## 3. Windows VPN: WFP &amp; WinTUN</span></span>
+<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a><span class="co">### 3.1 Windows Filtering Platform (WFP)</span></span>
+<span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-35"><a href="#cb7-35" aria-hidden="true" tabindex="-1"></a><span class="ex">Windows</span> provides the <span class="pp">**</span>Windows Filtering Platform <span class="er">(</span><span class="ex">WFP</span><span class="kw">)</span><span class="ex">**</span> for network-level packet filtering and modification:</span>
+<span id="cb7-36"><a href="#cb7-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-37"><a href="#cb7-37" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;</span> <span class="st">&quot;WFP callout drivers can steer traffic to specific adapters based on things like process image path or security descriptor.&quot;</span> <span class="ex">[^237^]</span></span>
+<span id="cb7-38"><a href="#cb7-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-39"><a href="#cb7-39" aria-hidden="true" tabindex="-1"></a><span class="ex">However,</span> WFP has known limitations for VPN use:</span>
+<span id="cb7-40"><a href="#cb7-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-41"><a href="#cb7-41" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;</span> <span class="st">&quot;WFP-based filtering has known limitations: it intercepts traffic at a higher level of the network stack, which leads to edge cases around compatibility with certain apps.&quot;</span> <span class="ex">[^236^]</span></span>
+<span id="cb7-42"><a href="#cb7-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-43"><a href="#cb7-43" aria-hidden="true" tabindex="-1"></a><span class="ex">AdGuard</span> VPN migrated from WFP to WinTun for these reasons.</span>
+<span id="cb7-44"><a href="#cb7-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-45"><a href="#cb7-45" aria-hidden="true" tabindex="-1"></a><span class="co">### 3.2 WinTUN / WireGuardNT</span></span>
+<span id="cb7-46"><a href="#cb7-46" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-47"><a href="#cb7-47" aria-hidden="true" tabindex="-1"></a><span class="ex">**WireGuardNT**</span> is the high-performance kernel implementation for Windows:</span>
+<span id="cb7-48"><a href="#cb7-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-49"><a href="#cb7-49" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;</span> <span class="st">&quot;WireGuard for Windows now uses high speed kernel implementation&quot;</span> <span class="ex">-</span> moved from WinTUN <span class="er">(</span><span class="ex">userspace</span><span class="kw">)</span> <span class="ex">to</span> WireGuardNT <span class="er">(</span><span class="ex">kernel</span> driver<span class="kw">)</span> <span class="er">in</span> <span class="ex">2021.</span> <span class="pp">[^</span><span class="ss">237^</span><span class="pp">]</span></span>
+<span id="cb7-50"><a href="#cb7-50" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-51"><a href="#cb7-51" aria-hidden="true" tabindex="-1"></a><span class="ex">Performance</span> comparison:</span>
+<span id="cb7-52"><a href="#cb7-52" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-53"><a href="#cb7-53" aria-hidden="true" tabindex="-1"></a><span class="kw">|</span> <span class="ex">Implementation</span> <span class="kw">|</span> <span class="ex">Upload</span> <span class="kw">|</span> <span class="ex">Download</span> <span class="kw">|</span></span>
+<span id="cb7-54"><a href="#cb7-54" aria-hidden="true" tabindex="-1"></a><span class="kw">|</span><span class="ex">---------------</span><span class="kw">|</span><span class="ex">--------</span><span class="kw">|</span><span class="ex">----------</span><span class="kw">|</span></span>
+<span id="cb7-55"><a href="#cb7-55" aria-hidden="true" tabindex="-1"></a><span class="kw">|</span> <span class="ex">WireGuardNT</span> <span class="er">(</span><span class="ex">kernel</span><span class="kw">)</span> <span class="kw">|</span> <span class="ex">**892</span> Mbit/s<span class="pp">**</span> <span class="kw">|</span> <span class="ex">**892</span> Mbit/s<span class="pp">**</span> <span class="kw">|</span></span>
+<span id="cb7-56"><a href="#cb7-56" aria-hidden="true" tabindex="-1"></a><span class="kw">|</span> <span class="ex">WireSock</span> VPN Client <span class="kw">|</span> <span class="ex">879</span> Mbit/s <span class="kw">|</span> <span class="ex">**892</span> Mbit/s<span class="pp">**</span> <span class="kw">|</span></span>
+<span id="cb7-57"><a href="#cb7-57" aria-hidden="true" tabindex="-1"></a><span class="kw">|</span> <span class="ex">WinTun</span> <span class="er">(</span><span class="ex">userspace</span><span class="kw">)</span> <span class="kw">|</span> <span class="ex">288</span> Mbit/s <span class="kw">|</span> <span class="ex">325</span> Mbit/s <span class="kw">|</span></span>
+<span id="cb7-58"><a href="#cb7-58" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-59"><a href="#cb7-59" aria-hidden="true" tabindex="-1"></a><span class="ex">[^171^]</span></span>
+<span id="cb7-60"><a href="#cb7-60" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-61"><a href="#cb7-61" aria-hidden="true" tabindex="-1"></a><span class="co">### 3.3 Windows Service Architecture</span></span>
+<span id="cb7-62"><a href="#cb7-62" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-63"><a href="#cb7-63" aria-hidden="true" tabindex="-1"></a><span class="ex">WireGuard</span> for Windows uses a sophisticated <span class="pp">**</span>dual-service architecture<span class="pp">**</span>:</span>
+<span id="cb7-64"><a href="#cb7-64" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-65"><a href="#cb7-65" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;</span> <span class="st">&quot;The &#39;manager service&#39; is responsible for displaying a UI on select users&#39; desktops (in the system tray), and responding to requests from the UI to do things like add, remove, start, or stop tunnels. The &#39;tunnel service&#39; is a separate Windows service for each tunnel.&quot;</span> <span class="ex">[^266^]</span></span>
+<span id="cb7-66"><a href="#cb7-66" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-67"><a href="#cb7-67" aria-hidden="true" tabindex="-1"></a><span class="ex">Attack</span> surface documentation:</span>
+<span id="cb7-68"><a href="#cb7-68" aria-hidden="true" tabindex="-1"></a><span class="ex">-</span> <span class="pp">**</span>WireGuardNT<span class="pp">**</span>: Kernel driver with restricted IOCTLs <span class="er">(</span><span class="ex">System</span> + Built-in Administrators only<span class="kw">)</span></span>
+<span id="cb7-69"><a href="#cb7-69" aria-hidden="true" tabindex="-1"></a><span class="ex">-</span> <span class="pp">**</span>Tunnel Service<span class="pp">**</span>: Runs as Local System, removes all privileges except <span class="kw">`</span>SeLoadDriverPrivilege<span class="kw">`</span></span>
+<span id="cb7-70"><a href="#cb7-70" aria-hidden="true" tabindex="-1"></a><span class="ex">-</span> <span class="pp">**</span>Manager Service<span class="pp">**</span>: Runs as Local System, manages UI spawning and IPC</span>
+<span id="cb7-71"><a href="#cb7-71" aria-hidden="true" tabindex="-1"></a><span class="ex">-</span> <span class="pp">**</span>UI Process<span class="pp">**</span>: Runs with administrator token, communicates via unnamed pipes <span class="pp">[^</span><span class="ss">268^</span><span class="pp">]</span></span></code></pre></div>
+<p>User Desktop: WireGuard.exe (UI) - runs as elevated admin | | Unnamed
+pipe IPC v Manager Service (Local System) | | Service control v Tunnel
+Service$ConfigName (Local System) | | NDIS IOCTLs v WireGuardNT.sys
+(Kernel)</p>
+<pre><code>
+### 3.4 Enterprise Deployment
+
+WireGuard supports enterprise deployment:
+
+&gt; &quot;Enterprise admins can instead download MSIs directly and deploy these using Group Policy Objects. The installer makes use of standard MSI features and should be easily automatable.&quot; [^266^]
+
+```powershell
+# Install tunnel service from CLI (no UI)
+wireguard.exe /installtunnelservice C:\path\to\config.conf
+# Creates service: WireGuardTunnel$configname
+
+# Uninstall tunnel service
+wireguard.exe /uninstalltunnelservice configname</code></pre>
+<hr />
+<h2 id="4-windows-ui-patterns">4. Windows UI Patterns</h2>
+<h3 id="41-winui-3-vs-wpf">4.1 WinUI 3 vs WPF</h3>
+<p>For a Windows VPN client, the framework choice matters:</p>
+<table>
+<thead>
+<tr>
+<th>Consideration</th>
+<th>WinUI 3</th>
+<th>WPF</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Modern Fluent UI</td>
+<td>Native, first-class</td>
+<td>Fluent theme (.NET 9+)</td>
+</tr>
+<tr>
+<td>Windows 11 integration</td>
+<td>Deep, native</td>
+<td>Limited</td>
+</tr>
+<tr>
+<td>Windows 7/8 support</td>
+<td>Not supported</td>
+<td>Supported</td>
+</tr>
+<tr>
+<td>Startup time</td>
+<td>Faster</td>
+<td>Slightly slower</td>
+</tr>
+<tr>
+<td>Memory footprint</td>
+<td>~15-20% lower</td>
+<td>Higher</td>
+</tr>
+<tr>
+<td>Third-party ecosystem</td>
+<td>Growing</td>
+<td>Broadest</td>
+</tr>
+<tr>
+<td>NavigationView</td>
+<td>Built-in</td>
+<td>Needs custom</td>
+</tr>
+<tr>
+<td>InfoBar notifications</td>
+<td>Native</td>
+<td>Needs custom</td>
+</tr>
+</tbody>
+</table>
+<p>[^249^]</p>
+<p><strong>Recommendation</strong>: Use WinUI 3 for new VPN apps
+targeting Windows 10/11+. WPF only if Windows 7/8 support is
+required.</p>
+<h3 id="42-system-tray-integration">4.2 System Tray Integration</h3>
+<p>VPN apps on Windows <strong>must</strong> have system tray
+integration. Windows 10/11 lacks a native VPN status indicator:</p>
+<blockquote>
+<p>&quot;The current editions of Windows 10 (1803) are lacking this
+functionality.&quot; - No native VPN status in notification area. [^287^]</p>
+</blockquote>
+<p>ProtonVPN&#39;s v4.2.0 added:</p>
+<ul>
+<li>&quot;A new system tray app to let you connect, disconnect, or switch
+profiles faster&quot;</li>
+<li>&quot;A taskbar status icon so you can see at a glance if you&#39;re
+connected&quot; [^286^]</li>
+</ul>
+<h3 id="43-windows-notifications">4.3 Windows Notifications</h3>
+<p>Use <code>ToastNotificationManager</code> (WinUI 3) or
+<code>System.Windows.Forms.NotifyIcon</code> for:</p>
+<ul>
+<li>Connection/disconnection events</li>
+<li>Kill switch triggered alerts</li>
+<li>Server switch notifications</li>
+<li>Error states</li>
+</ul>
+<h3 id="44-auto-start-on-boot">4.4 Auto-Start on Boot</h3>
+<p>Windows VPN apps should register as startup apps:</p>
+<ul>
+<li>Add to
+<code>HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Run</code></li>
+<li>Or use Task Scheduler for delayed start</li>
+<li>Windows services (tunnel) can start before user login</li>
+<li>UI should only start after user login</li>
+</ul>
+<hr />
+<h2 id="5-linux-vpn-tun--networkmanager">5. Linux VPN: TUN &amp;
+NetworkManager</h2>
+<h3 id="51-tun-device-creation">5.1 TUN Device Creation</h3>
+<p>On Linux, VPN tunnels are created using the <strong>TUN/TAP</strong>
+virtual network interface:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Using wiretun (Rust)</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">wiretun::</span><span class="op">{</span>Cidr<span class="op">,</span> Device<span class="op">,</span> DeviceConfig<span class="op">,</span> PeerConfig<span class="op">};</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> cfg <span class="op">=</span> <span class="pp">DeviceConfig::</span><span class="kw">default</span>()</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>listen_port(<span class="dv">40001</span>)<span class="op">;</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> device <span class="op">=</span> <span class="pp">Device::</span>native(<span class="st">&quot;wg0&quot;</span><span class="op">,</span> cfg)<span class="op">.</span><span class="kw">await</span><span class="op">?;</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>``` [<span class="op">^</span><span class="dv">239</span><span class="op">^</span>]</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="op">**</span>BoringTun<span class="op">**</span> (Cloudflare<span class="ot">&#39;s</span> Rust WireGuard implementation) is the industry standard<span class="op">:</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;</span> <span class="st">&quot;BoringTun is an implementation of the WireGuard protocol designed for portability and speed. BoringTun is successfully deployed on millions of iOS and Android consumer devices as well as thousands of Cloudflare Linux servers.&quot;</span> [<span class="op">^</span><span class="dv">49</span><span class="op">^</span>]</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>Capabilities required<span class="op">:</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>```bash</span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a># Grant CAP_NET_ADMIN capability</span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>sudo setcap cap_net_admin<span class="op">+</span>epi boringtun</span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a># No sudo needed after this</span></code></pre></div>
+<h3 id="52-networkmanager-integration">5.2 NetworkManager
+Integration</h3>
+<p>NetworkManager is the standard Linux network management daemon. VPN
+plugins use a <strong>D-Bus service architecture</strong>:</p>
+<blockquote>
+<p>&quot;A VPN plugin consists of the editor dialog and a D-Bus service that
+manages the actual VPN connection.&quot; [^292^]</p>
+</blockquote>
+<p>The D-Bus interface
+(<code>org.freedesktop.NetworkManager.VPN.Plugin</code>) requires:</p>
+<ul>
+<li><code>Connect(conn)</code> - initiate VPN connection</li>
+<li><code>Disconnect()</code> - terminate connection</li>
+<li><code>NeedSecrets(settings)</code> -&gt; <code>setting_name</code> -
+check if secrets needed</li>
+<li><code>ConnectInteractive(conn, details)</code> - connect with
+interactive auth</li>
+<li><code>SetConfig(config)</code> - set connection details</li>
+<li><code>SetIp4Config(config)</code> /
+<code>SetIp6Config(config)</code> - set IP configuration [^280^]</li>
+</ul>
+<p>Files for a NetworkManager VPN plugin:</p>
+<pre><code>/usr/lib/NetworkManager/libnm-vpn-plugin-myvpn.so    (editor UI)
+/usr/lib/NetworkManager/nm-myvpn-service             (D-Bus service)
+/usr/lib/NetworkManager/VPN/nm-myvpn-service.name    (plugin descriptor)</code></pre>
+<p>NetworkManager natively supports WireGuard since version
+<strong>1.16.0+</strong> (no plugin needed). [^292^]</p>
+<h3 id="53-systemd-service">5.3 systemd Service</h3>
+<p>VPN daemons on Linux should ship as systemd services:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode ini"><code class="sourceCode ini"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># /etc/systemd/system/myvpn-daemon.service</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="kw">[Unit]</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="dt">Description</span><span class="ot">=</span><span class="st">MyVPN Daemon</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="dt">After</span><span class="ot">=</span><span class="st">network-online.target</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="dt">Wants</span><span class="ot">=</span><span class="st">network-online.target</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="kw">[Service]</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="dt">Type</span><span class="ot">=</span><span class="st">dbus</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a><span class="dt">BusName</span><span class="ot">=</span><span class="st">com.mycompany.myvpn</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a><span class="dt">ExecStart</span><span class="ot">=</span><span class="st">/usr/bin/myvpn-daemon</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a><span class="dt">Restart</span><span class="ot">=</span><span class="st">on-failure</span></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a><span class="dt">RestartSec</span><span class="ot">=</span><span class="dv">5</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a><span class="kw">[Install]</span></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a><span class="dt">WantedBy</span><span class="ot">=</span><span class="st">multi-user.target</span></span></code></pre></div>
+<h3 id="54-d-bus-communication">5.4 D-Bus Communication</h3>
+<p>D-Bus is the standard IPC mechanism on Linux. VPN apps should:</p>
+<ul>
+<li>Expose a D-Bus service for the daemon</li>
+<li>Use D-Bus signals for connection state changes</li>
+<li>Integrate with systemd&#39;s D-Bus activation</li>
+</ul>
+<h3 id="55-polkit-for-privileges">5.5 polkit for Privileges</h3>
+<p>polkit handles privilege escalation on Linux:</p>
+<pre><code>User App (unprivileged)
+    |
+    | D-Bus call
+    v
+VPN Daemon (running as root or with cap_net_admin)
+    |
+    | polkit authorization check
+    v
+System operation (network config, firewall rules)</code></pre>
+<p>Custom polkit rules can be installed at
+<code>/usr/share/polkit-1/rules.d/</code>.</p>
+<hr />
+<h2 id="6-linux-ui-gtk4-vs-qt6">6. Linux UI: GTK4 vs Qt6</h2>
+<h3 id="61-framework-comparison">6.1 Framework Comparison</h3>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>GTK4 + libadwaita</th>
+<th>Qt6</th>
+<th>libappindicator</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Native GNOME look</td>
+<td>Yes (Adwaita)</td>
+<td>Themable</td>
+<td>N/A</td>
+</tr>
+<tr>
+<td>KDE Plasma look</td>
+<td>Themable</td>
+<td>Yes (Breeze)</td>
+<td>N/A</td>
+</tr>
+<tr>
+<td>System tray</td>
+<td>Via libappindicator</td>
+<td>QSystemTrayIcon</td>
+<td>Direct API</td>
+</tr>
+<tr>
+<td>Wayland support</td>
+<td>Good</td>
+<td>Good</td>
+<td>Partial</td>
+</tr>
+<tr>
+<td>Flatpak support</td>
+<td>Excellent</td>
+<td>Good</td>
+<td>Good</td>
+</tr>
+<tr>
+<td>Distribution packaging</td>
+<td>DEB/RPM/Flatpak</td>
+<td>DEB/RPM/Flatpak</td>
+<td>All</td>
+</tr>
+</tbody>
+</table>
+<h3 id="62-system-tray-on-linux">6.2 System Tray on Linux</h3>
+<p>Linux system tray support is fragmented:</p>
+<blockquote>
+<p>&quot;The status of tray icon support is currently incredibly messy on
+Linux, there is an X implementation, libappindicator/KStatusNotifier...&quot;
+[^276^]</p>
+</blockquote>
+<p><strong>AppIndicator</strong> is the most compatible approach:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>indicator <span class="op">=</span> appindicator.Indicator.new(</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;customtray&quot;</span>,</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;vpn-icon&quot;</span>,</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    appindicator.IndicatorCategory.APPLICATION_STATUS</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>indicator.set_status(appindicator.IndicatorStatus.ACTIVE)</span></code></pre></div>
+<p>GNOME 40+ requires the <strong>AppIndicator extension</strong> to be
+installed for tray icons. [^278^]</p>
+<p><strong>Mullvad</strong> addresses this:</p>
+<blockquote>
+<p>&quot;For the Mullvad padlock tray icon to show in Debian with GNOME,
+install the GNOME extension AppIndicator and KStatusNotifierItem
+Support.&quot; [^289^]</p>
+</blockquote>
+<h3 id="63-statusnotifieritem-xdg-spec">6.3 StatusNotifierItem (XDG
+Spec)</h3>
+<p>The modern standard is <code>StatusNotifierItem</code> via D-Bus:</p>
+<ul>
+<li>KDE Plasma: Native support</li>
+<li>GNOME: Requires extension</li>
+<li>XFCE: Native support</li>
+<li>Cinnamon: Native support</li>
+</ul>
+<h3 id="64-distribution-packaging">6.4 Distribution Packaging</h3>
+<table>
+<thead>
+<tr>
+<th>Format</th>
+<th>Pros</th>
+<th>Cons</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>DEB</strong> (Debian/Ubuntu)</td>
+<td>Native, dependency resolution</td>
+<td>Distro-specific</td>
+</tr>
+<tr>
+<td><strong>RPM</strong> (Fedora/openSUSE)</td>
+<td>Native, widely used</td>
+<td>Distro-specific</td>
+</tr>
+<tr>
+<td><strong>AUR</strong> (Arch)</td>
+<td>Community-driven</td>
+<td>Manual install</td>
+</tr>
+<tr>
+<td><strong>Flatpak</strong></td>
+<td>Universal, sandboxed</td>
+<td>Permission complexity</td>
+</tr>
+<tr>
+<td><strong>Snap</strong></td>
+<td>Universal, auto-updates</td>
+<td>Performance, sandboxing</td>
+</tr>
+<tr>
+<td><strong>AppImage</strong></td>
+<td>Portable, no install</td>
+<td>No integration</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Recommendation</strong>: Ship DEB + RPM from a custom
+repository (like Mullvad does) plus Flatpak for universal support.</p>
+<blockquote>
+<p>&quot;Mullvad repository: <code>sudo apt install mullvad-vpn</code>... The
+app should now be installed and will automatically be upgraded.&quot;
+[^289^]</p>
+</blockquote>
+<hr />
+<h2 id="7-aurora-os-sailfish-os">7. Aurora OS (Sailfish OS)</h2>
+<h3 id="71-architecture-overview">7.1 Architecture Overview</h3>
+<p>Aurora OS is based on Sailfish OS, which uses:</p>
+<blockquote>
+<p>&quot;Sailfish OS includes a multi-tasking graphical shell called
+&#39;Lipstick&#39; built with Qt by Jolla on top of the Wayland display server
+protocol. It uses standard Linux middleware like Systemd, Pulseaudio and
+Qt.&quot; [^257^]</p>
+</blockquote>
+<p>Key components:</p>
+<ul>
+<li><strong>ConnMan</strong> - Connection manager for network/VPN</li>
+<li><strong>Wayland</strong> - Display server</li>
+<li><strong>Qt/QML</strong> - UI framework</li>
+<li><strong>Silica</strong> - Native QML UI components</li>
+<li><strong>RPM</strong> - Package manager</li>
+<li><strong>oFono</strong> - Telephony stack</li>
+<li><strong>wpa_supplicant</strong> - WiFi</li>
+</ul>
+<h3 id="72-vpn-architecture-connman">7.2 VPN Architecture (ConnMan)</h3>
+<p>ConnMan manages VPN connections on Sailfish/Aurora:</p>
+<blockquote>
+<p>&quot;For connectivity ConnMan is used to manage network connections.&quot;
+[^257^]</p>
+</blockquote>
+<p>VPN plugins for ConnMan:</p>
+<ul>
+<li>OpenVPN plugin (<code>connman-vpn-plugin-openvpn</code>)</li>
+<li>WireGuard support via custom plugin</li>
+<li>VPN configuration via ConnMan D-Bus API</li>
+</ul>
+<p>Aurora OS provides a ConnMan VPN plugin example:</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode qml"><code class="sourceCode qml"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co">// qml-plugin.pro - Aurora OS OpenVPN plugin</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>TEMPLATE <span class="op">=</span> lib</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>TARGET <span class="op">=</span> ofvpnplugin</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>QT <span class="op">+=</span> qml</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>QT <span class="op">-=</span> gui</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>CONFIG <span class="op">+=</span> plugin c<span class="op">++</span><span class="dv">14</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="vs">``` [^227^]</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a><span class="vs">### 7.3 Qt/QML Native Development</span></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a><span class="vs">Aurora SDK uses **Sailfish Silica** for UI components:</span></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a><span class="vs">&gt; &quot;Aurora SDK includes its own module for UI development on QML - Sailfish Silica, which includes all necessary components.&quot; [^308^]</span></span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a><span class="vs">However, Silica has limitations:</span></span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a><span class="vs">- Color/font constraints tied to OS &quot;atmospheres&quot; (themes)</span></span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a><span class="vs">- Platform-specific (not cross-platform)</span></span>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a><span class="vs">- Qt Quick Controls not allowed in Aurora SDK validation</span></span>
+<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a><span class="vs">**Recommended approach**: Use standard Qt Quick components for cross-platform compatibility:</span></span>
+<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-22"><a href="#cb14-22" aria-hidden="true" tabindex="-1"></a><span class="vs">&gt; &quot;The workaround is implementing the interface using standard Qt Quick components. This library provides basic capabilities like anchors, lists, text labels, and more, allowing you to implement virtually any UI element.&quot; [^308^]</span></span>
+<span id="cb14-23"><a href="#cb14-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-24"><a href="#cb14-24" aria-hidden="true" tabindex="-1"></a><span class="vs">Basic Qt Quick components available:</span></span>
+<span id="cb14-25"><a href="#cb14-25" aria-hidden="true" tabindex="-1"></a><span class="vs">- `</span><span class="fu">Text</span><span class="vs">` - text rendering</span></span>
+<span id="cb14-26"><a href="#cb14-26" aria-hidden="true" tabindex="-1"></a><span class="vs">- `</span><span class="fu">Rectangle</span><span class="vs">` - shapes</span></span>
+<span id="cb14-27"><a href="#cb14-27" aria-hidden="true" tabindex="-1"></a><span class="vs">- `</span><span class="fu">MouseArea</span><span class="vs">` - touch/click handling</span></span>
+<span id="cb14-28"><a href="#cb14-28" aria-hidden="true" tabindex="-1"></a><span class="vs">- `</span><span class="fu">Image</span><span class="vs">` - images</span></span>
+<span id="cb14-29"><a href="#cb14-29" aria-hidden="true" tabindex="-1"></a><span class="vs">- `</span><span class="fu">ListView</span><span class="vs">` - lists</span></span>
+<span id="cb14-30"><a href="#cb14-30" aria-hidden="true" tabindex="-1"></a><span class="vs">- `</span><span class="fu">Item</span><span class="vs">` - custom components</span></span>
+<span id="cb14-31"><a href="#cb14-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-32"><a href="#cb14-32" aria-hidden="true" tabindex="-1"></a><span class="vs">### 7.4 RPM Packaging &amp; OpenRepos</span></span>
+<span id="cb14-33"><a href="#cb14-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-34"><a href="#cb14-34" aria-hidden="true" tabindex="-1"></a><span class="vs">Aurora OS uses RPM packaging:</span></span>
+<span id="cb14-35"><a href="#cb14-35" aria-hidden="true" tabindex="-1"></a><span class="vs">```</span>spec</span>
+<span id="cb14-36"><a href="#cb14-36" aria-hidden="true" tabindex="-1"></a>Name<span class="op">:</span> myvpn</span>
+<span id="cb14-37"><a href="#cb14-37" aria-hidden="true" tabindex="-1"></a>Version<span class="op">:</span> <span class="fl">1.0.0</span></span>
+<span id="cb14-38"><a href="#cb14-38" aria-hidden="true" tabindex="-1"></a>Release<span class="op">:</span> <span class="dv">1</span></span>
+<span id="cb14-39"><a href="#cb14-39" aria-hidden="true" tabindex="-1"></a>Summary<span class="op">:</span> MyVPN client <span class="cf">for</span> Aurora OS</span>
+<span id="cb14-40"><a href="#cb14-40" aria-hidden="true" tabindex="-1"></a>License<span class="op">:</span> GPLv3</span>
+<span id="cb14-41"><a href="#cb14-41" aria-hidden="true" tabindex="-1"></a>BuildRequires<span class="op">:</span> <span class="fu">pkgconfig</span>(Qt5Core)<span class="op">,</span> <span class="fu">pkgconfig</span>(Qt5Qml)</span>
+<span id="cb14-42"><a href="#cb14-42" aria-hidden="true" tabindex="-1"></a><span class="op">%</span>description</span>
+<span id="cb14-43"><a href="#cb14-43" aria-hidden="true" tabindex="-1"></a>VPN client <span class="cf">for</span> Aurora OS</span></code></pre></div>
+<p>Distribution via <strong>OpenRepos</strong> (unofficial community
+store) or Aurora Store (official).</p>
+<h3 id="75-aurora-os-vpn-app-architecture">7.5 Aurora OS VPN App
+Architecture</h3>
+<pre><code>QML UI (Qt Quick)
+  |
+  v
+C++ Bridge / Qt D-Bus
+  |
+  v
+ConnMan VPN Plugin (D-Bus service)
+  |
+  v
+WireGuard/OpenVPN (TUN interface)</code></pre>
+<hr />
+<h2 id="8-desktop-rust-core-integration">8. Desktop Rust Core
+Integration</h2>
+<h3 id="81-architecture-overview">8.1 Architecture Overview</h3>
+<p>The recommended architecture separates a <strong>Rust core</strong>
+(tunnel, encryption, networking) from a <strong>platform-specific
+UI</strong>:</p>
+<pre><code>Desktop Architecture:
+  +------------------------------------------------------+
+  | UI Layer (Tauri/Flutter/Qt/SwiftUI)                   |
+  |   - Connection UI, Settings, System Tray             |
+  +------------------------------------------------------+
+                    | IPC/FFI/Platform Channel
+                    v
+  +------------------------------------------------------+
+  | Rust Core Library (libvpn_core)                       |
+  |   - Protocol implementation (WireGuard/etc.)          |
+  |   - Tunnel management                                 |
+  |   - Kill switch logic                                 |
+  |   - Firewall rules                                    |
+  |   - DNS management                                    |
+  +------------------------------------------------------+
+                    | Platform Abstraction
+                    v
+  +------------------------------------------------------+
+  | Platform Adaptors                                     |
+  |   macOS: NetworkExtension (NEPacketTunnelProvider)   |
+  |   Windows: WireGuardNT / WFP                         |
+  |   Linux: TUN + netlink + iptables/nftables           |
+  |   Aurora: ConnMan plugin + TUN                       |
+  +------------------------------------------------------+</code></pre>
+<h3 id="82-tauri-command-pattern">8.2 Tauri Command Pattern</h3>
+<p>Tauri uses a command pattern for JS-to-Rust communication:</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span><span class="pp">tauri::</span>command<span class="at">]</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> vpn_connect(server<span class="op">:</span> <span class="dt">String</span><span class="op">,</span> protocol<span class="op">:</span> <span class="dt">String</span>) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span><span class="dt">String</span><span class="op">,</span> <span class="dt">String</span><span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Rust implementation</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>    <span class="cn">Ok</span>(<span class="st">&quot;connected&quot;</span><span class="op">.</span>to_string())</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span><span class="pp">tauri::</span>command<span class="at">]</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a><span class="kw">async</span> <span class="kw">fn</span> vpn_disconnect(state<span class="op">:</span> State<span class="op">&lt;</span><span class="ot">&#39;_</span><span class="op">,</span> VpnState<span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">,</span> <span class="dt">String</span><span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>    <span class="co">// async command</span></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>    <span class="cn">Ok</span>(())</span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a><span class="co">// Register</span></span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a><span class="pp">tauri::Builder::</span><span class="kw">default</span>()</span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>invoke_handler(<span class="pp">tauri::generate_handler!</span>[vpn_connect<span class="op">,</span> vpn_disconnect])</span>
+<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a>``` [<span class="op">^</span><span class="dv">149</span><span class="op">^</span>]</span>
+<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a><span class="op">**</span>IPC Model<span class="op">**:</span> Tauri uses JSON<span class="op">-</span>RPC over a custom IPC channel<span class="op">.</span> Commands are registered <span class="kw">in</span> Rust and callable from JavaScript via `invoke()`<span class="op">.</span></span>
+<span id="cb17-19"><a href="#cb17-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-20"><a href="#cb17-20" aria-hidden="true" tabindex="-1"></a>### <span class="dv">8.3</span> Flutter Platform Channels</span>
+<span id="cb17-21"><a href="#cb17-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-22"><a href="#cb17-22" aria-hidden="true" tabindex="-1"></a>For Flutter desktop<span class="op">,</span> <span class="kw">use</span> FFI or platform channels<span class="op">:</span></span>
+<span id="cb17-23"><a href="#cb17-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-24"><a href="#cb17-24" aria-hidden="true" tabindex="-1"></a><span class="op">**</span><span class="dt">Option</span> A<span class="op">:</span> flutter_rust_bridge<span class="op">**</span> (recommended)</span>
+<span id="cb17-25"><a href="#cb17-25" aria-hidden="true" tabindex="-1"></a>```bash</span>
+<span id="cb17-26"><a href="#cb17-26" aria-hidden="true" tabindex="-1"></a>cargo install flutter_rust_bridge_codegen</span>
+<span id="cb17-27"><a href="#cb17-27" aria-hidden="true" tabindex="-1"></a>flutter_rust_bridge_codegen create my_vpn_app</span>
+<span id="cb17-28"><a href="#cb17-28" aria-hidden="true" tabindex="-1"></a># Generates Flutter <span class="op">+</span> Rust scaffold with bindings</span>
+<span id="cb17-29"><a href="#cb17-29" aria-hidden="true" tabindex="-1"></a>``` [<span class="op">^</span><span class="dv">271</span><span class="op">^</span>]</span>
+<span id="cb17-30"><a href="#cb17-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-31"><a href="#cb17-31" aria-hidden="true" tabindex="-1"></a><span class="op">**</span><span class="dt">Option</span> B<span class="op">:</span> NativeShell<span class="op">**</span> (Rust<span class="op">-</span>based desktop shell <span class="cf">for</span> Flutter)</span>
+<span id="cb17-32"><a href="#cb17-32" aria-hidden="true" tabindex="-1"></a>```rust</span>
+<span id="cb17-33"><a href="#cb17-33" aria-hidden="true" tabindex="-1"></a><span class="co">// Rust side - register platform channel handler</span></span>
+<span id="cb17-34"><a href="#cb17-34" aria-hidden="true" tabindex="-1"></a>context<span class="op">.</span>message_manager</span>
+<span id="cb17-35"><a href="#cb17-35" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>borrow_mut()</span>
+<span id="cb17-36"><a href="#cb17-36" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>register_method_handler(<span class="st">&quot;vpn_channel&quot;</span><span class="op">,</span> <span class="op">|</span>call<span class="op">,</span> reply<span class="op">,</span> engine<span class="op">|</span> <span class="op">{</span></span>
+<span id="cb17-37"><a href="#cb17-37" aria-hidden="true" tabindex="-1"></a>        <span class="cf">match</span> call<span class="op">.</span>method<span class="op">.</span>as_str() <span class="op">{</span></span>
+<span id="cb17-38"><a href="#cb17-38" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;connect&quot;</span> <span class="op">=&gt;</span> <span class="op">{</span></span>
+<span id="cb17-39"><a href="#cb17-39" aria-hidden="true" tabindex="-1"></a>                reply<span class="op">.</span>send_ok(<span class="pp">json!</span>(<span class="op">{</span><span class="st">&quot;status&quot;</span><span class="op">:</span> <span class="st">&quot;connected&quot;</span><span class="op">}</span>))<span class="op">;</span></span>
+<span id="cb17-40"><a href="#cb17-40" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb17-41"><a href="#cb17-41" aria-hidden="true" tabindex="-1"></a>            _ <span class="op">=&gt;</span> <span class="op">{}</span></span>
+<span id="cb17-42"><a href="#cb17-42" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb17-43"><a href="#cb17-43" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb17-44"><a href="#cb17-44" aria-hidden="true" tabindex="-1"></a>``` [<span class="op">^</span><span class="dv">267</span><span class="op">^</span>]</span>
+<span id="cb17-45"><a href="#cb17-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-46"><a href="#cb17-46" aria-hidden="true" tabindex="-1"></a>### <span class="dv">8.4</span> Direct FFI</span>
+<span id="cb17-47"><a href="#cb17-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-48"><a href="#cb17-48" aria-hidden="true" tabindex="-1"></a>For maximum control<span class="op">,</span> <span class="kw">use</span> direct FFI<span class="op">:</span></span>
+<span id="cb17-49"><a href="#cb17-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-50"><a href="#cb17-50" aria-hidden="true" tabindex="-1"></a>```rust</span>
+<span id="cb17-51"><a href="#cb17-51" aria-hidden="true" tabindex="-1"></a><span class="co">// Rust exports (cdylib/staticlib)</span></span>
+<span id="cb17-52"><a href="#cb17-52" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>no_mangle<span class="at">]</span></span>
+<span id="cb17-53"><a href="#cb17-53" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">extern</span> <span class="st">&quot;C&quot;</span> <span class="kw">fn</span> vpn_core_init(config<span class="op">:</span> <span class="op">*</span><span class="kw">const</span> <span class="dt">c_char</span>) <span class="op">-&gt;</span> <span class="op">*</span><span class="kw">mut</span> VpnCore <span class="op">{</span></span>
+<span id="cb17-54"><a href="#cb17-54" aria-hidden="true" tabindex="-1"></a>    <span class="co">// initialize</span></span>
+<span id="cb17-55"><a href="#cb17-55" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb17-56"><a href="#cb17-56" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-57"><a href="#cb17-57" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>no_mangle<span class="at">]</span></span>
+<span id="cb17-58"><a href="#cb17-58" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">extern</span> <span class="st">&quot;C&quot;</span> <span class="kw">fn</span> vpn_core_connect(core<span class="op">:</span> <span class="op">*</span><span class="kw">mut</span> VpnCore) <span class="op">-&gt;</span> <span class="dt">i32</span> <span class="op">{</span></span>
+<span id="cb17-59"><a href="#cb17-59" aria-hidden="true" tabindex="-1"></a>    <span class="co">// connect</span></span>
+<span id="cb17-60"><a href="#cb17-60" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Platform-specific loading:</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode dart"><code class="sourceCode dart"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Dart FFI</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="at">dynamic</span> _dylib;</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (Platform<span class="op">.</span>isMacOS) <span class="op">{</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>    _dylib <span class="op">=</span> DynamicLibrary<span class="op">.</span>open(<span class="st">&#39;libvpn_core.dylib&#39;</span>);</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> <span class="cf">else</span> <span class="cf">if</span> (Platform<span class="op">.</span>isWindows) <span class="op">{</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>    _dylib <span class="op">=</span> DynamicLibrary<span class="op">.</span>open(<span class="st">&#39;vpn_core.dll&#39;</span>);</span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> <span class="cf">else</span> <span class="cf">if</span> (Platform<span class="op">.</span>isLinux) <span class="op">{</span></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>    _dylib <span class="op">=</span> DynamicLibrary<span class="op">.</span>open(<span class="st">&#39;libvpn_core.so&#39;</span>);</span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>``` [<span class="op">^</span><span class="dv">271</span><span class="op">^</span>]</span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>### <span class="fl">8.5</span> Mullvad<span class="st">&#39;s Architecture (Real-World Reference)</span></span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a>Mullvad uses a <span class="op">**</span>daemon <span class="op">+</span> frontend<span class="op">**</span> architecture<span class="op">:</span></span>
+<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;</span> <span class="st">&quot;The daemon is implemented in Rust and is implemented in several crates. The main, or top level, crate that builds the final daemon binary is mullvad-daemon. The talpid crates are supposed to be completely unrelated to Mullvad specific things. A talpid crate is not allowed to know anything about the API through which the daemon fetch Mullvad account details.&quot;</span> [<span class="op">^</span><span class="dv">155</span><span class="op">^</span>]</span></code></pre></div>
+<p>mullvad-daemon/ - Main Rust daemon talpid-core/ - Generic VPN client
+library talpid-wireguard/ - WireGuard implementation talpid-openvpn/ -
+OpenVPN implementation talpid-firewall/ - Firewall/kill switch
+(platform-specific) talpid-routing/ - Routing table management
+talpid-tunnel/ - Tunnel abstraction talpid-dbus/ - D-Bus interface
+(Linux) GUI/ - Electron + React frontend (desktop) mullvad/ - CLI
+frontend</p>
+<pre><code>
+**GotaTun**: Mullvad&#39;s new WireGuard implementation in Rust:
+
+&gt; &quot;GotaTun is a WireGuard implementation written in Rust aimed at being fast, efficient and reliable. GotaTun is a fork of the BoringTun project from Cloudflare.&quot; - Result: &quot;crash rate dropped from 0.40% to 0.01%&quot; [^62^]
+
+---
+
+## 9. Privilege Escalation Patterns
+
+### 9.1 macOS: Privileged Helper Tool (SMJobBless)
+
+The **SMJobBless** pattern is the Apple-approved method for privilege escalation:
+
+&gt; &quot;As of 10.7, AuthorizationExecuteWithPrivileges was deprecated and since then all privilege escalation should be handled by a privileged helper tool.&quot; [^260^]
+
+How it works:
+1. App bundle contains a helper tool
+2. `SMJobBless()` installs it to `/Library/PrivilegedHelperTools/`
+3. A launchd job is configured in `/Library/LaunchDaemons/`
+4. Helper runs with root privileges
+5. Communication via XPC between app and helper
+</code></pre>
+<p>User App (user privileges) | | XPC v Privileged Helper
+(/Library/PrivilegedHelperTools/) | | root privileges v Network config,
+firewall rules, tunnel creation</p>
+<pre><code>
+Security requirements:
+- Both app and helper must be code-signed with the same Developer ID
+- Helper&#39;s `Info.plist` must list `SMAuthorizedClients` with the app&#39;s signing certificate
+- App must validate helper&#39;s code signature before communicating
+- Helper should validate client certificate [^264^]
+
+### 9.2 Windows: Service Pattern
+
+Windows VPN apps should use the **Windows Service pattern**:
+</code></pre>
+<p>User App (UI) - runs as standard user or elevated admin | | Named
+pipes / COM v Manager Service - runs as Local System | | Service control
+v Tunnel Service$Name - runs as Local System (per-tunnel) | | NDIS
+IOCTLs v WireGuardNT.sys (kernel driver)</p>
+<pre><code>
+Key Windows service considerations:
+- Services can start before user login
+- `Local System` account has full system access
+- Use ACLs to restrict service access
+- Drop privileges after initialization (remove `SeLoadDriverPrivilege` when not needed)
+- Store config encrypted with DPAPI [^268^]
+
+### 9.3 Linux: polkit + Capabilities
+
+Linux uses a combination of capabilities and polkit:
+
+**Approach A: Capabilities (preferred)**
+```bash
+# Grant CAP_NET_ADMIN to the binary
+sudo setcap cap_net_admin,cap_net_raw+eip /usr/bin/myvpn
+
+# The app can now create TUN interfaces without root</code></pre>
+<p><strong>Approach B: polkit authorization</strong></p>
+<pre><code>User App (unprivileged)
+    |
+    | D-Bus method call
+    v
+VPN Daemon (root via systemd)
+    |
+    | polkit check (IsUserAuthorized)
+    v
+Privileged operation (allowed/denied)</code></pre>
+<p><strong>Approach C: Root daemon with unprivileged UI</strong></p>
+<pre><code>myvpn-gui (user) &lt;--D-Bus--&gt; myvpn-daemon (root, via systemd)</code></pre>
+<p>This is the pattern used by NetworkManager and most Linux VPN
+clients.</p>
+<h3 id="94-aurora-os-sailjail-sandboxing">9.4 Aurora OS: Sailjail
+Sandboxing</h3>
+<p>Aurora OS uses <strong>Sailjail</strong> (based on Firejail) for
+sandboxing:</p>
+<blockquote>
+<p>&quot;Firejail (Sailjail) is used for security sandboxing of native
+applications since version 4.0.1 in 2021.&quot; [^257^]</p>
+</blockquote>
+<p>VPN apps need appropriate permissions in the <code>.desktop</code>
+file:</p>
+<div class="sourceCode" id="cb24"><pre class="sourceCode ini"><code class="sourceCode ini"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="dt">X-Sailjail-Permissions</span><span class="ot">=</span><span class="st">Network;Internet;VPN</span></span></code></pre></div>
+<hr />
+<h2 id="10-auto-updaters">10. Auto-Updaters</h2>
+<h3 id="101-tauri-updater">10.1 Tauri Updater</h3>
+<p>Tauri includes a built-in updater:</p>
+<blockquote>
+<p>&quot;Tauri&#39;s built-in updater plugin checks a configured URL for a
+release manifest, compares versions, and handles downloading and
+installing updates. Configure <code>plugins.updater</code> in
+<code>tauri.conf.json</code> with your update server URL.&quot; [^149^]</p>
+</blockquote>
+<p>Configuration:</p>
+<div class="sourceCode" id="cb25"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;plugins&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;updater&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;active&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">,</span></span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;endpoints&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="st">&quot;https://releases.myvpn.com/{{target}}/{{current_version}}&quot;</span><span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;pubkey&quot;</span><span class="fu">:</span> <span class="st">&quot;YOUR_PUBLIC_KEY&quot;</span><span class="fu">,</span></span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;windows&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;installMode&quot;</span><span class="fu">:</span> <span class="st">&quot;basicUi&quot;</span> <span class="fu">}</span></span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>Features:</p>
+<ul>
+<li>EdDSA signature verification</li>
+<li>Cross-platform (Windows .msi, macOS .app, Linux AppImage)</li>
+<li>Static JSON manifest (can use GitHub Releases)</li>
+<li>Delta updates not natively supported (full download)</li>
+</ul>
+<h3 id="102-sparkle-macos">10.2 Sparkle (macOS)</h3>
+<p>Sparkle is the standard macOS auto-updater:</p>
+<blockquote>
+<p>&quot;Sparkle supports &#39;delta updates&#39; for your application: when
+possible, users can download only the bits that have changed.&quot;
+[^261^]</p>
+</blockquote>
+<div class="sourceCode" id="cb26"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Generate delta updates automatically</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="ex">./bin/generate_appcast</span> ./releases/</span></code></pre></div>
+<p>Features:</p>
+<ul>
+<li>RSS-based appcast (static XML)</li>
+<li>EdDSA signature verification</li>
+<li>Delta updates via BinaryDelta</li>
+<li>Background/silent updates</li>
+<li>Sandboxed support</li>
+</ul>
+<h3 id="103-winsparkle-windows">10.3 WinSparkle (Windows)</h3>
+<p>WinSparkle is the Windows equivalent of Sparkle:</p>
+<ul>
+<li>RSS-based appcast (same format as Sparkle)</li>
+<li>Windows-specific UI (shows changelog, progress)</li>
+<li>Supports MSI and EXE installers</li>
+<li>Code signature verification</li>
+</ul>
+<h3 id="104-linux-update-mechanisms">10.4 Linux Update Mechanisms</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>APT repository</strong></td>
+<td>Custom .deb repo (Mullvad&#39;s approach)</td>
+</tr>
+<tr>
+<td><strong>DNF/YUM repo</strong></td>
+<td>Custom .rpm repo</td>
+</tr>
+<tr>
+<td><strong>AUR</strong></td>
+<td>PKGBUILD maintained by community</td>
+</tr>
+<tr>
+<td><strong>Flatpak</strong></td>
+<td>Flathub or custom remote</td>
+</tr>
+<tr>
+<td><strong>Snap</strong></td>
+<td>Snap Store</td>
+</tr>
+<tr>
+<td><strong>AppImage</strong></td>
+<td>Manual download + AppImageUpdate</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Recommendation</strong>: Provide APT + RPM repositories for
+direct installation, plus Flatpak for universal support. This matches
+what Mullvad and ProtonVPN do.</p>
+<hr />
+<h2 id="11-kill-switch-implementation">11. Kill Switch
+Implementation</h2>
+<h3 id="111-overview">11.1 Overview</h3>
+<p>A kill switch prevents data leakage when the VPN disconnects:</p>
+<blockquote>
+<p>&quot;An Internet kill switch is a mechanism to prevent data from leaking
+outside of the VPN tunnel when the tunnel fails for any reason.&quot;
+[^240^]</p>
+</blockquote>
+<h3 id="112-macos-pf-firewall">11.2 macOS: pf Firewall</h3>
+<p>macOS uses the <strong>pf (packet filter)</strong> firewall:</p>
+<div class="sourceCode" id="cb27"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Enable kill switch with pf</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> killswitch <span class="at">-e</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Rules written to /tmp/killswitch.pf.conf</span></span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Only allows traffic through VPN tunnel (utun interface)</span></span></code></pre></div>
+<p>Rules structure:</p>
+<pre><code>block drop all
+pass on lo0
+pass on utun0  # VPN tunnel interface
+pass out proto udp from any to VPN_SERVER port 51820
+``` [^244^]
+
+&gt; &quot;When enabled, killswitch loads pf firewall rules that only allow traffic through the VPN tunnel. If the VPN disconnects, the tunnel interface disappears but the firewall rules remain -- blocking all internet traffic until the VPN reconnects.&quot; [^244^]
+
+IVPN&#39;s approach:
+
+&gt; &quot;The IVPN firewall integrates deep into the operating system (using Microsoft&#39;s own WFP API on Windows, `pf` on macOS, and `iptables` on Linux) and filters all network packets. The Firewall is independent of the IVPN client, so even if a component of the IVPN Client crashes filtering will continue uninterrupted.&quot; [^240^]
+
+**Boot-time protection on macOS**: Limited
+
+&gt; &quot;On macOS and Linux, firewall rules are activated as early as possible, but boot-time protection depends on the system configuration and service startup order and cannot be guaranteed to the same degree.&quot; [^240^]
+
+### 11.3 Windows: WFP
+
+Windows kill switch uses the **Windows Filtering Platform**:
+
+&gt; &quot;The IVPN firewall integrates deep into the operating system using Microsoft&#39;s own WFP API.&quot; [^240^]
+
+Key WFP rules:
+- Block all outbound traffic not through VPN tunnel interface
+- Allow traffic to VPN server endpoints (for reconnection)
+- Allow DHCP/DNS through physical interface only to VPN DNS
+- Persistent rules survive process crashes
+- **Full boot-time protection** when &quot;Persistent Firewall&quot; is enabled
+
+### 11.4 Linux: iptables/nftables
+
+**iptables approach:**
+```bash
+# Kill switch with iptables
+iptables -P OUTPUT DROP          # Default deny
+iptables -A INPUT -i lo -j ACCEPT
+iptables -A OUTPUT -o lo -j ACCEPT
+iptables -A OUTPUT -o tun0 -j ACCEPT   # VPN tunnel
+iptables -A OUTPUT -d VPN_SERVER -j ACCEPT  # VPN server</code></pre>
+<p><strong>nftables approach (modern):</strong></p>
+<pre class="nft"><code>#!/usr/sbin/nft -f
+flush ruleset
+add table inet killswitch
+add chain inet killswitch OUTPUT { type filter hook output priority 0 ; policy drop ; }
+
+add rule inet killswitch OUTPUT oifname &quot;lo&quot; counter accept
+add rule inet killswitch OUTPUT oifname $VPN_DEV counter accept
+add rule inet killswitch OUTPUT oifname $INET_DEV ip daddr $VPN_SERVERS counter accept
+add rule inet killswitch OUTPUT ct state related,established accept
+add rule inet killswitch OUTPUT counter drop
+``` [^302^]
+
+**Policy-based routing kill switch:**
+```bash
+# Create custom routing table with blackhole
+ip route add default dev vpn1 via VPN_GATEWAY table vpn1 metric 100
+ip route add blackhole default table vpn1 metric 200
+ip rule add not sport WG_PORT table vpn1
+ip rule add table main suppress_prefixlength 0
+``` [^305^]
+
+### 11.5 Kill Switch Comparison
+
+| OS | Mechanism | Boot-time Protection | Crash Protection | Reliability |
+|----|-----------|---------------------|------------------|-------------|
+| macOS | `pf` firewall | Best-effort | Yes (rules persist) | Good |
+| Windows | WFP | **Full** (persistent rules) | Yes | **Excellent** |
+| Linux | iptables/nftables | Best-effort | Yes (if daemon restarts) | Good |
+
+---
+
+## 12. Desktop UI/UX Patterns for VPN
+
+### 12.1 Essential UI Elements
+
+Based on analysis of leading VPN clients (Mullvad, ProtonVPN, IVPN, NordVPN):
+
+**System Tray / Menu Bar:**
+- Icon showing connection status (color change: green=connected, red=disconnected, gray=connecting)
+- Quick connect/disconnect from menu
+- Recent server list
+- Connection status (protocol, server, IP)
+- Kill switch toggle
+- Open main window / Preferences / Quit
+
+**Main Window:**
+- Large connect/disconnect button
+- Server selection (map or list view)
+- Protocol selection (WireGuard, OpenVPN)
+- Connection info (IP, time connected, data transferred)
+- Settings/preferences
+
+### 12.2 ProtonVPN v4.2.0 System Tray Features
+
+ProtonVPN&#39;s desktop redesign (v4.2.0) introduced:
+
+&gt; &quot;- Introduced a new system tray app to let you connect, disconnect, or switch profiles faster
+&gt; - Made it possible to connect to printers, speakers, and other devices on your local network, even with the VPN connected
+&gt; - Gave you a way to see the active port number when you&#39;re using port forwarding
+&gt; - Rolled out a taskbar status icon so you can see at a glance if you&#39;re connected
+&gt; - Made the kill switch easier to find&quot; [^286^]
+
+### 12.3 macOS Menu Bar Best Practices
+
+For macOS VPN apps:
+- Use `MenuBarExtra` (SwiftUI) or `NSStatusItem` (AppKit)
+- Icon should change color for status (not just a tiny checkmark)
+- Include connection time and data transfer in menu
+- Support &quot;connect on launch&quot; preference
+- Honor macOS dark mode
+
+User feedback on ProtonVPN&#39;s macOS icon:
+
+&gt; &quot;The proton VPN app icon currently shows the connection status by showing a tiny cross sign or a tick, which is hardly noticeable... PIA has a menu bar icon that is red when disconnected, and green when connected. This is easy and quick to check.&quot; [^290^]
+
+### 12.4 Windows System Tray Best Practices
+
+- Use `NotifyIcon` with context menu
+- Show balloon/toast notifications on connect/disconnect
+- Support &quot;minimize to tray&quot; behavior
+- Show tooltip with connection status on hover
+- Icon in taskbar should indicate status
+
+---
+
+## 13. Platform Comparison Matrix
+
+| Feature | macOS | Windows | Linux | Aurora OS |
+|---------|-------|---------|-------|-----------|
+| **VPN API** | NetworkExtension (NEPacketTunnelProvider) | WFP / WireGuardNT / WinTUN | TUN + netlink / NetworkManager | ConnMan plugin |
+| **Min OS Version** | macOS 10.15+ | Windows 10+ | Kernel 5.6+ (WG native) | Sailfish 4+ |
+| **UI Framework** | SwiftUI / AppKit | WinUI 3 / WPF | GTK4+libadwaita / Qt6 | Qt Quick / Silica |
+| **System Tray** | MenuBarExtra | NotifyIcon | AppIndicator / SNI | Lipfish Silica |
+| **Privilege Model** | SMJobBless helper | Windows Service | CAP_NET_ADMIN / polkit | Sailjail sandbox |
+| **Code Signing** | Developer ID + Notarization | EV cert recommended | GPG signing | RPM signing |
+| **Distribution** | DMG / App Store | MSI / MSIX | DEB/RPM/Flatpak/Snap | RPM / OpenRepos |
+| **Auto-Update** | Sparkle (delta) | WinSparkle / Tauri | APT/DNF repo | Store/Zypper |
+| **Kill Switch** | pf firewall | WFP (persistent) | iptables/nftables | iptables |
+| **Boot Protection** | Best-effort | Full | Best-effort | Best-effort |
+| **Bundle Size** | ~5-15MB | ~10-20MB | ~5-15MB | ~5-10MB |
+| **RAM Usage** | ~30-150MB | ~30-150MB | ~20-100MB | ~20-80MB |
+| **Sandboxed** | Optional (App Store) | No | Optional (Flatpak) | Yes (Sailjail) |
+| **Rust Core FFI** | C ABI + swift-bridge | C ABI (DLL) | C ABI (.so) | C ABI (.so) |
+| **Notifications** | UserNotifications | ToastNotification | libnotify | Nemo QML |
+
+---
+
+## 14. Desktop-Specific Danger Zones
+
+### DZ1: macOS Sandboxing vs. NetworkExtension
+- **Danger**: Mac App Store sandboxing restricts NetworkExtension capabilities
+- **Mitigation**: Distribute outside App Store (standalone DMG with Sparkle)
+- **Impact**: Cannot run before login, limited keychain access in sandbox
+
+### DZ2: macOS pf Firewall Conflicts
+- **Danger**: Multiple apps using `pf` can conflict (VPN + Little Snitch + LuLu)
+- **Mitigation**: Use NetworkExtension&#39;s built-in routing, not raw pf rules
+- **Impact**: Kill switch may not work reliably with other firewall software
+
+### DZ3: Windows WFP Compat Issues
+- **Danger**: WFP callout drivers from different vendors conflict
+- **Mitigation**: Use WireGuardNT kernel driver instead of WFP for tunneling
+- **Impact**: Third-party antivirus/firewall may break VPN connectivity
+
+### DZ4: Windows Service UAC
+- **Danger**: Windows services require careful privilege management
+- **Mitigation**: Separate manager service (Local System) from UI (user/admin)
+- **Impact**: Wrong ACLs can expose IPC to non-admin users
+
+### DZ5: Linux Fragmentation
+- **Danger**: System tray, networking, and packaging differ across distros
+- **Mitigation**: Use standard APIs (AppIndicator, NetworkManager), ship Flatpak
+- **Impact**: High support burden for distro-specific issues
+
+### DZ6: Linux Kill Switch Timing
+- **Danger**: Kill switch rules may not be applied early enough in boot
+- **Mitigation**: Use systemd service with `Before=network-online.target`
+- **Impact**: Leaks possible during early boot on Linux
+
+### DZ7: Aurora OS Validation
+- **Danger**: Aurora SDK restricts Qt Quick Controls usage
+- **Mitigation**: Use standard Qt Quick components, avoid Silica for cross-platform
+- **Impact**: App may fail validation if wrong modules used
+
+### DZ8: Cross-Platform Kill Switch
+- **Danger**: Kill switch behavior varies significantly across platforms
+- **Mitigation**: Platform-specific implementations (WFP, pf, nftables)
+- **Impact**: Cannot share kill switch code; must implement per-OS
+
+### DZ9: Rust FFI Complexity
+- **Danger**: FFI between Rust and UI languages introduces memory safety risks
+- **Mitigation**: Use generated bridges (swift-bridge, flutter_rust_bridge)
+- **Impact**: Manual FFI can cause crashes and memory leaks
+
+### DZ10: Auto-Update Security
+- **Danger**: Update mechanism can be compromised to distribute malware
+- **Mitigation**: EdDSA signature verification on all updates
+- **Impact**: Unsigned or improperly signed updates are a critical vulnerability
+
+---
+
+## 15. Recommended Architecture per OS
+
+### 15.1 macOS Architecture
+</code></pre>
+<p>+-----------------------------------------+ | SwiftUI Frontend | | -
+MenuBarExtra (system tray) | | - Settings window | | - Onboarding | | |
+| Swift Package Manager build | | swift-bridge for FFI |
++-----------------------------------------+ | C ABI v
++-----------------------------------------+ | Rust Core (static library)
+| | - WireGuard protocol (boringtun/gotatun)| | - Kill switch logic | |
+- DNS management | | - Routing control |
++-----------------------------------------+ | v
++-----------------------------------------+ | NetworkExtension
+(NEPacketTunnelProvider)| | - Virtual network interface (utun) | | -
+Packet flow management | | - System routing integration |
++-----------------------------------------+</p>
+<pre><code>
+**Distribution**: DMG with Sparkle auto-updater  
+**Signing**: Developer ID + Notarization  
+**Privileges**: SMJobBless helper tool for system-level operations  
+
+### 15.2 Windows Architecture
+</code></pre>
+<p>+-----------------------------------------+ | WinUI 3 Frontend | | -
+System tray (NotifyIcon) | | - Taskbar status | | - Settings / Server
+selection | | | | C# + P/Invoke or C++/WinRT for Rust |
++-----------------------------------------+ | C ABI (DLL) v
++-----------------------------------------+ | Rust Core (DLL) | | -
+WireGuard protocol (boringtun) | | - Kill switch logic | | - WFP
+integration | +-----------------------------------------+ | v
++-----------------------------------------+ | Windows Services | | -
+Manager Service (Local System) | | - Tunnel Service$Name (Local System)
+| | | | + WireGuardNT.sys (kernel driver) |
++-----------------------------------------+</p>
+<pre><code>
+**Distribution**: MSI via WinSparkle or custom updater  
+**Signing**: EV code signing certificate  
+**Privileges**: Windows services (Local System)  
+
+### 15.3 Linux Architecture
+</code></pre>
+<p>+-----------------------------------------+ | GTK4 + libadwaita
+Frontend | | - AppIndicator system tray | | - Settings / Server
+selection | | | | D-Bus client |
++-----------------------------------------+ | D-Bus v
++-----------------------------------------+ | Rust Daemon (systemd
+service) | | - D-Bus service interface | | - WireGuard protocol
+(boringtun) | | - Kill switch (nftables/iptables) | | - NetworkManager
+integration | | - polkit authorization |
++-----------------------------------------+ | v
++-----------------------------------------+ | System | | - TUN device |
+| - netlink (rtnetlink) | | - nftables/iptables | | - systemd-resolved
+(DNS) | +-----------------------------------------+</p>
+<pre><code>
+**Distribution**: DEB + RPM repositories + Flatpak  
+**Signing**: GPG package signing  
+**Privileges**: CAP_NET_ADMIN capability or root daemon  
+
+### 15.4 Aurora OS Architecture
+</code></pre>
+<p>+-----------------------------------------+ | Qt Quick Frontend | | -
+Native QML components | | - System integration (Lipstick) | | | | Qt
+D-Bus for IPC | +-----------------------------------------+ | D-Bus v
++-----------------------------------------+ | C++ / Rust Bridge | | -
+ConnMan VPN plugin interface |
++-----------------------------------------+ | v
++-----------------------------------------+ | Rust Core (.so) | | -
+WireGuard protocol | | - TUN device management |
++-----------------------------------------+ | v
++-----------------------------------------+ | ConnMan + Linux Kernel | |
+- ConnMan VPN plugin | | - TUN interface |
++-----------------------------------------+</p>
+<pre><code>
+**Distribution**: RPM via OpenRepos / Aurora Store  
+**Signing**: RPM GPG signing  
+**Privileges**: Sailjail sandbox permissions  
+
+---
+
+## Appendix A: Key Source References
+
+1. Apple Developer Documentation - NEPacketTunnelProvider: https://developer.apple.com/documentation/networkextension/nepackettunnelprovider [^235^]
+2. Apple WWDC25 - NetworkExtension: https://developer.apple.com/videos/play/wwdc2025/234/ [^136^]
+3. iOS/macOS VPN Extensions Guide: https://antongubarenko.substack.com/p/ios-personal-vpn-and-network-extensions [^64^]
+4. macOS Code Signing &amp; Notarization: https://dennisbabkin.com/blog/?t=how-to-get-certificate-code-sign-notarize-macos-binaries-outside-apple-app-store [^231^]
+5. macOS Menu Bar SwiftUI: https://nilcoalescing.com/blog/BuildAMacOSMenuBarUtilityInSwiftUI [^247^]
+6. SwiftUI + Rust FFI: https://dfrojas.com/software/integrating-Rust-and-SwiftUI.html [^252^]
+7. Mullvad VPN Architecture: https://github.com/mullvad/mullvadvpn-app [^155^]
+8. GotaTun (WireGuard Rust): https://mullvad.net/en/blog/announcing-gotatun-the-future-of-wireguard-at-mullvad-vpn [^62^]
+9. WireGuard Windows Enterprise: https://git.zx2c4.com/wireguard-windows/about/docs/enterprise.md [^266^]
+10. WireGuard Windows Attack Surface: https://github.com/WireGuard/wireguard-windows/blob/master/docs/attacksurface.md [^268^]
+11. WinUI vs WPF 2026: https://www.ctco.blog/posts/winui-vs-wpf-2026-practical-comparison/ [^249^]
+12. BoringTun Rust WireGuard: https://github.com/cloudflare/boringtun [^49^]
+13. wiretun Rust crate: https://docs.rs/wiretun [^239^]
+14. IVPN Kill Switch: https://www.ivpn.net/knowledgebase/general/do-you-offer-a-kill-switch-or-vpn-firewall/ [^240^]
+15. macOS killswitch (pf): https://github.com/vpn-kill-switch/killswitch [^244^]
+16. Linux nftables kill switch: https://www.ivpn.net/knowledgebase/linux/linux-how-do-i-prevent-vpn-leaks-using-nftables-and-openvpn/ [^302^]
+17. Linux policy-based routing kill switch: https://dev.to/staex/vpn-kill-switch-how-to-do-it-on-linux-3ne3 [^305^]
+18. NetworkManager VPN: https://networkmanager.dev/docs/vpn/ [^292^]
+19. NM VPN Plugin D-Bus: https://people.freedesktop.org/~lkundrak/nm-dbus-api/gdbus-org.freedesktop.NetworkManager.VPN.Plugin.html [^280^]
+20. ProtonVPN Windows Release Notes: https://protonvpn.com/support/release-notes-windows [^286^]
+21. Sailfish OS Architecture: https://en.wikipedia.org/wiki/Sailfish_OS [^257^]
+22. Aurora OS Qt Development: https://habr.com/ru/companies/digdes/articles/772250/ [^308^]
+23. SMJobBless Pattern: https://erikberglund.github.io/2016/No_Privileged_Helper_Tool_Left_Behind/ [^260^]
+24. Sparkle Delta Updates: https://sparkle-project.org/documentation/delta-updates/ [^261^]
+25. Tauri Commands: https://rustify.rs/articles/rust-tauri-v2-desktop-app-tutorial-2026 [^149^]
+26. Flutter Rust Bridge: https://dev.to/abibeh/rust-flutter-how-to-build-fast-safe-cross-platform-mobile-apps-ika [^271^]
+27. Linux AppIndicator: https://fosspost.org/custom-system-tray-icon-indicator-linux/ [^269^]
+28. Tailscale macOS Variants: https://tailscale.com/docs/concepts/macos-variants [^306^]
+29. NativeShell Flutter Desktop: https://matejknopp.com/post/introducing-nativeshell/ [^267^]
+30. Mullvad Linux Install: https://mullvad.net/en/help/install-mullvad-app-linux [^289^]
+
+---
+
+*This research was compiled from 12+ independent web searches across Apple Developer documentation, GitHub repositories, VPN vendor documentation, and technical blogs. All citations use [^number^] format referencing sources found during the research phase.*
+</code></pre>
+</body>
+</html>

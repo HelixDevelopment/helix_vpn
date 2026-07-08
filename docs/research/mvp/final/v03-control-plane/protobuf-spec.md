@@ -1,7 +1,13 @@
 # Protobuf / Connect Service Spec
 
-**Revision:** 1
-**Last modified:** 2026-06-25T00:00:00Z
+**Revision:** 2
+**Last modified:** 2026-07-04T12:00:00Z
+
+**Rev 2 (enterprise-hardening pass, 2026-07-04):** added §9 "Versioning & compatibility policy" —
+closes a production-readiness gap: §8 ("Forward seams") previously described WHAT additive changes
+Phase 2 makes but never stated the explicit POLICY governing when a `v2` package is warranted, the
+backward-compatibility guarantee for an old agent binary talking to a newer coordinator, or the
+deprecation/sunset window for a superseded field. Old §9 "Sources" renumbered to §10.
 
 > Master technical specification — Volume 3 (Control Plane, Go), nano-detail document.
 > Scope: the **complete `Coordinator` service contract** — the single `.proto` that every
@@ -755,7 +761,63 @@ are the **`WatchNetworkMap` contract** document (this Volume) — referenced, no
 
 ---
 
-## 9. Sources
+## 9. Versioning & compatibility policy (production-readiness — old agents vs. a newer coordinator)
+
+§8 shows *what* Phase-2 additions look like; this section states the explicit *policy* a fleet
+operator and a client-app release manager both depend on. It is deliberately conservative — the
+agent population is never assumed to upgrade in lockstep with the gateway.
+
+### 9.1 The backward-compatibility guarantee (binding for the life of `v1`)
+
+**A coordinator running `helix.coordinator.v1` MUST correctly serve an agent built against ANY
+prior `v1` schema revision** (i.e., any commit since the field-number registry in §1.1 was frozen).
+This holds because proto3 field addition is additive by construction: an old agent simply does not
+populate/read fields it does not know about, and `oneof` + explicit presence (`optional`-shaped
+fields via "present only if changed", §1) let the server omit a field from a delta without an old
+client mis-interpreting its absence as a value. The `buf breaking` gate (§6.3) is the mechanical
+enforcement — a v1-breaking change (renumber, type change, remove-without-`reserved`) fails the
+pre-build gate and cannot ship. **The converse is NOT guaranteed**: a NEW agent talking to an OLD
+coordinator that predates a field the agent expects is out of scope for `v1` (the coordinator
+fleet is operator-controlled and upgraded before client apps are told to rely on a new field) —
+this asymmetry (coordinator-first rollout) is the standard server-then-client compatibility
+posture and MUST be stated to operators in the upgrade runbook (`v06-deploy/kubernetes.md` /
+`v06-deploy/ha-and-multiregion.md`): **upgrade every gateway/coordinator replica before shipping a
+client-app release that depends on a field the new coordinator introduces.**
+
+### 9.2 What triggers a `v2` package (never taken lightly)
+
+A NEW major package (`helix.coordinator.v2`, a new `.proto` file tree, NOT a field renumber
+inside `v1`) is warranted only when a change cannot be expressed additively under §9.1 — concretely:
+(a) a **semantic** change to an existing field's meaning that old clients would misinterpret (e.g.
+redefining what `Peer.endpoint` means, not merely adding a new field alongside it); (b) removing an
+RPC method entirely (proto3 has no method-level `reserved`, so a removed RPC is a wire break for
+any client still calling it); (c) a wholesale replacement of the streaming model itself (e.g. if a
+future transport requires bidi-streaming where `WatchNetworkMap` is server-stream-only). Simple
+field/message additions (the §8 Phase-2 list: transport ladder entries, `direct_candidates`,
+multi-hop path fields, PQ-PSK field) are explicitly **NOT** `v2` triggers — they are the intended
+`v1` evolution path. A `v2` package, if ever needed, runs **side-by-side** with `v1` (both served
+on the same Connect listener, distinguished by path prefix) for a announced deprecation window
+(recommended ≥ 2 minor platform releases) before `v1` handlers are removed — never a flag-day cutover.
+
+### 9.3 Field deprecation (within `v1`, no renumber)
+
+A field that is superseded (e.g. if `Peer.endpoint` were ever replaced by a richer type) is marked
+`[deprecated = true]` in a `.proto` comment + a `// DEPRECATED(reason, replacement, since)` comment,
+continues to be POPULATED by the server for at least one deprecation window (so old clients keep
+working), and its field number is never reused even after the field is eventually dropped —
+dropping requires a `reserved <N>;` declaration in the same commit (§1.1's registry is updated to
+show the number as `reserved`, not deleted from the table). No field in `v1` is currently
+deprecated; this subsection documents the mechanism for when one is.
+
+### 9.4 Anti-bluff test point (added to §7's table)
+
+| # | Test type | Target | Concrete assertion + evidence |
+|---|---|---|---|
+| T20 | contract / compat | old-agent-vs-new-coordinator | a Go test pins a golden `v1` client stub from an earlier commit (vendored fixture) against the CURRENT coordinator server; assert `WatchNetworkMap`/`Enroll`/`AdvertisePrefixes` all succeed and the old client correctly ignores any new field it doesn't recognize (proto3 unknown-field skip) — captured as a passing round-trip transcript, re-run on every `v1` schema change |
+
+---
+
+## 10. Sources
 
 - **[research-go_cp]** `docs/research/mvp/final/02-control-plane.md` — §4 (proto), §6 (coordinator
   stream loop), §7 (policy compiler outputs the proto carries), §8 (Connect binding + authz), §9
